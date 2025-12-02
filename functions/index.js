@@ -299,3 +299,84 @@ exports.secureIDOR = functions.https.onRequest((req, res) => {
         res.status(200).send("<h3>No Data</h3>");
     }
 });
+// ==============================================================
+// 7. 운영체제 명령어 삽입 (OS Command Injection)
+// ==============================================================
+
+// 🚫 취약한 코드 (Vulnerable Mode)
+// [KR] 사용자 입력을 시스템 명령어의 일부로 직접 사용
+// [EN] Vulnerable: User input directly used in system command
+exports.vulnerableCmd = functions.https.onRequest((req, res) => {
+    const ip = req.query.ip || "8.8.8.8";
+
+    // [가상 시나리오] 실제 서버에서는: exec("ping -c 1 " + ip)
+    // 공격자가 "8.8.8.8; ls -al"을 입력하면 -> "ping -c 1 8.8.8.8; ls -al" 실행됨
+    
+    let output = `PING ${ip} (56 data bytes)\n64 bytes from ${ip}: icmp_seq=1 ttl=115 time=12.4 ms\n\n--- ${ip} ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss`;
+
+    // 시뮬레이션: 공격 패턴(; | &)이 있으면 해킹된 결과를 보여줌
+    if (ip.includes(";") || ip.includes("|") || ip.includes("&")) {
+        const command = ip.split(/;|\||&/)[1].trim(); // 뒤에 붙은 명령어 추출
+        
+        let hackedOutput = "";
+        if (command.startsWith("ls")) {
+            hackedOutput = `
+drwxr-xr-x 2 root root 4096 May 20 10:00 .
+drwxr-xr-x 3 root root 4096 May 20 09:00 ..
+-rw-r--r-- 1 root root  512 May 20 10:01 secret_config.json
+-rw-r--r-- 1 root root 1024 May 20 10:02 admin_password.txt
+            `;
+        } else if (command.startsWith("whoami")) {
+            hackedOutput = "root";
+        } else {
+            hackedOutput = `Command not found: ${command}`;
+        }
+
+        res.status(200).send(`
+            <div style="border:2px solid red; padding:10px; background:#2d2d2d; color:#00ff00; font-family:monospace;">
+                <h3>⚠️ [KR] 터미널 실행 결과 (Hacked)</h3>
+                <p>$ ping -c 1 ${ip}</p>
+                <pre>${output}</pre>
+                <hr style="border-color:#00ff00;">
+                <p><strong>$ ${command}</strong></p>
+                <pre>${hackedOutput}</pre>
+            </div>
+        `);
+    } else {
+        res.status(200).send(`
+            <div style="background:#f0f0f0; padding:10px; font-family:monospace;">
+                <h3>ℹ️ Ping Result</h3>
+                <pre>${output}</pre>
+            </div>
+        `);
+    }
+});
+
+// ✅ 안전한 코드 (Secure Mode)
+// [KR] IP 주소 형식(숫자와 점)만 허용하는 화이트리스트 검증
+// [EN] Secure: Allow only IP address format (Whitelist)
+exports.secureCmd = functions.https.onRequest((req, res) => {
+    const ip = req.query.ip || "8.8.8.8";
+
+    // IP 주소 정규식 (IPv4)
+    const ipPattern = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+
+    if (!ipPattern.test(ip)) {
+        res.status(200).send(`
+            <div style="border:2px solid green; padding:10px; background:#f0fff0;">
+                <h3>🛡️ [KR] 실행 차단 (Blocked)</h3>
+                <p>Input: ${ip}</p>
+                <hr>
+                <p>[KR] 잘못된 IP 주소 형식이거나, 금지된 문자가 포함되어 있습니다.</p>
+                <p>[EN] Invalid IP format or forbidden characters detected.</p>
+            </div>
+        `);
+    } else {
+        res.status(200).send(`
+            <div style="background:#f0f0f0; padding:10px; font-family:monospace;">
+                <h3>✅ Safe Ping Result</h3>
+                <pre>PING ${ip} ... (Normal Execution)</pre>
+            </div>
+        `);
+    }
+});

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>OS Command Injection Simulation</title>
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 8px 16px; cursor: pointer; }
+        
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+        .comment { color: #999; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>💻 운영체제 명령어 삽입 (OS Command Injection)</h1>
+
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 외부 입력값을 시스템 명령어의 일부로 사용할 때, <code>;</code>, <code>|</code>, <code>&</code> 같은 구분자를 이용해 악의적인 명령어를 추가로 실행하는 공격입니다.</p>
+        <p><strong>[EN]</strong> An attack that executes arbitrary system commands by injecting shell metacharacters (e.g., ; | &) into inputs used in OS commands.</p>
+    </div>
+    
+    <div class="container">
+        <!-- 취약한 모드 -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드</h2>
+            <p>기능: Ping 테스트</p>
+            <p>[KR] 공격: <code>8.8.8.8; ls -al</code> 입력 (파일 목록 훔쳐보기)</p>
+            <input type="text" id="vulnInput" value="8.8.8.8; ls -al">
+            <button onclick="runTest('vulnerableCmd', 'vulnInput')">Run Attack</button>
+        </div>
+
+        <!-- 안전한 모드 -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드</h2>
+            <p>[KR] 방어: 입력값 패턴(IP주소) 검증</p>
+            <p>[EN] Defense: Validate Input Pattern (Allow IP only)</p>
+            <input type="text" id="secureInput" value="8.8.8.8; ls -al">
+            <button onclick="runTest('secureCmd', 'secureInput')">Run Secure</button>
+        </div>
+    </div>
+
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드</h2>
+        
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python</summary>
+            <pre><code><span class="comment"># [KR] shell=True 옵션을 사용하지 않고, 입력값을 리스트로 분리하여 전달한다.</span>
+<span class="comment"># [EN] Do not use shell=True, pass arguments as a list.</span>
+
+import subprocess
+
+ip = request.POST.get('ip')
+
+<span class="comment"># ❌ 취약 (Vulnerable): 쉘에서 문자열로 실행</span>
+<span class="comment"># subprocess.call("ping -c 1 " + ip, shell=True)</span>
+
+<span class="comment"># ✅ 안전 (Secure): 실행 파일과 인자를 분리</span>
+subprocess.call(["ping", "-c", "1", ip])</code></pre>
+        </details>
+
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java</summary>
+            <pre><code><span class="comment">// [KR] Runtime.exec() 사용 시 문자열 하나로 전달하지 말고 배열로 전달한다.</span>
+<span class="comment">// [EN] Pass command and arguments as an array to Runtime.exec().</span>
+
+String ip = request.getParameter("ip");
+
+<span class="comment">// ❌ 취약 (Vulnerable)</span>
+<span class="comment">// Runtime.getRuntime().exec("ping " + ip);</span>
+
+<span class="comment">// ✅ 안전 (Secure): 명령어와 인자를 분리</span>
+String[] cmd = new String[] { "/bin/ping", "-c", "1", ip };
+Runtime.getRuntime().exec(cmd);</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName, inputId) {
+            const inputVal = document.getElementById(inputId).value;
+            // 세미콜론 등 특수문자 전송을 위해 인코딩
+            const encodedInput = encodeURIComponent(inputVal);
+            const url = `${BASE_URL}/${funcName}?ip=${encodedInput}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
