@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Error Exposure Simulation</title>
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        button { padding: 10px 20px; cursor: pointer; width: 100%; }
+        
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+        .comment { color: #999; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>⚠️ 오류 메시지 정보 노출</h1>
+
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 프로그램 오류 발생 시, 시스템의 내부 정보(경로, DB 쿼리, 라이브러리 버전 등)가 포함된 상세한 에러 메시지를 사용자에게 그대로 보여주는 취약점입니다.</p>
+    </div>
+    
+    <div class="container">
+        <!-- 취약한 모드 -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드</h2>
+            <p>[KR] 상황: DB 연결 오류 발생</p>
+            <p>[EN] Scenario: DB Connection Failed</p>
+            <p style="font-size:0.9em; color:#666;">버튼을 누르면 서버에서 고의로 에러를 발생시킵니다.</p>
+            <button onclick="runTest('vulnerableError')">에러 유발 (Trigger Error)</button>
+        </div>
+
+        <!-- 안전한 모드 -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드</h2>
+            <p>[KR] 방어: 일반적인 메시지로 대체</p>
+            <p>[EN] Defense: Show generic message</p>
+            <p style="font-size:0.9em; color:#666;">사용자에게는 단순 안내 문구만 보여줍니다.</p>
+            <button onclick="runTest('secureError')">에러 유발 (Trigger Error)</button>
+        </div>
+    </div>
+
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드</h2>
+        
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python (Django/Flask)</summary>
+            <pre><code><span class="comment"># [KR] 운영 환경(Production)에서는 디버그 모드를 반드시 꺼야 합니다.</span>
+<span class="comment"># [EN] Must disable DEBUG mode in production.</span>
+
+<span class="comment"># settings.py (Django)</span>
+
+<span class="comment"># ❌ 취약 (Vulnerable)</span>
+<span class="comment"># DEBUG = True</span>
+
+<span class="comment"># ✅ 안전 (Secure)</span>
+DEBUG = False
+ALLOWED_HOSTS = ['yourdomain.com']</code></pre>
+        </details>
+
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java (Spring)</summary>
+            <pre><code><span class="comment">// [KR] 예외 처리(try-catch)를 통해 스택 트레이스 출력을 방지합니다.</span>
+<span class="comment">// [EN] Use try-catch to prevent printing stack traces.</span>
+
+try {
+    // Business Logic...
+} catch (Exception e) {
+    <span class="comment">// ❌ 취약: e.printStackTrace(); (콘솔/화면에 노출됨)</span>
+    
+    <span class="comment">// ✅ 안전: 로그 파일에만 기록하고, 사용자에게는 별도 메시지 전달</span>
+    logger.error("System Error", e);
+    return "error_page";
+}</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName) {
+            // 별도의 입력값 없이 함수만 호출
+            window.open(`${BASE_URL}/${funcName}`, '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -380,3 +380,59 @@ exports.secureCmd = functions.https.onRequest((req, res) => {
         `);
     }
 });
+// ==============================================================
+// 8. 오류 메시지 정보 노출 (Security Misconfiguration)
+// ==============================================================
+
+// 🚫 취약한 코드 (Vulnerable Mode)
+// [KR] 에러 발생 시 스택 트레이스(Stack Trace)를 그대로 노출
+// [EN] Vulnerable: Expose full stack trace to the user
+exports.vulnerableError = functions.https.onRequest((req, res) => {
+    try {
+        // [시나리오] DB 연결을 시도하다가 에러가 발생한 상황 연출
+        // 존재하지 않는 함수를 호출하여 강제로 에러 유발
+        const dbConnection = database.connect("192.168.0.10", "root", "password123");
+    } catch (error) {
+        // ⚠️ 위험: 개발자용 에러 메시지(내부 정보 포함)를 사용자에게 그대로 보여줌
+        res.status(500).send(`
+            <div style="border:2px solid red; padding:10px; background:#fff0f0; font-family:monospace;">
+                <h3>⚠️ 500 Internal Server Error</h3>
+                <p style="color:red; font-weight:bold;">ReferenceError: database is not defined</p>
+                <hr>
+                <p><strong>Stack Trace:</strong></p>
+                <pre>${error.stack}</pre>
+                <hr>
+                <p><strong>[KR] 해커가 얻은 정보:</strong></p>
+                <ul>
+                    <li>오류 원인 (변수명 노출)</li>
+                    <li>서버 내부 파일 경로 (/user_code/index.js...)</li>
+                    <li>사용 중인 함수 로직 위치</li>
+                </ul>
+            </div>
+        `);
+    }
+});
+
+// ✅ 안전한 코드 (Secure Mode)
+// [KR] 에러 발생 시 내부 정보를 숨기고, 약속된 일반 메시지만 출력
+// [EN] Secure: Hide details and show generic error message
+exports.secureError = functions.https.onRequest((req, res) => {
+    try {
+        // 동일하게 강제 에러 유발
+        const dbConnection = database.connect("192.168.0.10", "root", "password123");
+    } catch (error) {
+        // 🛡️ 방어: 상세 내용은 서버 로그(console.error)에만 남기고,
+        // 사용자에게는 "서비스 이용에 불편을 드려 죄송합니다" 같은 단순 메시지만 전달
+        console.error("System Error:", error); // 내부 로그 기록
+
+        res.status(500).send(`
+            <div style="border:2px solid green; padding:10px; background:#f0fff0;">
+                <h3>✅ 서비스 오류 (Service Error)</h3>
+                <p>시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</p>
+                <p style="color:gray; font-size:0.9em;">(Error Code: 500)</p>
+                <hr>
+                <p><strong>[KR] 방어 성공:</strong> 내부 정보가 전혀 노출되지 않았습니다.</p>
+            </div>
+        `);
+    }
+});
