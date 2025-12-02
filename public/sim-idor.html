@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>IDOR Simulation</title>
+    <!-- 설정 파일 로드 -->
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 8px 16px; cursor: pointer; }
+        
+        /* 가이드 스타일 */
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+        .comment { color: #999; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>🚫 부적절한 인가 (IDOR)</h1>
+
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 사용자가 자신의 권한 밖의 데이터(타인의 주문내역 등)에 접근할 때, 서버가 소유권을 검증하지 않아 발생하는 취약점입니다.</p>
+        <p><strong>[EN]</strong> Occurs when an application provides direct access to objects based on user-supplied input without authorization checks.</p>
+    </div>
+    
+    <div class="container">
+        <!-- 취약한 모드 -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드 (Vulnerable)</h2>
+            <p>상황: 나는 <strong>userA</strong> (주문번호 100번 주인)</p>
+            <p>[KR] 공격: 주문번호를 <strong>101</strong>(userB의 것)로 변조</p>
+            <input type="text" id="vulnInput" value="101">
+            <button onclick="runTest('vulnerableIDOR', 'vulnInput')">Run Attack</button>
+        </div>
+
+        <!-- 안전한 모드 -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드 (Secure)</h2>
+            <p>[KR] 방어: 소유자 일치 여부 검증</p>
+            <p>[EN] Defense: Check ownership</p>
+            <input type="text" id="secureInput" value="101">
+            <button onclick="runTest('secureIDOR', 'secureInput')">Run Secure</button>
+        </div>
+    </div>
+
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
+        
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python (Django)</summary>
+            <pre><code><span class="comment"># [KR] 객체 접근 시 소유자(request.user)와 일치하는지 반드시 확인한다.</span>
+<span class="comment"># [EN] Verify that the requesting user owns the object.</span>
+
+def view_order(request, order_id):
+    order = Order.objects.get(id=order_id)
+
+    <span class="comment"># ❌ 취약 (Vulnerable): 그냥 반환</span>
+    <span class="comment"># return render(request, 'order.html', {'order': order})</span>
+
+    <span class="comment"># ✅ 안전 (Secure): 소유자 검증</span>
+    if order.owner != request.user:
+        return HttpResponseForbidden("권한이 없습니다.")
+    
+    return render(request, 'order.html', {'order': order})</code></pre>
+        </details>
+
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java (Spring Boot)</summary>
+            <pre><code><span class="comment">// [KR] Service 계층에서 현재 로그인한 사용자와 데이터 소유자를 비교한다.</span>
+<span class="comment">// [EN] Compare current user with data owner in Service layer.</span>
+
+public Order getOrder(Long orderId, String username) {
+    Order order = orderRepository.findById(orderId);
+    
+    <span class="comment">// ✅ 안전 (Secure)</span>
+    if (!order.getOwner().equals(username)) {
+        throw new AccessDeniedException("접근 권한이 없습니다.");
+    }
+    return order;
+}</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName, inputId) {
+            const inputVal = document.getElementById(inputId).value;
+            // IDOR는 보통 ID값 그대로 호출합니다.
+            const url = `${BASE_URL}/${funcName}?id=${inputVal}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

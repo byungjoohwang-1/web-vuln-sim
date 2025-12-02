@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Path Traversal Simulation</title>
+    <!-- [KR] 설정 파일 로드 / [EN] Load configuration file -->
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 8px 16px; cursor: pointer; }
+        
+        /* 코드 가이드 섹션 스타일 */
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+        .comment { color: #999; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>📁 경로 조작 및 자원 삽입 (Path Traversal)</h1>
+
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 검증되지 않은 외부 입력값으로 파일 경로를 조작하여, 시스템의 민감한 파일(예: /etc/passwd)에 무단으로 접근하는 공격입니다.</p>
+        <p><strong>[EN]</strong> An attack where an attacker manipulates file paths using unvalidated input to access sensitive system files (e.g., /etc/passwd).</p>
+    </div>
+    
+    <div class="container">
+        <!-- 취약한 모드 (Vulnerable) -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드 (Vulnerable)</h2>
+            <p>[KR] 공격: <code>../</code>를 사용해 상위 폴더 접근</p>
+            <p>[EN] Attack: Use <code>../</code> to access parent dir</p>
+            <input type="text" id="vulnInput" value="../../../etc/passwd">
+            <button onclick="runTest('vulnerablePath', 'vulnInput')">Run Attack</button>
+        </div>
+
+        <!-- 안전한 모드 (Secure) -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드 (Secure)</h2>
+            <p>[KR] 방어: 경로 이동 문자 제거 필터링</p>
+            <p>[EN] Defense: Filter path traversal chars</p>
+            <input type="text" id="secureInput" value="../../../etc/passwd">
+            <button onclick="runTest('securePath', 'secureInput')">Run Secure</button>
+        </div>
+    </div>
+
+    <!-- 하단 코드 예제 섹션 -->
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
+        
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python (Django/Flask)</summary>
+            <pre><code><span class="comment"># [KR] 외부 입력값에서 경로 조작 문자열(/, \, .. 등)을 제거해야 한다.</span>
+<span class="comment"># [EN] External input must be filtered to remove directory traversal sequences.</span>
+
+import os
+
+def get_info(request):
+    filename = request.POST.get('request_file')
+    
+    <span class="comment"># ❌ 취약 (Vulnerable): 입력값을 그대로 사용 (Use input as is)</span>
+    <span class="comment"># with open(filename) as f: ...</span>
+
+    <span class="comment"># ✅ 안전 (Secure): replace() 또는 os.path.basename() 사용</span>
+    filename = filename.replace("..", "").replace("/", "").replace("\\", "")
+    # OR
+    filename = os.path.basename(filename)
+    
+    if filename:
+        with open(filename, "r") as f: ...</code></pre>
+        </details>
+
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java (JSP/Servlet)</summary>
+            <pre><code><span class="comment">// [KR] 외부 입력값에 대하여 경로순회 문자열(/, \, &, .. 등)을 제거한다.</span>
+<span class="comment">// [EN] Remove path traversal characters from external input.</span>
+
+String fileName = request.getParameter("P");
+
+<span class="comment">// ❌ 취약 (Vulnerable)</span>
+<span class="comment">// fis = new FileInputStream("C:/datas/" + fileName);</span>
+
+<span class="comment">// ✅ 안전 (Secure): replaceAll() 사용</span>
+if (fileName != null) {
+    fileName = fileName.replaceAll("\\.\\.", "").replaceAll("/", "").replaceAll("\\\\", "");
+}
+
+File f = new File("C:/datas/" + fileName);</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName, inputId) {
+            const inputVal = document.getElementById(inputId).value;
+            // 경로 조작 문자(../)가 URL 파라미터로 잘 전달되도록 인코딩
+            const encodedInput = encodeURIComponent(inputVal);
+            // config.js의 BASE_URL 사용
+            const url = `${BASE_URL}/${funcName}?file=${encodedInput}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

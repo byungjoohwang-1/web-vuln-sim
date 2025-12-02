@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>XSS Simulation</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 8px 16px; cursor: pointer; }
+        
+        /* 코드 가이드 섹션 스타일 */
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+        .comment { color: #999; }
+        .result-box { margin-top: 10px; padding: 10px; border: 1px dashed #999; background: #fff; min-height: 30px; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>💥 크로스 사이트 스크립트 (XSS)</h1>
+    
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 검증되지 않은 외부 입력값이 브라우저에서 실행되어 악성 스크립트가 동작하는 공격입니다.</p>
+        <p><strong>[EN]</strong> Unvalidated external input executes in the browser, allowing malicious scripts to run.</p>
+    </div>
+
+    <div class="container">
+        <!-- 취약한 모드 (Vulnerable) -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드 (Vulnerable)</h2>
+            <p>Method: <code>innerHTML</code></p>
+            <p>[KR] 공격: <code>onerror</code> 이벤트를 통한 스크립트 실행</p>
+            <p>[EN] Attack: Execute script via <code>onerror</code> event</p>
+            <input type="text" id="vulnInput" value="<img src=x onerror=alert('XSS')>">
+            <button onclick="document.getElementById('vResult').innerHTML = document.getElementById('vulnInput').value">Run</button>
+            <div id="vResult" class="result-box">Result here...</div>
+        </div>
+
+        <!-- 안전한 모드 (Secure) -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드 (Secure)</h2>
+            <p>Method: <code>textContent</code></p>
+            <p>[KR] 방어: 텍스트로만 처리 (스크립트 실행 안 됨)</p>
+            <p>[EN] Defense: Treat as text only (Script not executed)</p>
+            <input type="text" id="secureInput" value="<img src=x onerror=alert('XSS')>">
+            <button onclick="document.getElementById('sResult').textContent = document.getElementById('secureInput').value">Run</button>
+            <div id="sResult" class="result-box">Result here...</div>
+        </div>
+    </div>
+
+    <!-- 하단 코드 예제 섹션 -->
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
+        
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java (JSP)</summary>
+            <pre><code><span class="comment">// [KR] JSTL의 c:out 태그를 사용하여 특수문자를 변환(Escape)한다.</span>
+<span class="comment">// [EN] Use JSTL c:out tag to escape special characters.</span>
+
+<span class="comment">// ❌ 취약 (Vulnerable)</span>
+&lt;%= request.getParameter("msg") %&gt;
+
+<span class="comment">// ✅ 안전 (Secure)</span>
+&lt;c:out value="${param.msg}" /&gt;</code></pre>
+        </details>
+
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python (Flask/Django)</summary>
+            <pre><code><span class="comment"># [KR] 템플릿 엔진의 자동 이스케이프 기능을 사용한다. safe 필터 사용 주의.</span>
+<span class="comment"># [EN] Use auto-escaping of template engines. Be careful with 'safe' filter.</span>
+
+<span class="comment"># ❌ 취약 (Vulnerable): safe 필터는 이스케이프를 비활성화함</span>
+{{ user_input | safe }}
+
+<span class="comment"># ✅ 안전 (Secure): 기본적으로 자동 이스케이프 적용됨</span>
+{{ user_input }}</code></pre>
+        </details>
+    </div>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>HTTP Response Splitting</title>
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; }
+        button { padding: 8px 16px; cursor: pointer; }
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; list-style: none; }
+        summary:hover { background-color: #f0f0f0; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; margin: 0; border-radius: 0 0 5px 5px; }
+        code { font-family: monospace; }
+        .comment { color: #999; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>HTTP 응답 분할 (HTTP Response Splitting)</h1>
+    
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 외부 입력값에 개행문자(CR, LF)가 포함되면 HTTP 응답이 2개 이상으로 분리될 수 있으며, 이를 통해 XSS나 캐시 훼손 공격이 가능합니다.</p>
+        <p><strong>[EN]</strong> If external input contains CRLF characters, the HTTP response can be split, enabling XSS or Cache Poisoning attacks.</p>
+    </div>
+    
+    <div class="container">
+        <div class="box vuln">
+            <h2>🚫 취약한 모드 (Vulnerable)</h2>
+            <p>공격: <code>%0d%0a</code> (CRLF) 사용</p>
+            <input type="text" id="vulnInput" value="guest%0d%0aSet-Cookie:Hacked=true">
+            <button onclick="runTest('vulnerableSplit', 'vulnInput')">Run Attack</button>
+        </div>
+
+        <div class="box secure">
+            <h2>✅ 안전한 모드 (Secure)</h2>
+            <p>방어: 개행문자 제거 (Remove CRLF)</p>
+            <input type="text" id="secureInput" value="guest%0d%0aSet-Cookie:Hacked=true">
+            <button onclick="runTest('secureSplit', 'secureInput')">Run Secure</button>
+        </div>
+    </div>
+
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
+        <details open>
+            <summary>🐍 Python (Django/Flask)</summary>
+            <pre><code><span class="comment"># [KR] 헤더, 쿠키 등에 사용되는 입력값에서 개행문자를 제거해야 한다.</span>
+<span class="comment"># [EN] Remove CRLF characters from inputs used in headers or cookies.</span>
+
+def secure_view(request):
+    user_input = request.GET.get('next')
+    
+    if user_input:
+        <span class="comment"># [KR] CR(\r), LF(\n) 문자를 공백으로 치환하거나 제거</span>
+        <span class="comment"># [EN] Replace CR(\r), LF(\n) with empty string</span>
+        safe_input = user_input.replace('\r', '').replace('\n', '')
+        
+        response['Location'] = safe_input
+        return response</code></pre>
+        </details>
+
+        <details>
+            <summary>☕ Java (JSP/Servlet)</summary>
+            <pre><code><span class="comment">// [KR] 외부 입력값에서 개행문자(\r, \n)를 제거한 후 사용한다.</span>
+<span class="comment">// [EN] Use external input after removing newline characters.</span>
+
+String input = request.getParameter("id");
+if (input != null) {
+    <span class="comment">// replaceAll을 사용하여 개행 문자 제거</span>
+    String safeInput = input.replaceAll("\\r", "").replaceAll("\\n", "");
+    response.setHeader("Set-Cookie", "USER=" + safeInput);
+}</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName, inputId) {
+            const inputVal = document.getElementById(inputId).value;
+            const url = `${BASE_URL}/${funcName}?input=${inputVal}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

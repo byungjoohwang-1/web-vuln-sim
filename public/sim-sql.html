@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SQL Injection Simulation</title>
+    <!-- [KR] 설정 파일 로드 / [EN] Load configuration file -->
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 8px 16px; cursor: pointer; }
+        
+        /* 코드 가이드 섹션 스타일 */
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+        .comment { color: #999; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>💉 SQL 삽입 (SQL Injection)</h1>
+
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 입력값에 SQL 쿼리 문법(예: ' OR '1'='1)을 삽입하여, 데이터베이스를 조작하는 공격입니다.</p>
+        <p><strong>[EN]</strong> An attack that inserts SQL query syntax (e.g., ' OR '1'='1) into input to manipulate the database.</p>
+    </div>
+    
+    <div class="container">
+        <!-- 취약한 모드 (Vulnerable) -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드 (Vulnerable)</h2>
+            <p>[KR] 공격: <code>admin' OR '1'='1</code> 입력</p>
+            <p>[EN] Attack: Input <code>admin' OR '1'='1</code></p>
+            <!-- 기본값으로 공격 구문을 넣어둠 -->
+            <input type="text" id="vulnInput" value="admin' OR '1'='1">
+            <button onclick="runTest('vulnerableSQL', 'vulnInput')">Run Attack</button>
+        </div>
+
+        <!-- 안전한 모드 (Secure) -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드 (Secure)</h2>
+            <p>[KR] 방어: 파라미터 바인딩 적용</p>
+            <p>[EN] Defense: Use Parameter Binding</p>
+            <input type="text" id="secureInput" value="admin' OR '1'='1">
+            <button onclick="runTest('secureSQL', 'secureInput')">Run Secure</button>
+        </div>
+    </div>
+
+    <!-- 하단 코드 예제 섹션 -->
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
+        
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python (Django/Flask)</summary>
+            <pre><code><span class="comment"># [KR] 원시 SQL 사용 시 인자화된 쿼리(Parameterized Query)를 사용해야 한다.</span>
+<span class="comment"># [EN] Use parameterized queries when using raw SQL.</span>
+
+<span class="comment"># ❌ 취약 (Vulnerable): 문자열 포맷팅 (String formatting)</span>
+<span class="comment"># sql = "SELECT * FROM users WHERE id = '" + user_id + "'"</span>
+
+<span class="comment"># ✅ 안전 (Secure): %s 플레이스홀더 및 튜플 바인딩 (Tuple binding)</span>
+sql = "SELECT * FROM users WHERE id = %s"
+cursor.execute(sql, (user_id,))</code></pre>
+        </details>
+
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java (JDBC)</summary>
+            <pre><code><span class="comment">// [KR] PreparedStatement를 사용하여 컴파일된 쿼리 객체를 사용한다.</span>
+<span class="comment">// [EN] Use PreparedStatement to use compiled query objects.</span>
+
+String sql = "SELECT * FROM users WHERE id = ?";
+
+<span class="comment">// ✅ 안전 (Secure): ? 문자로 바인딩 변수 사용 (? placeholder)</span>
+PreparedStatement pstmt = con.prepareStatement(sql);
+pstmt.setString(1, userId);
+ResultSet rs = pstmt.executeQuery();</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName, inputId) {
+            const inputVal = document.getElementById(inputId).value;
+            // SQL 구문(따옴표 등)이 URL 파라미터로 잘 전달되도록 인코딩
+            const encodedInput = encodeURIComponent(inputVal);
+            // config.js의 BASE_URL 사용
+            const url = `${BASE_URL}/${funcName}?id=${encodedInput}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

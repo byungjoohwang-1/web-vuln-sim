@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>코드 삽입 실습</title>
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 8px 16px; cursor: pointer; }
+        
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        .guide-box { background-color: #f4f7f9; padding: 15px; border-left: 5px solid #007bff; margin-bottom: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; list-style: none; }
+        summary:hover { background-color: #f0f0f0; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; margin: 0; border-radius: 0 0 5px 5px; }
+        code { font-family: monospace; }
+        .comment { color: #999; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← 메인으로</a>
+    <h1>💻 코드 삽입 (Code Injection)</h1>
+
+    <div class="guide-box">
+        <h3>📘 취약점 개요</h3>
+        <p>입력값을 검증 없이 <code>eval()</code>, <code>exec()</code> 함수에 전달할 때 발생합니다. 공격자는 시스템 명령어를 실행하거나 서버를 장악할 수 있습니다.</p>
+    </div>
+    
+    <div class="container">
+        <!-- 취약한 모드 -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드</h2>
+            <p>기능: 수식 계산기 (eval 사용)</p>
+            <p>공격: 자바스크립트 코드 입력</p>
+            <!-- 공격 예시: 단순 계산 대신 임의의 문자열 반환 코드 삽입 -->
+            <input type="text" id="vulnInput" value="10 * 10; return '시스템 장악 완료'">
+            <button onclick="runTest('vulnerableCode', 'vulnInput')">공격 실행</button>
+        </div>
+
+        <!-- 안전한 모드 -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드</h2>
+            <p>방어: 입력값 검증 (숫자/연산자만 허용)</p>
+            <input type="text" id="secureInput" value="10 * 10; return '시스템 장악 완료'">
+            <button onclick="runTest('secureCode', 'secureInput')">방어 테스트</button>
+        </div>
+    </div>
+
+    <!-- 언어별 가이드 섹션 -->
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드</h2>
+        <p>제공해주신 가이드 문서에 기반한 언어별 방어 기법입니다.</p>
+
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python (Django/Flask)</summary>
+            <pre><code><span class="comment"># [Python 가이드] eval(), exec() 사용 시 입력값 검증 필수</span>
+
+<span class="comment"># ❌ 취약한 코드: eval() 직접 사용</span>
+<span class="comment"># result = eval(user_input)</span>
+
+<span class="comment"># ✅ 안전한 코드: 화이트리스트 검증 또는 ast.literal_eval 사용</span>
+import ast
+
+def calculate(user_input):
+    try:
+        <span class="comment"># ast.literal_eval은 파이썬 표현식만 안전하게 평가함 (함수 실행 불가)</span>
+        result = ast.literal_eval(user_input)
+        return result
+    except:
+        return "Error"</code></pre>
+        </details>
+
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java (ScriptEngine)</summary>
+            <pre><code><span class="comment">// [Java 가이드] ScriptEngine.eval() 사용 시 입력값 검증 필수</span>
+
+<span class="comment"># ❌ 취약한 코드</span>
+<span class="comment"># engine.eval(userInput);</span>
+
+<span class="comment"># ✅ 안전한 코드: 정규식으로 입력값 패턴 검사</span>
+if (userInput.matches("^[0-9+\\-*/().\\s]+$")) {
+    engine.eval(userInput);
+} else {
+    throw new IllegalArgumentException("허용되지 않은 입력입니다.");
+}</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName, inputId) {
+            const inputVal = document.getElementById(inputId).value;
+            // 코드 문자가 URL로 잘 전달되도록 인코딩
+            const encodedInput = encodeURIComponent(inputVal);
+            const url = `${BASE_URL}/${funcName}?exp=${encodedInput}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
