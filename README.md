@@ -1,108 +1,107 @@
-🛡️ Web Vulnerability Simulation (Vuln-Sim) : Made by Jack Hwang(jackhwang0210@gmail.com)
-WebSite: https://vuln-sim-test.web.app/
+# 🛡️ Web Vulnerability Simulator
 
-This project is an educational simulator designed to demonstrate the mechanisms of major web security vulnerabilities and practice Secure Coding techniques to defend against them. It is built on the Firebase (Cloud Functions & Hosting) platform.
+## 📖 Introduction
+This project is a **Web Vulnerability Simulation Platform** designed for educational purposes. It utilizes **Google Firebase** as a serverless backend to demonstrate common web vulnerabilities (such as XSS, Injection, and Insecure Direct Object References) and their mitigation strategies. This tool is intended for students and professionals preparing for certifications like CISA, ISRM, and penetration testing practice.
 
-🚀 Project Overview
+## 📂 Project Structure
+The current file structure of the project is organized as follows:
 
-Objective: To allow developers and security beginners to directly attack vulnerabilities in a realistic environment and visually experience the difference when defense code is applied.
+```text
+web-vuln-sim/
+├── index.html            # Main entry point (Login & Dashboard)
+├── styles.css            # Global stylesheets and layout
+├── firebase-config.js    # Firebase SDK initialization and configuration logic
+├── README.md             # Project documentation
+└── .gitignore            # Git ignore rules
 
-Tech Stack:
+🚀 Features
+User Authentication: Secure sign-up and login using Firebase Authentication.
 
-Frontend: HTML, CSS, JavaScript (Firebase Hosting)
+Real-time Database: CRUD operations (Create, Read, Update, Delete) using Cloud Firestore.
 
-Backend: Node.js (Firebase Cloud Functions)
+Vulnerability Labs:
 
-Platform: Firebase (Serverless Architecture)
+Simulation of web vulnerabilities (e.g., XSS, Broken Access Control).
 
-🎯 Implemented Vulnerability Scenarios (7 Types)
+Secure coding practice environment.
 
-This simulator covers 7 major vulnerabilities selected based on KISA's (Korea Internet & Security Agency) Software Development Security Guide and OWASP Top 10.
+Responsive Design: Simple and accessible UI for testing.
 
-HTTP Response Splitting
+🛠️ Prerequisites
+Before you begin, ensure you have the following:
 
-Scenario: Practice header splitting and cookie manipulation that occur when user input is included in response headers (e.g., Cookie) without validation.
+A modern web browser (Chrome, Edge, etc.)
 
-Cross-Site Scripting (Reflected XSS)
+A Google Account (to access Firebase Console)
 
-Scenario: Practice DOM-based XSS attacks where scripts are executed in bulletin boards or search bars, and defense using textContent.
+Git or GitHub Desktop installed
 
-Path Traversal
+⚙️ Installation & Setup Guide
+Step 1: Clone the Repository
+Clone this repository to your local machine using Git or GitHub Desktop.
 
-Scenario: Practice attacks accessing sensitive system files (e.g., /etc/passwd) using ../ characters in file download/view functions.
+git clone [https://github.com/byungjoohwang-1/web-vuln-sim.git](https://github.com/byungjoohwang-1/web-vuln-sim.git)
 
-SQL Injection
+Step 2: Set up Firebase Project
+Since this project relies on Firebase, you must create your own Firebase project.
 
-Scenario: Practice authentication bypass by hijacking an administrator account using the ' OR '1'='1 pattern in a login window.
+Go to the Firebase Console.
 
-Code Injection
+Click "Add project" and follow the instructions to create a new project (e.g., my-security-lab).
 
-Scenario: Practice attacks where system commands or arbitrary code are executed due to the misuse of the eval() function in a calculator feature.
+Once the project is ready, click the Web icon (</>) to register an app.
 
-Insecure Direct Object References (IDOR)
+Enter an app nickname (e.g., WebSimulator) and click Register app.
 
-Scenario: Practice unauthorized viewing of others' order history or personal information simply by manipulating URL parameters due to insufficient authorization checks.
+You will see a code snippet containing firebaseConfig. Copy this code block.
 
-OS Command Injection
+Step 3: Enable Firebase Services
+You need to enable Authentication and Firestore in the console for the code to work.
 
-Scenario: Practice attacks executing system commands like ls using ; characters in a Ping test tool.
+Authentication:
 
-🛠️ Installation & Execution Guide
+Go to Build > Authentication in the sidebar.
 
-Follow these steps to run this project locally or deploy it directly.
+Click Get Started.
 
-1. Prerequisites
+Select Email/Password as the Sign-in provider and Enable it.
 
-Node.js installed (LTS version recommended)
+Firestore Database:
 
-Firebase CLI installed: npm install -g firebase-tools
+Go to Build > Firestore Database.
 
-Firebase Account and a Blaze Plan (Pay-as-you-go) project (Required for Cloud Functions)
+Click Create Database.
 
-2. Project Setup
+Start in Test mode (for development) or Production mode (requires setting security rules).
 
-Clone the repository.
+Step 4: Configure the Code
+Open the firebase-config.js file in your code editor (VS Code, Notepad, etc.).
 
-git clone [https://github.com/YOUR_USERNAME/web-vuln-sim.git](https://github.com/YOUR_USERNAME/web-vuln-sim.git)
-cd web-vuln-sim
+Paste the firebaseConfig object you copied in Step 2. It should look like this:
 
+// firebase-config.js
 
-Initialize and connect the Firebase project.
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "[https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js](https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js)";
+// TODO: Add SDKs for Firebase products that you want to use
+// [https://firebase.google.com/docs/web/setup#available-libraries](https://firebase.google.com/docs/web/setup#available-libraries)
 
-firebase login
-firebase init
-# Select Functions, Hosting -> Select Existing Project
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY_HERE",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-Modify the configuration file (public/config.js).
+Step 5: Run the Simulator
+Simply open index.html in your web browser. You can now test the signup and login features connected to your own Firebase backend.
 
-// Change to your Firebase Project ID
-const PROJECT_ID = "YOUR_PROJECT_ID"; 
-const REGION = "us-central1"; 
-const BASE_URL = `https://${REGION}-${PROJECT_ID}.cloudfunctions.net`;
+⚠️ Disclaimer
+This tool is created strictly for educational and authorized testing purposes only. Any misuse of the techniques demonstrated in this project on unauthorized systems is illegal and punishable by law. The author assumes no responsibility for any misuse or damage caused by this program.
 
-
-3. Deploy
-
-Deploy the code to the Firebase server.
-
-firebase deploy
-
-
-Once deployment is complete, access the Hosting URL displayed in the terminal to start the simulation.
-
-📂 File Structure
-
-/
-├── functions/          # Backend (Cloud Functions)
-│   └── index.js        # Implementation of vulnerability and defense logic (Core)
-└── public/             # Frontend (Hosting)
-    ├── config.js       # Project configuration file
-    ├── index.html      # Main Menu
-    ├── sim-split.html  # 1. HTTP Response Splitting
-    ├── sim-xss.html    # 2. XSS
-    ├── sim-path.html   # 3. Path Traversal
-    ├── sim-sql.html    # 4. SQL Injection
-    ├── sim-code.html   # 5. Code Injection
-    ├── sim-idor.html   # 6. IDOR
-    └── sim-cmd.html    # 7. OS Command Injection
+Contact: Copyright 2025 jackhwang0210@gmail.com
