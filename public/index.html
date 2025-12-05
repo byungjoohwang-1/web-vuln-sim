@@ -13,6 +13,9 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
         iframe { width: 100%; height: 100%; border: none; }
+        .sidebar-scroll::-webkit-scrollbar { width: 5px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: #0f172a; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen flex overflow-hidden">
@@ -24,13 +27,14 @@
             <i class="fas fa-shield-halved text-emerald-400 text-2xl"></i>
             <div>
                 <h1 class="font-bold text-white text-lg tracking-tight leading-none">SecSim</h1>
-                <span class="text-xs text-slate-500">Firebase Edition</span>
+                <span class="text-xs text-slate-500">Full Version (12 Modules)</span>
             </div>
         </div>
         
         <!-- Menu Items -->
-        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1 sidebar-scroll">
             
+            <!-- Injection Section -->
             <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-2 px-3">Injection</div>
             <button onclick="loadSim('sim-sql.html', 'SQL Injection', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
                 <i class="fas fa-database w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
@@ -40,7 +44,12 @@
                 <i class="fas fa-terminal w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
                 <span>Command Injection</span>
             </button>
+            <button onclick="loadSim('sim-xxe.html', 'XXE Injection', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
+                <i class="fas fa-file-code w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
+                <span>XXE Injection</span>
+            </button>
 
+            <!-- Client Side Section -->
             <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-3">Client Side</div>
             <button onclick="loadSim('sim-xss.html', 'XSS (Reflected)', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
                 <i class="fas fa-code w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
@@ -51,6 +60,7 @@
                 <span>CSRF Attack</span>
             </button>
             
+            <!-- Server Logic Section -->
             <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-3">Server Logic</div>
             <button onclick="loadSim('sim-upload.html', 'File Upload', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
                 <i class="fas fa-file-upload w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
@@ -60,13 +70,16 @@
                 <i class="fas fa-folder-open w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
                 <span>Path Traversal</span>
             </button>
-            <button onclick="loadSim('sim-ssrf.html', 'SSRF', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group relative overflow-hidden">
-                <div class="absolute left-0 top-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <button onclick="loadSim('sim-ssrf.html', 'SSRF', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
                 <i class="fas fa-network-wired w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
                 <span>SSRF</span>
-                <span class="ml-auto text-[10px] bg-emerald-500 text-slate-900 px-1.5 py-0.5 rounded font-bold">NEW</span>
+            </button>
+            <button onclick="loadSim('sim-split.html', 'HTTP Splitting', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
+                <i class="fas fa-columns w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
+                <span>HTTP Splitting</span>
             </button>
 
+            <!-- Access Control Section -->
             <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-3">Access Control</div>
             <button onclick="loadSim('sim-brute.html', 'Brute Force', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
                 <i class="fas fa-unlock w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
@@ -77,6 +90,7 @@
                 <span>IDOR</span>
             </button>
             
+            <!-- Utils Section -->
             <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-3">Utils</div>
             <button onclick="loadSim('sim-code.html', 'Code Viewer', this)" class="nav-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all flex items-center gap-3 group">
                 <i class="fas fa-file-code w-5 text-center group-hover:text-emerald-400 transition-colors"></i> 
@@ -98,48 +112,41 @@
                 <i class="fas fa-home text-slate-400"></i> Dashboard
             </h2>
             <div class="flex items-center gap-3">
-                <span class="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Sandbox Env</span>
+                <span class="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    <i class="fas fa-server mr-1"></i> Sandbox Env
+                </span>
             </div>
         </header>
 
         <!-- Iframe Container -->
         <div class="flex-1 relative bg-slate-50 overflow-hidden">
             <!-- Loading Indicator -->
-            <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white z-0 hidden">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+            <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white z-20 hidden">
+                <div class="flex flex-col items-center">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mb-2"></div>
+                    <span class="text-sm text-slate-500">Loading module...</span>
+                </div>
             </div>
             
             <!-- Content Iframe -->
-            <!-- Fixed: Removed onload="hideLoader()" from HTML to prevent ReferenceError -->
-            <iframe id="main-frame" src="about:blank" class="w-full h-full"></iframe>
+            <iframe id="main-frame" src="about:blank" class="w-full h-full z-0"></iframe>
             
             <!-- Default Welcome Screen (Initial State) -->
             <div id="welcome-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-400 z-10">
-                <i class="fas fa-shield-virus text-6xl mb-4 text-slate-300"></i>
-                <h3 class="text-xl font-bold text-slate-600">Web Vulnerability Simulator</h3>
-                <p class="mt-2 text-sm">좌측 메뉴에서 실습할 모듈을 선택하세요.</p>
-                <div class="mt-8 grid grid-cols-3 gap-4 text-center text-xs">
-                   <div class="p-3 bg-white rounded shadow-sm border border-slate-200">
-                       <i class="fas fa-database mb-2 text-blue-400 block text-lg"></i> SQL Injection
-                   </div>
-                   <div class="p-3 bg-white rounded shadow-sm border border-slate-200">
-                       <i class="fas fa-network-wired mb-2 text-emerald-400 block text-lg"></i> SSRF (New)
-                   </div>
-                   <div class="p-3 bg-white rounded shadow-sm border border-slate-200">
-                       <i class="fas fa-bug mb-2 text-red-400 block text-lg"></i> XSS
-                   </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center max-w-lg">
+                    <i class="fas fa-shield-virus text-6xl mb-4 text-emerald-500 opacity-80"></i>
+                    <h3 class="text-2xl font-bold text-slate-700">Web Vulnerability Simulator</h3>
+                    <p class="mt-2 text-slate-500">좌측 메뉴에서 실습할 취약점 모듈을 선택하세요.</p>
+                    <p class="mt-4 text-xs font-mono bg-slate-100 p-2 rounded text-slate-500">Loaded 12 Modules</p>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // Define functions globally
         function hideLoader() {
             const loader = document.getElementById('loader');
-            if (loader) {
-                loader.classList.add('hidden');
-            }
+            if (loader) loader.classList.add('hidden');
         }
 
         function loadSim(filename, title, element) {
@@ -148,57 +155,47 @@
             const headerTitle = document.getElementById('current-title');
             const loader = document.getElementById('loader');
 
-            // 1. UI Update
-            if (welcome) welcome.classList.add('hidden'); // Hide welcome screen
-            if (loader) loader.classList.remove('hidden'); // Show loader
+            // 1. UI Reset & Loading State
+            if (welcome) welcome.classList.add('hidden'); 
+            if (loader) loader.classList.remove('hidden');
             if (headerTitle) headerTitle.innerText = title;
 
-            // 2. Active Class Handling
-            // Use 'element' if passed (from click), otherwise search by filename
+            // 2. Active Menu Highlighting
             document.querySelectorAll('.nav-item').forEach(el => {
                 el.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
                 el.classList.add('hover:bg-slate-800', 'hover:text-white');
+                const icon = el.querySelector('i');
+                if(icon) icon.classList.add('group-hover:text-emerald-400');
             });
             
             let activeBtn = element;
             if (!activeBtn) {
-                // Find button by onclick content if not passed directly
                 activeBtn = document.querySelector(`button[onclick*="'${filename}'"]`);
             }
 
             if (activeBtn) {
                 activeBtn.classList.remove('hover:bg-slate-800');
                 activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
+                const icon = activeBtn.querySelector('i');
+                if(icon) icon.classList.remove('group-hover:text-emerald-400');
             }
 
-            // 3. Load File
+            // 3. Load Iframe
             if (frame) {
                 frame.src = filename;
             }
         }
 
-        // Initialize setup
         document.addEventListener('DOMContentLoaded', () => {
             const frame = document.getElementById('main-frame');
-            
-            // Attach onload listener via JS to avoid ReferenceError
             if (frame) {
                 frame.addEventListener('load', hideLoader);
             }
-
-            // Check URL params for deep linking
             const params = new URLSearchParams(window.location.search);
             const mod = params.get('mod');
             if(mod) {
-                // Find and click the button corresponding to the module
-                // We assume the button's onclick contains the filename
                 const btn = document.querySelector(`button[onclick*="${mod}"]`);
-                if(btn) {
-                    btn.click();
-                } else {
-                    // Fallback if button not found but we want to load it
-                    loadSim(mod, 'Module', null);
-                }
+                if(btn) btn.click();
             }
         });
     </script>

@@ -1,90 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTTP Response Splitting</title>
-    <script src="config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; }
-        button { padding: 8px 16px; cursor: pointer; }
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; list-style: none; }
-        summary:hover { background-color: #f0f0f0; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; margin: 0; border-radius: 0 0 5px 5px; }
-        code { font-family: monospace; }
-        .comment { color: #999; }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>HTTP 응답 분할 (HTTP Response Splitting)</h1>
-    
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 외부 입력값에 개행문자(CR, LF)가 포함되면 HTTP 응답이 2개 이상으로 분리될 수 있으며, 이를 통해 XSS나 캐시 훼손 공격이 가능합니다.</p>
-        <p><strong>[EN]</strong> If external input contains CRLF characters, the HTTP response can be split, enabling XSS or Cache Poisoning attacks.</p>
-    </div>
-    
-    <div class="container">
-        <div class="box vuln">
-            <h2>🚫 취약한 모드 (Vulnerable)</h2>
-            <p>공격: <code>%0d%0a</code> (CRLF) 사용</p>
-            <input type="text" id="vulnInput" value="guest%0d%0aSet-Cookie:Hacked=true">
-            <button onclick="runTest('vulnerableSplit', 'vulnInput')">Run Attack</button>
-        </div>
+<body class="bg-slate-50 p-8 h-screen flex flex-col">
 
-        <div class="box secure">
-            <h2>✅ 안전한 모드 (Secure)</h2>
-            <p>방어: 개행문자 제거 (Remove CRLF)</p>
-            <input type="text" id="secureInput" value="guest%0d%0aSet-Cookie:Hacked=true">
-            <button onclick="runTest('secureSplit', 'secureInput')">Run Secure</button>
+    <div class="mb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                <i class="fas fa-columns text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800">HTTP Response Splitting (CRLF Injection)</h1>
         </div>
+        <p class="text-slate-500 text-sm">
+            입력값에 개행 문자(\r\n)를 삽입하여 HTTP 응답 헤더를 조작하거나, 응답을 두 개로 쪼개어 악성 콘텐츠를 주입하는 공격입니다.
+        </p>
     </div>
 
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
-        <details open>
-            <summary>🐍 Python (Django/Flask)</summary>
-            <pre><code><span class="comment"># [KR] 헤더, 쿠키 등에 사용되는 입력값에서 개행문자를 제거해야 한다.</span>
-<span class="comment"># [EN] Remove CRLF characters from inputs used in headers or cookies.</span>
-
-def secure_view(request):
-    user_input = request.GET.get('next')
-    
-    if user_input:
-        <span class="comment"># [KR] CR(\r), LF(\n) 문자를 공백으로 치환하거나 제거</span>
-        <span class="comment"># [EN] Replace CR(\r), LF(\n) with empty string</span>
-        safe_input = user_input.replace('\r', '').replace('\n', '')
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         
-        response['Location'] = safe_input
-        return response</code></pre>
-        </details>
+        <!-- Input Area -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="font-bold text-lg mb-4 text-slate-700">언어 설정 변경</h3>
+            <p class="text-sm text-slate-500 mb-4">선택한 언어는 <code>Set-Cookie: lang=...</code> 헤더로 설정됩니다.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Language Code</label>
+                    <input type="text" id="lang-input" class="w-full p-2 border border-slate-300 rounded code-font text-sm" value="en-US">
+                </div>
+                
+                <button onclick="simSplit()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded transition">
+                    설정 저장
+                </button>
+            </div>
 
-        <details>
-            <summary>☕ Java (JSP/Servlet)</summary>
-            <pre><code><span class="comment">// [KR] 외부 입력값에서 개행문자(\r, \n)를 제거한 후 사용한다.</span>
-<span class="comment">// [EN] Use external input after removing newline characters.</span>
+            <div class="mt-6 p-4 bg-slate-100 rounded text-sm">
+                <p class="font-bold text-slate-600 mb-2">Attack Scenario:</p>
+                <p class="text-slate-500 mb-2">공격자는 개행 문자(CRLF)를 넣어 임의의 헤더를 추가할 수 있습니다.</p>
+                <div class="bg-white p-2 border border-slate-300 rounded cursor-pointer hover:bg-purple-50 transition" onclick="setPayload()">
+                    <code class="text-purple-600 text-xs break-all">en%0d%0aSet-Cookie: session_id=HACKED</code>
+                    <div class="text-[10px] text-slate-400 mt-1 text-right">클릭하여 payload 입력</div>
+                </div>
+            </div>
+        </div>
 
-String input = request.getParameter("id");
-if (input != null) {
-    <span class="comment">// replaceAll을 사용하여 개행 문자 제거</span>
-    String safeInput = input.replaceAll("\\r", "").replaceAll("\\n", "");
-    response.setHeader("Set-Cookie", "USER=" + safeInput);
-}</code></pre>
-        </details>
+        <!-- Result / Server Header View -->
+        <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 relative overflow-hidden">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                <span class="text-slate-400 font-mono text-xs">Server Response Headers</span>
+            </div>
+
+            <pre id="header-output" class="font-mono text-sm text-green-400 leading-6 min-h-[200px]">HTTP/1.1 200 OK
+Content-Type: text/html
+Set-Cookie: lang=en-US
+Content-Length: 1024
+
+(Body content...)</pre>
+
+            <!-- Hacked Badge -->
+            <div id="hacked-badge" class="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold hidden animate-pulse">
+                HEADER INJECTED
+            </div>
+        </div>
     </div>
 
     <script>
-        function runTest(funcName, inputId) {
-            const inputVal = document.getElementById(inputId).value;
-            const url = `${BASE_URL}/${funcName}?input=${inputVal}`;
-            window.open(url, '_blank');
+        function setPayload() {
+            document.getElementById('lang-input').value = "en\r\nSet-Cookie: session_id=HACKED";
+        }
+
+        function simSplit() {
+            const input = document.getElementById('lang-input').value;
+            const output = document.getElementById('header-output');
+            const badge = document.getElementById('hacked-badge');
+            
+            // Simulation Logic
+            let headers = `HTTP/1.1 200 OK\nContent-Type: text/html\nSet-Cookie: lang=${input}\nContent-Length: 1024\n\n(Body content...)`;
+            
+            // CRLF detection logic for visualization
+            if (input.includes('\r\n') || input.includes('%0d%0a')) {
+                // Visualize the split
+                const cleanInput = input.replace(/%0d%0a/g, '\n').replace(/\r\n/g, '\n');
+                
+                let injectedHeaders = `HTTP/1.1 200 OK\nContent-Type: text/html\nSet-Cookie: lang=${cleanInput}\nContent-Length: 1024\n\n(Body content...)`;
+                
+                // Highlight injected part
+                let highlighted = injectedHeaders.replace(
+                    /Set-Cookie: session_id=HACKED/g, 
+                    '<span class="text-red-500 font-bold bg-red-900/30">Set-Cookie: session_id=HACKED</span>'
+                );
+
+                output.innerHTML = highlighted;
+                badge.classList.remove('hidden');
+            } else {
+                output.innerText = headers;
+                badge.classList.add('hidden');
+            }
         }
     </script>
 </body>
