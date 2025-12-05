@@ -1,100 +1,294 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>OS Command Injection Simulation</title>
-    <script src="config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Command Injection Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
-        button { padding: 8px 16px; cursor: pointer; }
+        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f0f9ff; }
+        .font-comic { font-family: 'Jua', sans-serif; }
+
+        /* Animation Keyframes */
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
-        .comment { color: #999; }
+        .animate-slide { animation: slideIn 0.5s ease-out; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .conveyor-belt {
+            background: repeating-linear-gradient(90deg, #334155 0, #334155 20px, #475569 20px, #475569 40px);
+            background-size: 40px 100%;
+            animation: moveBelt 1s linear infinite;
+        }
+        @keyframes moveBelt { from { background-position: 0 0; } to { background-position: 40px 0; } }
+        .paused { animation-play-state: paused; }
+
+        /* Custom Card Styles */
+        .cmd-card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>💻 운영체제 명령어 삽입 (OS Command Injection)</h1>
+<body class="p-4 md:p-8 h-screen overflow-y-auto">
 
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 외부 입력값을 시스템 명령어의 일부로 사용할 때, <code>;</code>, <code>|</code>, <code>&</code> 같은 구분자를 이용해 악의적인 명령어를 추가로 실행하는 공격입니다.</p>
-        <p><strong>[EN]</strong> An attack that executes arbitrary system commands by injecting shell metacharacters (e.g., ; | &) into inputs used in OS commands.</p>
-    </div>
-    
-    <div class="container">
-        <!-- 취약한 모드 -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드</h2>
-            <p>기능: Ping 테스트</p>
-            <p>[KR] 공격: <code>8.8.8.8; ls -al</code> 입력 (파일 목록 훔쳐보기)</p>
-            <input type="text" id="vulnInput" value="8.8.8.8; ls -al">
-            <button onclick="runTest('vulnerableCmd', 'vulnInput')">Run Attack</button>
-        </div>
-
-        <!-- 안전한 모드 -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드</h2>
-            <p>[KR] 방어: 입력값 패턴(IP주소) 검증</p>
-            <p>[EN] Defense: Validate Input Pattern (Allow IP only)</p>
-            <input type="text" id="secureInput" value="8.8.8.8; ls -al">
-            <button onclick="runTest('secureCmd', 'secureInput')">Run Secure</button>
-        </div>
-    </div>
-
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드</h2>
+    <div class="max-w-5xl mx-auto space-y-8">
         
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python</summary>
-            <pre><code><span class="comment"># [KR] shell=True 옵션을 사용하지 않고, 입력값을 리스트로 분리하여 전달한다.</span>
-<span class="comment"># [EN] Do not use shell=True, pass arguments as a list.</span>
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl md:text-4xl font-comic text-indigo-600 mb-2">
+                <i class="fa-solid fa-robot"></i> 서버 로봇의 하루 (Command Injection)
+            </h1>
+            <p class="text-slate-600">명령어 주입 공격이 어떻게 서버를 속이는지 확인해보세요!</p>
+        </div>
 
-import subprocess
+        <!-- 1. Controller (Input) -->
+        <div class="bg-white p-6 rounded-3xl shadow-xl border-4 border-indigo-100 relative z-10">
+            <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-indigo-500 text-white px-6 py-1 rounded-full font-bold text-sm shadow-md">
+                STEP 1. 명령 내리기
+            </div>
 
-ip = request.POST.get('ip')
+            <div class="flex flex-col md:flex-row gap-6 items-center">
+                <div class="flex-1 w-full">
+                    <label class="block text-slate-500 font-bold mb-2">웹사이트 입력창 (Ping 테스트)</label>
+                    <div class="relative">
+                        <input type="text" id="userInput" 
+                               class="w-full p-4 border-2 border-slate-300 rounded-2xl text-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition font-mono"
+                               placeholder="IP 주소를 입력하세요 (예: 8.8.8.8)"
+                               onkeyup="updatePreview()">
+                        <i class="fa-solid fa-keyboard absolute right-4 top-5 text-slate-400"></i>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        <button onclick="setScenario('normal')" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg text-sm font-bold transition">
+                            <i class="fa-regular fa-circle-check"></i> 정상 요청
+                        </button>
+                        <button onclick="setScenario('attack')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold transition">
+                            <i class="fa-solid fa-skull"></i> 해킹 요청 (; ls)
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="hidden md:block text-4xl text-slate-300">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
 
-<span class="comment"># ❌ 취약 (Vulnerable): 쉘에서 문자열로 실행</span>
-<span class="comment"># subprocess.call("ping -c 1 " + ip, shell=True)</span>
+                <!-- Preview Box -->
+                <div class="w-full md:w-1/3 bg-slate-800 text-white p-4 rounded-xl font-mono text-sm shadow-inner">
+                    <div class="text-slate-400 text-xs mb-1">서버가 해석한 최종 명령어:</div>
+                    <div id="serverCmdPreview" class="text-yellow-400 font-bold break-all">
+                        ping -c 3 <span class="opacity-50">...</span>
+                    </div>
+                </div>
+            </div>
 
-<span class="comment"># ✅ 안전 (Secure): 실행 파일과 인자를 분리</span>
-subprocess.call(["ping", "-c", "1", ip])</code></pre>
-        </details>
+            <div class="mt-6 text-center">
+                <button onclick="runAnimation()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg px-8 py-3 rounded-full font-bold shadow-lg transform transition active:scale-95">
+                    <i class="fa-solid fa-play"></i> 실행하기
+                </button>
+            </div>
+        </div>
 
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java</summary>
-            <pre><code><span class="comment">// [KR] Runtime.exec() 사용 시 문자열 하나로 전달하지 말고 배열로 전달한다.</span>
-<span class="comment">// [EN] Pass command and arguments as an array to Runtime.exec().</span>
+        <!-- 2. Visualization Stage (The Server Robot) -->
+        <div class="bg-white p-2 md:p-8 rounded-3xl shadow-xl border-4 border-slate-200 min-h-[400px] relative overflow-hidden">
+            <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-slate-600 text-white px-6 py-1 rounded-full font-bold text-sm shadow-md z-10">
+                STEP 2. 서버 내부 처리 과정
+            </div>
 
-String ip = request.getParameter("ip");
+            <!-- Background Elements -->
+            <div class="absolute bottom-0 left-0 w-full h-4 bg-slate-300 z-0"></div> <!-- Floor -->
+            <div class="absolute top-20 right-10 opacity-20 text-9xl text-slate-300">
+                <i class="fa-solid fa-server"></i>
+            </div>
 
-<span class="comment">// ❌ 취약 (Vulnerable)</span>
-<span class="comment">// Runtime.getRuntime().exec("ping " + ip);</span>
+            <!-- Scene Container -->
+            <div class="relative z-10 h-full flex flex-col justify-center items-center py-10" id="sceneContainer">
+                
+                <!-- Initial State Message -->
+                <div id="idleState" class="text-center text-slate-400">
+                    <i class="fa-solid fa-robot text-6xl mb-4 animate-bounce"></i>
+                    <p class="text-xl">명령을 기다리고 있습니다...</p>
+                </div>
 
-<span class="comment">// ✅ 안전 (Secure): 명령어와 인자를 분리</span>
-String[] cmd = new String[] { "/bin/ping", "-c", "1", ip };
-Runtime.getRuntime().exec(cmd);</code></pre>
-        </details>
+                <!-- Animation Actors (Hidden by default) -->
+                <div id="animationStage" class="hidden w-full flex flex-col items-center gap-8">
+                    
+                    <!-- 1. The Command Packet -->
+                    <div id="packet" class="flex gap-2 transition-all duration-1000 transform translate-x-[-100vw]">
+                        <!-- Legitimate Command -->
+                        <div class="bg-green-500 text-white p-3 rounded-lg shadow-lg flex items-center gap-2">
+                            <i class="fa-solid fa-network-wired"></i>
+                            <span class="font-bold">PING (8.8.8.8)</span>
+                        </div>
+                        <!-- Malicious Command (Hidden initially) -->
+                        <div id="maliciousPacket" class="hidden bg-red-600 text-white p-3 rounded-lg shadow-lg flex items-center gap-2 animate-shake">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span class="font-bold">파일 훔쳐보기 (ls)</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. The Server Robot -->
+                    <div class="relative">
+                        <div id="robot" class="text-8xl text-slate-700 transition-transform duration-500">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <!-- Speech Bubble -->
+                        <div id="robotSpeech" class="absolute -top-16 -right-20 bg-white border-2 border-slate-300 p-3 rounded-xl rounded-bl-none shadow-md hidden animate-pop whitespace-nowrap z-20">
+                            <p class="text-sm font-bold text-slate-700" id="robotText">처리 중...</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. Output Area -->
+                    <div id="outputArea" class="w-full max-w-2xl bg-slate-900 text-green-400 p-4 rounded-xl font-mono text-sm min-h-[120px] shadow-inner opacity-0 transition-opacity duration-500">
+                        <div class="border-b border-slate-700 pb-2 mb-2 text-slate-400 text-xs">TERMINAL OUTPUT</div>
+                        <div id="terminalLines" class="space-y-1"></div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 3. Explanation -->
+        <div id="explanationBox" class="hidden bg-yellow-50 border-l-8 border-yellow-400 p-6 rounded-r-xl shadow-md animate-slide">
+            <h3 class="text-xl font-bold text-yellow-800 mb-2">
+                <i class="fa-solid fa-lightbulb"></i> 왜 이런 일이 일어났나요?
+            </h3>
+            <p class="text-yellow-900 mb-4">
+                개발자는 로봇에게 <b>"Ping 명령어 뒤에 입력값을 붙여서 실행해!"</b>라고 시켰습니다.<br>
+                하지만 <code>; (세미콜론)</code>이 <b>"명령어 구분자"</b>라는 것을 잊어버렸네요.
+            </p>
+            <div class="bg-white p-4 rounded-lg border border-yellow-200 font-mono text-sm text-slate-700">
+                <span class="text-slate-400">// 실제 서버 코드 예시</span><br>
+                system("ping " + <span class="text-red-500 font-bold">input</span>);<br><br>
+                <span class="text-slate-400">// 공격자가 "8.8.8.8; ls"를 입력하면?</span><br>
+                system("ping 8.8.8.8<span class="text-red-600 font-bold">; ls</span>"); <span class="text-blue-600 font-bold"><- 두 개의 명령어가 됨!</span>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        function runTest(funcName, inputId) {
-            const inputVal = document.getElementById(inputId).value;
-            // 세미콜론 등 특수문자 전송을 위해 인코딩
-            const encodedInput = encodeURIComponent(inputVal);
-            const url = `${BASE_URL}/${funcName}?ip=${encodedInput}`;
-            window.open(url, '_blank');
+        // Update Preview Text
+        function updatePreview() {
+            const input = document.getElementById('userInput').value;
+            const preview = document.getElementById('serverCmdPreview');
+            
+            if (!input) {
+                preview.innerHTML = 'ping -c 3 <span class="opacity-50">...</span>';
+                return;
+            }
+
+            // Syntax Highlighting for Visual Aid
+            let formatted = input
+                .replace(/;/g, '<span class="text-red-500 bg-red-900/50 px-1 rounded mx-1 text-lg">;</span>')
+                .replace(/ls/g, '<span class="text-red-400 font-bold underline">ls</span>');
+
+            preview.innerHTML = `ping -c 3 ${formatted}`;
         }
+
+        // Preset Scenarios
+        function setScenario(type) {
+            const input = document.getElementById('userInput');
+            if (type === 'normal') {
+                input.value = '8.8.8.8';
+            } else {
+                input.value = '8.8.8.8; ls';
+            }
+            updatePreview();
+        }
+
+        // Main Animation Logic
+        function runAnimation() {
+            const input = document.getElementById('userInput').value;
+            if(!input) { alert("IP 주소를 입력해주세요!"); return; }
+
+            const isAttack = input.includes(';');
+
+            // Reset UI
+            document.getElementById('idleState').classList.add('hidden');
+            document.getElementById('animationStage').classList.remove('hidden');
+            document.getElementById('explanationBox').classList.add('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
+            document.getElementById('outputArea').classList.remove('opacity-100');
+            
+            // Reset Positions
+            const packet = document.getElementById('packet');
+            const malPacket = document.getElementById('maliciousPacket');
+            const robotSpeech = document.getElementById('robotSpeech');
+            const robotText = document.getElementById('robotText');
+
+            packet.style.transform = 'translateX(-100vw)';
+            robotSpeech.classList.add('hidden');
+
+            if (isAttack) {
+                malPacket.classList.remove('hidden');
+            } else {
+                malPacket.classList.add('hidden');
+            }
+
+            // Animation Sequence
+            // 1. Packet moves to Robot
+            setTimeout(() => {
+                packet.style.transform = 'translateX(0)';
+            }, 100);
+
+            // 2. Robot Receives Packet
+            setTimeout(() => {
+                robotSpeech.classList.remove('hidden');
+                robotText.innerText = "명령어 수신 완료!";
+                document.getElementById('robot').classList.add('text-indigo-600');
+            }, 1200);
+
+            // 3. Processing Task 1 (Ping)
+            setTimeout(() => {
+                robotText.innerText = "작업 1 실행: Ping...";
+                addLog("Ping 8.8.8.8 실행 중...", "text-green-400");
+                document.getElementById('outputArea').classList.add('opacity-100');
+            }, 2500);
+
+            // 4. If Attack, Processing Task 2
+            setTimeout(() => {
+                if (isAttack) {
+                    robotText.innerText = "어? 다음 명령이 있네?";
+                    document.getElementById('robot').classList.replace('text-indigo-600', 'text-red-600');
+                    // Shake animation for confusion
+                    document.getElementById('robot').classList.add('animate-shake');
+                    
+                    setTimeout(() => {
+                        robotText.innerText = "작업 2 실행: 파일 목록 조회 (ls)";
+                        document.getElementById('robot').classList.remove('animate-shake');
+                        addLog("!!! 경고 !!! 추가 명령어 실행 감지", "text-red-400 font-bold");
+                        addLog("root     bin     etc     home    var", "text-white mt-2");
+                        addLog("index.php  config.php  secret_db_pass.txt", "text-yellow-300");
+                        
+                        // Show Explanation Box
+                        setTimeout(() => {
+                            document.getElementById('explanationBox').classList.remove('hidden');
+                        }, 1000);
+                    }, 2000);
+
+                } else {
+                    robotText.innerText = "모든 작업 완료!";
+                    addLog("Ping 성공: 0% 손실", "text-green-400");
+                    document.getElementById('robot').classList.replace('text-indigo-600', 'text-slate-700');
+                }
+            }, 4500);
+        }
+
+        function addLog(text, classes) {
+            const div = document.createElement('div');
+            div.className = classes;
+            div.innerText = text;
+            document.getElementById('terminalLines').appendChild(div);
+        }
+
+        // Init
+        updatePreview();
     </script>
 </body>
 </html>
