@@ -436,3 +436,86 @@ exports.secureError = functions.https.onRequest((req, res) => {
         `);
     }
 });
+
+// ==============================================================
+// 9. 서버 사이드 요청 위조 (SSRF)
+// ==============================================================
+
+// 가상의 내부 시스템 데이터 (시뮬레이션용)
+const internalSystems = {
+    "http://localhost/admin": "🔑 [Secret] Admin Dashboard Data",
+    "http://127.0.0.1/config": "⚙️ [Secret] Database Password: pass1234",
+    "file:///etc/passwd": "root:x:0:0:root:/root:/bin/bash..."
+};
+
+// 🚫 취약한 코드 (Vulnerable Mode)
+// [KR] 사용자가 입력한 URL로 서버가 직접 요청을 보냄 (검증 없음)
+// [EN] Vulnerable: Server sends request to user-supplied URL without validation
+exports.vulnerableSSRF = functions.https.onRequest((req, res) => {
+    const targetUrl = req.query.url || "";
+
+    // [시뮬레이션] 실제 요청 대신, 내부 시스템 주소인지 확인하여 결과 반환
+    if (internalSystems[targetUrl]) {
+        res.status(200).send(`
+            <div style="border:2px solid red; padding:10px; background:#fff0f0;">
+                <h3>⚠️ [KR] SSRF 공격 성공! (Hacked)</h3>
+                <p>Target URL: <code>${targetUrl}</code></p>
+                <hr>
+                <strong>[Server Response]</strong><br>
+                <pre>${internalSystems[targetUrl]}</pre>
+                <p style="color:red;">[KR] 서버가 내부망(Localhost) 데이터에 접근하여 사용자에게 보여주었습니다.</p>
+            </div>
+        `);
+    } else if (targetUrl.startsWith("http")) {
+        res.status(200).send(`
+            <h3>🌐 외부 사이트 조회 성공</h3>
+            <p>URL: ${targetUrl}</p>
+            <p>[Preview] This is a preview of the external website...</p>
+        `);
+    } else {
+        res.status(400).send("Invalid URL");
+    }
+});
+
+// ✅ 안전한 코드 (Secure Mode)
+// [KR] 허용된 도메인(Allowlist)만 접속 가능하도록 제한
+// [EN] Secure: Restrict access to allowed domains (Allowlist) only
+exports.secureSSRF = functions.https.onRequest((req, res) => {
+    const targetUrl = req.query.url || "";
+
+    // [KR] 화이트리스트: 허용할 도메인 목록 정의
+    const allowedDomains = ["google.com", "naver.com", "example.com"];
+
+    try {
+        const parsedUrl = new URL(targetUrl);
+        
+        // 1. 프로토콜 검증 (http, https만 허용)
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            throw new Error("Disallowed protocol (file://, gopher:// etc.)");
+        }
+
+        // 2. 도메인 검증 (화이트리스트)
+        if (!allowedDomains.some(domain => parsedUrl.hostname.endsWith(domain))) {
+            throw new Error("Disallowed domain (Internal or malicious)");
+        }
+
+        res.status(200).send(`
+            <div style="border:2px solid green; padding:10px; background:#f0fff0;">
+                <h3>🛡️ [KR] 정상 요청 처리 (Secure)</h3>
+                <p>Target URL: ${targetUrl}</p>
+                <p>[Preview] Safe external content loaded.</p>
+            </div>
+        `);
+
+    } catch (error) {
+        res.status(403).send(`
+            <div style="border:2px solid green; padding:10px; background:#f0fff0;">
+                <h3>🛡️ [KR] 차단됨 (Blocked)</h3>
+                <p>Target URL: ${targetUrl}</p>
+                <hr>
+                <p style="color:red;">${error.message}</p>
+                <p>[KR] 허용되지 않은 도메인이거나 프로토콜입니다.</p>
+            </div>
+        `);
+    }
+});

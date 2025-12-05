@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SSRF Simulation</title>
+    <script src="config.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .vuln { background-color: #ffe6e6; }
+        .secure { background-color: #e6fffa; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 8px 16px; cursor: pointer; }
+        
+        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; }
+        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <a href="index.html">← Main Menu</a>
+    <h1>🌐 서버 사이드 요청 위조 (SSRF)</h1>
+
+    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
+        <h3>📘 취약점 개요 (Overview)</h3>
+        <p><strong>[KR]</strong> 공격자가 서버를 조종하여 서버가 권한을 가진 내부 시스템(Localhost)이나 외부의 임의 시스템에 요청을 보내게 만드는 공격입니다.</p>
+        <p><strong>[EN]</strong> An attack where the attacker induces the server to make requests to an unintended location (e.g., internal network).</p>
+    </div>
+    
+    <div class="container">
+        <!-- 취약한 모드 -->
+        <div class="box vuln">
+            <h2>🚫 취약한 모드</h2>
+            <p>기능: URL 미리보기</p>
+            <p>[KR] 공격: <code>http://localhost/admin</code> 입력 (내부망 접근)</p>
+            <input type="text" id="vulnInput" value="http://localhost/admin">
+            <button onclick="runTest('vulnerableSSRF', 'vulnInput')">Run Attack</button>
+        </div>
+
+        <!-- 안전한 모드 -->
+        <div class="box secure">
+            <h2>✅ 안전한 모드</h2>
+            <p>[KR] 방어: 도메인 화이트리스트(Allowlist) 검증</p>
+            <input type="text" id="secureInput" value="http://localhost/admin">
+            <button onclick="runTest('secureSSRF', 'secureInput')">Run Secure</button>
+        </div>
+    </div>
+
+    <div class="code-section">
+        <h2>📚 언어별 시큐어 코딩 가이드</h2>
+        
+        <!-- Python 예제 -->
+        <details>
+            <summary>🐍 Python (Requests)</summary>
+            <pre><code><span style="color:#999"># [KR] 입력된 URL의 호스트가 허용된 목록에 있는지 확인한다.</span>
+<span style="color:#999"># [EN] Verify that the URL host is in the allowed list.</span>
+
+from urllib.parse import urlparse
+
+url = request.args.get('url')
+parsed = urlparse(url)
+
+<span style="color:#999"># ✅ 안전: 화이트리스트 검증</span>
+if parsed.hostname not in ['google.com', 'example.com']:
+    return "Error: Invalid Domain"
+
+response = requests.get(url)</code></pre>
+        </details>
+
+        <!-- Java 예제 -->
+        <details>
+            <summary>☕ Java</summary>
+            <pre><code><span style="color:#999"># [KR] URL 클래스를 사용하여 프로토콜과 호스트를 검증한다.</span>
+<span style="color:#999"># [EN] Validate protocol and host using URL class.</span>
+
+URL url = new URL(inputUrl);
+
+<span style="color:#999"># ✅ 안전: 로컬 IP 대역 접근 차단</span>
+if (url.getHost().equals("127.0.0.1") || url.getHost().equals("localhost")) {
+    throw new SecurityException("Access to local network is denied.");
+}</code></pre>
+        </details>
+    </div>
+
+    <script>
+        function runTest(funcName, inputId) {
+            const inputVal = document.getElementById(inputId).value;
+            const encodedInput = encodeURIComponent(inputVal);
+            const url = `${BASE_URL}/${funcName}?url=${encodedInput}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
