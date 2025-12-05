@@ -1,95 +1,194 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SSRF Simulation</title>
-    <script src="config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
-        button { padding: 8px 16px; cursor: pointer; }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
         
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+        /* Terminal Styling */
+        .terminal-window {
+            background-color: #1e293b;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .terminal-header {
+            background-color: #0f172a;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .dot-red { background-color: #ef4444; }
+        .dot-yellow { background-color: #f59e0b; }
+        .dot-green { background-color: #22c55e; }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>🌐 서버 사이드 요청 위조 (SSRF)</h1>
+<body class="bg-white p-8">
 
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 공격자가 서버를 조종하여 서버가 권한을 가진 내부 시스템(Localhost)이나 외부의 임의 시스템에 요청을 보내게 만드는 공격입니다.</p>
-        <p><strong>[EN]</strong> An attack where the attacker induces the server to make requests to an unintended location (e.g., internal network).</p>
-    </div>
-    
-    <div class="container">
-        <!-- 취약한 모드 -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드</h2>
-            <p>기능: URL 미리보기</p>
-            <p>[KR] 공격: <code>http://localhost/admin</code> 입력 (내부망 접근)</p>
-            <input type="text" id="vulnInput" value="http://localhost/admin">
-            <button onclick="runTest('vulnerableSSRF', 'vulnInput')">Run Attack</button>
-        </div>
-
-        <!-- 안전한 모드 -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드</h2>
-            <p>[KR] 방어: 도메인 화이트리스트(Allowlist) 검증</p>
-            <input type="text" id="secureInput" value="http://localhost/admin">
-            <button onclick="runTest('secureSSRF', 'secureInput')">Run Secure</button>
-        </div>
-    </div>
-
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드</h2>
+    <div class="max-w-4xl mx-auto space-y-6">
         
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python (Requests)</summary>
-            <pre><code><span style="color:#999"># [KR] 입력된 URL의 호스트가 허용된 목록에 있는지 확인한다.</span>
-<span style="color:#999"># [EN] Verify that the URL host is in the allowed list.</span>
+        <!-- Header Section -->
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                    <i class="fas fa-network-wired text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">SSRF (Server-Side Request Forgery)</h1>
+            </div>
+            <p class="text-slate-500 text-sm">
+                공격자가 서버를 유도하여, 서버가 직접 내부 네트워크 리소스나 외부 시스템에 요청을 보내도록 조작하는 취약점입니다.
+            </p>
+        </div>
 
-from urllib.parse import urlparse
+        <!-- Simulation Interface -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-bold">이미지 프록시 서비스</h3>
+                    <p class="text-sm text-slate-500">이미지 URL을 입력하면 서버가 대신 다운로드하여 보여줍니다.</p>
+                </div>
+                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded font-bold">High Risk</span>
+            </div>
 
-url = request.args.get('url')
-parsed = urlparse(url)
+            <!-- Input Area -->
+            <div class="flex gap-2 mb-6">
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-mono text-sm">Target:</span>
+                    </div>
+                    <input type="text" id="ssrf-input" class="w-full pl-16 p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none code-font text-sm" value="https://example.com/image.png">
+                </div>
+                <button onclick="simSSRF()" class="bg-slate-800 text-white px-6 py-2 rounded hover:bg-slate-700 flex items-center gap-2 transition-colors">
+                    <i class="fas fa-bolt text-yellow-400"></i> Fetch
+                </button>
+            </div>
 
-<span style="color:#999"># ✅ 안전: 화이트리스트 검증</span>
-if parsed.hostname not in ['google.com', 'example.com']:
-    return "Error: Invalid Domain"
+            <!-- Scenario Hints -->
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition group" onclick="setPayload('http://localhost/admin')">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-emerald-700">Scenario 1: Internal Admin</span>
+                        <i class="fas fa-arrow-right text-slate-300 group-hover:text-emerald-500 text-xs"></i>
+                    </div>
+                    <code class="text-emerald-600 text-xs break-all bg-white px-1 py-0.5 rounded border border-slate-200">http://localhost/admin</code>
+                </div>
+                <div class="p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition group" onclick="setPayload('http://169.254.169.254/latest/meta-data/')">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-emerald-700">Scenario 2: AWS Metadata</span>
+                        <i class="fas fa-arrow-right text-slate-300 group-hover:text-emerald-500 text-xs"></i>
+                    </div>
+                    <code class="text-emerald-600 text-xs break-all bg-white px-1 py-0.5 rounded border border-slate-200">http://169.254.169.254/...</code>
+                </div>
+            </div>
 
-response = requests.get(url)</code></pre>
-        </details>
+            <!-- Result Terminal -->
+            <div class="terminal-window">
+                 <div class="terminal-header">
+                    <div class="flex items-center">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                        <span class="text-xs text-slate-400 font-mono ml-3">server_response.log</span>
+                    </div>
+                    <span id="ssrf-status" class="text-xs text-slate-500 font-mono">IDLE</span>
+                </div>
+                <div id="ssrf-result" class="p-4 code-font text-sm text-slate-300 min-h-[150px] overflow-auto whitespace-pre-wrap">Waiting for request...</div>
+            </div>
+        </div>
+        
+        <!-- Explanation Box -->
+        <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg flex gap-3">
+            <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+            <div class="text-sm text-blue-800">
+                <p class="font-bold mb-1">SSRF가 왜 위험한가요?</p>
+                <p>웹 서버는 방화벽 내부에 위치하여 내부망에 접근할 수 있는 권한(Privilege)을 가진 경우가 많습니다. 공격자는 SSRF를 통해 이 신뢰 관계를 악용하여 외부에서 접근할 수 없는 내부 시스템(DB, 관리자 페이지 등)을 스캔하거나 데이터를 탈취할 수 있습니다.</p>
+            </div>
+        </div>
 
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java</summary>
-            <pre><code><span style="color:#999"># [KR] URL 클래스를 사용하여 프로토콜과 호스트를 검증한다.</span>
-<span style="color:#999"># [EN] Validate protocol and host using URL class.</span>
-
-URL url = new URL(inputUrl);
-
-<span style="color:#999"># ✅ 안전: 로컬 IP 대역 접근 차단</span>
-if (url.getHost().equals("127.0.0.1") || url.getHost().equals("localhost")) {
-    throw new SecurityException("Access to local network is denied.");
-}</code></pre>
-        </details>
     </div>
 
     <script>
-        function runTest(funcName, inputId) {
-            const inputVal = document.getElementById(inputId).value;
-            const encodedInput = encodeURIComponent(inputVal);
-            const url = `${BASE_URL}/${funcName}?url=${encodedInput}`;
-            window.open(url, '_blank');
+        function setPayload(val) {
+            document.getElementById('ssrf-input').value = val;
+            // Add slight highlight effect
+            const input = document.getElementById('ssrf-input');
+            input.classList.add('bg-yellow-50');
+            setTimeout(() => input.classList.remove('bg-yellow-50'), 300);
+        }
+
+        function simSSRF() {
+            const url = document.getElementById('ssrf-input').value;
+            const resultBox = document.getElementById('ssrf-result');
+            const statusBox = document.getElementById('ssrf-status');
+            
+            // UI Loading State
+            resultBox.innerHTML = `<span class="text-yellow-400 animate-pulse">> Connecting to ${url}...</span>`;
+            statusBox.innerText = "FETCHING...";
+            statusBox.className = "text-xs text-yellow-500 font-mono font-bold animate-pulse";
+
+            setTimeout(() => {
+                let response = "";
+                let isCritical = false;
+
+                // --- Simulation Logic (Mocking Server Behavior) ---
+                
+                // 1. Localhost / Loopback Logic
+                if (url.includes('localhost') || url.includes('127.0.0.1')) {
+                    if (url.includes('admin')) {
+                        response = `HTTP/1.1 200 OK\nDate: Mon, 25 Oct 2024 10:00:00 GMT\nServer: Apache/2.4.41 (Ubuntu)\nContent-Type: text/html\n\n<html>\n<body>\n  <h1>🔐 Internal Admin Dashboard</h1>\n  <hr>\n  <p>Welcome, Administrator.</p>\n  <p><strong>Secret Key:</strong> SUPER_SECRET_ADMIN_KEY_1234</p>\n  <button>Restart Server</button>\n  <button>Delete Database</button>\n</body>\n</html>`;
+                        isCritical = true;
+                    } else {
+                        response = `HTTP/1.1 403 Forbidden\nServer: Internal-Gateway\n\nAccess to root is denied. Try /admin for dashboard.`;
+                    }
+                } 
+                // 2. AWS Metadata Service Logic
+                else if (url.includes('169.254.169.254')) { 
+                    response = `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\n  "instance-id": "i-0123456789abcdef0",\n  "ami-id": "ami-0abcdef1234567890",\n  "security-groups": "launch-wizard-1",\n  "iam": {\n    "security-credentials": {\n      "role-name": "s3-admin-role",\n      "AccessKeyId": "AKIAIOSFODNN7EXAMPLE",\n      "SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"\n    }\n  }\n}`;
+                    isCritical = true;
+                } 
+                // 3. Normal External URL
+                else if (url.startsWith('http')) {
+                    response = `HTTP/1.1 200 OK\nContent-Type: image/png\nContent-Length: 4502\n\n[Binary Image Data Omitted]\n(Successfully fetched external image)`;
+                } 
+                // 4. Invalid Protocol
+                else {
+                    response = `Error: Protocol not supported or Host unreachable.\nOnly HTTP/HTTPS protocols are allowed.`;
+                }
+
+                // --- Render Result ---
+                if(isCritical) {
+                    resultBox.innerHTML = `<span class="text-green-400 font-bold">[SUCCESS] Response received from internal service:</span>\n\n${escapeHtml(response)}`;
+                    statusBox.innerText = "200 OK (LEAKED)";
+                    statusBox.className = "text-xs text-red-500 font-mono font-bold";
+                } else if (response.startsWith("Error")) {
+                    resultBox.innerHTML = `<span class="text-red-400">${response}</span>`;
+                    statusBox.innerText = "ERROR";
+                    statusBox.className = "text-xs text-red-500 font-mono";
+                } else {
+                    resultBox.innerHTML = `<span class="text-slate-300">${escapeHtml(response)}</span>`;
+                    statusBox.innerText = "200 OK";
+                    statusBox.className = "text-xs text-green-500 font-mono";
+                }
+
+            }, 800); // 0.8s Simulated delay
+        }
+
+        // Helper to prevent inner HTML rendering of the 'response' code
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
