@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Vulnerability</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 p-8 h-screen flex flex-col">
+
+    <div class="mb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                <i class="fas fa-file-upload text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800">File Upload Vulnerability</h1>
+        </div>
+        <p class="text-slate-500 text-sm">
+            파일 확장자나 내용을 검증하지 않아 웹 쉘(Web Shell)과 같은 악성 스크립트 파일이 서버에 업로드되는 취약점입니다.
+        </p>
+    </div>
+
+    <div class="flex-1 flex flex-col md:flex-row gap-8">
+        
+        <!-- Upload Area -->
+        <div class="w-full md:w-1/2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="font-bold text-lg mb-6 text-slate-700">프로필 이미지 변경</h3>
+            
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center hover:bg-slate-50 transition-colors relative">
+                <i class="fas fa-cloud-upload-alt text-5xl text-slate-300 mb-4"></i>
+                <p class="text-slate-500 mb-6">업로드할 파일을 선택하세요</p>
+                
+                <!-- Simulated File Input -->
+                <div class="max-w-xs mx-auto space-y-3">
+                    <select id="file-select" class="w-full p-3 border border-slate-300 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="profile.jpg" data-type="image">📸 my_profile.jpg (정상 이미지)</option>
+                        <option value="webshell.php" data-type="malware">💀 exploit.php (웹 쉘 스크립트)</option>
+                        <option value="malware.exe" data-type="malware">💣 game_crack.exe (실행 파일)</option>
+                    </select>
+                    
+                    <button onclick="uploadFile()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fas fa-upload"></i> 업로드 시작
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 text-blue-800 text-sm rounded-lg">
+                <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Tip</p>
+                <p>일반적으로 서버는 <code>.jpg</code>, <code>.png</code> 등 이미지만 허용해야 합니다. 검증이 없을 경우 <code>.php</code> 파일을 올려 서버 명령어를 실행할 수 있습니다.</p>
+            </div>
+        </div>
+
+        <!-- Result Area -->
+        <div class="w-full md:w-1/2 bg-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 flex flex-col relative overflow-hidden">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                <span class="text-slate-400 font-mono text-xs">Server Logs</span>
+                <div class="flex gap-1.5">
+                    <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                </div>
+            </div>
+            
+            <div id="log-container" class="flex-1 font-mono text-sm space-y-2 overflow-y-auto max-h-[400px]">
+                <div class="text-slate-500">[SYSTEM] Server ready. Waiting for upload...</div>
+            </div>
+            
+            <!-- Hacked Overlay -->
+            <div id="hacked-overlay" class="absolute inset-0 bg-red-600/90 flex flex-col items-center justify-center z-10 hidden backdrop-blur-sm">
+                <i class="fas fa-biohazard text-6xl text-white mb-4 animate-pulse"></i>
+                <h2 class="text-3xl font-bold text-white mb-2">SERVER COMPROMISED</h2>
+                <p class="text-white text-center px-6">악성 스크립트(Web Shell)가 실행되었습니다.<br>공격자가 시스템 제어권을 획득했습니다.</p>
+                <button onclick="resetSim()" class="mt-8 bg-white text-red-600 px-6 py-2 rounded-full font-bold shadow-lg hover:bg-red-50">
+                    시스템 복구
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function uploadFile() {
+            const select = document.getElementById('file-select');
+            const file = select.value;
+            const type = select.options[select.selectedIndex].dataset.type;
+            const logs = document.getElementById('log-container');
+
+            // Log: Upload Start
+            addLog(`[UPLOAD] Receiving file: ${file}...`, 'text-blue-400');
+
+            setTimeout(() => {
+                if (type === 'image') {
+                    addLog(`[SUCCESS] File saved to /uploads/${file}`, 'text-green-400');
+                    addLog(`[INFO] Image processed successfully.`, 'text-slate-400');
+                } else {
+                    addLog(`[WARNING] Executable file detected: ${file}`, 'text-yellow-400');
+                    addLog(`[DANGER] Executing script content...`, 'text-red-500 font-bold');
+                    
+                    setTimeout(() => {
+                        document.getElementById('hacked-overlay').classList.remove('hidden');
+                    }, 1000);
+                }
+            }, 800);
+        }
+
+        function addLog(msg, colorClass = 'text-slate-300') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.innerText = `> ${msg}`;
+            const container = document.getElementById('log-container');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function resetSim() {
+            document.getElementById('hacked-overlay').classList.add('hidden');
+            const logs = document.getElementById('log-container');
+            logs.innerHTML = '<div class="text-slate-500">[SYSTEM] Server recovered & rebooted.</div>';
+        }
+    </script>
+</body>
+</html>

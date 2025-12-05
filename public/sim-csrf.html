@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Attack Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 p-8 h-screen flex flex-col">
+
+    <div class="mb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                <i class="fas fa-cookie-bite text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800">CSRF (Cross-Site Request Forgery)</h1>
+        </div>
+        <p class="text-slate-500 text-sm">
+            사용자의 의지와 무관하게, 공격자가 의도한 행위(수정, 삭제, 송금 등)를 서버에 요청하게 만드는 공격입니다.
+        </p>
+    </div>
+
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        
+        <!-- 1. Victim's Bank View -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col relative">
+            <div class="bg-slate-800 px-4 py-3 flex justify-between items-center text-white">
+                <span class="font-bold"><i class="fas fa-university mr-2"></i>My Safe Bank</span>
+                <span class="text-xs bg-emerald-500 text-slate-900 px-2 py-0.5 rounded font-bold">Logged In</span>
+            </div>
+            
+            <div class="p-8 flex-1 flex flex-col justify-center">
+                <div class="text-center mb-8">
+                    <p class="text-slate-500 text-sm mb-1">현재 잔액 (Account Balance)</p>
+                    <div class="text-4xl font-bold text-slate-800">$<span id="balance">1,000,000</span></div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-6">
+                    <h4 class="font-bold text-slate-700 mb-4 text-sm">빠른 송금 (Transfer)</h4>
+                    <div class="space-y-3 opacity-50 pointer-events-none">
+                        <input type="text" placeholder="받는 사람 계좌번호" class="w-full p-2 border rounded text-sm bg-slate-50">
+                        <input type="text" placeholder="금액" class="w-full p-2 border rounded text-sm bg-slate-50">
+                        <button class="w-full bg-blue-600 text-white py-2 rounded text-sm">송금하기</button>
+                    </div>
+                    <p class="text-xs text-red-400 mt-2 text-center">* 데모를 위해 입력 폼은 비활성화 상태입니다.</p>
+                </div>
+            </div>
+
+            <!-- Notification Toast -->
+            <div id="bank-toast" class="absolute bottom-4 left-4 right-4 bg-slate-800 text-white p-3 rounded shadow-lg transform translate-y-20 transition-transform duration-300 flex items-center gap-3">
+                <i class="fas fa-bell text-yellow-400"></i>
+                <div class="text-sm">
+                    <p class="font-bold">알림</p>
+                    <p id="toast-msg">메시지 내용</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Attacker's Trap Site -->
+        <div class="bg-slate-100 rounded-xl shadow-inner border border-slate-200 h-full flex flex-col relative overflow-hidden">
+            <!-- Browser Chrome -->
+            <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+                <div class="flex gap-1">
+                    <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                </div>
+                <div class="flex-1 bg-white h-6 rounded text-[10px] flex items-center px-2 text-slate-500 truncate">
+                    http://win-prizes-free.com/event/lucky-draw
+                </div>
+            </div>
+
+            <div class="p-8 flex-1 flex flex-col items-center justify-center text-center bg-gradient-to-br from-yellow-50 to-orange-50">
+                <div class="animate-bounce mb-4 text-6xl">🎁</div>
+                <h2 class="text-2xl font-bold text-red-600 mb-2">축하합니다! 당첨되셨습니다!</h2>
+                <p class="text-slate-600 mb-8 text-sm">
+                    지금 바로 아래 버튼을 클릭하여<br>
+                    <strong>최신형 스마트폰</strong>을 수령하세요!
+                </p>
+
+                <button onclick="triggerCSRF()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all flex items-center gap-2">
+                    <i class="fas fa-gift"></i> 경품 수령하기
+                </button>
+                
+                <p class="mt-6 text-xs text-slate-400">
+                    (버튼 뒤에는 은행 서버로 송금을 요청하는 스크립트가 숨겨져 있습니다)
+                </p>
+            </div>
+            
+            <!-- Hidden Exploit Representation -->
+            <div class="absolute bottom-0 left-0 w-full bg-slate-800 text-slate-400 p-2 text-[10px] font-mono border-t border-slate-700">
+                <span class="text-red-400">&lt;img src="http://bank.com/transfer?to=hacker&amt=all"&gt;</span> (Hidden Request)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function triggerCSRF() {
+            // 1. Show visual cue on attacker side
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 요청 처리중...';
+            
+            setTimeout(() => {
+                // 2. Execute Attack (Simulated)
+                const balanceEl = document.getElementById('balance');
+                const toast = document.getElementById('bank-toast');
+                const toastMsg = document.getElementById('toast-msg');
+
+                // Update Balance
+                balanceEl.innerText = "0";
+                balanceEl.classList.add('text-red-500');
+
+                // Show Notification
+                toastMsg.innerText = "해커 계좌로 $1,000,000 이체 완료";
+                toast.querySelector('i').className = "fas fa-exclamation-triangle text-red-500";
+                toast.classList.remove('translate-y-20');
+
+                // Reset Button
+                btn.innerHTML = '<i class="fas fa-check"></i> 전송 완료';
+                btn.className = "bg-slate-400 text-white font-bold py-3 px-8 rounded-full shadow-none cursor-default";
+                
+                // Hide toast after delay
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20');
+                }, 4000);
+
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
