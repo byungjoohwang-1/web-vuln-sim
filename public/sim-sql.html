@@ -1,100 +1,277 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>SQL Injection Simulation</title>
-    <!-- [KR] 설정 파일 로드 / [EN] Load configuration file -->
-    <script src="config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy SQL Injection Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
-        button { padding: 8px 16px; cursor: pointer; }
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f1f5f9; }
+        .font-code { font-family: 'Fira Code', monospace; }
         
-        /* 코드 가이드 섹션 스타일 */
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
-        .comment { color: #999; }
+        /* Highlight Animations */
+        @keyframes flash {
+            0% { background-color: rgba(239, 68, 68, 0.2); }
+            50% { background-color: rgba(239, 68, 68, 0.5); }
+            100% { background-color: transparent; }
+        }
+        .highlight-attack { animation: flash 1s ease-out; }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>💉 SQL 삽입 (SQL Injection)</h1>
+<body class="p-6 md:p-10 h-screen overflow-y-auto">
 
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 입력값에 SQL 쿼리 문법(예: ' OR '1'='1)을 삽입하여, 데이터베이스를 조작하는 공격입니다.</p>
-        <p><strong>[EN]</strong> An attack that inserts SQL query syntax (e.g., ' OR '1'='1) into input to manipulate the database.</p>
-    </div>
-    
-    <div class="container">
-        <!-- 취약한 모드 (Vulnerable) -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드 (Vulnerable)</h2>
-            <p>[KR] 공격: <code>admin' OR '1'='1</code> 입력</p>
-            <p>[EN] Attack: Input <code>admin' OR '1'='1</code></p>
-            <!-- 기본값으로 공격 구문을 넣어둠 -->
-            <input type="text" id="vulnInput" value="admin' OR '1'='1">
-            <button onclick="runTest('vulnerableSQL', 'vulnInput')">Run Attack</button>
-        </div>
-
-        <!-- 안전한 모드 (Secure) -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드 (Secure)</h2>
-            <p>[KR] 방어: 파라미터 바인딩 적용</p>
-            <p>[EN] Defense: Use Parameter Binding</p>
-            <input type="text" id="secureInput" value="admin' OR '1'='1">
-            <button onclick="runTest('secureSQL', 'secureInput')">Run Secure</button>
-        </div>
-    </div>
-
-    <!-- 하단 코드 예제 섹션 -->
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python (Django/Flask)</summary>
-            <pre><code><span class="comment"># [KR] 원시 SQL 사용 시 인자화된 쿼리(Parameterized Query)를 사용해야 한다.</span>
-<span class="comment"># [EN] Use parameterized queries when using raw SQL.</span>
+        <!-- Left Panel: User Interface -->
+        <div class="space-y-6">
+            
+            <!-- Header -->
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                    <i class="fa-solid fa-syringe text-indigo-500"></i>
+                    SQL Injection 시각화
+                </h1>
+                <p class="text-slate-500 mt-2">입력값이 어떻게 쿼리를 조작하는지 확인해보세요.</p>
+            </div>
 
-<span class="comment"># ❌ 취약 (Vulnerable): 문자열 포맷팅 (String formatting)</span>
-<span class="comment"># sql = "SELECT * FROM users WHERE id = '" + user_id + "'"</span>
+            <!-- 1. The Vulnerable Form -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="font-bold text-lg mb-4 text-slate-700 flex justify-between">
+                    <span>1. 로그인 입력</span>
+                    <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">취약한 폼</span>
+                </h2>
+                
+                <form id="loginForm" onsubmit="event.preventDefault(); runSimulation();">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">사용자 ID 입력</label>
+                        <input type="text" id="userInput" 
+                               class="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-indigo-500 focus:ring-0 font-code text-lg transition-colors"
+                               placeholder="여기에 입력하세요..." 
+                               onkeyup="updateRealtimeQuery()">
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                        <button type="button" onclick="setPayload('admin')" class="whitespace-nowrap px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded text-xs font-medium text-slate-600 border border-slate-200 transition">
+                            정상 로그인 (admin)
+                        </button>
+                        <button type="button" onclick="setPayload(`' OR '1'='1`)" class="whitespace-nowrap px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded text-xs font-medium text-red-600 border border-red-200 transition">
+                            <i class="fa-solid fa-bug"></i> 공격 패턴 1 (' OR '1'='1)
+                        </button>
+                        <button type="button" onclick="setPayload(`admin' --`)" class="whitespace-nowrap px-3 py-1.5 bg-orange-50 hover:bg-orange-100 rounded text-xs font-medium text-orange-600 border border-orange-200 transition">
+                            <i class="fa-solid fa-bug"></i> 공격 패턴 2 (주석)
+                        </button>
+                    </div>
 
-<span class="comment"># ✅ 안전 (Secure): %s 플레이스홀더 및 튜플 바인딩 (Tuple binding)</span>
-sql = "SELECT * FROM users WHERE id = %s"
-cursor.execute(sql, (user_id,))</code></pre>
-        </details>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold shadow-md transition transform active:scale-95">
+                        로그인 시도
+                    </button>
+                </form>
+            </div>
 
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java (JDBC)</summary>
-            <pre><code><span class="comment">// [KR] PreparedStatement를 사용하여 컴파일된 쿼리 객체를 사용한다.</span>
-<span class="comment">// [EN] Use PreparedStatement to use compiled query objects.</span>
+            <!-- 2. The Code (Real-time View) -->
+            <div class="bg-slate-900 text-slate-300 p-6 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-2 opacity-50 text-6xl text-slate-800 pointer-events-none">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <h2 class="font-bold text-sm text-indigo-400 mb-4 uppercase tracking-wider">2. 서버에서 실행되는 SQL 쿼리</h2>
+                
+                <div class="font-code text-lg leading-relaxed break-all bg-black/30 p-4 rounded-lg border border-slate-700">
+                    <span class="text-purple-400">SELECT</span> * <span class="text-purple-400">FROM</span> users <br>
+                    <span class="text-purple-400">WHERE</span> id = '<span id="queryInput" class="text-yellow-400 font-bold transition-all duration-200 min-w-[10px] inline-block"></span>'
+                </div>
+                
+                <div class="mt-4 text-xs text-slate-500">
+                    <i class="fa-solid fa-circle-info"></i> 사용자의 입력값이 따옴표(' ') 안으로 그대로 들어가는 것이 문제입니다.
+                </div>
+            </div>
 
-String sql = "SELECT * FROM users WHERE id = ?";
+        </div>
 
-<span class="comment">// ✅ 안전 (Secure): ? 문자로 바인딩 변수 사용 (? placeholder)</span>
-PreparedStatement pstmt = con.prepareStatement(sql);
-pstmt.setString(1, userId);
-ResultSet rs = pstmt.executeQuery();</code></pre>
-        </details>
+        <!-- Right Panel: Database & Result -->
+        <div class="space-y-6">
+
+            <!-- 3. The Database -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-slate-400"></i>
+                    3. 데이터베이스 상태
+                </h2>
+                
+                <div class="overflow-hidden rounded-lg border border-slate-200">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3">Selection</th>
+                                <th class="px-4 py-3">ID</th>
+                                <th class="px-4 py-3">Password</th>
+                                <th class="px-4 py-3">Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dbTableBody" class="divide-y divide-slate-100">
+                            <!-- Rows will be generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-right">* 가상의 사용자 테이블입니다.</p>
+            </div>
+
+            <!-- 4. Result Console -->
+            <div id="resultBox" class="hidden transform transition-all duration-500 translate-y-4 opacity-0">
+                <div class="p-6 rounded-2xl border-l-8 shadow-sm" id="resultCard">
+                    <h2 class="text-xl font-bold mb-2 flex items-center gap-2" id="resultTitle">
+                        <!-- Result Title -->
+                    </h2>
+                    <p class="text-sm opacity-90 mb-4" id="resultDesc">
+                        <!-- Explanation -->
+                    </p>
+                    <div class="bg-white/50 p-3 rounded text-sm font-code font-bold" id="resultData">
+                        <!-- Dumped Data -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
+    <!-- Scripts -->
     <script>
-        function runTest(funcName, inputId) {
-            const inputVal = document.getElementById(inputId).value;
-            // SQL 구문(따옴표 등)이 URL 파라미터로 잘 전달되도록 인코딩
-            const encodedInput = encodeURIComponent(inputVal);
-            // config.js의 BASE_URL 사용
-            const url = `${BASE_URL}/${funcName}?id=${encodedInput}`;
-            window.open(url, '_blank');
+        // Virtual Database Data
+        const dbData = [
+            { id: 'admin', pw: 'sUpEr_sEcReT!', name: '관리자' },
+            { id: 'jack',  pw: 'coffee123',     name: 'Jack Hwang' },
+            { id: 'guest', pw: 'guest',         name: '방문자' }
+        ];
+
+        // Initialize Table
+        function renderTable(selectedIndex = -1, selectAll = false) {
+            const tbody = document.getElementById('dbTableBody');
+            tbody.innerHTML = '';
+
+            dbData.forEach((row, index) => {
+                const isSelected = selectAll || index === selectedIndex;
+                const rowClass = isSelected ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50';
+                const checkIcon = isSelected ? '<i class="fa-solid fa-check-circle text-indigo-500"></i>' : '<i class="fa-regular fa-circle text-slate-300"></i>';
+
+                const tr = document.createElement('tr');
+                tr.className = `transition-colors duration-300 ${rowClass}`;
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-center">${checkIcon}</td>
+                    <td class="px-4 py-3">${row.id}</td>
+                    <td class="px-4 py-3 font-code text-xs">${row.pw}</td>
+                    <td class="px-4 py-3">${row.name}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
+
+        // Real-time Query Update
+        function updateRealtimeQuery() {
+            const input = document.getElementById('userInput').value;
+            const querySpan = document.getElementById('queryInput');
+            
+            // Syntax Highlighting for injected SQL keywords
+            let formatted = input
+                .replace(/'/g, '<span class="text-red-500">\'</span>')
+                .replace(/OR/gi, '<span class="text-blue-400 font-bold">OR</span>')
+                .replace(/--/g, '<span class="text-gray-500 italic">--</span>');
+                
+            if (input === '') formatted = '<span class="opacity-30">...</span>';
+            
+            querySpan.innerHTML = formatted;
+        }
+
+        // Quick Button Actions
+        function setPayload(text) {
+            const input = document.getElementById('userInput');
+            input.value = text;
+            input.focus();
+            updateRealtimeQuery();
+            
+            // Reset result
+            document.getElementById('resultBox').classList.add('hidden', 'translate-y-4', 'opacity-0');
+            renderTable(-1);
+        }
+
+        // Main Simulation Logic
+        function runSimulation() {
+            const input = document.getElementById('userInput').value;
+            const resultBox = document.getElementById('resultBox');
+            const resultCard = document.getElementById('resultCard');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultDesc = document.getElementById('resultDesc');
+            const resultData = document.getElementById('resultData');
+
+            let isExploited = false;
+            let targetIndex = -1;
+            let selectAll = false;
+
+            // Simple Logic to detect SQL Injection patterns
+            // 1. Tautology (' OR '1'='1) -> Always True -> Selects All or First
+            if (input.includes("' OR '1'='1") || input.includes("' OR 1=1")) {
+                isExploited = true;
+                selectAll = true; // In many DBs, this returns all rows
+            } 
+            // 2. Comment Attack (admin' --) -> Ignores password check
+            else if (input.includes("'--") || input.includes("' --") || input.includes("'#")) {
+                const idPart = input.split("'")[0];
+                targetIndex = dbData.findIndex(u => u.id === idPart);
+                if (targetIndex !== -1) isExploited = true;
+            }
+            // 3. Normal Login
+            else {
+                targetIndex = dbData.findIndex(u => u.id === input);
+            }
+
+            // Update UI based on logic
+            renderTable(targetIndex, selectAll);
+
+            // Show Result
+            resultBox.classList.remove('hidden');
+            // Small delay for animation
+            setTimeout(() => {
+                resultBox.classList.remove('translate-y-4', 'opacity-0');
+            }, 50);
+
+            if (isExploited) {
+                // HACKED
+                resultCard.className = "p-6 rounded-2xl border-l-8 shadow-md bg-red-50 border-red-500 text-red-900";
+                resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 공격 성공 (SQL Injection)`;
+                
+                if (selectAll) {
+                    resultDesc.innerHTML = `
+                        <b>' OR '1'='1</b> 구문은 수학적으로 <b>항상 참(True)</b>입니다.<br>
+                        이로 인해 WHERE 조건절이 무력화되어 테이블의 <b>모든 데이터</b>가 반환되었습니다.
+                    `;
+                    resultData.innerHTML = `Dumped: [Admin, Jack, Guest] (모든 계정 탈취)`;
+                } else {
+                    resultDesc.innerHTML = `
+                        <b>주석(--)</b> 문자를 사용하여 뒤따라오는 쿼리(비밀번호 검증 등)를 무시했습니다.<br>
+                        비밀번호 없이 <b>${dbData[targetIndex].id}</b> 계정으로 로그인되었습니다.
+                    `;
+                    resultData.innerHTML = `Logged in as: ${dbData[targetIndex].name} (권한 상승)`;
+                }
+
+            } else if (targetIndex !== -1) {
+                // SUCCESS
+                resultCard.className = "p-6 rounded-2xl border-l-8 shadow-md bg-emerald-50 border-emerald-500 text-emerald-900";
+                resultTitle.innerHTML = `<i class="fa-solid fa-check"></i> 로그인 성공`;
+                resultDesc.innerText = "정상적인 ID 입력으로 해당 사용자를 찾았습니다.";
+                resultData.innerText = `Welcome, ${dbData[targetIndex].name}!`;
+            } else {
+                // FAIL
+                resultCard.className = "p-6 rounded-2xl border-l-8 shadow-md bg-slate-100 border-slate-400 text-slate-600";
+                resultTitle.innerHTML = `<i class="fa-solid fa-xmark"></i> 로그인 실패`;
+                resultDesc.innerText = "입력한 ID와 일치하는 사용자가 없습니다. (WHERE 조건 거짓)";
+                resultData.innerText = "Result: Empty Set";
+            }
+        }
+
+        // Initial Render
+        renderTable();
+        updateRealtimeQuery();
     </script>
 </body>
 </html>
