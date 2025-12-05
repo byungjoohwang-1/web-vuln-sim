@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Security Simulator v0.2</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -25,23 +23,19 @@
 </head>
 <body class="bg-slate-50 h-screen flex overflow-hidden">
 
-    <!-- Sidebar -->
     <aside class="w-80 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col shadow-2xl z-20">
-        <!-- Logo -->
         <div class="p-6 border-b border-slate-700 flex items-center gap-3">
             <div class="bg-indigo-500/10 p-2 rounded-lg">
                 <i class="fas fa-cube text-indigo-400 text-xl"></i>
             </div>
             <div>
-                <h1 class="font-bold text-white text-lg tracking-tight">Web Security Simulator v0.1 beta </h1>
-                <span class="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Made by Jack Hwang</span>
+                <h1 class="font-bold text-white text-lg tracking-tight">Web Security Simulator</h1>
+                <span class="text-[10px] text-slate-500 font-mono uppercase tracking-widest">v0.1 beta | Made by Jack Hwang</span>
             </div>
         </div>
         
-        <!-- Navigation -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-4 sidebar-scroll">
             
-            <!-- SECTION 1: SIMULATOR (All 13 Attacks) -->
             <div>
                 <button onclick="toggleMenu('menu-sim', this)" class="w-full flex items-center justify-between p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm font-bold text-white shadow-sm border border-slate-700">
                     <div class="flex items-center gap-3">
@@ -88,14 +82,12 @@
                     <button onclick="loadSim('sim-error.html', 'Error Exposure', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
                         <i class="fas fa-exclamation-triangle w-4 text-center"></i> Error Exposure
                     </button>
-                    <!-- 13th Module: Code Injection -->
                     <button onclick="loadSim('sim-code.html', 'Code Injection', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
                         <i class="fas fa-code-branch w-4 text-center"></i> Code Injection
                     </button>
                 </div>
             </div>
 
-            <!-- SECTION 2: SECURE CODING GUIDELINES -->
             <div>
                 <button onclick="toggleMenu('menu-guide', this)" class="w-full flex items-center justify-between p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm font-bold text-white shadow-sm border border-slate-700">
                     <div class="flex items-center gap-3">
@@ -104,40 +96,31 @@
                     </div>
                     <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
                 </button>
-                <div id="menu-guide" class="hidden pl-2 mt-2 space-y-2">
+                
+                <div id="menu-guide" class="hidden pl-2 mt-2 space-y-1">
                     
-                    <!-- 2-1. Input Validation -->
-                    <div>
-                        <button class="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-slate-800/50 text-xs font-semibold text-slate-300 transition cursor-default">
-                            <span>2-1. 입력 데이터 검증 및 표현</span>
-                            <!-- Placeholder for future sub-menus -->
-                            <i class="fas fa-circle text-[6px] text-slate-600"></i>
-                        </button>
-                    </div>
+                    <button onclick="loadSim('guide-input.html', '2-1. 입력 데이터 검증 및 표현', this)" class="nav-item w-full flex items-center justify-between px-4 py-2 rounded-md hover:bg-slate-800 text-xs font-semibold text-slate-400 transition cursor-pointer group">
+                        <span>2-1. 입력 데이터 검증 및 표현</span>
+                        <div class="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-blue-500 transition-colors"></div>
+                    </button>
 
-                    <!-- 2-2. Security Features -->
-                    <div>
-                        <button class="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-slate-800/50 text-xs font-semibold text-slate-300 transition cursor-default">
-                            <span>2-2. 보안 기능</span>
-                            <i class="fas fa-circle text-[6px] text-slate-600"></i>
-                        </button>
-                    </div>
+                    <button onclick="loadSim('guide-security.html', '2-2. 보안 기능', this)" class="nav-item w-full flex items-center justify-between px-4 py-2 rounded-md hover:bg-slate-800 text-xs font-semibold text-slate-400 transition cursor-pointer group">
+                        <span>2-2. 보안 기능</span>
+                        <div class="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-red-500 transition-colors"></div>
+                    </button>
 
                 </div>
             </div>
 
         </nav>
 
-        <!-- Footer -->
         <div class="p-4 border-t border-slate-800 bg-slate-900/50 text-[10px] text-slate-600 text-center">
-            &copy; 2025 Web Security Simulator Platform<br>Referrded from K
-            ISA Standard Compliant
+            &copy; 2025 Web Security Simulator Platform<br>
+            Referred from KISA Standard Compliant
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col relative bg-white min-w-0">
-        <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-10 shadow-sm">
             <h2 id="current-title" class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="fas fa-home text-slate-400"></i> Dashboard
@@ -150,10 +133,8 @@
             </div>
         </header>
 
-        <!-- Iframe Container -->
         <div class="flex-1 relative bg-slate-50 overflow-hidden flex flex-col">
             
-            <!-- Loader -->
             <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white z-20 hidden">
                 <div class="flex flex-col items-center">
                     <div class="w-12 h-12 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
@@ -161,10 +142,8 @@
                 </div>
             </div>
             
-            <!-- Iframe -->
             <iframe id="main-frame" name="contentFrame" src="" class="flex-1 w-full h-full bg-white"></iframe>
             
-            <!-- Welcome Screen -->
             <div id="welcome-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-10">
                 <div class="bg-white p-10 rounded-2xl shadow-sm border border-slate-100 text-center max-w-lg mx-4">
                     <div class="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -221,14 +200,22 @@
 
             // Deactivate all items
             document.querySelectorAll('.nav-item').forEach(el => {
+                // Reset styles
                 el.classList.remove('text-indigo-400', 'bg-slate-800', 'font-bold', 'text-white');
-                el.classList.add('text-slate-400', 'text-slate-500'); // Reset to default
+                el.classList.add('text-slate-400');
+                
+                // Reset icons for section 2 dots (specific logic)
+                const dot = el.querySelector('div[class*="rounded-full"]');
+                if (dot) {
+                     // Reset dot logic handled by CSS group-hover usually, 
+                     // but if you want persistent active state for dots, add logic here.
+                }
             });
 
             // Activate current item
             if (btnElement) {
-                btnElement.classList.remove('text-slate-400', 'text-slate-500');
-                btnElement.classList.add('text-indigo-400', 'bg-slate-800', 'font-bold');
+                btnElement.classList.remove('text-slate-400');
+                btnElement.classList.add('text-indigo-400', 'bg-slate-800', 'font-bold', 'text-white');
             }
 
             // Load Iframe
@@ -253,14 +240,23 @@
             const params = new URLSearchParams(window.location.search);
             const mod = params.get('mod');
             if(mod) {
-                const targetBtn = document.querySelector(`button[onclick*="'${mod}'"]`);
+                // Find button with matching onclick content
+                const buttons = document.querySelectorAll('button[onclick]');
+                let targetBtn = null;
+                buttons.forEach(btn => {
+                    if(btn.getAttribute('onclick').includes(mod)) targetBtn = btn;
+                });
+
                 if(targetBtn) {
                     // Open parent menus recursively if needed
                     let parent = targetBtn.parentElement;
                     while(parent && parent.id !== 'menu-sim' && parent.id !== 'menu-guide') {
                          if(parent.classList.contains('hidden')) {
-                             const toggle = parent.previousElementSibling;
-                             if(toggle) toggle.click();
+                             // Find the toggle button for this section
+                             // In this DOM structure, the toggle button is the previous sibling of the parent container's parent? 
+                             // Simplified: Just open both main menus if active
+                             if(parent.id === 'menu-sim') toggleMenu('menu-sim', document.querySelector('button[onclick*="menu-sim"]'));
+                             if(parent.id === 'menu-guide') toggleMenu('menu-guide', document.querySelector('button[onclick*="menu-guide"]'));
                          }
                          parent = parent.parentElement;
                     }
