@@ -1,106 +1,239 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>코드 삽입 실습</title>
-    <script src="config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>코드 삽입 (Code Injection) 시뮬레이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
-        button { padding: 8px 16px; cursor: pointer; }
-        
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        .guide-box { background-color: #f4f7f9; padding: 15px; border-left: 5px solid #007bff; margin-bottom: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; list-style: none; }
-        summary:hover { background-color: #f0f0f0; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; margin: 0; border-radius: 0 0 5px 5px; }
-        code { font-family: monospace; }
-        .comment { color: #999; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .terminal-window { background-color: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; }
+        .command-prompt::before { content: "$ "; color: #4ade80; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
-    <a href="index.html">← 메인으로</a>
-    <h1>💻 코드 삽입 (Code Injection)</h1>
+<body class="bg-slate-100 min-h-screen p-8 flex flex-col items-center">
 
-    <div class="guide-box">
-        <h3>📘 취약점 개요</h3>
-        <p>입력값을 검증 없이 <code>eval()</code>, <code>exec()</code> 함수에 전달할 때 발생합니다. 공격자는 시스템 명령어를 실행하거나 서버를 장악할 수 있습니다.</p>
-    </div>
-    
-    <div class="container">
-        <!-- 취약한 모드 -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드</h2>
-            <p>기능: 수식 계산기 (eval 사용)</p>
-            <p>공격: 자바스크립트 코드 입력</p>
-            <!-- 공격 예시: 단순 계산 대신 임의의 문자열 반환 코드 삽입 -->
-            <input type="text" id="vulnInput" value="10 * 10; return '시스템 장악 완료'">
-            <button onclick="runTest('vulnerableCode', 'vulnInput')">공격 실행</button>
+    <div class="max-w-6xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-purple-700 p-6 text-white flex items-center gap-4 shadow-md">
+            <div class="bg-white/20 p-3 rounded-xl">
+                <i class="fas fa-code text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold">코드 삽입 (Code Injection)</h1>
+                <p class="text-purple-200 text-sm mt-1">사용자 입력값이 프로그램 코드로 해석되어 실행되는 치명적 취약점</p>
+            </div>
         </div>
 
-        <!-- 안전한 모드 -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드</h2>
-            <p>방어: 입력값 검증 (숫자/연산자만 허용)</p>
-            <input type="text" id="secureInput" value="10 * 10; return '시스템 장악 완료'">
-            <button onclick="runTest('secureCode', 'secureInput')">방어 테스트</button>
+        <!-- Scenario Explanation -->
+        <div class="p-8 bg-purple-50 border-b border-purple-100">
+            <div class="flex items-start gap-4">
+                <div class="bg-white p-3 rounded-full shadow-sm text-purple-600">
+                    <i class="fas fa-calculator text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">시나리오: 온라인 수식 계산기</h2>
+                    <p class="text-gray-600">
+                        개발자가 사용자의 수식(예: <code>10 + 20</code>)을 편하게 계산하기 위해 
+                        <code class="bg-red-100 text-red-600 px-1 rounded font-bold">eval()</code> 함수를 사용했습니다.<br>
+                        하지만 해커는 이 기능을 악용하여 <strong>서버의 시스템 명령</strong>을 실행하려 합니다.
+                    </p>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- 언어별 가이드 섹션 -->
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드</h2>
-        <p>제공해주신 가이드 문서에 기반한 언어별 방어 기법입니다.</p>
+        <!-- Simulation Content -->
+        <div class="p-8 grid lg:grid-cols-2 gap-8 bg-white">
+            
+            <!-- Left: Vulnerable Mode -->
+            <div class="bg-white rounded-xl border-2 border-red-200 shadow-lg overflow-hidden flex flex-col h-full">
+                <div class="bg-red-50 p-4 border-b border-red-100 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-red-600 flex items-center gap-2">
+                        <i class="fas fa-skull-crossbones"></i> 취약한 모드 (eval 사용)
+                    </h2>
+                    <span class="bg-red-200 text-red-800 text-xs px-2 py-1 rounded-full font-bold">DANGEROUS</span>
+                </div>
+                
+                <div class="p-6 flex-1 flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">입력값 (Python 코드):</label>
+                        <div class="relative">
+                            <input type="text" id="vulnInput" value="__import__('os').system('ls -al')" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 font-mono text-sm bg-gray-50 text-red-700"
+                                   placeholder="수식 또는 코드 입력">
+                            <div class="absolute right-2 top-2">
+                                <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">해킹 코드</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1 ml-1">정상 입력 예: <code>10 * 5</code></p>
+                    </div>
+                    
+                    <button onclick="runVulnerable()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-terminal"></i> 서버에서 실행 (Execute)
+                    </button>
 
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python (Django/Flask)</summary>
-            <pre><code><span class="comment"># [Python 가이드] eval(), exec() 사용 시 입력값 검증 필수</span>
+                    <!-- Virtual Terminal -->
+                    <div class="terminal-window rounded-lg p-4 flex-1 min-h-[200px] shadow-inner overflow-hidden relative">
+                        <div class="flex gap-1.5 mb-3">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div id="vulnOutput" class="text-xs space-y-1">
+                            <div class="text-gray-500">Server ready... waiting for input.</div>
+                        </div>
+                        <!-- Hack Effect Overlay -->
+                        <div id="hackEffect" class="absolute inset-0 bg-red-500/10 hidden flex items-center justify-center pointer-events-none">
+                            <div class="bg-red-600 text-white px-6 py-3 rounded-lg font-bold text-xl shadow-2xl animate-bounce">
+                                <i class="fas fa-exclamation-triangle"></i> SYSTEM HACKED!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<span class="comment"># ❌ 취약한 코드: eval() 직접 사용</span>
-<span class="comment"># result = eval(user_input)</span>
+            <!-- Right: Secure Mode -->
+            <div class="bg-white rounded-xl border-2 border-green-200 shadow-lg overflow-hidden flex flex-col h-full">
+                <div class="bg-green-50 p-4 border-b border-green-100 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-green-600 flex items-center gap-2">
+                        <i class="fas fa-shield-alt"></i> 안전한 모드 (ast.literal_eval)
+                    </h2>
+                    <span class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full font-bold">SECURE</span>
+                </div>
+                
+                <div class="p-6 flex-1 flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">입력값 (Python 코드):</label>
+                         <div class="relative">
+                            <input type="text" id="secureInput" value="__import__('os').system('ls -al')" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-sm bg-gray-50"
+                                   placeholder="수식 또는 코드 입력">
+                         </div>
+                        <p class="text-xs text-gray-500 mt-1 ml-1">동일한 해킹 코드를 입력해도 안전합니다.</p>
+                    </div>
 
-<span class="comment"># ✅ 안전한 코드: 화이트리스트 검증 또는 ast.literal_eval 사용</span>
-import ast
+                    <button onclick="runSecure()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-check-double"></i> 안전하게 실행 (Verify & Execute)
+                    </button>
 
-def calculate(user_input):
-    try:
-        <span class="comment"># ast.literal_eval은 파이썬 표현식만 안전하게 평가함 (함수 실행 불가)</span>
-        result = ast.literal_eval(user_input)
-        return result
-    except:
-        return "Error"</code></pre>
-        </details>
+                    <!-- Virtual Terminal -->
+                    <div class="terminal-window rounded-lg p-4 flex-1 min-h-[200px] shadow-inner">
+                        <div class="flex gap-1.5 mb-3">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div id="secureOutput" class="text-xs space-y-1">
+                            <div class="text-gray-500">Server ready... safe mode enabled.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java (ScriptEngine)</summary>
-            <pre><code><span class="comment">// [Java 가이드] ScriptEngine.eval() 사용 시 입력값 검증 필수</span>
-
-<span class="comment"># ❌ 취약한 코드</span>
-<span class="comment"># engine.eval(userInput);</span>
-
-<span class="comment"># ✅ 안전한 코드: 정규식으로 입력값 패턴 검사</span>
-if (userInput.matches("^[0-9+\\-*/().\\s]+$")) {
-    engine.eval(userInput);
-} else {
-    throw new IllegalArgumentException("허용되지 않은 입력입니다.");
-}</code></pre>
-        </details>
+        <!-- Code Comparison Footer -->
+        <div class="bg-gray-900 p-8 text-gray-300 border-t border-gray-800">
+             <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fab fa-python text-yellow-400"></i> Python 코드 비교
+            </h3>
+            <div class="grid md:grid-cols-2 gap-8 text-sm font-mono">
+                <div>
+                    <p class="text-red-400 mb-2 font-bold">🔴 Vulnerable (eval)</p>
+                    <div class="bg-black p-4 rounded border-l-4 border-red-500">
+                        user_input = request.POST['code']<br>
+                        <span class="text-gray-500"># 입력값을 그대로 실행 (위험!)</span><br>
+                        <span class="text-red-400">eval(user_input)</span>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-green-400 mb-2 font-bold">🟢 Secure (ast.literal_eval)</p>
+                    <div class="bg-black p-4 rounded border-l-4 border-green-500">
+                        import ast<br>
+                        user_input = request.POST['code']<br>
+                        <span class="text-gray-500"># 순수 데이터 구조만 평가 (함수 실행 불가)</span><br>
+                        <span class="text-green-400">ast.literal_eval(user_input)</span>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-8 text-center">
+                <a href="input_validation.html" class="inline-flex items-center text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i> 목록으로 돌아가기
+                </a>
+            </div>
+        </div>
     </div>
 
     <script>
-        function runTest(funcName, inputId) {
-            const inputVal = document.getElementById(inputId).value;
-            // 코드 문자가 URL로 잘 전달되도록 인코딩
-            const encodedInput = encodeURIComponent(inputVal);
-            const url = `${BASE_URL}/${funcName}?exp=${encodedInput}`;
-            window.open(url, '_blank');
+        function runVulnerable() {
+            const input = document.getElementById('vulnInput').value;
+            const output = document.getElementById('vulnOutput');
+            const hackEffect = document.getElementById('hackEffect');
+
+            output.innerHTML += `<div class="command-prompt mb-1">${input}</div>`;
+
+            // Simulation Logic
+            if (input.includes('import') || input.includes('os') || input.includes('system')) {
+                // HACK SUCCESS
+                setTimeout(() => {
+                    output.innerHTML += `<div class="text-red-400 fade-in">root@server: /var/www/html # ls -al</div>`;
+                    output.innerHTML += `<div class="text-gray-400 fade-in pl-2">
+                        drwxr-xr-x  user  staff   128B  config.py<br>
+                        drwxr-xr-x  user  staff   256B  database.db<br>
+                        -rwxr-xr-x  root  root    1.2M  server_key.pem
+                    </div>`;
+                    output.innerHTML += `<div class="text-red-500 font-bold mt-2 fade-in">>> 시스템 명령어가 실행되었습니다!</div>`;
+                    
+                    // Show visual effect
+                    hackEffect.classList.remove('hidden');
+                    setTimeout(() => hackEffect.classList.add('hidden'), 2000);
+                }, 300);
+            } else {
+                // Normal Calculation
+                try {
+                    const result = eval(input); // Just for simulation (safe in client-side isolation)
+                    output.innerHTML += `<div class="text-green-400 fade-in">Result: ${result}</div>`;
+                } catch (e) {
+                    output.innerHTML += `<div class="text-yellow-500 fade-in">Error: ${e.message}</div>`;
+                }
+            }
+            
+            // Auto scroll
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function runSecure() {
+            const input = document.getElementById('secureInput').value;
+            const output = document.getElementById('secureOutput');
+
+            output.innerHTML += `<div class="command-prompt mb-1">${input}</div>`;
+
+            // Simulation Logic (Secure)
+            if (input.includes('import') || input.includes('os') || input.includes('system') || input.includes('(')) {
+                // BLOCK ATTACK
+                 setTimeout(() => {
+                    output.innerHTML += `<div class="text-red-400 fade-in">[Security Block]</div>`;
+                    output.innerHTML += `<div class="text-red-300 fade-in">ValueError: malformed node or string: ${input}</div>`;
+                    output.innerHTML += `<div class="text-green-500 mt-2 font-bold fade-in">>> 함수 호출이나 시스템 명령은 허용되지 않습니다.</div>`;
+                }, 300);
+            } else {
+                // Normal Calculation (Simple Literals Only in simulation)
+                 try {
+                    // Simple regex to allow only math for simulation purpose
+                    if (/^[0-9+\-*/\s]+$/.test(input)) {
+                         const result = eval(input); 
+                         output.innerHTML += `<div class="text-green-400 fade-in">Result: ${result}</div>`;
+                    } else {
+                         throw new Error("Only literals allowed");
+                    }
+                } catch (e) {
+                     output.innerHTML += `<div class="text-yellow-500 fade-in">Error: 안전하지 않은 입력입니다.</div>`;
+                }
+            }
+            output.scrollTop = output.scrollHeight;
         }
     </script>
 </body>
