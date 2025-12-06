@@ -1,94 +1,209 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>Error Exposure Simulation</title>
-    <script src="config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오류 메시지 정보 노출 시뮬레이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        button { padding: 10px 20px; cursor: pointer; width: 100%; }
-        
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
-        .comment { color: #999; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .console-font { font-family: 'Consolas', 'Monaco', monospace; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>⚠️ 오류 메시지 정보 노출</h1>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 프로그램 오류 발생 시, 시스템의 내부 정보(경로, DB 쿼리, 라이브러리 버전 등)가 포함된 상세한 에러 메시지를 사용자에게 그대로 보여주는 취약점입니다.</p>
-    </div>
-    
-    <div class="container">
-        <!-- 취약한 모드 -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드</h2>
-            <p>[KR] 상황: DB 연결 오류 발생</p>
-            <p>[EN] Scenario: DB Connection Failed</p>
-            <p style="font-size:0.9em; color:#666;">버튼을 누르면 서버에서 고의로 에러를 발생시킵니다.</p>
-            <button onclick="runTest('vulnerableError')">에러 유발 (Trigger Error)</button>
+    <div class="max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-yellow-500 p-6 text-white flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">오류 메시지 정보 노출</h1>
+                    <p class="text-yellow-100 text-sm">Information Exposure Through an Error Message</p>
+                </div>
+            </div>
+            <div class="bg-white/20 px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-server mr-1"></i> 시스템 내부 정보(스택 트레이스 등) 유출 위험
+            </div>
         </div>
 
-        <!-- 안전한 모드 -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드</h2>
-            <p>[KR] 방어: 일반적인 메시지로 대체</p>
-            <p>[EN] Defense: Show generic message</p>
-            <p style="font-size:0.9em; color:#666;">사용자에게는 단순 안내 문구만 보여줍니다.</p>
-            <button onclick="runTest('secureError')">에러 유발 (Trigger Error)</button>
+        <!-- Context & Explanation -->
+        <div class="p-8 border-b border-gray-100 bg-gray-50">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="md:col-span-2">
+                    <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-blue-500"></i> 시나리오 상황 (Scenario)
+                    </h2>
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        사용자가 존재하지 않는 게시글을 요청하거나, DB 연결이 끊기는 등 <strong>예외(Exception)</strong>가 발생하는 상황입니다.<br>
+                        이때 서버가 사용자에게 어떤 응답을 보내는지에 따라 보안 취약점이 될 수 있습니다.
+                    </p>
+                    <div class="bg-white p-4 rounded-lg border border-gray-200">
+                        <p class="text-sm font-bold text-gray-700 mb-2"><i class="fas fa-bug text-red-500 mr-2"></i>공격자의 관점:</p>
+                        <p class="text-xs text-gray-500">
+                            "오류 메시지에 포함된 <strong>DB 버전, 쿼리 구조, 서버 경로, 라이브러리 버전</strong> 등을 수집하여
+                            더 정교한 공격(SQL Injection, Exploit 등)을 설계할 수 있습니다."
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-yellow-800 mb-2">목표 (Goal)</h3>
+                    <p class="text-sm text-yellow-700 mb-3">
+                        고의로 에러를 발생시켜(Trigger Error), 서버가 민감한 정보를 노출하는지 확인해보세요.
+                    </p>
+                    <div class="text-center">
+                        <button onclick="triggerError()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all transform active:scale-95">
+                            <i class="fas fa-bomb mr-2"></i> 에러 유발 (Trigger Error)
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드</h2>
-        
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python (Django/Flask)</summary>
-            <pre><code><span class="comment"># [KR] 운영 환경(Production)에서는 디버그 모드를 반드시 꺼야 합니다.</span>
-<span class="comment"># [EN] Must disable DEBUG mode in production.</span>
+        <!-- Simulation Area -->
+        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            
+            <!-- Vulnerable Side -->
+            <div class="p-8 bg-red-50/30 relative">
+                <div class="absolute top-4 right-4 text-red-200 text-6xl opacity-20 pointer-events-none">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h3 class="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+                    <i class="fas fa-times-circle"></i> 취약한 모드 (Vulnerable)
+                </h3>
+                <p class="text-xs text-gray-500 mb-6">개발 편의를 위해 <code>printStackTrace()</code> 또는 원본 에러 메시지를 그대로 출력함</p>
+                
+                <div class="border-2 border-red-200 rounded-lg bg-white shadow-inner min-h-[250px] relative overflow-hidden flex flex-col">
+                    <div class="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        <span class="text-xs text-gray-500 ml-2">Browser Window</span>
+                    </div>
+                    <div id="vulnOutput" class="p-4 flex-1 overflow-auto font-mono text-xs text-red-700 break-all">
+                        <div class="flex h-full items-center justify-center text-gray-400">
+                            [에러 유발] 버튼을 눌러주세요.
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<span class="comment"># settings.py (Django)</span>
+            <!-- Secure Side -->
+            <div class="p-8 bg-green-50/30 relative">
+                <div class="absolute top-4 right-4 text-green-200 text-6xl opacity-20 pointer-events-none">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="text-lg font-bold text-green-600 mb-2 flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i> 안전한 모드 (Secure)
+                </h3>
+                <p class="text-xs text-gray-500 mb-6">내부 로그에는 기록하되, 사용자에게는 <strong>정제된 일반 메시지</strong>만 보여줌</p>
+                
+                <div class="border-2 border-green-200 rounded-lg bg-white shadow-inner min-h-[250px] relative overflow-hidden flex flex-col">
+                    <div class="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        <span class="text-xs text-gray-500 ml-2">Browser Window</span>
+                    </div>
+                    <div id="secureOutput" class="p-4 flex-1 flex items-center justify-center">
+                         <div class="text-gray-400 text-xs font-mono">
+                            [에러 유발] 버튼을 눌러주세요.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<span class="comment"># ❌ 취약 (Vulnerable)</span>
-<span class="comment"># DEBUG = True</span>
-
-<span class="comment"># ✅ 안전 (Secure)</span>
-DEBUG = False
-ALLOWED_HOSTS = ['yourdomain.com']</code></pre>
-        </details>
-
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java (Spring)</summary>
-            <pre><code><span class="comment">// [KR] 예외 처리(try-catch)를 통해 스택 트레이스 출력을 방지합니다.</span>
-<span class="comment">// [EN] Use try-catch to prevent printing stack traces.</span>
-
-try {
-    // Business Logic...
+        <!-- Code Reference -->
+        <div class="bg-slate-900 p-6 text-gray-300">
+            <h4 class="font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-code"></i> 백엔드 예외 처리 비교 (Backend Exception Handling)
+            </h4>
+            <div class="grid md:grid-cols-2 gap-6 text-sm font-mono">
+                <div class="bg-black/30 p-4 rounded border border-red-900/50 relative group">
+                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="bg-red-600 text-white text-[10px] px-2 py-1 rounded">Java</span>
+                    </div>
+                    <p class="text-red-400 font-bold mb-2">// Vulnerable</p>
+                    <pre class="text-gray-400 whitespace-pre-wrap">try {
+    ...
 } catch (Exception e) {
-    <span class="comment">// ❌ 취약: e.printStackTrace(); (콘솔/화면에 노출됨)</span>
-    
-    <span class="comment">// ✅ 안전: 로그 파일에만 기록하고, 사용자에게는 별도 메시지 전달</span>
-    logger.error("System Error", e);
-    return "error_page";
-}</code></pre>
-        </details>
+    // 스택 트레이스를 그대로 웹 화면에 출력
+    <span class="text-red-300">e.printStackTrace(response.getWriter());</span>
+}</pre>
+                </div>
+                <div class="bg-black/30 p-4 rounded border border-green-900/50 relative group">
+                     <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="bg-green-600 text-white text-[10px] px-2 py-1 rounded">Java</span>
+                    </div>
+                    <p class="text-green-400 font-bold mb-2">// Secure</p>
+                    <pre class="text-gray-400 whitespace-pre-wrap">try {
+    ...
+} catch (Exception e) {
+    // 내부에만 로그 기록
+    logger.error(e);
+    // 사용자에게는 약속된 메시지/페이지 전달
+    <span class="text-green-300">response.sendRedirect("/error/500.jsp");</span>
+}</pre>
+                </div>
+            </div>
+             <div class="mt-6 flex justify-center">
+                <a href="security_functions.html" class="text-white hover:text-yellow-300 font-medium text-sm flex items-center gap-2 transition-colors">
+                    <i class="fas fa-arrow-left"></i> 보안 기능 가이드로 돌아가기
+                </a>
+            </div>
+        </div>
     </div>
 
     <script>
-        function runTest(funcName) {
-            // 별도의 입력값 없이 함수만 호출
-            window.open(`${BASE_URL}/${funcName}`, '_blank');
+        function triggerError() {
+            const vulnOutput = document.getElementById('vulnOutput');
+            const secureOutput = document.getElementById('secureOutput');
+
+            // Reset
+            vulnOutput.innerHTML = '<div class="flex h-full items-center justify-center"><i class="fas fa-circle-notch fa-spin text-red-500 text-2xl"></i></div>';
+            secureOutput.innerHTML = '<div class="flex h-full items-center justify-center"><i class="fas fa-circle-notch fa-spin text-green-500 text-2xl"></i></div>';
+
+            setTimeout(() => {
+                // Vulnerable Response (Simulation)
+                vulnOutput.innerHTML = `
+                    <div class="fade-in text-xs">
+                        <h3 class="text-lg font-bold mb-2">500 Internal Server Error</h3>
+                        <p class="mb-2">java.sql.SQLException: Syntax error in SQL statement "SELECT * FROM users WHERE id = 1[...]; expected "identifier"; SQL statement:</p>
+                        <div class="bg-red-50 p-2 rounded border border-red-100 mb-2">
+                            at com.example.dao.UserDao.getUser(UserDao.java:42)<br>
+                            at com.example.service.UserService.find(UserService.java:28)<br>
+                            at com.example.controller.UserController.view(UserController.java:55)<br>
+                            ... 32 more
+                        </div>
+                        <p class="font-bold text-red-800">Server: Apache-Tomcat/9.0.56 (Ubuntu)</p>
+                        <p class="font-bold text-red-800">DB: MySQL 5.7.33-0ubuntu0.18.04.1</p>
+                    </div>
+                `;
+
+                // Secure Response (Simulation)
+                secureOutput.innerHTML = `
+                    <div class="fade-in text-center">
+                        <div class="inline-block p-3 bg-red-100 rounded-full text-red-500 mb-3">
+                            <i class="fas fa-exclamation text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">일시적인 오류가 발생했습니다.</h3>
+                        <p class="text-xs text-gray-500 mb-4">잠시 후 다시 시도해주세요.<br>문제가 지속되면 관리자에게 문의바랍니다.</p>
+                        <button class="bg-gray-800 text-white px-4 py-2 rounded text-xs hover:bg-gray-700 transition">메인으로 돌아가기</button>
+                        
+                        <div class="mt-4 border-t border-gray-100 pt-2 text-[10px] text-gray-400 text-left w-full">
+                            <p>Ref ID: <span class="font-mono">ERR-20240521-X9J2K</span></p>
+                            <p class="text-green-600 mt-1"><i class="fas fa-check mr-1"></i>상세 로그는 서버에 안전하게 기록됨</p>
+                        </div>
+                    </div>
+                `;
+            }, 600);
         }
     </script>
 </body>
