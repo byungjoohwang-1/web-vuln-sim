@@ -1,89 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>XSS Simulation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS 공격 시뮬레이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
-        button { padding: 8px 16px; cursor: pointer; }
-        
-        /* 코드 가이드 섹션 스타일 */
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
-        .comment { color: #999; }
-        .result-box { margin-top: 10px; padding: 10px; border: 1px dashed #999; background: #fff; min-height: 30px; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .simulation-box { min-height: 150px; }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>💥 크로스 사이트 스크립트 (XSS)</h1>
-    
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 검증되지 않은 외부 입력값이 브라우저에서 실행되어 악성 스크립트가 동작하는 공격입니다.</p>
-        <p><strong>[EN]</strong> Unvalidated external input executes in the browser, allowing malicious scripts to run.</p>
-    </div>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="container">
-        <!-- 취약한 모드 (Vulnerable) -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드 (Vulnerable)</h2>
-            <p>Method: <code>innerHTML</code></p>
-            <p>[KR] 공격: <code>onerror</code> 이벤트를 통한 스크립트 실행</p>
-            <p>[EN] Attack: Execute script via <code>onerror</code> event</p>
-            <input type="text" id="vulnInput" value="<img src=x onerror=alert('XSS')>">
-            <button onclick="document.getElementById('vResult').innerHTML = document.getElementById('vulnInput').value">Run</button>
-            <div id="vResult" class="result-box">Result here...</div>
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-red-600 p-6 text-white flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-bug text-3xl"></i>
+                <div>
+                    <h1 class="text-2xl font-bold">크로스 사이트 스크립트 (XSS)</h1>
+                    <p class="text-red-100 text-sm">Cross-Site Scripting Simulation</p>
+                </div>
+            </div>
+            <div class="bg-white/20 px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-info-circle mr-1"></i> 공격자가 웹 페이지에 악성 스크립트를 삽입하는 취약점
+            </div>
         </div>
 
-        <!-- 안전한 모드 (Secure) -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드 (Secure)</h2>
-            <p>Method: <code>textContent</code></p>
-            <p>[KR] 방어: 텍스트로만 처리 (스크립트 실행 안 됨)</p>
-            <p>[EN] Defense: Treat as text only (Script not executed)</p>
-            <input type="text" id="secureInput" value="<img src=x onerror=alert('XSS')>">
-            <button onclick="document.getElementById('sResult').textContent = document.getElementById('secureInput').value">Run</button>
-            <div id="sResult" class="result-box">Result here...</div>
+        <!-- Explanation Section -->
+        <div class="p-8 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-search text-blue-500"></i> 취약점 개요 (Overview)
+            </h2>
+            <p class="text-gray-600 leading-relaxed mb-4">
+                [KR] 검증되지 않은 외부 입력값이 브라우저에서 실행되어 악성 스크립트가 동작하는 공격입니다.<br>
+                [EN] Unvalidated external input executes in the browser, allowing malicious scripts to run.
+            </p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            아래 입력창에 <code class="bg-yellow-100 px-1 rounded text-red-600 font-mono">&lt;img src=x onerror=alert('XSS')&gt;</code> 를 입력해보세요.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulation Area -->
+        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            
+            <!-- Vulnerable Side -->
+            <div class="p-8 bg-red-50/30">
+                <h3 class="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+                    <i class="fas fa-unlock"></i> 취약한 모드 (Vulnerable)
+                </h3>
+                <p class="text-xs text-gray-500 mb-4 font-mono">Method: innerHTML</p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">공격 코드 입력:</label>
+                    <input type="text" id="vulnInput" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 font-mono text-sm"
+                           placeholder="<script>alert('XSS')</script>" 
+                           value="<img src=x onerror=alert('XSS')>">
+                </div>
+                
+                <button onclick="runVulnerable()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors mb-4">
+                    <i class="fas fa-play mr-2"></i> Run Attack
+                </button>
+
+                <div class="border-2 border-dashed border-red-300 rounded-lg p-4 bg-white simulation-box relative">
+                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono">Browser Render Area</span>
+                    <div id="vulnOutput" class="mt-4 text-gray-800 break-all">
+                        Result here...
+                    </div>
+                </div>
+                <p class="text-xs text-red-500 mt-2">
+                    [KR] 공격: onerror 이벤트를 통한 스크립트 실행<br>
+                    [EN] Attack: Execute script via onerror event
+                </p>
+            </div>
+
+            <!-- Secure Side -->
+            <div class="p-8 bg-green-50/30">
+                <h3 class="text-lg font-bold text-green-600 mb-2 flex items-center gap-2">
+                    <i class="fas fa-lock"></i> 안전한 모드 (Secure)
+                </h3>
+                <p class="text-xs text-gray-500 mb-4 font-mono">Method: textContent (Escape)</p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">공격 코드 입력:</label>
+                    <input type="text" id="secureInput" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
+                           placeholder="<script>alert('XSS')</script>"
+                           value="<img src=x onerror=alert('XSS')>">
+                </div>
+
+                <button onclick="runSecure()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors mb-4">
+                    <i class="fas fa-shield-alt mr-2"></i> Run Securely
+                </button>
+
+                <div class="border-2 border-dashed border-green-300 rounded-lg p-4 bg-white simulation-box relative">
+                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono">Browser Render Area</span>
+                    <div id="secureOutput" class="mt-4 text-gray-800 break-all">
+                        Result here...
+                    </div>
+                </div>
+                <p class="text-xs text-green-600 mt-2">
+                    [KR] 방어: 텍스트로만 처리 (스크립트 실행 안 됨)<br>
+                    [EN] Defense: Treat as text only (Script not executed)
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer Guide Links -->
+        <div class="bg-slate-50 p-6 border-t border-gray-200">
+            <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                <i class="fas fa-book"></i> 언어별 시큐어 코딩 가이드 (Secure Coding Guide)
+            </h4>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded border border-gray-200 text-sm">
+                    <strong class="text-purple-600 block mb-1"><i class="fab fa-java mr-1"></i> Java (JSP)</strong>
+                    <code>out.println(Encoder.encodeForHTML(input));</code>
+                    <p class="text-gray-500 text-xs mt-1">JSTL &lt;c:out&gt; 태그 또는 OWASP Encoder 사용</p>
+                </div>
+                <div class="bg-white p-4 rounded border border-gray-200 text-sm">
+                    <strong class="text-blue-600 block mb-1"><i class="fab fa-python mr-1"></i> Python (Flask/Django)</strong>
+                    <code>{{ user_input }}</code>
+                    <p class="text-gray-500 text-xs mt-1">템플릿 엔진(Jinja2/Django Template)이 기본적으로 자동 이스케이프 처리</p>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-center">
+                <a href="input_validation.html" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center gap-1">
+                    <i class="fas fa-arrow-left"></i> 입력 데이터 검증 가이드로 돌아가기
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- 하단 코드 예제 섹션 -->
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
-        
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java (JSP)</summary>
-            <pre><code><span class="comment">// [KR] JSTL의 c:out 태그를 사용하여 특수문자를 변환(Escape)한다.</span>
-<span class="comment">// [EN] Use JSTL c:out tag to escape special characters.</span>
+    <script>
+        function runVulnerable() {
+            const input = document.getElementById('vulnInput').value;
+            const output = document.getElementById('vulnOutput');
+            
+            // Vulnerable: innerHTML interprets HTML tags
+            output.innerHTML = input; 
+        }
 
-<span class="comment">// ❌ 취약 (Vulnerable)</span>
-&lt;%= request.getParameter("msg") %&gt;
-
-<span class="comment">// ✅ 안전 (Secure)</span>
-&lt;c:out value="${param.msg}" /&gt;</code></pre>
-        </details>
-
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python (Flask/Django)</summary>
-            <pre><code><span class="comment"># [KR] 템플릿 엔진의 자동 이스케이프 기능을 사용한다. safe 필터 사용 주의.</span>
-<span class="comment"># [EN] Use auto-escaping of template engines. Be careful with 'safe' filter.</span>
-
-<span class="comment"># ❌ 취약 (Vulnerable): safe 필터는 이스케이프를 비활성화함</span>
-{{ user_input | safe }}
-
-<span class="comment"># ✅ 안전 (Secure): 기본적으로 자동 이스케이프 적용됨</span>
-{{ user_input }}</code></pre>
-        </details>
-    </div>
+        function runSecure() {
+            const input = document.getElementById('secureInput').value;
+            const output = document.getElementById('secureOutput');
+            
+            // Secure: textContent treats input as pure text
+            output.textContent = input;
+        }
+    </script>
 </body>
 </html>

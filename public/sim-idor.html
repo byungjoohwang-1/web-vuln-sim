@@ -1,103 +1,268 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>IDOR Simulation</title>
-    <!-- 설정 파일 로드 -->
-    <script src="config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부적절한 인가 (IDOR) 시뮬레이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
-        button { padding: 8px 16px; cursor: pointer; }
-        
-        /* 가이드 스타일 */
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
-        .comment { color: #999; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .simulation-box { min-height: 180px; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>🚫 부적절한 인가 (IDOR)</h1>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 사용자가 자신의 권한 밖의 데이터(타인의 주문내역 등)에 접근할 때, 서버가 소유권을 검증하지 않아 발생하는 취약점입니다.</p>
-        <p><strong>[EN]</strong> Occurs when an application provides direct access to objects based on user-supplied input without authorization checks.</p>
-    </div>
-    
-    <div class="container">
-        <!-- 취약한 모드 -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드 (Vulnerable)</h2>
-            <p>상황: 나는 <strong>userA</strong> (주문번호 100번 주인)</p>
-            <p>[KR] 공격: 주문번호를 <strong>101</strong>(userB의 것)로 변조</p>
-            <input type="text" id="vulnInput" value="101">
-            <button onclick="runTest('vulnerableIDOR', 'vulnInput')">Run Attack</button>
+    <div class="max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-orange-600 p-6 text-white flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg">
+                    <i class="fas fa-id-card text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">부적절한 인가 (IDOR)</h1>
+                    <p class="text-orange-100 text-sm">Insecure Direct Object References Simulation</p>
+                </div>
+            </div>
+            <div class="bg-white/20 px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-user-lock mr-1"></i> 파라미터 변조를 통한 타인 정보 접근
+            </div>
         </div>
 
-        <!-- 안전한 모드 -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드 (Secure)</h2>
-            <p>[KR] 방어: 소유자 일치 여부 검증</p>
-            <p>[EN] Defense: Check ownership</p>
-            <input type="text" id="secureInput" value="101">
-            <button onclick="runTest('secureIDOR', 'secureInput')">Run Secure</button>
+        <!-- Context & Explanation -->
+        <div class="p-8 border-b border-gray-100 bg-gray-50">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="md:col-span-2">
+                    <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-blue-500"></i> 시나리오 상황 (Scenario)
+                    </h2>
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        현재 당신은 <strong>'User A' (내 ID: 100)</strong>로 로그인되어 있습니다.<br>
+                        서버에는 다음과 같은 주문 정보가 저장되어 있습니다.
+                    </p>
+                    <ul class="space-y-2 text-sm bg-white p-4 rounded-lg border border-gray-200">
+                        <li class="flex items-center text-green-700 font-semibold">
+                            <span class="w-20 text-gray-500">ID: 100</span> 
+                            <i class="fas fa-check-circle mr-2"></i> 내 주문 (게이밍 노트북) - 접근 허용
+                        </li>
+                        <li class="flex items-center text-red-700 opacity-75">
+                            <span class="w-20 text-gray-500">ID: 101</span> 
+                            <i class="fas fa-times-circle mr-2"></i> User B의 주문 (비밀 문서) - <strong>접근 불가해야 함</strong>
+                        </li>
+                        <li class="flex items-center text-red-700 opacity-75">
+                            <span class="w-20 text-gray-500">ID: 102</span> 
+                            <i class="fas fa-times-circle mr-2"></i> User C의 주문 (개인 사진) - <strong>접근 불가해야 함</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-orange-800 mb-2">공격 목표 (Goal)</h3>
+                    <p class="text-sm text-orange-700 mb-3">
+                        내 주문 번호(100)를 <strong>101</strong>로 변조하여 다른 사람의 주문 정보를 훔쳐보세요.
+                    </p>
+                    <div class="text-center">
+                        <i class="fas fa-user-secret text-4xl text-orange-300"></i>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
-        
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python (Django)</summary>
-            <pre><code><span class="comment"># [KR] 객체 접근 시 소유자(request.user)와 일치하는지 반드시 확인한다.</span>
-<span class="comment"># [EN] Verify that the requesting user owns the object.</span>
+        <!-- Simulation Area -->
+        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            
+            <!-- Vulnerable Side -->
+            <div class="p-8 bg-red-50/30 relative">
+                <div class="absolute top-4 right-4 text-red-200 text-6xl opacity-20 pointer-events-none">
+                    <i class="fas fa-unlock-alt"></i>
+                </div>
+                <h3 class="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+                    <i class="fas fa-times-circle"></i> 취약한 모드 (Vulnerable)
+                </h3>
+                <p class="text-xs text-gray-500 mb-6">서버가 ID만 확인하고 <strong>소유권(Ownership)</strong>은 검증하지 않음</p>
+                
+                <div class="bg-white p-4 rounded-lg border border-red-200 shadow-sm mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Parameter / Input</label>
+                    <div class="flex items-center border border-gray-300 rounded bg-gray-50 px-3 py-2">
+                        <span class="text-gray-400 text-sm mr-2">/order/view?id=</span>
+                        <input type="number" id="vulnInput" value="100" class="bg-transparent outline-none w-full font-mono font-bold text-gray-700">
+                    </div>
+                </div>
+                
+                <button onclick="runVulnerable()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-all transform active:scale-95 shadow-md mb-6 flex items-center justify-center gap-2">
+                    <i class="fas fa-search"></i> 조회 요청 (Request)
+                </button>
 
-def view_order(request, order_id):
-    order = Order.objects.get(id=order_id)
+                <div class="border-2 border-dashed border-red-300 rounded-lg bg-white simulation-box p-4 relative overflow-hidden">
+                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono uppercase">Server Response</span>
+                    <div id="vulnOutput" class="mt-6 flex items-center justify-center h-full text-gray-400">
+                        결과가 여기에 표시됩니다...
+                    </div>
+                </div>
+            </div>
 
-    <span class="comment"># ❌ 취약 (Vulnerable): 그냥 반환</span>
-    <span class="comment"># return render(request, 'order.html', {'order': order})</span>
+            <!-- Secure Side -->
+            <div class="p-8 bg-green-50/30 relative">
+                <div class="absolute top-4 right-4 text-green-200 text-6xl opacity-20 pointer-events-none">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="text-lg font-bold text-green-600 mb-2 flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i> 안전한 모드 (Secure)
+                </h3>
+                <p class="text-xs text-gray-500 mb-6">서버가 <strong>현재 로그인한 사용자와 데이터 소유자가 일치하는지</strong> 검증함</p>
+                
+                <div class="bg-white p-4 rounded-lg border border-green-200 shadow-sm mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Parameter / Input</label>
+                    <div class="flex items-center border border-gray-300 rounded bg-gray-50 px-3 py-2">
+                        <span class="text-gray-400 text-sm mr-2">/order/view?id=</span>
+                        <input type="number" id="secureInput" value="100" class="bg-transparent outline-none w-full font-mono font-bold text-gray-700">
+                    </div>
+                </div>
 
-    <span class="comment"># ✅ 안전 (Secure): 소유자 검증</span>
-    if order.owner != request.user:
-        return HttpResponseForbidden("권한이 없습니다.")
-    
-    return render(request, 'order.html', {'order': order})</code></pre>
-        </details>
+                <button onclick="runSecure()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all transform active:scale-95 shadow-md mb-6 flex items-center justify-center gap-2">
+                    <i class="fas fa-shield-check"></i> 안전한 조회 요청 (Request)
+                </button>
 
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java (Spring Boot)</summary>
-            <pre><code><span class="comment">// [KR] Service 계층에서 현재 로그인한 사용자와 데이터 소유자를 비교한다.</span>
-<span class="comment">// [EN] Compare current user with data owner in Service layer.</span>
+                <div class="border-2 border-dashed border-green-300 rounded-lg bg-white simulation-box p-4 relative overflow-hidden">
+                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono uppercase">Server Response</span>
+                    <div id="secureOutput" class="mt-6 flex items-center justify-center h-full text-gray-400">
+                        결과가 여기에 표시됩니다...
+                    </div>
+                </div>
+            </div>
+        </div>
 
-public Order getOrder(Long orderId, String username) {
-    Order order = orderRepository.findById(orderId);
-    
-    <span class="comment">// ✅ 안전 (Secure)</span>
-    if (!order.getOwner().equals(username)) {
-        throw new AccessDeniedException("접근 권한이 없습니다.");
-    }
-    return order;
-}</code></pre>
-        </details>
+        <!-- Code Reference -->
+        <div class="bg-slate-900 p-6 text-gray-300">
+            <h4 class="font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-code"></i> 백엔드 로직 비교 (Backend Logic Comparison)
+            </h4>
+            <div class="grid md:grid-cols-2 gap-6 text-sm font-mono">
+                <div class="bg-black/30 p-4 rounded border border-red-900/50">
+                    <p class="text-red-400 font-bold mb-2">// Vulnerable (Java/Python)</p>
+                    <p class="text-gray-400">
+                        // 검증 없음: ID로만 조회<br>
+                        return db.getOrder(id);
+                    </p>
+                </div>
+                <div class="bg-black/30 p-4 rounded border border-green-900/50">
+                    <p class="text-green-400 font-bold mb-2">// Secure (Java/Python)</p>
+                    <p class="text-gray-400">
+                        // 소유권 검증 로직 추가<br>
+                        Order o = db.getOrder(id);<br>
+                        if (o.owner != currentUser.id) <span class="text-yellow-300">throw AccessDenied;</span><br>
+                        return o;
+                    </p>
+                </div>
+            </div>
+             <div class="mt-6 flex justify-center">
+                <a href="security_functions.html" class="text-white hover:text-orange-300 font-medium text-sm flex items-center gap-2 transition-colors">
+                    <i class="fas fa-arrow-left"></i> 보안 기능 가이드로 돌아가기
+                </a>
+            </div>
+        </div>
     </div>
 
     <script>
-        function runTest(funcName, inputId) {
-            const inputVal = document.getElementById(inputId).value;
-            // IDOR는 보통 ID값 그대로 호출합니다.
-            const url = `${BASE_URL}/${funcName}?id=${inputVal}`;
-            window.open(url, '_blank');
+        // Mock Data Database
+        const mockDB = {
+            100: { owner: 'User A', content: '💻 게이밍 노트북 (RTX 4090)', price: '$3,500', icon: 'fa-laptop' },
+            101: { owner: 'User B', content: '📄 대외비 프로젝트 기획안', price: 'CONFIDENTIAL', icon: 'fa-file-contract' },
+            102: { owner: 'User C', content: '📸 개인 여행 사진.zip', price: 'PRIVATE', icon: 'fa-images' },
+            999: { owner: 'System', content: '데이터 없음', price: '-', icon: 'fa-question' }
+        };
+
+        const CURRENT_USER = 'User A';
+
+        function getData(id) {
+            return mockDB[id] || null;
+        }
+
+        function renderResult(elementId, data, isSuccess, message) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = '';
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full fade-in';
+
+            if (isSuccess) {
+                // Success Display (Data Revealed)
+                wrapper.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded p-3 mb-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-green-700 bg-green-200 px-2 py-0.5 rounded">HTTP 200 OK</span>
+                            <span class="text-xs text-gray-500">Owner: ${data.owner}</span>
+                        </div>
+                        <div class="flex items-center gap-3 mt-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                                <i class="fas ${data.icon}"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-800">${data.content}</div>
+                                <div class="text-xs text-gray-500">${data.price}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center ${data.owner === CURRENT_USER ? 'text-green-600' : 'text-red-600 font-bold'}">
+                        ${message}
+                    </p>
+                `;
+            } else {
+                // Error Display (Access Denied)
+                wrapper.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded p-4 text-center">
+                        <div class="text-red-500 text-3xl mb-2"><i class="fas fa-ban"></i></div>
+                        <div class="font-bold text-red-700">HTTP 403 Forbidden</div>
+                        <div class="text-xs text-red-500 mt-1">접근 권한이 없습니다.</div>
+                    </div>
+                     <p class="text-xs text-center text-green-600 mt-2 font-bold">
+                        ${message}
+                    </p>
+                `;
+            }
+            el.appendChild(wrapper);
+        }
+
+        function runVulnerable() {
+            const id = document.getElementById('vulnInput').value;
+            const data = getData(id);
+
+            if (!data) {
+                document.getElementById('vulnOutput').innerHTML = '<span class="text-gray-400">데이터를 찾을 수 없습니다 (404 Not Found)</span>';
+                return;
+            }
+
+            // Vulnerable Logic: Just return data if ID exists
+            let message = "";
+            if (data.owner !== CURRENT_USER) {
+                message = `⚠️ 경고: ${CURRENT_USER}가 ${data.owner}의 데이터를 무단 조회했습니다! (취약점 발생)`;
+            } else {
+                message = "본인의 데이터를 정상적으로 조회했습니다.";
+            }
+            
+            renderResult('vulnOutput', data, true, message);
+        }
+
+        function runSecure() {
+            const id = document.getElementById('secureInput').value;
+            const data = getData(id);
+
+            if (!data) {
+                document.getElementById('secureOutput').innerHTML = '<span class="text-gray-400">데이터를 찾을 수 없습니다 (404 Not Found)</span>';
+                return;
+            }
+
+            // Secure Logic: Check Ownership
+            if (data.owner !== CURRENT_USER) {
+                // Block access if owner doesn't match
+                renderResult('secureOutput', null, false, "✅ 방어 성공: 타인의 데이터 접근을 서버가 차단했습니다.");
+            } else {
+                // Allow access if owner matches
+                renderResult('secureOutput', data, true, "✅ 인증 성공: 본인의 데이터입니다.");
+            }
         }
     </script>
 </body>
