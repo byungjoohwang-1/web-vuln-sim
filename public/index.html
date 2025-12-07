@@ -3,67 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WEB-VULN-SIM: 보안 약점 진단 시뮬레이터</title>
+    <title>Web Security Simulator</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { padding-top: 20px; background-color: #f8f9fa; }
-        .container { max-width: 900px; }
-        .card { margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header-title { color: #2c3e50; font-weight: bold; margin-bottom: 30px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+        }
+        #wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh; /* 전체 높이 사용 */
+        }
+        
+        /* 사이드바 스타일 (Dark Navy) */
+        #sidebar-wrapper {
+            min-height: 100vh;
+            width: 280px;
+            background-color: #0f172a; /* 스크린샷과 유사한 다크 네이비 */
+            color: #94a3b8;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem 1.25rem;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-bottom: 1px solid #1e293b;
+        }
+        
+        .sidebar-brand small {
+            display: block;
+            font-size: 0.65rem;
+            color: #64748b;
+            margin-top: 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* 메뉴 아이템 스타일 */
+        .list-group-item {
+            background-color: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .list-group-item:hover, .list-group-item:focus {
+            background-color: #1e293b;
+            color: #fff;
+        }
+        
+        .list-group-item i {
+            width: 20px;
+            margin-right: 8px;
+            text-align: center;
+        }
+
+        /* 카테고리 헤더 */
+        .menu-category {
+            padding: 12px 20px;
+            color: #fff;
+            font-weight: 600;
+            background-color: #1e293b; /* 약간 밝은 배경으로 구분 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        /* 메인 콘텐츠 영역 */
+        #page-content-wrapper {
+            width: 100%;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+
+        .content-header {
+            padding: 2rem;
+            background-color: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1 class="text-center header-title">WEB-VULN-SIM</h1>
-    
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary rounded mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.html">Home</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            1. 구현 단계 진단 (13개 항목)
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="sim-sql.html">1. SQL 삽입 (SQL Injection)</a></li>
-                            <li><a class="dropdown-item" href="sim-path.html">2. 경로 조작 (Path Traversal)</a></li>
-                            <li><a class="dropdown-item" href="sim-xss.html">3. 크로스사이트 스크립트 (XSS)</a></li>
-                            <li><a class="dropdown-item" href="sim-csrf.html">4. CSRF</a></li>
-                            <li><a class="dropdown-item" href="sim-cmd.html">5. 운영체제 명령어 삽입</a></li>
-                            <li><a class="dropdown-item" href="sim-upload.html">6. 위험한 파일 업로드</a></li>
-                            <li><a class="dropdown-item" href="sim-ssrf.html">7. 서버 측 요청 위조 (SSRF)</a></li>
-                            <li><a class="dropdown-item" href="sim-xxe.html">8. XXE (XML 외부 엔티티)</a></li>
-                            <li><a class="dropdown-item" href="sim-brute.html">9. 인증 시도 제한 부재</a></li>
-                            <li><a class="dropdown-item" href="sim-idor.html">10. 부적절한 인가 (IDOR)</a></li>
-                            <li><a class="dropdown-item" href="sim-encap.html">11. 잘못된 캡슐화</a></li>
-                            <li><a class="dropdown-item" href="sim-error-handling.html">12. 오류 처리 미흡</a></li>
-                            <li><a class="dropdown-item" href="sim-quality.html">13. 코드 품질/API 오용</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="guide-security.html">보안 가이드</a>
-                    </li>
-                </ul>
+<div id="wrapper">
+    <div id="sidebar-wrapper">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-cube me-2"></i> Web Security Simulator
+            <small>V0.2 BETA | MADE BY JACK</small>
+        </div>
+
+        <div class="list-group list-group-flush mt-2">
+            
+            <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
+                <span><i class="fa-solid fa-bug text-danger me-2"></i> 1. Simulator (13 Attacks)</span>
+                <i class="fa-solid fa-chevron-down fa-xs"></i>
+            </div>
+            
+            <div class="collapse show" id="menu1">
+                <a href="sim-sql.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-database"></i> SQL Injection
+                </a>
+                <a href="sim-cmd.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-terminal"></i> Command Injection
+                </a>
+                <a href="sim-xxe.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-file-code"></i> XXE Injection
+                </a>
+                <a href="sim-xss.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-code"></i> Reflected XSS
+                </a>
+                <a href="sim-csrf.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-globe"></i> CSRF Attack
+                </a>
+                <a href="sim-ssrf.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-server"></i> SSRF
+                </a>
+                <a href="sim-upload.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-file-arrow-up"></i> File Upload
+                </a>
+                <a href="sim-path.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-folder-open"></i> Path Traversal
+                </a>
+                <a href="sim-split.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-arrows-split-up-and-left"></i> HTTP Splitting
+                </a>
+                <a href="sim-brute.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-lock"></i> Brute Force
+                </a>
+                <a href="sim-idor.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-id-card"></i> IDOR
+                </a>
+                <a href="sim-error-handling.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Error Exposure
+                </a>
+                <a href="sim-code.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-code-branch"></i> Code Injection
+                </a>
+            </div>
+
+            <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
+                <span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span>
+                <i class="fa-solid fa-chevron-down fa-xs"></i>
+            </div>
+            
+            <div class="collapse show" id="menu2">
+                <a href="guide-input.html" class="list-group-item list-group-item-action">
+                    <i class="fa-regular fa-file-lines"></i> 2-1. 입력 데이터 검증 및 표현
+                </a>
+                <a href="guide-security.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-shield-halved"></i> 2-2. 보안 기능
+                </a>
+                
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-hourglass-half"></i> 2-3. 시간 및 상태
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-bug"></i> 2-4. 에러 처리
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-check-double"></i> 2-5. 코드 품질
+                </a>
+                
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-box-open"></i> 2-6. 캡슐화 및 API 오용
+                </a>
             </div>
         </div>
-    </nav>
-
-    <div class="card p-4">
-        <h3>환영합니다</h3>
-        <p>상단 메뉴에서 진단하고 싶은 <strong>13가지 보안 약점</strong>을 선택하여 시뮬레이션을 진행하세요.</p>
-        <hr>
-        <div class="alert alert-info">
-            <strong>시스템 상태:</strong> 모든 시뮬레이터 파일이 로드되었습니다.
+    </div>
+    <div id="page-content-wrapper">
+        <div class="container-fluid p-5">
+            <h1 class="mb-4">Web Security Simulator Dashboard</h1>
+            <p class="lead">왼쪽 사이드바에서 실습할 취약점 공격(Simulator) 또는 시큐어 코딩 가이드(Guidelines)를 선택하세요.</p>
+            <hr class="my-4">
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-0 bg-light">
+                        <div class="card-body">
+                            <h4 class="card-title text-danger"><i class="fa-solid fa-shield-virus"></i> 모의 해킹 실습</h4>
+                            <p class="card-text">SQL Injection, XSS, CSRF 등 13가지 주요 웹 취약점을 직접 공격해보며 원리를 이해할 수 있습니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-0 bg-light">
+                        <div class="card-body">
+                            <h4 class="card-title text-primary"><i class="fa-solid fa-book-open"></i> 시큐어 코딩 가이드</h4>
+                            <p class="card-text">행정안전부 7대 가이드라인을 기반으로 안전한 코드 작성법과 방어 기법을 학습합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-4" role="alert">
+                <i class="fa-solid fa-circle-info me-2"></i> 
+                <strong>시스템 상태:</strong> 모든 시뮬레이터 파일이 정상 로드되었습니다. (v0.2 Beta)
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>
