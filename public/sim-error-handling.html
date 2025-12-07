@@ -2,191 +2,576 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>2-4. 부적절한 에러 처리 시뮬레이션</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="config.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2-4. 에러 처리 코드 가이드</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
     <style>
-        /* Stack Trace 출력을 위한 스타일 */
-        pre { white-space: pre-wrap; word-wrap: break-word; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+        }
+        #wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        /* 사이드바 스타일 (Dark Navy) */
+        #sidebar-wrapper {
+            min-height: 100vh;
+            width: 280px;
+            background-color: #0f172a;
+            color: #94a3b8;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem 1.25rem;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-bottom: 1px solid #1e293b;
+        }
+        
+        .sidebar-brand small {
+            display: block;
+            font-size: 0.65rem;
+            color: #64748b;
+            margin-top: 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* 메뉴 아이템 스타일 */
+        .list-group-item {
+            background-color: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .list-group-item:hover, .list-group-item:focus, .list-group-item.active {
+            background-color: #1e293b;
+            color: #fff;
+        }
+        
+        .list-group-item i {
+            width: 20px;
+            margin-right: 8px;
+            text-align: center;
+        }
+
+        /* 카테고리 헤더 */
+        .menu-category {
+            padding: 12px 20px;
+            color: #fff;
+            font-weight: 600;
+            background-color: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        /* 메인 콘텐츠 영역 */
+        #page-content-wrapper {
+            width: 100%;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+        .code-block-header {
+            background-color: #1e293b;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            border-radius: 0.25rem 0.25rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        pre[class*="language-"] {
+            margin: 0;
+            border-radius: 0 0 0.25rem 0.25rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
     </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body>
 
-    <div class="max-w-5xl mx-auto p-6">
-        <div class="mb-8">
-            <a href="index.html" class="text-gray-500 hover:text-gray-900 text-sm mb-2 inline-flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                메인 대시보드로 이동
-            </a>
-            <h1 class="text-3xl font-bold text-gray-900 flex items-center mt-2">
-                <span class="mr-3 p-2 bg-red-100 rounded-lg text-red-500 text-2xl">⚠️</span>
-                2-4. 부적절한 에러 처리 (Improper Error Handling)
-            </h1>
-            <p class="mt-3 text-gray-600">
-                소프트웨어 실행 중 발생한 오류 메시지를 통해 
-                <span class="font-bold text-red-500">시스템 내부 정보(경로, DB구조, 라이브러리 버전 등)</span>가 공격자에게 노출되는 취약점입니다.
-            </p>
+<div id="wrapper">
+    <div id="sidebar-wrapper">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-cube me-2"></i> Web Security Simulator
+            <small>V0.2 BETA | MADE BY JACK</small>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div class="list-group list-group-flush mt-2">
             
-            <div class="bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
-                <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
-                    <h3 class="font-bold text-red-700 flex items-center">
-                        🚫 취약한 구현 (Vulnerable)
-                    </h3>
-                    <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">Stack Trace 노출</span>
-                </div>
-                <div class="p-6">
-                    <p class="text-sm text-gray-600 mb-4">
-                        DB 연결 실패 등의 예외 발생 시, <code>e.printStackTrace()</code> 내용을 웹 브라우저에 그대로 출력합니다.
-                    </p>
-                    <button onclick="runSimulation('vulnerableError')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex justify-center items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        오류 발생 시키기
-                    </button>
-                    
-                    <div id="result-vuln" class="mt-4 bg-gray-900 text-green-400 p-4 rounded-lg text-xs font-mono min-h-[150px] overflow-auto border border-gray-700 shadow-inner">
-                        <span class="text-gray-500">// 결과가 여기에 표시됩니다...</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-green-100 overflow-hidden">
-                <div class="bg-green-50 px-6 py-4 border-b border-green-100 flex justify-between items-center">
-                    <h3 class="font-bold text-green-700 flex items-center">
-                        ✅ 안전한 구현 (Secure)
-                    </h3>
-                    <span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">사용자 정의 메시지</span>
-                </div>
-                <div class="p-6">
-                    <p class="text-sm text-gray-600 mb-4">
-                        내부 로그에는 상세 정보를 기록하고, 사용자에게는 <strong>"일시적인 오류입니다"</strong>와 같은 단순 메시지만 보여줍니다.
-                    </p>
-                    <button onclick="runSimulation('secureError')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex justify-center items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        안전한 처리 확인
-                    </button>
-
-                    <div id="result-secure" class="mt-4 bg-gray-50 text-gray-700 p-4 rounded-lg text-sm min-h-[150px] border border-gray-200 shadow-inner flex items-center justify-center">
-                        <span class="text-gray-400">// 결과가 여기에 표시됩니다...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-slate-800 text-white rounded-xl shadow-lg overflow-hidden">
-            <div class="bg-slate-900 px-6 py-4 border-b border-slate-700">
-                <h2 class="text-lg font-bold text-white flex items-center">
-                    📚 [보안 가이드 분석] 언어별 취약점 및 대책
-                </h2>
+            <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
+                <span><i class="fa-solid fa-bug text-danger me-2"></i> 1. Simulator (10 Attacks)</span>
+                <i class="fa-solid fa-chevron-down fa-xs"></i>
             </div>
             
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="collapse show" id="menu1">
+                <a href="sim-sql.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-database"></i> SQL Injection</a>
+                <a href="sim-cmd.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-terminal"></i> Command Injection</a>
+                <a href="sim-xxe.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-file-code"></i> XXE Injection</a>
+                <a href="sim-xss.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-code"></i> Reflected XSS</a>
+                <a href="sim-csrf.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-globe"></i> CSRF Attack</a>
+                <a href="sim-ssrf.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-server"></i> SSRF</a>
+                <a href="sim-upload.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-file-arrow-up"></i> File Upload</a>
+                <a href="sim-path.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-folder-open"></i> Path Traversal</a>
+                <a href="sim-split.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-arrows-split-up-and-left"></i> HTTP Splitting</a>
+                <a href="sim-brute.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-lock"></i> Brute Force</a>
+                <a href="sim-idor.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-id-card"></i> IDOR</a>
+                <a href="sim-code.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-code-branch"></i> Code Injection</a>
+            </div>
+
+            <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
+                <span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span>
+                <i class="fa-solid fa-chevron-down fa-xs"></i>
+            </div>
+            
+            <div class="collapse show" id="menu2">
+                <a href="guide-input.html" class="list-group-item list-group-item-action"><i class="fa-regular fa-file-lines"></i> 2-1. 입력 데이터 검증 및 표현</a>
+                <a href="guide-security.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-shield-halved"></i> 2-2. 보안 기능</a>
+                <a href="sim-time-state.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-hourglass-half"></i> 2-3. 시간 및 상태</a>
                 
-                <div>
-                    <h3 class="text-yellow-400 font-bold mb-3 flex items-center text-lg">
-                        <span class="mr-2">☕</span> Java (JSP/Spring)
-                    </h3>
-                    <div class="bg-black rounded-lg p-4 font-mono text-sm border border-gray-700">
-                        <div class="mb-4">
-                            <p class="text-red-400 font-bold mb-1">// [취약] e.printStackTrace() 직접 노출</p>
-                            <pre class="text-gray-300">
-try {
-    ...
-} catch (SQLException e) {
-    <span class="text-red-500">e.printStackTrace(response.getWriter());</span>
-    // ▲ 결과: DB 종류, 쿼리, 테이블명,
-    // 서버 절대 경로가 브라우저에 출력됨
-}
-                            </pre>
-                        </div>
-                        <div>
-                            <p class="text-green-400 font-bold mb-1">// [안전] 로깅 프레임워크 사용</p>
-                            <pre class="text-gray-300">
-try {
-    ...
-} catch (SQLException e) {
-    <span class="text-green-500">logger.error("Error Code 102", e);</span> 
-    // ▲ 서버 로그 파일에만 기록
-    
-    <span class="text-green-500">out.println("시스템 장애가 발생했습니다.");</span>
-    // ▲ 사용자에게는 단순 메시지만 전달
-}
-                            </pre>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-blue-400 font-bold mb-3 flex items-center text-lg">
-                        <span class="mr-2">🐍</span> Python (Django/Flask)
-                    </h3>
-                    <div class="bg-black rounded-lg p-4 font-mono text-sm border border-gray-700">
-                        <div class="mb-4">
-                            <p class="text-red-400 font-bold mb-1"># [취약] 디버그 모드 활성화</p>
-                            <pre class="text-gray-300">
-# settings.py (Django)
-<span class="text-red-500">DEBUG = True</span> 
-
-# 운영 환경(Production)에서 True일 경우,
-# 에러 발생 시 상세 Traceback 페이지가 노출됨.
-# (환경 변수, 소스 코드 일부 등 포함)
-                            </pre>
-                        </div>
-                        <div>
-                            <p class="text-green-400 font-bold mb-1"># [안전] 예외 처리 및 로깅</p>
-                            <pre class="text-gray-300">
-import logging
-
-try:
-    file = open('secret_data.txt')
-except FileNotFoundError:
-    <span class="text-green-500">logging.exception("File Missing")</span>
-    # ▲ 관리자만 볼 수 있는 로그에 기록
-    
-    <span class="text-green-500">return "요청하신 파일을 찾을 수 없습니다."</span>
-                            </pre>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start">
-            <svg class="w-6 h-6 text-blue-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <div>
-                <h4 class="font-bold text-blue-800">개발자 팁</h4>
-                <p class="text-sm text-blue-700 mt-1">
-                    운영 서버에서는 반드시 <strong>Custom Error Page</strong>(예: 404.html, 500.html)를 설정하여, WAS(Web Application Server)의 기본 에러 페이지가 노출되지 않도록 해야 합니다.
-                </p>
+                <a href="sim-error-handling.html" class="list-group-item list-group-item-action active">
+                    <i class="fa-solid fa-bug"></i> 2-4. 에러 처리
+                </a>
+                <a href="sim-quality.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-check-double"></i> 2-5. 코드 품질
+                </a>
+                <a href="sim-encap.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-box-open"></i> 2-6. 캡슐화 및 API 오용
+                </a>
             </div>
         </div>
     </div>
-
-    <script>
-        async function runSimulation(endpoint) {
-            const targetId = endpoint === 'vulnerableError' ? 'result-vuln' : 'result-secure';
-            const targetEl = document.getElementById(targetId);
+    
+    <div id="page-content-wrapper">
+        <div class="container-fluid p-5">
+            <h1 class="mb-4 text-danger"><i class="fa-solid fa-bug me-2"></i> 2-4. 에러 처리 (Error Handling)</h1>
+            <p class="lead">에러 발생 시 부적절한 처리로 인해 발생하는 취약점을 **Java**와 **Python** 코드를 통해 학습합니다.</p>
+            <hr>
             
-            // 로딩 표시
-            targetEl.innerHTML = '<span class="animate-pulse">⏳ 서버 요청 중...</span>';
+            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> 1. 널 포인터 역참조 (Null Pointer Dereference)</h2>
+            <p class="text-secondary">객체가 null인지 확인하지 않고 접근하여 프로그램 비정상 종료나 서비스 거부(DoS)를 유발합니다.</p>
 
-            try {
-                // 이전에 만든 index.js의 함수 호출
-                const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">NullPointerException</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+String user = getUserName(id); // user가 null을 반환할 수 있음
+// ... (생략)
+
+// user 변수가 null인지 검사하지 않음
+if (user.length() > 0) { 
+    // user가 null일 경우 NullPointerException 발생
+    System.out.println("User exists.");
+} 
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: Null 검사</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+String user = getUserName(id);
+
+// 1. null인지 명시적으로 확인
+if (user != null && user.length() > 0) {
+    System.out.println("User exists.");
+}
+
+// 2. Optional 사용 (Java 8+)
+Optional.ofNullable(user)
+        .ifPresent(u -> System.out.println("User exists."));
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">AttributeError</span></div>
+                        <pre><code class="language-python"># 취약한 코드 (Python)
+def get_user_data(user_id):
+    # user_data가 None을 반환할 수 있음
+    return None 
+
+user_data = get_user_data(101)
+
+# None 객체에 .keys() 메서드 호출 시도
+if user_data.keys(): 
+    print("Data found.")
+# AttributeError: 'NoneType' object has no attribute 'keys' 발생
+</code></pre>
+                    </div>
+                </div>
                 
-                // 500 에러 등의 HTML 응답을 텍스트로 받아옴
-                const htmlText = await response.text();
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: None 검사</span></div>
+                        <pre><code class="language-python"># 안전한 코드 (Python)
+user_data = get_user_data(101)
+
+# 1. is not None으로 명시적 확인
+if user_data is not None and user_data:
+    if 'name' in user_data.keys():
+        print("Data is valid.")
+
+# 2. Try-Except 문으로 예외 처리
+try:
+    if user_data.keys():
+        print("Data found.")
+except AttributeError:
+    print("User data is missing or invalid.")
+</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-5">
+
+            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-box-open me-2"></i> 2. 부적절한 자원 해제 (Improper Resource Release)</h2>
+            <p class="text-secondary">열린 파일, DB 연결, 소켓 등의 자원을 명시적으로 닫지 않아 자원 누수 및 DoS를 유발합니다.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">자원 누수</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+FileInputStream fis = null;
+try {
+    fis = new FileInputStream("data.txt");
+    // ... 파일 처리 중 예외 발생 가능
+    if (fis.read() == -1) { 
+        return; // 여기서 함수가 종료되면서 close() 실행 안 됨
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+} 
+// finally 블록이 없거나, return 등으로 close()가 누락됨
+// fis.close() 누락
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: Try-with-Resources</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+// Try-with-Resources 사용 (AutoCloseable 구현 객체)
+try (FileInputStream fis = new FileInputStream("data.txt")) {
+    int data = fis.read();
+    // ... 파일 처리 로직
+    System.out.println(data);
+} catch (IOException e) {
+    e.printStackTrace();
+}
+// try 블록을 벗어나면 fis.close()가 자동으로 호출됨
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">자원 누수</span></div>
+                        <pre><code class="language-python"># 취약한 코드 (Python)
+f = open('config.log', 'r')
+data = f.read()
+
+if 'error' in data:
+    return data # 여기서 함수 종료. f.close() 누락
+
+# f.close()를 명시적으로 호출하지 않음
+# 예외 발생 시에도 close()가 실행되지 않음
+</code></pre>
+                    </div>
+                </div>
                 
-                // 결과 표시
-                targetEl.innerHTML = htmlText;
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: With 문</span></div>
+                        <pre><code class="language-python"># 안전한 코드 (Python)
+try:
+    # with 문 사용 (Context Manager)
+    with open('config.log', 'r') as f:
+        data = f.read()
+        
+        if 'error' in data:
+            return data
+            
+    # with 블록을 벗어나는 순간 f.close()가 자동 호출됨
+except FileNotFoundError:
+    print("File not found.")
+</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-5">
+
+            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-circle-exclamation me-2"></i> 3. 오류 메시지를 통한 정보 노출</h2>
+            <p class="text-secondary">개발 환경의 상세한 오류 메시지(스택 트레이스 등)를 사용자에게 그대로 노출하여 시스템 정보를 유출합니다.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">정보 노출</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+try {
+    // DB 연결 실패 또는 SQL 구문 오류 발생
+    connection.createStatement(); 
+} catch (Exception e) {
+    // 스택 트레이스를 응답에 포함하거나 클라이언트에 출력
+    response.getWriter().write(e.toString()); // 상세 예외 정보 클라이언트 전달
+    e.printStackTrace(); // 서버 로그에 기록하고 클라이언트에 500 에러 전달
+}
+// DB 스키마, 파일 경로, 서버 내부 구조 등 상세 정보 노출
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 일반화된 오류</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+try {
+    connection.createStatement();
+} catch (SQLException e) {
+    // 1. 상세 내용은 서버 로그에만 기록 (개발자용)
+    log.error("Database error occurred: ", e);
+    
+    // 2. 클라이언트에게는 일반적인 메시지만 전달
+    response.sendError(500, "서비스 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+}
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">정보 노출</span></div>
+                        <pre><code class="language-python"># 취약한 코드 (Python - Flask/Django 예시)
+from flask import Flask, jsonify
+
+@app.route('/data')
+def get_data():
+    try:
+        result = 10 / 0 # ZeroDivisionError 발생
+    except Exception as e:
+        # e.args를 통해 상세 에러 메시지 직접 반환
+        return jsonify({'error': str(e)}), 500
+# "division by zero"와 같은 내부 예외 메시지 노출
+</code></pre>
+                    </div>
+                </div>
                 
-            } catch (error) {
-                targetEl.innerHTML = `<span class="text-red-500">Client Error: ${error.message}</span>`;
-            }
-        }
-    </script>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 일반화된 오류</span></div>
+                        <pre><code class="language-python"># 안전한 코드 (Python - Flask/Django 예시)
+import logging
+log = logging.getLogger(__name__)
+
+@app.route('/data')
+def get_data():
+    try:
+        result = 10 / 0 
+    except Exception as e:
+        # 1. 상세 내용은 서버 로그에 기록
+        log.error("데이터 처리 중 오류 발생", exc_info=True)
+        
+        # 2. 사용자에게는 일반 메시지 반환
+        return jsonify({'error': 'Internal Server Error'}), 500
+</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-5">
+
+            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-hand-fist me-2"></i> 4. 예외 처리 미흡 (Inadequate Exception Handling)</h2>
+            <p class="text-secondary">광범위한 예외(`Exception` 또는 `BaseException`)를 잡고 로그를 남기지 않거나, 적절한 후속 조치 없이 에러를 무시합니다(Swallowing Error).</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">Swallowing Error</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+try {
+    // 중요한 로직 (예: 파일 삭제)
+    fileManager.deleteFile(userFile);
+} catch (Exception e) { 
+    // 모든 예외를 잡고 아무런 조치도 취하지 않음 (Log도 없음)
+    // 공격자가 에러 발생을 유도해도 아무도 모름
+}
+// 오류가 발생했지만 프로그램은 정상적으로 계속 실행
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 명시적 Catch 및 Log</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+try {
+    fileManager.deleteFile(userFile);
+} catch (SecurityException e) { 
+    // 1. 필요한 특정 예외만 잡음
+    log.warn("파일 삭제 권한 없음: ", e);
+    // 2. 적절한 예외 처리 로직 (재시도, 사용자에게 오류 메시지 전달 등)
+} catch (IOException e) {
+    log.error("파일 I/O 오류 발생: ", e);
+    throw new RuntimeException("파일 삭제 실패", e); // 3. 오류 전파
+}
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">Swallowing Error</span></div>
+                        <pre><code class="language-python"># 취약한 코드 (Python)
+try:
+    # 중요한 계산 로직
+    result = calculate_critical_value(data)
+except: 
+    # 예외의 종류와 상관없이 모두 무시하고 통과
+    pass 
+    
+return default_value # 계산 오류에도 불구하고 기본값 반환
+</code></pre>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 명시적 Catch 및 Log</span></div>
+                        <pre><code class="language-python"># 안전한 코드 (Python)
+import logging
+log = logging.getLogger(__name__)
+
+try:
+    result = calculate_critical_value(data)
+except ZeroDivisionError as e: 
+    # 1. 특정 예외만 잡고 로그 기록
+    log.warning(f"계산 중 0 나누기 오류 발생: {e}")
+    result = 0 # 2. 안전한 기본값 설정
+except Exception as e:
+    # 3. 예상치 못한 예외는 상세 로그 기록 후 재전파
+    log.error("알 수 없는 오류 발생", exc_info=True)
+    raise 
+</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-5">
+
+            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-list-check me-2"></i> 5. 오류 처리 누락 (Missing Error Handling)</h2>
+            <p class="text-secondary">잠재적으로 예외가 발생할 수 있는 함수나 시스템 호출에 대해 예외 처리(`try-catch`/`try-except`)를 전혀 하지 않아 서비스가 중단됩니다.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">서비스 중단</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+// 파일 읽기/쓰기는 IOException 발생 가능
+public String readConfig(String path) {
+    // new FileReader는 FileNotFoundException을 throw함에도 처리하지 않음
+    FileReader fr = new FileReader(path); 
+    BufferedReader br = new BufferedReader(fr);
+    return br.readLine(); 
+}
+// main 함수에서 호출 시, 예외 처리 없으면 컴파일 오류 또는 런타임 종료
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 예외 전파/처리</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+// 1. 함수 레벨에서 예외를 호출자로 전파
+public String readConfigSecure(String path) throws IOException {
+    try (FileReader fr = new FileReader(path);
+         BufferedReader br = new BufferedReader(fr)) {
+        return br.readLine();
+    }
+}
+// 2. 호출자는 try-catch로 예외를 반드시 처리해야 함
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">서비스 중단</span></div>
+                        <pre><code class="language-python"># 취약한 코드 (Python)
+def load_settings(filename):
+    # 파일이 없을 경우 FileNotFoundError 발생 가능
+    with open(filename, 'r') as f: 
+        return json.load(f)
+
+# 파일이 없는 상태에서 함수 호출 시
+# 프로그램이 FileNotFoundError로 비정상 종료됨
+</code></pre>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 기본값 제공</span></div>
+                        <pre><code class="language-python"># 안전한 코드 (Python)
+import json
+
+def load_settings_secure(filename):
+    try:
+        with open(filename, 'r') as f: 
+            return json.load(f)
+    except FileNotFoundError:
+        # 파일이 없을 경우 안전한 기본 설정 반환 (오류 무시가 아님)
+        print(f"설정 파일 {filename}을 찾을 수 없습니다. 기본 설정을 사용합니다.")
+        return {"default_key": "default_value"}
+    except json.JSONDecodeError:
+        # 파일 손상 시 적절한 처리
+        print("설정 파일 형식이 잘못되었습니다.")
+        return {"default_key": "default_value"}
+</code></pre>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+    // 코드 하이라이팅 활성화
+    document.addEventListener('DOMContentLoaded', (event) => {
+        Prism.highlightAll();
+    });
+</script>
+
 </body>
 </html>
