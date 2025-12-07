@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2-3. 시간 및 상태 시뮬레이터</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+        }
+        #wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        /* 사이드바 스타일 (Dark Navy) - index.html과 동일하게 유지 */
+        #sidebar-wrapper {
+            min-height: 100vh;
+            width: 280px;
+            background-color: #0f172a;
+            color: #94a3b8;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem 1.25rem;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-bottom: 1px solid #1e293b;
+        }
+        
+        .sidebar-brand small {
+            display: block;
+            font-size: 0.65rem;
+            color: #64748b;
+            margin-top: 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* 메뉴 아이템 스타일 */
+        .list-group-item {
+            background-color: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .list-group-item:hover, .list-group-item:focus, .list-group-item.active {
+            background-color: #1e293b;
+            color: #fff;
+        }
+        
+        .list-group-item i {
+            width: 20px;
+            margin-right: 8px;
+            text-align: center;
+        }
+
+        /* 카테고리 헤더 */
+        .menu-category {
+            padding: 12px 20px;
+            color: #fff;
+            font-weight: 600;
+            background-color: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        /* 메인 콘텐츠 영역 */
+        #page-content-wrapper {
+            width: 100%;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+    <div id="sidebar-wrapper">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-cube me-2"></i> Web Security Simulator
+            <small>V0.2 BETA | MADE BY JACK</small>
+        </div>
+
+        <div class="list-group list-group-flush mt-2">
+            
+            <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
+                <span><i class="fa-solid fa-bug text-danger me-2"></i> 1. Simulator (10 Attacks)</span>
+                <i class="fa-solid fa-chevron-down fa-xs"></i>
+            </div>
+            
+            <div class="collapse show" id="menu1">
+                <a href="sim-sql.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-database"></i> SQL Injection</a>
+                <a href="sim-cmd.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-terminal"></i> Command Injection</a>
+                <a href="sim-xxe.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-file-code"></i> XXE Injection</a>
+                <a href="sim-xss.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-code"></i> Reflected XSS</a>
+                <a href="sim-csrf.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-globe"></i> CSRF Attack</a>
+                <a href="sim-ssrf.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-server"></i> SSRF</a>
+                <a href="sim-upload.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-file-arrow-up"></i> File Upload</a>
+                <a href="sim-path.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-folder-open"></i> Path Traversal</a>
+                <a href="sim-split.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-arrows-split-up-and-left"></i> HTTP Splitting</a>
+                <a href="sim-brute.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-lock"></i> Brute Force</a>
+                <a href="sim-idor.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-id-card"></i> IDOR</a>
+                <a href="sim-code.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-code-branch"></i> Code Injection</a>
+            </div>
+
+            <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
+                <span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span>
+                <i class="fa-solid fa-chevron-down fa-xs"></i>
+            </div>
+            
+            <div class="collapse show" id="menu2">
+                <a href="guide-input.html" class="list-group-item list-group-item-action"><i class="fa-regular fa-file-lines"></i> 2-1. 입력 데이터 검증 및 표현</a>
+                <a href="guide-security.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-shield-halved"></i> 2-2. 보안 기능</a>
+                
+                <a href="sim-time-state.html" class="list-group-item list-group-item-action active">
+                    <i class="fa-solid fa-hourglass-half"></i> 2-3. 시간 및 상태
+                </a>
+                <a href="sim-error-handling.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-bug"></i> 2-4. 에러 처리
+                </a>
+                <a href="sim-quality.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-check-double"></i> 2-5. 코드 품질
+                </a>
+                <a href="sim-encap.html" class="list-group-item list-group-item-action">
+                    <i class="fa-solid fa-box-open"></i> 2-6. 캡슐화 및 API 오용
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div id="page-content-wrapper">
+        <div class="container-fluid p-5">
+            <h1 class="mb-4 text-primary">⏳ 2-3. 시간 및 상태 (Time and State)</h1>
+            <p class="lead">동시성(Concurrency) 문제로 인해 발생하는 보안 약점을 실습합니다. 주로 **경쟁 조건(Race Condition)**을 다룹니다.</p>
+            <hr>
+            
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i> 취약점 개요</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>두 개 이상의 프로세스가 동시에 공유 자원에 접근할 때, 접근 순서에 따라 결과가 달라지는 상황에서 발생할 수 있는 취약점입니다.</p>
+                            <ul>
+                                <li>**TOCTOU (Time-of-Check to Time-of-Use)**: 검사 시점과 사용 시점 사이에 상태가 바뀌어 발생하는 오류입니다.</li>
+                            </ul>
+                            <div class="alert alert-danger mt-3">
+                                <strong>해결 방안:</strong> 공유 자원에 대한 **원자성(Atomicity)**을 보장하고, 락(Lock)을 사용하여 동시 접근을 제어해야 합니다.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">실습 코드 (Vulnerable Code)</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre><code class="language-java">// 여기에 취약한 코드를 넣어주세요.</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">공격 결과 시뮬레이션</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>공격 시나리오를 여기에 작성합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
