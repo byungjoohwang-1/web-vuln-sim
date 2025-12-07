@@ -19,8 +19,6 @@
             width: 100%;
             height: 100vh;
         }
-        
-        /* 사이드바 스타일 (Dark Navy) */
         #sidebar-wrapper {
             min-height: 100vh;
             width: 280px;
@@ -163,190 +161,30 @@
     
     <div id="page-content-wrapper">
         <div class="container-fluid p-5">
-            <h1 class="mb-4 text-danger"><i class="fa-solid fa-bug me-2"></i> 2-4. 에러 처리 (Error Handling)</h1>
+            <h1 class="mb-4 text-danger"><i class="fa-solid fa-bug me-2"></i> 2-4. 에러 처리 가이드 (제4절)</h1>
             <p class="lead">에러 발생 시 부적절한 처리로 인해 발생하는 취약점을 **Java**와 **Python** 코드를 통해 학습합니다.</p>
             <hr>
             
-            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> 1. 널 포인터 역참조 (Null Pointer Dereference)</h2>
-            <p class="text-secondary">객체가 null인지 확인하지 않고 접근하여 프로그램 비정상 종료나 서비스 거부(DoS)를 유발합니다.</p>
+            <h2 class="mt-5 mb-4 text-primary"><i class="fa-solid fa-screwdriver-wrench me-2"></i> 제4절: 에러 처리</h2>
 
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">NullPointerException</span></div>
-                        <pre><code class="language-java">/* 취약한 코드 (Java) */
-String user = getUserName(id); // user가 null을 반환할 수 있음
-// ... (생략)
-
-// user 변수가 null인지 검사하지 않음
-if (user.length() > 0) { 
-    // user가 null일 경우 NullPointerException 발생
-    System.out.println("User exists.");
-} 
-</code></pre>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: Null 검사</span></div>
-                        <pre><code class="language-java">/* 안전한 코드 (Java) */
-String user = getUserName(id);
-
-// 1. null인지 명시적으로 확인
-if (user != null && user.length() > 0) {
-    System.out.println("User exists.");
-}
-
-// 2. Optional 사용 (Java 8+)
-Optional.ofNullable(user)
-        .ifPresent(u -> System.out.println("User exists."));
-</code></pre>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">AttributeError</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def get_user_data(user_id):
-    # user_data가 None을 반환할 수 있음
-    return None 
-
-user_data = get_user_data(101)
-
-# None 객체에 .keys() 메서드 호출 시도
-if user_data.keys(): 
-    print("Data found.")
-# AttributeError: 'NoneType' object has no attribute 'keys' 발생
-</code></pre>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: None 검사</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-user_data = get_user_data(101)
-
-# 1. is not None으로 명시적 확인
-if user_data is not None and user_data:
-    if 'name' in user_data.keys():
-        print("Data is valid.")
-
-# 2. Try-Except 문으로 예외 처리
-try:
-    if user_data.keys():
-        print("Data found.")
-except AttributeError:
-    print("User data is missing or invalid.")
-</code></pre>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="my-5">
-
-            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-box-open me-2"></i> 2. 부적절한 자원 해제 (Improper Resource Release)</h2>
-            <p class="text-secondary">열린 파일, DB 연결, 소켓 등의 자원을 명시적으로 닫지 않아 자원 누수 및 DoS를 유발합니다.</p>
-
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">자원 누수</span></div>
-                        <pre><code class="language-java">/* 취약한 코드 (Java) */
-FileInputStream fis = null;
-try {
-    fis = new FileInputStream("data.txt");
-    // ... 파일 처리 중 예외 발생 가능
-    if (fis.read() == -1) { 
-        return; // 여기서 함수가 종료되면서 close() 실행 안 됨
-    }
-} catch (IOException e) {
-    e.printStackTrace();
-} 
-// finally 블록이 없거나, return 등으로 close()가 누락됨
-// fis.close() 누락
-</code></pre>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: Try-with-Resources</span></div>
-                        <pre><code class="language-java">/* 안전한 코드 (Java) */
-// Try-with-Resources 사용 (AutoCloseable 구현 객체)
-try (FileInputStream fis = new FileInputStream("data.txt")) {
-    int data = fis.read();
-    // ... 파일 처리 로직
-    System.out.println(data);
-} catch (IOException e) {
-    e.printStackTrace();
-}
-// try 블록을 벗어나면 fis.close()가 자동으로 호출됨
-</code></pre>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">자원 누수</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-f = open('config.log', 'r')
-data = f.read()
-
-if 'error' in data:
-    return data # 여기서 함수 종료. f.close() 누락
-
-# f.close()를 명시적으로 호출하지 않음
-# 예외 발생 시에도 close()가 실행되지 않음
-</code></pre>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: With 문</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-try:
-    # with 문 사용 (Context Manager)
-    with open('config.log', 'r') as f:
-        data = f.read()
-        
-        if 'error' in data:
-            return data
-            
-    # with 블록을 벗어나는 순간 f.close()가 자동 호출됨
-except FileNotFoundError:
-    print("File not found.")
-</code></pre>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="my-5">
-
-            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-circle-exclamation me-2"></i> 3. 오류 메시지를 통한 정보 노출</h2>
+            <h3 class="mt-4 mb-3 text-danger"><i class="fa-solid fa-circle-exclamation me-2"></i> 1. 오류 메시지 정보 노출</h3>
             <p class="text-secondary">개발 환경의 상세한 오류 메시지(스택 트레이스 등)를 사용자에게 그대로 노출하여 시스템 정보를 유출합니다.</p>
-
-            <div class="row g-4">
+            <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">정보 노출</span></div>
                         <pre><code class="language-java">/* 취약한 코드 (Java) */
 try {
-    // DB 연결 실패 또는 SQL 구문 오류 발생
+    // DB 연결 실패 또는 SQL 구문 오류 발생 가정
     connection.createStatement(); 
 } catch (Exception e) {
-    // 스택 트레이스를 응답에 포함하거나 클라이언트에 출력
-    response.getWriter().write(e.toString()); // 상세 예외 정보 클라이언트 전달
-    e.printStackTrace(); // 서버 로그에 기록하고 클라이언트에 500 에러 전달
+    // 상세 예외 정보를 응답에 포함
+    response.getWriter().write(e.toString()); 
 }
-// DB 스키마, 파일 경로, 서버 내부 구조 등 상세 정보 노출
+// -> DB 스키마, 서버 경로 등 상세 정보 노출 위험
 </code></pre>
                     </div>
                 </div>
-
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 일반화된 오류</span></div>
@@ -354,34 +192,35 @@ try {
 try {
     connection.createStatement();
 } catch (SQLException e) {
-    // 1. 상세 내용은 서버 로그에만 기록 (개발자용)
+    // 1. 상세 내용은 서버 로그에만 기록 (클라이언트에게 전송 금지)
     log.error("Database error occurred: ", e);
     
     // 2. 클라이언트에게는 일반적인 메시지만 전달
-    response.sendError(500, "서비스 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    response.sendError(500, "서비스 처리 중 오류가 발생했습니다.");
 }
 </code></pre>
                     </div>
                 </div>
+            </div>
 
+            <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">정보 노출</span></div>
                         <pre><code class="language-python"># 취약한 코드 (Python - Flask/Django 예시)
-from flask import Flask, jsonify
+from flask import jsonify
 
 @app.route('/data')
 def get_data():
     try:
-        result = 10 / 0 # ZeroDivisionError 발생
+        result = 10 / 0 # ZeroDivisionError 발생 가정
     except Exception as e:
-        # e.args를 통해 상세 에러 메시지 직접 반환
+        # 상세 에러 메시지 직접 반환
         return jsonify({'error': str(e)}), 500
-# "division by zero"와 같은 내부 예외 메시지 노출
+# -> "division by zero"와 같은 내부 예외 메시지 노출
 </code></pre>
                     </div>
                 </div>
-                
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 일반화된 오류</span></div>
@@ -403,29 +242,26 @@ def get_data():
                     </div>
                 </div>
             </div>
-
+            
             <hr class="my-5">
 
-            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-hand-fist me-2"></i> 4. 예외 처리 미흡 (Inadequate Exception Handling)</h2>
-            <p class="text-secondary">광범위한 예외(`Exception` 또는 `BaseException`)를 잡고 로그를 남기지 않거나, 적절한 후속 조치 없이 에러를 무시합니다(Swallowing Error).</p>
-
-            <div class="row g-4">
+            <h3 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-hand-fist me-2"></i> 2. 오류 상황 대응 부재 및 3. 부적절한 예외 처리</h3>
+            <p class="text-secondary">광범위한 예외를 잡거나, 로그를 남기지 않거나, 적절한 후속 조치 없이 에러를 무시(Swallowing)하여 오류 상황에 대응하지 못합니다.</p>
+            
+            <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">Swallowing Error</span></div>
                         <pre><code class="language-java">/* 취약한 코드 (Java) */
 try {
-    // 중요한 로직 (예: 파일 삭제)
     fileManager.deleteFile(userFile);
 } catch (Exception e) { 
-    // 모든 예외를 잡고 아무런 조치도 취하지 않음 (Log도 없음)
-    // 공격자가 에러 발생을 유도해도 아무도 모름
+    // 모든 예외를 잡고 로그 기록 등 아무런 조치도 취하지 않음
+    // 오류가 발생했지만 프로그램은 정상적으로 계속 실행되어 디버깅 불가
 }
-// 오류가 발생했지만 프로그램은 정상적으로 계속 실행
 </code></pre>
                     </div>
                 </div>
-
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 명시적 Catch 및 Log</span></div>
@@ -433,33 +269,34 @@ try {
 try {
     fileManager.deleteFile(userFile);
 } catch (SecurityException e) { 
-    // 1. 필요한 특정 예외만 잡음
+    // 1. 필요한 특정 예외만 잡고 상세 로그 기록
     log.warn("파일 삭제 권한 없음: ", e);
-    // 2. 적절한 예외 처리 로직 (재시도, 사용자에게 오류 메시지 전달 등)
+    // 2. 적절한 오류 전파 (재시도, 사용자 알림 등)
+    throw new CustomFileException("권한 문제로 삭제 실패");
 } catch (IOException e) {
     log.error("파일 I/O 오류 발생: ", e);
-    throw new RuntimeException("파일 삭제 실패", e); // 3. 오류 전파
 }
 </code></pre>
                     </div>
                 </div>
+            </div>
 
+            <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">Swallowing Error</span></div>
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">대응 부재/Swallowing</span></div>
                         <pre><code class="language-python"># 취약한 코드 (Python)
 try:
-    # 중요한 계산 로직
     result = calculate_critical_value(data)
 except: 
-    # 예외의 종류와 상관없이 모두 무시하고 통과
+    # 예외의 종류와 상관없이 모두 무시하고 통과 (except Exception: 보다 더 나쁨)
     pass 
     
-return default_value # 계산 오류에도 불구하고 기본값 반환
+return default_value 
+# -> 계산 오류에도 불구하고 기본값 반환, 오류 감지 불가능
 </code></pre>
                     </div>
                 </div>
-                
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 명시적 Catch 및 Log</span></div>
@@ -477,82 +314,6 @@ except Exception as e:
     # 3. 예상치 못한 예외는 상세 로그 기록 후 재전파
     log.error("알 수 없는 오류 발생", exc_info=True)
     raise 
-</code></pre>
-                    </div>
-                </div>
-            </div>
-            
-            <hr class="my-5">
-
-            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-list-check me-2"></i> 5. 오류 처리 누락 (Missing Error Handling)</h2>
-            <p class="text-secondary">잠재적으로 예외가 발생할 수 있는 함수나 시스템 호출에 대해 예외 처리(`try-catch`/`try-except`)를 전혀 하지 않아 서비스가 중단됩니다.</p>
-
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">서비스 중단</span></div>
-                        <pre><code class="language-java">/* 취약한 코드 (Java) */
-// 파일 읽기/쓰기는 IOException 발생 가능
-public String readConfig(String path) {
-    // new FileReader는 FileNotFoundException을 throw함에도 처리하지 않음
-    FileReader fr = new FileReader(path); 
-    BufferedReader br = new BufferedReader(fr);
-    return br.readLine(); 
-}
-// main 함수에서 호출 시, 예외 처리 없으면 컴파일 오류 또는 런타임 종료
-</code></pre>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 예외 전파/처리</span></div>
-                        <pre><code class="language-java">/* 안전한 코드 (Java) */
-// 1. 함수 레벨에서 예외를 호출자로 전파
-public String readConfigSecure(String path) throws IOException {
-    try (FileReader fr = new FileReader(path);
-         BufferedReader br = new BufferedReader(fr)) {
-        return br.readLine();
-    }
-}
-// 2. 호출자는 try-catch로 예외를 반드시 처리해야 함
-</code></pre>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">서비스 중단</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def load_settings(filename):
-    # 파일이 없을 경우 FileNotFoundError 발생 가능
-    with open(filename, 'r') as f: 
-        return json.load(f)
-
-# 파일이 없는 상태에서 함수 호출 시
-# 프로그램이 FileNotFoundError로 비정상 종료됨
-</code></pre>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 기본값 제공</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import json
-
-def load_settings_secure(filename):
-    try:
-        with open(filename, 'r') as f: 
-            return json.load(f)
-    except FileNotFoundError:
-        # 파일이 없을 경우 안전한 기본 설정 반환 (오류 무시가 아님)
-        print(f"설정 파일 {filename}을 찾을 수 없습니다. 기본 설정을 사용합니다.")
-        return {"default_key": "default_value"}
-    except json.JSONDecodeError:
-        # 파일 손상 시 적절한 처리
-        print("설정 파일 형식이 잘못되었습니다.")
-        return {"default_key": "default_value"}
 </code></pre>
                     </div>
                 </div>
