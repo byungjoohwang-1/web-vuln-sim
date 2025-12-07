@@ -3,175 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Security Simulator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>WEB-VULN-SIM: 보안 약점 진단 시뮬레이터</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; }
-        /* 커스텀 스크롤바 */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        body { padding-top: 20px; background-color: #f8f9fa; }
+        .container { max-width: 900px; }
+        .card { margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header-title { color: #2c3e50; font-weight: bold; margin-bottom: 30px; }
     </style>
 </head>
-<body class="bg-gray-900 text-white h-screen flex overflow-hidden">
+<body>
 
-    <aside class="w-72 bg-[#0B1120] border-r border-gray-800 flex-shrink-0 flex flex-col transition-all duration-300">
-        
-        <div class="p-5 border-b border-gray-800 flex items-center space-x-3">
-            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-            </div>
-            <div>
-                <h1 class="font-bold text-lg tracking-tight">Web Security Simulator</h1>
-                <p class="text-[11px] text-gray-500 font-medium tracking-wide">V0.2 BETA | MADE BY JACK</p>
-            </div>
-        </div>
-
-        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
-            
-            <div>
-                <button class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-gray-400 uppercase tracking-wider hover:text-white transition-colors">
-                    <span>1. Simulator (13 Attacks)</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-                <div class="mt-2 space-y-1 pl-2 border-l border-gray-800 ml-2">
-                    <a href="#" class="block px-3 py-2 text-sm text-gray-500 hover:text-indigo-400 hover:bg-gray-800/50 rounded-md transition-colors">SQL Injection</a>
-                    <a href="#" class="block px-3 py-2 text-sm text-gray-500 hover:text-indigo-400 hover:bg-gray-800/50 rounded-md transition-colors">Command Injection</a>
-                    <a href="#" class="block px-3 py-2 text-sm text-gray-500 hover:text-indigo-400 hover:bg-gray-800/50 rounded-md transition-colors">Reflected XSS</a>
-                </div>
-            </div>
-
-            <div>
-                <button class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-white bg-gray-800/50 rounded-lg mb-2">
-                    <span class="flex items-center">2. Secure Coding Guidelines</span>
-                    <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-
-                <div class="space-y-1">
-                    <a href="sim-sql.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-white bg-indigo-900/40 border-l-[3px] border-indigo-500 rounded-r-md transition-all">
-                        <svg class="mr-3 h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        2-1. 입력 데이터 검증 및 표현
-                    </a>
-
-                    <a href="#" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
-                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        2-2. 보안 기능
-                    </a>
-
-                    <a href="sim-time-state.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
-                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        2-3. 시간 및 상태
-                    </a>
-
-                    <a href="sim-error-handling.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
-                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        2-4. 에러 처리
-                    </a>
-
-                    <a href="sim-code-quality.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
-                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                        2-5. 코드 품질
-                    </a>
-
-                    <a href="sim-encapsulation.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
-                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                        2-6. 캡슐화
-                    </a>
-                </div>
-            </div>
-        </nav>
-        
-        <div class="p-4 border-t border-gray-800">
-            <div class="flex items-center">
-                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs">US</div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium">User Admin</p>
-                    <p class="text-xs text-gray-500">Security Team</p>
-                </div>
+<div class="container">
+    <h1 class="text-center header-title">WEB-VULN-SIM</h1>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary rounded mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">Home</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            1. 구현 단계 진단 (13개 항목)
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="sim-sql.html">1. SQL 삽입 (SQL Injection)</a></li>
+                            <li><a class="dropdown-item" href="sim-path.html">2. 경로 조작 (Path Traversal)</a></li>
+                            <li><a class="dropdown-item" href="sim-xss.html">3. 크로스사이트 스크립트 (XSS)</a></li>
+                            <li><a class="dropdown-item" href="sim-csrf.html">4. CSRF</a></li>
+                            <li><a class="dropdown-item" href="sim-cmd.html">5. 운영체제 명령어 삽입</a></li>
+                            <li><a class="dropdown-item" href="sim-upload.html">6. 위험한 파일 업로드</a></li>
+                            <li><a class="dropdown-item" href="sim-ssrf.html">7. 서버 측 요청 위조 (SSRF)</a></li>
+                            <li><a class="dropdown-item" href="sim-xxe.html">8. XXE (XML 외부 엔티티)</a></li>
+                            <li><a class="dropdown-item" href="sim-brute.html">9. 인증 시도 제한 부재</a></li>
+                            <li><a class="dropdown-item" href="sim-idor.html">10. 부적절한 인가 (IDOR)</a></li>
+                            <li><a class="dropdown-item" href="sim-encap.html">11. 잘못된 캡슐화</a></li>
+                            <li><a class="dropdown-item" href="sim-error-handling.html">12. 오류 처리 미흡</a></li>
+                            <li><a class="dropdown-item" href="sim-quality.html">13. 코드 품질/API 오용</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="guide-security.html">보안 가이드</a>
+                    </li>
+                </ul>
             </div>
         </div>
-    </aside>
+    </nav>
 
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8">
-            <h2 class="text-xl font-bold text-gray-900 flex items-center">
-                <span class="text-indigo-600 mr-2">#</span>
-                메인 대시보드
-            </h2>
-            <div class="flex items-center space-x-4">
-                <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Last updated: Today</span>
-            </div>
-        </header>
-
-        <div class="flex-1 overflow-y-auto p-10 bg-gray-50">
-            
-            <div class="max-w-6xl mx-auto">
-                <div class="mb-10 text-center">
-                    <h3 class="text-3xl font-bold text-gray-900 mb-3">Web Security Simulator에 오신 것을 환영합니다</h3>
-                    <p class="text-gray-600">좌측 사이드바의 <strong>[2. Secure Coding Guidelines]</strong> 메뉴를 선택하여<br> KISA 가이드 기반의 취약점 및 보안 코드를 실습하세요.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <a href="sim-sql.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            </span>
-                            <span class="text-xs font-bold text-gray-400">2-1</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-900 mb-1">입력 데이터 검증</h4>
-                        <p class="text-sm text-gray-500">SQL Injection, XSS 등</p>
-                    </a>
-
-                    <a href="sim-time-state.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </span>
-                            <span class="text-xs font-bold text-gray-400">2-3</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-900 mb-1">시간 및 상태</h4>
-                        <p class="text-sm text-gray-500">Race Condition, TOCTOU</p>
-                    </a>
-
-                    <a href="sim-error-handling.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            </span>
-                            <span class="text-xs font-bold text-gray-400">2-4</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-900 mb-1">에러 처리</h4>
-                        <p class="text-sm text-gray-500">정보 노출 (Stack Trace)</p>
-                    </a>
-
-                    <a href="sim-code-quality.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                            </span>
-                            <span class="text-xs font-bold text-gray-400">2-5</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-900 mb-1">코드 품질</h4>
-                        <p class="text-sm text-gray-500">하드코딩된 패스워드</p>
-                    </a>
-
-                    <a href="sim-encapsulation.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                            </span>
-                            <span class="text-xs font-bold text-gray-400">2-6</span>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-900 mb-1">캡슐화</h4>
-                        <p class="text-sm text-gray-500">Mass Assignment, Public 필드</p>
-                    </a>
-                </div>
-
-            </div>
+    <div class="card p-4">
+        <h3>환영합니다</h3>
+        <p>상단 메뉴에서 진단하고 싶은 <strong>13가지 보안 약점</strong>을 선택하여 시뮬레이션을 진행하세요.</p>
+        <hr>
+        <div class="alert alert-info">
+            <strong>시스템 상태:</strong> 모든 시뮬레이터 파일이 로드되었습니다.
         </div>
-    </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
