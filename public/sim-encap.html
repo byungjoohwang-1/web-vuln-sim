@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>캡슐화 실습</title>
+<script src="config.js"></script>
+<style>
+/* 스타일 생략 (위와 동일) */
+body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+.container { display: flex; gap: 20px; }
+.box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+.vuln { background-color: #ffe6e6; }
+.secure { background-color: #e6fffa; }
+button { padding: 8px 16px; cursor: pointer; margin-top: 10px; }
+.code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+summary { padding: 10px; cursor: pointer; font-weight: bold; }
+pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<a href="index.html">← 메인으로</a>
+<h1>📦 캡슐화 (Encapsulation)</h1>
+<p>객체의 내부 구현을 숨기고 API를 통해서만 접근 허용</p>
+
+<div class="container">
+    <div class="box vuln">
+        <h2>🚫 취약한 모드</h2>
+        <p>외부 입력값으로 객체 속성 전체 덮어쓰기 허용 (Mass Assignment)</p>
+        <button onclick="runTest('vulnerableEncap', 'data', 'json')">공격: Role 변경 시도</button>
+    </div>
+    <div class="box secure">
+        <h2>✅ 안전한 모드</h2>
+        <p>허용된 필드만 수정 가능하도록 제한</p>
+        <button onclick="runTest('secureEncap', 'data', 'json')">방어: Role 변경 시도</button>
+    </div>
+</div>
+
+<div class="code-section">
+    <h2>📚 예전 책 분석: Java & Python 가이드</h2>
+    
+    <details>
+        <summary>☕ Java: 접근 제어자</summary>
+        <pre><code>// [취약한 코드] public 필드 사용
+public class User {
+    public int point; // 🚫 외부에서 user.point = -9999; 조작 가능
+}
+
+// [안전한 코드] private 필드 및 Getter/Setter 사용
+public class User {
+    private int point;
+    public void setPoint(int p) {
+        if (p >= 0) this.point = p; // ✅ 유효성 검증 가능
+    }
+}</code></pre>
+    </details>
+
+    <details>
+        <summary>🐍 Python: 속성 보호</summary>
+        <pre><code># [취약한 코드] 모든 속성 공개
+class Account:
+    def __init__(self):
+        self.balance = 0 # 🚫 acc.balance = 1000000 바로 수정 가능
+
+# [안전한 코드] 네이밍 컨벤션(_) 및 Property 사용
+class Account:
+    def __init__(self):
+        self._balance = 0
+    
+    @property
+    def balance(self):
+        return self._balance
+        
+    @balance.setter
+    def balance(self, value):
+        if value >= 0: self._balance = value</code></pre>
+    </details>
+</div>
+
+<script>
+function runTest(funcName, paramName, type) {
+    // 공격 데이터: 권한을 admin으로 상승 시도
+    const payload = JSON.stringify({ name: "Hacker", role: "super-admin" });
+    const encoded = encodeURIComponent(payload);
+    window.open(`${BASE_URL}/${funcName}?${paramName}=${encoded}`, '_blank');
+}
+</script>
+</body>
+</html>

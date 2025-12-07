@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>2-4. 부적절한 에러 처리 시뮬레이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+    <style>
+        /* Stack Trace 출력을 위한 스타일 */
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <div class="max-w-5xl mx-auto p-6">
+        <div class="mb-8">
+            <a href="index.html" class="text-gray-500 hover:text-gray-900 text-sm mb-2 inline-flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                메인 대시보드로 이동
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center mt-2">
+                <span class="mr-3 p-2 bg-red-100 rounded-lg text-red-500 text-2xl">⚠️</span>
+                2-4. 부적절한 에러 처리 (Improper Error Handling)
+            </h1>
+            <p class="mt-3 text-gray-600">
+                소프트웨어 실행 중 발생한 오류 메시지를 통해 
+                <span class="font-bold text-red-500">시스템 내부 정보(경로, DB구조, 라이브러리 버전 등)</span>가 공격자에게 노출되는 취약점입니다.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
+                <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
+                    <h3 class="font-bold text-red-700 flex items-center">
+                        🚫 취약한 구현 (Vulnerable)
+                    </h3>
+                    <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">Stack Trace 노출</span>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">
+                        DB 연결 실패 등의 예외 발생 시, <code>e.printStackTrace()</code> 내용을 웹 브라우저에 그대로 출력합니다.
+                    </p>
+                    <button onclick="runSimulation('vulnerableError')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex justify-center items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        오류 발생 시키기
+                    </button>
+                    
+                    <div id="result-vuln" class="mt-4 bg-gray-900 text-green-400 p-4 rounded-lg text-xs font-mono min-h-[150px] overflow-auto border border-gray-700 shadow-inner">
+                        <span class="text-gray-500">// 결과가 여기에 표시됩니다...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-green-100 overflow-hidden">
+                <div class="bg-green-50 px-6 py-4 border-b border-green-100 flex justify-between items-center">
+                    <h3 class="font-bold text-green-700 flex items-center">
+                        ✅ 안전한 구현 (Secure)
+                    </h3>
+                    <span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">사용자 정의 메시지</span>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">
+                        내부 로그에는 상세 정보를 기록하고, 사용자에게는 <strong>"일시적인 오류입니다"</strong>와 같은 단순 메시지만 보여줍니다.
+                    </p>
+                    <button onclick="runSimulation('secureError')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex justify-center items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        안전한 처리 확인
+                    </button>
+
+                    <div id="result-secure" class="mt-4 bg-gray-50 text-gray-700 p-4 rounded-lg text-sm min-h-[150px] border border-gray-200 shadow-inner flex items-center justify-center">
+                        <span class="text-gray-400">// 결과가 여기에 표시됩니다...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 text-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-slate-900 px-6 py-4 border-b border-slate-700">
+                <h2 class="text-lg font-bold text-white flex items-center">
+                    📚 [보안 가이드 분석] 언어별 취약점 및 대책
+                </h2>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div>
+                    <h3 class="text-yellow-400 font-bold mb-3 flex items-center text-lg">
+                        <span class="mr-2">☕</span> Java (JSP/Spring)
+                    </h3>
+                    <div class="bg-black rounded-lg p-4 font-mono text-sm border border-gray-700">
+                        <div class="mb-4">
+                            <p class="text-red-400 font-bold mb-1">// [취약] e.printStackTrace() 직접 노출</p>
+                            <pre class="text-gray-300">
+try {
+    ...
+} catch (SQLException e) {
+    <span class="text-red-500">e.printStackTrace(response.getWriter());</span>
+    // ▲ 결과: DB 종류, 쿼리, 테이블명,
+    // 서버 절대 경로가 브라우저에 출력됨
+}
+                            </pre>
+                        </div>
+                        <div>
+                            <p class="text-green-400 font-bold mb-1">// [안전] 로깅 프레임워크 사용</p>
+                            <pre class="text-gray-300">
+try {
+    ...
+} catch (SQLException e) {
+    <span class="text-green-500">logger.error("Error Code 102", e);</span> 
+    // ▲ 서버 로그 파일에만 기록
+    
+    <span class="text-green-500">out.println("시스템 장애가 발생했습니다.");</span>
+    // ▲ 사용자에게는 단순 메시지만 전달
+}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-blue-400 font-bold mb-3 flex items-center text-lg">
+                        <span class="mr-2">🐍</span> Python (Django/Flask)
+                    </h3>
+                    <div class="bg-black rounded-lg p-4 font-mono text-sm border border-gray-700">
+                        <div class="mb-4">
+                            <p class="text-red-400 font-bold mb-1"># [취약] 디버그 모드 활성화</p>
+                            <pre class="text-gray-300">
+# settings.py (Django)
+<span class="text-red-500">DEBUG = True</span> 
+
+# 운영 환경(Production)에서 True일 경우,
+# 에러 발생 시 상세 Traceback 페이지가 노출됨.
+# (환경 변수, 소스 코드 일부 등 포함)
+                            </pre>
+                        </div>
+                        <div>
+                            <p class="text-green-400 font-bold mb-1"># [안전] 예외 처리 및 로깅</p>
+                            <pre class="text-gray-300">
+import logging
+
+try:
+    file = open('secret_data.txt')
+except FileNotFoundError:
+    <span class="text-green-500">logging.exception("File Missing")</span>
+    # ▲ 관리자만 볼 수 있는 로그에 기록
+    
+    <span class="text-green-500">return "요청하신 파일을 찾을 수 없습니다."</span>
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start">
+            <svg class="w-6 h-6 text-blue-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+                <h4 class="font-bold text-blue-800">개발자 팁</h4>
+                <p class="text-sm text-blue-700 mt-1">
+                    운영 서버에서는 반드시 <strong>Custom Error Page</strong>(예: 404.html, 500.html)를 설정하여, WAS(Web Application Server)의 기본 에러 페이지가 노출되지 않도록 해야 합니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function runSimulation(endpoint) {
+            const targetId = endpoint === 'vulnerableError' ? 'result-vuln' : 'result-secure';
+            const targetEl = document.getElementById(targetId);
+            
+            // 로딩 표시
+            targetEl.innerHTML = '<span class="animate-pulse">⏳ 서버 요청 중...</span>';
+
+            try {
+                // 이전에 만든 index.js의 함수 호출
+                const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+                
+                // 500 에러 등의 HTML 응답을 텍스트로 받아옴
+                const htmlText = await response.text();
+                
+                // 결과 표시
+                targetEl.innerHTML = htmlText;
+                
+            } catch (error) {
+                targetEl.innerHTML = `<span class="text-red-500">Client Error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

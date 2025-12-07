@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>코드 품질 실습</title>
+<script src="config.js"></script>
+<style>
+/* 스타일 생략 (위와 동일) */
+body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
+.container { display: flex; gap: 20px; }
+.box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+.vuln { background-color: #ffe6e6; }
+.secure { background-color: #e6fffa; }
+button { padding: 8px 16px; cursor: pointer; margin-top: 10px; }
+.code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
+summary { padding: 10px; cursor: pointer; font-weight: bold; }
+pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<a href="index.html">← 메인으로</a>
+<h1>📝 코드 품질 (Hardcoded Credentials)</h1>
+<p>소스코드 내 중요 정보 하드코딩 여부 확인</p>
+
+<div class="container">
+    <div class="box vuln">
+        <h2>🚫 취약한 모드</h2>
+        <p>비밀번호가 소스코드에 평문으로 존재</p>
+        <button onclick="runTest('vulnerableQuality')">코드 확인</button>
+    </div>
+    <div class="box secure">
+        <h2>✅ 안전한 모드</h2>
+        <p>환경 설정 파일 또는 외부 저장소 사용</p>
+        <button onclick="runTest('secureQuality')">코드 확인</button>
+    </div>
+</div>
+
+<div class="code-section">
+    <h2>📚 예전 책 분석: Java & Python 가이드</h2>
+    
+    <details>
+        <summary>☕ Java: 하드코딩</summary>
+        <pre><code>// [취약한 코드] 키/패스워드 하드코딩
+String secretKey = "ABcd1234!"; // 🚫 컴파일된 .class 파일에서도 추출 가능
+
+// [안전한 코드] 프로퍼티 파일 또는 환경 변수 사용
+Properties prop = new Properties();
+prop.load(new FileInputStream("config.properties"));
+String secretKey = prop.getProperty("secretKey");</code></pre>
+    </details>
+
+    <details>
+        <summary>🐍 Python: 하드코딩</summary>
+        <pre><code># [취약한 코드] 스크립트 내 API 키 포함
+API_KEY = "AIzaSyD..." # 🚫 깃허브 등에 실수로 업로드 시 유출됨
+
+# [안전한 코드] os.environ 사용 (.env 파일 활용)
+import os
+API_KEY = os.environ.get("API_KEY")</code></pre>
+    </details>
+</div>
+
+<script>
+function runTest(funcName) {
+    window.open(`${BASE_URL}/${funcName}`, '_blank');
+}
+</script>
+</body>
+</html>

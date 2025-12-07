@@ -3,275 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Security Simulator v0.2</title>
-    <!-- Tailwind CSS -->
+    <title>Web Security Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        /* Sidebar Scrollbar */
-        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
-        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
-
-        /* Tree Animation */
-        .rotate-icon { transform: rotate(180deg); }
-        .menu-content { transition: max-height 0.3s ease-in-out; overflow: hidden; }
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-slate-50 h-screen flex overflow-hidden">
+<body class="bg-gray-900 text-white h-screen flex overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="w-80 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col shadow-2xl z-20">
-        <!-- Logo -->
-        <div class="p-6 border-b border-slate-700 flex items-center gap-3">
-            <div class="bg-indigo-500/10 p-2 rounded-lg">
-                <i class="fas fa-cube text-indigo-400 text-xl"></i>
+    <aside class="w-72 bg-[#0B1120] border-r border-gray-800 flex-shrink-0 flex flex-col transition-all duration-300">
+        
+        <div class="p-5 border-b border-gray-800 flex items-center space-x-3">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
             </div>
             <div>
-                <h1 class="font-bold text-white text-lg tracking-tight">Web Security Simulator</h1>
-                <span class="text-[10px] text-slate-500 font-mono uppercase tracking-widest">v0.2 beta | Made by Jack</span>
+                <h1 class="font-bold text-lg tracking-tight">Web Security Simulator</h1>
+                <p class="text-[11px] text-gray-500 font-medium tracking-wide">V0.2 BETA | MADE BY JACK</p>
             </div>
         </div>
-        
-        <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto p-4 space-y-4 sidebar-scroll">
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
             
-            <!-- SECTION 1: SIMULATOR (All 13 Attacks) -->
             <div>
-                <button onclick="toggleMenu('menu-sim', this)" class="w-full flex items-center justify-between p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm font-bold text-white shadow-sm border border-slate-700">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-bug text-red-400"></i>
-                        <span>1. Simulator (13 Attacks)</span>
-                    </div>
-                    <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
+                <button class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-gray-400 uppercase tracking-wider hover:text-white transition-colors">
+                    <span>1. Simulator (13 Attacks)</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
-                <div id="menu-sim" class="hidden pl-2 mt-2 space-y-1 border-l-2 border-slate-700 ml-4">
-                    
-                    <!-- Simulators (Placeholders or actual files if you have them) -->
-                    <button onclick="loadSim('sim-sql.html', 'SQL Injection', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-database w-4 text-center"></i> SQL Injection
-                    </button>
-                    <button onclick="loadSim('sim-cmd.html', 'Command Injection', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-terminal w-4 text-center"></i> Command Injection
-                    </button>
-                    <button onclick="loadSim('sim-xxe.html', 'XXE Injection', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-file-code w-4 text-center"></i> XXE Injection
-                    </button>
-                    <button onclick="loadSim('sim-xss.html', 'Reflected XSS', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-code w-4 text-center"></i> Reflected XSS
-                    </button>
-                    <button onclick="loadSim('sim-csrf.html', 'CSRF Attack', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-cookie-bite w-4 text-center"></i> CSRF Attack
-                    </button>
-                    <button onclick="loadSim('sim-ssrf.html', 'SSRF', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-network-wired w-4 text-center"></i> SSRF
-                    </button>
-                    <button onclick="loadSim('sim-upload.html', 'File Upload', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-file-upload w-4 text-center"></i> File Upload
-                    </button>
-                    <button onclick="loadSim('sim-path.html', 'Path Traversal', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-folder-open w-4 text-center"></i> Path Traversal
-                    </button>
-                    <button onclick="loadSim('sim-split.html', 'HTTP Splitting', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-columns w-4 text-center"></i> HTTP Splitting
-                    </button>
-                    <button onclick="loadSim('sim-brute.html', 'Brute Force', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-unlock w-4 text-center"></i> Brute Force
-                    </button>
-                    <button onclick="loadSim('sim-idor.html', 'IDOR', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-id-badge w-4 text-center"></i> IDOR
-                    </button>
-                    <button onclick="loadSim('sim-error.html', 'Error Exposure', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-exclamation-triangle w-4 text-center"></i> Error Exposure
-                    </button>
-                    <button onclick="loadSim('sim-code.html', 'Code Injection', this)" class="nav-item w-full text-left px-3 py-2 rounded-md hover:text-white hover:bg-slate-800 text-xs text-slate-400 transition flex items-center gap-2">
-                        <i class="fas fa-code-branch w-4 text-center"></i> Code Injection
-                    </button>
+                <div class="mt-2 space-y-1 pl-2 border-l border-gray-800 ml-2">
+                    <a href="#" class="block px-3 py-2 text-sm text-gray-500 hover:text-indigo-400 hover:bg-gray-800/50 rounded-md transition-colors">SQL Injection</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-gray-500 hover:text-indigo-400 hover:bg-gray-800/50 rounded-md transition-colors">Command Injection</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-gray-500 hover:text-indigo-400 hover:bg-gray-800/50 rounded-md transition-colors">Reflected XSS</a>
                 </div>
             </div>
 
-            <!-- SECTION 2: SECURE CODING GUIDELINES -->
             <div>
-                <button onclick="toggleMenu('menu-guide', this)" class="w-full flex items-center justify-between p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm font-bold text-white shadow-sm border border-slate-700">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-book-shield text-emerald-400"></i>
-                        <span>2. Secure Coding Guidelines</span>
-                    </div>
-                    <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
+                <button class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-white bg-gray-800/50 rounded-lg mb-2">
+                    <span class="flex items-center">2. Secure Coding Guidelines</span>
+                    <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
-                
-                <div id="menu-guide" class="hidden pl-2 mt-2 space-y-1 border-l-2 border-slate-700 ml-4">
-                    
-                    <!-- 2-1. Input Validation (Linked to guide-input.html) -->
-                    <button onclick="loadSim('guide-input.html', '2-1. 입력 데이터 검증 및 표현', this)" class="nav-item w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-slate-800 text-xs font-semibold text-slate-400 transition cursor-pointer group">
-                        <span class="flex items-center gap-2"><i class="fas fa-file-shield w-4 text-center"></i> 2-1. 입력 데이터 검증 및 표현</span>
-                        <div class="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-blue-500 transition-colors"></div>
-                    </button>
 
-                    <!-- 2-2. Security Features (Linked to guide-security.html) -->
-                    <button onclick="loadSim('guide-security.html', '2-2. 보안 기능', this)" class="nav-item w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-slate-800 text-xs font-semibold text-slate-400 transition cursor-pointer group">
-                        <span class="flex items-center gap-2"><i class="fas fa-lock w-4 text-center"></i> 2-2. 보안 기능</span>
-                        <div class="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-red-500 transition-colors"></div>
-                    </button>
+                <div class="space-y-1">
+                    <a href="sim-sql.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-white bg-indigo-900/40 border-l-[3px] border-indigo-500 rounded-r-md transition-all">
+                        <svg class="mr-3 h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        2-1. 입력 데이터 검증 및 표현
+                    </a>
 
+                    <a href="#" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
+                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        2-2. 보안 기능
+                    </a>
+
+                    <a href="sim-time-state.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
+                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        2-3. 시간 및 상태
+                    </a>
+
+                    <a href="sim-error-handling.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
+                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        2-4. 에러 처리
+                    </a>
+
+                    <a href="sim-code-quality.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
+                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        2-5. 코드 품질
+                    </a>
+
+                    <a href="sim-encapsulation.html" class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-[3px] border-transparent rounded-r-md transition-all">
+                        <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        2-6. 캡슐화
+                    </a>
                 </div>
             </div>
-
         </nav>
-
-        <!-- Footer -->
-        <div class="p-4 border-t border-slate-800 bg-slate-900/50 text-[10px] text-slate-600 text-center">
-            &copy; 2025 Web Security Simulator Platform<br>
-            Referred from KISA Standard Compliant
+        
+        <div class="p-4 border-t border-gray-800">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs">US</div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium">User Admin</p>
+                    <p class="text-xs text-gray-500">Security Team</p>
+                </div>
+            </div>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col relative bg-white min-w-0">
-        <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-10 shadow-sm">
-            <h2 id="current-title" class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <i class="fas fa-home text-slate-400"></i> Dashboard
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                <span class="text-indigo-600 mr-2">#</span>
+                메인 대시보드
             </h2>
-            <div class="flex items-center gap-3">
-                <span class="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    Enterprise Mode
-                </span>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Last updated: Today</span>
             </div>
         </header>
 
-        <!-- Iframe Container -->
-        <div class="flex-1 relative bg-slate-50 overflow-hidden flex flex-col">
+        <div class="flex-1 overflow-y-auto p-10 bg-gray-50">
             
-            <!-- Loader -->
-            <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white z-20 hidden">
-                <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
-                    <span class="text-sm font-medium text-slate-500">Loading module...</span>
+            <div class="max-w-6xl mx-auto">
+                <div class="mb-10 text-center">
+                    <h3 class="text-3xl font-bold text-gray-900 mb-3">Web Security Simulator에 오신 것을 환영합니다</h3>
+                    <p class="text-gray-600">좌측 사이드바의 <strong>[2. Secure Coding Guidelines]</strong> 메뉴를 선택하여<br> KISA 가이드 기반의 취약점 및 보안 코드를 실습하세요.</p>
                 </div>
-            </div>
-            
-            <!-- Iframe -->
-            <iframe id="main-frame" name="contentFrame" src="" class="flex-1 w-full h-full bg-white"></iframe>
-            
-            <!-- Welcome Screen -->
-            <div id="welcome-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-10">
-                <div class="bg-white p-10 rounded-2xl shadow-sm border border-slate-100 text-center max-w-lg mx-4">
-                    <div class="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-layer-group text-4xl text-indigo-500"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-slate-800 mb-2">Security Training Platform</h3>
-                    <p class="text-slate-500 mb-8 leading-relaxed text-sm">
-                        This platform integrates <strong>Live Simulations</strong> with <strong>Secure Coding Standards</strong>.<br>
-                        Select a module from the sidebar to begin training.
-                    </p>
-                    
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-indigo-300 transition" onclick="document.querySelector('button[onclick*=\'menu-sim\']').click()">
-                           <i class="fas fa-bug text-red-500 text-xl mb-2 block"></i>
-                           <span class="text-xs font-bold text-slate-600 block">1. Simulations</span>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:border-emerald-300 transition" onclick="document.querySelector('button[onclick*=\'menu-guide\']').click()">
-                           <i class="fas fa-book-shield text-emerald-500 text-xl mb-2 block"></i>
-                           <span class="text-xs font-bold text-slate-600 block">2. Guidelines</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <a href="sim-sql.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </span>
+                            <span class="text-xs font-bold text-gray-400">2-1</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-1">입력 데이터 검증</h4>
+                        <p class="text-sm text-gray-500">SQL Injection, XSS 등</p>
+                    </a>
+
+                    <a href="sim-time-state.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </span>
+                            <span class="text-xs font-bold text-gray-400">2-3</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-1">시간 및 상태</h4>
+                        <p class="text-sm text-gray-500">Race Condition, TOCTOU</p>
+                    </a>
+
+                    <a href="sim-error-handling.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </span>
+                            <span class="text-xs font-bold text-gray-400">2-4</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-1">에러 처리</h4>
+                        <p class="text-sm text-gray-500">정보 노출 (Stack Trace)</p>
+                    </a>
+
+                    <a href="sim-code-quality.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            </span>
+                            <span class="text-xs font-bold text-gray-400">2-5</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-1">코드 품질</h4>
+                        <p class="text-sm text-gray-500">하드코딩된 패스워드</p>
+                    </a>
+
+                    <a href="sim-encapsulation.html" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                            </span>
+                            <span class="text-xs font-bold text-gray-400">2-6</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-1">캡슐화</h4>
+                        <p class="text-sm text-gray-500">Mass Assignment, Public 필드</p>
+                    </a>
+                </div>
+
+            </div>
         </div>
     </main>
 
-    <script>
-        // Toggle Tree Menu
-        function toggleMenu(menuId, btn) {
-            const menu = document.getElementById(menuId);
-            const icon = btn.querySelector('.fa-chevron-down, .fa-caret-down');
-            
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-                if(icon) icon.classList.add('rotate-icon');
-            } else {
-                menu.classList.add('hidden');
-                if(icon) icon.classList.remove('rotate-icon');
-            }
-        }
-
-        // Loader & Iframe Logic
-        function loadSim(filename, title, btnElement) {
-            const frame = document.getElementById('main-frame');
-            const welcome = document.getElementById('welcome-screen');
-            const headerTitle = document.getElementById('current-title');
-            const loader = document.getElementById('loader');
-
-            // UI Reset
-            if (welcome) welcome.classList.add('hidden');
-            if (loader) loader.classList.remove('hidden');
-            if (headerTitle) headerTitle.innerText = title;
-
-            // Deactivate all items
-            document.querySelectorAll('.nav-item').forEach(el => {
-                // Reset styles
-                el.classList.remove('text-indigo-400', 'bg-slate-800', 'font-bold', 'text-white');
-                el.classList.add('text-slate-400');
-            });
-
-            // Activate current item
-            if (btnElement) {
-                btnElement.classList.remove('text-slate-400');
-                btnElement.classList.add('text-indigo-400', 'bg-slate-800', 'font-bold', 'text-white');
-            }
-
-            // Load Iframe
-            setTimeout(() => {
-                if (frame) {
-                    frame.src = filename; // Assuming files are served from root (or public/ maps to root)
-                    frame.onload = () => { if (loader) loader.classList.add('hidden'); };
-                    frame.onerror = () => { 
-                        console.error('Failed to load:', filename);
-                        if (loader) loader.classList.add('hidden'); 
-                    };
-                }
-            }, 300);
-        }
-
-        // Init: Open First Menu or specific mod
-        window.addEventListener('DOMContentLoaded', () => {
-            // Open '1. Simulator' by default
-            const simBtn = document.querySelector('button[onclick*="menu-sim"]');
-            if(simBtn) toggleMenu('menu-sim', simBtn);
-
-            // Handle URL parameters for direct linking
-            const params = new URLSearchParams(window.location.search);
-            const mod = params.get('mod');
-            if(mod) {
-                const buttons = document.querySelectorAll('button[onclick]');
-                let targetBtn = null;
-                buttons.forEach(btn => {
-                    const onclick = btn.getAttribute('onclick');
-                    if(onclick && onclick.includes(mod)) targetBtn = btn;
-                });
-
-                if(targetBtn) {
-                    // Open parent menus recursively
-                    let parent = targetBtn.parentElement;
-                    while(parent && parent.id !== 'menu-sim' && parent.id !== 'menu-guide') {
-                         if(parent.classList.contains('hidden')) {
-                             if(parent.id === 'menu-sim') toggleMenu('menu-sim', document.querySelector('button[onclick*="menu-sim"]'));
-                             if(parent.id === 'menu-guide') toggleMenu('menu-guide', document.querySelector('button[onclick*="menu-guide"]'));
-                         }
-                         parent = parent.parentElement;
-                    }
-                    targetBtn.click();
-                }
-            }
-        });
-    </script>
 </body>
 </html>
