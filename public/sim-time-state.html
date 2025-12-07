@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2-3. 시간 및 상태 시뮬레이터</title>
+    <title>2-3. 시간 및 상태 코드 가이드</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     
     <style>
         body {
@@ -19,7 +20,7 @@
             height: 100vh;
         }
         
-        /* 사이드바 스타일 (Dark Navy) - index.html과 동일하게 유지 */
+        /* 사이드바 스타일 (Dark Navy) */
         #sidebar-wrapper {
             min-height: 100vh;
             width: 280px;
@@ -88,6 +89,22 @@
             overflow-y: auto;
             background-color: #fff;
         }
+        .code-block-header {
+            background-color: #1e293b;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            border-radius: 0.25rem 0.25rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        pre[class*="language-"] {
+            margin: 0;
+            border-radius: 0 0 0.25rem 0.25rem;
+            white-space: pre-wrap; /* 긴 줄 자동 줄바꿈 */
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -149,52 +166,191 @@
     <div id="page-content-wrapper">
         <div class="container-fluid p-5">
             <h1 class="mb-4 text-primary">⏳ 2-3. 시간 및 상태 (Time and State)</h1>
-            <p class="lead">동시성(Concurrency) 문제로 인해 발생하는 보안 약점을 실습합니다. 주로 **경쟁 조건(Race Condition)**을 다룹니다.</p>
+            <p class="lead">코드의 실행 시점과 상태 변화에 따라 발생하는 보안 약점을 **Java**와 **Python** 코드를 통해 학습합니다.</p>
             <hr>
             
+            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-stopwatch me-2"></i> 1. 경쟁조건: 검사시점과 사용시점 (TOCTOU)</h2>
+            <p class="text-secondary">보안 검사 시점(Time of Check)과 실제 자원 사용 시점(Time of Use) 사이에 공유 자원의 상태가 악의적으로 변경되어 발생하는 취약점입니다.</p>
+
             <div class="row g-4">
-                <div class="col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-warning text-dark">
-                            <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i> 취약점 개요</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>두 개 이상의 프로세스가 동시에 공유 자원에 접근할 때, 접근 순서에 따라 결과가 달라지는 상황에서 발생할 수 있는 취약점입니다.</p>
-                            <ul>
-                                <li>**TOCTOU (Time-of-Check to Time-of-Use)**: 검사 시점과 사용 시점 사이에 상태가 바뀌어 발생하는 오류입니다.</li>
-                            </ul>
-                            <div class="alert alert-danger mt-3">
-                                <strong>해결 방안:</strong> 공유 자원에 대한 **원자성(Atomicity)**을 보장하고, 락(Lock)을 사용하여 동시 접근을 제어해야 합니다.
-                            </div>
-                        </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">TOCTOU</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+import java.io.File;
+// ... (생략)
+File f = new File(fileName);
+
+// 1. 검사 시점 (Time of Check)
+if (f.exists() && f.canWrite()) {
+    // *** 공격자가 이 사이에 파일을 심볼릭 링크로 바꿔치기 ***
+    
+    // 2. 사용 시점 (Time of Use)
+    FileWriter fw = new FileWriter(f, true); // 공격자의 파일에 쓰기 시도
+    fw.write(userData);
+    fw.close();
+}
+// 검사-사용 시점 차이로 인해 악의적인 파일에 쓰기 가능
+</code></pre>
                     </div>
                 </div>
 
-                <div class="col-lg-6">
+                <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">실습 코드 (Vulnerable Code)</h5>
-                        </div>
-                        <div class="card-body">
-                            <pre><code class="language-java">// 여기에 취약한 코드를 넣어주세요.</code></pre>
-                        </div>
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 원자적 처리</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+// ... (생략)
+
+Path path = Paths.get(fileName);
+String data = "log data";
+
+try {
+    // 파일 생성 및 쓰기를 원자적으로 처리 (파일이 존재하면 예외 발생)
+    Files.write(path, data.getBytes(StandardCharsets.UTF_8), 
+                StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+} catch (FileAlreadyExistsException e) {
+    // 파일이 이미 존재하면 TOCTOU가 발생하기 전에 실패 처리
+    System.out.println("파일이 이미 존재합니다.");
+}
+// CREATE_NEW 옵션이 원자성을 보장하여 TOCTOU 회피
+</code></pre>
                     </div>
                 </div>
-                <div class="col-lg-6">
+
+                <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">공격 결과 시뮬레이션</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>공격 시나리오를 여기에 작성합니다.</p>
-                        </div>
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">TOCTOU</span></div>
+                        <pre><code class="language-python"># 취약한 코드 (Python)
+import os
+
+file_name = "shared_resource.tmp"
+user_input = "malicious data"
+
+# 1. 검사 시점 (Time of Check)
+if os.path.exists(file_name):
+    # 공격자가 이 사이에 file_name을 심볼릭 링크로 바꿔치기
+    
+    # 2. 사용 시점 (Time of Use)
+    with open(file_name, 'a') as f:
+        f.write(user_input + '\n')
+# 검사 후 파일 열기 시점 사이에 상태가 변경될 위험
+</code></pre>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 원자적 처리</span></div>
+                        <pre><code class="language-python"># 안전한 코드 (Python)
+import os
+
+file_name = "user_log.txt"
+data = "log data"
+
+try:
+    # os.O_EXCL 플래그: 파일이 이미 존재하면 에러 발생, 원자성 보장
+    fd = os.open(file_name, os.O_CREAT | os.O_WRONLY | os.O_EXCL)
+    with os.fdopen(fd, 'w') as f:
+        f.write(data)
+    print("파일 쓰기 성공")
+except FileExistsError:
+    # 파일이 이미 존재할 경우 안전하게 처리
+    print("파일이 이미 존재합니다.")
+# os.open() 사용으로 Check와 Use를 결합
+</code></pre>
                     </div>
                 </div>
             </div>
+
+            <hr class="my-5">
+
+            <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-infinity me-2"></i> 2. 종료되지 않는 반복문 또는 재귀함수</h2>
+            <p class="text-secondary">반복문이나 재귀함수에 종료 조건이 없거나 오류가 있어 시스템 자원을 고갈시켜 DoS 공격을 유발하는 취약점입니다.</p>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">무한 재귀</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+public long calculateFactorialVulnerable(int n) {
+    // 종료 조건(Base Case)이 없거나 항상 참인 경우
+    return n * calculateFactorialVulnerable(n); 
+}
+
+// 외부에서 이 함수를 호출할 경우 StackOverflowError 발생
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 유효성/종료 조건</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+public long calculateFactorialSecure(int n) {
+    if (n < 0 || n > 20) { // 1. 입력값 유효성 검사 및 오버플로우 방지
+        throw new IllegalArgumentException("Invalid input");
+    }
+    if (n <= 1) { // 2. 명확한 종료 조건(Base Case)
+        return 1;
+    }
+    return n * calculateFactorialSecure(n - 1); // 3. 상태가 종료 조건으로 수렴
+}
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">무한 재귀</span></div>
+                        <pre><code class="language-python"># 취약한 코드 (Python)
+def process_data_recursively(n):
+    # 종료 조건 누락
+    print(f"Processing item {n}")
+    process_data_recursively(n) # 무한 재귀 호출
+    
+# 호출 시 RecursionError (Python의 재귀 한계) 또는 무한 루프 발생
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 제한 설정</span></div>
+                        <pre><code class="language-python"># 안전한 코드 (Python)
+def process_data_secure(n, max_depth=50):
+    if n >= max_depth:
+        # 1. 최대 반복 횟수(깊이)를 제한
+        raise RecursionError("최대 처리 깊이 초과") 
+
+    if n <= 1:
+        # 2. 명확한 종료 조건
+        return 1
+        
+    return n * process_data_secure(n - 1)
+    
+# 또는 while 루프 사용 시 외부 입력에 의존하지 않는 안전한 탈출 조건 사용
+</code></pre>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+    // 코드 하이라이팅 활성화
+    document.addEventListener('DOMContentLoaded', (event) => {
+        Prism.highlightAll();
+    });
+</script>
+
 </body>
 </html>
