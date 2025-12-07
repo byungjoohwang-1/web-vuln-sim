@@ -157,7 +157,7 @@ exports.secureError = functions.https.onRequest((req, res) => {
 exports.vulnerableQuality = functions.https.onRequest((req, res) => {
     // [책 분석] 소스코드 내에 비밀번호 하드코딩
     const DB_ADMIN_PW = "P@ssw0rd123!";
-    const API_SECRET = "sk_test_4eC";
+    const API_SECRET = "sk";
 
     res.send(`
         <div style="font-family:sans-serif; padding:20px;">
