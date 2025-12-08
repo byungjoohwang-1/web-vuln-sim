@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 에러 메시지 정보노출 실전 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .animate-blink { animation: blink 1s infinite; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-900 p-4">
+
+    <!-- 타이틀 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exclamation-triangle text-3xl"></i>
+                    <div>
+                        <h1 class="font-bold text-xl">금융권 에러 메시지 정보노출 실전 시나리오</h1>
+                        <p class="text-sm">WEB-SER-031: 시스템 운영정보 노출 | 위험도: 4 (높음)</p>
+                    </div>
+                </div>
+                <button onclick="resetAll()" class="bg-white text-orange-600 px-4 py-2 rounded font-bold hover:bg-gray-100">
+                    <i class="fas fa-redo"></i> 처음부터
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- 좌측: 공격자 화면 -->
+        <div class="space-y-4">
+            
+            <!-- 공격자 브라우저 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-user-secret text-red-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🔴 공격자 (해커)</h2>
+                        <p class="text-sm text-gray-400" id="attackerStatus">에러 유발 준비 중...</p>
+                    </div>
+                </div>
+                
+                <!-- 브라우저 화면 -->
+                <div class="bg-white rounded-lg overflow-hidden">
+                    <div class="bg-gray-300 px-3 py-2 flex items-center gap-2">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="flex-1 bg-white rounded px-2 py-1">
+                            <span class="text-xs text-gray-600 code-font" id="browserUrl">https://xxbank.com/login</span>
+                        </div>
+                        <button class="text-gray-600 text-xs"><i class="fas fa-sync"></i></button>
+                    </div>
+                    
+                    <div id="browserScreen" class="p-4 bg-white text-gray-900 min-h-[400px] max-h-[450px] overflow-auto">
+                        <div class="text-center text-gray-400 py-20">
+                            <i class="fas fa-globe text-6xl mb-4"></i>
+                            <p>시나리오를 시작하세요</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 수집한 정보 -->
+            <div id="collectedInfo" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-database text-red-400 text-xl animate-pulse"></i>
+                    <h3 class="font-bold">🔓 수집한 시스템 정보</h3>
+                </div>
+                <div id="collectedContent" class="bg-black p-3 rounded code-font text-xs"></div>
+            </div>
+
+            <!-- 공격 단계 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-list-ol text-orange-400"></i>
+                    공격 진행 단계
+                </h3>
+                <div id="attackSteps" class="space-y-2 text-sm max-h-[250px] overflow-auto">
+                    <div class="text-gray-500">시나리오를 시작하세요...</div>
+                </div>
+            </div>
+
+            <!-- 시나리오 선택 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-flask text-red-400"></i>
+                    실전 공격 시나리오
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="startScenario(1)" 
+                            class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-bug"></i> <strong>시나리오 1:</strong> 스택 트레이스 노출 (DB 정보)
+                    </button>
+                    <button onclick="startScenario(2)" 
+                            class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-database"></i> <strong>시나리오 2:</strong> SQL 에러 메시지 (테이블 구조)
+                    </button>
+                    <button onclick="startScenario(3)" 
+                            class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-folder-open"></i> <strong>시나리오 3:</strong> 경로 정보 노출 (서버 구조)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 취약한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-red-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-red-400">
+                        <i class="fas fa-bug"></i> 취약한 코드 (상세 에러 노출)
+                    </h3>
+                    <span class="text-xs bg-red-600 px-2 py-1 rounded">문제 원인</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[600px]"><code><span class="text-gray-500">// Java Spring - 취약한 에러 처리</span>
+
+@RestController
+public class LoginController {
+    
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestBody LoginDTO dto) {
+        try {
+            User user = userService.login(
+                dto.getUsername(), 
+                dto.getPassword()
+            );
+            return ResponseEntity.ok(user);
+            
+        } catch (Exception e) {
+            <span class="text-red-400">// ❌ 전체 스택 트레이스 노출!</span>
+            e.printStackTrace();
+            
+            <span class="text-red-400">// ❌ 상세 에러 메시지 반환!</span>
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error: " + e.getMessage() + 
+                      "\nCause: " + e.getCause() + 
+                      "\nStack: " + e.getStackTrace()[0]);
+        }
+    }
+}
+
+@Service
+public class UserService {
+    
+    @Autowired
+    private DataSource dataSource;
+    
+    public User login(String username, String password) {
+        try {
+            <span class="text-red-400">// ❌ DB 연결 실패 시 정보 노출</span>
+            Connection conn = dataSource.getConnection();
+            
+            String sql = "SELECT * FROM users " +
+                        "WHERE username = ? AND password = ?";
+            
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return new User(rs);
+            } else {
+                <span class="text-red-400">// ❌ 구체적 에러 메시지</span>
+                throw new Exception(
+                    "Login failed: User not found for username=" 
+                    + username
+                );
+            }
+            
+        } catch (SQLException e) {
+            <span class="text-red-400">// ❌ SQL 에러 상세 노출!</span>
+            throw new RuntimeException(
+                "Database error: " + e.getMessage() +
+                "\nSQL State: " + e.getSQLState() +
+                "\nError Code: " + e.getErrorCode()
+            );
+        }
+    }
+}
+
+<span class="text-gray-500">// Python Flask - 취약한 에러 처리</span>
+
+@app.route('/transfer', methods=['POST'])
+def transfer():
+    try:
+        from_account = request.json['from_account']
+        to_account = request.json['to_account']
+        amount = request.json['amount']
+        
+        <span class="text-red-400"># ❌ DB 연결 에러 노출</span>
+        conn = mysql.connector.connect(
+            host='10.1.2.3',
+            user='bank_admin',
+            password='BankDB@2024',
+            database='bank_prod'
+        )
+        
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE accounts SET balance = balance - %s "
+            "WHERE account_number = %s",
+            (amount, from_account)
+        )
+        
+        return jsonify({"status": "success"})
+        
+    except Exception as e:
+        <span class="text-red-400"># ❌ 전체 에러 정보 반환!</span>
+        return jsonify({
+            "error": str(e),
+            "type": type(e).__name__,
+            "traceback": traceback.format_exc()
+        }), 500
+
+<span class="text-gray-500">// JavaScript/Node.js - 취약한 에러 처리</span>
+
+app.post('/api/accounts', async (req, res) => {
+    try {
+        const { accountNumber } = req.body;
+        
+        <span class="text-red-400">// ❌ 파일 경로 노출</span>
+        const configPath = path.join(
+            __dirname, 
+            '../../config/database.json'
+        );
+        
+        const config = JSON.parse(
+            fs.readFileSync(configPath, 'utf8')
+        );
+        
+        const account = await getAccount(accountNumber);
+        res.json(account);
+        
+    } catch (error) {
+        <span class="text-red-400">// ❌ 상세 에러 스택 노출!</span>
+        res.status(500).json({
+            error: error.message,
+            stack: error.stack,
+            <span class="text-red-400">// ❌ 개발 정보 노출</span>
+            env: process.env.NODE_ENV,
+            version: process.version,
+            platform: process.platform
+        });
+    }
+});
+
+<span class="text-gray-500">// application.properties - 취약한 설정</span>
+
+<span class="text-red-400"># ❌ 개발 모드로 운영 (상세 에러 표시)</span>
+spring.profiles.active=dev
+
+<span class="text-red-400"># ❌ 에러 상세정보 노출</span>
+server.error.include-message=always
+server.error.include-binding-errors=always
+server.error.include-stacktrace=always
+server.error.include-exception=true
+
+<span class="text-red-400"># ❌ 디버그 모드 활성화</span>
+debug=true
+logging.level.root=DEBUG
+
+<span class="text-red-400"># ❌ SQL 쿼리 로깅</span>
+spring.jpa.show-sql=true
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql=TRACE</code></pre>
+            </div>
+
+        </div>
+
+        <!-- 우측: 서버 & 분석 -->
+        <div class="space-y-4">
+            
+            <!-- 서버 에러 로그 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-orange-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-server text-orange-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🟠 서버 에러 로그</h2>
+                        <p class="text-sm text-gray-400">상세 에러 메시지 노출</p>
+                    </div>
+                </div>
+                
+                <!-- 서버 로그 -->
+                <div class="bg-black rounded-lg p-4 min-h-[400px] max-h-[500px] overflow-auto">
+                    <div id="serverLog" class="code-font text-xs space-y-1 text-red-400">
+                        <div class="text-gray-500">[SERVER] Waiting...</div>
+                    </div>
+                </div>
+                
+                <!-- 상태 -->
+                <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">서버 상태:</span>
+                    <span id="serverStatus" class="text-xs bg-green-600 px-3 py-1 rounded">RUNNING</span>
+                </div>
+            </div>
+
+            <!-- 공격 성공 -->
+            <div id="successBox" class="hidden bg-green-900 text-white p-4 rounded-lg shadow-lg border-2 border-green-400">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                    <h3 class="font-bold">✅ 정보 수집 성공!</h3>
+                </div>
+                <div id="successContent" class="text-sm"></div>
+            </div>
+
+            <!-- 문제점 분석 -->
+            <div id="problemBox" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl animate-blink"></i>
+                    <h3 class="font-bold">🚨 문제점 분석</h3>
+                </div>
+                <div id="problemContent" class="text-sm space-y-2"></div>
+            </div>
+
+            <!-- 안전한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-green-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-green-400">
+                        <i class="fas fa-shield-halved"></i> 안전한 코드 (에러 처리)
+                    </h3>
+                    <span class="text-xs bg-green-600 px-2 py-1 rounded">해결책</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[900px]"><code><span class="text-gray-500">// Java Spring - 안전한 에러 처리</span>
+
+<span class="text-green-400">// ✅ 전역 예외 처리기</span>
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    
+    private static final Logger logger = 
+        LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(
+        Exception e, HttpServletRequest request
+    ) {
+        <span class="text-green-400">// 내부 로깅 (상세 정보)</span>
+        logger.error(
+            "Error occurred: {} at {}", 
+            e.getMessage(), 
+            request.getRequestURI(), 
+            e  // 스택 트레이스는 로그에만
+        );
+        
+        <span class="text-green-400">// 클라이언트 응답 (일반 메시지만)</span>
+        ErrorResponse response = new ErrorResponse(
+            "ERR_INTERNAL_SERVER",
+            "서비스 처리 중 오류가 발생했습니다.",
+            UUID.randomUUID().toString()  // 추적용 ID
+        );
+        
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(response);
+    }
+    
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(
+        DataAccessException e, HttpServletRequest request
+    ) {
+        <span class="text-green-400">// 상세 로깅 (내부용)</span>
+        logger.error(
+            "Database error at {}: {}", 
+            request.getRequestURI(),
+            e.getMessage(),
+            e
+        );
+        
+        <span class="text-green-400">// 일반적인 메시지만 반환</span>
+        ErrorResponse response = new ErrorResponse(
+            "ERR_DATABASE",
+            "데이터베이스 처리 중 오류가 발생했습니다.",
+            UUID.randomUUID().toString()
+        );
+        
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(response);
+    }
+}
+
+<span class="text-green-400">// ✅ 표준화된 에러 응답</span>
+public class ErrorResponse {
+    private String errorCode;      // 에러 코드
+    private String message;        // 사용자 메시지
+    private String trackingId;     // 추적 ID
+    private LocalDateTime timestamp;
+    
+    public ErrorResponse(
+        String errorCode, 
+        String message, 
+        String trackingId
+    ) {
+        this.errorCode = errorCode;
+        this.message = message;
+        this.trackingId = trackingId;
+        this.timestamp = LocalDateTime.now();
+    }
+    
+    <span class="text-green-400">// getter/setter (상세 정보 제외)</span>
+}
+
+@Service
+public class SecureUserService {
+    
+    private static final Logger logger = 
+        LoggerFactory.getLogger(SecureUserService.class);
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    public User login(String username, String password) {
+        try {
+            <span class="text-green-400">// Repository 패턴 사용 (DB 정보 숨김)</span>
+            Optional<User> user = userRepository
+                .findByUsernameAndPassword(username, password);
+            
+            if (user.isPresent()) {
+                return user.get();
+            } else {
+                <span class="text-green-400">// 일반적인 에러 메시지</span>
+                throw new AuthenticationException(
+                    "아이디 또는 비밀번호가 올바르지 않습니다."
+                );
+            }
+            
+        } catch (DataAccessException e) {
+            <span class="text-green-400">// 상세 정보는 로그에만</span>
+            logger.error(
+                "Database error during login for user: {}", 
+                username, 
+                e
+            );
+            
+            <span class="text-green-400">// 사용자에게는 일반 메시지</span>
+            throw new ServiceException(
+                "로그인 처리 중 오류가 발생했습니다."
+            );
+        }
+    }
+}
+
+<span class="text-gray-500">// Python Flask - 안전한 에러 처리</span>
+
+<span class="text-green-400"># ✅ 전역 에러 핸들러</span>
+@app.errorhandler(Exception)
+def handle_exception(e):
+    <span class="text-green-400"># 상세 로깅 (서버측)</span>
+    app.logger.error(
+        f"Error: {str(e)}",
+        exc_info=True  # 스택 트레이스 포함
+    )
+    
+    <span class="text-green-400"># 추적 ID 생성</span>
+    tracking_id = str(uuid.uuid4())
+    
+    <span class="text-green-400"># 일반 응답 (클라이언트)</span>
+    return jsonify({
+        "error_code": "ERR_INTERNAL_SERVER",
+        "message": "서비스 처리 중 오류가 발생했습니다.",
+        "tracking_id": tracking_id
+    }), 500
+
+@app.errorhandler(DatabaseError)
+def handle_database_error(e):
+    <span class="text-green-400"># 로그에만 상세 정보</span>
+    app.logger.error(
+        f"Database error: {str(e)}",
+        exc_info=True
+    )
+    
+    <span class="text-green-400"># 사용자에게는 일반 메시지</span>
+    return jsonify({
+        "error_code": "ERR_DATABASE",
+        "message": "데이터베이스 처리 중 오류가 발생했습니다.",
+        "tracking_id": str(uuid.uuid4())
+    }), 500
+
+@app.route('/transfer', methods=['POST'])
+def transfer():
+    try:
+        from_account = request.json.get('from_account')
+        to_account = request.json.get('to_account')
+        amount = request.json.get('amount')
+        
+        <span class="text-green-400"># 입력 검증</span>
+        if not all([from_account, to_account, amount]):
+            return jsonify({
+                "error_code": "ERR_INVALID_INPUT",
+                "message": "필수 입력값이 누락되었습니다."
+            }), 400
+        
+        <span class="text-green-400"># DB 연결 (환경변수 사용)</span>
+        conn = get_db_connection()  # 내부 함수
+        
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE accounts SET balance = balance - %s "
+            "WHERE account_number = %s",
+            (amount, from_account)
+        )
+        conn.commit()
+        
+        return jsonify({"status": "success"})
+        
+    except ValueError as e:
+        <span class="text-green-400"># 예상된 에러 (사용자 메시지)</span>
+        app.logger.warning(f"Invalid input: {str(e)}")
+        return jsonify({
+            "error_code": "ERR_INVALID_INPUT",
+            "message": "입력값이 올바르지 않습니다."
+        }), 400
+        
+    except Exception as e:
+        <span class="text-green-400"># 예상치 못한 에러 (일반 메시지)</span>
+        app.logger.error(f"Transfer error: {str(e)}", exc_info=True)
+        return jsonify({
+            "error_code": "ERR_TRANSFER_FAILED",
+            "message": "송금 처리 중 오류가 발생했습니다."
+        }), 500
+
+<span class="text-green-400"># ✅ 안전한 로깅 설정</span>
+import logging
+from logging.handlers import RotatingFileHandler
+
+<span class="text-green-400"># 파일 로깅 (상세 정보)</span>
+file_handler = RotatingFileHandler(
+    'logs/app.log',
+    maxBytes=10240000,
+    backupCount=10
+)
+file_handler.setLevel(logging.ERROR)
+file_handler.setFormatter(logging.Formatter(
+    '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+))
+
+app.logger.addHandler(file_handler)
+
+<span class="text-gray-500">// JavaScript/Node.js - 안전한 에러 처리</span>
+
+<span class="text-green-400">// ✅ 전역 에러 미들웨어</span>
+app.use((err, req, res, next) => {
+    <span class="text-green-400">// 상세 로깅 (서버측)</span>
+    console.error('Error:', {
+        message: err.message,
+        stack: err.stack,
+        url: req.url,
+        method: req.method,
+        timestamp: new Date().toISOString()
+    });
+    
+    <span class="text-green-400">// 추적 ID</span>
+    const trackingId = require('uuid').v4();
+    
+    <span class="text-green-400">// 일반 응답 (클라이언트)</span>
+    res.status(err.status || 500).json({
+        error_code: err.code || 'ERR_INTERNAL_SERVER',
+        message: err.userMessage || 
+                '서비스 처리 중 오류가 발생했습니다.',
+        tracking_id: trackingId
+    });
+});
+
+app.post('/api/accounts', async (req, res, next) => {
+    try {
+        const { accountNumber } = req.body;
+        
+        <span class="text-green-400">// 입력 검증</span>
+        if (!accountNumber) {
+            const error = new Error('Account number required');
+            error.status = 400;
+            error.code = 'ERR_INVALID_INPUT';
+            error.userMessage = '계좌번호를 입력해주세요.';
+            throw error;
+        }
+        
+        <span class="text-green-400">// 안전한 DB 접근</span>
+        const account = await getAccount(accountNumber);
+        res.json(account);
+        
+    } catch (error) {
+        <span class="text-green-400">// 에러 핸들러로 전달</span>
+        next(error);
+    }
+});
+
+<span class="text-green-400">// ✅ 커스텀 에러 클래스</span>
+class ApplicationError extends Error {
+    constructor(message, code, status, userMessage) {
+        super(message);
+        this.code = code;
+        this.status = status;
+        this.userMessage = userMessage;
+    }
+}
+
+<span class="text-gray-500">// application.properties - 안전한 설정</span>
+
+<span class="text-green-400"># ✅ 운영 모드 (최소 정보)</span>
+spring.profiles.active=prod
+
+<span class="text-green-400"># ✅ 에러 정보 최소화</span>
+server.error.include-message=never
+server.error.include-binding-errors=never
+server.error.include-stacktrace=never
+server.error.include-exception=false
+
+<span class="text-green-400"># ✅ 운영 환경 로깅</span>
+debug=false
+logging.level.root=WARN
+logging.level.com.xxbank=INFO
+
+<span class="text-green-400"># ✅ SQL 로깅 비활성화</span>
+spring.jpa.show-sql=false
+logging.level.org.hibernate.SQL=WARN
+
+<span class="text-green-400"># ✅ 에러 페이지 커스터마이징</span>
+server.error.whitelabel.enabled=false
+server.error.path=/error
+
+<span class="text-gray-500">// logback-spring.xml - 안전한 로깅 설정</span>
+
+&lt;configuration&gt;
+    <span class="text-green-400">&lt;!-- 파일 로깅 (상세 정보) --&gt;</span>
+    &lt;appender name="FILE" 
+        class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;logs/application.log&lt;/file&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;
+                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level 
+                %logger{36} - %msg%n
+            &lt;/pattern&gt;
+        &lt;/encoder&gt;
+        &lt;rollingPolicy 
+            class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;
+                logs/application-%d{yyyy-MM-dd}.log
+            &lt;/fileNamePattern&gt;
+            &lt;maxHistory&gt;30&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+    &lt;/appender&gt;
+    
+    <span class="text-green-400">&lt;!-- 콘솔 로깅 (최소 정보) --&gt;</span>
+    &lt;appender name="CONSOLE" 
+        class="ch.qos.logback.core.ConsoleAppender"&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;%d{HH:mm:ss} %-5level - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    
+    &lt;root level="INFO"&gt;
+        &lt;appender-ref ref="FILE" /&gt;
+        &lt;appender-ref ref="CONSOLE" /&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+
+        function resetAll() {
+            isRunning = false;
+            
+            document.getElementById('attackerStatus').textContent = '에러 유발 준비 중...';
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com/login';
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="text-center text-gray-400 py-20">' +
+                '<i class="fas fa-globe text-6xl mb-4"></i>' +
+                '<p>시나리오를 시작하세요</p>' +
+                '</div>';
+            
+            document.getElementById('serverLog').innerHTML = 
+                '<div class="text-gray-500">[SERVER] Waiting...</div>';
+            
+            document.getElementById('serverStatus').textContent = 'RUNNING';
+            document.getElementById('serverStatus').className = 'text-xs bg-green-600 px-3 py-1 rounded';
+            
+            document.getElementById('attackSteps').innerHTML = 
+                '<div class="text-gray-500">시나리오를 시작하세요...</div>';
+            
+            document.getElementById('collectedInfo').classList.add('hidden');
+            document.getElementById('problemBox').classList.add('hidden');
+            document.getElementById('successBox').classList.add('hidden');
+        }
+
+        async function startScenario(scenario) {
+            if (isRunning) return;
+            isRunning = true;
+            
+            resetAll();
+            await sleep(300);
+            
+            if (scenario === 1) {
+                await scenario1_StackTraceExposure();
+            } else if (scenario === 2) {
+                await scenario2_SqlErrorMessage();
+            } else if (scenario === 3) {
+                await scenario3_PathInformationLeak();
+            }
+            
+            isRunning = false;
+        }
+
+        // 시나리오 1: 스택 트레이스 노출
+        async function scenario1_StackTraceExposure() {
+            updateStep('🎯 시나리오 1: 스택 트레이스 노출 (DB 정보 유출)');
+            await sleep(1000);
+            
+            updateStep('1️⃣ XX은행 로그인 페이지 접속');
+            document.getElementById('attackerStatus').textContent = '로그인 페이지 접속...';
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com/login';
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-10">' +
+                '<h2 class="text-2xl font-bold mb-6 text-gray-800">XX은행 로그인</h2>' +
+                '<form class="space-y-4">' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">아이디</label>' +
+                '<input type="text" class="w-full border border-gray-300 rounded px-3 py-2" value="test_user">' +
+                '</div>' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>' +
+                '<input type="password" class="w-full border border-gray-300 rounded px-3 py-2" value="wrong_password">' +
+                '</div>' +
+                '<button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">로그인</button>' +
+                '</form>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('2️⃣ 잘못된 비밀번호로 로그인 시도');
+            document.getElementById('attackerStatus').textContent = '로그인 시도...';
+            
+            await addServerLog('[INFO] Login attempt for user: test_user', 'text-blue-400');
+            await sleep(500);
+            await addServerLog('[INFO] Connecting to database...', 'text-blue-400');
+            await sleep(800);
+            
+            updateServerStatus('ERROR', 'bg-red-600 animate-pulse');
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">서버 에러 발생! 스택 트레이스 노출!</span>');
+            
+            await addServerLog('[ERROR] Database connection failed!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('java.sql.SQLException: Access denied for user', 'text-red-400');
+            await sleep(200);
+            await addServerLog("  'bank_admin'@'10.1.2.3' (using password: YES)", 'text-red-400');
+            await sleep(500);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('  at com.mysql.cj.jdbc.ConnectionImpl.createNewIO', 'text-gray-400');
+            await sleep(200);
+            await addServerLog('  at com.mysql.cj.jdbc.ConnectionImpl.<init>', 'text-gray-400');
+            await sleep(200);
+            await addServerLog('  at com.xxbank.service.UserService.login(UserService.java:45)', 'text-yellow-400');
+            await sleep(200);
+            await addServerLog('  at com.xxbank.controller.LoginController.login(LoginController.java:28)', 'text-yellow-400');
+            await sleep(500);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('Connection details:', 'text-cyan-400');
+            await sleep(200);
+            await addServerLog('  URL: jdbc:mysql://10.1.2.3:3306/bank_prod', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  User: bank_admin', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  Database: bank_prod', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  Server: MySQL 8.0.35', 'text-red-400');
+            await sleep(1000);
+            
+            // 브라우저에 에러 표시
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-2xl mx-auto mt-10 bg-red-50 border-2 border-red-300 rounded-lg p-6">' +
+                '<div class="flex items-center gap-2 mb-4 text-red-700">' +
+                '<i class="fas fa-exclamation-triangle text-2xl"></i>' +
+                '<h3 class="text-xl font-bold">500 Internal Server Error</h3>' +
+                '</div>' +
+                '<div class="bg-white p-4 rounded border border-red-200 code-font text-xs">' +
+                '<div class="text-red-600 font-bold mb-2">java.sql.SQLException: Access denied</div>' +
+                '<div class="text-gray-700 mb-2">for user \'bank_admin\'@\'10.1.2.3\' (using password: YES)</div>' +
+                '<div class="border-t border-gray-300 my-3"></div>' +
+                '<div class="text-gray-600 mb-1">Connection details:</div>' +
+                '<div class="text-red-600">  URL: jdbc:mysql://10.1.2.3:3306/bank_prod</div>' +
+                '<div class="text-red-600">  User: bank_admin</div>' +
+                '<div class="text-red-600">  Database: bank_prod</div>' +
+                '<div class="border-t border-gray-300 my-3"></div>' +
+                '<div class="text-gray-600 mb-1">Stack Trace:</div>' +
+                '<div class="text-gray-500 text-xs space-y-1">' +
+                '<div>  at com.xxbank.service.UserService.login(UserService.java:45)</div>' +
+                '<div>  at com.xxbank.controller.LoginController.login(LoginController.java:28)</div>' +
+                '<div>  at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0</div>' +
+                '<div>  at org.springframework.web.servlet.mvc.method.annotation...</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            
+            await sleep(1000);
+            
+            updateStep('4️⃣ 공격자가 DB 정보 수집');
+            
+            document.getElementById('collectedInfo').classList.remove('hidden');
+            document.getElementById('collectedContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">🗄️ 수집한 DB 정보:</div>' +
+                '<div class="text-red-400">Host: 10.1.2.3</div>' +
+                '<div class="text-red-400">Port: 3306</div>' +
+                '<div class="text-red-400">Database: bank_prod</div>' +
+                '<div class="text-red-400">Username: bank_admin</div>' +
+                '<div class="text-red-400">Server: MySQL 8.0.35</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">📂 파일 경로:</div>' +
+                '<div class="text-green-400">UserService.java:45</div>' +
+                '<div class="text-green-400">LoginController.java:28</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-orange-400 mb-2">⚙️ 시스템 정보:</div>' +
+                '<div class="text-green-400">Framework: Spring Boot</div>' +
+                '<div class="text-green-400">Java Version: JDK Internal</div>';
+            
+            showResults(
+                '스택 트레이스를 통해 DB 접속 정보, 파일 경로, 시스템 구조 노출',
+                'scenario1'
+            );
+        }
+
+        // 시나리오 2: SQL 에러 메시지
+        async function scenario2_SqlErrorMessage() {
+            updateStep('🎯 시나리오 2: SQL 에러 메시지 (테이블 구조 노출)');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 계좌 조회 페이지 접속');
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com/account';
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-10">' +
+                '<h2 class="text-2xl font-bold mb-6 text-gray-800">계좌 조회</h2>' +
+                '<form class="space-y-4">' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">계좌번호</label>' +
+                '<input type="text" class="w-full border border-gray-300 rounded px-3 py-2" value="110-123-456789\' OR \'1\'=\'1">' +
+                '</div>' +
+                '<button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">조회</button>' +
+                '</form>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('2️⃣ SQL Injection 시도 (에러 기반)');
+            document.getElementById('attackerStatus').textContent = 'SQL 에러 유발...';
+            
+            await addServerLog('[INFO] Account lookup request', 'text-blue-400');
+            await sleep(500);
+            await addServerLog('[INFO] Executing SQL query...', 'text-blue-400');
+            await sleep(800);
+            
+            updateServerStatus('ERROR', 'bg-red-600');
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">SQL 에러! 테이블 구조 노출!</span>');
+            
+            await addServerLog('[ERROR] SQL syntax error!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('You have an error in your SQL syntax;', 'text-red-400');
+            await sleep(200);
+            await addServerLog('check the manual that corresponds to your', 'text-red-400');
+            await sleep(200);
+            await addServerLog('MySQL server version for the right syntax', 'text-red-400');
+            await sleep(500);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('Query:', 'text-cyan-400');
+            await sleep(200);
+            await addServerLog('  SELECT account_number, customer_name,', 'text-yellow-400');
+            await sleep(200);
+            await addServerLog('         balance, account_type, status,', 'text-yellow-400');
+            await sleep(200);
+            await addServerLog('         created_date, last_transaction_date,', 'text-yellow-400');
+            await sleep(200);
+            await addServerLog('         customer_ssn, phone_number, address', 'text-yellow-400');
+            await sleep(200);
+            await addServerLog('  FROM bank_prod.customer_accounts', 'text-yellow-400');
+            await sleep(200);
+            await addServerLog("  WHERE account_number = '110-123-456789' OR '1'='1'", 'text-red-400');
+            await sleep(500);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('Table: bank_prod.customer_accounts', 'text-cyan-400');
+            await sleep(200);
+            await addServerLog('Columns: 10 columns found', 'text-red-400');
+            await sleep(1000);
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-3xl mx-auto mt-10 bg-red-50 border-2 border-red-300 rounded-lg p-6">' +
+                '<div class="flex items-center gap-2 mb-4 text-red-700">' +
+                '<i class="fas fa-database text-2xl"></i>' +
+                '<h3 class="text-xl font-bold">Database Error</h3>' +
+                '</div>' +
+                '<div class="bg-white p-4 rounded border border-red-200 code-font text-xs">' +
+                '<div class="text-red-600 font-bold mb-3">SQLException: Syntax error</div>' +
+                '<div class="text-gray-600 mb-2">Failed query:</div>' +
+                '<div class="bg-gray-100 p-3 rounded text-gray-700 mb-3">' +
+                'SELECT account_number, customer_name, balance,<br>' +
+                '       account_type, status, created_date,<br>' +
+                '       last_transaction_date, <span class="text-red-600">customer_ssn</span>,<br>' +
+                '       phone_number, address<br>' +
+                'FROM <span class="text-red-600">bank_prod.customer_accounts</span><br>' +
+                'WHERE account_number = \'110-123-456789\' OR \'1\'=\'1\'' +
+                '</div>' +
+                '<div class="border-t border-gray-300 my-3"></div>' +
+                '<div class="text-gray-600">Table: <span class="text-red-600">bank_prod.customer_accounts</span></div>' +
+                '<div class="text-gray-600">Database: <span class="text-red-600">bank_prod</span></div>' +
+                '<div class="text-gray-600">Columns: <span class="text-red-600">10 columns (including SSN)</span></div>' +
+                '</div>' +
+                '</div>';
+            
+            await sleep(1000);
+            
+            updateStep('4️⃣ 테이블 구조 및 민감 컬럼 정보 수집');
+            
+            document.getElementById('collectedInfo').classList.remove('hidden');
+            document.getElementById('collectedContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">🗂️ 테이블 정보:</div>' +
+                '<div class="text-red-400">Database: bank_prod</div>' +
+                '<div class="text-red-400">Table: customer_accounts</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">📋 컬럼 목록 (10개):</div>' +
+                '<div class="text-green-400">1. account_number</div>' +
+                '<div class="text-green-400">2. customer_name</div>' +
+                '<div class="text-green-400">3. balance</div>' +
+                '<div class="text-green-400">4. account_type</div>' +
+                '<div class="text-green-400">5. status</div>' +
+                '<div class="text-green-400">6. created_date</div>' +
+                '<div class="text-green-400">7. last_transaction_date</div>' +
+                '<div class="text-red-400 font-bold">8. customer_ssn ⚠️</div>' +
+                '<div class="text-green-400">9. phone_number</div>' +
+                '<div class="text-green-400">10. address</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-orange-400">⚡ 다음 공격 가능:</div>' +
+                '<div class="text-gray-300 text-xs">• UNION SELECT로 데이터 탈취</div>' +
+                '<div class="text-gray-300 text-xs">• customer_ssn 컬럼 추출</div>';
+            
+            showResults(
+                'SQL 에러 메시지를 통해 데이터베이스 이름, 테이블 구조, 민감 컬럼 정보 노출',
+                'scenario2'
+            );
+        }
+
+        // 시나리오 3: 경로 정보 노출
+        async function scenario3_PathInformationLeak() {
+            updateStep('🎯 시나리오 3: 경로 정보 노출 (서버 구조 파악)');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 파일 다운로드 요청');
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com/download?file=../../../etc/passwd';
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-10">' +
+                '<h2 class="text-2xl font-bold mb-6 text-gray-800">문서 다운로드</h2>' +
+                '<div class="space-y-4">' +
+                '<p class="text-gray-600">요청한 파일: <code class="bg-gray-100 px-2 py-1 rounded">../../../etc/passwd</code></p>' +
+                '<button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">다운로드</button>' +
+                '</div>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('2️⃣ 경로 조작 공격 시도');
+            document.getElementById('attackerStatus').textContent = '경로 조작 공격...';
+            
+            await addServerLog('[INFO] File download request', 'text-blue-400');
+            await sleep(500);
+            await addServerLog('[INFO] Processing file: ../../../etc/passwd', 'text-yellow-400');
+            await sleep(800);
+            
+            updateServerStatus('ERROR', 'bg-red-600');
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">파일 접근 에러! 절대 경로 노출!</span>');
+            
+            await addServerLog('[ERROR] File access denied!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('java.io.FileNotFoundException:', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  /home/xxbank/app/public/downloads/../../../etc/passwd', 'text-red-400');
+            await sleep(300);
+            await addServerLog('  (No such file or directory)', 'text-red-400');
+            await sleep(500);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('Application path:', 'text-cyan-400');
+            await sleep(200);
+            await addServerLog('  Base: /home/xxbank/app', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  Config: /home/xxbank/app/config', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  Logs: /home/xxbank/app/logs', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  Data: /home/xxbank/app/data', 'text-red-400');
+            await sleep(500);
+            await addServerLog('', 'text-red-400');
+            await addServerLog('System info:', 'text-cyan-400');
+            await sleep(200);
+            await addServerLog('  OS: Linux Ubuntu 20.04.6 LTS', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  Java: OpenJDK 17.0.8', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  Tomcat: 9.0.82', 'text-red-400');
+            await sleep(200);
+            await addServerLog('  User: xxbank (uid=1001)', 'text-red-400');
+            await sleep(1000);
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-3xl mx-auto mt-10 bg-red-50 border-2 border-red-300 rounded-lg p-6">' +
+                '<div class="flex items-center gap-2 mb-4 text-red-700">' +
+                '<i class="fas fa-folder-open text-2xl"></i>' +
+                '<h3 class="text-xl font-bold">File Access Error</h3>' +
+                '</div>' +
+                '<div class="bg-white p-4 rounded border border-red-200 code-font text-xs">' +
+                '<div class="text-red-600 font-bold mb-3">FileNotFoundException</div>' +
+                '<div class="text-gray-600 mb-2">Failed to access:</div>' +
+                '<div class="bg-red-100 p-3 rounded text-red-700 mb-3">' +
+                '/home/xxbank/app/public/downloads/../../../etc/passwd' +
+                '</div>' +
+                '<div class="border-t border-gray-300 my-3"></div>' +
+                '<div class="text-gray-600 mb-2">Application structure:</div>' +
+                '<div class="text-gray-700 space-y-1">' +
+                '<div>📁 /home/xxbank/app/</div>' +
+                '<div class="ml-4">📁 config/ <span class="text-red-600">← 설정 파일</span></div>' +
+                '<div class="ml-4">📁 logs/ <span class="text-red-600">← 로그 파일</span></div>' +
+                '<div class="ml-4">📁 data/ <span class="text-red-600">← 데이터베이스</span></div>' +
+                '<div class="ml-4">📁 public/downloads/</div>' +
+                '</div>' +
+                '<div class="border-t border-gray-300 my-3"></div>' +
+                '<div class="text-gray-600">System: <span class="text-red-600">Linux Ubuntu 20.04.6 LTS</span></div>' +
+                '<div class="text-gray-600">Server: <span class="text-red-600">Apache Tomcat 9.0.82</span></div>' +
+                '</div>' +
+                '</div>';
+            
+            await sleep(1000);
+            
+            updateStep('4️⃣ 서버 디렉토리 구조 및 시스템 정보 수집');
+            
+            document.getElementById('collectedInfo').classList.remove('hidden');
+            document.getElementById('collectedContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">📂 서버 경로:</div>' +
+                '<div class="text-red-400">Base: /home/xxbank/app</div>' +
+                '<div class="text-red-400">Config: /home/xxbank/app/config</div>' +
+                '<div class="text-red-400">Logs: /home/xxbank/app/logs</div>' +
+                '<div class="text-red-400">Data: /home/xxbank/app/data</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">💻 시스템 정보:</div>' +
+                '<div class="text-green-400">OS: Ubuntu 20.04.6 LTS</div>' +
+                '<div class="text-green-400">Java: OpenJDK 17.0.8</div>' +
+                '<div class="text-green-400">Tomcat: 9.0.82</div>' +
+                '<div class="text-green-400">User: xxbank (uid=1001)</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-orange-400">⚡ 다음 공격 가능:</div>' +
+                '<div class="text-gray-300 text-xs">• /config 경로의 설정 파일 접근</div>' +
+                '<div class="text-gray-300 text-xs">• /logs 경로의 로그 파일 열람</div>' +
+                '<div class="text-gray-300 text-xs">• 알려진 Tomcat 취약점 공격</div>';
+            
+            showResults(
+                '에러 메시지를 통해 서버 디렉토리 구조, 시스템 버전, 실행 환경 노출',
+                'scenario3'
+            );
+        }
+
+        function showResults(description, scenario) {
+            document.getElementById('problemBox').classList.remove('hidden');
+            
+            let problems = '';
+            if (scenario === 'scenario1') {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ 스택 트레이스 노출 문제:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>1. DB 접속 정보 평문 노출</div>' +
+                    '<div>2. 서버 내부 파일 경로 노출</div>' +
+                    '<div>3. 프레임워크 버전 정보 노출</div>' +
+                    '<div>4. 클래스 및 메서드 구조 노출</div>' +
+                    '</div></div>';
+            } else if (scenario === 'scenario2') {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ SQL 에러 노출 문제:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>1. 데이터베이스 이름 노출</div>' +
+                    '<div>2. 테이블 및 컬럼 구조 노출</div>' +
+                    '<div>3. 민감 컬럼(SSN) 존재 확인</div>' +
+                    '<div>4. SQL 쿼리 전체 노출</div>' +
+                    '</div></div>';
+            } else {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ 경로 정보 노출 문제:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>1. 절대 경로 노출</div>' +
+                    '<div>2. 디렉토리 구조 노출</div>' +
+                    '<div>3. OS 및 서버 버전 노출</div>' +
+                    '<div>4. 실행 사용자 정보 노출</div>' +
+                    '</div></div>';
+            }
+            
+            problems += 
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 시스템 구조 파악</div>' +
+                '<div>• 추가 공격 경로 발견</div>' +
+                '<div>• 알려진 취약점 활용</div>' +
+                '<div>• 데이터베이스 공격 가능</div>' +
+                '</div></div>';
+            
+            document.getElementById('problemContent').innerHTML = problems;
+            
+            document.getElementById('successBox').classList.remove('hidden');
+            document.getElementById('successContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">🎯 수집 성공:</p>' +
+                '<div class="ml-4">' + description + '</div>' +
+                '</div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">🛡️ 필요한 방어:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 전역 예외 처리기 구현</div>' +
+                '<div>• 일반화된 에러 메시지 사용</div>' +
+                '<div>• 상세 정보는 로그에만 기록</div>' +
+                '<div>• 운영 환경 설정 적용</div>' +
+                '</div></div>';
+        }
+
+        function updateStep(html) {
+            const steps = document.getElementById('attackSteps');
+            const div = document.createElement('div');
+            div.className = 'p-2 bg-gray-700 rounded text-sm slide-in';
+            div.innerHTML = html;
+            steps.appendChild(div);
+            steps.scrollTop = steps.scrollHeight;
+        }
+
+        async function addServerLog(message, colorClass = 'text-green-400') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.textContent = message;
+            const container = document.getElementById('serverLog');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            await sleep(50);
+        }
+
+        function updateServerStatus(text, className) {
+            document.getElementById('serverStatus').textContent = text;
+            document.getElementById('serverStatus').className = 'text-xs text-white px-3 py-1 rounded ' + className;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
