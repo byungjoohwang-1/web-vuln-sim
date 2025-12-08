@@ -3,274 +3,910 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brute Force Attack Simulation</title>
+    <title>금융권 Brute Force 실전 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
-        .code-font { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Terminal Scrollbar */
-        .terminal-scroll::-webkit-scrollbar { width: 6px; }
-        .terminal-scroll::-webkit-scrollbar-track { background: #1e293b; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .code-font { font-family: 'Courier New', monospace; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .animate-blink { animation: blink 1s infinite; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .animate-shake { animation: shake 0.3s; }
     </style>
 </head>
-<body class="bg-slate-50 p-8 h-screen flex flex-col">
+<body class="bg-gray-900 p-4">
 
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-red-100 text-red-600 rounded-lg">
-                <i class="fas fa-unlock text-xl"></i>
+    <!-- 타이틀 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-lock text-3xl"></i>
+                    <div>
+                        <h1 class="font-bold text-xl">금융권 Brute Force 공격 실전 시나리오</h1>
+                        <p class="text-sm">WEB-SER-032: 인증 오류 횟수 제한 | 위험도: 5 (매우 높음) | 전자금융: 5회 이내 제한 필수</p>
+                    </div>
+                </div>
+                <button onclick="resetAll()" class="bg-white text-red-600 px-4 py-2 rounded font-bold hover:bg-gray-100">
+                    <i class="fas fa-redo"></i> 처음부터
+                </button>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800">Brute Force Attack</h1>
         </div>
-        <p class="text-slate-500 text-sm">
-            가능한 모든 경우의 수(비밀번호 조합)를 시도하여 인증을 우회하는 공격 기법입니다.
-        </p>
     </div>
 
-    <!-- Main Grid -->
-    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
         
-        <!-- 1. Target System (Login Form) -->
-        <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 h-full flex flex-col justify-center relative overflow-hidden">
+        <!-- 좌측: 공격자 화면 -->
+        <div class="space-y-4">
             
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-            
-            <div class="max-w-sm mx-auto w-full">
-                <div class="text-center mb-8">
-                    <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-user-shield text-2xl text-slate-600"></i>
+            <!-- 공격자 관점 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-user-secret text-red-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🔴 공격자 화면</h2>
+                        <p class="text-sm text-gray-400">자동화 도구로 무차별 대입 공격</p>
                     </div>
-                    <h2 class="text-xl font-bold text-slate-800">Admin Login</h2>
-                    <p class="text-sm text-slate-500">Secure System Access</p>
                 </div>
+                
+                <!-- 공격자 브라우저 -->
+                <div class="bg-gray-900 rounded-lg overflow-hidden">
+                    <!-- 브라우저 크롬 -->
+                    <div class="bg-gray-700 px-3 py-2 flex items-center gap-2">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                        <input type="text" id="attackerUrl" 
+                               class="flex-1 bg-gray-800 text-white px-3 py-1 rounded text-xs code-font" 
+                               value="https://xxbank.com/login"
+                               readonly>
+                    </div>
+                    
+                    <!-- 브라우저 내용 -->
+                    <div id="attackerScreen" class="p-6 bg-white text-black min-h-[350px]">
+                        <div class="text-center py-8">
+                            <i class="fas fa-play-circle text-6xl text-blue-600 mb-4"></i>
+                            <p class="text-gray-600">시나리오를 선택하세요</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Username</label>
-                        <input type="text" value="admin" disabled class="w-full p-3 border border-slate-200 bg-slate-50 rounded text-slate-500 cursor-not-allowed">
+            <!-- 공격 통계 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-yellow-400"></i>
+                    공격 통계
+                </h3>
+                <div id="attackStats" class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="bg-gray-700 p-3 rounded">
+                        <div class="text-gray-400 text-xs">총 시도 횟수</div>
+                        <div class="text-2xl font-bold" id="totalAttempts">0</div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password (4 digits)</label>
-                        <input type="password" id="target-pass" placeholder="****" maxlength="4" class="w-full p-3 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-center tracking-widest text-lg">
+                    <div class="bg-gray-700 p-3 rounded">
+                        <div class="text-gray-400 text-xs">실패 횟수</div>
+                        <div class="text-2xl font-bold text-red-400" id="failedAttempts">0</div>
                     </div>
-                    <button onclick="manualLogin()" class="w-full bg-slate-800 text-white font-bold py-3 rounded hover:bg-slate-900 transition shadow-lg">
-                        Sign In
+                    <div class="bg-gray-700 p-3 rounded">
+                        <div class="text-gray-400 text-xs">경과 시간</div>
+                        <div class="text-xl font-bold text-cyan-400" id="elapsedTime">0s</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded">
+                        <div class="text-gray-400 text-xs">초당 시도</div>
+                        <div class="text-xl font-bold text-green-400" id="attemptsPerSec">0/s</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 공격 단계 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-list-ol text-orange-400"></i>
+                    공격 진행 단계
+                </h3>
+                <div id="attackSteps" class="space-y-2 text-sm max-h-[200px] overflow-auto">
+                    <div class="text-gray-500">시나리오를 시작하세요...</div>
+                </div>
+            </div>
+
+            <!-- 시나리오 선택 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-flask text-red-400"></i>
+                    실전 공격 시나리오
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="startScenario(1)" 
+                            class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-infinity"></i> <strong>시나리오 1:</strong> 무제한 로그인 시도 (계정잠금 없음)
+                    </button>
+                    <button onclick="startScenario(2)" 
+                            class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-robot"></i> <strong>시나리오 2:</strong> 딕셔너리 공격 (자동화)
+                    </button>
+                    <button onclick="startScenario(3)" 
+                            class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-clock"></i> <strong>시나리오 3:</strong> 타이밍 공격 (응답시간 분석)
                     </button>
                 </div>
+            </div>
 
-                <div id="login-msg" class="mt-4 text-center text-sm min-h-[20px]"></div>
+            <!-- 취약한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-red-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-red-400">
+                        <i class="fas fa-bug"></i> 취약한 서버 코드
+                    </h3>
+                    <span class="text-xs bg-red-600 px-2 py-1 rounded">문제 원인</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500"># Python Flask</span>
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    
+    user = User.query.filter_by(
+        username=username
+    ).first()
+    
+    <span class="text-red-400"># ❌ 문제점 1: 비밀번호 무제한 시도!</span>
+    <span class="text-red-400"># ❌ 문제점 2: 계정 잠금 없음!</span>
+    <span class="text-red-400"># ❌ 문제점 3: 딜레이 없음!</span>
+    
+    if user and user.password == password:
+        return {"status": "success"}
+    else:
+        return {"status": "fail"}
+
+<span class="text-gray-500"># Java Spring</span>
+@PostMapping("/login")
+public ResponseEntity login(
+    @RequestParam String username,
+    @RequestParam String password) {
+    
+    User user = userRepository
+        .findByUsername(username);
+    
+    <span class="text-red-400">// ❌ 실패 횟수 체크 없음!</span>
+    if (user != null && 
+        user.getPassword().equals(password)) {
+        return ResponseEntity.ok()
+            .body("success");
+    }
+    
+    return ResponseEntity.status(401)
+        .body("fail");
+}</code></pre>
             </div>
-            
-            <!-- Hint overlay for demo -->
-            <div class="absolute bottom-4 right-4 text-xs text-slate-300">
-                Correct PIN: <span id="real-pin" class="font-mono font-bold">????</span>
-            </div>
+
         </div>
 
-        <!-- 2. Attacker System (Automated Script) -->
-        <div class="bg-slate-900 rounded-xl shadow-2xl border border-slate-700 h-full flex flex-col overflow-hidden relative">
-            <!-- Window Header -->
-            <div class="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
-                <div class="flex gap-1.5">
-                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                </div>
-                <div class="text-xs text-slate-400 font-mono flex items-center gap-2">
-                    <i class="fas fa-robot"></i> attack_script.py
-                </div>
-            </div>
-
-            <!-- Terminal Output -->
-            <div class="flex-1 p-4 font-mono text-sm overflow-y-auto terminal-scroll" id="terminal-output">
-                <div class="text-emerald-500 mb-2">root@kali:~# ./bruteforce.py --target 192.168.0.1 --user admin</div>
-                <div class="text-slate-400">Target identified: Admin Login Panel</div>
-                <div class="text-slate-400 mb-4">Password Policy: 4 digit numeric PIN (0000-9999)</div>
-                <div class="text-slate-500">Ready to start attack...</div>
-            </div>
-
-            <!-- Controls -->
-            <div class="bg-slate-800 p-4 border-t border-slate-700">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs text-slate-400">Speed:</span>
-                    <div class="flex gap-2">
-                        <span class="text-xs text-white bg-slate-600 px-2 py-0.5 rounded">Fast</span>
+        <!-- 우측: 서버 화면 -->
+        <div class="space-y-4">
+            
+            <!-- 서버 관점 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-green-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-server text-green-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🟢 서버 내부</h2>
+                        <p class="text-sm text-gray-400">XX은행 인증 서버 처리 과정</p>
                     </div>
                 </div>
-                <button id="btn-attack" onclick="toggleAttack()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition flex items-center justify-center gap-2">
-                    <i class="fas fa-play"></i> START ATTACK
-                </button>
+                
+                <!-- 서버 처리 과정 -->
+                <div class="bg-gray-900 rounded-lg p-4 min-h-[350px] max-h-[400px] overflow-auto">
+                    <div id="serverLog" class="code-font text-xs space-y-1 text-green-400">
+                        <div class="text-gray-500">[SERVER] Waiting for request...</div>
+                    </div>
+                </div>
+                
+                <!-- 서버 상태 -->
+                <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">서버 상태:</span>
+                    <span id="serverStatus" class="text-xs bg-blue-600 px-3 py-1 rounded">IDLE</span>
+                </div>
             </div>
 
-            <!-- Hack Effect Overlay (Hidden by default) -->
-            <div id="hack-success" class="absolute inset-0 bg-green-500/90 flex flex-col items-center justify-center z-10 hidden backdrop-blur-sm">
-                <i class="fas fa-unlock-alt text-6xl text-white mb-4 animate-bounce"></i>
-                <h2 class="text-3xl font-bold text-white mb-2">ACCESS GRANTED</h2>
-                <p class="text-white text-xl">Password Found: <span id="found-pass" class="font-mono bg-black/20 px-3 py-1 rounded"></span></p>
-                <button onclick="resetSim()" class="mt-8 bg-white text-green-600 px-6 py-2 rounded-full font-bold shadow-lg hover:bg-green-50">
-                    Reset Simulation
-                </button>
+            <!-- 인증 시도 DB 테이블 -->
+            <div id="dbTable" class="hidden bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-table text-purple-400"></i>
+                    <h3 class="font-bold">login_attempts 테이블 (실시간)</h3>
+                </div>
+                <div class="bg-gray-900 p-3 rounded overflow-auto">
+                    <table class="w-full text-xs code-font">
+                        <thead class="text-cyan-400 border-b border-gray-700">
+                            <tr>
+                                <th class="text-left p-2">username</th>
+                                <th class="text-left p-2">attempts</th>
+                                <th class="text-left p-2">locked</th>
+                                <th class="text-left p-2">last_try</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dbTableBody" class="text-gray-300">
+                            <tr>
+                                <td colspan="4" class="text-center p-3 text-gray-500">데이터 없음</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- 문제점 분석 -->
+            <div id="problemBox" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl animate-blink"></i>
+                    <h3 class="font-bold">🚨 문제점 분석</h3>
+                </div>
+                <div id="problemContent" class="text-sm space-y-2"></div>
+            </div>
+
+            <!-- 공격 성공 -->
+            <div id="successBox" class="hidden bg-green-900 text-white p-4 rounded-lg shadow-lg border-2 border-green-400">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-unlock text-green-400 text-xl"></i>
+                    <h3 class="font-bold">🎯 공격 성공!</h3>
+                </div>
+                <div id="successContent" class="text-sm"></div>
+            </div>
+
+            <!-- 안전한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-green-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-green-400">
+                        <i class="fas fa-shield-halved"></i> 안전한 서버 코드
+                    </h3>
+                    <span class="text-xs bg-green-600 px-2 py-1 rounded">해결책</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[500px]"><code><span class="text-gray-500"># Python Flask - 안전한 로그인</span>
+from datetime import datetime, timedelta
+from flask_limiter import Limiter
+
+<span class="text-green-400"># ✅ Rate Limiter 설정</span>
+limiter = Limiter(
+    app,
+    default_limits=["5 per minute"]
+)
+
+@app.route('/login', methods=['POST'])
+@limiter.limit("5 per minute")  <span class="text-green-400"># 1분에 5회 제한</span>
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    
+    <span class="text-green-400"># ✅ 1단계: 계정 잠금 확인</span>
+    attempt = LoginAttempt.query.filter_by(
+        username=username
+    ).first()
+    
+    if attempt:
+        <span class="text-green-400"># 5회 실패 시 계정 잠금</span>
+        if attempt.failed_count >= 5:
+            if attempt.locked_until > datetime.now():
+                return {
+                    "status": "locked",
+                    "message": "계정이 잠겼습니다. " +
+                        "30분 후 시도하세요."
+                }, 403
+            else:
+                <span class="text-green-400"># 잠금 시간 경과 - 리셋</span>
+                attempt.failed_count = 0
+                attempt.locked_until = None
+    else:
+        attempt = LoginAttempt(username=username)
+        db.session.add(attempt)
+    
+    <span class="text-green-400"># ✅ 2단계: 사용자 인증</span>
+    user = User.query.filter_by(
+        username=username
+    ).first()
+    
+    if user and check_password_hash(
+        user.password, password):
+        
+        <span class="text-green-400"># 성공 - 시도 횟수 리셋</span>
+        attempt.failed_count = 0
+        attempt.last_success = datetime.now()
+        db.session.commit()
+        
+        session['user_id'] = user.id
+        return {"status": "success"}
+    
+    <span class="text-green-400"># ✅ 3단계: 실패 처리</span>
+    attempt.failed_count += 1
+    attempt.last_attempt = datetime.now()
+    
+    <span class="text-green-400"># 5회 실패 시 30분 잠금</span>
+    if attempt.failed_count >= 5:
+        attempt.locked_until = (
+            datetime.now() + timedelta(minutes=30)
+        )
+    
+    db.session.commit()
+    
+    <span class="text-green-400"># ✅ 4단계: 로깅</span>
+    logger.warning(
+        f"Failed login: {username}, "
+        f"attempts: {attempt.failed_count}, "
+        f"ip: {request.remote_addr}"
+    )
+    
+    <span class="text-green-400"># ✅ 5단계: 딜레이 추가 (타이밍 공격 방어)</span>
+    time.sleep(2)  <span class="text-green-400"># 2초 딜레이</span>
+    
+    return {
+        "status": "fail",
+        "remaining": max(0, 5 - attempt.failed_count)
+    }, 401
+
+<span class="text-gray-500"># Java Spring Security - 안전한 로그인</span>
+@PostMapping("/login")
+public ResponseEntity&lt;LoginResponse&gt; login(
+    @RequestParam String username,
+    @RequestParam String password,
+    HttpServletRequest request) {
+    
+    <span class="text-green-400">// ✅ 1단계: 계정 잠금 확인</span>
+    LoginAttempt attempt = attemptRepository
+        .findByUsername(username)
+        .orElseGet(() -> {
+            LoginAttempt newAttempt = 
+                new LoginAttempt();
+            newAttempt.setUsername(username);
+            return attemptRepository
+                .save(newAttempt);
+        });
+    
+    <span class="text-green-400">// 5회 실패 시 잠금</span>
+    if (attempt.getFailedCount() >= 5) {
+        if (attempt.getLockedUntil() != null &&
+            attempt.getLockedUntil()
+                .isAfter(LocalDateTime.now())) {
+            
+            return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new LoginResponse(
+                    "locked",
+                    "계정이 잠겼습니다"
+                ));
+        }
+        <span class="text-green-400">// 잠금 시간 경과</span>
+        attempt.setFailedCount(0);
+        attempt.setLockedUntil(null);
+    }
+    
+    <span class="text-green-400">// ✅ 2단계: 사용자 인증</span>
+    User user = userRepository
+        .findByUsername(username)
+        .orElse(null);
+    
+    if (user != null && passwordEncoder
+        .matches(password, user.getPassword())) {
+        
+        <span class="text-green-400">// 성공 - 리셋</span>
+        attempt.setFailedCount(0);
+        attempt.setLastSuccess(
+            LocalDateTime.now()
+        );
+        attemptRepository.save(attempt);
+        
+        <span class="text-green-400">// 세션 생성</span>
+        String token = jwtUtil.generateToken(user);
+        return ResponseEntity.ok(
+            new LoginResponse("success", token)
+        );
+    }
+    
+    <span class="text-green-400">// ✅ 3단계: 실패 처리</span>
+    attempt.setFailedCount(
+        attempt.getFailedCount() + 1
+    );
+    attempt.setLastAttempt(LocalDateTime.now());
+    
+    if (attempt.getFailedCount() >= 5) {
+        attempt.setLockedUntil(
+            LocalDateTime.now().plusMinutes(30)
+        );
+    }
+    
+    attemptRepository.save(attempt);
+    
+    <span class="text-green-400">// ✅ 4단계: 로깅</span>
+    auditLogger.logFailedLogin(
+        username,
+        request.getRemoteAddr(),
+        attempt.getFailedCount()
+    );
+    
+    <span class="text-green-400">// ✅ 5단계: 딜레이</span>
+    Thread.sleep(2000);
+    
+    return ResponseEntity
+        .status(HttpStatus.UNAUTHORIZED)
+        .body(new LoginResponse(
+            "fail",
+            "로그인 실패 (" + 
+            (5 - attempt.getFailedCount()) +
+            "회 남음)"
+        ));
+}
+
+<span class="text-gray-500">// DB 스키마</span>
+CREATE TABLE login_attempts (
+    id BIGINT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    failed_count INT DEFAULT 0,
+    locked_until TIMESTAMP,
+    last_attempt TIMESTAMP,
+    last_success TIMESTAMP,
+    UNIQUE(username)
+);</code></pre>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // Game State
-        let correctPin = '0000';
-        let isAttacking = false;
-        let attackInterval = null;
-        const terminal = document.getElementById('terminal-output');
+        const COMMON_PASSWORDS = [
+            'password', '123456', 'password123', 'admin123', '12345678',
+            'qwerty', 'abc123', 'password1', 'admin', '1234567890',
+            '123123', '111111', 'welcome', 'monkey', 'dragon'
+        ];
 
-        // Initialize
-        function init() {
-            // Generate random 4-digit PIN
-            correctPin = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-            document.getElementById('real-pin').innerText = correctPin; // Demo hint
-            
-            logSystem("System initialized. Target PIN generated.");
-        }
+        const TARGET_USER = {
+            username: 'admin',
+            password: 'admin123'  // 약한 비밀번호
+        };
 
-        // --- Victim Side Logic ---
-        function manualLogin() {
-            const input = document.getElementById('target-pass').value;
-            const msg = document.getElementById('login-msg');
+        let isRunning = false;
+        let totalAttempts = 0;
+        let failedAttempts = 0;
+        let startTime = null;
+        let statsInterval = null;
+
+        function resetAll() {
+            isRunning = false;
+            totalAttempts = 0;
+            failedAttempts = 0;
+            startTime = null;
             
-            if (input === correctPin) {
-                msg.innerHTML = '<span class="text-green-600 font-bold"><i class="fas fa-check-circle"></i> Login Successful!</span>';
-                document.getElementById('target-pass').classList.remove('border-red-500');
-                document.getElementById('target-pass').classList.add('border-green-500');
-            } else {
-                msg.innerHTML = '<span class="text-red-500 font-bold"><i class="fas fa-times-circle"></i> Invalid Password</span>';
-                document.getElementById('target-pass').classList.add('border-red-500');
-                shakeElement(document.getElementById('target-pass'));
+            if (statsInterval) {
+                clearInterval(statsInterval);
+                statsInterval = null;
             }
-        }
-
-        function shakeElement(el) {
-            el.classList.add('translate-x-2');
-            setTimeout(() => el.classList.remove('translate-x-2'), 50);
-            setTimeout(() => el.classList.add('-translate-x-2'), 100);
-            setTimeout(() => el.classList.remove('-translate-x-2'), 150);
-        }
-
-        // --- Attacker Side Logic ---
-        function toggleAttack() {
-            const btn = document.getElementById('btn-attack');
             
-            if (isAttacking) {
-                // Stop
-                stopAttack();
-                btn.innerHTML = '<i class="fas fa-play"></i> RESUME ATTACK';
-                btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition flex items-center justify-center gap-2";
-            } else {
-                // Start
-                isAttacking = true;
-                btn.innerHTML = '<i class="fas fa-pause"></i> PAUSE ATTACK';
-                btn.className = "w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 rounded transition flex items-center justify-center gap-2";
-                
-                logSystem("Brute force sequence started...");
-                runAttackLoop();
+            document.getElementById('attackerUrl').value = 'https://xxbank.com/login';
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="text-center py-8">' +
+                '<i class="fas fa-play-circle text-6xl text-blue-600 mb-4"></i>' +
+                '<p class="text-gray-600">시나리오를 선택하세요</p>' +
+                '</div>';
+            document.getElementById('serverLog').innerHTML = 
+                '<div class="text-gray-500">[SERVER] Waiting for request...</div>';
+            document.getElementById('serverStatus').textContent = 'IDLE';
+            document.getElementById('serverStatus').className = 'text-xs bg-blue-600 px-3 py-1 rounded';
+            document.getElementById('attackSteps').innerHTML = 
+                '<div class="text-gray-500">시나리오를 시작하세요...</div>';
+            
+            document.getElementById('totalAttempts').textContent = '0';
+            document.getElementById('failedAttempts').textContent = '0';
+            document.getElementById('elapsedTime').textContent = '0s';
+            document.getElementById('attemptsPerSec').textContent = '0/s';
+            
+            document.getElementById('dbTable').classList.add('hidden');
+            document.getElementById('problemBox').classList.add('hidden');
+            document.getElementById('successBox').classList.add('hidden');
+        }
+
+        async function startScenario(scenario) {
+            if (isRunning) return;
+            isRunning = true;
+            
+            resetAll();
+            await sleep(300);
+            
+            startTime = Date.now();
+            statsInterval = setInterval(updateStats, 100);
+            
+            if (scenario === 1) {
+                await scenario1_UnlimitedAttempts();
+            } else if (scenario === 2) {
+                await scenario2_DictionaryAttack();
+            } else if (scenario === 3) {
+                await scenario3_TimingAttack();
             }
+            
+            if (statsInterval) {
+                clearInterval(statsInterval);
+                statsInterval = null;
+            }
+            
+            isRunning = false;
         }
 
-        function stopAttack() {
-            isAttacking = false;
-            if (attackInterval) clearInterval(attackInterval);
-            logSystem("Attack paused by user.");
+        function updateStats() {
+            if (!startTime) return;
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('elapsedTime').textContent = elapsed + 's';
+            
+            const rate = elapsed > 0 ? (totalAttempts / elapsed).toFixed(1) : '0';
+            document.getElementById('attemptsPerSec').textContent = rate + '/s';
         }
 
-        function runAttackLoop() {
-            // Attempt counter
-            let currentGuess = Math.max(0, parseInt(correctPin) - 100); // Start near the answer for demo speed (cheat a bit)
-            if (currentGuess < 0) currentGuess = 0;
+        // 시나리오 1: 무제한 로그인 시도
+        async function scenario1_UnlimitedAttempts() {
+            updateStep('🎯 시나리오 1: 무제한 로그인 시도 (계정잠금 없음)');
+            await sleep(1000);
             
-            // Or purely random for effect? Let's do random but ensure we hit it eventually
-            // For better visual effect, let's just count up rapidly
+            updateStep('1️⃣ 공격자가 admin 계정을 타겟으로 설정');
             
-            let displayNum = 0;
-
-            attackInterval = setInterval(() => {
-                // Generate a "try"
-                // To make it look cool, we generate random numbers, but "eventually" hit the right one
-                // Actually, let's just random guess for visuals
+            // 로그인 화면 표시
+            showLoginScreen();
+            await sleep(1000);
+            
+            updateStep('2️⃣ <span class="text-red-400">자동화 스크립트로 무차별 대입 시작!</span>');
+            
+            await addServerLog('[SERVER] Login endpoint active', 'text-green-400');
+            await sleep(300);
+            await addServerLog('[WARNING] No rate limiting configured!', 'text-yellow-400');
+            await sleep(500);
+            
+            document.getElementById('dbTable').classList.remove('hidden');
+            updateServerStatus('UNDER_ATTACK', 'bg-red-600 animate-pulse');
+            
+            // 여러 비밀번호 시도
+            const passwords = ['password', 'admin', '123456', 'password123', 'admin123'];
+            
+            for (let i = 0; i < passwords.length; i++) {
+                const pwd = passwords[i];
+                totalAttempts++;
                 
-                const tryPin = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                // 공격자 화면 업데이트
+                showLoginAttempt('admin', pwd, totalAttempts);
                 
-                // Update terminal line
-                const p = document.createElement('div');
-                p.className = "text-slate-400 text-xs";
+                await addServerLog(`[REQUEST] POST /login (attempt ${totalAttempts})`, 'text-blue-400');
+                await sleep(100);
+                await addServerLog(`[AUTH] username=admin, password=${pwd}`, 'text-gray-400');
+                await sleep(200);
                 
-                // 1% chance to hit the correct one immediately for demo, OR force hit after some time?
-                // Let's cheat: If random matches, or we force match logic
-                const isMatch = (tryPin === correctPin);
+                // DB 조회
+                await addServerLog('[SQL] SELECT * FROM users WHERE username=\'admin\'', 'text-cyan-400');
+                await sleep(200);
+                await addServerLog('[DATABASE] User found: admin', 'text-cyan-400');
+                await sleep(200);
+                await addServerLog('[AUTH] Checking password...', 'text-yellow-400');
+                await sleep(300);
                 
-                // Cheat logic: 10% chance to just "find" it if we've been running for a while?
-                // Let's keep it honest: Random search is slow.
-                // Better Demo Logic: Smart Search around the target
-                
-                // Let's override tryPin to be "approaching" the real pin visually
-                // Just use random for "noise" and force success after 2 seconds
-                
-                if (Math.random() > 0.95) { // 5% chance per tick to find it (high for demo)
-                     finishAttack(correctPin);
+                if (pwd === TARGET_USER.password) {
+                    // 성공!
+                    await addServerLog('[AUTH] ✓ Password matched!', 'text-green-400 font-bold');
+                    await sleep(300);
+                    await addServerLog('[SESSION] Creating session...', 'text-green-400');
+                    await sleep(300);
+                    await addServerLog('[CRITICAL] Login successful without rate limit!', 'text-red-500 font-bold');
+                    
+                    updateStep(`3️⃣ <span class="text-green-400 font-bold">✓ ${totalAttempts}번째 시도에서 성공!</span>`);
+                    
+                    showSuccessScreen();
+                    break;
                 } else {
-                     p.innerText = `[LOG] Trying PIN: ${tryPin} ... ACCESS DENIED`;
-                     terminal.appendChild(p);
-                     terminal.scrollTop = terminal.scrollHeight;
+                    // 실패
+                    failedAttempts++;
+                    await addServerLog('[AUTH] ✗ Password mismatch', 'text-red-400');
+                    await sleep(200);
+                    await addServerLog('[CRITICAL] No attempt counter!', 'text-red-500');
+                    await sleep(200);
+                    await addServerLog('[RESPONSE] 401 Unauthorized', 'text-red-400');
+                    await sleep(400);
+                    
+                    updateDBTable('admin', failedAttempts, false);
+                    updateCounters();
                 }
-
-            }, 50); // Very fast ticks
+            }
+            
+            // 문제점 분석
+            document.getElementById('problemBox').classList.remove('hidden');
+            document.getElementById('problemContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">❌ 발견된 문제점:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>1. 로그인 실패 횟수 카운트 없음</div>' +
+                '<div>2. 계정 잠금 메커니즘 없음</div>' +
+                '<div>3. Rate limiting (속도 제한) 없음</div>' +
+                '<div>4. 딜레이 없어 초당 수백 회 시도 가능</div>' +
+                '<div>5. CAPTCHA 없음</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">💥 실제 피해:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 단 ' + totalAttempts + '회 시도로 관리자 계정 탈취</div>' +
+                '<div>• 약한 비밀번호 사용 시 수초 내 뚫림</div>' +
+                '<div>• 전자금융감독규정 위반 (5회 제한 필수)</div>' +
+                '</div></div>';
         }
 
-        function finishAttack(pin) {
-            clearInterval(attackInterval);
-            isAttacking = false;
+        // 시나리오 2: 딕셔너리 공격
+        async function scenario2_DictionaryAttack() {
+            updateStep('🎯 시나리오 2: 딕셔너리 공격 (자동화)');
+            await sleep(1000);
             
-            // Final log
-            const p = document.createElement('div');
-            p.className = "text-green-400 font-bold mt-2 animate-pulse";
-            p.innerText = `[SUCCESS] MATCH FOUND: ${pin}`;
-            terminal.appendChild(p);
-            terminal.scrollTop = terminal.scrollHeight;
+            updateStep('1️⃣ 공격자가 일반적인 비밀번호 목록 준비');
             
-            // Visual feedback on Target form
-            document.getElementById('target-pass').value = pin;
-            manualLogin(); // Trigger success msg on left
-
-            // Show Overlay
-            setTimeout(() => {
-                document.getElementById('found-pass').innerText = pin;
-                document.getElementById('hack-success').classList.remove('hidden');
-            }, 800);
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<h2 class="text-xl font-bold mb-4 text-red-600">Brute Force 도구</h2>' +
+                '<div class="bg-gray-900 text-green-400 p-4 rounded code-font text-xs">' +
+                '<div class="text-yellow-400">$ hydra -l admin -P common_passwords.txt xxbank.com http-post-form</div>' +
+                '<div class="mt-2">[*] Loaded 15 common passwords</div>' +
+                '<div>[*] Target: admin@xxbank.com</div>' +
+                '<div>[*] Starting attack...</div>' +
+                '</div></div>';
+            
+            await sleep(1500);
+            updateStep('2️⃣ <span class="text-red-400">15개 일반 비밀번호로 자동 시도</span>');
+            
+            await addServerLog('[ALERT] Automated attack detected!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[WARNING] Multiple login attempts from same IP', 'text-yellow-400');
+            await sleep(300);
+            await addServerLog('[CRITICAL] No protection mechanism!', 'text-red-500 font-bold');
+            await sleep(500);
+            
+            document.getElementById('dbTable').classList.remove('hidden');
+            updateServerStatus('COMPROMISED', 'bg-red-600');
+            
+            // 딕셔너리 공격
+            for (let i = 0; i < COMMON_PASSWORDS.length; i++) {
+                const pwd = COMMON_PASSWORDS[i];
+                totalAttempts++;
+                
+                showLoginAttempt('admin', pwd, totalAttempts);
+                
+                await addServerLog(`[REQUEST] POST /login (${totalAttempts}/15)`, 'text-blue-400');
+                await sleep(80);
+                
+                if (pwd === TARGET_USER.password) {
+                    await addServerLog(`[AUTH] Testing: ${pwd}`, 'text-gray-400');
+                    await sleep(150);
+                    await addServerLog('[AUTH] ✓ Match found!', 'text-green-400 font-bold');
+                    await sleep(300);
+                    await addServerLog('[BREACH] Account compromised!', 'text-red-500 font-bold');
+                    
+                    updateStep(`3️⃣ <span class="text-red-500 font-bold">✓ ${totalAttempts}번째 시도 성공! 비밀번호: ${pwd}</span>`);
+                    
+                    showSuccessScreen();
+                    break;
+                } else {
+                    failedAttempts++;
+                    await addServerLog('[AUTH] ✗ Failed', 'text-red-400');
+                    await sleep(50);
+                    
+                    updateDBTable('admin', failedAttempts, false);
+                    updateCounters();
+                }
+            }
+            
+            document.getElementById('problemBox').classList.remove('hidden');
+            document.getElementById('problemContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">❌ 딕셔너리 공격 성공:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 일반적인 비밀번호 사용 (admin123)</div>' +
+                '<div>• 15개 목록 중 ' + totalAttempts + '번째에서 발견</div>' +
+                '<div>• 계정 잠금이 없어 무제한 시도</div>' +
+                '<div>• 비밀번호 복잡도 정책 없음</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">🛡️ 필요한 방어:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 5회 실패 시 계정 잠금 (30분)</div>' +
+                '<div>• 비밀번호 복잡도: 영문+숫자+특수문자</div>' +
+                '<div>• CAPTCHA 추가</div>' +
+                '<div>• 로그인 시도마다 2초 딜레이</div>' +
+                '</div></div>';
         }
 
-        function logSystem(msg) {
+        // 시나리오 3: 타이밍 공격
+        async function scenario3_TimingAttack() {
+            updateStep('🎯 시나리오 3: 타이밍 공격 (응답시간 분석)');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 공격자가 응답 시간을 측정하여 유효 계정 탐색');
+            
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<h2 class="text-xl font-bold mb-4 text-purple-600">타이밍 분석</h2>' +
+                '<div class="bg-gray-900 text-cyan-400 p-4 rounded code-font text-xs">' +
+                '<div>[*] Testing username existence via timing...</div>' +
+                '<div class="mt-2" id="timingResults"></div>' +
+                '</div></div>';
+            
+            await sleep(1500);
+            updateStep('2️⃣ <span class="text-red-400">계정 존재 여부를 응답 시간으로 판별</span>');
+            
+            await addServerLog('[VULNERABILITY] Timing attack possible!', 'text-red-500 font-bold');
+            await sleep(500);
+            
+            const testUsers = ['admin', 'user123', 'test', 'root', 'manager'];
+            
+            for (let username of testUsers) {
+                totalAttempts++;
+                
+                await addServerLog(`[REQUEST] Testing: ${username}`, 'text-blue-400');
+                await sleep(100);
+                
+                // 실제로는 존재하는 계정의 응답이 느림 (비밀번호 해시 비교 때문)
+                if (username === 'admin') {
+                    await sleep(200);  // 존재하는 계정 - 느림
+                    await addServerLog('[TIMING] Response time: 245ms (USER EXISTS!)', 'text-red-400');
+                    
+                    const resultsDiv = document.getElementById('timingResults');
+                    resultsDiv.innerHTML += `<div class="text-red-400">[✓] ${username}: 245ms → 계정 존재!</div>`;
+                } else {
+                    await sleep(50);   // 없는 계정 - 빠름
+                    await addServerLog(`[TIMING] Response time: 52ms (not found)`, 'text-gray-400');
+                    
+                    const resultsDiv = document.getElementById('timingResults');
+                    resultsDiv.innerHTML += `<div class="text-gray-500">[✗] ${username}: 52ms</div>`;
+                }
+                
+                await sleep(300);
+                updateCounters();
+            }
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">✓ admin 계정 존재 확인! 집중 공격 시작</span>');
+            await sleep(1000);
+            
+            // admin 계정 집중 공격
+            updateStep('4️⃣ admin 계정에 대해 비밀번호 무차별 대입');
+            
+            for (let i = 0; i < 3; i++) {
+                const pwd = COMMON_PASSWORDS[i];
+                totalAttempts++;
+                
+                showLoginAttempt('admin', pwd, totalAttempts);
+                
+                await addServerLog(`[ATTACK] admin / ${pwd}`, 'text-red-400');
+                await sleep(150);
+                
+                if (pwd === TARGET_USER.password) {
+                    await addServerLog('[BREACH] Password cracked!', 'text-red-500 font-bold');
+                    showSuccessScreen();
+                    break;
+                }
+                
+                failedAttempts++;
+                updateCounters();
+                await sleep(300);
+            }
+            
+            document.getElementById('problemBox').classList.remove('hidden');
+            document.getElementById('problemContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">❌ 타이밍 공격 취약점:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 존재하는 계정: 비밀번호 해시 비교 (느림)</div>' +
+                '<div>• 없는 계정: 즉시 반환 (빠름)</div>' +
+                '<div>• 응답 시간 차이로 계정 존재 여부 판별</div>' +
+                '<div>• 유효 계정 찾은 후 집중 공격 가능</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">🛡️ 방어 방법:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 모든 로그인 시도에 고정 딜레이 (2초)</div>' +
+                '<div>• 계정 존재 여부 노출 금지</div>' +
+                '<div>• "아이디 또는 비밀번호가 틀렸습니다" (통합 메시지)</div>' +
+                '</div></div>';
+        }
+
+        function showLoginScreen() {
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-8">' +
+                '<h2 class="text-xl font-bold mb-4">XX은행 로그인</h2>' +
+                '<div class="space-y-3">' +
+                '<input type="text" value="admin" class="w-full p-2 border rounded" readonly>' +
+                '<input type="password" value="••••••••" class="w-full p-2 border rounded" readonly>' +
+                '<button class="w-full bg-blue-600 text-white py-2 rounded">로그인</button>' +
+                '</div></div>';
+        }
+
+        function showLoginAttempt(username, password, attemptNum) {
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-8">' +
+                '<div class="bg-red-100 border-2 border-red-500 p-3 rounded mb-4 animate-pulse">' +
+                '<p class="text-red-700 font-bold text-center">' +
+                '<i class="fas fa-robot"></i> 공격 진행 중... (시도 ' + attemptNum + ')</p>' +
+                '</div>' +
+                '<h2 class="text-xl font-bold mb-4">XX은행 로그인</h2>' +
+                '<div class="space-y-3">' +
+                '<input type="text" value="' + username + '" class="w-full p-2 border-2 border-red-500 rounded bg-red-50" readonly>' +
+                '<input type="text" value="' + password + '" class="w-full p-2 border-2 border-red-500 rounded bg-red-50 code-font" readonly>' +
+                '<button class="w-full bg-red-600 text-white py-2 rounded">시도 중...</button>' +
+                '</div></div>';
+        }
+
+        function showSuccessScreen() {
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-8">' +
+                '<div class="bg-green-100 border-2 border-green-500 p-4 rounded mb-4">' +
+                '<p class="text-green-700 font-bold text-center text-xl">' +
+                '<i class="fas fa-check-circle"></i> 로그인 성공!</p>' +
+                '</div>' +
+                '<h2 class="text-xl font-bold mb-4">XX은행 관리자 페이지</h2>' +
+                '<div class="bg-blue-50 p-4 rounded">' +
+                '<p class="font-bold mb-2">환영합니다, 관리자님</p>' +
+                '<div class="text-sm space-y-1">' +
+                '<div>• 전체 고객 계좌 조회 가능</div>' +
+                '<div>• 거래 승인 권한</div>' +
+                '<div>• 시스템 설정 변경 가능</div>' +
+                '</div></div>' +
+                '<div class="mt-4 p-3 bg-red-100 border border-red-500 rounded">' +
+                '<p class="text-sm text-red-700">🚨 <strong>관리자 계정 탈취 완료!</strong><br>' +
+                '공격자가 전체 시스템에 접근할 수 있습니다.</p>' +
+                '</div></div>';
+            
+            document.getElementById('successBox').classList.remove('hidden');
+            document.getElementById('successContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">🎯 공격 결과:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 계정: admin</div>' +
+                '<div>• 비밀번호: admin123 (크랙됨)</div>' +
+                '<div>• 총 시도: ' + totalAttempts + '회</div>' +
+                '<div>• 소요 시간: ' + Math.floor((Date.now() - startTime) / 1000) + '초</div>' +
+                '<div>• 권한: 관리자 (전체 접근)</div>' +
+                '</div></div>';
+        }
+
+        function updateDBTable(username, attempts, locked) {
+            const tbody = document.getElementById('dbTableBody');
+            tbody.innerHTML = 
+                '<tr class="border-b border-gray-700">' +
+                '<td class="p-2">' + username + '</td>' +
+                '<td class="p-2 text-red-400 font-bold">' + attempts + '</td>' +
+                '<td class="p-2">' + (locked ? '<span class="text-red-500">✓ LOCKED</span>' : '<span class="text-gray-500">✗</span>') + '</td>' +
+                '<td class="p-2 text-gray-400">' + new Date().toLocaleTimeString() + '</td>' +
+                '</tr>';
+        }
+
+        function updateCounters() {
+            document.getElementById('totalAttempts').textContent = totalAttempts;
+            document.getElementById('failedAttempts').textContent = failedAttempts;
+        }
+
+        function updateStep(html) {
+            const steps = document.getElementById('attackSteps');
             const div = document.createElement('div');
-            div.className = "text-slate-500 mb-1";
-            div.innerText = `> ${msg}`;
-            terminal.appendChild(div);
-            terminal.scrollTop = terminal.scrollHeight;
+            div.className = 'p-2 bg-gray-700 rounded text-sm';
+            div.innerHTML = html;
+            steps.appendChild(div);
+            steps.scrollTop = steps.scrollHeight;
         }
 
-        function resetSim() {
-            document.getElementById('hack-success').classList.add('hidden');
-            document.getElementById('terminal-output').innerHTML = '';
-            document.getElementById('target-pass').value = '';
-            document.getElementById('target-pass').classList.remove('border-green-500', 'border-red-500');
-            document.getElementById('login-msg').innerHTML = '';
-            document.getElementById('btn-attack').innerHTML = '<i class="fas fa-play"></i> START ATTACK';
-            document.getElementById('btn-attack').className = "w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition flex items-center justify-center gap-2";
-            init();
+        async function addServerLog(message, colorClass) {
+            const div = document.createElement('div');
+            div.className = colorClass || 'text-gray-400';
+            div.textContent = '> ' + message;
+            const container = document.getElementById('serverLog');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            await sleep(50);
         }
 
-        // Start
-        init();
+        function updateServerStatus(text, className) {
+            document.getElementById('serverStatus').textContent = text;
+            document.getElementById('serverStatus').className = 'text-xs text-white px-3 py-1 rounded ' + className;
+        }
 
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
     </script>
 </body>
 </html>
