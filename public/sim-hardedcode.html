@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 하드코딩 취약점 실전 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .animate-blink { animation: blink 1s infinite; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-900 p-4">
+
+    <!-- 타이틀 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-mobile-alt text-3xl"></i>
+                    <div>
+                        <h1 class="font-bold text-xl">금융권 하드코딩 취약점 실전 시나리오</h1>
+                        <p class="text-sm">MOB-SER-025: 앱 소스코드 내 운영정보 노출 | 위험도: 5 (매우 높음)</p>
+                    </div>
+                </div>
+                <button onclick="resetAll()" class="bg-white text-indigo-600 px-4 py-2 rounded font-bold hover:bg-gray-100">
+                    <i class="fas fa-redo"></i> 처음부터
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- 좌측: 공격자 화면 -->
+        <div class="space-y-4">
+            
+            <!-- 공격자 화면 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-user-secret text-red-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🔴 공격자 (해커)</h2>
+                        <p class="text-sm text-gray-400" id="attackerStatus">APK 디컴파일 준비 중...</p>
+                    </div>
+                </div>
+                
+                <!-- 공격자 터미널 -->
+                <div class="bg-gray-900 rounded-lg overflow-hidden">
+                    <div class="bg-gray-700 px-3 py-2 flex items-center gap-2">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                        <span class="text-xs text-white code-font">attacker@kali:~$</span>
+                    </div>
+                    
+                    <div id="attackerScreen" class="p-4 bg-black text-green-400 code-font text-xs min-h-[300px] max-h-[350px] overflow-auto">
+                        <div class="text-gray-500">$ # Waiting for command...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 탈취한 정보 -->
+            <div id="stolenData" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-unlock text-red-400 text-xl animate-pulse"></i>
+                    <h3 class="font-bold">🔓 탈취한 운영정보</h3>
+                </div>
+                <div id="stolenDataContent" class="bg-black p-3 rounded code-font text-xs"></div>
+            </div>
+
+            <!-- 공격 단계 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-list-ol text-orange-400"></i>
+                    공격 진행 단계
+                </h3>
+                <div id="attackSteps" class="space-y-2 text-sm max-h-[250px] overflow-auto">
+                    <div class="text-gray-500">시나리오를 시작하세요...</div>
+                </div>
+            </div>
+
+            <!-- 시나리오 선택 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-flask text-red-400"></i>
+                    실전 공격 시나리오
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="startScenario(1)" 
+                            class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-database"></i> <strong>시나리오 1:</strong> DB 비밀번호 하드코딩
+                    </button>
+                    <button onclick="startScenario(2)" 
+                            class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-key"></i> <strong>시나리오 2:</strong> API 키 노출
+                    </button>
+                    <button onclick="startScenario(3)" 
+                            class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fab fa-aws"></i> <strong>시나리오 3:</strong> AWS 자격증명 노출
+                    </button>
+                </div>
+            </div>
+
+            <!-- 취약한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-red-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-red-400">
+                        <i class="fas fa-bug"></i> 취약한 코드 (하드코딩)
+                    </h3>
+                    <span class="text-xs bg-red-600 px-2 py-1 rounded">문제 원인</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// Java - Android App</span>
+public class DatabaseHelper {
+    
+    <span class="text-red-400">// ❌ DB 정보 하드코딩!</span>
+    private static final String DB_URL = 
+        "jdbc:mysql://10.1.2.3:3306/bank_db";
+    
+    private static final String DB_USER = "admin";
+    
+    <span class="text-red-400">// ❌ 비밀번호 평문 노출!</span>
+    private static final String DB_PASSWORD = 
+        "Bank@1234!";
+    
+    public Connection connect() {
+        return DriverManager.getConnection(
+            DB_URL, DB_USER, DB_PASSWORD
+        );
+    }
+}
+
+public class ApiClient {
+    
+    <span class="text-red-400">// ❌ API 키 하드코딩!</span>
+    private static final String API_KEY = 
+        "sk_live_51HxJ9KLp2k3M4n5o6P7q8R9s0T";
+    
+    <span class="text-red-400">// ❌ Secret 키도 노출!</span>
+    private static final String API_SECRET = 
+        "whsec_9a8b7c6d5e4f3g2h1i0j";
+    
+    public void sendRequest() {
+        headers.put("Authorization", 
+            "Bearer " + API_KEY);
+    }
+}
+
+public class CloudConfig {
+    
+    <span class="text-red-400">// ❌ AWS 자격증명 하드코딩!</span>
+    public static final String AWS_ACCESS_KEY = 
+        "AKIAIOSFODNN7EXAMPLE";
+    
+    public static final String AWS_SECRET_KEY = 
+        "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+    
+    public static final String S3_BUCKET = 
+        "xxbank-customer-data";
+}</code></pre>
+            </div>
+
+        </div>
+
+        <!-- 우측: 서버 & 분석 -->
+        <div class="space-y-4">
+            
+            <!-- 디컴파일 결과 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-green-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-file-code text-green-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🟢 디컴파일 결과</h2>
+                        <p class="text-sm text-gray-400">jadx로 APK 역분석</p>
+                    </div>
+                </div>
+                
+                <!-- 디컴파일 화면 -->
+                <div class="bg-gray-900 rounded-lg p-4 min-h-[400px] max-h-[500px] overflow-auto">
+                    <div id="decompileResult" class="code-font text-xs space-y-1 text-green-400">
+                        <div class="text-gray-500">[JADX] Waiting...</div>
+                    </div>
+                </div>
+                
+                <!-- 상태 -->
+                <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">디컴파일 상태:</span>
+                    <span id="decompileStatus" class="text-xs bg-blue-600 px-3 py-1 rounded">IDLE</span>
+                </div>
+            </div>
+
+            <!-- 공격 성공 -->
+            <div id="successBox" class="hidden bg-green-900 text-white p-4 rounded-lg shadow-lg border-2 border-green-400">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-skull-crossbones text-red-400 text-xl"></i>
+                    <h3 class="font-bold">💀 공격 성공!</h3>
+                </div>
+                <div id="successContent" class="text-sm"></div>
+            </div>
+
+            <!-- 문제점 분석 -->
+            <div id="problemBox" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl animate-blink"></i>
+                    <h3 class="font-bold">🚨 문제점 분석</h3>
+                </div>
+                <div id="problemContent" class="text-sm space-y-2"></div>
+            </div>
+
+            <!-- 안전한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-green-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-green-400">
+                        <i class="fas fa-shield-halved"></i> 안전한 코드
+                    </h3>
+                    <span class="text-xs bg-green-600 px-2 py-1 rounded">해결책</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[700px]"><code><span class="text-gray-500">// Java - 안전한 설정 관리</span>
+
+<span class="text-green-400">// ✅ 방법 1: 환경변수 사용</span>
+public class SecureDatabaseHelper {
+    
+    private static final String DB_URL = 
+        System.getenv("DATABASE_URL");
+    
+    private static final String DB_USER = 
+        System.getenv("DATABASE_USER");
+    
+    <span class="text-green-400">// 환경변수에서 안전하게 로드</span>
+    private static final String DB_PASSWORD = 
+        System.getenv("DATABASE_PASSWORD");
+    
+    public Connection connect() {
+        if (DB_URL == null || DB_PASSWORD == null) {
+            throw new IllegalStateException(
+                "Database credentials not configured"
+            );
+        }
+        
+        return DriverManager.getConnection(
+            DB_URL, DB_USER, DB_PASSWORD
+        );
+    }
+}
+
+<span class="text-green-400">// ✅ 방법 2: 암호화된 설정 파일</span>
+public class EncryptedConfigManager {
+    
+    private Properties config;
+    private static final String CONFIG_FILE = 
+        "encrypted.properties";
+    
+    public EncryptedConfigManager() {
+        loadEncryptedConfig();
+    }
+    
+    private void loadEncryptedConfig() {
+        try {
+            <span class="text-green-400">// 암호화된 파일 읽기</span>
+            InputStream is = getClass()
+                .getResourceAsStream(CONFIG_FILE);
+            
+            <span class="text-green-400">// AES 복호화</span>
+            byte[] encryptedData = is.readAllBytes();
+            byte[] decryptedData = decrypt(
+                encryptedData, 
+                getDeviceKey()
+            );
+            
+            <span class="text-green-400">// Properties 로드</span>
+            config = new Properties();
+            config.load(new ByteArrayInputStream(
+                decryptedData
+            ));
+            
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Failed to load config", e
+            );
+        }
+    }
+    
+    private byte[] decrypt(byte[] data, byte[] key) {
+        try {
+            Cipher cipher = Cipher.getInstance(
+                "AES/GCM/NoPadding"
+            );
+            SecretKeySpec keySpec = 
+                new SecretKeySpec(key, "AES");
+            
+            GCMParameterSpec gcmSpec = 
+                new GCMParameterSpec(128, 
+                    Arrays.copyOf(data, 12));
+            
+            cipher.init(Cipher.DECRYPT_MODE, 
+                keySpec, gcmSpec);
+            
+            return cipher.doFinal(data, 12, 
+                data.length - 12);
+            
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Decryption failed", e
+            );
+        }
+    }
+    
+    private byte[] getDeviceKey() {
+        <span class="text-green-400">// Android KeyStore에서 키 가져오기</span>
+        try {
+            KeyStore keyStore = KeyStore
+                .getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            
+            KeyStore.SecretKeyEntry entry = 
+                (KeyStore.SecretKeyEntry) keyStore
+                    .getEntry("ConfigKey", null);
+            
+            return entry.getSecretKey()
+                .getEncoded();
+            
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Failed to get device key", e
+            );
+        }
+    }
+    
+    public String getProperty(String key) {
+        return config.getProperty(key);
+    }
+}
+
+<span class="text-green-400">// ✅ 방법 3: Android KeyStore 활용</span>
+public class SecureApiClient {
+    
+    private static final String KEY_ALIAS = 
+        "api_key_alias";
+    
+    public SecureApiClient() {
+        initializeKeyStore();
+    }
+    
+    private void initializeKeyStore() {
+        try {
+            KeyStore keyStore = KeyStore
+                .getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            
+            <span class="text-green-400">// KeyStore에 키가 없으면 생성</span>
+            if (!keyStore.containsAlias(KEY_ALIAS)) {
+                KeyGenerator keyGenerator = 
+                    KeyGenerator.getInstance(
+                        KeyProperties.KEY_ALGORITHM_AES,
+                        "AndroidKeyStore"
+                    );
+                
+                keyGenerator.init(
+                    new KeyGenParameterSpec
+                        .Builder(KEY_ALIAS,
+                            KeyProperties.PURPOSE_ENCRYPT |
+                            KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(
+                            KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(
+                            KeyProperties
+                                .ENCRYPTION_PADDING_NONE)
+                        .setUserAuthenticationRequired(false)
+                        .build()
+                );
+                
+                keyGenerator.generateKey();
+            }
+            
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "KeyStore init failed", e
+            );
+        }
+    }
+    
+    public String getApiKey() {
+        <span class="text-green-400">// 서버에서 안전하게 가져오기</span>
+        try {
+            <span class="text-green-400">// 1. 디바이스 인증</span>
+            String deviceToken = getDeviceToken();
+            
+            <span class="text-green-400">// 2. 서버에 API 키 요청</span>
+            Response response = apiService
+                .getApiKey(deviceToken);
+            
+            <span class="text-green-400">// 3. KeyStore에 암호화 저장</span>
+            String apiKey = response.getApiKey();
+            encryptAndStore(apiKey);
+            
+            return apiKey;
+            
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Failed to get API key", e
+            );
+        }
+    }
+    
+    private void encryptAndStore(String data) {
+        try {
+            KeyStore keyStore = KeyStore
+                .getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            
+            SecretKey key = (SecretKey) keyStore
+                .getKey(KEY_ALIAS, null);
+            
+            Cipher cipher = Cipher.getInstance(
+                "AES/GCM/NoPadding"
+            );
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            
+            byte[] encrypted = cipher.doFinal(
+                data.getBytes()
+            );
+            
+            <span class="text-green-400">// SharedPreferences에 암호화된 데이터 저장</span>
+            SharedPreferences prefs = context
+                .getSharedPreferences(
+                    "secure_prefs", 
+                    Context.MODE_PRIVATE
+                );
+            
+            prefs.edit()
+                .putString("encrypted_api_key", 
+                    Base64.encodeToString(
+                        encrypted, 
+                        Base64.DEFAULT
+                    ))
+                .apply();
+            
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Encryption failed", e
+            );
+        }
+    }
+}
+
+<span class="text-green-400">// ✅ 방법 4: 백엔드에서 키 관리</span>
+public class SecureCloudConfig {
+    
+    <span class="text-green-400">// 하드코딩 대신 서버에서 가져오기</span>
+    public CloudCredentials getCloudCredentials() {
+        try {
+            <span class="text-green-400">// 1. 사용자 인증 토큰</span>
+            String authToken = getAuthToken();
+            
+            <span class="text-green-400">// 2. 서버에 임시 자격증명 요청</span>
+            Response response = cloudService
+                .getTemporaryCredentials(authToken);
+            
+            <span class="text-green-400">// 3. STS (임시 자격증명) 반환</span>
+            return new CloudCredentials(
+                response.getAccessKey(),
+                response.getSecretKey(),
+                response.getSessionToken(),
+                response.getExpiration()
+            );
+            
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Failed to get credentials", e
+            );
+        }
+    }
+}
+
+<span class="text-gray-500">// ProGuard 설정 (난독화)</span>
+<span class="text-green-400"># proguard-rules.pro</span>
+
+<span class="text-green-400"># 문자열 암호화</span>
+-keep class com.example.bank.** { *; }
+-obfuscate
+-repackageclasses 'o'
+
+<span class="text-green-400"># 클래스/메서드 이름 난독화</span>
+-keepclassmembers class * {
+    native <methods>;
+}
+
+<span class="text-green-400"># 리플렉션 방지</span>
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes Exceptions
+
+<span class="text-gray-500">// build.gradle 설정</span>
+android {
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile(
+                'proguard-android-optimize.txt'
+            ), 'proguard-rules.pro'
+            
+            <span class="text-green-400">// 환경변수 주입</span>
+            buildConfigField "String", "API_URL",
+                System.getenv("API_URL")
+        }
+    }
+}</code></pre>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+
+        function resetAll() {
+            isRunning = false;
+            
+            document.getElementById('attackerStatus').textContent = 'APK 디컴파일 준비 중...';
+            
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="text-gray-500">$ # Waiting for command...</div>';
+            
+            document.getElementById('decompileResult').innerHTML = 
+                '<div class="text-gray-500">[JADX] Waiting...</div>';
+            
+            document.getElementById('decompileStatus').textContent = 'IDLE';
+            document.getElementById('decompileStatus').className = 'text-xs bg-blue-600 px-3 py-1 rounded';
+            
+            document.getElementById('attackSteps').innerHTML = 
+                '<div class="text-gray-500">시나리오를 시작하세요...</div>';
+            
+            document.getElementById('stolenData').classList.add('hidden');
+            document.getElementById('problemBox').classList.add('hidden');
+            document.getElementById('successBox').classList.add('hidden');
+        }
+
+        async function startScenario(scenario) {
+            if (isRunning) return;
+            isRunning = true;
+            
+            resetAll();
+            await sleep(300);
+            
+            if (scenario === 1) {
+                await scenario1_DatabaseHardcoding();
+            } else if (scenario === 2) {
+                await scenario2_ApiKeyExposure();
+            } else if (scenario === 3) {
+                await scenario3_AwsCredentials();
+            }
+            
+            isRunning = false;
+        }
+
+        // 시나리오 1: DB 비밀번호 하드코딩
+        async function scenario1_DatabaseHardcoding() {
+            updateStep('🎯 시나리오 1: DB 비밀번호 하드코딩');
+            await sleep(1000);
+            
+            // 1단계: APK 다운로드
+            updateStep('1️⃣ 공격자가 XX은행 앱 다운로드');
+            document.getElementById('attackerStatus').textContent = 'APK 다운로드 중...';
+            
+            await addAttackerLog('$ wget https://xxbank.com/app/xxbank.apk');
+            await sleep(500);
+            await addAttackerLog('--2024-12-09 14:30:15--  https://xxbank.com/app/xxbank.apk');
+            await sleep(300);
+            await addAttackerLog('Resolving xxbank.com... 203.0.113.10');
+            await sleep(300);
+            await addAttackerLog('Connecting to xxbank.com:443... connected.');
+            await sleep(500);
+            await addAttackerLog('HTTP request sent, awaiting response... 200 OK');
+            await sleep(300);
+            await addAttackerLog('Length: 45678912 (44M) [application/vnd.android.package-archive]');
+            await sleep(300);
+            await addAttackerLog('Saving to: xxbank.apk');
+            await sleep(800);
+            await addAttackerLog('xxbank.apk        100%[==================>]  43.54M  5.2MB/s    in 9.2s');
+            await sleep(500);
+            await addAttackerLog('2024-12-09 14:30:24 (4.73 MB/s) - xxbank.apk saved [45678912/45678912]', 'text-green-400');
+            await sleep(500);
+            
+            // 2단계: jadx로 디컴파일
+            updateStep('2️⃣ jadx로 APK 디컴파일 시작');
+            document.getElementById('attackerStatus').textContent = '디컴파일 진행 중...';
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ jadx -d xxbank_decompiled xxbank.apk', 'text-yellow-400');
+            await sleep(500);
+            
+            updateDecompileStatus('PROCESSING', 'bg-yellow-600 animate-pulse');
+            
+            await addDecompileLog('[JADX] INFO: loading...', 'text-blue-400');
+            await sleep(300);
+            await addDecompileLog('[JADX] INFO: processing...', 'text-blue-400');
+            await sleep(500);
+            await addDecompileLog('[JADX] INFO: classes: 3,542', 'text-gray-400');
+            await sleep(300);
+            await addDecompileLog('[JADX] INFO: methods: 28,315', 'text-gray-400');
+            await sleep(500);
+            
+            await addAttackerLog('INFO  - loading...', 'text-blue-400');
+            await sleep(300);
+            await addAttackerLog('INFO  - processing...', 'text-blue-400');
+            await sleep(800);
+            await addAttackerLog('INFO  - done', 'text-green-400');
+            await sleep(500);
+            
+            // 3단계: 소스코드 검색
+            updateStep('3️⃣ 소스코드에서 민감정보 검색');
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ grep -r "password" xxbank_decompiled/', 'text-yellow-400');
+            await sleep(500);
+            await addAttackerLog('$ grep -r "DB_" xxbank_decompiled/', 'text-yellow-400');
+            await sleep(800);
+            
+            await addDecompileLog('[SEARCH] Searching for credentials...', 'text-yellow-400');
+            await sleep(500);
+            await addDecompileLog('[FOUND] DatabaseHelper.java', 'text-red-400');
+            await sleep(800);
+            
+            // 4단계: 하드코딩 발견!
+            updateStep('4️⃣ <span class="text-red-500 font-bold">DB 정보 하드코딩 발견!</span>');
+            document.getElementById('attackerStatus').textContent = 'DB 정보 탈취 성공!';
+            
+            updateDecompileStatus('FOUND', 'bg-red-600');
+            
+            const hardcodedCode = `public class DatabaseHelper {
+    private static final String DB_URL = 
+        "jdbc:mysql://10.1.2.3:3306/bank_db";
+    
+    private static final String DB_USER = "admin";
+    
+    private static final String DB_PASSWORD = 
+        "Bank@1234!";
+    
+    public Connection connect() {
+        return DriverManager.getConnection(
+            DB_URL, DB_USER, DB_PASSWORD);
+    }
+}`;
+
+            await addDecompileLog('');
+            await addDecompileLog('[CODE] DatabaseHelper.java:', 'text-cyan-400');
+            await sleep(500);
+            await addDecompileLog(hardcodedCode, 'text-red-300');
+            await sleep(1000);
+            
+            // 5단계: DB 접속 시도
+            updateStep('5️⃣ 탈취한 정보로 DB 직접 접속');
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ mysql -h 10.1.2.3 -u admin -p', 'text-yellow-400');
+            await sleep(500);
+            await addAttackerLog('Enter password: Bank@1234!', 'text-red-400');
+            await sleep(1000);
+            await addAttackerLog('Welcome to the MySQL monitor.', 'text-green-400');
+            await sleep(300);
+            await addAttackerLog('');
+            await addAttackerLog('mysql> USE bank_db;', 'text-cyan-400');
+            await sleep(500);
+            await addAttackerLog('Database changed', 'text-green-400');
+            await sleep(300);
+            await addAttackerLog('');
+            await addAttackerLog('mysql> SHOW TABLES;', 'text-cyan-400');
+            await sleep(800);
+            await addAttackerLog('+-------------------+', 'text-gray-400');
+            await addAttackerLog('| Tables_in_bank_db |', 'text-gray-400');
+            await addAttackerLog('+-------------------+', 'text-gray-400');
+            await addAttackerLog('| accounts          |', 'text-gray-400');
+            await addAttackerLog('| transactions      |', 'text-gray-400');
+            await addAttackerLog('| users             |', 'text-gray-400');
+            await addAttackerLog('| cards             |', 'text-gray-400');
+            await addAttackerLog('+-------------------+', 'text-gray-400');
+            await sleep(500);
+            await addAttackerLog('');
+            await addAttackerLog('mysql> SELECT * FROM accounts LIMIT 5;', 'text-cyan-400');
+            await sleep(1000);
+            
+            // 탈취한 데이터 표시
+            document.getElementById('stolenData').classList.remove('hidden');
+            document.getElementById('stolenDataContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">📊 DB 접속 정보:</div>' +
+                '<div class="text-red-400">Host: 10.1.2.3:3306</div>' +
+                '<div class="text-red-400">Database: bank_db</div>' +
+                '<div class="text-red-400">Username: admin</div>' +
+                '<div class="text-red-400">Password: Bank@1234!</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">💰 탈취한 계좌 정보:</div>' +
+                '<div class="text-green-400">account_id | name | balance</div>' +
+                '<div class="text-gray-400">10001 | 김철수 | 15,000,000원</div>' +
+                '<div class="text-gray-400">10002 | 이영희 | 28,500,000원</div>' +
+                '<div class="text-gray-400">10003 | 박민수 | 42,300,000원</div>' +
+                '<div class="text-gray-400">... (전체 100,000+ 계좌)</div>';
+            
+            showResults();
+        }
+
+        // 시나리오 2: API 키 노출
+        async function scenario2_ApiKeyExposure() {
+            updateStep('🎯 시나리오 2: API 키 노출');
+            await sleep(1000);
+            
+            updateStep('1️⃣ APK 다운로드 및 디컴파일');
+            
+            await addAttackerLog('$ jadx -d xxbank_decompiled xxbank.apk', 'text-yellow-400');
+            await sleep(500);
+            await addAttackerLog('INFO  - done', 'text-green-400');
+            await sleep(500);
+            
+            updateDecompileStatus('PROCESSING', 'bg-yellow-600');
+            await addDecompileLog('[JADX] Decompiling...', 'text-blue-400');
+            await sleep(800);
+            
+            updateStep('2️⃣ API 키 검색');
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ grep -r "api.key\\|API_KEY\\|sk_live" xxbank_decompiled/', 'text-yellow-400');
+            await sleep(800);
+            
+            await addDecompileLog('[SEARCH] Looking for API keys...', 'text-yellow-400');
+            await sleep(500);
+            await addDecompileLog('[FOUND] ApiClient.java', 'text-red-400');
+            await sleep(500);
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">결제 API 키 발견!</span>');
+            
+            updateDecompileStatus('FOUND', 'bg-red-600');
+            
+            const apiCode = `public class ApiClient {
+    private static final String API_KEY = 
+        "sk_live_51HxJ9KLp2k3M4n5o6P7q8R9s0T";
+    
+    private static final String API_SECRET = 
+        "whsec_9a8b7c6d5e4f3g2h1i0j";
+    
+    private static final String MERCHANT_ID = 
+        "acct_1234567890ABCDEF";
+    
+    public void sendPayment(String amount) {
+        headers.put("Authorization", 
+            "Bearer " + API_KEY);
+    }
+}`;
+
+            await addDecompileLog('');
+            await addDecompileLog('[CODE] ApiClient.java:', 'text-cyan-400');
+            await sleep(500);
+            await addDecompileLog(apiCode, 'text-red-300');
+            await sleep(1000);
+            
+            updateStep('4️⃣ API로 직접 결제 요청');
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ curl -X POST https://api.payment.com/v1/charges \\', 'text-yellow-400');
+            await sleep(300);
+            await addAttackerLog('  -H "Authorization: Bearer sk_live_51HxJ9KLp2k3M4n5o6P7q8R9s0T" \\', 'text-yellow-400');
+            await sleep(300);
+            await addAttackerLog('  -d "amount=5000000" \\', 'text-yellow-400');
+            await sleep(300);
+            await addAttackerLog('  -d "currency=krw"', 'text-yellow-400');
+            await sleep(1000);
+            await addAttackerLog('');
+            await addAttackerLog('{', 'text-green-400');
+            await addAttackerLog('  "id": "ch_3NxyABCD1234",', 'text-green-400');
+            await addAttackerLog('  "status": "succeeded",', 'text-green-400');
+            await addAttackerLog('  "amount": 5000000,', 'text-green-400');
+            await addAttackerLog('  "currency": "krw"', 'text-green-400');
+            await addAttackerLog('}', 'text-green-400');
+            await sleep(500);
+            
+            document.getElementById('stolenData').classList.remove('hidden');
+            document.getElementById('stolenDataContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">🔑 탈취한 API 정보:</div>' +
+                '<div class="text-red-400">API Key: sk_live_51HxJ9K...</div>' +
+                '<div class="text-red-400">API Secret: whsec_9a8b7c6...</div>' +
+                '<div class="text-red-400">Merchant ID: acct_1234...</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">💳 실행한 공격:</div>' +
+                '<div class="text-green-400">✓ 5,000,000원 결제 성공</div>' +
+                '<div class="text-green-400">✓ 은행 명의로 무단 결제</div>' +
+                '<div class="text-green-400">✓ API 사용량 무제한</div>';
+            
+            showResults();
+        }
+
+        // 시나리오 3: AWS 자격증명 노출
+        async function scenario3_AwsCredentials() {
+            updateStep('🎯 시나리오 3: AWS 자격증명 노출');
+            await sleep(1000);
+            
+            updateStep('1️⃣ APK 디컴파일 및 검색');
+            
+            await addAttackerLog('$ jadx -d xxbank_decompiled xxbank.apk', 'text-yellow-400');
+            await sleep(500);
+            await addAttackerLog('INFO  - done', 'text-green-400');
+            await sleep(500);
+            
+            updateDecompileStatus('PROCESSING', 'bg-yellow-600');
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ grep -r "AKIA\\|aws_access" xxbank_decompiled/', 'text-yellow-400');
+            await sleep(800);
+            
+            await addDecompileLog('[SEARCH] Searching for AWS credentials...', 'text-yellow-400');
+            await sleep(500);
+            await addDecompileLog('[FOUND] CloudConfig.java', 'text-red-400');
+            await sleep(500);
+            
+            updateStep('2️⃣ <span class="text-red-500 font-bold">AWS 자격증명 발견!</span>');
+            
+            updateDecompileStatus('CRITICAL', 'bg-red-600 animate-pulse');
+            
+            const awsCode = `public class CloudConfig {
+    public static final String AWS_ACCESS_KEY = 
+        "AKIAIOSFODNN7EXAMPLE";
+    
+    public static final String AWS_SECRET_KEY = 
+        "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+    
+    public static final String S3_BUCKET = 
+        "xxbank-customer-data";
+    
+    public static final String REGION = "ap-northeast-2";
+}`;
+
+            await addDecompileLog('');
+            await addDecompileLog('[CODE] CloudConfig.java:', 'text-cyan-400');
+            await sleep(500);
+            await addDecompileLog(awsCode, 'text-red-300');
+            await sleep(1000);
+            
+            updateStep('3️⃣ AWS CLI로 S3 버킷 접근');
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ aws configure', 'text-yellow-400');
+            await sleep(300);
+            await addAttackerLog('AWS Access Key ID: AKIAIOSFODNN7EXAMPLE', 'text-red-400');
+            await sleep(300);
+            await addAttackerLog('AWS Secret Access Key: wJalrXUt...', 'text-red-400');
+            await sleep(500);
+            await addAttackerLog('');
+            await addAttackerLog('$ aws s3 ls s3://xxbank-customer-data/', 'text-yellow-400');
+            await sleep(1000);
+            await addAttackerLog('2024-01-15 10:30:45  customers.csv', 'text-gray-400');
+            await addAttackerLog('2024-02-20 14:22:13  transactions/', 'text-gray-400');
+            await addAttackerLog('2024-03-10 09:15:32  account_backup.sql', 'text-gray-400');
+            await addAttackerLog('2024-04-05 16:45:21  user_data/', 'text-gray-400');
+            await sleep(500);
+            
+            updateStep('4️⃣ 고객 데이터 다운로드');
+            
+            await addAttackerLog('');
+            await addAttackerLog('$ aws s3 cp s3://xxbank-customer-data/customers.csv ./', 'text-yellow-400');
+            await sleep(1000);
+            await addAttackerLog('download: s3://xxbank-customer-data/customers.csv to ./customers.csv', 'text-green-400');
+            await sleep(500);
+            await addAttackerLog('');
+            await addAttackerLog('$ head customers.csv', 'text-yellow-400');
+            await sleep(500);
+            await addAttackerLog('name,ssn,account,phone,balance', 'text-cyan-400');
+            await addAttackerLog('김철수,801234-1234567,110-123-456789,010-1234-5678,15000000', 'text-gray-400');
+            await addAttackerLog('이영희,850512-2345678,110-234-567890,010-2345-6789,28500000', 'text-gray-400');
+            await sleep(500);
+            
+            document.getElementById('stolenData').classList.remove('hidden');
+            document.getElementById('stolenDataContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">☁️ AWS 자격증명:</div>' +
+                '<div class="text-red-400">Access Key: AKIAIOSFODN...</div>' +
+                '<div class="text-red-400">Secret Key: wJalrXUtnF...</div>' +
+                '<div class="text-red-400">Region: ap-northeast-2</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">💾 탈취한 데이터:</div>' +
+                '<div class="text-green-400">✓ customers.csv (100,000+ 고객)</div>' +
+                '<div class="text-green-400">✓ account_backup.sql (전체 DB)</div>' +
+                '<div class="text-green-400">✓ transactions/ (거래 내역)</div>' +
+                '<div class="text-red-400 mt-2">⚠️ 주민번호 포함!</div>';
+            
+            showResults();
+        }
+
+        function showResults() {
+            document.getElementById('problemBox').classList.remove('hidden');
+            document.getElementById('problemContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">❌ 하드코딩 문제점:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>1. 민감정보가 소스코드에 평문 노출</div>' +
+                '<div>2. APK 디컴파일로 쉽게 추출 가능</div>' +
+                '<div>3. 난독화만으로는 방어 불가</div>' +
+                '<div>4. 한번 노출되면 변경 불가</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• DB 전체 접근 가능</div>' +
+                '<div>• API 무단 사용</div>' +
+                '<div>• 클라우드 데이터 탈취</div>' +
+                '<div>• 개인정보 대량 유출</div>' +
+                '</div></div>';
+            
+            document.getElementById('successBox').classList.remove('hidden');
+            document.getElementById('successContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">🎯 공격 성공:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• jadx로 APK 디컴파일</div>' +
+                '<div>• 하드코딩된 정보 탈취</div>' +
+                '<div>• 서버/DB 직접 접근</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">🛡️ 필요한 방어:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 환경변수 사용</div>' +
+                '<div>• Android KeyStore 활용</div>' +
+                '<div>• 서버에서 동적으로 키 전달</div>' +
+                '<div>• 암호화된 설정 파일</div>' +
+                '</div></div>';
+        }
+
+        function updateStep(html) {
+            const steps = document.getElementById('attackSteps');
+            const div = document.createElement('div');
+            div.className = 'p-2 bg-gray-700 rounded text-sm slide-in';
+            div.innerHTML = html;
+            steps.appendChild(div);
+            steps.scrollTop = steps.scrollHeight;
+        }
+
+        async function addAttackerLog(message, colorClass = 'text-green-400') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.textContent = message;
+            const container = document.getElementById('attackerScreen');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            await sleep(50);
+        }
+
+        async function addDecompileLog(message, colorClass = 'text-green-400') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.textContent = message;
+            const container = document.getElementById('decompileResult');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            await sleep(50);
+        }
+
+        function updateDecompileStatus(text, className) {
+            document.getElementById('decompileStatus').textContent = text;
+            document.getElementById('decompileStatus').className = 'text-xs text-white px-3 py-1 rounded ' + className;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
