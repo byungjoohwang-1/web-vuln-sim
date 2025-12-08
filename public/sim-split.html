@@ -3,109 +3,577 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTTP Response Splitting</title>
+    <title>금융권 HTTP 응답 분할 취약점 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
-        .code-font { font-family: 'JetBrains Mono', monospace; }
+        .code-font { font-family: 'Courier New', monospace; }
     </style>
 </head>
-<body class="bg-slate-50 p-8 h-screen flex flex-col">
+<body class="bg-gray-100 p-4">
 
-    <div class="mb-6">
-        <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-purple-100 text-purple-600 rounded-lg">
-                <i class="fas fa-columns text-xl"></i>
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-purple-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">금융권 보안 - HTTP 응답 분할 (CRLF Injection)</h1>
+                    <p class="text-sm">헤더 인젝션 | 위험도: 4 (높음) | 세션 탈취, 쿠키 조작 가능</p>
+                </div>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800">HTTP Response Splitting (CRLF Injection)</h1>
         </div>
-        <p class="text-slate-500 text-sm">
-            입력값에 개행 문자(\r\n)를 삽입하여 HTTP 응답 헤더를 조작하거나, 응답을 두 개로 쪼개어 악성 콘텐츠를 주입하는 공격입니다.
-        </p>
     </div>
 
-    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-        
-        <!-- Input Area -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="font-bold text-lg mb-4 text-slate-700">언어 설정 변경</h3>
-            <p class="text-sm text-slate-500 mb-4">선택한 언어는 <code>Set-Cookie: lang=...</code> 헤더로 설정됩니다.</p>
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             
+            <!-- 좌측: 취약한 시스템 -->
             <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Language Code</label>
-                    <input type="text" id="lang-input" class="w-full p-2 border border-slate-300 rounded code-font text-sm" value="en-US">
-                </div>
                 
-                <button onclick="simSplit()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded transition">
-                    설정 저장
-                </button>
-            </div>
-
-            <div class="mt-6 p-4 bg-slate-100 rounded text-sm">
-                <p class="font-bold text-slate-600 mb-2">Attack Scenario:</p>
-                <p class="text-slate-500 mb-2">공격자는 개행 문자(CRLF)를 넣어 임의의 헤더를 추가할 수 있습니다.</p>
-                <div class="bg-white p-2 border border-slate-300 rounded cursor-pointer hover:bg-purple-50 transition" onclick="setPayload()">
-                    <code class="text-purple-600 text-xs break-all">en%0d%0aSet-Cookie: session_id=HACKED</code>
-                    <div class="text-[10px] text-slate-400 mt-1 text-right">클릭하여 payload 입력</div>
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">XX은행</h2>
+                            <p class="text-sm">인터넷뱅킹 - 사용자 설정</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-purple-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: HTTP 헤더 검증 미흡
+                    </div>
                 </div>
+
+                <!-- 설정 폼 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-cog text-purple-600"></i>
+                        프로필 설정
+                    </h3>
+                    
+                    <p class="text-sm text-gray-600 mb-4">
+                        언어 설정이 HTTP 쿠키로 저장됩니다
+                    </p>
+                    
+                    <label class="block text-sm font-bold mb-2">언어 설정</label>
+                    <input type="text" id="langInput" 
+                           class="w-full p-2 border border-gray-300 rounded mb-3 code-font text-sm" 
+                           value="ko-KR"
+                           placeholder="예: ko-KR, en-US">
+                    
+                    <div class="bg-blue-50 p-3 rounded mb-4 text-sm">
+                        <p class="font-bold text-blue-700 mb-1">
+                            <i class="fas fa-info-circle"></i> 정상 요청
+                        </p>
+                        <p class="text-blue-600 code-font text-xs">
+                            Set-Cookie: lang=ko-KR
+                        </p>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button onclick="resetSimulation()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                            <i class="fas fa-redo"></i> 리셋
+                        </button>
+                        <button onclick="submitSetting()" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded">
+                            <i class="fas fa-save"></i> 설정 저장
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-purple-400"></i>
+                        CRLF 인젝션 공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="setPayload(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-cookie-bite"></i> 시나리오 1: 세션 쿠키 조작
+                        </button>
+                        <button onclick="setPayload(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-code"></i> 시나리오 2: XSS 스크립트 삽입
+                        </button>
+                        <button onclick="setPayload(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-exchange-alt"></i> 시나리오 3: 캐시 포이즈닝
+                        </button>
+                        <button onclick="setPayload(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-shield-virus"></i> 시나리오 4: 응답 분할 (더블 응답)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CRLF 설명 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-purple-400"></i>
+                        CRLF 인젝션이란?
+                    </h3>
+                    <div class="text-sm space-y-2">
+                        <p><strong>CRLF:</strong> Carriage Return + Line Feed (개행 문자)</p>
+                        <div class="bg-gray-900 p-3 rounded code-font text-xs">
+                            <span class="text-red-400">\r\n</span> = CR (0x0D) + LF (0x0A)<br/>
+                            URL 인코딩: <span class="text-yellow-400">%0d%0a</span>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">
+                            ⚠️ HTTP 헤더는 CRLF로 구분됩니다. 사용자 입력에 CRLF를 삽입하면 임의의 헤더를 추가할 수 있습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 취약한 코드 - CRLF 검증 없음</span>
+@GetMapping("/setLang")
+public void setLanguage(
+    @RequestParam String lang,
+    HttpServletResponse response) {
+    
+    <span class="text-red-400">// 사용자 입력을 검증 없이 헤더에 직접 사용!</span>
+    Cookie cookie = new Cookie("lang", lang);
+    response.addCookie(cookie);
+    
+    <span class="text-red-400">// 또는</span>
+    response.setHeader("Set-Cookie", "lang=" + lang);
+}</code></pre>
+                </div>
+
             </div>
-        </div>
 
-        <!-- Result / Server Header View -->
-        <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 relative overflow-hidden">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                <span class="text-slate-400 font-mono text-xs">Server Response Headers</span>
-            </div>
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 서버 응답 헤더 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-server"></i> HTTP 응답 헤더
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font">
+                            NORMAL
+                        </span>
+                    </div>
+                    <div id="headerOutput" class="p-5 min-h-[300px] bg-gray-900 text-green-400 code-font text-xs space-y-1 overflow-auto">
+                        <div>HTTP/1.1 200 OK</div>
+                        <div>Content-Type: text/html; charset=UTF-8</div>
+                        <div>Set-Cookie: lang=ko-KR</div>
+                        <div>Content-Length: 2048</div>
+                        <div>&nbsp;</div>
+                        <div class="text-gray-500">(Body content...)</div>
+                    </div>
+                </div>
 
-            <pre id="header-output" class="font-mono text-sm text-green-400 leading-6 min-h-[200px]">HTTP/1.1 200 OK
-Content-Type: text/html
-Set-Cookie: lang=en-US
-Content-Length: 1024
+                <!-- 공격 상세 -->
+                <div id="attackDetails" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle"></i> CRLF 인젝션 성공!
+                    </h4>
+                    <div id="attackDetailsText" class="text-sm text-red-700"></div>
+                </div>
 
-(Body content...)</pre>
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-purple-100 border-l-4 border-purple-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-purple-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-purple-700 space-y-1"></div>
+                </div>
 
-            <!-- Hacked Badge -->
-            <div id="hacked-badge" class="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold hidden animate-pulse">
-                HEADER INJECTED
+                <!-- 실제 공격 페이로드 -->
+                <div id="realPayload" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-2 flex items-center gap-2">
+                        <i class="fas fa-code"></i> 실제 공격 페이로드
+                    </h3>
+                    <pre id="payloadContent" class="code-font text-xs bg-black p-3 rounded overflow-auto max-h-[200px] text-yellow-400"></pre>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[500px]"><code><span class="text-green-400">// ✅ 안전한 코드 - CRLF 필터링 및 검증</span>
+@GetMapping("/setLang")
+public void setLanguage(
+    @RequestParam String lang,
+    HttpServletResponse response) 
+    throws SecurityException {
+    
+    <span class="text-green-400">// 1. CRLF 문자 검증 (차단)</span>
+    if (lang.contains("\r") || lang.contains("\n")) {
+        throw new SecurityException(
+            "Invalid characters in language parameter"
+        );
+    }
+    
+    <span class="text-green-400">// 2. URL 인코딩된 CRLF 검증</span>
+    String decoded = URLDecoder.decode(lang, "UTF-8");
+    if (decoded.contains("\r") || decoded.contains("\n")) {
+        throw new SecurityException(
+            "Encoded CRLF detected"
+        );
+    }
+    
+    <span class="text-green-400">// 3. 화이트리스트 검증 (권장)</span>
+    Set&lt;String&gt; allowedLanguages = Set.of(
+        "ko-KR", "en-US", "ja-JP", "zh-CN"
+    );
+    
+    if (!allowedLanguages.contains(lang)) {
+        throw new IllegalArgumentException(
+            "Unsupported language: " + lang
+        );
+    }
+    
+    <span class="text-green-400">// 4. 안전한 쿠키 설정</span>
+    Cookie cookie = new Cookie("lang", lang);
+    cookie.setHttpOnly(true);  // XSS 방어
+    cookie.setSecure(true);    // HTTPS만
+    cookie.setPath("/");
+    cookie.setMaxAge(86400);   // 24시간
+    
+    response.addCookie(cookie);
+}
+
+<span class="text-green-400">// 추가: ResponseEntity 사용 (Spring 권장)</span>
+@GetMapping("/setLang")
+public ResponseEntity&lt;String&gt; setLanguage(
+    @RequestParam String lang) {
+    
+    <span class="text-green-400">// CRLF 검증</span>
+    if (lang.matches(".*[\\r\\n].*")) {
+        return ResponseEntity
+            .badRequest()
+            .body("Invalid parameter");
+    }
+    
+    <span class="text-green-400">// 화이트리스트 검증</span>
+    if (!ALLOWED_LANGS.contains(lang)) {
+        return ResponseEntity
+            .badRequest()
+            .body("Unsupported language");
+    }
+    
+    <span class="text-green-400">// ResponseEntity로 안전하게 반환</span>
+    return ResponseEntity
+        .ok()
+        .header(HttpHeaders.SET_COOKIE, 
+                "lang=" + lang + "; HttpOnly; Secure")
+        .body("Language set to: " + lang);
+}
+
+<span class="text-green-400">// 정규식 기반 필터링</span>
+private boolean isValidInput(String input) {
+    <span class="text-green-400">// CRLF 및 특수 문자 검증</span>
+    Pattern pattern = Pattern.compile("^[a-zA-Z0-9-_]+$");
+    return pattern.matcher(input).matches();
+}
+
+<span class="text-green-400">// Apache Commons 사용</span>
+import org.apache.commons.text.StringEscapeUtils;
+
+String sanitized = StringEscapeUtils.escapeHtml4(userInput);
+response.setHeader("Custom-Header", sanitized);
+</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-purple-600"></i>
+                        CRLF 인젝션 방어 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>CRLF 문자 차단:</strong> \r \n %0d %0a 필터링</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>화이트리스트:</strong> 허용된 값만 사용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>정규식 검증:</strong> 영숫자만 허용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>헤더 API 사용:</strong> response.addCookie() 등</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>입력 길이 제한:</strong> 최대 50자 이하</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-purple-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 금융권 CRLF 인젝션 피해
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>세션 탈취</strong><br>쿠키 조작으로 계정 접근</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>XSS 공격</strong><br>악성 스크립트 삽입</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>캐시 포이즈닝</strong><br>악성 페이지 캐싱</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>피싱 공격</strong><br>가짜 로그인 페이지 표시</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        function setPayload() {
-            document.getElementById('lang-input').value = "en\r\nSet-Cookie: session_id=HACKED";
+        function setPayload(scenario) {
+            let payload = '';
+            
+            if (scenario === 1) {
+                // 세션 쿠키 조작
+                payload = "ko-KR\r\nSet-Cookie: session_id=HACKED123";
+            } else if (scenario === 2) {
+                // XSS 스크립트 삽입
+                payload = "ko-KR\r\nContent-Type: text/html\r\n\r\n<script>alert('XSS')<\/script>";
+            } else if (scenario === 3) {
+                // 캐시 포이즈닝
+                payload = "ko-KR\r\nCache-Control: public, max-age=31536000\r\nContent-Length: 100\r\n\r\n<h1>Fake Page</h1>";
+            } else if (scenario === 4) {
+                // 응답 분할
+                payload = "ko-KR\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body>Phishing Page</body></html>";
+            }
+            
+            document.getElementById('langInput').value = payload;
+            document.getElementById('langInput').classList.add('bg-red-100');
+            setTimeout(() => {
+                document.getElementById('langInput').classList.remove('bg-red-100');
+            }, 500);
         }
 
-        function simSplit() {
-            const input = document.getElementById('lang-input').value;
-            const output = document.getElementById('header-output');
-            const badge = document.getElementById('hacked-badge');
-            
-            // Simulation Logic
-            let headers = `HTTP/1.1 200 OK\nContent-Type: text/html\nSet-Cookie: lang=${input}\nContent-Length: 1024\n\n(Body content...)`;
-            
-            // CRLF detection logic for visualization
-            if (input.includes('\r\n') || input.includes('%0d%0a')) {
-                // Visualize the split
-                const cleanInput = input.replace(/%0d%0a/g, '\n').replace(/\r\n/g, '\n');
-                
-                let injectedHeaders = `HTTP/1.1 200 OK\nContent-Type: text/html\nSet-Cookie: lang=${cleanInput}\nContent-Length: 1024\n\n(Body content...)`;
-                
-                // Highlight injected part
-                let highlighted = injectedHeaders.replace(
-                    /Set-Cookie: session_id=HACKED/g, 
-                    '<span class="text-red-500 font-bold bg-red-900/30">Set-Cookie: session_id=HACKED</span>'
-                );
+        function resetSimulation() {
+            document.getElementById('langInput').value = 'ko-KR';
+            document.getElementById('headerOutput').innerHTML = 
+                '<div>HTTP/1.1 200 OK</div>' +
+                '<div>Content-Type: text/html; charset=UTF-8</div>' +
+                '<div>Set-Cookie: lang=ko-KR</div>' +
+                '<div>Content-Length: 2048</div>' +
+                '<div>&nbsp;</div>' +
+                '<div class="text-gray-500">(Body content...)</div>';
+            document.getElementById('statusBadge').textContent = 'NORMAL';
+            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+            document.getElementById('attackDetails').classList.add('hidden');
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('realPayload').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+        }
 
-                output.innerHTML = highlighted;
-                badge.classList.remove('hidden');
+        async function submitSetting() {
+            let input = document.getElementById('langInput').value;
+            let badge = document.getElementById('statusBadge');
+            
+            document.getElementById('attackDetails').classList.add('hidden');
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('realPayload').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+
+            // CRLF 검증
+            let hasCRLF = input.includes('\r') || input.includes('\n') || 
+                         input.includes('%0d') || input.includes('%0a');
+
+            if (!hasCRLF) {
+                // 정상 응답
+                let headerHtml = 
+                    '<div>HTTP/1.1 200 OK</div>' +
+                    '<div>Content-Type: text/html; charset=UTF-8</div>' +
+                    '<div>Set-Cookie: lang=' + escapeHtml(input) + '</div>' +
+                    '<div>Content-Length: 2048</div>' +
+                    '<div>&nbsp;</div>' +
+                    '<div class="text-gray-500">(Body content...)</div>';
+                
+                document.getElementById('headerOutput').innerHTML = headerHtml;
+                badge.textContent = 'NORMAL';
+                badge.className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+                
             } else {
-                output.innerText = headers;
-                badge.classList.add('hidden');
+                // CRLF 인젝션 공격
+                badge.textContent = 'INJECTED!';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font animate-pulse';
+                
+                // 개행 문자를 실제 개행으로 변환
+                let processedInput = input
+                    .replace(/\\r/g, '\r')
+                    .replace(/\\n/g, '\n')
+                    .replace(/%0d/gi, '\r')
+                    .replace(/%0a/gi, '\n');
+                
+                let lines = processedInput.split(/\r?\n/);
+                let headerHtml = '<div>HTTP/1.1 200 OK</div>' +
+                                '<div>Content-Type: text/html; charset=UTF-8</div>' +
+                                '<div>Set-Cookie: lang=' + escapeHtml(lines[0]) + '</div>';
+                
+                // 주입된 헤더들 (빨간색으로 표시)
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim()) {
+                        headerHtml += '<div class="text-red-400 font-bold bg-red-900 bg-opacity-30">' + 
+                                     escapeHtml(lines[i]) + '</div>';
+                    } else {
+                        headerHtml += '<div>&nbsp;</div>';
+                    }
+                }
+                
+                if (!headerHtml.includes('Content-Length')) {
+                    headerHtml += '<div>Content-Length: 2048</div>';
+                }
+                
+                document.getElementById('headerOutput').innerHTML = headerHtml;
+                
+                // 공격 시나리오 판별
+                if (input.includes('session_id')) {
+                    showAttack(1, processedInput);
+                } else if (input.includes('<scr' + 'ipt>') || input.includes('alert')) {
+                    showAttack(2, processedInput);
+                } else if (input.includes('Cache-Control')) {
+                    showAttack(3, processedInput);
+                } else if (input.includes('HTTP/1.1')) {
+                    showAttack(4, processedInput);
+                } else {
+                    showAttack(0, processedInput);
+                }
             }
+        }
+
+        function showAttack(scenario, payload) {
+            document.getElementById('attackDetails').classList.remove('hidden');
+            document.getElementById('attackStages').classList.remove('hidden');
+            document.getElementById('realPayload').classList.remove('hidden');
+            document.getElementById('damageBox').classList.remove('hidden');
+            
+            let detailsText = '';
+            let stagesHtml = '';
+            let payloadHtml = '';
+            
+            if (scenario === 1) {
+                detailsText = '<strong>✓ 세션 쿠키 조작 성공!</strong><br>' +
+                             '공격자가 임의의 세션 쿠키를 주입하여 피해자의 계정에 접근할 수 있습니다.<br>' +
+                             '<code class="bg-black px-2 py-1 mt-2 inline-block">Set-Cookie: session_id=HACKED123</code>';
+                
+                stagesHtml = '<div><strong>1단계:</strong> 언어 설정 파라미터에 CRLF 삽입</div>' +
+                            '<div><strong>2단계:</strong> Set-Cookie 헤더 추가</div>' +
+                            '<div><strong>3단계:</strong> 피해자 브라우저가 조작된 쿠키 저장</div>' +
+                            '<div><strong>4단계:</strong> 공격자가 HACKED123 세션으로 로그인</div>' +
+                            '<div><strong>5단계:</strong> 계좌 정보 접근 및 이체 가능</div>';
+                
+                payloadHtml = '<span class="text-gray-500">// URL 인코딩된 페이로드</span>\n' +
+                             'GET /setLang?lang=ko-KR<span class="text-red-400">%0d%0a</span>Set-Cookie:%20session_id=HACKED123\n\n' +
+                             '<span class="text-gray-500">// 디코딩된 실제 요청</span>\n' +
+                             'GET /setLang?lang=ko-KR<span class="text-red-400">\\r\\n</span>Set-Cookie: session_id=HACKED123\n\n' +
+                             '<span class="text-gray-500">// 결과 응답 헤더</span>\n' +
+                             'HTTP/1.1 200 OK\n' +
+                             'Set-Cookie: lang=ko-KR\n' +
+                             '<span class="text-red-400">Set-Cookie: session_id=HACKED123  ← 주입된 헤더!</span>';
+                
+            } else if (scenario === 2) {
+                detailsText = '<strong>✓ XSS 스크립트 삽입 성공!</strong><br>' +
+                             'HTTP 응답 본문에 악성 스크립트가 주입되어 XSS 공격이 가능합니다.<br>' +
+                             '<code class="bg-black px-2 py-1 mt-2 inline-block">&lt;script&gt;alert(\'XSS\')&lt;/script&gt;</code>';
+                
+                stagesHtml = '<div><strong>1단계:</strong> CRLF로 헤더 종료 (이중 개행)</div>' +
+                            '<div><strong>2단계:</strong> 악성 스크립트를 응답 본문에 삽입</div>' +
+                            '<div><strong>3단계:</strong> 피해자 브라우저가 스크립트 실행</div>' +
+                            '<div><strong>4단계:</strong> 쿠키 탈취 또는 악성 동작 수행</div>';
+                
+                payloadHtml = '<span class="text-gray-500">// 페이로드</span>\n' +
+                             'ko-KR<span class="text-red-400">\\r\\n</span>Content-Type: text/html<span class="text-red-400">\\r\\n\\r\\n</span>&lt;script&gt;alert(\'XSS\')&lt;/script&gt;\n\n' +
+                             '<span class="text-gray-500">// 응답 구조</span>\n' +
+                             'HTTP/1.1 200 OK\n' +
+                             'Set-Cookie: lang=ko-KR\n' +
+                             'Content-Type: text/html\n' +
+                             '<span class="text-red-400">[빈 줄] ← 헤더 종료</span>\n' +
+                             '<span class="text-red-400">&lt;script&gt;alert(\'XSS\')&lt;/script&gt; ← 본문에 주입!</span>';
+                
+            } else if (scenario === 3) {
+                detailsText = '<strong>✓ 캐시 포이즈닝 성공!</strong><br>' +
+                             '프록시 서버나 CDN에 악성 페이지가 캐싱되어 모든 사용자에게 전파됩니다.<br>' +
+                             '<code class="bg-black px-2 py-1 mt-2 inline-block">Cache-Control: public, max-age=31536000</code>';
+                
+                stagesHtml = '<div><strong>1단계:</strong> Cache-Control 헤더 주입</div>' +
+                            '<div><strong>2단계:</strong> 가짜 콘텐츠를 응답 본문에 삽입</div>' +
+                            '<div><strong>3단계:</strong> 프록시/CDN이 악성 페이지 캐싱</div>' +
+                            '<div><strong>4단계:</strong> 모든 사용자가 캐시된 악성 페이지 확인</div>' +
+                            '<div><strong>5단계:</strong> 대규모 피싱 공격 가능</div>';
+                
+                payloadHtml = '<span class="text-gray-500">// 캐시 포이즈닝 페이로드</span>\n' +
+                             'ko-KR<span class="text-red-400">\\r\\n</span>Cache-Control: public, max-age=31536000<span class="text-red-400">\\r\\n\\r\\n</span>&lt;h1&gt;Fake Page&lt;/h1&gt;\n\n' +
+                             '<span class="text-gray-500">// 영향</span>\n' +
+                             '- CDN/프록시가 악성 페이지를 1년간 캐싱\n' +
+                             '- 모든 사용자가 동일한 악성 페이지 확인\n' +
+                             '- 정상 페이지로 복구 어려움';
+                
+            } else if (scenario === 4) {
+                detailsText = '<strong>✓ HTTP 응답 분할 성공!</strong><br>' +
+                             '하나의 요청에 대해 두 개의 HTTP 응답이 생성되어 피싱 페이지가 표시됩니다.<br>' +
+                             '<code class="bg-black px-2 py-1 mt-2 inline-block">HTTP/1.1 200 OK</code>';
+                
+                stagesHtml = '<div><strong>1단계:</strong> CRLF로 첫 번째 응답 조기 종료</div>' +
+                            '<div><strong>2단계:</strong> 두 번째 HTTP 응답 생성</div>' +
+                            '<div><strong>3단계:</strong> 피싱 페이지를 두 번째 응답으로 전송</div>' +
+                            '<div><strong>4단계:</strong> 피해자가 가짜 로그인 페이지 확인</div>' +
+                            '<div><strong>5단계:</strong> 계정 정보 탈취</div>';
+                
+                payloadHtml = '<span class="text-gray-500">// Response Splitting 페이로드</span>\n' +
+                             'ko-KR<span class="text-red-400">\\r\\n\\r\\n</span>HTTP/1.1 200 OK<span class="text-red-400">\\r\\n</span>Content-Type: text/html<span class="text-red-400">\\r\\n\\r\\n</span>&lt;html&gt;&lt;body&gt;Phishing Page&lt;/body&gt;&lt;/html&gt;\n\n' +
+                             '<span class="text-gray-500">// 결과: 2개의 응답</span>\n' +
+                             '<span class="text-yellow-400">응답 1:</span> HTTP/1.1 200 OK (정상 종료)\n' +
+                             '<span class="text-red-400">응답 2:</span> HTTP/1.1 200 OK (피싱 페이지)';
+            } else {
+                detailsText = '<strong>✓ CRLF 인젝션 감지!</strong><br>임의의 HTTP 헤더가 주입되었습니다.';
+                stagesHtml = '<div>개행 문자(CRLF)를 통해 HTTP 헤더를 조작했습니다.</div>';
+                payloadHtml = payload;
+            }
+            
+            document.getElementById('attackDetailsText').innerHTML = detailsText;
+            document.getElementById('stagesContent').innerHTML = stagesHtml;
+            document.getElementById('payloadContent').textContent = payloadHtml;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
     </script>
 </body>
