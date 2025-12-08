@@ -3,192 +3,483 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSRF Simulation</title>
+    <title>금융권 SSRF 모의해킹 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
-        .code-font { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Terminal Styling */
-        .terminal-window {
-            background-color: #1e293b;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        .terminal-header {
-            background-color: #0f172a;
-            padding: 0.5rem 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        .dot-red { background-color: #ef4444; }
-        .dot-yellow { background-color: #f59e0b; }
-        .dot-green { background-color: #22c55e; }
+        .code-font { font-family: 'Courier New', monospace; }
     </style>
 </head>
-<body class="bg-white p-8">
+<body class="bg-gray-100 p-4">
 
-    <div class="max-w-4xl mx-auto space-y-6">
-        
-        <!-- Header Section -->
-        <div>
-            <div class="flex items-center gap-3 mb-2">
-                <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                    <i class="fas fa-network-wired text-xl"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-800">SSRF (Server-Side Request Forgery)</h1>
-            </div>
-            <p class="text-slate-500 text-sm">
-                공격자가 서버를 유도하여, 서버가 직접 내부 네트워크 리소스나 외부 시스템에 요청을 보내도록 조작하는 취약점입니다.
-            </p>
-        </div>
-
-        <!-- Simulation Interface -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-start mb-4">
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-orange-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
                 <div>
-                    <h3 class="text-lg font-bold">이미지 프록시 서비스</h3>
-                    <p class="text-sm text-slate-500">이미지 URL을 입력하면 서버가 대신 다운로드하여 보여줍니다.</p>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-046</h1>
+                    <p class="text-sm">서버 사이드 요청 위조 (SSRF) | 위험도: 4 (높음) | 통제구분: 5.8.4 서비스 보호</p>
                 </div>
-                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded font-bold">High Risk</span>
-            </div>
-
-            <!-- Input Area -->
-            <div class="flex gap-2 mb-6">
-                <div class="flex-1 relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="text-slate-400 font-mono text-sm">Target:</span>
-                    </div>
-                    <input type="text" id="ssrf-input" class="w-full pl-16 p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none code-font text-sm" value="https://example.com/image.png">
-                </div>
-                <button onclick="simSSRF()" class="bg-slate-800 text-white px-6 py-2 rounded hover:bg-slate-700 flex items-center gap-2 transition-colors">
-                    <i class="fas fa-bolt text-yellow-400"></i> Fetch
-                </button>
-            </div>
-
-            <!-- Scenario Hints -->
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition group" onclick="setPayload('http://localhost/admin')">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs font-bold text-slate-600 group-hover:text-emerald-700">Scenario 1: Internal Admin</span>
-                        <i class="fas fa-arrow-right text-slate-300 group-hover:text-emerald-500 text-xs"></i>
-                    </div>
-                    <code class="text-emerald-600 text-xs break-all bg-white px-1 py-0.5 rounded border border-slate-200">http://localhost/admin</code>
-                </div>
-                <div class="p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition group" onclick="setPayload('http://169.254.169.254/latest/meta-data/')">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs font-bold text-slate-600 group-hover:text-emerald-700">Scenario 2: AWS Metadata</span>
-                        <i class="fas fa-arrow-right text-slate-300 group-hover:text-emerald-500 text-xs"></i>
-                    </div>
-                    <code class="text-emerald-600 text-xs break-all bg-white px-1 py-0.5 rounded border border-slate-200">http://169.254.169.254/...</code>
-                </div>
-            </div>
-
-            <!-- Result Terminal -->
-            <div class="terminal-window">
-                 <div class="terminal-header">
-                    <div class="flex items-center">
-                        <div class="dot dot-red"></div>
-                        <div class="dot dot-yellow"></div>
-                        <div class="dot dot-green"></div>
-                        <span class="text-xs text-slate-400 font-mono ml-3">server_response.log</span>
-                    </div>
-                    <span id="ssrf-status" class="text-xs text-slate-500 font-mono">IDLE</span>
-                </div>
-                <div id="ssrf-result" class="p-4 code-font text-sm text-slate-300 min-h-[150px] overflow-auto whitespace-pre-wrap">Waiting for request...</div>
             </div>
         </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
+                
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">OO은행</h2>
+                            <p class="text-sm">자산관리 포털 - 대출상품 이미지 조회 서비스</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-orange-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: URL 파라미터 검증 미흡
+                    </div>
+                </div>
+
+                <!-- 입력 폼 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-image text-orange-600"></i>
+                        상품 이미지 프록시 서비스
+                    </h3>
+                    
+                    <p class="text-sm text-gray-600 mb-3">
+                        외부 마케팅 이미지를 서버에서 대신 다운로드하여 표시합니다
+                    </p>
+                    
+                    <label class="block text-sm font-bold mb-2">이미지 URL</label>
+                    <input type="text" id="ssrfInput" 
+                           class="w-full p-2 border border-gray-300 rounded mb-3 code-font text-sm" 
+                           value="https://cdn.shinhan.com/products/loan_banner.jpg"
+                           placeholder="https://example.com/image.jpg">
+                    
+                    <div class="flex justify-between">
+                        <button onclick="resetInput()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                            <i class="fas fa-redo"></i> 초기화
+                        </button>
+                        <button onclick="submitSSRF()" 
+                                class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded">
+                            <i class="fas fa-download"></i> 이미지 가져오기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-orange-400"></i>
+                        SSRF 공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="setPayload(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-server"></i> 시나리오 1: 내부 관리자 페이지 접근
+                        </button>
+                        <button onclick="setPayload(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-cloud"></i> 시나리오 2: AWS 메타데이터 탈취
+                        </button>
+                        <button onclick="setPayload(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-database"></i> 시나리오 3: 내부 DB 스캔
+                        </button>
+                        <button onclick="setPayload(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-file"></i> 시나리오 4: 민감 파일 읽기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 취약한 코드 - URL 검증 없음</span>
+@RestController
+public class ImageProxyController {
+    
+    @GetMapping("/api/proxy/image")
+    public ResponseEntity&lt;byte[]&gt; getImage(
+        @RequestParam String url) {
         
-        <!-- Explanation Box -->
-        <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg flex gap-3">
-            <i class="fas fa-info-circle text-blue-500 mt-1"></i>
-            <div class="text-sm text-blue-800">
-                <p class="font-bold mb-1">SSRF가 왜 위험한가요?</p>
-                <p>웹 서버는 방화벽 내부에 위치하여 내부망에 접근할 수 있는 권한(Privilege)을 가진 경우가 많습니다. 공격자는 SSRF를 통해 이 신뢰 관계를 악용하여 외부에서 접근할 수 없는 내부 시스템(DB, 관리자 페이지 등)을 스캔하거나 데이터를 탈취할 수 있습니다.</p>
+        <span class="text-red-400">// URL 검증 없이 바로 요청!</span>
+        RestTemplate restTemplate = new RestTemplate();
+        byte[] imageBytes = restTemplate
+            .getForObject(url, byte[].class);
+        
+        return ResponseEntity.ok(imageBytes);
+    }
+}</code></pre>
+                </div>
+
+            </div>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 서버 응답 결과 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-terminal"></i> 서버 응답
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font">
+                            IDLE
+                        </span>
+                    </div>
+                    <div id="serverResponse" class="p-5 min-h-[300px] bg-gray-900 text-green-400 code-font text-xs overflow-auto">
+                        <div class="text-gray-500">
+                            > Waiting for request...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-orange-100 border-l-4 border-orange-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-orange-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-orange-700 space-y-1"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[400px]"><code><span class="text-green-400">// ✅ 안전한 코드 - 화이트리스트 검증</span>
+@RestController
+public class SecureImageProxyController {
+    
+    <span class="text-green-400">// 허용된 도메인 목록</span>
+    private static final Set&lt;String&gt; ALLOWED_DOMAINS = 
+        Set.of("cdn.shinhan.com", "images.shinhan.com");
+    
+    <span class="text-green-400">// 차단할 IP 대역 (내부망, 메타데이터)</span>
+    private static final Set&lt;String&gt; BLOCKED_IPS = Set.of(
+        "127.0.0.1", "localhost", 
+        "169.254.169.254", "metadata.google.internal",
+        "10.", "172.16.", "192.168."
+    );
+    
+    @GetMapping("/api/proxy/image")
+    public ResponseEntity&lt;byte[]&gt; getImage(
+        @RequestParam String url) throws Exception {
+        
+        <span class="text-green-400">// 1. URL 형식 검증</span>
+        if (!url.startsWith("https://")) {
+            throw new IllegalArgumentException(
+                "HTTPS만 허용됩니다");
+        }
+        
+        <span class="text-green-400">// 2. 도메인 화이트리스트 검증</span>
+        URL urlObj = new URL(url);
+        String host = urlObj.getHost();
+        
+        boolean isAllowed = ALLOWED_DOMAINS.stream()
+            .anyMatch(domain -> host.equals(domain) || 
+                      host.endsWith("." + domain));
+        
+        if (!isAllowed) {
+            throw new SecurityException(
+                "허용되지 않은 도메인: " + host);
+        }
+        
+        <span class="text-green-400">// 3. IP 주소로 변환하여 내부망 체크</span>
+        InetAddress address = InetAddress.getByName(host);
+        String ip = address.getHostAddress();
+        
+        <span class="text-green-400">// 사설 IP 대역 차단</span>
+        if (address.isSiteLocalAddress() || 
+            address.isLoopbackAddress() ||
+            address.isLinkLocalAddress()) {
+            throw new SecurityException(
+                "내부 IP 접근 차단: " + ip);
+        }
+        
+        <span class="text-green-400">// 추가 IP 블랙리스트 체크</span>
+        for (String blocked : BLOCKED_IPS) {
+            if (ip.startsWith(blocked)) {
+                throw new SecurityException(
+                    "차단된 IP: " + ip);
+            }
+        }
+        
+        <span class="text-green-400">// 4. Timeout 설정 (5초)</span>
+        RestTemplate restTemplate = new RestTemplate();
+        SimpleClientHttpRequestFactory factory = 
+            new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(5000);
+        restTemplate.setRequestFactory(factory);
+        
+        <span class="text-green-400">// 5. 안전하게 요청</span>
+        byte[] imageBytes = restTemplate
+            .getForObject(url, byte[].class);
+        
+        <span class="text-green-400">// 6. 응답 크기 제한 (10MB)</span>
+        if (imageBytes.length > 10 * 1024 * 1024) {
+            throw new IllegalArgumentException(
+                "이미지 크기 초과");
+        }
+        
+        return ResponseEntity.ok(imageBytes);
+    }
+}</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-orange-600"></i>
+                        SSRF 방어 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>도메인 화이트리스트:</strong> 허용된 도메인만 접근</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>내부 IP 차단:</strong> 127.0.0.1, 10.x, 192.168.x 차단</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>메타데이터 차단:</strong> 169.254.169.254 차단</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>프로토콜 제한:</strong> HTTPS만 허용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>Timeout 설정:</strong> 5초 제한</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-046 SSRF</div>
+                        <div><strong>판정:</strong> <span id="judgement"></span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-orange-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 금융권 SSRF 피해 사례
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>내부 관리자 페이지 접근</strong><br>고객 정보 조회, 권한 탈취</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>AWS 크레덴셜 탈취</strong><br>S3 버킷 접근, DB 접근</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>내부 포트 스캔</strong><br>네트워크 구조 파악</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>민감 파일 읽기</strong><br>설정 파일, 키 파일 탈취</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-
     </div>
 
     <script>
-        function setPayload(val) {
-            document.getElementById('ssrf-input').value = val;
-            // Add slight highlight effect
-            const input = document.getElementById('ssrf-input');
-            input.classList.add('bg-yellow-50');
-            setTimeout(() => input.classList.remove('bg-yellow-50'), 300);
+        function getPayload(type) {
+            if (type === 1) {
+                return "http://127.0.0.1:8080/admin/dashboard";
+            } else if (type === 2) {
+                return "http://169.254.169.254/latest/meta-data/iam/security-credentials/";
+            } else if (type === 3) {
+                return "http://10.10.1.100:3306";
+            } else if (type === 4) {
+                return "file:///etc/passwd";
+            }
+            return '';
         }
 
-        function simSSRF() {
-            const url = document.getElementById('ssrf-input').value;
-            const resultBox = document.getElementById('ssrf-result');
-            const statusBox = document.getElementById('ssrf-status');
+        function resetInput() {
+            document.getElementById('ssrfInput').value = 'https://cdn.shinhan.com/products/loan_banner.jpg';
+            document.getElementById('serverResponse').innerHTML = '<div class="text-gray-500">> Waiting for request...</div>';
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+            document.getElementById('statusBadge').textContent = 'IDLE';
+            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+        }
+
+        function setPayload(type) {
+            document.getElementById('ssrfInput').value = getPayload(type);
+            var input = document.getElementById('ssrfInput');
+            input.classList.add('bg-yellow-100');
+            setTimeout(function() {
+                input.classList.remove('bg-yellow-100');
+            }, 300);
+        }
+
+        async function submitSSRF() {
+            var url = document.getElementById('ssrfInput').value;
+            var responseBox = document.getElementById('serverResponse');
+            var badge = document.getElementById('statusBadge');
             
-            // UI Loading State
-            resultBox.innerHTML = `<span class="text-yellow-400 animate-pulse">> Connecting to ${url}...</span>`;
-            statusBox.innerText = "FETCHING...";
-            statusBox.className = "text-xs text-yellow-500 font-mono font-bold animate-pulse";
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
 
-            setTimeout(() => {
-                let response = "";
-                let isCritical = false;
+            badge.textContent = 'FETCHING...';
+            badge.className = 'text-xs bg-yellow-500 text-gray-900 px-3 py-1 rounded code-font animate-pulse';
+            responseBox.innerHTML = '<span class="text-yellow-400 animate-pulse">> Connecting to ' + escapeHtml(url) + '...</span>';
+            
+            await sleep(1000);
 
-                // --- Simulation Logic (Mocking Server Behavior) ---
-                
-                // 1. Localhost / Loopback Logic
-                if (url.includes('localhost') || url.includes('127.0.0.1')) {
-                    if (url.includes('admin')) {
-                        response = `HTTP/1.1 200 OK\nDate: Mon, 25 Oct 2024 10:00:00 GMT\nServer: Apache/2.4.41 (Ubuntu)\nContent-Type: text/html\n\n<html>\n<body>\n  <h1>🔐 Internal Admin Dashboard</h1>\n  <hr>\n  <p>Welcome, Administrator.</p>\n  <p><strong>Secret Key:</strong> SUPER_SECRET_ADMIN_KEY_1234</p>\n  <button>Restart Server</button>\n  <button>Delete Database</button>\n</body>\n</html>`;
-                        isCritical = true;
-                    } else {
-                        response = `HTTP/1.1 403 Forbidden\nServer: Internal-Gateway\n\nAccess to root is denied. Try /admin for dashboard.`;
-                    }
-                } 
-                // 2. AWS Metadata Service Logic
-                else if (url.includes('169.254.169.254')) { 
-                    response = `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\n  "instance-id": "i-0123456789abcdef0",\n  "ami-id": "ami-0abcdef1234567890",\n  "security-groups": "launch-wizard-1",\n  "iam": {\n    "security-credentials": {\n      "role-name": "s3-admin-role",\n      "AccessKeyId": "AKIAIOSFODNN7EXAMPLE",\n      "SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"\n    }\n  }\n}`;
-                    isCritical = true;
-                } 
-                // 3. Normal External URL
-                else if (url.startsWith('http')) {
-                    response = `HTTP/1.1 200 OK\nContent-Type: image/png\nContent-Length: 4502\n\n[Binary Image Data Omitted]\n(Successfully fetched external image)`;
-                } 
-                // 4. Invalid Protocol
-                else {
-                    response = `Error: Protocol not supported or Host unreachable.\nOnly HTTP/HTTPS protocols are allowed.`;
-                }
+            var response = '';
+            var isVulnerable = false;
+            var attackType = '';
 
-                // --- Render Result ---
-                if(isCritical) {
-                    resultBox.innerHTML = `<span class="text-green-400 font-bold">[SUCCESS] Response received from internal service:</span>\n\n${escapeHtml(response)}`;
-                    statusBox.innerText = "200 OK (LEAKED)";
-                    statusBox.className = "text-xs text-red-500 font-mono font-bold";
-                } else if (response.startsWith("Error")) {
-                    resultBox.innerHTML = `<span class="text-red-400">${response}</span>`;
-                    statusBox.innerText = "ERROR";
-                    statusBox.className = "text-xs text-red-500 font-mono";
+            // 공격 시나리오 판별
+            if (url.indexOf('127.0.0.1') !== -1 || url.indexOf('localhost') !== -1) {
+                if (url.indexOf('admin') !== -1 || url.indexOf('8080') !== -1) {
+                    attackType = '내부 관리자 페이지';
+                    response = 'HTTP/1.1 200 OK\n';
+                    response += 'Date: Mon, 08 Dec 2024 10:00:00 GMT\n';
+                    response += 'Server: Apache/2.4.41 (Ubuntu)\n';
+                    response += 'Content-Type: text/html\n\n';
+                    response += '<html>\n<body>\n';
+                    response += '  <h1>🔐 관리자 대시보드</h1>\n';
+                    response += '  <hr>\n';
+                    response += '  <h2>고객 정보 관리</h2>\n';
+                    response += '  <table>\n';
+                    response += '    <tr><td>고객명</td><td>계좌번호</td><td>잔액</td></tr>\n';
+                    response += '    <tr><td>김철수</td><td>110-123-456789</td><td>50,000,000원</td></tr>\n';
+                    response += '    <tr><td>이영희</td><td>110-987-654321</td><td>120,000,000원</td></tr>\n';
+                    response += '  </table>\n';
+                    response += '  <button>전체 고객 다운로드</button>\n';
+                    response += '</body>\n</html>';
+                    isVulnerable = true;
                 } else {
-                    resultBox.innerHTML = `<span class="text-slate-300">${escapeHtml(response)}</span>`;
-                    statusBox.innerText = "200 OK";
-                    statusBox.className = "text-xs text-green-500 font-mono";
+                    response = 'HTTP/1.1 403 Forbidden\n';
+                    response += 'Server: Internal-Gateway\n\n';
+                    response += 'Access denied. Try /admin';
                 }
+            } else if (url.indexOf('169.254.169.254') !== -1) {
+                attackType = 'AWS 메타데이터';
+                response = 'HTTP/1.1 200 OK\n';
+                response += 'Content-Type: application/json\n\n';
+                response += '{\n';
+                response += '  "Code": "Success",\n';
+                response += '  "LastUpdated": "2024-12-08T10:00:00Z",\n';
+                response += '  "Type": "AWS-HMAC",\n';
+                response += '  "AccessKeyId": "AKIAIOSFODNN7EXAMPLE",\n';
+                response += '  "SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",\n';
+                response += '  "Token": "AQoEXAMPLEH4aoAH0gNCAPyJ...",\n';
+                response += '  "Expiration": "2024-12-08T16:00:00Z"\n';
+                response += '}';
+                isVulnerable = true;
+            } else if (url.indexOf('10.') !== -1 || url.indexOf('192.168.') !== -1) {
+                attackType = '내부 DB 스캔';
+                response = '> Connecting to ' + escapeHtml(url) + '\n';
+                response += '> MySQL Server detected\n';
+                response += '> Port: 3306 OPEN\n';
+                response += '> Version: MySQL 8.0.28\n';
+                response += '> Databases: customers, transactions, accounts\n';
+                response += '> [!] 내부망 서버 정보 노출!';
+                isVulnerable = true;
+            } else if (url.indexOf('file://') !== -1) {
+                attackType = '민감 파일 읽기';
+                response = 'root:x:0:0:root:/root:/bin/bash\n';
+                response += 'daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\n';
+                response += 'shinhan:x:1000:1000::/home/shinhan:/bin/bash\n';
+                response += 'mysql:x:108:113:MySQL Server:/var/lib/mysql:/bin/false\n';
+                response += '\n[!] 시스템 파일 접근 성공!';
+                isVulnerable = true;
+            } else if (url.indexOf('https://') === 0) {
+                response = 'HTTP/1.1 200 OK\n';
+                response += 'Content-Type: image/jpeg\n';
+                response += 'Content-Length: 45023\n\n';
+                response += '[Binary Image Data]\n';
+                response += '✓ 정상적인 외부 이미지 다운로드 완료';
+            } else {
+                response = 'Error: Invalid protocol or unreachable host\n';
+                response += 'Only HTTPS is allowed';
+            }
 
-            }, 800); // 0.8s Simulated delay
+            // 결과 표시
+            if (isVulnerable) {
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 서버에서 URL 파라미터 검증 없이 요청</div>' +
+                    '<div>2. ' + attackType + ' 접근 시도</div>' +
+                    '<div>3. 내부 리소스 응답 수신</div>' +
+                    '<div>4. 공격자에게 민감정보 노출</div>';
+
+                responseBox.innerHTML = '<span class="text-red-400 font-bold">[!] SSRF 공격 성공!</span>\n\n' + escapeHtml(response);
+                badge.textContent = '200 OK (LEAKED)';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약</span>';
+                document.getElementById('evidence').textContent = 'URL 파라미터 검증 없음';
+                document.getElementById('damageBox').classList.remove('hidden');
+            } else if (response.indexOf('Error') !== -1) {
+                responseBox.innerHTML = '<span class="text-red-400">' + escapeHtml(response) + '</span>';
+                badge.textContent = 'ERROR';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font';
+            } else {
+                responseBox.innerHTML = '<span class="text-green-400">' + escapeHtml(response) + '</span>';
+                badge.textContent = '200 OK';
+                badge.className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-green-400">양호</span>';
+                document.getElementById('evidence').textContent = '안전한 외부 URL';
+            }
         }
 
-        // Helper to prevent inner HTML rendering of the 'response' code
         function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function sleep(ms) {
+            return new Promise(function(resolve) {
+                setTimeout(resolve, ms);
+            });
         }
     </script>
 </body>
