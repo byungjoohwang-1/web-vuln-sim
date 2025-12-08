@@ -3,122 +3,464 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload Vulnerability</title>
+    <title>금융권 파일 업로드 취약점 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
     </style>
 </head>
-<body class="bg-slate-50 p-8 h-screen flex flex-col">
+<body class="bg-gray-100 p-4">
 
-    <div class="mb-6">
-        <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                <i class="fas fa-file-upload text-xl"></i>
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-red-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-002</h1>
+                    <p class="text-sm">악성파일 업로드 | 위험도: 5 (매우 높음) | 통제구분: 5.8.4 서비스 보호</p>
+                </div>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800">File Upload Vulnerability</h1>
         </div>
-        <p class="text-slate-500 text-sm">
-            파일 확장자나 내용을 검증하지 않아 웹 쉘(Web Shell)과 같은 악성 스크립트 파일이 서버에 업로드되는 취약점입니다.
-        </p>
     </div>
 
-    <div class="flex-1 flex flex-col md:flex-row gap-8">
-        
-        <!-- Upload Area -->
-        <div class="w-full md:w-1/2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="font-bold text-lg mb-6 text-slate-700">프로필 이미지 변경</h3>
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center hover:bg-slate-50 transition-colors relative">
-                <i class="fas fa-cloud-upload-alt text-5xl text-slate-300 mb-4"></i>
-                <p class="text-slate-500 mb-6">업로드할 파일을 선택하세요</p>
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
                 
-                <!-- Simulated File Input -->
-                <div class="max-w-xs mx-auto space-y-3">
-                    <select id="file-select" class="w-full p-3 border border-slate-300 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                        <option value="profile.jpg" data-type="image">📸 my_profile.jpg (정상 이미지)</option>
-                        <option value="webshell.php" data-type="malware">💀 exploit.php (웹 쉘 스크립트)</option>
-                        <option value="malware.exe" data-type="malware">💣 game_crack.exe (실행 파일)</option>
-                    </select>
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">OO은행</h2>
+                            <p class="text-sm">인터넷뱅킹 - 금융상담 신청 시스템</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: 파일 확장자 검증 미흡
+                    </div>
+                </div>
+
+                <!-- 업로드 폼 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-file-upload text-red-600"></i>
+                        금융상담 신청서 제출
+                    </h3>
                     
-                    <button onclick="uploadFile()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md flex items-center justify-center gap-2">
-                        <i class="fas fa-upload"></i> 업로드 시작
+                    <p class="text-sm text-gray-600 mb-4">
+                        재직증명서, 소득증빙서류 등을 첨부해주세요
+                    </p>
+                    
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-4 bg-gray-50">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-gray-300 mb-3"></i>
+                        <p class="text-sm text-gray-600 mb-4">업로드할 파일을 선택하세요</p>
+                        
+                        <select id="fileSelect" class="w-full p-2 border border-gray-300 rounded mb-3 bg-white">
+                            <option value="document.pdf" data-type="safe">📄 재직증명서.pdf (정상 파일)</option>
+                            <option value="salary.jpg" data-type="safe">📸 급여명세서.jpg (정상 이미지)</option>
+                            <option value="webshell.jsp" data-type="webshell">💀 invoice.jsp (웹쉘 JSP)</option>
+                            <option value="backdoor.php" data-type="webshell">💀 receipt.php (웹쉘 PHP)</option>
+                            <option value="malware.exe" data-type="exe">💣 document.exe (실행 파일)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button onclick="resetUpload()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                            <i class="fas fa-redo"></i> 초기화
+                        </button>
+                        <button onclick="uploadFile()" 
+                                class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded">
+                            <i class="fas fa-upload"></i> 파일 업로드
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 설명 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-red-400"></i>
+                        웹쉘 (Web Shell) 이란?
+                    </h3>
+                    <div class="text-sm space-y-2">
+                        <p>업로드 취약점을 통해 해커가 원격에서 웹 서버를 조종할 수 있도록 작성한 웹 스크립트</p>
+                        <div class="bg-gray-900 p-3 rounded mt-2 code-font text-xs">
+                            <span class="text-red-400">// 웹쉘 예시 (JSP)</span><br/>
+                            &lt;% Runtime.getRuntime()<br/>
+                            &nbsp;&nbsp;.exec(request.getParameter("cmd")); %&gt;
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">
+                            ⚠️ 업로드 후 실행 시 시스템 명령어 실행 가능
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 취약한 코드 - 파일 검증 없음</span>
+@PostMapping("/upload")
+public String uploadFile(
+    @RequestParam("file") MultipartFile file) {
+    
+    <span class="text-red-400">// 파일명만 받아서 저장! (위험)</span>
+    String fileName = file.getOriginalFilename();
+    String uploadPath = "/uploads/" + fileName;
+    
+    <span class="text-red-400">// 확장자 검증 없이 저장</span>
+    file.transferTo(new File(uploadPath));
+    
+    return "success";
+}</code></pre>
+                </div>
+
+            </div>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 서버 로그 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-terminal"></i> 서버 로그
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font">
+                            READY
+                        </span>
+                    </div>
+                    <div id="serverLog" class="p-5 min-h-[300px] bg-gray-900 text-green-400 code-font text-xs space-y-1 overflow-auto">
+                        <div class="text-gray-500">[SYSTEM] Server ready. Waiting for upload...</div>
+                    </div>
+                </div>
+
+                <!-- 공격 성공 오버레이 -->
+                <div id="hackedOverlay" class="hidden fixed inset-0 bg-red-600 bg-opacity-95 flex flex-col items-center justify-center z-50">
+                    <i class="fas fa-biohazard text-8xl text-white mb-6 animate-pulse"></i>
+                    <h2 class="text-4xl font-bold text-white mb-4">SERVER COMPROMISED!</h2>
+                    <p class="text-xl text-white text-center mb-2">웹쉘이 업로드되어 서버가 장악되었습니다</p>
+                    <p class="text-white text-center mb-6 opacity-90">공격자가 시스템 전체에 접근 가능합니다</p>
+                    <button onclick="resetUpload()" 
+                            class="bg-white text-red-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 shadow-lg">
+                        <i class="fas fa-redo"></i> 시스템 복구
                     </button>
                 </div>
-            </div>
 
-            <div class="mt-6 p-4 bg-blue-50 text-blue-800 text-sm rounded-lg">
-                <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Tip</p>
-                <p>일반적으로 서버는 <code>.jpg</code>, <code>.png</code> 등 이미지만 허용해야 합니다. 검증이 없을 경우 <code>.php</code> 파일을 올려 서버 명령어를 실행할 수 있습니다.</p>
-            </div>
-        </div>
-
-        <!-- Result Area -->
-        <div class="w-full md:w-1/2 bg-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 flex flex-col relative overflow-hidden">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
-                <span class="text-slate-400 font-mono text-xs">Server Logs</span>
-                <div class="flex gap-1.5">
-                    <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-red-700 space-y-1"></div>
                 </div>
-            </div>
-            
-            <div id="log-container" class="flex-1 font-mono text-sm space-y-2 overflow-y-auto max-h-[400px]">
-                <div class="text-slate-500">[SYSTEM] Server ready. Waiting for upload...</div>
-            </div>
-            
-            <!-- Hacked Overlay -->
-            <div id="hacked-overlay" class="absolute inset-0 bg-red-600/90 flex flex-col items-center justify-center z-10 hidden backdrop-blur-sm">
-                <i class="fas fa-biohazard text-6xl text-white mb-4 animate-pulse"></i>
-                <h2 class="text-3xl font-bold text-white mb-2">SERVER COMPROMISED</h2>
-                <p class="text-white text-center px-6">악성 스크립트(Web Shell)가 실행되었습니다.<br>공격자가 시스템 제어권을 획득했습니다.</p>
-                <button onclick="resetSim()" class="mt-8 bg-white text-red-600 px-6 py-2 rounded-full font-bold shadow-lg hover:bg-red-50">
-                    시스템 복구
-                </button>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[400px]"><code><span class="text-green-400">// ✅ 안전한 코드 - 다층 검증</span>
+@PostMapping("/upload")
+public String uploadFile(
+    @RequestParam("file") MultipartFile file) 
+    throws Exception {
+    
+    <span class="text-green-400">// 1. 확장자 화이트리스트 검증</span>
+    String fileName = file.getOriginalFilename();
+    String extension = fileName.substring(
+        fileName.lastIndexOf(".") + 1).toLowerCase();
+    
+    Set&lt;String&gt; allowedExtensions = Set.of(
+        "jpg", "jpeg", "png", "pdf", "hwp"
+    );
+    
+    if (!allowedExtensions.contains(extension)) {
+        throw new SecurityException(
+            "허용되지 않은 확장자: " + extension);
+    }
+    
+    <span class="text-green-400">// 2. 파일 MIME 타입 검증</span>
+    String contentType = file.getContentType();
+    Set&lt;String&gt; allowedMimeTypes = Set.of(
+        "image/jpeg", "image/png", 
+        "application/pdf", "application/x-hwp"
+    );
+    
+    if (!allowedMimeTypes.contains(contentType)) {
+        throw new SecurityException(
+            "허용되지 않은 파일 타입");
+    }
+    
+    <span class="text-green-400">// 3. 파일 매직 넘버 검증 (실제 내용)</span>
+    byte[] fileBytes = file.getBytes();
+    if (!isValidFileSignature(fileBytes, extension)) {
+        throw new SecurityException(
+            "파일 내용이 확장자와 일치하지 않음");
+    }
+    
+    <span class="text-green-400">// 4. 파일 크기 제한 (10MB)</span>
+    if (file.getSize() > 10 * 1024 * 1024) {
+        throw new IllegalArgumentException(
+            "파일 크기 초과 (최대 10MB)");
+    }
+    
+    <span class="text-green-400">// 5. 안전한 파일명 생성 (UUID)</span>
+    String safeFileName = UUID.randomUUID().toString() 
+        + "." + extension;
+    
+    <span class="text-green-400">// 6. 실행 불가능한 디렉토리에 저장</span>
+    String uploadPath = "/data/uploads/" + safeFileName;
+    Path path = Paths.get(uploadPath);
+    Files.write(path, fileBytes);
+    
+    <span class="text-green-400">// 7. DB에 메타데이터 저장</span>
+    FileMetadata metadata = new FileMetadata();
+    metadata.setOriginalName(fileName);
+    metadata.setSafeName(safeFileName);
+    metadata.setUploadTime(LocalDateTime.now());
+    fileRepository.save(metadata);
+    
+    return "success";
+}
+
+<span class="text-green-400">// 파일 매직 넘버 검증</span>
+private boolean isValidFileSignature(
+    byte[] bytes, String extension) {
+    
+    if (bytes.length < 4) return false;
+    
+    <span class="text-green-400">// JPEG: FF D8 FF</span>
+    if (extension.equals("jpg") || extension.equals("jpeg")) {
+        return bytes[0] == (byte)0xFF && 
+               bytes[1] == (byte)0xD8 && 
+               bytes[2] == (byte)0xFF;
+    }
+    
+    <span class="text-green-400">// PNG: 89 50 4E 47</span>
+    if (extension.equals("png")) {
+        return bytes[0] == (byte)0x89 && 
+               bytes[1] == (byte)0x50 && 
+               bytes[2] == (byte)0x4E && 
+               bytes[3] == (byte)0x47;
+    }
+    
+    <span class="text-green-400">// PDF: 25 50 44 46</span>
+    if (extension.equals("pdf")) {
+        return bytes[0] == (byte)0x25 && 
+               bytes[1] == (byte)0x50 && 
+               bytes[2] == (byte)0x44 && 
+               bytes[3] == (byte)0x46;
+    }
+    
+    return true;
+}</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-red-600"></i>
+                        파일 업로드 방어 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>확장자 화이트리스트:</strong> jpg, png, pdf만 허용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>MIME 타입 검증:</strong> Content-Type 확인</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>매직 넘버 검증:</strong> 파일 실제 내용 확인</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>파일명 변경:</strong> UUID로 안전한 이름 생성</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>실행 권한 제거:</strong> 업로드 디렉토리 실행 불가</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-002 악성파일 업로드</div>
+                        <div><strong>판정:</strong> <span id="judgement"></span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-red-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 금융권 악성파일 업로드 피해
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>시스템 명령어 실행</strong><br>서버 완전 장악</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>DB 접근</strong><br>고객 정보 대량 유출</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>인접 서버 침입</strong><br>내부망 확산</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>랜섬웨어 배포</strong><br>시스템 암호화</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        function uploadFile() {
-            const select = document.getElementById('file-select');
-            const file = select.value;
-            const type = select.options[select.selectedIndex].dataset.type;
-            const logs = document.getElementById('log-container');
-
-            // Log: Upload Start
-            addLog(`[UPLOAD] Receiving file: ${file}...`, 'text-blue-400');
-
-            setTimeout(() => {
-                if (type === 'image') {
-                    addLog(`[SUCCESS] File saved to /uploads/${file}`, 'text-green-400');
-                    addLog(`[INFO] Image processed successfully.`, 'text-slate-400');
-                } else {
-                    addLog(`[WARNING] Executable file detected: ${file}`, 'text-yellow-400');
-                    addLog(`[DANGER] Executing script content...`, 'text-red-500 font-bold');
-                    
-                    setTimeout(() => {
-                        document.getElementById('hacked-overlay').classList.remove('hidden');
-                    }, 1000);
-                }
-            }, 800);
+        function resetUpload() {
+            document.getElementById('fileSelect').value = 'document.pdf';
+            document.getElementById('serverLog').innerHTML = 
+                '<div class="text-gray-500">[SYSTEM] Server ready. Waiting for upload...</div>';
+            document.getElementById('hackedOverlay').classList.add('hidden');
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+            document.getElementById('statusBadge').textContent = 'READY';
+            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
         }
 
-        function addLog(msg, colorClass = 'text-slate-300') {
-            const div = document.createElement('div');
-            div.className = colorClass;
-            div.innerText = `> ${msg}`;
-            const container = document.getElementById('log-container');
+        async function uploadFile() {
+            var select = document.getElementById('fileSelect');
+            var fileName = select.value;
+            var fileType = select.options[select.selectedIndex].dataset.type;
+            var logBox = document.getElementById('serverLog');
+            var badge = document.getElementById('statusBadge');
+            
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+
+            badge.textContent = 'UPLOADING...';
+            badge.className = 'text-xs bg-yellow-500 text-gray-900 px-3 py-1 rounded code-font animate-pulse';
+            
+            addLog('[UPLOAD] Receiving file: ' + fileName, 'text-blue-400');
+            await sleep(500);
+            addLog('[INFO] File size: ' + Math.floor(Math.random() * 500 + 100) + ' KB', 'text-gray-400');
+            await sleep(500);
+            
+            if (fileType === 'safe') {
+                addLog('[VALIDATION] Extension check: PASS', 'text-green-400');
+                await sleep(300);
+                addLog('[VALIDATION] MIME type check: PASS', 'text-green-400');
+                await sleep(300);
+                addLog('[SUCCESS] File saved to /uploads/' + fileName, 'text-green-400');
+                
+                badge.textContent = 'SUCCESS';
+                badge.className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-green-400">양호</span>';
+                document.getElementById('evidence').textContent = '허용된 파일 형식';
+                
+            } else if (fileType === 'webshell') {
+                addLog('[VALIDATION] Extension check: FAILED', 'text-red-400');
+                await sleep(300);
+                addLog('[WARNING] Suspicious file detected: JSP/PHP', 'text-yellow-400');
+                await sleep(300);
+                addLog('[DANGER] No validation - File uploaded!', 'text-red-500');
+                await sleep(500);
+                addLog('[ALERT] Web shell deployed at /uploads/' + fileName, 'text-red-500 font-bold');
+                await sleep(500);
+                addLog('[CRITICAL] Executing remote commands...', 'text-red-500 font-bold');
+                
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 웹쉘 파일 업로드 (JSP/PHP)</div>' +
+                    '<div>2. 업로드된 파일 실행 권한 획득</div>' +
+                    '<div>3. 시스템 명령어 실행 (whoami, ls 등)</div>' +
+                    '<div>4. DB 접근 및 고객 정보 탈취</div>' +
+                    '<div>5. 인접 서버로 침입 확산</div>';
+                
+                await sleep(1000);
+                
+                badge.textContent = 'HACKED';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약</span>';
+                document.getElementById('evidence').textContent = '악성 스크립트 파일 업로드 가능';
+                document.getElementById('damageBox').classList.remove('hidden');
+                
+                document.getElementById('hackedOverlay').classList.remove('hidden');
+                
+            } else if (fileType === 'exe') {
+                addLog('[VALIDATION] Extension check: FAILED', 'text-red-400');
+                await sleep(300);
+                addLog('[WARNING] Executable file detected: EXE', 'text-yellow-400');
+                await sleep(300);
+                addLog('[DANGER] File uploaded without validation!', 'text-red-500');
+                await sleep(500);
+                addLog('[ALERT] Malware deployed!', 'text-red-500 font-bold');
+                
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 실행 파일 업로드 (EXE)</div>' +
+                    '<div>2. 서버에서 악성코드 실행</div>' +
+                    '<div>3. 랜섬웨어 배포 시작</div>' +
+                    '<div>4. 파일 암호화 진행</div>';
+                
+                await sleep(1000);
+                
+                badge.textContent = 'INFECTED';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약</span>';
+                document.getElementById('evidence').textContent = '실행 파일 업로드 가능';
+                document.getElementById('damageBox').classList.remove('hidden');
+            }
+        }
+
+        function addLog(msg, colorClass) {
+            var div = document.createElement('div');
+            div.className = colorClass || 'text-gray-400';
+            div.textContent = '> ' + msg;
+            var container = document.getElementById('serverLog');
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
 
-        function resetSim() {
-            document.getElementById('hacked-overlay').classList.add('hidden');
-            const logs = document.getElementById('log-container');
-            logs.innerHTML = '<div class="text-slate-500">[SYSTEM] Server recovered & rebooted.</div>';
+        function sleep(ms) {
+            return new Promise(function(resolve) {
+                setTimeout(resolve, ms);
+            });
         }
     </script>
 </body>
