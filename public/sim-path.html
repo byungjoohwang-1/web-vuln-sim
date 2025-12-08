@@ -1,112 +1,518 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>Path Traversal Simulation</title>
-    <!-- [KR] 설정 파일 로드 / [EN] Load configuration file -->
-    <script src="config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 경로 탐색 취약점 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;}
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .vuln { background-color: #ffe6e6; }
-        .secure { background-color: #e6fffa; }
-        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
-        button { padding: 8px 16px; cursor: pointer; }
-        
-        /* 코드 가이드 섹션 스타일 */
-        .code-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        details { background: #f9f9f9; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        summary { padding: 10px; cursor: pointer; font-weight: bold; }
-        pre { background: #333; color: #fff; padding: 15px; overflow-x: auto; }
-        .comment { color: #999; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
     </style>
 </head>
-<body>
-    <a href="index.html">← Main Menu</a>
-    <h1>📁 경로 조작 및 자원 삽입 (Path Traversal)</h1>
+<body class="bg-gray-100 p-4">
 
-    <div style="background:#f4f7f9; padding:15px; margin-bottom:20px; border-left:5px solid #007bff;">
-        <h3>📘 취약점 개요 (Overview)</h3>
-        <p><strong>[KR]</strong> 검증되지 않은 외부 입력값으로 파일 경로를 조작하여, 시스템의 민감한 파일(예: /etc/passwd)에 무단으로 접근하는 공격입니다.</p>
-        <p><strong>[EN]</strong> An attack where an attacker manipulates file paths using unvalidated input to access sensitive system files (e.g., /etc/passwd).</p>
-    </div>
-    
-    <div class="container">
-        <!-- 취약한 모드 (Vulnerable) -->
-        <div class="box vuln">
-            <h2>🚫 취약한 모드 (Vulnerable)</h2>
-            <p>[KR] 공격: <code>../</code>를 사용해 상위 폴더 접근</p>
-            <p>[EN] Attack: Use <code>../</code> to access parent dir</p>
-            <input type="text" id="vulnInput" value="../../../etc/passwd">
-            <button onclick="runTest('vulnerablePath', 'vulnInput')">Run Attack</button>
-        </div>
-
-        <!-- 안전한 모드 (Secure) -->
-        <div class="box secure">
-            <h2>✅ 안전한 모드 (Secure)</h2>
-            <p>[KR] 방어: 경로 이동 문자 제거 필터링</p>
-            <p>[EN] Defense: Filter path traversal chars</p>
-            <input type="text" id="secureInput" value="../../../etc/passwd">
-            <button onclick="runTest('securePath', 'secureInput')">Run Secure</button>
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-purple-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-010</h1>
+                    <p class="text-sm">파일 다운로드 (경로 탐색) | 위험도: 5 (매우 높음) | 통제구분: 5.8.4 서비스 보호</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 하단 코드 예제 섹션 -->
-    <div class="code-section">
-        <h2>📚 언어별 시큐어 코딩 가이드 (Secure Coding Guide)</h2>
-        
-        <!-- Python 예제 -->
-        <details>
-            <summary>🐍 Python (Django/Flask)</summary>
-            <pre><code><span class="comment"># [KR] 외부 입력값에서 경로 조작 문자열(/, \, .. 등)을 제거해야 한다.</span>
-<span class="comment"># [EN] External input must be filtered to remove directory traversal sequences.</span>
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
+                
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">OO은행</h2>
+                            <p class="text-sm">인터넷뱅킹 - 거래내역 다운로드 서비스</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-purple-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: 파일 경로 검증 미흡
+                    </div>
+                </div>
 
-import os
+                <!-- 다운로드 폼 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-download text-purple-600"></i>
+                        거래내역 다운로드
+                    </h3>
+                    
+                    <p class="text-sm text-gray-600 mb-4">
+                        계좌별 거래내역을 엑셀 파일로 다운로드합니다
+                    </p>
+                    
+                    <label class="block text-sm font-bold mb-2">파일명 입력</label>
+                    <input type="text" id="fileInput" 
+                           class="w-full p-2 border border-gray-300 rounded mb-3 code-font text-sm" 
+                           value="transaction_2024.xlsx"
+                           placeholder="파일명을 입력하세요">
+                    
+                    <div class="bg-blue-50 p-3 rounded mb-4 text-sm">
+                        <p class="font-bold text-blue-700 mb-1">
+                            <i class="fas fa-info-circle"></i> 이용 안내
+                        </p>
+                        <p class="text-blue-600">
+                            거래내역 파일은 /user_data/documents/ 폴더에 저장됩니다
+                        </p>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button onclick="resetDownload()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                            <i class="fas fa-redo"></i> 초기화
+                        </button>
+                        <button onclick="downloadFile()" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded">
+                            <i class="fas fa-download"></i> 다운로드
+                        </button>
+                    </div>
+                </div>
 
-def get_info(request):
-    filename = request.POST.get('request_file')
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-purple-400"></i>
+                        경로 탐색 공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="setPayload(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-folder-open"></i> 시나리오 1: 상위 디렉토리 접근
+                        </button>
+                        <button onclick="setPayload(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-key"></i> 시나리오 2: 설정 파일 다운로드
+                        </button>
+                        <button onclick="setPayload(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-code"></i> 시나리오 3: 소스 코드 유출
+                        </button>
+                        <button onclick="setPayload(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-lock"></i> 시나리오 4: 암호 파일 접근
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 취약한 코드 - 경로 검증 없음</span>
+@GetMapping("/download")
+public ResponseEntity&lt;Resource&gt; downloadFile(
+    @RequestParam String fileName) {
     
-    <span class="comment"># ❌ 취약 (Vulnerable): 입력값을 그대로 사용 (Use input as is)</span>
-    <span class="comment"># with open(filename) as f: ...</span>
-
-    <span class="comment"># ✅ 안전 (Secure): replace() 또는 os.path.basename() 사용</span>
-    filename = filename.replace("..", "").replace("/", "").replace("\\", "")
-    # OR
-    filename = os.path.basename(filename)
+    <span class="text-red-400">// 사용자 입력을 그대로 경로에 결합!</span>
+    String filePath = "/user_data/documents/" + fileName;
     
-    if filename:
-        with open(filename, "r") as f: ...</code></pre>
-        </details>
+    <span class="text-red-400">// 경로 검증 없이 파일 읽기</span>
+    File file = new File(filePath);
+    Resource resource = new FileSystemResource(file);
+    
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" + fileName + "\"")
+        .body(resource);
+}</code></pre>
+                </div>
 
-        <!-- Java 예제 -->
-        <details>
-            <summary>☕ Java (JSP/Servlet)</summary>
-            <pre><code><span class="comment">// [KR] 외부 입력값에 대하여 경로순회 문자열(/, \, &, .. 등)을 제거한다.</span>
-<span class="comment">// [EN] Remove path traversal characters from external input.</span>
+            </div>
 
-String fileName = request.getParameter("P");
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 서버 응답 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-server"></i> 서버 응답
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font">
+                            READY
+                        </span>
+                    </div>
+                    <div id="serverResponse" class="p-5 min-h-[300px] bg-gray-900 text-green-400 code-font text-xs space-y-1 overflow-auto">
+                        <div class="text-gray-500">[SERVER] Ready for file download request...</div>
+                    </div>
+                </div>
 
-<span class="comment">// ❌ 취약 (Vulnerable)</span>
-<span class="comment">// fis = new FileInputStream("C:/datas/" + fileName);</span>
+                <!-- 파일 내용 표시 -->
+                <div id="fileContent" class="hidden bg-red-900 text-white p-4 rounded-lg">
+                    <h4 class="font-bold mb-2 flex items-center gap-2">
+                        <i class="fas fa-file-alt"></i> 다운로드된 파일 내용
+                    </h4>
+                    <pre id="fileContentText" class="code-font text-xs bg-black p-3 rounded overflow-auto max-h-[200px]"></pre>
+                </div>
 
-<span class="comment">// ✅ 안전 (Secure): replaceAll() 사용</span>
-if (fileName != null) {
-    fileName = fileName.replaceAll("\\.\\.", "").replaceAll("/", "").replaceAll("\\\\", "");
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-purple-100 border-l-4 border-purple-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-purple-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-purple-700 space-y-1"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[450px]"><code><span class="text-green-400">// ✅ 안전한 코드 - 경로 검증 및 정규화</span>
+@GetMapping("/download")
+public ResponseEntity&lt;Resource&gt; downloadFile(
+    @RequestParam String fileName) throws Exception {
+    
+    <span class="text-green-400">// 1. 경로 탐색 문자 제거</span>
+    fileName = fileName.replaceAll("\\.\\.", "")
+                       .replaceAll("/", "")
+                       .replaceAll("\\\\", "");
+    
+    <span class="text-green-400">// 2. 파일명만 추출 (경로 제거)</span>
+    Path path = Paths.get(fileName);
+    fileName = path.getFileName().toString();
+    
+    <span class="text-green-400">// 3. 허용된 확장자만 허용</span>
+    String extension = fileName.substring(
+        fileName.lastIndexOf(".") + 1
+    ).toLowerCase();
+    
+    Set&lt;String&gt; allowedExtensions = Set.of(
+        "xlsx", "pdf", "csv"
+    );
+    
+    if (!allowedExtensions.contains(extension)) {
+        throw new SecurityException(
+            "허용되지 않은 파일 형식"
+        );
+    }
+    
+    <span class="text-green-400">// 4. 베이스 디렉토리 설정</span>
+    String baseDir = "/user_data/documents/";
+    Path basePath = Paths.get(baseDir).normalize();
+    
+    <span class="text-green-400">// 5. 전체 경로 생성 및 정규화</span>
+    Path fullPath = basePath.resolve(fileName).normalize();
+    
+    <span class="text-green-400">// 6. 경로 벗어남 체크</span>
+    if (!fullPath.startsWith(basePath)) {
+        throw new SecurityException(
+            "허용된 경로 외부 접근 시도"
+        );
+    }
+    
+    <span class="text-green-400">// 7. 파일 존재 여부 확인</span>
+    File file = fullPath.toFile();
+    if (!file.exists() || !file.isFile()) {
+        throw new FileNotFoundException(
+            "파일을 찾을 수 없습니다"
+        );
+    }
+    
+    <span class="text-green-400">// 8. 안전하게 다운로드</span>
+    Resource resource = new FileSystemResource(file);
+    
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" + 
+                URLEncoder.encode(fileName, "UTF-8") + "\"")
+        .body(resource);
 }
 
-File f = new File("C:/datas/" + fileName);</code></pre>
-        </details>
+<span class="text-green-400">// 추가: 화이트리스트 기반 파일 검증</span>
+private boolean isAllowedFile(String fileName) {
+    <span class="text-green-400">// DB에 저장된 허용 파일 목록 확인</span>
+    List&lt;String&gt; allowedFiles = 
+        fileRepository.findAllowedFiles();
+    
+    return allowedFiles.contains(fileName);
+}</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-purple-600"></i>
+                        경로 탐색 방어 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>경로 문자 제거:</strong> ../ \\ / 제거</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>파일명만 추출:</strong> basename() 사용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>경로 정규화:</strong> normalize() 적용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>베이스 경로 검증:</strong> startsWith() 확인</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>화이트리스트:</strong> 허용된 파일만 다운로드</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-010 파일 다운로드</div>
+                        <div><strong>판정:</strong> <span id="judgement"></span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-purple-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 금융권 경로 탐색 피해
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>설정 파일 유출</strong><br>DB 접속 정보 노출</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>소스 코드 유출</strong><br>비즈니스 로직 노출</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>고객 파일 접근</strong><br>개인정보 대량 유출</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>시스템 파일 접근</strong><br>/etc/passwd 등 유출</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 
     <script>
-        function runTest(funcName, inputId) {
-            const inputVal = document.getElementById(inputId).value;
-            // 경로 조작 문자(../)가 URL 파라미터로 잘 전달되도록 인코딩
-            const encodedInput = encodeURIComponent(inputVal);
-            // config.js의 BASE_URL 사용
-            const url = `${BASE_URL}/${funcName}?file=${encodedInput}`;
-            window.open(url, '_blank');
+        function getPayload(type) {
+            if (type === 1) {
+                return "../../../etc/passwd";
+            } else if (type === 2) {
+                return "../../config/application.properties";
+            } else if (type === 3) {
+                return "../../../src/main/java/BankController.java";
+            } else if (type === 4) {
+                return "../../../../etc/shadow";
+            }
+            return '';
+        }
+
+        function resetDownload() {
+            document.getElementById('fileInput').value = 'transaction_2024.xlsx';
+            document.getElementById('serverResponse').innerHTML = 
+                '<div class="text-gray-500">[SERVER] Ready for file download request...</div>';
+            document.getElementById('fileContent').classList.add('hidden');
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+            document.getElementById('statusBadge').textContent = 'READY';
+            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+        }
+
+        function setPayload(type) {
+            document.getElementById('fileInput').value = getPayload(type);
+            var input = document.getElementById('fileInput');
+            input.classList.add('bg-yellow-100');
+            setTimeout(function() {
+                input.classList.remove('bg-yellow-100');
+            }, 300);
+        }
+
+        async function downloadFile() {
+            var fileName = document.getElementById('fileInput').value;
+            var responseBox = document.getElementById('serverResponse');
+            var badge = document.getElementById('statusBadge');
+            
+            document.getElementById('fileContent').classList.add('hidden');
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+
+            badge.textContent = 'PROCESSING...';
+            badge.className = 'text-xs bg-yellow-500 text-gray-900 px-3 py-1 rounded code-font animate-pulse';
+            
+            addLog('[REQUEST] File download requested: ' + fileName, 'text-blue-400');
+            await sleep(500);
+            addLog('[INFO] Resolving file path...', 'text-gray-400');
+            await sleep(500);
+
+            var isAttack = fileName.indexOf('..') !== -1 || 
+                          fileName.indexOf('/etc/') !== -1 ||
+                          fileName.indexOf('config') !== -1 ||
+                          fileName.indexOf('.java') !== -1 ||
+                          fileName.indexOf('shadow') !== -1;
+
+            if (!isAttack) {
+                addLog('[VALIDATION] Path check: PASS', 'text-green-400');
+                await sleep(300);
+                addLog('[SUCCESS] File path: /user_data/documents/' + fileName, 'text-green-400');
+                await sleep(300);
+                addLog('[DOWNLOAD] File sent to client', 'text-green-400');
+                
+                badge.textContent = 'SUCCESS';
+                badge.className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-green-400">양호</span>';
+                document.getElementById('evidence').textContent = '정상 파일 경로';
+                
+            } else {
+                addLog('[VALIDATION] Path check: FAILED', 'text-red-400');
+                await sleep(300);
+                addLog('[WARNING] Path traversal detected: ' + fileName, 'text-yellow-400');
+                await sleep(300);
+                addLog('[DANGER] Accessing restricted file!', 'text-red-500');
+                await sleep(500);
+
+                var fileContentDiv = document.getElementById('fileContent');
+                var fileContentText = document.getElementById('fileContentText');
+                
+                if (fileName.indexOf('passwd') !== -1) {
+                    addLog('[CRITICAL] /etc/passwd accessed!', 'text-red-500 font-bold');
+                    fileContentText.textContent = 
+                        'root:x:0:0:root:/root:/bin/bash\n' +
+                        'daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\n' +
+                        'www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n' +
+                        'mysql:x:108:113:MySQL Server:/var/lib/mysql:/bin/false\n' +
+                        'hana:x:1000:1000::/home/hana:/bin/bash';
+                    
+                    document.getElementById('attackStages').classList.remove('hidden');
+                    document.getElementById('stagesContent').innerHTML = 
+                        '<div>1. 경로 탐색 문자(../) 사용</div>' +
+                        '<div>2. 상위 디렉토리로 이동</div>' +
+                        '<div>3. /etc/passwd 파일 접근</div>' +
+                        '<div>4. 시스템 계정 정보 유출</div>';
+                    
+                } else if (fileName.indexOf('config') !== -1 || fileName.indexOf('application.properties') !== -1) {
+                    addLog('[CRITICAL] Configuration file accessed!', 'text-red-500 font-bold');
+                    fileContentText.textContent = 
+                        '# Database Configuration\n' +
+                        'spring.datasource.url=jdbc:mysql://10.10.1.100:3306/hanabank\n' +
+                        'spring.datasource.username=admin\n' +
+                        'spring.datasource.password=HanaBank@2024!Secret\n' +
+                        '\n' +
+                        '# JWT Secret\n' +
+                        'jwt.secret=SuperSecretKeyForHanaBank123456\n' +
+                        '\n' +
+                        '# AWS Credentials\n' +
+                        'aws.access.key=AKIAIOSFODNN7EXAMPLE\n' +
+                        'aws.secret.key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY';
+                    
+                    document.getElementById('attackStages').classList.remove('hidden');
+                    document.getElementById('stagesContent').innerHTML = 
+                        '<div>1. 상위 디렉토리 탐색 (../../)</div>' +
+                        '<div>2. config 폴더 접근</div>' +
+                        '<div>3. application.properties 다운로드</div>' +
+                        '<div>4. DB 패스워드, AWS 키 유출</div>';
+                    
+                } else if (fileName.indexOf('.java') !== -1) {
+                    addLog('[CRITICAL] Source code accessed!', 'text-red-500 font-bold');
+                    fileContentText.textContent = 
+                        '@RestController\n' +
+                        'public class BankController {\n' +
+                        '    // 비밀 알고리즘\n' +
+                        '    private String encryptPin(String pin) {\n' +
+                        '        return MD5.hash(pin + "SALT_KEY_2024");\n' +
+                        '    }\n' +
+                        '    \n' +
+                        '    // 관리자 백도어\n' +
+                        '    if (username.equals("admin") && \n' +
+                        '        password.equals("master123")) {\n' +
+                        '        return adminToken;\n' +
+                        '    }\n' +
+                        '}';
+                    
+                    document.getElementById('attackStages').classList.remove('hidden');
+                    document.getElementById('stagesContent').innerHTML = 
+                        '<div>1. 경로 탐색으로 src 폴더 접근</div>' +
+                        '<div>2. Java 소스 코드 다운로드</div>' +
+                        '<div>3. 비즈니스 로직 분석</div>' +
+                        '<div>4. 백도어 계정 발견</div>';
+                    
+                } else if (fileName.indexOf('shadow') !== -1) {
+                    addLog('[CRITICAL] /etc/shadow accessed!', 'text-red-500 font-bold');
+                    fileContentText.textContent = 
+                        'root:$6$random$encrypted_password_hash:18000:0:99999:7:::\n' +
+                        'hana:$6$salt$another_encrypted_hash:18000:0:99999:7:::\n' +
+                        '\n' +
+                        '[!] 암호화된 패스워드 해시 획득\n' +
+                        '[!] 오프라인 크래킹 가능';
+                    
+                    document.getElementById('attackStages').classList.remove('hidden');
+                    document.getElementById('stagesContent').innerHTML = 
+                        '<div>1. 루트 경로까지 탐색 (../../../../)</div>' +
+                        '<div>2. /etc/shadow 파일 접근</div>' +
+                        '<div>3. 암호화된 패스워드 해시 획득</div>' +
+                        '<div>4. 오프라인 크래킹 시도</div>';
+                }
+                
+                fileContentDiv.classList.remove('hidden');
+                
+                badge.textContent = 'LEAKED';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약</span>';
+                document.getElementById('evidence').textContent = '경로 탐색 공격으로 민감 파일 접근';
+                document.getElementById('damageBox').classList.remove('hidden');
+            }
+        }
+
+        function addLog(msg, colorClass) {
+            var div = document.createElement('div');
+            div.className = colorClass || 'text-gray-400';
+            div.textContent = '> ' + msg;
+            var container = document.getElementById('serverResponse');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(function(resolve) {
+                setTimeout(resolve, ms);
+            });
         }
     </script>
 </body>
