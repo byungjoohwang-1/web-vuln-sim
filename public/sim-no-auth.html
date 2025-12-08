@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 인증 우회 취약점 실전 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .animate-blink { animation: blink 1s infinite; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-900 p-4">
+
+    <!-- 타이틀 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-gradient-to-r from-red-600 to-pink-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-user-lock text-3xl"></i>
+                    <div>
+                        <h1 class="font-bold text-xl">금융권 인증 우회 취약점 실전 시나리오</h1>
+                        <p class="text-sm">WEB-SER-019: 불충분한 이용자 인증 | 위험도: 4 (높음)</p>
+                    </div>
+                </div>
+                <button onclick="resetAll()" class="bg-white text-red-600 px-4 py-2 rounded font-bold hover:bg-gray-100">
+                    <i class="fas fa-redo"></i> 처음부터
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- 좌측: 공격자 화면 -->
+        <div class="space-y-4">
+            
+            <!-- 공격자 브라우저 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-user-secret text-red-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🔴 공격자 (해커)</h2>
+                        <p class="text-sm text-gray-400" id="attackerStatus">인증 우회 준비 중...</p>
+                    </div>
+                </div>
+                
+                <!-- 브라우저 화면 -->
+                <div class="bg-white rounded-lg overflow-hidden">
+                    <div class="bg-gray-300 px-3 py-2 flex items-center gap-2">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="flex-1 bg-white rounded px-2 py-1 flex items-center gap-2">
+                            <i class="fas fa-lock text-green-600 text-xs"></i>
+                            <span class="text-xs text-gray-600 code-font flex-1" id="browserUrl">https://xxbank.com</span>
+                        </div>
+                        <button class="text-gray-600 text-xs"><i class="fas fa-sync"></i></button>
+                    </div>
+                    
+                    <div id="browserScreen" class="p-4 bg-white text-gray-900 min-h-[450px] max-h-[500px] overflow-auto">
+                        <div class="text-center text-gray-400 py-20">
+                            <i class="fas fa-globe text-6xl mb-4"></i>
+                            <p>시나리오를 시작하세요</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 공격 결과 -->
+            <div id="attackResult" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-skull-crossbones text-red-400 text-xl animate-pulse"></i>
+                    <h3 class="font-bold">💀 공격 성공!</h3>
+                </div>
+                <div id="attackResultContent" class="bg-black p-3 rounded code-font text-xs"></div>
+            </div>
+
+            <!-- 공격 단계 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-list-ol text-orange-400"></i>
+                    공격 진행 단계
+                </h3>
+                <div id="attackSteps" class="space-y-2 text-sm max-h-[250px] overflow-auto">
+                    <div class="text-gray-500">시나리오를 시작하세요...</div>
+                </div>
+            </div>
+
+            <!-- 시나리오 선택 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-flask text-red-400"></i>
+                    실전 공격 시나리오
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="startScenario(1)" 
+                            class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-exchange-alt"></i> <strong>시나리오 1:</strong> URL 직접 입력 - 송금 페이지
+                    </button>
+                    <button onclick="startScenario(2)" 
+                            class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-key"></i> <strong>시나리오 2:</strong> 비밀번호 변경 - 재인증 우회
+                    </button>
+                    <button onclick="startScenario(3)" 
+                            class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-user-shield"></i> <strong>시나리오 3:</strong> 관리자 페이지 - 클라이언트 검증만
+                    </button>
+                </div>
+            </div>
+
+            <!-- 취약한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-red-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-red-400">
+                        <i class="fas fa-bug"></i> 취약한 코드 (인증 미흡)
+                    </h3>
+                    <span class="text-xs bg-red-600 px-2 py-1 rounded">문제 원인</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[700px]"><code><span class="text-gray-500">// Java Spring - 취약한 인증 체크</span>
+
+@Controller
+public class TransferController {
+    
+    @GetMapping("/transfer")
+    public String transferPage(Model model) {
+        <span class="text-red-400">// ❌ 인증 체크 없음!</span>
+        <span class="text-red-400">// 누구나 URL 직접 입력으로 접근 가능</span>
+        return "transfer";
+    }
+    
+    @PostMapping("/transfer")
+    public ResponseEntity transfer(
+        @RequestBody TransferRequest request
+    ) {
+        <span class="text-red-400">// ❌ 세션 검증 없음!</span>
+        transferService.execute(
+            request.getFromAccount(),
+            request.getToAccount(),
+            request.getAmount()
+        );
+        
+        return ResponseEntity.ok("송금 완료");
+    }
+}
+
+@Controller
+public class PasswordController {
+    
+    @GetMapping("/change-password")
+    public String changePasswordPage() {
+        <span class="text-red-400">// ❌ 재인증 없음!</span>
+        return "change-password";
+    }
+    
+    @PostMapping("/change-password")
+    public ResponseEntity changePassword(
+        @RequestBody PasswordRequest request
+    ) {
+        <span class="text-red-400">// ❌ 현재 비밀번호 확인 없음!</span>
+        userService.updatePassword(
+            request.getUserId(),
+            request.getNewPassword()
+        );
+        
+        return ResponseEntity.ok("변경 완료");
+    }
+}
+
+@Controller
+public class AdminController {
+    
+    @GetMapping("/admin")
+    public String adminPage(HttpSession session) {
+        <span class="text-red-400">// ❌ 클라이언트 검증만 존재!</span>
+        return "admin";
+    }
+}
+
+<span class="text-gray-500">// admin.jsp - 클라이언트 검증</span>
+
+&lt;script&gt;
+    <span class="text-red-400">// ❌ JavaScript로만 관리자 체크!</span>
+    if (localStorage.getItem('role') !== 'admin') {
+        alert('관리자만 접근 가능합니다.');
+        location.href = '/';
+    }
+&lt;/script&gt;
+
+&lt;div id="adminPanel"&gt;
+    &lt;h1&gt;관리자 페이지&lt;/h1&gt;
+    &lt;button onclick="deleteAllUsers()"&gt;
+        전체 사용자 삭제
+    &lt;/button&gt;
+&lt;/div&gt;
+
+<span class="text-gray-500">// Python Flask - 취약한 인증</span>
+
+@app.route('/transfer', methods=['GET', 'POST'])
+def transfer():
+    <span class="text-red-400"># ❌ 세션 체크 없음!</span>
+    if request.method == 'GET':
+        return render_template('transfer.html')
+    
+    <span class="text-red-400"># ❌ 인증 없이 송금 처리</span>
+    from_account = request.json['from_account']
+    to_account = request.json['to_account']
+    amount = request.json['amount']
+    
+    execute_transfer(from_account, to_account, amount)
+    return jsonify({"status": "success"})
+
+@app.route('/change-password', methods=['POST'])
+def change_password():
+    <span class="text-red-400"># ❌ 현재 비밀번호 확인 없음!</span>
+    user_id = request.json['user_id']
+    new_password = request.json['new_password']
+    
+    update_password(user_id, new_password)
+    return jsonify({"status": "success"})
+
+<span class="text-gray-500">// JavaScript/Node.js - 취약한 플로우</span>
+
+<span class="text-red-400">// ❌ 단계별 검증 없음!</span>
+app.post('/register/step2', (req, res) => {
+    <span class="text-red-400">// step1 완료 여부 확인 없음!</span>
+    const { address } = req.body;
+    saveAddress(address);
+    res.json({ next: '/register/step3' });
+});
+
+app.post('/register/step3', (req, res) => {
+    <span class="text-red-400">// step2 완료 여부 확인 없음!</span>
+    const { ssn } = req.body;
+    saveSsn(ssn);
+    res.json({ status: 'complete' });
+});</code></pre>
+            </div>
+
+        </div>
+
+        <!-- 우측: 서버 & 분석 -->
+        <div class="space-y-4">
+            
+            <!-- 서버 로그 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-green-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-server text-green-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🟢 서버 처리 로그</h2>
+                        <p class="text-sm text-gray-400">인증 검증 없이 처리</p>
+                    </div>
+                </div>
+                
+                <!-- 서버 로그 -->
+                <div class="bg-black rounded-lg p-4 min-h-[450px] max-h-[550px] overflow-auto">
+                    <div id="serverLog" class="code-font text-xs space-y-1 text-green-400">
+                        <div class="text-gray-500">[SERVER] Waiting...</div>
+                    </div>
+                </div>
+                
+                <!-- 상태 -->
+                <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">서버 상태:</span>
+                    <span id="serverStatus" class="text-xs bg-green-600 px-3 py-1 rounded">RUNNING</span>
+                </div>
+            </div>
+
+            <!-- 문제점 분석 -->
+            <div id="problemBox" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl animate-blink"></i>
+                    <h3 class="font-bold">🚨 문제점 분석</h3>
+                </div>
+                <div id="problemContent" class="text-sm space-y-2"></div>
+            </div>
+
+            <!-- 안전한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-green-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-green-400">
+                        <i class="fas fa-shield-halved"></i> 안전한 코드 (인증 검증)
+                    </h3>
+                    <span class="text-xs bg-green-600 px-2 py-1 rounded">해결책</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[1000px]"><code><span class="text-gray-500">// Java Spring - 안전한 인증 체크</span>
+
+<span class="text-green-400">// ✅ 방법 1: Spring Security 사용</span>
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain filterChain(
+        HttpSecurity http
+    ) throws Exception {
+        http
+            .authorizeHttpRequests(auth -> auth
+                <span class="text-green-400">// 인증 필요한 경로 지정</span>
+                .requestMatchers("/transfer/**")
+                    .authenticated()
+                .requestMatchers("/change-password")
+                    .authenticated()
+                .requestMatchers("/admin/**")
+                    .hasRole("ADMIN")
+                .anyRequest().permitAll()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/")
+            )
+            .sessionManagement(session -> session
+                <span class="text-green-400">// 세션 고정 공격 방어</span>
+                .sessionFixation()
+                    .newSession()
+                <span class="text-green-400">// 세션 타임아웃 10분</span>
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(true)
+            );
+        
+        return http.build();
+    }
+}
+
+<span class="text-green-400">// ✅ 방법 2: 커스텀 인증 인터셉터</span>
+@Component
+public class AuthenticationInterceptor 
+    implements HandlerInterceptor {
+    
+    @Override
+    public boolean preHandle(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Object handler
+    ) throws Exception {
+        
+        HttpSession session = request.getSession(false);
+        
+        <span class="text-green-400">// 세션 존재 여부 확인</span>
+        if (session == null) {
+            response.sendRedirect("/login");
+            return false;
+        }
+        
+        <span class="text-green-400">// 사용자 인증 정보 확인</span>
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            response.sendRedirect("/login");
+            return false;
+        }
+        
+        <span class="text-green-400">// 세션 타임아웃 체크 (10분)</span>
+        long lastAccessTime = session.getLastAccessedTime();
+        long currentTime = System.currentTimeMillis();
+        long timeout = 10 * 60 * 1000; // 10분
+        
+        if (currentTime - lastAccessTime > timeout) {
+            session.invalidate();
+            response.sendRedirect("/login");
+            return false;
+        }
+        
+        <span class="text-green-400">// 관리자 권한 체크 (admin 경로)</span>
+        String path = request.getRequestURI();
+        if (path.startsWith("/admin") && 
+            !"ADMIN".equals(user.getRole())) {
+            response.sendError(
+                HttpServletResponse.SC_FORBIDDEN,
+                "접근 권한이 없습니다."
+            );
+            return false;
+        }
+        
+        return true;
+    }
+}
+
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+    
+    @Autowired
+    private AuthenticationInterceptor authInterceptor;
+    
+    @Override
+    public void addInterceptors(
+        InterceptorRegistry registry
+    ) {
+        registry.addInterceptor(authInterceptor)
+            <span class="text-green-400">// 인증 필요한 경로 지정</span>
+            .addPathPatterns("/transfer/**")
+            .addPathPatterns("/change-password")
+            .addPathPatterns("/admin/**");
+    }
+}
+
+<span class="text-green-400">// ✅ 안전한 송금 컨트롤러</span>
+@Controller
+@RequiredArgsConstructor
+public class SecureTransferController {
+    
+    private final TransferService transferService;
+    
+    @GetMapping("/transfer")
+    public String transferPage(
+        HttpSession session, 
+        Model model
+    ) {
+        <span class="text-green-400">// 인증 확인</span>
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+        
+        model.addAttribute("user", user);
+        return "transfer";
+    }
+    
+    @PostMapping("/transfer")
+    public ResponseEntity transfer(
+        @RequestBody TransferRequest request,
+        HttpSession session
+    ) {
+        <span class="text-green-400">// 1. 세션 검증</span>
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("인증이 필요합니다.");
+        }
+        
+        <span class="text-green-400">// 2. 계좌 소유자 확인</span>
+        if (!user.getId().equals(
+            request.getFromAccountOwnerId()
+        )) {
+            return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("본인 계좌만 사용 가능합니다.");
+        }
+        
+        <span class="text-green-400">// 3. 추가 인증 (OTP)</span>
+        if (!otpService.verify(
+            user.getId(), 
+            request.getOtp()
+        )) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("OTP 인증에 실패했습니다.");
+        }
+        
+        <span class="text-green-400">// 4. 송금 실행</span>
+        transferService.execute(
+            user.getId(),
+            request.getFromAccount(),
+            request.getToAccount(),
+            request.getAmount()
+        );
+        
+        return ResponseEntity.ok("송금 완료");
+    }
+}
+
+<span class="text-green-400">// ✅ 안전한 비밀번호 변경</span>
+@Controller
+@RequiredArgsConstructor
+public class SecurePasswordController {
+    
+    private final UserService userService;
+    
+    @GetMapping("/change-password")
+    public String changePasswordPage(
+        HttpSession session
+    ) {
+        <span class="text-green-400">// 인증 확인</span>
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+        
+        <span class="text-green-400">// 재인증 플래그 초기화</span>
+        session.removeAttribute("reauth_verified");
+        
+        return "change-password";
+    }
+    
+    @PostMapping("/verify-current-password")
+    public ResponseEntity verifyCurrentPassword(
+        @RequestBody Map<String, String> request,
+        HttpSession session
+    ) {
+        User user = (User) session.getAttribute("user");
+        String currentPassword = request.get("password");
+        
+        <span class="text-green-400">// 현재 비밀번호 확인</span>
+        if (userService.verifyPassword(
+            user.getId(), 
+            currentPassword
+        )) {
+            <span class="text-green-400">// 재인증 완료 플래그</span>
+            session.setAttribute(
+                "reauth_verified", 
+                true
+            );
+            session.setAttribute(
+                "reauth_time",
+                System.currentTimeMillis()
+            );
+            
+            return ResponseEntity.ok("인증 완료");
+        } else {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("비밀번호가 일치하지 않습니다.");
+        }
+    }
+    
+    @PostMapping("/change-password")
+    public ResponseEntity changePassword(
+        @RequestBody PasswordRequest request,
+        HttpSession session
+    ) {
+        User user = (User) session.getAttribute("user");
+        
+        <span class="text-green-400">// 1. 재인증 확인</span>
+        Boolean reauthVerified = (Boolean) session
+            .getAttribute("reauth_verified");
+        
+        if (reauthVerified == null || !reauthVerified) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("현재 비밀번호를 먼저 확인해주세요.");
+        }
+        
+        <span class="text-green-400">// 2. 재인증 시간 확인 (5분 이내)</span>
+        Long reauthTime = (Long) session
+            .getAttribute("reauth_time");
+        long currentTime = System.currentTimeMillis();
+        
+        if (currentTime - reauthTime > 5 * 60 * 1000) {
+            session.removeAttribute("reauth_verified");
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("재인증 시간이 만료되었습니다.");
+        }
+        
+        <span class="text-green-400">// 3. 비밀번호 변경</span>
+        userService.updatePassword(
+            user.getId(),
+            request.getNewPassword()
+        );
+        
+        <span class="text-green-400">// 4. 재인증 플래그 제거</span>
+        session.removeAttribute("reauth_verified");
+        session.removeAttribute("reauth_time");
+        
+        return ResponseEntity.ok("변경 완료");
+    }
+}
+
+<span class="text-gray-500">// Python Flask - 안전한 인증</span>
+
+from functools import wraps
+from flask import session, redirect, request
+
+<span class="text-green-400"># ✅ 인증 데코레이터</span>
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        <span class="text-green-400"># 세션 확인</span>
+        if 'user_id' not in session:
+            return redirect('/login')
+        
+        <span class="text-green-400"># 세션 타임아웃 체크 (10분)</span>
+        last_activity = session.get('last_activity')
+        if last_activity:
+            elapsed = time.time() - last_activity
+            if elapsed > 600:  # 10분
+                session.clear()
+                return redirect('/login')
+        
+        <span class="text-green-400"># 활동 시간 업데이트</span>
+        session['last_activity'] = time.time()
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+<span class="text-green-400"># ✅ 관리자 권한 체크</span>
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect('/login')
+        
+        <span class="text-green-400"># 관리자 권한 확인</span>
+        user = get_user(session['user_id'])
+        if user.role != 'ADMIN':
+            return jsonify({
+                "error": "접근 권한이 없습니다."
+            }), 403
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/transfer', methods=['GET', 'POST'])
+@login_required
+def transfer():
+    if request.method == 'GET':
+        return render_template('transfer.html')
+    
+    <span class="text-green-400"># 사용자 확인</span>
+    user_id = session['user_id']
+    from_account = request.json['from_account']
+    
+    <span class="text-green-400"># 계좌 소유자 확인</span>
+    account = get_account(from_account)
+    if account.owner_id != user_id:
+        return jsonify({
+            "error": "본인 계좌만 사용 가능합니다."
+        }), 403
+    
+    <span class="text-green-400"># OTP 확인</span>
+    otp = request.json.get('otp')
+    if not verify_otp(user_id, otp):
+        return jsonify({
+            "error": "OTP 인증에 실패했습니다."
+        }), 401
+    
+    execute_transfer(
+        from_account,
+        request.json['to_account'],
+        request.json['amount']
+    )
+    
+    return jsonify({"status": "success"})
+
+@app.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    user_id = session['user_id']
+    
+    <span class="text-green-400"># 재인증 확인</span>
+    if not session.get('reauth_verified'):
+        return jsonify({
+            "error": "현재 비밀번호를 먼저 확인해주세요."
+        }), 401
+    
+    <span class="text-green-400"># 재인증 시간 확인 (5분)</span>
+    reauth_time = session.get('reauth_time')
+    if time.time() - reauth_time > 300:
+        session.pop('reauth_verified', None)
+        return jsonify({
+            "error": "재인증 시간이 만료되었습니다."
+        }), 401
+    
+    <span class="text-green-400"># 비밀번호 변경</span>
+    update_password(
+        user_id,
+        request.json['new_password']
+    )
+    
+    <span class="text-green-400"># 재인증 플래그 제거</span>
+    session.pop('reauth_verified', None)
+    session.pop('reauth_time', None)
+    
+    return jsonify({"status": "success"})
+
+@app.route('/admin')
+@admin_required
+def admin_page():
+    return render_template('admin.html')
+
+<span class="text-gray-500">// JavaScript/Node.js - 안전한 플로우</span>
+
+<span class="text-green-400">// ✅ 세션 기반 플로우 관리</span>
+app.post('/register/step2', (req, res) => {
+    const session = req.session;
+    
+    <span class="text-green-400">// step1 완료 확인</span>
+    if (!session.step1_completed) {
+        return res.status(400).json({
+            error: "이전 단계를 먼저 완료해주세요."
+        });
+    }
+    
+    const { address } = req.body;
+    saveAddress(session.user_id, address);
+    
+    <span class="text-green-400">// step2 완료 표시</span>
+    session.step2_completed = true;
+    
+    res.json({ next: '/register/step3' });
+});
+
+app.post('/register/step3', (req, res) => {
+    const session = req.session;
+    
+    <span class="text-green-400">// 이전 단계 확인</span>
+    if (!session.step1_completed || 
+        !session.step2_completed) {
+        return res.status(400).json({
+            error: "이전 단계를 먼저 완료해주세요."
+        });
+    }
+    
+    const { ssn } = req.body;
+    saveSsn(session.user_id, ssn);
+    
+    <span class="text-green-400">// 플로우 완료 - 세션 정리</span>
+    delete session.step1_completed;
+    delete session.step2_completed;
+    
+    res.json({ status: 'complete' });
+});</code></pre>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+
+        function resetAll() {
+            isRunning = false;
+            
+            document.getElementById('attackerStatus').textContent = '인증 우회 준비 중...';
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com';
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="text-center text-gray-400 py-20">' +
+                '<i class="fas fa-globe text-6xl mb-4"></i>' +
+                '<p>시나리오를 시작하세요</p>' +
+                '</div>';
+            
+            document.getElementById('serverLog').innerHTML = 
+                '<div class="text-gray-500">[SERVER] Waiting...</div>';
+            
+            document.getElementById('serverStatus').textContent = 'RUNNING';
+            document.getElementById('serverStatus').className = 'text-xs bg-green-600 px-3 py-1 rounded';
+            
+            document.getElementById('attackSteps').innerHTML = 
+                '<div class="text-gray-500">시나리오를 시작하세요...</div>';
+            
+            document.getElementById('attackResult').classList.add('hidden');
+            document.getElementById('problemBox').classList.add('hidden');
+        }
+
+        async function startScenario(scenario) {
+            if (isRunning) return;
+            isRunning = true;
+            
+            resetAll();
+            await sleep(300);
+            
+            if (scenario === 1) {
+                await scenario1_DirectUrlAccess();
+            } else if (scenario === 2) {
+                await scenario2_PasswordChangeNoReauth();
+            } else if (scenario === 3) {
+                await scenario3_ClientSideOnly();
+            }
+            
+            isRunning = false;
+        }
+
+        // 시나리오 1: URL 직접 입력 - 송금 페이지
+        async function scenario1_DirectUrlAccess() {
+            updateStep('🎯 시나리오 1: URL 직접 입력으로 송금 페이지 접근');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 공격자가 로그인하지 않은 상태');
+            document.getElementById('attackerStatus').textContent = '로그인 없이 시도...';
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-10 text-center">' +
+                '<i class="fas fa-user-slash text-gray-400 text-6xl mb-4"></i>' +
+                '<h2 class="text-2xl font-bold mb-2 text-gray-800">로그인 안 함</h2>' +
+                '<p class="text-gray-600">현재 로그인 상태가 아닙니다.</p>' +
+                '<p class="text-sm text-gray-500 mt-2">세션: <span class="text-red-600">없음</span></p>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('2️⃣ 송금 페이지 URL을 직접 입력');
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com/transfer';
+            
+            await addServerLog('[INFO] GET /transfer', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[INFO] Remote IP: 203.0.113.45', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] Session: null', 'text-yellow-400');
+            await sleep(500);
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">인증 체크 없이 페이지 제공!</span>');
+            
+            await addServerLog('[WARN] No authentication check!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[INFO] Rendering transfer.jsp', 'text-green-400');
+            await sleep(500);
+            await addServerLog('[INFO] Response 200 OK', 'text-green-400');
+            await sleep(800);
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-2xl mx-auto mt-6">' +
+                '<div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-4">' +
+                '<div class="flex items-center gap-2 text-blue-700">' +
+                '<i class="fas fa-info-circle"></i>' +
+                '<span class="font-bold">인증 없이 접근 성공!</span>' +
+                '</div>' +
+                '</div>' +
+                '<h2 class="text-2xl font-bold mb-6 text-gray-800">송금하기</h2>' +
+                '<form class="space-y-4">' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">출금 계좌</label>' +
+                '<input type="text" class="w-full border border-gray-300 rounded px-3 py-2" value="110-123-456789" placeholder="계좌번호">' +
+                '</div>' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">입금 계좌</label>' +
+                '<input type="text" class="w-full border border-gray-300 rounded px-3 py-2" value="110-987-654321" placeholder="계좌번호">' +
+                '</div>' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">금액</label>' +
+                '<input type="text" class="w-full border border-gray-300 rounded px-3 py-2" value="5,000,000" placeholder="금액">' +
+                '</div>' +
+                '<button class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-bold">' +
+                '<i class="fas fa-exchange-alt mr-2"></i>송금하기' +
+                '</button>' +
+                '</form>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('4️⃣ 송금 요청 전송');
+            document.getElementById('attackerStatus').textContent = '송금 실행 중...';
+            
+            await addServerLog('');
+            await addServerLog('[INFO] POST /transfer', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[INFO] From: 110-123-456789', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] To: 110-987-654321', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] Amount: 5,000,000원', 'text-gray-400');
+            await sleep(500);
+            await addServerLog('[WARN] No session validation!', 'text-red-400');
+            await sleep(500);
+            await addServerLog('[WARN] No account ownership check!', 'text-red-400');
+            await sleep(500);
+            await addServerLog('[INFO] Executing transfer...', 'text-yellow-400');
+            await sleep(1000);
+            await addServerLog('[SUCCESS] Transfer completed!', 'text-green-400');
+            await sleep(500);
+            
+            updateStep('5️⃣ <span class="text-green-500 font-bold">송금 성공! 5,000,000원 탈취!</span>');
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-2xl mx-auto mt-10">' +
+                '<div class="bg-green-50 border-2 border-green-300 rounded-lg p-6">' +
+                '<div class="flex items-center gap-2 mb-4 text-green-700">' +
+                '<i class="fas fa-check-circle text-3xl"></i>' +
+                '<h3 class="text-2xl font-bold">송금 완료</h3>' +
+                '</div>' +
+                '<div class="space-y-2 text-gray-700">' +
+                '<div class="flex justify-between py-2 border-b">' +
+                '<span>출금 계좌:</span>' +
+                '<span class="font-bold">110-123-456789</span>' +
+                '</div>' +
+                '<div class="flex justify-between py-2 border-b">' +
+                '<span>입금 계좌:</span>' +
+                '<span class="font-bold">110-987-654321 (공격자)</span>' +
+                '</div>' +
+                '<div class="flex justify-between py-2 border-b">' +
+                '<span>금액:</span>' +
+                '<span class="font-bold text-red-600 text-xl">5,000,000원</span>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            
+            document.getElementById('attackResult').classList.remove('hidden');
+            document.getElementById('attackResultContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">⚔️ 공격 방법:</div>' +
+                '<div class="text-green-400">1. 로그인 없이 송금 페이지 URL 직접 입력</div>' +
+                '<div class="text-green-400">2. 송금 폼 작성</div>' +
+                '<div class="text-green-400">3. 서버가 인증 체크 없이 처리</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">💰 피해액:</div>' +
+                '<div class="text-red-400 text-lg font-bold">5,000,000원 탈취</div>';
+            
+            showResults('scenario1');
+        }
+
+        // 시나리오 2: 비밀번호 변경 - 재인증 우회
+        async function scenario2_PasswordChangeNoReauth() {
+            updateStep('🎯 시나리오 2: 비밀번호 변경 - 재인증 우회');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 공격자가 피해자 계정으로 로그인');
+            document.getElementById('attackerStatus').textContent = '세션 탈취 완료...';
+            
+            await addServerLog('[INFO] User logged in', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[INFO] User ID: victim_user', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] Session created: SESS123ABC', 'text-green-400');
+            await sleep(500);
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-10">' +
+                '<div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">' +
+                '<div class="flex items-center gap-2 text-green-700">' +
+                '<i class="fas fa-user-check"></i>' +
+                '<span class="font-bold">로그인 성공 (세션 탈취)</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="text-center">' +
+                '<i class="fas fa-user-circle text-blue-600 text-6xl mb-4"></i>' +
+                '<h2 class="text-xl font-bold text-gray-800">피해자 계정</h2>' +
+                '<p class="text-gray-600">victim_user</p>' +
+                '</div>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('2️⃣ 비밀번호 변경 페이지 접근');
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com/change-password';
+            
+            await addServerLog('');
+            await addServerLog('[INFO] GET /change-password', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[INFO] Session: SESS123ABC', 'text-green-400');
+            await sleep(500);
+            await addServerLog('[WARN] No re-authentication required!', 'text-red-400');
+            await sleep(500);
+            await addServerLog('[INFO] Rendering page', 'text-green-400');
+            await sleep(800);
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">재인증 없이 변경 페이지 제공!</span>');
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-2xl mx-auto mt-6">' +
+                '<div class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-4">' +
+                '<div class="flex items-center gap-2 text-red-700">' +
+                '<i class="fas fa-exclamation-triangle"></i>' +
+                '<span class="font-bold">현재 비밀번호 확인 없음!</span>' +
+                '</div>' +
+                '</div>' +
+                '<h2 class="text-2xl font-bold mb-6 text-gray-800">비밀번호 변경</h2>' +
+                '<form class="space-y-4">' +
+                '<div class="bg-gray-100 p-3 rounded">' +
+                '<p class="text-sm text-gray-600"><i class="fas fa-info-circle"></i> 현재 비밀번호 입력 불필요</p>' +
+                '</div>' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">새 비밀번호</label>' +
+                '<input type="password" class="w-full border border-gray-300 rounded px-3 py-2" value="hacker1234">' +
+                '</div>' +
+                '<div>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-1">새 비밀번호 확인</label>' +
+                '<input type="password" class="w-full border border-gray-300 rounded px-3 py-2" value="hacker1234">' +
+                '</div>' +
+                '<button class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-bold">' +
+                '<i class="fas fa-key mr-2"></i>비밀번호 변경' +
+                '</button>' +
+                '</form>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('4️⃣ 비밀번호 변경 요청');
+            document.getElementById('attackerStatus').textContent = '비밀번호 변경 중...';
+            
+            await addServerLog('');
+            await addServerLog('[INFO] POST /change-password', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[INFO] User: victim_user', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] New password: hacker1234', 'text-yellow-400');
+            await sleep(500);
+            await addServerLog('[WARN] No current password check!', 'text-red-400');
+            await sleep(500);
+            await addServerLog('[INFO] Updating password...', 'text-yellow-400');
+            await sleep(1000);
+            await addServerLog('[SUCCESS] Password changed!', 'text-green-400');
+            await sleep(500);
+            
+            updateStep('5️⃣ <span class="text-green-500 font-bold">비밀번호 변경 완료! 계정 탈취!</span>');
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-2xl mx-auto mt-10">' +
+                '<div class="bg-green-50 border-2 border-green-300 rounded-lg p-6">' +
+                '<div class="flex items-center gap-2 mb-4 text-green-700">' +
+                '<i class="fas fa-check-circle text-3xl"></i>' +
+                '<h3 class="text-2xl font-bold">비밀번호 변경 완료</h3>' +
+                '</div>' +
+                '<div class="bg-white p-4 rounded border border-gray-300">' +
+                '<p class="text-gray-700 mb-3">새 비밀번호로 변경되었습니다.</p>' +
+                '<div class="bg-red-100 border border-red-300 p-3 rounded">' +
+                '<p class="text-red-700 font-bold">⚠️ 공격자가 계정을 완전히 장악!</p>' +
+                '<p class="text-sm text-red-600 mt-2">이제 공격자만 로그인 가능</p>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            
+            document.getElementById('attackResult').classList.remove('hidden');
+            document.getElementById('attackResultContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">⚔️ 공격 방법:</div>' +
+                '<div class="text-green-400">1. 세션 하이재킹으로 로그인</div>' +
+                '<div class="text-green-400">2. 비밀번호 변경 페이지 접근</div>' +
+                '<div class="text-green-400">3. 현재 비밀번호 확인 없이 변경</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">💀 피해:</div>' +
+                '<div class="text-red-400">계정 완전 탈취 (영구적)</div>' +
+                '<div class="text-red-400">원래 사용자 로그인 불가</div>';
+            
+            showResults('scenario2');
+        }
+
+        // 시나리오 3: 관리자 페이지 - 클라이언트 검증만
+        async function scenario3_ClientSideOnly() {
+            updateStep('🎯 시나리오 3: 관리자 페이지 - 클라이언트 검증만');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 일반 사용자로 로그인');
+            document.getElementById('attackerStatus').textContent = '일반 사용자 로그인...';
+            
+            await addServerLog('[INFO] User logged in', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[INFO] User ID: normal_user', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] Role: USER (not ADMIN)', 'text-yellow-400');
+            await sleep(500);
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-10 text-center">' +
+                '<i class="fas fa-user text-blue-600 text-6xl mb-4"></i>' +
+                '<h2 class="text-xl font-bold text-gray-800">일반 사용자</h2>' +
+                '<p class="text-gray-600">normal_user</p>' +
+                '<p class="text-sm text-gray-500 mt-2">권한: <span class="text-blue-600">USER</span></p>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('2️⃣ 관리자 페이지 URL 직접 입력');
+            document.getElementById('browserUrl').textContent = 'https://xxbank.com/admin';
+            document.getElementById('attackerStatus').textContent = '관리자 페이지 접근...';
+            
+            await addServerLog('');
+            await addServerLog('[INFO] GET /admin', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[INFO] User: normal_user', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] Role: USER', 'text-yellow-400');
+            await sleep(500);
+            await addServerLog('[WARN] No server-side authorization!', 'text-red-400');
+            await sleep(500);
+            await addServerLog('[INFO] Rendering admin.jsp', 'text-green-400');
+            await sleep(800);
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">서버 권한 체크 없이 페이지 제공!</span>');
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-3xl mx-auto mt-6">' +
+                '<div class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-4">' +
+                '<div class="flex items-center gap-2 text-red-700">' +
+                '<i class="fas fa-shield-alt"></i>' +
+                '<span class="font-bold">JavaScript 검증만 존재 (우회 가능)</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="bg-gray-100 p-4 rounded mb-4 code-font text-xs">' +
+                '<div class="text-gray-600">&lt;script&gt;</div>' +
+                '<div class="text-red-600 ml-4">// 클라이언트 검증만!</div>' +
+                '<div class="text-gray-700 ml-4">if (localStorage.getItem(\'role\') !== \'admin\') {</div>' +
+                '<div class="text-gray-700 ml-8">alert(\'관리자만 접근 가능\');</div>' +
+                '<div class="text-gray-700 ml-8">location.href = \'/\';</div>' +
+                '<div class="text-gray-700 ml-4">}</div>' +
+                '<div class="text-gray-600">&lt;/script&gt;</div>' +
+                '</div>' +
+                '<div class="bg-white p-4 rounded border-2 border-gray-300">' +
+                '<h2 class="text-2xl font-bold mb-4 text-gray-800">' +
+                '<i class="fas fa-user-shield text-red-600 mr-2"></i>관리자 페이지' +
+                '</h2>' +
+                '<div class="text-sm text-gray-500 mb-4">페이지 로드됨 (JavaScript 우회 전)</div>' +
+                '</div>' +
+                '</div>';
+            
+            await sleep(2000);
+            
+            updateStep('4️⃣ 개발자 도구로 JavaScript 무력화');
+            document.getElementById('attackerStatus').textContent = 'JavaScript 비활성화...';
+            
+            await addServerLog('');
+            await addServerLog('[CLIENT] Opening DevTools...', 'text-cyan-400');
+            await sleep(500);
+            await addServerLog('[CLIENT] Disabling JavaScript validation', 'text-yellow-400');
+            await sleep(800);
+            await addServerLog('[CLIENT] localStorage.setItem("role", "admin")', 'text-red-400');
+            await sleep(500);
+            await addServerLog('[CLIENT] JavaScript check bypassed!', 'text-green-400');
+            await sleep(1000);
+            
+            updateStep('5️⃣ <span class="text-green-500 font-bold">관리자 기능 접근 성공!</span>');
+            
+            document.getElementById('browserScreen').innerHTML = 
+                '<div class="max-w-3xl mx-auto mt-6">' +
+                '<div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">' +
+                '<div class="flex items-center gap-2 text-green-700">' +
+                '<i class="fas fa-check-circle"></i>' +
+                '<span class="font-bold">JavaScript 우회 완료!</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="bg-white p-6 rounded-lg border-2 border-gray-300">' +
+                '<h2 class="text-2xl font-bold mb-6 text-gray-800">' +
+                '<i class="fas fa-user-shield text-green-600 mr-2"></i>관리자 페이지' +
+                '</h2>' +
+                '<div class="grid grid-cols-2 gap-4">' +
+                '<button class="bg-red-600 text-white py-3 rounded hover:bg-red-700">' +
+                '<i class="fas fa-users-slash mr-2"></i>전체 사용자 삭제' +
+                '</button>' +
+                '<button class="bg-orange-600 text-white py-3 rounded hover:bg-orange-700">' +
+                '<i class="fas fa-database mr-2"></i>데이터베이스 백업' +
+                '</button>' +
+                '<button class="bg-purple-600 text-white py-3 rounded hover:bg-purple-700">' +
+                '<i class="fas fa-cog mr-2"></i>시스템 설정' +
+                '</button>' +
+                '<button class="bg-blue-600 text-white py-3 rounded hover:bg-blue-700">' +
+                '<i class="fas fa-chart-line mr-2"></i>전체 거래 내역' +
+                '</button>' +
+                '</div>' +
+                '<div class="mt-4 bg-green-100 border border-green-300 p-3 rounded">' +
+                '<p class="text-green-700 font-bold">✅ 모든 관리자 기능 사용 가능</p>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            
+            document.getElementById('attackResult').classList.remove('hidden');
+            document.getElementById('attackResultContent').innerHTML = 
+                '<div class="text-cyan-400 mb-2">⚔️ 공격 방법:</div>' +
+                '<div class="text-green-400">1. 관리자 URL 직접 입력</div>' +
+                '<div class="text-green-400">2. 개발자 도구 활성화</div>' +
+                '<div class="text-green-400">3. localStorage 수정 또는 JS 비활성화</div>' +
+                '<div class="text-green-400">4. 클라이언트 검증 우회</div>' +
+                '<div class="border-t border-gray-700 my-2"></div>' +
+                '<div class="text-yellow-400 mb-2">💥 가능한 공격:</div>' +
+                '<div class="text-red-400">• 전체 사용자 삭제</div>' +
+                '<div class="text-red-400">• 데이터베이스 접근</div>' +
+                '<div class="text-red-400">• 시스템 설정 변경</div>' +
+                '<div class="text-red-400">• 모든 거래 내역 조회</div>';
+            
+            showResults('scenario3');
+        }
+
+        function showResults(scenario) {
+            document.getElementById('problemBox').classList.remove('hidden');
+            
+            let problems = '';
+            if (scenario === 'scenario1') {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ URL 직접 접근 문제:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>1. 인증 없이 중요 기능 접근</div>' +
+                    '<div>2. 세션 검증 누락</div>' +
+                    '<div>3. 계좌 소유자 확인 없음</div>' +
+                    '<div>4. OTP 등 추가 인증 없음</div>' +
+                    '</div></div>' +
+                    '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                    '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>• 무단 송금</div>' +
+                    '<div>• 타인 계좌 접근</div>' +
+                    '<div>• 금전적 손실</div>' +
+                    '</div></div>';
+            } else if (scenario === 'scenario2') {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ 재인증 없음 문제:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>1. 현재 비밀번호 확인 없음</div>' +
+                    '<div>2. 추가 인증 수단 없음</div>' +
+                    '<div>3. 세션만으로 중요 정보 변경</div>' +
+                    '<div>4. 재인증 시간 제한 없음</div>' +
+                    '</div></div>' +
+                    '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                    '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>• 계정 영구 탈취</div>' +
+                    '<div>• 원 사용자 로그인 불가</div>' +
+                    '<div>• 2차 피해 발생</div>' +
+                    '</div></div>';
+            } else {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ 클라이언트 검증만 존재:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>1. JavaScript로만 권한 체크</div>' +
+                    '<div>2. 서버 측 검증 없음</div>' +
+                    '<div>3. 개발자 도구로 우회 가능</div>' +
+                    '<div>4. localStorage 조작 가능</div>' +
+                    '</div></div>' +
+                    '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                    '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                    '<div class="space-y-1 ml-4">' +
+                    '<div>• 관리자 권한 획득</div>' +
+                    '<div>• 전체 시스템 장악</div>' +
+                    '<div>• 데이터베이스 접근</div>' +
+                    '<div>• 대량 정보 유출</div>' +
+                    '</div></div>';
+            }
+            
+            document.getElementById('problemContent').innerHTML = problems;
+        }
+
+        function updateStep(html) {
+            const steps = document.getElementById('attackSteps');
+            const div = document.createElement('div');
+            div.className = 'p-2 bg-gray-700 rounded text-sm slide-in';
+            div.innerHTML = html;
+            steps.appendChild(div);
+            steps.scrollTop = steps.scrollHeight;
+        }
+
+        async function addServerLog(message, colorClass = 'text-green-400') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.textContent = message;
+            const container = document.getElementById('serverLog');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            await sleep(50);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
