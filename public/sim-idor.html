@@ -3,266 +3,630 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부적절한 인가 (IDOR) 시뮬레이션</title>
+    <title>금융권 IDOR 실전 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
-        .simulation-box { min-height: 180px; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .code-font { font-family: 'Courier New', monospace; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .animate-blink { animation: blink 1s infinite; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-900 p-4">
 
-    <div class="max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- Header -->
-        <div class="bg-orange-600 p-6 text-white flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 p-2 rounded-lg">
-                    <i class="fas fa-id-card text-2xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold">부적절한 인가 (IDOR)</h1>
-                    <p class="text-orange-100 text-sm">Insecure Direct Object References Simulation</p>
-                </div>
-            </div>
-            <div class="bg-white/20 px-4 py-2 rounded-lg text-sm">
-                <i class="fas fa-user-lock mr-1"></i> 파라미터 변조를 통한 타인 정보 접근
-            </div>
-        </div>
-
-        <!-- Context & Explanation -->
-        <div class="p-8 border-b border-gray-100 bg-gray-50">
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="md:col-span-2">
-                    <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-blue-500"></i> 시나리오 상황 (Scenario)
-                    </h2>
-                    <p class="text-gray-600 leading-relaxed mb-4">
-                        현재 당신은 <strong>'User A' (내 ID: 100)</strong>로 로그인되어 있습니다.<br>
-                        서버에는 다음과 같은 주문 정보가 저장되어 있습니다.
-                    </p>
-                    <ul class="space-y-2 text-sm bg-white p-4 rounded-lg border border-gray-200">
-                        <li class="flex items-center text-green-700 font-semibold">
-                            <span class="w-20 text-gray-500">ID: 100</span> 
-                            <i class="fas fa-check-circle mr-2"></i> 내 주문 (게이밍 노트북) - 접근 허용
-                        </li>
-                        <li class="flex items-center text-red-700 opacity-75">
-                            <span class="w-20 text-gray-500">ID: 101</span> 
-                            <i class="fas fa-times-circle mr-2"></i> User B의 주문 (비밀 문서) - <strong>접근 불가해야 함</strong>
-                        </li>
-                        <li class="flex items-center text-red-700 opacity-75">
-                            <span class="w-20 text-gray-500">ID: 102</span> 
-                            <i class="fas fa-times-circle mr-2"></i> User C의 주문 (개인 사진) - <strong>접근 불가해야 함</strong>
-                        </li>
-                    </ul>
-                </div>
-                <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg flex flex-col justify-center">
-                    <h3 class="text-sm font-bold text-orange-800 mb-2">공격 목표 (Goal)</h3>
-                    <p class="text-sm text-orange-700 mb-3">
-                        내 주문 번호(100)를 <strong>101</strong>로 변조하여 다른 사람의 주문 정보를 훔쳐보세요.
-                    </p>
-                    <div class="text-center">
-                        <i class="fas fa-user-secret text-4xl text-orange-300"></i>
+    <!-- 타이틀 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-shield-virus text-3xl"></i>
+                    <div>
+                        <h1 class="font-bold text-xl">금융권 IDOR 공격 실전 시나리오</h1>
+                        <p class="text-sm">WEB-SER-003: 부적절한 이용자 인가 | 위험도: 5 (매우 높음)</p>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Simulation Area -->
-        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-            
-            <!-- Vulnerable Side -->
-            <div class="p-8 bg-red-50/30 relative">
-                <div class="absolute top-4 right-4 text-red-200 text-6xl opacity-20 pointer-events-none">
-                    <i class="fas fa-unlock-alt"></i>
-                </div>
-                <h3 class="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
-                    <i class="fas fa-times-circle"></i> 취약한 모드 (Vulnerable)
-                </h3>
-                <p class="text-xs text-gray-500 mb-6">서버가 ID만 확인하고 <strong>소유권(Ownership)</strong>은 검증하지 않음</p>
-                
-                <div class="bg-white p-4 rounded-lg border border-red-200 shadow-sm mb-4">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Parameter / Input</label>
-                    <div class="flex items-center border border-gray-300 rounded bg-gray-50 px-3 py-2">
-                        <span class="text-gray-400 text-sm mr-2">/order/view?id=</span>
-                        <input type="number" id="vulnInput" value="100" class="bg-transparent outline-none w-full font-mono font-bold text-gray-700">
-                    </div>
-                </div>
-                
-                <button onclick="runVulnerable()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-all transform active:scale-95 shadow-md mb-6 flex items-center justify-center gap-2">
-                    <i class="fas fa-search"></i> 조회 요청 (Request)
+                <button onclick="resetAll()" class="bg-white text-red-600 px-4 py-2 rounded font-bold hover:bg-gray-100">
+                    <i class="fas fa-redo"></i> 처음부터
                 </button>
-
-                <div class="border-2 border-dashed border-red-300 rounded-lg bg-white simulation-box p-4 relative overflow-hidden">
-                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono uppercase">Server Response</span>
-                    <div id="vulnOutput" class="mt-6 flex items-center justify-center h-full text-gray-400">
-                        결과가 여기에 표시됩니다...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Secure Side -->
-            <div class="p-8 bg-green-50/30 relative">
-                <div class="absolute top-4 right-4 text-green-200 text-6xl opacity-20 pointer-events-none">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3 class="text-lg font-bold text-green-600 mb-2 flex items-center gap-2">
-                    <i class="fas fa-check-circle"></i> 안전한 모드 (Secure)
-                </h3>
-                <p class="text-xs text-gray-500 mb-6">서버가 <strong>현재 로그인한 사용자와 데이터 소유자가 일치하는지</strong> 검증함</p>
-                
-                <div class="bg-white p-4 rounded-lg border border-green-200 shadow-sm mb-4">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Parameter / Input</label>
-                    <div class="flex items-center border border-gray-300 rounded bg-gray-50 px-3 py-2">
-                        <span class="text-gray-400 text-sm mr-2">/order/view?id=</span>
-                        <input type="number" id="secureInput" value="100" class="bg-transparent outline-none w-full font-mono font-bold text-gray-700">
-                    </div>
-                </div>
-
-                <button onclick="runSecure()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all transform active:scale-95 shadow-md mb-6 flex items-center justify-center gap-2">
-                    <i class="fas fa-shield-check"></i> 안전한 조회 요청 (Request)
-                </button>
-
-                <div class="border-2 border-dashed border-green-300 rounded-lg bg-white simulation-box p-4 relative overflow-hidden">
-                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono uppercase">Server Response</span>
-                    <div id="secureOutput" class="mt-6 flex items-center justify-center h-full text-gray-400">
-                        결과가 여기에 표시됩니다...
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Code Reference -->
-        <div class="bg-slate-900 p-6 text-gray-300">
-            <h4 class="font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fas fa-code"></i> 백엔드 로직 비교 (Backend Logic Comparison)
-            </h4>
-            <div class="grid md:grid-cols-2 gap-6 text-sm font-mono">
-                <div class="bg-black/30 p-4 rounded border border-red-900/50">
-                    <p class="text-red-400 font-bold mb-2">// Vulnerable (Java/Python)</p>
-                    <p class="text-gray-400">
-                        // 검증 없음: ID로만 조회<br>
-                        return db.getOrder(id);
-                    </p>
-                </div>
-                <div class="bg-black/30 p-4 rounded border border-green-900/50">
-                    <p class="text-green-400 font-bold mb-2">// Secure (Java/Python)</p>
-                    <p class="text-gray-400">
-                        // 소유권 검증 로직 추가<br>
-                        Order o = db.getOrder(id);<br>
-                        if (o.owner != currentUser.id) <span class="text-yellow-300">throw AccessDenied;</span><br>
-                        return o;
-                    </p>
-                </div>
-            </div>
-             <div class="mt-6 flex justify-center">
-                <a href="security_functions.html" class="text-white hover:text-orange-300 font-medium text-sm flex items-center gap-2 transition-colors">
-                    <i class="fas fa-arrow-left"></i> 보안 기능 가이드로 돌아가기
-                </a>
             </div>
         </div>
     </div>
 
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- 좌측: 공격자 화면 -->
+        <div class="space-y-4">
+            
+            <!-- 공격자 관점 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-user-secret text-red-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🔴 공격자 화면</h2>
+                        <p class="text-sm text-gray-400">해커가 보는 브라우저</p>
+                    </div>
+                </div>
+                
+                <!-- 공격자 브라우저 -->
+                <div class="bg-gray-900 rounded-lg overflow-hidden">
+                    <!-- 브라우저 크롬 -->
+                    <div class="bg-gray-700 px-3 py-2 flex items-center gap-2">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                        <input type="text" id="attackerUrl" 
+                               class="flex-1 bg-gray-800 text-white px-3 py-1 rounded text-xs code-font" 
+                               value="https://xxbank.com/mypage"
+                               readonly>
+                    </div>
+                    
+                    <!-- 브라우저 내용 -->
+                    <div id="attackerScreen" class="p-6 bg-white text-black min-h-[300px]">
+                        <div class="text-center py-8">
+                            <i class="fas fa-play-circle text-6xl text-blue-600 mb-4"></i>
+                            <p class="text-gray-600">시나리오를 선택하세요</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 공격 단계 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-list-ol text-orange-400"></i>
+                    공격 진행 단계
+                </h3>
+                <div id="attackSteps" class="space-y-2 text-sm">
+                    <div class="text-gray-500">시나리오를 시작하세요...</div>
+                </div>
+            </div>
+
+            <!-- 시나리오 선택 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-flask text-red-400"></i>
+                    실전 공격 시나리오
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="startScenario(1)" 
+                            class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-wallet"></i> <strong>시나리오 1:</strong> 타인 계좌번호 탈취
+                    </button>
+                    <button onclick="startScenario(2)" 
+                            class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-list"></i> <strong>시나리오 2:</strong> 거래내역 대량 수집
+                    </button>
+                    <button onclick="startScenario(3)" 
+                            class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-database"></i> <strong>시나리오 3:</strong> 전체 고객 DB 탈취
+                    </button>
+                </div>
+            </div>
+
+            <!-- 취약한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-red-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-red-400">
+                        <i class="fas fa-bug"></i> 취약한 서버 코드
+                    </h3>
+                    <span class="text-xs bg-red-600 px-2 py-1 rounded">문제 원인</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// Controller.java</span>
+@GetMapping("/account")
+public Account getAccount(@RequestParam Long id) {
+    
+    <span class="text-red-400">// ❌ 문제점 1: 세션 확인도 안함!</span>
+    <span class="text-red-400">// ❌ 문제점 2: 권한 검증 없음!</span>
+    
+    return accountRepository.findById(id);
+}
+
+<span class="text-gray-500">// SQL 실행됨</span>
+SELECT * FROM accounts WHERE id = ?
+<span class="text-red-400">-- userId 조건 없음! (치명적)</span></code></pre>
+            </div>
+
+        </div>
+
+        <!-- 우측: 서버 화면 -->
+        <div class="space-y-4">
+            
+            <!-- 서버 관점 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-green-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-server text-green-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🟢 서버 내부</h2>
+                        <p class="text-sm text-gray-400">XX은행 서버 처리 과정</p>
+                    </div>
+                </div>
+                
+                <!-- 서버 처리 과정 -->
+                <div class="bg-gray-900 rounded-lg p-4 min-h-[300px] max-h-[400px] overflow-auto">
+                    <div id="serverLog" class="code-font text-xs space-y-1 text-green-400">
+                        <div class="text-gray-500">[SERVER] Waiting for request...</div>
+                    </div>
+                </div>
+                
+                <!-- 서버 상태 -->
+                <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">서버 상태:</span>
+                    <span id="serverStatus" class="text-xs bg-blue-600 px-3 py-1 rounded">IDLE</span>
+                </div>
+            </div>
+
+            <!-- SQL 쿼리 실행 -->
+            <div id="sqlBox" class="hidden bg-indigo-900 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-database text-cyan-400"></i>
+                    <h3 class="font-bold">실행된 SQL 쿼리</h3>
+                </div>
+                <div class="bg-gray-900 p-3 rounded">
+                    <pre id="sqlQuery" class="code-font text-xs text-cyan-400"></pre>
+                </div>
+            </div>
+
+            <!-- 문제점 분석 -->
+            <div id="problemBox" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl animate-blink"></i>
+                    <h3 class="font-bold">🚨 문제점 분석</h3>
+                </div>
+                <div id="problemContent" class="text-sm space-y-2"></div>
+            </div>
+
+            <!-- 조회 결과 -->
+            <div id="resultBox" class="hidden bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-database"></i>
+                    조회된 데이터
+                </h3>
+                <div id="resultContent" class="bg-gray-900 p-3 rounded code-font text-xs"></div>
+            </div>
+
+            <!-- 안전한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-green-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-green-400">
+                        <i class="fas fa-shield-halved"></i> 안전한 서버 코드
+                    </h3>
+                    <span class="text-xs bg-green-600 px-2 py-1 rounded">해결책</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[300px]"><code><span class="text-gray-500">// Controller.java</span>
+@GetMapping("/account")
+public Account getAccount(
+    @RequestParam Long id,
+    @AuthenticationPrincipal User user) {
+    
+    <span class="text-green-400">// ✅ 1단계: 인증 확인 (Spring Security)</span>
+    if (user == null) {
+        throw new UnauthorizedException();
+    }
+    
+    Account account = accountRepository
+        .findById(id)
+        .orElseThrow();
+    
+    <span class="text-green-400">// ✅ 2단계: 권한 검증 (핵심!)</span>
+    if (!account.getUserId().equals(user.getId())) {
+        <span class="text-green-400">// 로깅 추가</span>
+        logger.warn("Unauthorized access attempt: " +
+            "user={}, account={}", 
+            user.getId(), id);
+        
+        throw new ForbiddenException();
+    }
+    
+    return account;
+}
+
+<span class="text-gray-500">// 또는 Repository에서 해결 (더 안전)</span>
+accountRepository.findByIdAndUserId(id, user.getId())
+
+<span class="text-gray-500">// SQL 실행됨</span>
+SELECT * FROM accounts 
+WHERE id = ? <span class="text-green-400">AND user_id = ?</span>
+<span class="text-green-400">-- user_id 조건 필수!</span></code></pre>
+            </div>
+
+        </div>
+    </div>
+
     <script>
-        // Mock Data Database
-        const mockDB = {
-            100: { owner: 'User A', content: '💻 게이밍 노트북 (RTX 4090)', price: '$3,500', icon: 'fa-laptop' },
-            101: { owner: 'User B', content: '📄 대외비 프로젝트 기획안', price: 'CONFIDENTIAL', icon: 'fa-file-contract' },
-            102: { owner: 'User C', content: '📸 개인 여행 사진.zip', price: 'PRIVATE', icon: 'fa-images' },
-            999: { owner: 'System', content: '데이터 없음', price: '-', icon: 'fa-question' }
+        const DB = {
+            accounts: [
+                { id: 1001, userId: 'user001', name: '홍길동', accountNo: '110-123-456789', balance: 5000000 },
+                { id: 1002, userId: 'user002', name: '김영희', accountNo: '110-234-567890', balance: 12500000 },
+                { id: 1003, userId: 'user003', name: '이철수', accountNo: '110-345-678901', balance: 8300000 },
+                { id: 1004, userId: 'user004', name: '박민수', accountNo: '110-456-789012', balance: 3200000 },
+                { id: 1005, userId: 'user005', name: '정수진', accountNo: '110-567-890123', balance: 15700000 }
+            ]
         };
 
-        const CURRENT_USER = 'User A';
+        let isRunning = false;
 
-        function getData(id) {
-            return mockDB[id] || null;
+        function resetAll() {
+            isRunning = false;
+            document.getElementById('attackerUrl').value = 'https://xxbank.com/mypage';
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="text-center py-8">' +
+                '<i class="fas fa-play-circle text-6xl text-blue-600 mb-4"></i>' +
+                '<p class="text-gray-600">시나리오를 선택하세요</p>' +
+                '</div>';
+            document.getElementById('serverLog').innerHTML = 
+                '<div class="text-gray-500">[SERVER] Waiting for request...</div>';
+            document.getElementById('serverStatus').textContent = 'IDLE';
+            document.getElementById('serverStatus').className = 'text-xs bg-blue-600 px-3 py-1 rounded';
+            document.getElementById('attackSteps').innerHTML = 
+                '<div class="text-gray-500">시나리오를 시작하세요...</div>';
+            document.getElementById('sqlBox').classList.add('hidden');
+            document.getElementById('problemBox').classList.add('hidden');
+            document.getElementById('resultBox').classList.add('hidden');
         }
 
-        function renderResult(elementId, data, isSuccess, message) {
-            const el = document.getElementById(elementId);
-            el.innerHTML = '';
+        async function startScenario(scenario) {
+            if (isRunning) return;
+            isRunning = true;
             
-            const wrapper = document.createElement('div');
-            wrapper.className = 'w-full fade-in';
-
-            if (isSuccess) {
-                // Success Display (Data Revealed)
-                wrapper.innerHTML = `
-                    <div class="bg-green-50 border border-green-200 rounded p-3 mb-2">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-bold text-green-700 bg-green-200 px-2 py-0.5 rounded">HTTP 200 OK</span>
-                            <span class="text-xs text-gray-500">Owner: ${data.owner}</span>
-                        </div>
-                        <div class="flex items-center gap-3 mt-3">
-                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                                <i class="fas ${data.icon}"></i>
-                            </div>
-                            <div>
-                                <div class="font-bold text-gray-800">${data.content}</div>
-                                <div class="text-xs text-gray-500">${data.price}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-center ${data.owner === CURRENT_USER ? 'text-green-600' : 'text-red-600 font-bold'}">
-                        ${message}
-                    </p>
-                `;
-            } else {
-                // Error Display (Access Denied)
-                wrapper.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 rounded p-4 text-center">
-                        <div class="text-red-500 text-3xl mb-2"><i class="fas fa-ban"></i></div>
-                        <div class="font-bold text-red-700">HTTP 403 Forbidden</div>
-                        <div class="text-xs text-red-500 mt-1">접근 권한이 없습니다.</div>
-                    </div>
-                     <p class="text-xs text-center text-green-600 mt-2 font-bold">
-                        ${message}
-                    </p>
-                `;
-            }
-            el.appendChild(wrapper);
-        }
-
-        function runVulnerable() {
-            const id = document.getElementById('vulnInput').value;
-            const data = getData(id);
-
-            if (!data) {
-                document.getElementById('vulnOutput').innerHTML = '<span class="text-gray-400">데이터를 찾을 수 없습니다 (404 Not Found)</span>';
-                return;
-            }
-
-            // Vulnerable Logic: Just return data if ID exists
-            let message = "";
-            if (data.owner !== CURRENT_USER) {
-                message = `⚠️ 경고: ${CURRENT_USER}가 ${data.owner}의 데이터를 무단 조회했습니다! (취약점 발생)`;
-            } else {
-                message = "본인의 데이터를 정상적으로 조회했습니다.";
+            resetAll();
+            await sleep(300);
+            
+            if (scenario === 1) {
+                await scenario1_AccountTheft();
+            } else if (scenario === 2) {
+                await scenario2_BulkCollection();
+            } else if (scenario === 3) {
+                await scenario3_DatabaseDump();
             }
             
-            renderResult('vulnOutput', data, true, message);
+            isRunning = false;
         }
 
-        function runSecure() {
-            const id = document.getElementById('secureInput').value;
-            const data = getData(id);
+        // 시나리오 1: 타인 계좌번호 탈취
+        async function scenario1_AccountTheft() {
+            updateStep('🎯 시나리오 1: 타인 계좌번호 탈취 시작');
+            
+            // 공격자: 1단계 - 로그인
+            await sleep(1000);
+            updateStep('1️⃣ 공격자가 자신의 계정으로 로그인 (user001)');
+            document.getElementById('attackerUrl').value = 'https://xxbank.com/login';
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="max-w-md mx-auto mt-8">' +
+                '<h2 class="text-xl font-bold mb-4">XX은행 로그인</h2>' +
+                '<div class="space-y-3">' +
+                '<input type="text" value="user001" class="w-full p-2 border rounded" readonly>' +
+                '<input type="password" value="••••••••" class="w-full p-2 border rounded" readonly>' +
+                '<button class="w-full bg-blue-600 text-white py-2 rounded">로그인</button>' +
+                '</div></div>';
+            
+            await addServerLog('[REQUEST] POST /login', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[AUTH] Credentials: user001 / ********', 'text-gray-400');
+            await sleep(500);
+            await addServerLog('[AUTH] Authentication successful ✓', 'text-green-400');
+            await sleep(300);
+            await addServerLog('[SESSION] Creating session: JSESSIONID=abc123...', 'text-yellow-400');
+            await sleep(300);
+            await addServerLog('[RESPONSE] 200 OK - Login successful', 'text-green-400');
+            await sleep(1000);
+            
+            // 공격자: 2단계 - 내 계좌 확인
+            updateStep('2️⃣ 자신의 마이페이지에서 URL 구조 파악');
+            document.getElementById('attackerUrl').value = 'https://xxbank.com/account?id=1001';
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<h2 class="text-xl font-bold mb-4">내 계좌 정보</h2>' +
+                '<div class="bg-blue-50 p-4 rounded">' +
+                '<div class="grid grid-cols-2 gap-2 text-sm">' +
+                '<div class="font-bold">계좌번호:</div><div>110-123-456789</div>' +
+                '<div class="font-bold">예금주:</div><div>홍길동</div>' +
+                '<div class="font-bold">잔액:</div><div class="text-blue-600 font-bold">5,000,000원</div>' +
+                '</div></div>' +
+                '<div class="mt-4 p-3 bg-yellow-100 border border-yellow-400 rounded">' +
+                '<p class="text-sm">💡 <strong>공격자 발견:</strong> URL에 <code class="bg-white px-2 py-1">id=1001</code> 파라미터가 있다!</p>' +
+                '</div></div>';
+            
+            await addServerLog('[REQUEST] GET /account?id=1001', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[SESSION] User: user001 (authenticated)', 'text-green-400');
+            await sleep(500);
+            
+            document.getElementById('sqlBox').classList.remove('hidden');
+            document.getElementById('sqlQuery').textContent = 
+                'SELECT * FROM accounts WHERE id = 1001;';
+            
+            await addServerLog('[SQL] SELECT * FROM accounts WHERE id = 1001', 'text-cyan-400');
+            await sleep(600);
+            await addServerLog('[DATABASE] 1 row returned', 'text-cyan-400');
+            await sleep(300);
+            await addServerLog('[RESPONSE] 200 OK - Account data sent', 'text-green-400');
+            await sleep(1500);
+            
+            // 공격자: 3단계 - 파라미터 변조
+            updateStep('3️⃣ <span class="text-red-400">URL의 id 값을 1002로 변조!</span>');
+            document.getElementById('attackerUrl').value = 'https://xxbank.com/account?id=1002';
+            document.getElementById('attackerUrl').classList.add('bg-red-900', 'text-white');
+            
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<div class="bg-red-100 border-2 border-red-500 p-4 rounded mb-4 animate-pulse">' +
+                '<p class="text-red-700 font-bold text-center">' +
+                '<i class="fas fa-skull-crossbones"></i> 공격 중...</p>' +
+                '</div>' +
+                '<div class="text-center py-8">' +
+                '<div class="animate-spin text-6xl text-red-600 mb-4">⚠️</div>' +
+                '<p class="text-gray-600">타인 계좌 조회 시도 중...</p>' +
+                '</div></div>';
+            
+            await sleep(1000);
+            updateServerStatus('ATTACKED', 'bg-red-600 animate-pulse');
+            
+            await addServerLog('[REQUEST] GET /account?id=1002', 'text-blue-400');
+            await sleep(300);
+            await addServerLog('[SESSION] User: user001 (authenticated)', 'text-green-400');
+            await sleep(300);
+            await addServerLog('[WARNING] User requesting different account!', 'text-yellow-400');
+            await sleep(500);
+            await addServerLog('[AUTHORIZATION] Checking permissions...', 'text-yellow-400');
+            await sleep(800);
+            await addServerLog('[CRITICAL] ❌ NO AUTHORIZATION CHECK!', 'text-red-500 font-bold');
+            await sleep(500);
+            await addServerLog('[VULNERABILITY] IDOR detected - Skipping auth', 'text-red-500 font-bold');
+            await sleep(800);
+            
+            document.getElementById('sqlQuery').innerHTML = 
+                '<span class="text-red-400">-- ❌ 취약한 쿼리: user_id 조건 없음!</span>\n' +
+                'SELECT * FROM accounts WHERE id = 1002;\n\n' +
+                '<span class="text-green-400">-- ✅ 안전한 쿼리는 이렇게:</span>\n' +
+                'SELECT * FROM accounts\n' +
+                'WHERE id = 1002 AND user_id = \'user001\';';
+            
+            await addServerLog('[SQL] SELECT * FROM accounts WHERE id = 1002', 'text-cyan-400');
+            await sleep(600);
+            await addServerLog('[DATABASE] 1 row returned (김영희 account)', 'text-cyan-400');
+            await sleep(500);
+            await addServerLog('[DANGER] Returning unauthorized data!', 'text-red-500 font-bold');
+            await sleep(300);
+            await addServerLog('[RESPONSE] 200 OK - Sending victim\'s data', 'text-red-400');
+            await sleep(1000);
+            
+            // 공격 성공!
+            updateStep('4️⃣ <span class="text-red-500 font-bold">✓ 공격 성공! 타인 계좌 정보 탈취</span>');
+            
+            document.getElementById('attackerUrl').classList.remove('bg-red-900', 'text-white');
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<div class="bg-green-100 border-2 border-green-500 p-4 rounded mb-4">' +
+                '<p class="text-green-700 font-bold text-center">' +
+                '<i class="fas fa-check-circle"></i> 조회 성공!</p>' +
+                '</div>' +
+                '<h2 class="text-xl font-bold mb-4">계좌 정보</h2>' +
+                '<div class="bg-red-50 border-2 border-red-500 p-4 rounded">' +
+                '<div class="grid grid-cols-2 gap-2 text-sm">' +
+                '<div class="font-bold">계좌번호:</div><div class="text-red-600">110-234-567890</div>' +
+                '<div class="font-bold">예금주:</div><div class="text-red-600">김영희</div>' +
+                '<div class="font-bold">잔액:</div><div class="text-red-600 font-bold text-lg">12,500,000원</div>' +
+                '</div></div>' +
+                '<div class="mt-4 p-3 bg-red-100 border border-red-500 rounded">' +
+                '<p class="text-sm text-red-700">🚨 <strong>권한 없는 계좌 조회 성공!</strong><br>' +
+                '공격자가 김영희님의 계좌번호와 잔액을 알게 되었습니다.</p>' +
+                '</div></div>';
+            
+            // 문제점 분석
+            document.getElementById('problemBox').classList.remove('hidden');
+            document.getElementById('problemContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">❌ 발견된 문제점:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>1. 세션만 확인하고 리소스 소유자는 확인 안함</div>' +
+                '<div>2. SQL 쿼리에 user_id 조건이 없음</div>' +
+                '<div>3. 권한 검증 로직이 완전히 누락됨</div>' +
+                '<div>4. 감사 로그도 없어 공격 탐지 불가</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• ID를 1~999999까지 반복하면 전체 고객 DB 탈취</div>' +
+                '<div>• 계좌번호로 피싱 공격 가능</div>' +
+                '<div>• 잔액 정보로 타겟 선정 가능</div>' +
+                '</div></div>';
+            
+            document.getElementById('resultBox').classList.remove('hidden');
+            document.getElementById('resultContent').innerHTML = 
+                '<span class="text-red-400">// 공격자가 획득한 데이터</span>\n' +
+                JSON.stringify(DB.accounts[1], null, 2);
+        }
 
-            if (!data) {
-                document.getElementById('secureOutput').innerHTML = '<span class="text-gray-400">데이터를 찾을 수 없습니다 (404 Not Found)</span>';
-                return;
+        // 시나리오 2: 거래내역 대량 수집
+        async function scenario2_BulkCollection() {
+            updateStep('🎯 시나리오 2: 거래내역 대량 수집 시작');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 공격자가 로그인 후 자동화 스크립트 실행');
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<h2 class="text-xl font-bold mb-4">자동화 공격 스크립트</h2>' +
+                '<div class="bg-gray-900 text-green-400 p-4 rounded code-font text-xs">' +
+                '<div>$ python3 idor_exploit.py</div>' +
+                '<div class="mt-2 text-yellow-400">[*] Starting IDOR attack...</div>' +
+                '<div>[*] Target: https://xxbank.com/account</div>' +
+                '<div>[*] Range: id=1000 to 1005</div>' +
+                '<div class="mt-2 text-cyan-400">[+] Session: JSESSIONID=abc123</div>' +
+                '</div></div>';
+            
+            await addServerLog('[SERVER] Multiple requests incoming...', 'text-yellow-400');
+            await sleep(800);
+            
+            updateStep('2️⃣ <span class="text-red-400">ID 1000~1005 순차적으로 요청</span>');
+            
+            for (let id = 1001; id <= 1005; id++) {
+                document.getElementById('attackerUrl').value = `https://xxbank.com/account?id=${id}`;
+                
+                await addServerLog(`[REQUEST] GET /account?id=${id}`, 'text-blue-400');
+                await sleep(200);
+                await addServerLog(`[SQL] SELECT * FROM accounts WHERE id = ${id}`, 'text-cyan-400');
+                await sleep(200);
+                
+                if (id <= 1005) {
+                    const account = DB.accounts.find(a => a.id === id);
+                    await addServerLog(`[DATABASE] Found: ${account.name} (${account.accountNo})`, 'text-red-400');
+                    
+                    // 공격자 화면에 누적 표시
+                    const currentContent = document.getElementById('attackerScreen').querySelector('.bg-gray-900');
+                    const newLine = document.createElement('div');
+                    newLine.className = 'text-green-400';
+                    newLine.textContent = `[✓] ID ${id}: ${account.name} | ${account.accountNo} | ${account.balance.toLocaleString()}원`;
+                    currentContent.appendChild(newLine);
+                }
+                
+                await sleep(300);
             }
+            
+            updateStep('3️⃣ <span class="text-red-500 font-bold">✓ 5개 계좌 정보 수집 완료!</span>');
+            
+            await addServerLog('[CRITICAL] 5 unauthorized queries executed!', 'text-red-500 font-bold');
+            await sleep(500);
+            
+            document.getElementById('problemBox').classList.remove('hidden');
+            document.getElementById('problemContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">❌ 대량 수집 공격 성공:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 총 5개 계좌 정보 탈취</div>' +
+                '<div>• Rate limiting 없음 (무제한 요청)</div>' +
+                '<div>• 캡차(CAPTCHA) 없음</div>' +
+                '<div>• 이상 패턴 탐지 없음</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">💥 실제 피해 시나리오:</p>' +
+                '<div class="space-y-1 ml-4">' +
+                '<div>• 하룻밤에 10만 개 계좌 정보 수집 가능</div>' +
+                '<div>• 고액 자산가 리스트 작성</div>' +
+                '<div>• 타겟 피싱 공격에 활용</div>' +
+                '</div></div>';
+            
+            document.getElementById('resultBox').classList.remove('hidden');
+            document.getElementById('resultContent').textContent = 
+                '// 수집된 5개 계좌 정보\n' +
+                JSON.stringify(DB.accounts, null, 2);
+            
+            updateServerStatus('COMPROMISED', 'bg-red-600');
+        }
 
-            // Secure Logic: Check Ownership
-            if (data.owner !== CURRENT_USER) {
-                // Block access if owner doesn't match
-                renderResult('secureOutput', null, false, "✅ 방어 성공: 타인의 데이터 접근을 서버가 차단했습니다.");
-            } else {
-                // Allow access if owner matches
-                renderResult('secureOutput', data, true, "✅ 인증 성공: 본인의 데이터입니다.");
-            }
+        // 시나리오 3: 전체 DB 탈취
+        async function scenario3_DatabaseDump() {
+            updateStep('🎯 시나리오 3: 전체 고객 DB 탈취');
+            await sleep(1000);
+            
+            updateStep('1️⃣ 공격자가 자동화 도구로 대량 요청 준비');
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<h2 class="text-xl font-bold mb-4 text-red-600">DB 덤프 도구 실행</h2>' +
+                '<div class="bg-gray-900 text-green-400 p-4 rounded code-font text-xs">' +
+                '<div class="text-red-400">$ ./bank_dumper --target xxbank.com --threads 50</div>' +
+                '<div class="mt-2">[*] IDOR vulnerability confirmed</div>' +
+                '<div>[*] Starting parallel extraction...</div>' +
+                '<div>[*] Thread pool: 50 workers</div>' +
+                '<div>[*] Estimated accounts: 100,000+</div>' +
+                '<div class="mt-2 text-yellow-400">[!] Press ENTER to start</div>' +
+                '</div></div>';
+            
+            await sleep(1500);
+            updateStep('2️⃣ <span class="text-red-400">50개 쓰레드로 병렬 요청 시작</span>');
+            
+            await addServerLog('[ALERT] High traffic detected!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[ALERT] 500+ requests/second', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[CRITICAL] No rate limiting!', 'text-red-500 font-bold');
+            await sleep(500);
+            
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<h2 class="text-xl font-bold mb-4 text-red-600">진행 중...</h2>' +
+                '<div class="bg-gray-900 text-green-400 p-4 rounded code-font text-xs">' +
+                '<div>[████████████████░░░░] 78%</div>' +
+                '<div class="mt-2">Extracted: 78,432 accounts</div>' +
+                '<div>Speed: 523 accounts/sec</div>' +
+                '<div>Remaining: ~42 seconds</div>' +
+                '<div class="mt-2 text-cyan-400">Writing to: customer_db.json</div>' +
+                '</div></div>';
+            
+            await sleep(2000);
+            updateStep('3️⃣ <span class="text-red-500 font-bold">✓ 전체 고객 DB 탈취 완료!</span>');
+            
+            await addServerLog('[DISASTER] Full database extracted!', 'text-red-500 font-bold');
+            await sleep(500);
+            await addServerLog('[IMPACT] 100,000+ customer records stolen', 'text-red-500 font-bold');
+            
+            document.getElementById('attackerScreen').innerHTML = 
+                '<div class="p-6">' +
+                '<div class="bg-green-100 border-2 border-green-500 p-4 rounded mb-4">' +
+                '<p class="text-green-700 font-bold text-center text-xl">' +
+                '<i class="fas fa-check-circle"></i> 추출 완료!</p>' +
+                '</div>' +
+                '<div class="bg-gray-900 text-green-400 p-4 rounded code-font text-xs">' +
+                '<div class="text-green-400">[✓] Extraction complete!</div>' +
+                '<div class="mt-2">Total accounts: 100,247</div>' +
+                '<div>Total balance: ₩1,247,532,000,000</div>' +
+                '<div>Execution time: 3m 24s</div>' +
+                '<div class="mt-2 text-yellow-400">Saved: customer_db.json (245 MB)</div>' +
+                '<div class="mt-2 text-red-400">⚠ Exfiltrating data via TOR...</div>' +
+                '</div></div>';
+            
+            document.getElementById('problemBox').classList.remove('hidden');
+            document.getElementById('problemContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">🔥 재앙적 보안 사고:</p>' +
+                '<div class="space-y-1 ml-4 text-sm">' +
+                '<div>• 10만+ 고객 개인정보 유출</div>' +
+                '<div>• 계좌번호, 잔액 전부 노출</div>' +
+                '<div>• Rate limiting 없어 탐지 실패</div>' +
+                '<div>• WAF/IPS 우회됨</div>' +
+                '<div>• 감사 로그 부재로 추적 불가</div>' +
+                '</div></div>' +
+                '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                '<p class="font-bold mb-2">💰 예상 피해액:</p>' +
+                '<div class="space-y-1 ml-4 text-sm">' +
+                '<div>• 개인정보보호법 위반: 과징금 수십억</div>' +
+                '<div>• 영업정지 가능성</div>' +
+                '<div>• 집단 소송 리스크</div>' +
+                '<div>• 브랜드 이미지 추락</div>' +
+                '</div></div>';
+            
+            updateServerStatus('BREACHED', 'bg-red-600 animate-blink');
+        }
+
+        function updateStep(html) {
+            const steps = document.getElementById('attackSteps');
+            const div = document.createElement('div');
+            div.className = 'p-2 bg-gray-700 rounded text-sm';
+            div.innerHTML = html;
+            steps.appendChild(div);
+            steps.scrollTop = steps.scrollHeight;
+        }
+
+        async function addServerLog(message, colorClass) {
+            const div = document.createElement('div');
+            div.className = colorClass || 'text-gray-400';
+            div.textContent = '> ' + message;
+            const container = document.getElementById('serverLog');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            await sleep(100);
+        }
+
+        function updateServerStatus(text, className) {
+            document.getElementById('serverStatus').textContent = text;
+            document.getElementById('serverStatus').className = 'text-xs text-white px-3 py-1 rounded ' + className;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
     </script>
 </body>
