@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2-2. 보안 기능 가이드</title>
+    <title>2-2. 보안 기능 가이드 (Java Only)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -60,26 +60,29 @@
     
     <div id="page-content-wrapper">
         <div class="container-fluid p-5">
-            <h1 class="mb-4 text-primary"><i class="fa-solid fa-shield-halved me-2"></i> 2-2. 보안 기능 가이드 (16개 항목)</h1>
-            <p class="lead">인증, 인가, 암호화, 세션 관리 등 애플리케이션의 핵심 보안 기능 구현 시 발생하는 취약점 및 안전한 코드 가이드입니다[cite: 2049, 3236, 7155].</p>
+            <h1 class="mb-4 text-primary"><i class="fa-solid fa-shield-halved me-2"></i> 2-2. 보안 기능 가이드 (Java Only)</h1>
+            <p class="lead">인증, 인가, 암호화, 세션 관리 등 애플리케이션의 핵심 보안 기능 구현 시 발생하는 취약점 및 안전한 코드 가이드입니다.</p>
             <hr>
             
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-key me-2"></i> 1. 적절한 인증 없는 중요 기능 허용</h2>
-            <p class="text-secondary">중요 기능이나 자원을 요청할 때 인증 여부를 확인하지 않아 중요 정보가 노출되거나 권한이 도용될 수 있습니다[cite: 2050, 3236, 7155].</p>
+            <p class="text-secondary">중요 기능이나 자원을 요청할 때 인증 여부를 확인하지 않아 중요 정보가 노출되거나 권한이 도용될 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">권한 확인 없음</span></div>
                         <pre><code class="language-java">/* 취약한 코드 (Java) */
-//...
-String userId = (String) session.getAttribute("userId"); // 로그인 ID
-String requestedUserId = memberModel.getUserId(); // 요청 ID
+@RequestMapping(value = "/modify.do", method = RequestMethod.POST)
+public ModelAndView memberModifyProcess(@ModelAttribute("MemberModel") MemberModel memberModel, HttpServletRequest request, HttpSession session) {
+    // 1. 로그인한 사용자를 불러온다.
+    String userId = (String) session.getAttribute("userId"); // 로그인 ID
+    String requestedUserId = memberModel.getUserId(); // 요청 ID
 
-// 로그인한 사용자와 요청한 사용자 ID 일치 확인 누락 [cite: 6152]
-if (service.modifyMember(memberModel)) {
-    // 회원정보 수정 로직
-} 
-// 만약 requestedUserId가 다른 사용자 ID라면 IDOR 발생
+    // 로그인한 사용자와 요청한 사용자 ID 일치 확인 누락 
+    if (service.modifyMember(memberModel)) { 
+        // 회원정보 수정 로직
+    } 
+    // 만약 requestedUserId가 다른 사용자 ID라면 IDOR 발생
+}
 </code></pre>
                     </div>
                 </div>
@@ -87,16 +90,19 @@ if (service.modifyMember(memberModel)) {
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 요청 사용자 확인</span></div>
                         <pre><code class="language-java">/* 안전한 코드 (Java) */
-String userId = (String) session.getAttribute("userId"); 
-String requestedUserId = memberModel.getUserId();
+@RequestMapping(value = "/modify.do", method = RequestMethod.POST)
+public ModelAndView memberModifyProcess(@ModelAttribute("MemberModel") MemberModel memberModel, HttpServletRequest request, HttpSession session) {
+    String userId = (String) session.getAttribute("userId"); 
+    String requestedUserId = memberModel.getUserId();
 
-// 요청된 자원이 로그인된 사용자의 것인지 확인
-if (!requestedUserId.equals(userId)) {
-    // 권한 없음 에러 처리 [cite: 6157]
-    throw new SecurityException("접근 권한이 없습니다.");
-}
-if (service.modifyMember(memberModel)) {
-    // 안전하게 회원정보 수정
+    // 요청된 자원이 로그인된 사용자의 것인지 확인
+    if (!requestedUserId.equals(userId)) {
+        // 권한 없음 에러 처리
+        throw new SecurityException("접근 권한이 없습니다.");
+    }
+    if (service.modifyMember(memberModel)) {
+        // 안전하게 회원정보 수정
+    }
 }
 </code></pre>
                     </div>
@@ -104,539 +110,588 @@ if (service.modifyMember(memberModel)) {
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-user-lock me-2"></i> 2. 부적절한 인가</h2>
-            <p class="text-secondary">프로그램이 모든 실행 경로에 대해 접근 제어를 검사하지 않거나 불완전하게 검사하여 비인가자가 정보를 유출할 수 있습니다[cite: 2149, 3234, 7155].</p>
+            <p class="text-secondary">프로그램이 모든 실행 경로에 대해 접근 제어를 검사하지 않거나 불완전하게 검사하여 비인가자가 정보를 유출할 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">권한 확인 없음</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python Django)
-def delete_content(request):
-    action = request.POST.get('action', "")
-    content_id = request.POST.get('content_id', "")
-    
-    # 작업 요청을 하는 사용자의 권한 확인 없이 delete 수행 [cite: 2184]
-    if action is not None and action == "delete":
-        Content.objects.filter(id=content_id).delete()
-        return render(request, '/success.html')
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">인가 확인 없는 중요 기능 실행</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+private BoardDao boardDao;
+String action = request.getParameter("action");
+String contentId = request.getParameter("contentId");
+
+// 요청을 하는 사용자의 delete 작원 권한 확인 없이 수행하고 있어 안전하지 않다.
+if (action != null && action.equals("delete")) {
+    boardDao.delete(contentId);
+}
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 데코레이터 사용</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python Django)
-from django.contrib.auth.decorators import login_required, permission_required
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 인가 확인 로직</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+private BoardDao boardDao;
+String action = request.getParameter("action");
+String contentId = request.getParameter("contentId");
+User user = (User)session.getAttribute("user");
 
-# @permission_required: 해당 기능을 수행할 권한이 있는지 확인 [cite: 2199]
-@login_required
-@permission_required('content.delete', raise_exception=True) 
-def delete_content(request):
-    action = request.POST.get('action', "")
-    content_id = request.POST.get('content_id', "")
-    
-    if action is not None and action == "delete":
-        # 권한 확인 후 delete 수행
-        Content.objects.filter(id=content_id).delete()
+// 사용자정보에서 해당 사용자가 delete작업의 권한이 있는지 확인한 뒤 삭제 작업을 수행한다.
+// checkAccessControlList(user, action) 로직을 통해 권한을 검사해야 함
+if (action != null && action.equals("delete") && checkAccessControlList(user, action)) {
+    boardDao.delete(contentId);
+}
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-user-slash me-2"></i> 3. 중요한 자원에 대한 잘못된 권한 설정</h2>
-            <p class="text-secondary">중요 자원(설정 파일 등)에 대해 최소 권한이 아닌 과도한 권한이 부여되어 비인가자에게 노출됩니다[cite: 2224, 3235, 7155].</p>
+            <p class="text-secondary">중요 자원(설정 파일 등)에 대해 최소 권한이 아닌 과도한 권한이 부여되어 비인가자에게 노출됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">전체 사용자 권한 허용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-import os
-def write_file():
-    # 모든 사용자(Owner, Group, Others)에게 읽기, 쓰기, 실행 권한을 부여 (0777) [cite: 2248]
-    os.chmod('/root/system_config', 0o777) 
-    with open("/root/system_config", 'w') as f:
-        f.write("your config is broken")
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">전체 사용자 권한 허용</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+File file = new File("/home/setup/system.ini");
+// 모든 사용자에게 실행, 읽기, 쓰기 권한을 허용하여 안전하지 않다.
+file.setExecutable(true, false); // 모든 사용자 실행 허용
+file.setReadable(true, false);   // 모든 사용자 읽기 허용
+file.setWritable(true, false);   // 모든 사용자 쓰기 허용
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 최소 권한 할당</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import os
-def write_file_secure():
-    # 소유자(Owner) 외에는 아무런 권한을 주지 않음 (0700) [cite: 2265]
-    os.chmod('/root/system_config', 0o700) 
-    with open("/root/system_config", "w") as f:
-        f.write("your config is secure")
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 최소 권한 할당</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+File file = new File("/home/setup/system.ini");
+// 소유자에게만 권한을 할당 (최소 권한의 원칙)
+file.setExecutable(false); // 소유자 실행 권한 금지 (필요 시 true)
+file.setReadable(true);    // 소유자 읽기 권한 허용
+file.setWritable(false);   // 소유자 쓰기 권한 금지 (필요 시 true)
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-skull-crossbones me-2"></i> 4. 취약한 암호화 알고리즘 사용</h2>
-            <p class="text-secondary">MD5, SHA1, DES 등 정보보호 측면에서 취약한 암호화 알고리즘을 사용하여 중요 정보의 기밀성을 보장할 수 없습니다[cite: 2274, 2290, 3235, 7155].</p>
+            <p class="text-secondary">DES, RC5, MD5 등 정보보호 측면에서 취약한 암호화 알고리즘을 사용하여 중요 정보의 기밀성을 보장할 수 없습니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">DES/MD5 사용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-from Crypto.Cipher import DES
-# 취약한 DES 알고리즘 사용 [cite: 2311]
-cipher_des = DES.new(key, DES.MODE_ECB) 
-
-import hashlib
-# 취약한 md5 해시함수 사용 [cite: 2344]
-hash_text = hashlib.md5(plain_text.encode('utf-8')).hexdigest()
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">DES 알고리즘 사용</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+public byte[] encrypt(byte[] msg, Key k) { 
+    byte[] rslt = null;
+    try {
+        // 키 길이가 짧아 취약한 암호화 알고리즘인 DES를 사용하여 안전하지 않다.
+        Cipher c = Cipher.getInstance("DES");
+        c.init(Cipher.ENCRYPT_MODE, k);
+        rslt = c.update(msg);
+    } catch (/* ... */) { /* ... */ }
+    return rslt;
+}
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: AES/SHA-256 사용</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-from Crypto.Cipher import AES
-# 1. 안전한 AES 알고리즘 및 CBC 모드 사용 [cite: 2327]
-cipher_aes = AES.new(key, AES.MODE_CBC, iv) 
-
-import hashlib
-# 2. 안전한 sha-256 해시함수 사용 [cite: 2356]
-hash_text = hashlib.sha256(plain_text.encode('utf-8')).hexdigest()
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: AES 알고리즘 사용</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+public byte[] encrypt(byte[] msg, Key k) { 
+    byte[] rslt = null;
+    try {
+        // 키 길이가 길어 강력한 알고리즘인 AES를 사용하여 안전하다.
+        Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        c.init(Cipher.ENCRYPT_MODE, k); 
+        rslt = c.update(msg);
+    } catch (/* ... */) { /* ... */ }
+    return rslt;
+}
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-lock-slash me-2"></i> 5. 암호화되지 않은 중요정보</h2>
-            <p class="text-secondary">중요 정보(개인정보, 패스워드 등)를 평문으로 **저장**하거나 **전송**하여 인가되지 않은 사용자에게 노출됩니다[cite: 2371, 2382, 3235, 7155].</p>
+            <p class="text-secondary">중요 정보(개인정보, 패스워드 등)를 평문으로 **저장**하거나 **전송**하여 인가되지 않은 사용자에게 노출됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">평문 저장/전송</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python DB/Socket)
-# 1. 평문 저장 [cite: 2398]
-curs.execute(
-'UPDATE USERS SET PASSWORD=%s WHERE USER_ID=%s',
-password, user_id # 암호화되지 않은 패스워드
-)
-
-# 2. 평문 전송 [cite: 2455]
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.sendall(password.encode('utf-8')) # 암호화 하지 않고 전송
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">평문 저장</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+String pwd = request.getParameter("pwd");
+// ... (SQL 쿼리)
+stmt.setString(2, pwd); // 입력받은 패스워드가 평문으로 DB에 저장되어 안전하지 않다.
+stmt.executeUpdate();
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 해시 + Salt 저장/암호화 전송</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-# 1. 해시 + Salt 저장 [cite: 2426]
-hash_obj.update(bytes(password + salt, 'utf-8'))
-hash_pwd = hash_obj.hexdigest()
-curs.execute('UPDATE USERS SET PASSWORD=%s ...', (hash_pwd, user_id))
-
-# 2. 암호화 전송 [cite: 2481]
-aes = AEScipher(block_key)
-enc_passowrd = aes.encrypt(passowrd) # 중요 정보는 암호화하여 전송
-s.sendall(enc_passowrd.encode('utf-8'))
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 해시 + Salt 저장</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+String pwd = request.getParameter("pwd");
+// 패스워드를 솔트값을 포함하여 SHA-256 해쉬로 변경하여 안전하게 저장한다.
+MessageDigest md = MessageDigest.getInstance("SHA-256");
+// md.update(salt); // 솔트 적용 로직
+byte[] hashInBytes = md.digest(pwd.getBytes());
+// ... (해시값을 문자열로 변환)
+pwd = sb.toString(); 
+// ...
+stmt.setString(2, pwd);
+stmt.executeUpdate();
+</code></pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">평문 전송</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+try {
+    Socket s = new Socket("taranis", 4444);
+    PrintWriter o = new PrintWriter(s.getOutputStream(), true);
+    // 패스워드를 평문으로 전송하여 안전하지 않다.
+    String password = getPassword();
+    o.write(password);
+} catch (/* ... */) { /* ... */ }
+</code></pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 암호화 전송</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+// 패스워드를 암호화 하여 전송
+try {
+    Socket s = new Socket("taranis", 4444);
+    PrintStream o = new PrintStream(s.getOutputStream(), true);
+    // 패스워드를 강력한 AES암호화 알고리즘으로 암호화하여 전송
+    Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    String password = getPassword();
+    byte[] encPassword = c.update(password.getBytes());
+    o.write(encPassword, 0, encPassword.length);
+} catch (/* ... */) { /* ... */ }
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-code me-2"></i> 6. 하드코드된 중요정보</h2>
-            <p class="text-secondary">소스코드 내부에 패스워드, 암호화 키 등 중요 정보를 상수로 직접 코딩하여 소스코드 유출 시 함께 노출됩니다[cite: 2530, 2541, 3235, 7153].</p>
+            <p class="text-secondary">소스코드 내부에 패스워드, 암호화 키 등 중요 정보를 상수로 직접 코딩하여 소스코드 유출 시 함께 노출됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">DB 정보 하드코딩</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python pymysql)
-def query_execute(query):
-    # user, passwd가 소스코드에 평문으로 하드코딩되어 있음 [cite: 2555, 2564, 2566]
-    dbconn = pymysql.connect(
-        host='127.0.0.1',
-        user='root',
-        passwd='1234', 
-    )
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">DB 정보 하드코딩</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+public class MemberDAO {
+    // ...
+    private static final String USER = "SCOTT"; // DB ID;
+    private static final String PASS = "SCOTT"; // DB PW;
+    // ...
+    con = DriverManager.getConnection(URL, USER, PASS); // DB 패스워드가 소스코드에 평문으로 저장
+}
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 외부 파일/복호화</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-def query_execute(query, config_path):
-    with open(config_path, 'r') as config:
-        dbconf = json.load(fp=config)
-        # 외부 설정 파일에서 암호화된 값을 가져와 복호화한 후에 사용 [cite: 2592, 2597]
-        dbUser = decrypt(blockkey, dbconf['user'])
-        dbPasswd = decrypt(blockkey, dbconf['passwd'])
-    
-    dbconn = pymysql.connect(user=dbUser, passwd=dbPasswd)
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 외부 파일/복호화</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+public class MemberDAO {
+    // ...
+    public Connection getConn() {
+        // ...
+        // 암호화된 패스워드를 프로퍼티에서 읽어들여 복호화해서 사용해야한다.
+        String PASS = props.getProperty("EncryptedPswd");
+        byte[] decryptedPswd = cipher.doFinal(PASS.getBytes());
+        PASS = new String(decryptedPswd);
+        con = DriverManager.getConnection(URL, USER, PASS);
+        // ...
+    }
+}
+</code></pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">암호화 키 하드코딩</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+public String encriptString(String usr) {
+    // 암호화 키를 소스코드 내부에 사용하는 것은 안전하지 않다.
+    String key = "22df3023sf~2;asn!@#/>as"; 
+    if (key != null) {
+        byte[] bToEncrypt = usr.getBytes("UTF-8");
+        SecretKeySpec sKeySpec = new SecretKeySpec(key.getBytes(), "AES");
+    }
+    // ...
+}
+</code></pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 외부 파일/복호화된 키 사용</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+public String encriptString(String usr) {
+    // 암호화 키는 외부 파일에서 암호화 된 형태로 저장하고, 사용 시 복호화 한다.
+    String key = getPassword("./password.ini");
+    key = decrypt(key);
+    if (key != null) {
+        byte[] bToEncrypt = usr.getBytes("UTF-8");
+        SecretKeySpec sKeySpec = new SecretKeySpec(key.getBytes(), "AES");
+    }
+    // ...
+}
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-key me-2"></i> 7. 충분하지 않은 키 길이 사용</h2>
-            <p class="text-secondary">RSA는 2048 비트 이상, 대칭 암호화는 128비트 이상의 키를 사용해야 합니다. 키 길이가 짧으면 짧은 시간 안에 키를 찾아낼 수 있습니다[cite: 2643, 2670, 3235, 7153].</p>
+            <p class="text-secondary">키 길이가 짧으면 짧은 시간 안에 키를 찾아낼 수 있고 이를 이용해 공격자가 암호화된 데이터나 패스워드를 복호화 할 수 있게 됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">약한 RSA 키 길이</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-from Crypto.PublicKey import RSA
-def make_rsa_key_pair():
-    # RSA 키 길이를 2048 비트 이하로 설정하는 경우 안전하지 않음 [cite: 2682]
-    private_key = RSA.generate(1024) 
-    # ECC의 키 길이를 224비트 이하로 설정하는 경우 안전하지 않음 [cite: 2691]
-    ecc_curve = registry.get_curve('secp192r1') 
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">짧은 키 길이 사용</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+public static void generateKey() {
+    try {
+        final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
+        // RSA 키 길이를 1024 비트로 짧게 설정하는 경우 안전하지 않다.
+        keyGen.initialize(1024);
+        final KeyPair key = keyGen.generateKeyPair();
+        // ...
+    } catch (/* ... */) { /* ... */ }
+}
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 2048 비트 이상</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-from Crypto.PublicKey import RSA
-def make_rsa_key_pair():
-    # RSA 키 길이를 2048 비트 이상으로 길게 설정 [cite: 2712]
-    private_key = RSA.generate(2048)
-    
-def make_ecc():
-    # ECC 키 길이를 224 비트 이상으로 설정 [cite: 2721]
-    ecc_curve = registry.get_curve('secp224r1')
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 2048 비트 이상</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+public static void generateKey() {
+    try {
+        final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
+        // 공개키 암호화에 사용하는 키의 길이는 적어도 2048비트 이상으로 설정한다.
+        keyGen.initialize(2048);
+        final KeyPair key = keyGen.generateKeyPair();
+        // ...
+    } catch (/* ... */) { /* ... */ }
+}
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-dice me-2"></i> 8. 적절하지 않은 난수 값 사용</h2>
-            <p class="text-secondary">예측 불가능한 난수가 필요한 상황(세션 ID, 암호화 키)에서 예측 가능한 난수(예: `random` 모듈)를 사용하여 공격에 취약해집니다[cite: 2741, 2752, 3236, 7155].</p>
+            <p class="text-secondary">예측 불가능한 난수가 필요한 상황(세션 ID, 암호화 키)에서 예측 가능한 난수(`java.util.Random`)를 사용하여 공격에 취약해집니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">random 라이브러리 사용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-import random
-def get_otp_number():
-    random_str = ""
-    # random 라이브러리는 주요 보안 기능을 위한 난수로 안전하지 않다 [cite: 2772, 2774]
-    for i in range(6):
-        random_str += str(random.randrange(10))
-    return random_str
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">Random 클래스 사용</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+import java.util.Random;
+public Static String getAuthKey() {
+    // 보안결정을 위한 난수로는 안전하지 않은 Random 클래스 사용
+    Random random = new Random();
+    String authKey = Integer.toString(random.nextInt());
+    // ...
+}
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: secrets 모듈 사용</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import secrets
-def get_otp_number():
-    random_str = ""
-    # 보안기능에 적합한 난수 생성용 secrets 라이브러리 사용 [cite: 2792]
-    for i in range(6):
-        random_str += str(secrets.randbelow(10))
-    return random_str
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: SecureRandom 클래스 사용</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+import java.security.SecureRandom;
+import java.security.MessageDigest;
+public Static String getAuthKey() {
+    // 보안결정을 위한 난수로는 예측이 거의 불가능하게 암호학적으로 보호된 SecureRandom을 사용한다.
+    try {
+        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        secureRandom.setSeed(secureRandom.generateSeed(128));
+        String authKey = new String(digest.digest((secureRandom.nextLong() + "").getBytes()));
+    } catch (/* ... */) { /* ... */ }
+    return authKey;
+}
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-clipboard-question me-2"></i> 9. 취약한 비밀번호 허용</h2>
-            <p class="text-secondary">강한 비밀번호 조합 규칙(영문, 숫자, 특수문자 등)이 미흡하여 무차별 대입 공격에 취약해집니다[cite: 2834, 2841, 3236, 7155].</p>
+            <p class="text-secondary">강한 비밀번호 조합 규칙(영문, 숫자, 특수문자 등)이 미흡하여 무차별 대입 공격(Brute Force)에 취약해집니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">복잡도 검증 누락</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python Flask)
-def register():
-    password = request.form.get('password')
-    # 패스워드 생성 규칙을 확인하지 않고 회원 가입 [cite: 2878]
-    usertable = User()
-    usertable.password = password
-    db.session.add(usertable)
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">복잡도 검증 누락</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+String pass = request.getParameter("pass");
+UserVo userVO = new UserVo(id, pass);
+// 비밀번호의 자릿수, 특수문자 포함 여부 등 복잡도를 체크하지 않고 등록
+String result = registerDAO.register(userVO);
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 정규식 복잡도 검사</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python Flask)
-import re
-# ... (check_password 함수 정의)
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 정규식 복잡도 검사</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+String pass = request.getParameter("pass");
+// 비밀번호에 자릿수, 특수문자 포함 여부 등의 복잡도를 체크하고 등록하게 한다.
+Pattern pattern = Pattern.compile("((?=.*[a-zA-Z])(?=.*[0-9@#$%]).{9, })");
+Matcher matcher = pattern.matcher(pass);
 
-def register_secure():
-    password = request.form.get('password')
-    
-    if not check_password(password):
-        # 패스워드 복잡도 검증 후 가입 승인 처리 [cite: 2882]
-        return make_response("패스워드 조합규칙에 맞지 않습니다.", 400)
-    
-    usertable = User()
-    usertable.password = password
-    db.session.add(usertable)
+if (!matcher.matches()) {
+    return "비밀번호 조합규칙 오류";
+}
+UserVo userVO = new UserVo(id, pass);
+String result = registerDAO.register(userVO);
 </code></pre>
                     </div>
                 </div>
             </div>
             
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-signature me-2"></i> 10. 부적절한 전자서명 확인</h2>
-            <p class="text-secondary">전자서명을 검증하지 않거나 검증 절차가 부적절하면 위변조된 파일/코드가 실행될 수 있습니다[cite: 2895, 3236, 7155].</p>
+            <p class="text-secondary">전자서명을 검증하지 않거나 검증 절차가 부적절하면 위변조된 파일/코드가 실행될 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">전자서명 검증 누락</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def verify_data(request):
-    encrypted_code = request.POST.get("encrypted_msg", "")
-    # 클라이언트로부터 전달받은 데이터(전자서명을 수신 처리 하지 않음) [cite: 2901]
-    # ...
-    origin_python_code = decrypt_with_symmetric_key(secret_key, encrypted_code)
-    
-    # 전자서명 검증 없이 파이썬 코드 실행 [cite: 2902]
-    eval(origin_python_code) 
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">서명 확인 없이 사용</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+File f = new File(downloadedFilePath);
+// 신뢰할 수 없는 곳에서 다운로드 한 JAR 파일의 서명을 확인하지 않고 사용
+JarFile jf = new JarFile(f); 
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 전자서명 검증</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-def verify_data_secure(request):
-    # ... (코드 및 서명 복호화)
-    # 클라이언트의 공개키를 통해 파이썬 코드(원문)와 전자서명을 검증
-    verify_result = verify_digit_signature(origin_python_code, origin_signature, public_key)
-    
-    # 전자서명 검증을 통과해야만 파이썬 코드 실행 [cite: 2907, 2908]
-    if verify_result:
-        eval(origin_python_code)
-    else:
-        return render(request, "/verify_failed.html")
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 전자서명 확인</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+File f = new File(downloadedFilePath);
+// JarFile 생성자에 boolean형 파라미터를 사용하여 전자서명을 확인
+JarFile jf = new JarFile(f, true); 
+Enumeration<JarEntry> ens = jf.entries();
+while (ens.hasMoreElements()) {
+    JarEntry en = ens.nextElement();
+    if (!en.isDirectory()) {
+        // ...
+        CodeSigner[] signers = en.getCodeSigners(); // 서명 주체를 확인
+    }
+}
 </code></pre>
                     </div>
                 </div>
             </div>
             
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-certificate me-2"></i> 11. 부적절한 인증서 유효성 검증</h2>
-            <p class="text-secondary">SSL/TLS 통신 시 서버 측 인증서의 유효성을 확인하지 않거나 부적절하게 검증하여, 악성 호스트에 연결되거나 중간자 공격에 노출됩니다[cite: 2912, 3236, 7155].</p>
+            <p class="text-secondary">SSL/TLS 통신 시 서버 측 인증서의 유효성을 확인하지 않거나 부적절하게 검증하여, 악성 호스트에 연결되거나 중간자 공격에 노출됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">인증서 검증 안 함</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python ssl)
-import ssl
-def connect_with_server():
-    context = ssl.SSLContext()
-    # CERT_NONE: 상대방을 인증하지 않기 때문에 서버 신뢰성을 보장할 수 없음 [cite: 2919]
-    context.verify_mode = ssl.CERT_NONE 
-    
-    with context.wrap_socket(sock) as ssock:
-        ssock.connect((HOST, PORT))
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">인증서 유효성 검증 로직 누락</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+// PDF에 Java 코드 예제가 없어 C 코드 기반으로 유추
+// (인증서 유효성 검증 없이 통신을 진행하는 로직)
+URL url = new URL("https://untrusted.com/");
+HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+conn.setHostnameVerifier( (hostname, session) -> true ); // 모든 호스트명 허용 (매우 위험)
+InputStream in = conn.getInputStream();
+//...
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 유효성 검증 적용</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import ssl
-
-def connect_with_server():
-    # PROTOCOL_TLS_CLIENT 사용으로 인증서 유효성 검사 (verify_mode=CERT_REQUIRED) [cite: 2921, 2924]
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    
-    # 서버로부터 전달받은 CA 인증서를 context에 로드 (필수)
-    context.load_verify_locations(SERVER_CA_PEM) 
-    
-    # 호스트 이름(HOST_NAME)이 일치하지 않으면 통신 불가
-    with context.wrap_socket(sock, server_hostname=HOST_NAME) as ssock:
-        ssock.connect((HOST, PORT))
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 인증서 체인 및 유효기간 확인</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+private boolean verifySignature(X509Certificate toVerify, X509Certificate signingCert) {
+    /* 검증하려는 호스트 인증서(toVerify)와 CA인증서(signingCert)의 DN이 일치하는지 여부를 확인한다.*/
+    if (!toVerify.getIssuerDN().equals(signingCert.getSubjectDN())) return false;
+    try {
+        // 호스트 인증서가 CA인증서로 서명 되었는지 확인한다.
+        toVerify.verify(signingCert.getPublicKey());
+        // 호스트 인증서가 유효기간이 만료되었는지 확인한다.
+        toVerify.checkValidity();
+        return true;
+    } catch (GeneralSecurityException verifyFailed) {
+        return false;
+    }
+}
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-cookie-bite me-2"></i> 12. 사용자 하드디스크에 저장되는 쿠키를 통한 정보노출</h2>
-            <p class="text-secondary">개인정보, 인증 정보 등이 영속적인 쿠키(Persistent Cookie)에 저장되도록 만료 시간을 길게 설정하여 공격자에게 노출됩니다[cite: 2928, 3236, 7154].</p>
+            <p class="text-secondary">개인정보, 인증 정보 등이 영속적인 쿠키(Persistent Cookie)에 저장되도록 만료 시간을 길게 설정하여 공격자에게 노출됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">과도한 만료시간</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python Django)
-def remind_user_state(request):
-    res = HttpResponse()
-    # 쿠키의 만료시간을 1년(60*60*24*365)으로 과도하게 길게 설정하고 있어 안전하지 않다 [cite: 2934]
-    res.set_cookie('rememberme', 1, max_age=60*60*24*365)
-    return res
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">과도한 만료시간</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+Cookie loginCookie = new Cookie("rememberme", "YES");
+// 쿠키의 만료시간을 1년으로 과도하게 길게 설정하고 있어 안전하지 않다.
+loginCookie.setMaxAge(60*60*24*365);
+response.addCookie(loginCookie);
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 최소 만료시간 및 Secure</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python Django)
-def remind_user_state(request):
-    res = HttpResponse()
-    # 쿠키의 만료시간을 적절하게 부여하고 secure 및 httpOnly 옵션을 활성화 한다. [cite: 2940]
-    res.set_cookie('rememberme', 1, max_age=60*60, secure=True, httponly=True)
-    return res
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 최소 만료시간</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+Cookie loginCookie = new Cookie("rememberme", "YES");
+// 쿠키의 만료시간은 해당 기능에 맞춰 최소로 사용한다. (예: 24시간)
+loginCookie.setMaxAge(60*60*24);
+response.addCookie(loginCookie);
 </code></pre>
                     </div>
                 </div>
             </div>
             
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-comment-slash me-2"></i> 13. 주석문 안에 포함된 시스템 주요정보</h2>
-            <p class="text-secondary">개발자가 편의를 위해 ID, 패스워드 등 보안 관련 내용을 주석문에 포함하여 소스코드 유출 시 함께 노출됩니다[cite: 2945, 3236, 7154].</p>
+            <p class="text-secondary">개발자가 편의를 위해 ID, 패스워드 등 보안 관련 내용을 주석문에 포함하여 소스코드 유출 시 함께 노출됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">주석 내 중요정보</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def user_login(id, passwd):
-    # 주석문에 포함된 중요 시스템의 인증 정보
-    # id = admin
-    # passwd = passw0rd
-    
-    result = login(id, passwd)
-    return result
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">주석 내 중요정보</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+// 주석문으로 DB연결 ID, 패스워드의 중요한 정보를 노출시켜 안전하지 않다. 
+// DB연결 root / a1q2w3r3f2!@
+con = DriverManager.getConnection(URL, USER, PASS);
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 주석 제거</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-def user_login(id, passwd):
-    # 주석문에 포함된 민감한 정보는 삭제 [cite: 2954]
-    result = login(id, passwd)
-    return result
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 주석 제거</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+// ID, 패스워드등의 중요 정보는 주석에 포함해서는 안된다.
+con = DriverManager.getConnection(URL, USER, PASS);
 </code></pre>
                     </div>
                 </div>
             </div>
             
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-lock-open me-2"></i> 14. 솔트 없이 일방향 해시 함수 사용</h2>
-            <p class="text-secondary">패스워드 저장 시 솔트(Salt) 없이 해시하여 레인보우 테이블 공격에 취약해집니다[cite: 2957, 3237, 7154].</p>
+            <p class="text-secondary">패스워드 저장 시 솔트(Salt) 없이 해시하여 레인보우 테이블 공격에 취약해집니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">솔트 없이 해시</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-import hashlib
-def get_hash_from_pwd(pw):
-    # salt 없이 생성된 해시값은 강도가 약해 취약하다 [cite: 2964]
-    h = hashlib.sha256(pw.encode())
-    return h.digest()
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">솔트 없이 해시</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+public String getPasswordHash(String password) throws Exception  {
+    MessageDigest md = MessageDigest.getInstance("SHA-256");
+    // 해쉬에 솔트를 적용하지 않아 안전하지 않다.
+    md.update(password.getBytes());
+    byte byteData[] = md.digest();
+    // ...
+}
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: Salt 사용</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import hashlib
-import secrets
-
-def get_hash_from_pwd(pw):
-    # 1. 솔트 값을 사용하면 길이가 짧은 패스워드로도 고강도의 해시를 생성할 수 있다. [cite: 2968]
-    salt = secrets.token_hex(32)
-    # 2. 솔트와 패스워드를 함께 해시 함수에 적용
-    h = hashlib.sha256(salt.encode() + pw.encode())
-    return h.digest(), salt
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: Salt 사용</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+public String getPasswordHash(String password, byte[] salt) throws Exception {
+    MessageDigest md = MessageDigest.getInstance("SHA-256");
+    md.update(password.getBytes());
+    // 해쉬 사용 시에는 원문을 찾을 수 없도록 솔트를 사용하여야 한다.
+    md.update(salt);
+    byte byteData[] = md.digest();
+    // ...
+}
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-download me-2"></i> 15. 무결성 검사 없는 코드 다운로드</h2>
-            <p class="text-secondary">원격에서 소스코드나 실행파일을 다운로드받아 실행 시 무결성 검사를 하지 않아 악의적인 코드가 실행됩니다[cite: 2971, 3237, 7155].</p>
+            <p class="text-secondary">원격에서 소스코드나 실행파일을 다운로드받아 실행 시 무결성 검사를 하지 않아 악의적인 코드가 실행됩니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">무결성 검증 누락</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-import requests
-def execute_remote_code():
-    url = "https://www.somewhere.com/storage/code.py"
-    # 원격 코드 다운로드 [cite: 2981]
-    file = requests.get(url) 
-    # 다운로드한 파일의 무결성 검사 없이 바로 파일에 저장/실행
-    with open('save.py', 'wb') as f:
-        f.write(file.content)
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">무결성 검증 누락</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+URL[] classURLs = new URL[] { new URL("file:subdir/") };
+// 원격에서 파일을 다운로드한 뒤 로드하면서, 대상 파일에 대한 무결성 검사를 수행하지 않아 파일변조 등으로 인한 피해가 발생할 수 있다.
+URLClassLoader loader = new URLClassLoader(classURLs);
+Class loadedClass = Class.forName("LoadMe", true, loader);
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 해시값 비교</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import requests
-import hashlib
-# ...
-def execute_remote_code():
-    # ... (config 파일에서 remote_code_hash 가져오기)
-    file = requests.get(url)
-    remote_code = file.content
-    
-    sha = hashlib.sha256()
-    sha.update(remote_code)
-    
-    # 다운로드 받은 파일의 해시값 검증 [cite: 2984]
-    if sha.hexdigest() != remote_code_hash:
-        raise Exception('파일이 손상되었습니다.')
-        
-    with open('save.py', 'wb') as f:
-        f.write(file.content)
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 암호화/서명 확인 후 로드</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+// ... (파일을 다운로드 받은 후)
+byte[] loadFile = FileManager.getBytes(jarFile);
+// Public Key로 복호화 (전자 서명 확인)
+loadFile = decrypt(loadFile, publicKey);
+// 복호화된 파일을 생성한다.
+FileManager.createFile(loadFile, jarFile);
+
+URLClassLoader loader = new URLClassLoader(classURLs);
+Class loadedClass = Class.forName("MyClass", true, loader);
 </code></pre>
                     </div>
                 </div>
             </div>
 
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-user-clock me-2"></i> 16. 반복된 인증시도 제한 기능 부재</h2>
-            <p class="text-secondary">인증 시도 횟수를 제한하지 않아 공격자가 무차별 대입 공격(Brute Force)을 통해 계정 권한을 획득할 수 있습니다[cite: 2987, 3237, 7155].</p>
+            <p class="text-secondary">인증 시도 횟수를 제한하지 않아 공격자가 무차별 대입 공격(Brute Force)을 통해 계정 권한을 획득할 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">시도 횟수 제한 없음</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def login(request):
-    user_id = request.POST.get('user_id', '')
-    # ... (패스워드 해시 검증)
-    
-    # 인증 시도에 따른 제한이 없어 반복적인 인증 시도가 가능 [cite: 2993]
-    if sha.hexdigest() == hashed_passwd:
-        return render(request, '/index.html', {'state':'login_success'})
-    else:
-        return render(request, '/login.html', {'state':'login_failed'})
+                        <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">시도 횟수 제한 없음</span></div>
+                        <pre><code class="language-java">/* 취약한 코드 (Java) */
+private static final int FAIL = -1;
+public void login() {
+    // ...
+    int result = FAIL;
+    try {
+        // 인증 실패에 대해 제한을 두지 않아 안전하지 않다.
+        while (result == FAIL) {
+            // ...
+            result = verifyUser(username, password);
+        }
+    } catch (/* ... */) { /* ... */ }
+}
 </code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 횟수 제한/잠금</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-LOGIN_TRY_LIMIT = 5
-
-def login_secure(request):
-    # ... (패스워드 해시 검증)
-    # ... (COUNT 변수 로직)
-    
-    if COUNT >= LOGIN_TRY_LIMIT:
-        # 로그인 실패횟수 초과로 인해 잠금된 계정에 대한 인증 시도 제한 [cite: 2997]
-        return render(request, "/account_lock.html", {"state": "account_lock"})
-    elif sha.hexdigest() == hashed_passwd:
-        # 성공 시 실패 횟수 삭제 [cite: 2995]
-        LoginFail.objects.filter(user_id=user_id).delete()
-        return render(request, '/index.html', {'state':'login_success'})
-    else:
-        # 실패 시 횟수 DB 기록 [cite: 2997]
-        # ...
+                        <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 횟수 제한/잠금</span></div>
+                        <pre><code class="language-java">/* 안전한 코드 (Java) */
+private static final int FAIL = -1;
+private static final int MAX_ATTEMPTS = 5; // 최대 시도 횟수 설정
+public void login() {
+    // ...
+    int result = FAIL;
+    int count = 0;
+    try {
+        // 인증 실패 및 시도 횟수에 제한을 두어 안전하다.
+        while (result == FAIL && count < MAX_ATTEMPTS) {
+            // ...
+            result = verifyUser(username, password);
+            count++;
+        }
+    } catch (/* ... */) { /* ... */ }
+}
 </code></pre>
                     </div>
                 </div>
             </div>
-            
+
         </div>
     </div>
 </div>
@@ -644,7 +699,6 @@ def login_secure(request):
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
         Prism.highlightAll();

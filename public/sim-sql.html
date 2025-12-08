@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy SQL Injection Simulator</title>
+    <title>금융권 SQL Injection 시뮬레이터 - 교육용</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f1f5f9; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .font-code { font-family: 'Fira Code', monospace; }
         
         /* Highlight Animations */
@@ -18,118 +18,229 @@
             100% { background-color: transparent; }
         }
         .highlight-attack { animation: flash 1s ease-out; }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .slide-in { animation: slideIn 0.5s ease-out; }
     </style>
 </head>
-<body class="p-6 md:p-10 h-screen overflow-y-auto">
+<body class="p-4 md:p-8 min-h-screen">
 
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Warning Banner -->
+    <div class="max-w-6xl mx-auto mb-6">
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-sm">
+            <div class="flex items-start">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-600 text-xl mt-0.5 mr-3"></i>
+                <div>
+                    <p class="text-sm font-bold text-yellow-800">⚠️ 교육 전용 시뮬레이터</p>
+                    <p class="text-xs text-yellow-700 mt-1">실제 금융시스템에서는 절대 시도하지 마세요. 전자금융거래법 위반 시 5년 이하의 징역 또는 5천만원 이하의 벌금에 처해질 수 있습니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <!-- Left Panel: User Interface -->
+        <!-- Left Panel: 취약한 금융 시스템 -->
         <div class="space-y-6">
             
             <!-- Header -->
-            <div>
-                <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                    <i class="fa-solid fa-syringe text-indigo-500"></i>
-                    SQL Injection 시각화
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                    <i class="fa-solid fa-building-columns text-indigo-600"></i>
+                    <span>KB은행 인터넷뱅킹</span>
                 </h1>
-                <p class="text-slate-500 mt-2">입력값이 어떻게 쿼리를 조작하는지 확인해보세요.</p>
+                <p class="text-slate-500 mt-2 text-sm">계좌번호로 잔액 및 거래내역 조회</p>
+                <div class="mt-3 flex items-center gap-2 text-xs">
+                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">취약점 존재</span>
+                    <span class="text-slate-400">· 입력값 검증 미흡</span>
+                </div>
             </div>
 
-            <!-- 1. The Vulnerable Form -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h2 class="font-bold text-lg mb-4 text-slate-700 flex justify-between">
-                    <span>1. 로그인 입력</span>
-                    <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">취약한 폼</span>
+            <!-- 1. 계좌조회 폼 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-indigo-500">
+                <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass-dollar"></i>
+                    1. 잔액 조회 시스템
                 </h2>
                 
-                <form id="loginForm" onsubmit="event.preventDefault(); runSimulation();">
+                <form id="accountForm" onsubmit="event.preventDefault(); runSimulation();">
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-slate-600 mb-1">사용자 ID 입력</label>
-                        <input type="text" id="userInput" 
-                               class="w-full p-3 border-2 border-slate-300 rounded-lg focus:border-indigo-500 focus:ring-0 font-code text-lg transition-colors"
-                               placeholder="여기에 입력하세요..." 
+                        <label class="block text-sm font-medium text-slate-600 mb-2">
+                            <i class="fa-solid fa-wallet mr-1"></i> 계좌번호 입력
+                        </label>
+                        <input type="text" id="accountInput" 
+                               class="w-full p-4 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 font-code text-lg transition-all"
+                               placeholder="예: 1001-1234-5678" 
                                onkeyup="updateRealtimeQuery()">
+                        <p class="text-xs text-slate-400 mt-1">
+                            <i class="fa-solid fa-info-circle"></i> 본인 계좌번호를 입력하여 잔액을 조회하세요
+                        </p>
                     </div>
                     
-                    <!-- Quick Actions -->
-                    <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
-                        <button type="button" onclick="setPayload('admin')" class="whitespace-nowrap px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded text-xs font-medium text-slate-600 border border-slate-200 transition">
-                            정상 로그인 (admin)
-                        </button>
-                        <button type="button" onclick="setPayload(`' OR '1'='1`)" class="whitespace-nowrap px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded text-xs font-medium text-red-600 border border-red-200 transition">
-                            <i class="fa-solid fa-bug"></i> 공격 패턴 1 (' OR '1'='1)
-                        </button>
-                        <button type="button" onclick="setPayload(`admin' --`)" class="whitespace-nowrap px-3 py-1.5 bg-orange-50 hover:bg-orange-100 rounded text-xs font-medium text-orange-600 border border-orange-200 transition">
-                            <i class="fa-solid fa-bug"></i> 공격 패턴 2 (주석)
-                        </button>
+                    <!-- Quick Attack Patterns -->
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-slate-600 mb-2">빠른 테스트:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <button type="button" onclick="setPayload('1001-1234-5678')" 
+                                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium text-slate-700 border border-slate-300 transition text-left">
+                                <i class="fa-solid fa-user text-green-500"></i> 정상 조회 (김철수)
+                            </button>
+                            <button type="button" onclick="setPayload(`1001' OR '1'='1`)" 
+                                    class="px-3 py-2 bg-red-50 hover:bg-red-100 rounded-lg text-sm font-medium text-red-700 border border-red-300 transition text-left">
+                                <i class="fa-solid fa-skull-crossbones"></i> 공격 1: 전체 조회
+                            </button>
+                            <button type="button" onclick="setPayload(`1001' AND balance > 10000000 --`)" 
+                                    class="px-3 py-2 bg-orange-50 hover:bg-orange-100 rounded-lg text-sm font-medium text-orange-700 border border-orange-300 transition text-left">
+                                <i class="fa-solid fa-bug"></i> 공격 2: 거액 계좌
+                            </button>
+                            <button type="button" onclick="setPayload(`1001' UNION SELECT account_no, owner_name, balance, ssn FROM customers --`)" 
+                                    class="px-3 py-2 bg-purple-50 hover:bg-purple-100 rounded-lg text-sm font-medium text-purple-700 border border-purple-300 transition text-left">
+                                <i class="fa-solid fa-database"></i> 공격 3: UNION
+                            </button>
+                        </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold shadow-md transition transform active:scale-95">
-                        로그인 시도
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-search"></i>
+                        계좌 조회하기
                     </button>
                 </form>
             </div>
 
-            <!-- 2. The Code (Real-time View) -->
-            <div class="bg-slate-900 text-slate-300 p-6 rounded-2xl shadow-lg relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-2 opacity-50 text-6xl text-slate-800 pointer-events-none">
+            <!-- 2. SQL 쿼리 실시간 보기 -->
+            <div class="bg-slate-900 text-slate-300 p-6 rounded-2xl shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-8xl text-slate-700 pointer-events-none">
                     <i class="fa-solid fa-code"></i>
                 </div>
-                <h2 class="font-bold text-sm text-indigo-400 mb-4 uppercase tracking-wider">2. 서버에서 실행되는 SQL 쿼리</h2>
                 
-                <div class="font-code text-lg leading-relaxed break-all bg-black/30 p-4 rounded-lg border border-slate-700">
-                    <span class="text-purple-400">SELECT</span> * <span class="text-purple-400">FROM</span> users <br>
-                    <span class="text-purple-400">WHERE</span> id = '<span id="queryInput" class="text-yellow-400 font-bold transition-all duration-200 min-w-[10px] inline-block"></span>'
+                <h2 class="font-bold text-sm text-indigo-400 mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-terminal"></i>
+                    2. 서버에서 실행되는 SQL 쿼리
+                </h2>
+                
+                <div class="font-code text-sm md:text-base leading-relaxed bg-black/40 p-4 rounded-lg border border-slate-700 overflow-x-auto">
+                    <span class="text-purple-400">SELECT</span> account_no, owner_name, balance, last_transaction <br>
+                    <span class="text-purple-400">FROM</span> accounts <br>
+                    <span class="text-purple-400">WHERE</span> account_no = '<span id="queryInput" class="text-yellow-300 font-bold transition-all duration-200 break-all"></span>'<br>
+                    <span class="text-purple-400 opacity-50">AND</span> <span class="opacity-50">user_id = session.user_id</span>
                 </div>
                 
-                <div class="mt-4 text-xs text-slate-500">
-                    <i class="fa-solid fa-circle-info"></i> 사용자의 입력값이 따옴표(' ') 안으로 그대로 들어가는 것이 문제입니다.
+                <div class="mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg">
+                    <p class="text-xs text-red-300 flex items-start gap-2">
+                        <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                        <span><strong>취약점:</strong> 사용자 입력값이 따옴표 안에 직접 삽입되며, 입력값에 대한 검증이 없습니다. (PreparedStatement 미사용)</span>
+                    </p>
                 </div>
             </div>
 
         </div>
 
-        <!-- Right Panel: Database & Result -->
+        <!-- Right Panel: 데이터베이스 & 결과 -->
         <div class="space-y-6">
 
-            <!-- 3. The Database -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+            <!-- 3. 계좌 데이터베이스 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-emerald-500">
                 <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
-                    <i class="fa-solid fa-database text-slate-400"></i>
-                    3. 데이터베이스 상태
+                    <i class="fa-solid fa-database text-emerald-600"></i>
+                    3. 고객 계좌 데이터베이스 (accounts)
                 </h2>
                 
-                <div class="overflow-hidden rounded-lg border border-slate-200">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-xs">
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                    <table class="w-full text-xs md:text-sm text-left">
+                        <thead class="bg-gradient-to-r from-slate-100 to-slate-50 text-slate-700 font-bold">
                             <tr>
-                                <th class="px-4 py-3">Selection</th>
-                                <th class="px-4 py-3">ID</th>
-                                <th class="px-4 py-3">Password</th>
-                                <th class="px-4 py-3">Name</th>
+                                <th class="px-3 py-3 text-center w-12">
+                                    <i class="fa-solid fa-check-circle text-slate-400"></i>
+                                </th>
+                                <th class="px-3 py-3">계좌번호</th>
+                                <th class="px-3 py-3">예금주</th>
+                                <th class="px-3 py-3 text-right">잔액</th>
+                                <th class="px-3 py-3">주민번호</th>
                             </tr>
                         </thead>
                         <tbody id="dbTableBody" class="divide-y divide-slate-100">
-                            <!-- Rows will be generated by JS -->
+                            <!-- Rows generated by JS -->
                         </tbody>
                     </table>
                 </div>
-                <p class="text-xs text-slate-400 mt-2 text-right">* 가상의 사용자 테이블입니다.</p>
+                
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+                    <span><i class="fa-solid fa-users"></i> 총 5명의 고객</span>
+                    <span class="text-red-500 font-bold">⚠️ 민감정보 포함</span>
+                </div>
             </div>
 
-            <!-- 4. Result Console -->
-            <div id="resultBox" class="hidden transform transition-all duration-500 translate-y-4 opacity-0">
-                <div class="p-6 rounded-2xl border-l-8 shadow-sm" id="resultCard">
-                    <h2 class="text-xl font-bold mb-2 flex items-center gap-2" id="resultTitle">
-                        <!-- Result Title -->
-                    </h2>
-                    <p class="text-sm opacity-90 mb-4" id="resultDesc">
-                        <!-- Explanation -->
-                    </p>
-                    <div class="bg-white/50 p-3 rounded text-sm font-code font-bold" id="resultData">
-                        <!-- Dumped Data -->
+            <!-- 4. 공격 결과 -->
+            <div id="resultBox" class="hidden">
+                <div class="rounded-2xl border-4 shadow-xl p-6 slide-in" id="resultCard">
+                    <div class="flex items-start gap-3 mb-4">
+                        <i id="resultIcon" class="text-4xl mt-1"></i>
+                        <div class="flex-1">
+                            <h2 class="text-xl font-bold mb-1" id="resultTitle"></h2>
+                            <p class="text-sm opacity-90 leading-relaxed" id="resultDesc"></p>
+                        </div>
                     </div>
+                    
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border-2" id="resultDataBox">
+                        <div class="font-code text-xs md:text-sm font-bold whitespace-pre-wrap" id="resultData"></div>
+                    </div>
+
+                    <!-- 대응 방법 -->
+                    <div id="mitigation" class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg hidden">
+                        <p class="text-xs font-bold text-blue-800 mb-2">
+                            <i class="fa-solid fa-shield-halved"></i> 안전한 코딩 방법 (WEB-SER-001 대응)
+                        </p>
+                        <pre class="text-xs text-blue-900 font-code overflow-x-auto"><code>// PreparedStatement 사용 (안전)
+String sql = "SELECT * FROM accounts WHERE account_no = ? AND user_id = ?";
+PreparedStatement pstmt = conn.prepareStatement(sql);
+pstmt.setString(1, accountInput);  // 자동 이스케이프
+pstmt.setString(2, sessionUserId);
+ResultSet rs = pstmt.executeQuery();</code></pre>
+                    </div>
+
+                    <!-- 금융감독 규정 -->
+                    <div class="mt-4 p-3 bg-slate-900 text-slate-300 rounded-lg">
+                        <p class="text-xs font-bold text-indigo-400 mb-1">
+                            <i class="fa-solid fa-balance-scale"></i> 관련 규정
+                        </p>
+                        <p class="text-xs leading-relaxed">
+                            · 전자금융기반시설 보안 취약점 평가기준 <strong>WEB-SER-001</strong><br>
+                            · 위험도: <span class="text-red-400 font-bold">5 (최고위험)</span><br>
+                            · 통제구분: 카테고리 2 - 7) DBMS 조회 및 결과 검증
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 피해 시나리오 -->
+            <div id="damageScenario" class="hidden">
+                <div class="bg-gradient-to-br from-red-600 to-red-800 text-white p-6 rounded-2xl shadow-xl">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-fire-flame-curved"></i>
+                        실제 금융권 피해 시나리오
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-1 text-yellow-300"></i>
+                            <span><strong>고객정보 대량 유출:</strong> 계좌번호, 잔액, 주민번호 등 민감정보 탈취</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-1 text-yellow-300"></i>
+                            <span><strong>금전적 손실:</strong> 거액 보유 계좌 정보를 이용한 피싱/보이스피싱</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-1 text-yellow-300"></i>
+                            <span><strong>법적 책임:</strong> 개인정보보호법, 전자금융거래법 위반 → 과징금 및 형사처벌</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-1 text-yellow-300"></i>
+                            <span><strong>신뢰도 하락:</strong> 금융회사 이미지 타격 및 고객 이탈</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -138,139 +249,233 @@
 
     <!-- Scripts -->
     <script>
-        // Virtual Database Data
-        const dbData = [
-            { id: 'admin', pw: 'sUpEr_sEcReT!', name: '관리자' },
-            { id: 'jack',  pw: 'coffee123',     name: 'Jack Hwang' },
-            { id: 'guest', pw: 'guest',         name: '방문자' }
+        // 가상 금융 데이터베이스
+        const accountsDB = [
+            { accountNo: '1001-1234-5678', owner: '김철수', balance: 5420000, ssn: '850315-1******', transaction: '2024-12-01 ATM 출금' },
+            { accountNo: '1002-5678-9012', owner: '이영희', balance: 125000000, ssn: '920820-2******', transaction: '2024-12-05 이체입금' },
+            { accountNo: '1003-3456-7890', owner: '박민수', balance: 890000, ssn: '880512-1******', transaction: '2024-11-28 카드결제' },
+            { accountNo: '1004-7890-1234', owner: '최지연', balance: 34500000, ssn: '950203-2******', transaction: '2024-12-07 급여입금' },
+            { accountNo: '1005-2468-1357', owner: '정태양', balance: 780000, ssn: '910725-1******', transaction: '2024-12-03 공과금' }
         ];
 
-        // Initialize Table
-        function renderTable(selectedIndex = -1, selectAll = false) {
+        // 테이블 렌더링
+        function renderTable(selectedIndices = [], highlightAll = false) {
             const tbody = document.getElementById('dbTableBody');
             tbody.innerHTML = '';
 
-            dbData.forEach((row, index) => {
-                const isSelected = selectAll || index === selectedIndex;
-                const rowClass = isSelected ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50';
-                const checkIcon = isSelected ? '<i class="fa-solid fa-check-circle text-indigo-500"></i>' : '<i class="fa-regular fa-circle text-slate-300"></i>';
+            accountsDB.forEach((row, index) => {
+                const isSelected = highlightAll || selectedIndices.includes(index);
+                const rowClass = isSelected 
+                    ? 'bg-red-50 border-l-4 border-red-500' 
+                    : 'hover:bg-slate-50';
+                
+                const checkIcon = isSelected 
+                    ? '<i class="fa-solid fa-circle-check text-red-500 text-lg"></i>' 
+                    : '<i class="fa-regular fa-circle text-slate-300"></i>';
+
+                const balanceColor = isSelected ? 'text-red-700 font-bold' : 'text-slate-700';
 
                 const tr = document.createElement('tr');
-                tr.className = `transition-colors duration-300 ${rowClass}`;
+                tr.className = `transition-all duration-300 ${rowClass}`;
                 tr.innerHTML = `
-                    <td class="px-4 py-3 text-center">${checkIcon}</td>
-                    <td class="px-4 py-3">${row.id}</td>
-                    <td class="px-4 py-3 font-code text-xs">${row.pw}</td>
-                    <td class="px-4 py-3">${row.name}</td>
+                    <td class="px-3 py-3 text-center">${checkIcon}</td>
+                    <td class="px-3 py-3 font-code text-xs">${row.accountNo}</td>
+                    <td class="px-3 py-3 font-medium">${row.owner}</td>
+                    <td class="px-3 py-3 text-right ${balanceColor}">${row.balance.toLocaleString()}원</td>
+                    <td class="px-3 py-3 font-code text-xs text-slate-500">${row.ssn}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Real-time Query Update
+        // 실시간 쿼리 업데이트
         function updateRealtimeQuery() {
-            const input = document.getElementById('userInput').value;
+            const input = document.getElementById('accountInput').value;
             const querySpan = document.getElementById('queryInput');
             
-            // Syntax Highlighting for injected SQL keywords
+            // SQL 키워드 하이라이팅
             let formatted = input
-                .replace(/'/g, '<span class="text-red-500">\'</span>')
-                .replace(/OR/gi, '<span class="text-blue-400 font-bold">OR</span>')
-                .replace(/--/g, '<span class="text-gray-500 italic">--</span>');
+                .replace(/'/g, '<span class="text-red-400 font-bold">\'</span>')
+                .replace(/OR/gi, '<span class="text-blue-300 font-bold">OR</span>')
+                .replace(/AND/gi, '<span class="text-blue-300 font-bold">AND</span>')
+                .replace(/UNION/gi, '<span class="text-purple-300 font-bold">UNION</span>')
+                .replace(/SELECT/gi, '<span class="text-green-300 font-bold">SELECT</span>')
+                .replace(/--/g, '<span class="text-gray-400 italic font-bold">--</span>')
+                .replace(/>/g, '<span class="text-orange-300">&gt;</span>')
+                .replace(/</g, '<span class="text-orange-300">&lt;</span>');
                 
-            if (input === '') formatted = '<span class="opacity-30">...</span>';
+            if (input === '') formatted = '<span class="opacity-40">입력값이 여기 들어갑니다...</span>';
             
             querySpan.innerHTML = formatted;
         }
 
-        // Quick Button Actions
+        // 빠른 입력
         function setPayload(text) {
-            const input = document.getElementById('userInput');
+            const input = document.getElementById('accountInput');
             input.value = text;
             input.focus();
             updateRealtimeQuery();
             
-            // Reset result
-            document.getElementById('resultBox').classList.add('hidden', 'translate-y-4', 'opacity-0');
-            renderTable(-1);
+            // 결과 초기화
+            document.getElementById('resultBox').classList.add('hidden');
+            document.getElementById('damageScenario').classList.add('hidden');
+            renderTable([]);
         }
 
-        // Main Simulation Logic
+        // 메인 시뮬레이션 로직
         function runSimulation() {
-            const input = document.getElementById('userInput').value;
+            const input = document.getElementById('accountInput').value.trim();
             const resultBox = document.getElementById('resultBox');
             const resultCard = document.getElementById('resultCard');
             const resultTitle = document.getElementById('resultTitle');
             const resultDesc = document.getElementById('resultDesc');
             const resultData = document.getElementById('resultData');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultDataBox = document.getElementById('resultDataBox');
+            const mitigation = document.getElementById('mitigation');
+            const damageScenario = document.getElementById('damageScenario');
+
+            if (!input) {
+                alert('계좌번호를 입력해주세요.');
+                return;
+            }
 
             let isExploited = false;
-            let targetIndex = -1;
-            let selectAll = false;
+            let attackType = '';
+            let selectedIndices = [];
+            let highlightAll = false;
 
-            // Simple Logic to detect SQL Injection patterns
-            // 1. Tautology (' OR '1'='1) -> Always True -> Selects All or First
-            if (input.includes("' OR '1'='1") || input.includes("' OR 1=1")) {
+            // SQL Injection 패턴 탐지
+            // 1. Tautology (항상 참) - 전체 데이터 유출
+            if (input.includes("' OR '1'='1") || input.includes("' OR 1=1") || input.includes("' or '1'='1")) {
                 isExploited = true;
-                selectAll = true; // In many DBs, this returns all rows
-            } 
-            // 2. Comment Attack (admin' --) -> Ignores password check
-            else if (input.includes("'--") || input.includes("' --") || input.includes("'#")) {
-                const idPart = input.split("'")[0];
-                targetIndex = dbData.findIndex(u => u.id === idPart);
-                if (targetIndex !== -1) isExploited = true;
+                attackType = 'tautology';
+                highlightAll = true;
+                selectedIndices = accountsDB.map((_, i) => i);
             }
-            // 3. Normal Login
+            // 2. Conditional Injection - 특정 조건 데이터 추출
+            else if (input.match(/'\s*(AND|OR).*(balance|ssn).*(>|<|=)/i)) {
+                isExploited = true;
+                attackType = 'conditional';
+                // 잔액 1천만원 이상 계좌 필터링 시뮬레이션
+                accountsDB.forEach((acc, i) => {
+                    if (acc.balance > 10000000) selectedIndices.push(i);
+                });
+            }
+            // 3. UNION Injection - 다른 테이블 데이터 추출
+            else if (input.toUpperCase().includes('UNION')) {
+                isExploited = true;
+                attackType = 'union';
+                highlightAll = true;
+                selectedIndices = accountsDB.map((_, i) => i);
+            }
+            // 4. Comment Injection - 뒤 쿼리 무시
+            else if (input.includes('--') || input.includes('#')) {
+                isExploited = true;
+                attackType = 'comment';
+                const accountNo = input.split("'")[0];
+                const index = accountsDB.findIndex(a => a.accountNo === accountNo);
+                if (index !== -1) selectedIndices.push(index);
+            }
+            // 5. 정상 조회
             else {
-                targetIndex = dbData.findIndex(u => u.id === input);
+                const index = accountsDB.findIndex(a => a.accountNo === input);
+                if (index !== -1) {
+                    selectedIndices.push(index);
+                }
             }
 
-            // Update UI based on logic
-            renderTable(targetIndex, selectAll);
+            // UI 업데이트
+            renderTable(selectedIndices, highlightAll);
 
-            // Show Result
+            // 결과 표시
             resultBox.classList.remove('hidden');
-            // Small delay for animation
-            setTimeout(() => {
-                resultBox.classList.remove('translate-y-4', 'opacity-0');
-            }, 50);
+            mitigation.classList.add('hidden');
+            damageScenario.classList.add('hidden');
 
             if (isExploited) {
-                // HACKED
-                resultCard.className = "p-6 rounded-2xl border-l-8 shadow-md bg-red-50 border-red-500 text-red-900";
-                resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 공격 성공 (SQL Injection)`;
-                
-                if (selectAll) {
-                    resultDesc.innerHTML = `
-                        <b>' OR '1'='1</b> 구문은 수학적으로 <b>항상 참(True)</b>입니다.<br>
-                        이로 인해 WHERE 조건절이 무력화되어 테이블의 <b>모든 데이터</b>가 반환되었습니다.
-                    `;
-                    resultData.innerHTML = `Dumped: [Admin, Jack, Guest] (모든 계정 탈취)`;
-                } else {
-                    resultDesc.innerHTML = `
-                        <b>주석(--)</b> 문자를 사용하여 뒤따라오는 쿼리(비밀번호 검증 등)를 무시했습니다.<br>
-                        비밀번호 없이 <b>${dbData[targetIndex].id}</b> 계정으로 로그인되었습니다.
-                    `;
-                    resultData.innerHTML = `Logged in as: ${dbData[targetIndex].name} (권한 상승)`;
+                // 공격 성공
+                resultCard.className = "rounded-2xl border-4 shadow-xl p-6 slide-in bg-red-50 border-red-500 text-red-900";
+                resultIcon.className = "fa-solid fa-circle-exclamation text-4xl mt-1 text-red-500";
+                resultDataBox.className = "bg-white border-2 border-red-300 p-4 rounded-lg";
+                mitigation.classList.remove('hidden');
+                damageScenario.classList.remove('hidden');
+
+                switch(attackType) {
+                    case 'tautology':
+                        resultTitle.innerHTML = `<i class="fa-solid fa-skull-crossbones"></i> SQL Injection 공격 성공 - 전체 데이터 유출`;
+                        resultDesc.innerHTML = `
+                            <strong>' OR '1'='1</strong> 구문은 논리적으로 <strong>항상 참(True)</strong>입니다.<br>
+                            WHERE 조건절이 무력화되어 <strong class="text-red-700">데이터베이스의 모든 계좌 정보</strong>가 공격자에게 노출되었습니다.<br>
+                            <span class="text-xs mt-1 inline-block bg-red-200 px-2 py-1 rounded">총 ${accountsDB.length}개 계좌 · 약 ${accountsDB.reduce((sum, a) => sum + a.balance, 0).toLocaleString()}원 정보 유출</span>
+                        `;
+                        resultData.innerText = accountsDB.map(a => 
+                            `[유출] ${a.accountNo} | ${a.owner} | ${a.balance.toLocaleString()}원 | ${a.ssn}`
+                        ).join('\n');
+                        break;
+
+                    case 'conditional':
+                        resultTitle.innerHTML = `SQL Injection 공격 성공 - 조건부 데이터 추출`;
+                        resultDesc.innerHTML = `
+                            <strong>AND/OR</strong> 연산자와 조건식을 조합하여 <strong class="text-red-700">특정 조건의 고객 정보</strong>만 추출했습니다.<br>
+                            예: 잔액 1천만원 이상 계좌 → 보이스피싱 타겟으로 악용 가능<br>
+                            <span class="text-xs mt-1 inline-block bg-red-200 px-2 py-1 rounded">${selectedIndices.length}개 고액 계좌 탈취</span>
+                        `;
+                        resultData.innerText = selectedIndices.map(i => {
+                            const a = accountsDB[i];
+                            return `[고액계좌] ${a.accountNo} | ${a.owner} | ${a.balance.toLocaleString()}원`;
+                        }).join('\n');
+                        break;
+
+                    case 'union':
+                        resultTitle.innerHTML = `SQL Injection 공격 성공 - UNION 공격`;
+                        resultDesc.innerHTML = `
+                            <strong>UNION SELECT</strong> 구문을 사용하여 다른 테이블의 데이터를 결합했습니다.<br>
+                            실제 환경에서는 관리자 계정, 내부 시스템 정보 등 <strong class="text-red-700">추가 민감정보 탈취</strong>가 가능합니다.<br>
+                            <span class="text-xs mt-1 inline-block bg-red-200 px-2 py-1 rounded">고급 공격 기법 - 다중 테이블 조회</span>
+                        `;
+                        resultData.innerText = `[전체 계좌 정보]\n` + accountsDB.map(a => 
+                            `${a.accountNo} | ${a.owner} | ${a.balance.toLocaleString()}원 | ${a.ssn}`
+                        ).join('\n') + '\n\n[추가 정보 - 다른 테이블에서 조회된 데이터]\n(시뮬레이션: 실제로는 더 많은 정보 유출 가능)';
+                        break;
+
+                    case 'comment':
+                        const account = accountsDB[selectedIndices[0]];
+                        resultTitle.innerHTML = `SQL Injection 공격 성공 - 주석 처리 공격`;
+                        resultDesc.innerHTML = `
+                            SQL 주석 문자(<strong>--</strong>)를 사용하여 뒤따라오는 쿼리를 무시시켰습니다.<br>
+                            <strong class="text-red-700">사용자 인증 우회</strong>로 본인 확인 없이 타인의 계좌정보에 접근했습니다.<br>
+                            <span class="text-xs mt-1 inline-block bg-red-200 px-2 py-1 rounded">인증 우회 기법</span>
+                        `;
+                        resultData.innerText = `[무단 접근 성공]\n계좌번호: ${account.accountNo}\n예금주: ${account.owner}\n잔액: ${account.balance.toLocaleString()}원\n주민번호: ${account.ssn}`;
+                        break;
                 }
 
-            } else if (targetIndex !== -1) {
-                // SUCCESS
-                resultCard.className = "p-6 rounded-2xl border-l-8 shadow-md bg-emerald-50 border-emerald-500 text-emerald-900";
-                resultTitle.innerHTML = `<i class="fa-solid fa-check"></i> 로그인 성공`;
-                resultDesc.innerText = "정상적인 ID 입력으로 해당 사용자를 찾았습니다.";
-                resultData.innerText = `Welcome, ${dbData[targetIndex].name}!`;
+            } else if (selectedIndices.length > 0) {
+                // 정상 조회 성공
+                const account = accountsDB[selectedIndices[0]];
+                resultCard.className = "rounded-2xl border-4 shadow-xl p-6 slide-in bg-emerald-50 border-emerald-500 text-emerald-900";
+                resultIcon.className = "fa-solid fa-circle-check text-4xl mt-1 text-emerald-500";
+                resultDataBox.className = "bg-white border-2 border-emerald-300 p-4 rounded-lg";
+                
+                resultTitle.innerHTML = `조회 성공`;
+                resultDesc.innerHTML = `정상적인 계좌번호 입력으로 본인 계좌 정보를 조회했습니다.<br><span class="text-xs text-emerald-700">PreparedStatement 사용 시 이와 같이 안전하게 동작합니다.</span>`;
+                resultData.innerText = `계좌번호: ${account.accountNo}\n예금주: ${account.owner}\n잔액: ${account.balance.toLocaleString()}원\n최근거래: ${account.transaction}`;
+
             } else {
-                // FAIL
-                resultCard.className = "p-6 rounded-2xl border-l-8 shadow-md bg-slate-100 border-slate-400 text-slate-600";
-                resultTitle.innerHTML = `<i class="fa-solid fa-xmark"></i> 로그인 실패`;
-                resultDesc.innerText = "입력한 ID와 일치하는 사용자가 없습니다. (WHERE 조건 거짓)";
-                resultData.innerText = "Result: Empty Set";
+                // 조회 실패
+                resultCard.className = "rounded-2xl border-4 shadow-xl p-6 slide-in bg-slate-100 border-slate-400 text-slate-700";
+                resultIcon.className = "fa-solid fa-circle-xmark text-4xl mt-1 text-slate-400";
+                resultDataBox.className = "bg-white border-2 border-slate-300 p-4 rounded-lg";
+                
+                resultTitle.innerHTML = `조회 실패`;
+                resultDesc.innerHTML = `입력한 계좌번호와 일치하는 정보가 없습니다.<br><span class="text-xs text-slate-500">(WHERE 조건이 False를 반환)</span>`;
+                resultData.innerText = `조회 결과: Empty Set (0 rows)`;
             }
         }
 
-        // Initial Render
-        renderTable();
+        // 초기화
+        renderTable([]);
         updateRealtimeQuery();
     </script>
 </body>

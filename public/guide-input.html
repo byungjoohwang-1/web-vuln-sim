@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2-1. 입력 데이터 검증 및 표현 가이드</title>
-    <!-- 스타일 및 스크립트 로드 (Prism.js 포함) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -26,7 +25,6 @@
 <body>
 
 <div id="wrapper">
-    <!-- 사이드바 (메뉴 구조) -->
     <div id="sidebar-wrapper">
         <div class="sidebar-brand">
             <i class="fa-solid fa-cube me-2"></i> Web Security Simulator
@@ -52,7 +50,6 @@
 
             <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2"><span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span><i class="fa-solid fa-chevron-down fa-xs"></i></div>
             <div class="collapse show" id="menu2">
-                <!-- 현재 페이지 활성화 -->
                 <a href="guide-input.html" class="list-group-item list-group-item-action active"><i class="fa-regular fa-file-lines"></i> 2-1. 입력 데이터 검증 및 표현</a>
                 <a href="guide-security.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-shield-halved"></i> 2-2. 보안 기능</a>
                 <a href="sim-time-state.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-hourglass-half"></i> 2-3. 시간 및 상태</a>
@@ -63,14 +60,12 @@
         </div>
     </div>
     
-    <!-- 메인 콘텐츠 영역 -->
     <div id="page-content-wrapper">
         <div class="container-fluid p-5">
-            <h1 class="mb-4 text-primary"><i class="fa-regular fa-file-lines me-2"></i> 2-1. 입력 데이터 검증 및 표현 (17개 항목)</h1>
+            <h1 class="mb-4 text-primary"><i class="fa-regular fa-file-lines me-2"></i> 2-1. 입력 데이터 검증 및 표현 (Java Only)</h1>
             <p class="lead">외부 입력 데이터를 안전하게 검증하고 표현하여 SQL Injection, XSS, Path Traversal 등의 공격을 방어하는 가이드입니다.</p>
             <hr>
             
-            <!-- 1. SQL 삽입 (SQL Injection) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-filter me-2"></i> 1. SQL 삽입</h2>
             <p class="text-secondary">DBMS와 연동된 응용프로그램에서 입력된 데이터에 대한 유효성 검증을 하지 않을 경우 공격자가 SQL 문을 삽입하여 정보를 열람하거나 조작할 수 있는 보안 약점입니다.</p>
             <div class="row g-4 mb-4 code-container">
@@ -80,29 +75,12 @@
                         <pre><code class="language-java">/* 취약한 코드 (Java JDBC API) */
 String gubun = request.getParameter("gubun");
 // 외부 입력값을 문자열로 바로 사용
-String sql = "SELECT * FROM board WHERE b_gubun = '" + gubun  + "'";
+String sql = "SELECT * FROM board WHERE b_gubun = '" + gubun  + "'";
 Statement stmt = con.createStatement();
 ResultSet rs = stmt.executeQuery(sql); // 공격 가능한 구문 실행
 </code></pre>
                     </div>
                 </div>
-                <!-- Python SQL Injection - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">DB API 문자열 결합</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python DB API)
-def update_board(request):
-    dbconn = connection
-    with dbconn.cursor() as curs:
-        name = request.POST.get('name', "")
-        content_id = request.POST.get('content_id', "")
-        # 사용자의 검증되지 않은 입력값을 사용해 동적 쿼리문 생성
-        sql_query= "update board set name='" + name + "' where content_id='" + content_id + "'"
-        curs.execute(sql_query) 
-</code></pre>
-                    </div>
-                </div>
-                <!-- Java SQL Injection - 안전 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: Prepared Statement</span></div>
@@ -115,30 +93,11 @@ ResultSet rs = pstmt.executeQuery();
 </code></pre>
                     </div>
                 </div>
-                <!-- Python SQL Injection - 안전 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 인자화된 쿼리</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python DB API)
-def update_board(request):
-    dbconn = connection
-    with dbconn.cursor() as curs:
-        name = request.POST.get('name', "")
-        content_id = request.POST.get('content_id', "")
-        # 인자화된 쿼리를 생성한다. (%s는 Placeholder)
-        sql_query = 'update board set name=%s where content_id=%s'
-        # 사용자의 입력값이 바인딩 후 실행되므로 안전하다.
-        curs.execute(sql_query, (name, content_id))
-</code></pre>
-                    </div>
-                </div>
             </div>
 
-            <!-- 2. 코드 삽입 (Code Injection) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-terminal me-2"></i> 2. 코드 삽입</h2>
-            <p class="text-secondary">공격자가 소프트웨어의 의도된 동작을 변경하도록 임의 코드를 삽입하여 비정상적으로 동작하게 합니다. Python에서는 `eval()`, `exec()` 함수 사용 시 취약합니다.</p>
+            <p class="text-secondary">공격자가 소프트웨어의 의도된 동작을 변경하도록 임의 코드를 삽입하여 비정상적으로 동작하게 합니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java Code Injection - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">ScriptEngineManager 사용</span></div>
@@ -146,25 +105,12 @@ def update_board(request):
 @RequestMapping(value = "/execute", method = RequestMethod.GET)
 public String execute(@RequestParam("src") String src) 
 throws ScriptException {
-    ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-    ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("javascript");
-    // 외부 입력값인 src를 javascript eval 함수로 실행하고 있어 안전하지 않다.
-    String retValue = (String)scriptEngine.eval(src);
-    return retValue;
+    ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+    ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("javascript");
+    // 외부 입력값인 src를 javascript eval 함수로 실행하고 있어 안전하지 않다.
+    String retValue = (String)scriptEngine.eval(src);
+    return retValue;
 }
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python eval() - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">eval() 사용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def route(request):
-    message = request.POST.get('message', "")
-    # 외부 입력값을 검증 없이 eval 함수에 전달할 경우 위험하다
-    ret = eval(message) 
-    return render(request, '/success.html', {'data':ret})
 </code></pre>
                     </div>
                 </div>
@@ -174,41 +120,23 @@ def route(request):
                         <pre><code class="language-java">/* 안전한 코드 (Java) */
 @RequestMapping(value = "/execute", method = RequestMethod.GET)
 public String execute(@RequestParam("src") String src) throws ScriptException {
-    // 1. 정규식을 이용하여 특수문자 입력 시 예외를 발생시킨다.
-    if (src.matches("[\\w\\s]*") == false) {
-        throw new IllegalArgumentException();
-    }
-    ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-    ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("javascript");
-    String retValue = (String)scriptEngine.eval(src);
-    return retValue;
+    // 1. 정규식을 이용하여 특수문자 입력 시 예외를 발생시킨다.
+    if (src.matches("[\\w\\s]*") == false) {
+        throw new IllegalArgumentException();
+    }
+    ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+    ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("javascript");
+    String retValue = (String)scriptEngine.eval(src);
+    return retValue;
 }
-</code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 입력값 검증</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-def route(request):
-    message = request.POST.get('message', "")
-    
-    # 사용자 입력을 영문, 숫자로 제한하며, 특수문자 포함 시 에러 반환
-    if message.isalnum():
-        ret = eval(message) # 검증 후 실행
-        return render(request, '/success.html', {'data':ret})
-    else:
-        return render(request, '/error.html')
 </code></pre>
                     </div>
                 </div>
             </div>
             
-            <!-- 3. 경로 조작 및 자원 삽입 (Path Traversal / Resource Injection) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-folder-open me-2"></i> 3. 경로 조작 및 자원 삽입</h2>
             <p class="text-secondary">검증되지 않은 외부 입력값으로 파일 경로 또는 시스템 자원 식별(포트, IP 등)을 허용하여 시스템이 보호하는 자원에 임의로 접근할 수 있는 보안 약점입니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java Path Traversal - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">경로 조작</span></div>
@@ -220,21 +148,6 @@ fis = new FileInputStream("C:/datas/" + fileName); // 임의 파일 접근 가�
 </code></pre>
                     </div>
                 </div>
-                <!-- Python Path Traversal - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">경로 조작</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-import os
-def get_info(request):
-    request_file = request.POST.get('request_file') # 외부 입력값
-    # ... (생략)
-    # 입력값을 검증 없이 파일 처리에 사용
-    with open(request_file) as f: 
-        data = f.read()
-</code></pre>
-                    </div>
-                </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 경로 문자열 제거</span></div>
@@ -242,39 +155,18 @@ def get_info(request):
 String fileName = request.getParameter("P");
 // 외부 입력받은 값에서 경로순회 문자열 (/, \, .. 등)을 제거
 filename = filename.replaceAll("..", "")
-                   .replaceAll("/",  "")
-                   .replaceAll("\\\\", ""); 
+                   .replaceAll("/",  "")
+                   .replaceAll("\\\\", ""); 
 
 fis = new FileInputStream("C:/datas/" + fileName);
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 경로 문자열 필터링</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import os
-def get_info_secure(request):
-    request_file = request.POST.get('request_file')
-    (filename, file_ext) = os.path.splitext(request_file)
-    
-    # 파일 명에서 경로 조작 문자열을 필터링 한다.
-    filename = filename.replace("..", "")
-    filename = filename.replace('/', "")
-    filename = filename.replace('\\', "")
-    
-    with open(filename + file_ext) as f:
-        data = f.read()
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 4. 크로스사이트 스크립트 (XSS) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-code me-2"></i> 4. 크로스사이트 스크립트 (XSS)</h2>
             <p class="text-secondary">웹사이트에 악성 코드를 삽입하는 공격 방법으로, 공격자는 대상 웹 응용프로그램의 결함을 이용해 악성 코드(JavaScript)를 사용자에게 보냅니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java XSS - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">출력 시 이스케이프 누락</span></div>
@@ -283,19 +175,6 @@ String keyword = request.getParameter("keyword");
 // 검증 없이 사용자 입력값을 HTML에 출력
 out.println("검색어 : " + keyword); 
 // keyword에 &lt;script&gt;...&lt;/script&gt; 입력 시 XSS 발생
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python XSS - 취약 (Django mark_safe) -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">`mark_safe` 오용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Django mark_safe)
-from django.utils.safestring import mark_safe
-# ...
-object_link = '<a href="{}">{}</a>'.format(profile_url, profile_name)
-# mark_safe 함수는 Django의 XSS escape 정책을 무력화한다
-object_link = mark_safe(object_link) 
 </code></pre>
                     </div>
                 </div>
@@ -309,31 +188,13 @@ keyword = keyword.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 // 2. JSP에서 출력값에 JSTL c:out을 사용한다.
 // &lt;c:out value="${keyword}"/&gt; 
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: HTML 이스케이프</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python Flask/Jinja2 예시)
-import html
-# ...
-def search():
-    search_keyword = request.form.get('search_keyword')
-    # html.escape() 함수를 사용하여 특수 문자 변환
-    escape_keyword = html.escape(search_keyword) 
-    
-    # Jinja2 템플릿의 자동 이스케이프 기능을 이용하거나, 명시적으로 이스케이프 적용
-    return render_template('search.html', search_keyword=escape_keyword)
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- 5. 운영체제 명령어 삽입 (OS Command Injection) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-sliders me-2"></i> 5. 운영체제 명령어 삽입</h2>
             <p class="text-secondary">적절한 검증 절차를 거치지 않은 사용자 입력값이 운영체제 명령어의 일부 또는 전부로 구성되어 실행되는 경우 의도하지 않은 시스템 명령어가 실행될 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java OS Command - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">Runtime.exec() 사용</span></div>
@@ -342,22 +203,8 @@ def search():
 String cmd = args[0]; // 외부 입력
 Process ps = null; 
 try {
-    ps = Runtime.getRuntime().exec(cmd); 
+    ps = Runtime.getRuntime().exec(cmd); 
 } catch (IOException e) { ... }
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python OS Command - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">os.system() 사용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-import os
-def execute_command(request):
-    app_name_string = request.POST.get('app_name', "")
-    # 입력 파라미터를 제한하지 않아 외부 입력값으로 전달된 모든 프로그램이 실행될 수 있음
-    os.system(app_name_string)
-    return render(request, '/success.html')
 </code></pre>
                     </div>
                 </div>
@@ -371,38 +218,18 @@ String cmd = args[0];
 
 // 입력받은 명령어가 허용 목록에 포함되는지 검사
 if (!allowedCommands.contains(cmd)) { 
-    System.err.println("허용되지 않은 명령어입니다."); 
-    return;
+    System.err.println("허용되지 않은 명령어입니다."); 
+    return;
 }
 Process ps = Runtime.getRuntime().exec(cmd);
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 화이트리스트 프로그램</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import os
-ALLOW_PROGRAM = ['notepad', 'calc'] # 허용된 프로그램 화이트리스트
-
-def execute_command(request):
-    app_name_string = request.POST.get('app_name', "")
-    
-    # 입력받은 파라미터가 허용된 시스템 명령어 목록에 포함되는지 검사
-    if app_name_string not in ALLOW_PROGRAM:
-        return render(request, '/error.html', {'error': '허용되지 않은 프로그램입니다.'})
-        
-    os.system(app_name_string)
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 6. 위험한 형식 파일 업로드 -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-file-arrow-up me-2"></i> 6. 위험한 형식 파일 업로드</h2>
             <p class="text-secondary">서버 측에서 실행 가능한 스크립트 파일(`.jsp`, `.php` 등)이 업로드가능하고, 이 파일을 공격자가 웹으로 직접 실행시킬 수 있는 경우 시스템 내부 명령어를 실행하거나 외부와 연결해 시스템을 제어할 수 있는 보안 약점입니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java File Upload - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">확장자 검증 없음</span></div>
@@ -416,68 +243,29 @@ sql = "INSERT INTO board(...) values (..., ?, ?)";
 </code></pre>
                     </div>
                 </div>
-                <!-- Python File Upload - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">확장자 검증 없음</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python Django)
-from django.core.files.storage import FileSystemStorage
-def file_upload(request):
-    upload_file = request.FILES['upload_file']
-    # 파일에 대한 크기, 개수, 확장자 등을 검증하지 않음
-    fs = FileSystemStorage(location='media/screenshot', base_url='media/screenshot')
-    filename = fs.save(upload_file.name, upload_file)
-    # 위험한 형식의 파일이 시스템에 업로드 될 수 있음
-</code></pre>
-                    </div>
-                </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 확장자 화이트리스트</span></div>
                         <pre><code class="language-java">/* 안전한 코드 (Java) */
 String fileName = multi.getFilesystemName("filename");
 if (fileName != null) {
-    // 1. 파일 확장자 추출 및 소문자 변환
-    String fileExt = fileName.substring(fileName.lastIndexOf(".")+1).toLowerCase();
-    // 2. 화이트 리스트 방식으로 허용되는 확장자로 제한
-    if (!"gif".equals(fileExt) && !"jpg".equals(fileExt) && !"png".equals(fileExt)) {
-        alertMessage("업로드 불가능한 파일입니다."); 
-        return;
-    }
+    // 1. 파일 확장자 추출 및 소문자 변환
+    String fileExt = fileName.substring(fileName.lastIndexOf(".")+1).toLowerCase();
+    // 2. 화이트 리스트 방식으로 허용되는 확장자로 제한
+    if (!"gif".equals(fileExt) && !"jpg".equals(fileExt) && !"png".equals(fileExt)) {
+        alertMessage("업로드 불가능한 파일입니다."); 
+        return;
+    }
 }
 // 안전한 파일명만 DB에 저장
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 확장자 화이트리스트</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python Django)
-import os
-# ...
-WHITE_LIST_EXT = ['.jpg', '.jpeg', '.png'] # 허용하는 확장자는 화이트리스트로 관리
-
-def file_upload_secure(request):
-    # ... (파일 크기 및 Content-Type 검사 로직 생략)
-    
-    upload_file = request.FILES['upload_file']
-    file_name, file_ext = os.path.splitext(upload_file.name)
-
-    # 파일 확장자 검사
-    if file_ext.lower() not in WHITE_LIST_EXT:
-        return render(request, '/error.html', {'error': '파일 타입 오류'})
-        
-    # fs.save(upload_file.name, upload_file)
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- 7. 신뢰되지 않는 URL 주소로 자동접속 연결 -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-link me-2"></i> 7. 신뢰되지 않는 URL 주소로 자동접속 연결</h2>
             <p class="text-secondary">사용자 입력값을 외부 사이트 주소로 사용하여 자동으로 연결하는 서버 프로그램은 피싱 공격(Open Redirect)에 노출되는 취약점을 가집니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java Open Redirect - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">URL 검증 없음</span></div>
@@ -485,23 +273,10 @@ def file_upload_secure(request):
 String rd = request.getParameter("redirect");
 // ... (권한 검증 후)
 if ("0".equals(rs.getString(1)) && "01AD".equals(bn)) {
-    // 외부 입력값을 검증 없이 바로 Redirect에 사용
-    response.sendRedirect(rd); 
-    return;
+    // 외부 입력값을 검증 없이 바로 Redirect에 사용
+    response.sendRedirect(rd); 
+    return;
 }
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python Open Redirect - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">URL 검증 없음</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python Django)
-from django.shortcuts import redirect
-def redirect_url(request):
-    url_string = request.POST.get('url', "") # 외부 입력
-    # 사용자 입력에 포함된 URL 주소로 리다이렉트 하는 경우 피싱 사이트 노출
-    return redirect(url_string) 
 </code></pre>
                     </div>
                 </div>
@@ -515,41 +290,21 @@ String rdIndex = request.getParameter("redirect");
 String rd;
 
 try {
-    // 입력값을 인덱스로 사용하여 화이트리스트에서 선택
-    rd = allowedUrl[Integer.parseInt(rdIndex)];
+    // 입력값을 인덱스로 사용하여 화이트리스트에서 선택
+    rd = allowedUrl[Integer.parseInt(rdIndex)];
 } catch(Exception e) { 
-    return "잘못된 접근입니다.";
+    return "잘못된 접근입니다.";
 }
 // ... (권한 검증 후)
 response.sendRedirect(rd);
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 화이트리스트 URL</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python Django)
-from django.shortcuts import render, redirect
-ALLOW_URL_LIST = ['127.0.0.1', 'https://login.myservice.com', '/notice'] # 화이트리스트
-
-def redirect_url_secure(request):
-    url_string = request.POST.get('url', "")
-    
-    # 이동할 수 있는 URL 범위를 제한하여 위험한 사이트의 접근을 차단하고 있다
-    if url_string not in ALLOW_URL_LIST:
-        return render(request, '/error.html', {'error':'허용되지 않는 주소입니다.'})
-        
-    return redirect(url_string)
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 8. 부적절한 XML 외부 개체 참조 (XXE) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-file-code me-2"></i> 8. 부적절한 XML 외부 개체 참조 (XXE)</h2>
             <p class="text-secondary">취약한 XML 파서가 외부 엔티티(DTD) 처리를 허용하도록 설정된 경우, 공격자가 삽입한 공격 구문이 동작되어 서버 파일 접근, 정보 노출 등이 발생할 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java XXE - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">외부 엔티티 허용</span></div>
@@ -560,22 +315,6 @@ DocumentBuilder db = dbf.newDocumentBuilder();
 Document document = db.parse(receivedXml); 
 // 외부 엔티티로 만들어진 document를 이용하여 마샬링을 수행하여 안전하지 않다.
 Student employee = (Student) jaxbUnmarshaller.unmarshal( document );
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python XXE - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">외부 엔티티 허용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python xml.sax)
-from xml.sax import make_parser
-from xml.sax.handler import feature_external_ges
-
-parser = make_parser()
-# 외부 일반 엔티티를 포함하는 설정을 True로 적용할 경우 취약하다
-parser.setFeature(feature_external_ges, True) 
-
-doc = parseString(request.body.decode('utf-8'), parser=parser)
 </code></pre>
                     </div>
                 </div>
@@ -593,30 +332,13 @@ dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd",
 DocumentBuilder db = dbf.newDocumentBuilder();
 Document document = db.parse(receivedXml);
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: DTD 비활성화</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python xml.sax)
-from xml.sax import make_parser
-from xml.sax.handler import feature_external_ges
-
-parser = make_parser()
-# 외부 일반 엔티티를 False로 설정하여 비활성화
-parser.setFeature(feature_external_ges, False) 
-
-doc = parseString(request.body.decode('utf-8'), parser=parser)
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 9. XML 삽입 (XPath/XQuery Injection) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-sitemap me-2"></i> 9. XML 삽입</h2>
             <p class="text-secondary">검증되지 않은 외부 입력 값이 XQuery 또는 XPath 쿼리문을 생성하는 문자열로 사용되어, 허가되지 않은 데이터를 열람하거나 인증절차를 우회할 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java XML/XPath - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">XQuery 삽입</span></div>
@@ -624,22 +346,8 @@ doc = parseString(request.body.decode('utf-8'), parser=parser)
 String name = props.getProperty("name");
 // 외부 입력 값에 의해 쿼리 구조가 변경되어 안전하지 않다.
 String es = "doc('users.xml')/userlist/user[uname='"+name+"']";
-XQPreparedExpression expr  = conn.prepareExpression(es);
+XQPreparedExpression expr  = conn.prepareExpression(es);
 // name에 'something' or '1'='1 입력 시 모든 파일 값 출력 가능
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python XML/XPath - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">XPath 문자열 결합</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python lxml)
-from lxml import etree
-def parse_xml(request):
-    user_name  = request.POST.get('user_name', "")
-    # 검증되지 않은 외부 입력값 user_name을 사용한 안전하지 않은 질의문
-    query = "/collection/users/user[@name=" + user_name + "]/home/text()"
-    elmts = root.xpath(query)
 </code></pre>
                     </div>
                 </div>
@@ -655,29 +363,13 @@ XQPreparedExpression expr = conn.prepareExpression(es);
 expr.bindString(new QName("xname"), name, null);
 XQResultSequence result = expr.executeQuery();
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 바인딩 변수 사용</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python lxml)
-from lxml import etree
-def parse_xml_secure(request):
-    user_name = request.POST.get('user_name', "")
-    # 외부 입력값을 paramname으로 인자화 해서 사용
-    query = '/collection/users/user[@name = $paramname]/home/text()'
-    # root.xpath 함수에 바인딩하여 쿼리 구조 변경을 방지
-    elmts = root.xpath(query, paramname=user_name)
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 10. LDAP 삽입 (LDAP Injection) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-people-group me-2"></i> 10. LDAP 삽입</h2>
             <p class="text-secondary">외부 입력값을 LDAP 조회를 위한 필터 생성에 사용될 경우, LDAP 쿼리문의 내용을 마음대로 변경할 수 있으며 권한 상승 등의 공격에 노출될 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java LDAP Injection - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">LDAP Injection</span></div>
@@ -686,19 +378,6 @@ def parse_xml_secure(request):
 String filter = "(&(sn=" + userSN + ")(userPassword=" + userPassword + "))";
 NamingEnumeration<?> results = dctx.search(base, filter, sc); 
 // userSN과 userPassword에 *와 같은 문자가 전달되면 권한 상승 가능</code></pre>
-                    </div>
-                </div>
-                <!-- Python LDAP Injection - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">문자열 포맷 사용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python ldap3)
-def ldap_query(request):
-    search_keyword = request.POST.get('search_keyword', "")
-    # 사용자 입력을 필터링하지 않고 질의문에 사용
-    search_str = '(&(objectclass=%s))' % search_keyword 
-    conn.search('dc=company.dc=com', search_str, attributes=['sn', 'cn'])
-</code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -712,54 +391,22 @@ if (!userSN.matches("[\\w\\s]*") || !userPassword.matches("[\\w]*")) {
 String filter = "(&(sn=" + userSN + ")(userPassword=" + userPassword + "))"; 
 NamingEnumeration<?> results = dctx.search(base, filter, sc);
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 이스케이프 처리</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python ldap3)
-from ldap3.utils.conv import escape_filter_chars
-
-def ldap_query_secure(request):
-    search_keyword = request.POST.get('search_keyword', "")
-    
-    # escape_filter_chars를 사용해 공격에 사용될 수 있는 문자를 이스케이프
-    escpae_keyword = escape_filter_chars(search_keyword) 
-    
-    search_str = '(&(objectclass=%s))' % escpae_keyword
-    conn.search('dc=company.dc=com', search_str, attributes=['sn', 'cn'])
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 11. 크로스사이트 요청 위조 (CSRF) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-mask me-2"></i> 11. 크로스사이트 요청 위조 (CSRF)</h2>
             <p class="text-secondary">특정 웹사이트에 대해 사용자가 인지하지 못한 상황에서 공격자가 의도한 행위(수정, 삭제, 등록 등)를 요청하게 하는 공격입니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java CSRF - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">토큰 검증 누락</span></div>
                         <pre><code class="language-java">/* 취약한 코드 (Java) */
 // 토큰 검증 없이 요청 처리
 if ("POST".equalsIgnoreCase(request.getMethod())) {
-    // 상태 변경 로직 실행
+    // 상태 변경 로직 실행
 }
 // -> POST 방식이더라도 CSRF 토큰 검증 없이는 취약</code></pre>
-                    </div>
-                </div>
-                <!-- Python CSRF - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">CSRF 기능 해제</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Django View/Settings)
-from django.views.decorators.csrf import csrf_exempt
-@csrf_exempt # csrf_exempt 데코레이터로 미들웨어의 CSRF 기능을 해제
-def pay_to_point(request):
-    # ... (중요 기능 실행)
-    pass
-</code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -771,57 +418,27 @@ String sToken = (String)session.getAttribute("SESSION_CSRF_TOKEN");
 
 // 요청 파라미터와 세션에 저장된 토큰을 비교하여 일치하는 경우에만 요청을 처리
 if (pToken != null && pToken.equals(sToken)) {
-    // 정상 처리
+    // 정상 처리
 } else {
-    // 토큰이 없거나 값이 일치하지 않는 경우 -> 오류 메시지 출력
+    // 토큰이 없거나 값이 일치하지 않는 경우 -> 오류 메시지 출력
 }
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: CSRF 토큰 활성화</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Django View/Template)
-# 1. settings.py MIDDLEWARE 목록에 'django.middleware.csrf.CsrfViewMiddleware' 활성화
-# 2. View에서 @csrf_exempt 데코레이터를 사용하지 않음
-def pay_to_point_secure(request):
-    # ... (미들웨어의 CSRF 토큰 검증에 의존)
-    pass
-
-# 3. HTML 템플릿에 CSRF 토큰 명시: {% csrf_token %}
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 12. 서버사이드 요청 위조 (SSRF) -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-server me-2"></i> 12. 서버사이드 요청 위조 (SSRF)</h2>
             <p class="text-secondary">적절한 검증 절차를 거치지 않은 사용자 입력 값을 서버 간의 요청에 사용하여 악의적인 행위가 발생할 수 있는 보안 약점입니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java SSRF - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">URL 검증 없음</span></div>
                         <pre><code class="language-java">/* 취약한 코드 (Java) */
 protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    // 사용자 입력값(url)을 검증없이 사용하여 안전하지 않다.
-    URL url = new URL(req.getParameter("url"));
-    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-    // -> url에 내부 IP나 file:// 공격 가능</code></pre>
-                    </div>
-                </div>
-                <!-- Python SSRF - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">URL 검증 없음</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python requests)
-import requests
-def call_third_party_api(request):
-    addr = request.POST.get('address', "") # 외부 입력
-    # 사용자가 입력한 주소를 검증하지 않고 HTTP 요청을 보냄
-    result = requests.get(addr).text
-    return render(request, '/result.html', {'result': result})
-</code></pre>
+    // 사용자 입력값(url)을 검증없이 사용하여 안전하지 않다.
+    URL url = new URL(req.getParameter("url"));
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    // -> url에 내부 IP나 file:// 공격 가능</code></pre>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -831,39 +448,19 @@ def call_third_party_api(request):
 // URL 목록을 Map 객체에 정의하고 키 값으로 입력받아 참조
 private Map&lt;String, URL&gt; urlMap;
 protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    // 사용자에게 urlMap의 key를 입력받아 urlMap에서 URL값을 참조한다.
-    URL url = urlMap.get(req.getParameter("url")); 
-    // urlMap에서 참조한 값으로 Connection을 만들어 접속한다.
-    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    // 사용자에게 urlMap의 key를 입력받아 urlMap에서 URL값을 참조한다.
+    URL url = urlMap.get(req.getParameter("url")); 
+    // urlMap에서 참조한 값으로 Connection을 만들어 접속한다.
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 }
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 화이트리스트 URL</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-ALLOW_SERVER_LIST = ['https://127.0.0.1/latest/', 'https://192.168.0.1/user_data']
-
-def call_third_party_api(request):
-    addr = request.POST.get('address', "")
-    
-    # 입력한 URL이 화이트리스트에 포함되는지 검증
-    if addr not in ALLOW_SERVER_LIST:
-        return render(request, '/error.html', {'error': '허용되지 않은 서버입니다.'})
-        
-    result = requests.get(addr).text
-    return render(request, '/result.html', {'result': result})
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 13. HTTP 응답분할 -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-arrows-split-up-and-left me-2"></i> 13. HTTP 응답분할</h2>
             <p class="text-secondary">HTTP 요청에 들어 있는 파라미터가 HTTP 응답헤더에 포함되어 사용자에게 다시 전달될 때, 입력값에 개행문자(`CR`, `LF`)가 존재하면 HTTP 응답이 2개 이상으로 분리될 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java HTTP Split - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">개행문자 검증 없음</span></div>
@@ -877,81 +474,34 @@ response.addCookie(c);
 </code></pre>
                     </div>
                 </div>
-                <!-- Python HTTP Split - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">개행문자 검증 없음</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def route(request):
-    content_type = request.POST.get('content-type')
-    res = HttpResponse()
-    # 외부 입력값을 검증 또는 필터링 하지 않고 응답 헤더의 값으로 포함시켜 회신한다
-    res['Content-Type'] = content_type
-    return res
-</code></pre>
-                    </div>
-                </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 개행문자 제거</span></div>
                         <pre><code class="language-java">/* 안전한 코드 (Java) */
 String lastLogin = request.getParameter("last_login");
 // ...
-// 외부 입력값에서 개행문자(\r\n)를 제거한 후 쿠키의 값으로 설정
+// 외부 입력값에서 개행문자(\r\n)를 제거한 후 쿠키의 값으로 설정 
 lastLogin = lastLogin.replaceAll("[\\r\\n]", "");
 Cookie c = new Cookie("LASTLOGIN", lastLogin); 
 response.addCookie(c);
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 개행문자 제거</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-def route(request):
-    content_type = request.POST.get('content-type')
-    
-    # 응답 해더에 포함될 수 있는 외부 입력값 내의 개행 문자를 제거한다
-    content_type = content_type.replace('\r', "")
-    content_type = content_type.replace('\n', "")
-
-    res = HttpResponse()
-    res['Content-Type'] = content_type
-    return res
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- 14. 정수형 오버플로우 -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-calculator me-2"></i> 14. 정수형 오버플로우</h2>
             <p class="text-secondary">정수형 변수가 저장할 수 있는 범위를 넘어서 아주 작은 수이거나 음수가 되어 프로그램이 예기치 않게 동작할 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java Integer Overflow - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">음수 크기 할당</span></div>
                         <pre><code class="language-java">/* 취약한 코드 (Java) */
 String tmp = request.getParameter("slf_msg_param_num");
 // ...
-// 외부 입력값을 정수형으로 사용할 때 입력값의 크기를 검증하지 않고 사용
+// 외부 입력값을 정수형으로 사용할 때 입력값의 크기를 검증하지 않고 사용 
 int param_ct = Integer.parseInt(tmp);
 // param_ct가 오버플로우되어 음수가 될 경우, 배열의 크기가 음수로 할당됨
 String[] strArr = new String[param_ct]; 
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python Integer Overflow - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">Numpy 사용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python Numpy)
-import numpy as np
-
-def handle_data(number, pow):
-    # 64비트를 넘어서는 숫자와 지수가 입력될 경우 오버플로우가 발생해 결과값이 0이 된다
-    res = np.power(number, pow, dtype=np.int64)
-    return res
 </code></pre>
                     </div>
                 </div>
@@ -960,45 +510,23 @@ def handle_data(number, pow):
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 음수 검사</span></div>
                         <pre><code class="language-java">/* 안전한 코드 (Java) */
 try {
-    int param_ct = Integer.parseInt(tmp);
-    // 외부 입력값을 정수형으로 사용할 때 입력값의 크기를 검증하고 사용
-    if (param_ct < 0) {
-        throw new Exception();
-    }
-    String[] strArr = new String[param_ct];
+    int param_ct = Integer.parseInt(tmp);
+    // 외부 입력값을 정수형으로 사용할 때 입력값의 크기를 검증하고 사용
+    if (param_ct < 0) {
+        throw new Exception();
+    }
+    String[] strArr = new String[param_ct];
 } catch(Exception e) {
-    msg_str = "잘못된 입력(접근) 입니다.";
+    msg_str = "잘못된 입력(접근) 입니다.";
 }
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 기본 자료형 검사</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-import numpy as np
-MAX_NUMBER  = np.iinfo(np.int64).max
-MIN_NUMBER  = np.iinfo(np.int64).min
-
-def handle_data_secure(number, pow):
-    calculated = number ** pow # 파이썬 기본 자료형으로 계산
-    
-    # 파이썬 기본 자료형으로 큰 수를 계산한 후 이를 검사해 오버플로우 탐지
-    if calculated > MAX_NUMBER or calculated < MIN_NUMBER:
-        return -1 # 오버플로우 탐지 시 비정상 종료를 나타내는 -1 값 반환
-        
-    res = np.power(number, pow, dtype=np.int64)
-    return res
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 15. 보안기능 결정에 사용되는 부적절한 입력값 -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-lock-open me-2"></i> 15. 보안기능 결정에 사용되는 부적절한 입력값</h2>
             <p class="text-secondary">응용 프로그램이 외부 입력값에 대한 신뢰를 전제로 보호 메커니즘을 사용하는 경우 공격자가 입력값을 조작하여 보호 메커니즘을 우회할 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java Security Decision - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">가격 정보 클라이언트 의존</span></div>
@@ -1008,22 +536,6 @@ price = request.getParameter("price");
 quantity = request.getParameter("quantity");
 total = Integer.parseInt(quantity) * Float.parseFloat(price);
 // -> 공격자가 price를 조작하여 결제 금액 변경 가능
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python Security Decision - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">쿠키 기반 권한</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python Django)
-def init_password(request):
-    # 쿠키에서 권한 정보를 가져옴 (변조 가능)
-    role = request.COOKIES['role']
-    
-    # 쿠키에서 가져온 권한이 'admin'인지 비교
-    if role == 'admin':
-        # 중요 기능 실행
-        password_init_and_sendmail(request_id, request_mail)
 </code></pre>
                     </div>
                 </div>
@@ -1037,85 +549,43 @@ price = productService.getPrice(item);
 quantity = request.getParameter("quantity"); 
 total = Integer.parseInt(quantity) * price;
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 세션 기반 권한</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python Django)
-def init_password(request):
-    # 세션에서 권한 정보를 가져옴 (서버에서 관리되어 안전)
-    role = request.session['role']
-    
-    # 세션에서 가져온 권한이 'admin'인지 비교
-    if role == 'admin':
-        # 중요 기능 실행
-        password_init_and_sendmail(request_id, request_mail)
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- 16. 메모리 버퍼 오버플로우 -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-sd-card me-2"></i> 16. 메모리 버퍼 오버플로우</h2>
-            <p class="text-secondary">할당된 메모리 버퍼의 범위를 넘어선 위치에 자료를 읽거나 써서 프로그램 오동작 또는 악의적인 코드 실행 권한을 획득하게 됩니다.</p>
+            <p class="text-secondary">할당된 메모리 버퍼의 범위를 넘어선 위치에 자료를 읽거나 써서 프로그램 오동작 또는 악의적인 코드 실행 권한을 획득하게 됩니다. *Java는 언어 특성상 해당 취약점의 직접적인 예시를 제공하지 않습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- C Buffer Overflow - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>C - 취약한 코드</span><span class="badge bg-light text-dark">gets() 사용</span></div>
-                        <pre><code class="language-c">/* 취약한 코드 (C) */
-void foo() {
-    char message[40];
-    // gets() 함수는 문자열 길이를 제한 할 수 없어 버퍼 오버플로우 유발
-    gets(message); 
-} 
+                        <div class="code-block-header bg-secondary"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">N/A (C/C++ 취약점)</span></div>
+                        <pre><code class="language-java">/* Java는 가비지 컬렉션 및 경계 검사로 인해 메모리 버퍼 오버플로우를 자동으로 방지합니다. */
+// (원본 HTML의 C/C++ 코드는 제외했습니다.)
 </code></pre>
                     </div>
                 </div>
-                <!-- Python Buffer Overflow - Python은 언어 특성상 해당 취약점 제외됨 (Python 가이드) -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>C - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 안전한 함수 사용</span></div>
-                        <pre><code class="language-c">/* 안전한 코드 (C) */
-void requestString() {
-    char str[100];
-    // gets_s() 함수는 문자열 길이 제한이 가능하여 안전
-    gets_s(str, sizeof(str));
-}
+                        <div class="code-block-header bg-secondary"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">N/A (C/C++ 취약점)</span></div>
+                        <pre><code class="language-java">/* Java는 가비지 컬렉션 및 경계 검사로 인해 메모리 버퍼 오버플로우를 자동으로 방지합니다. */
+// (원본 HTML의 C/C++ 코드는 제외했습니다.)
 </code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- 17. 포맷 스트링 삽입 -->
             <h2 class="mt-5 mb-3 text-danger"><i class="fa-solid fa-square-poll-vertical me-2"></i> 17. 포맷 스트링 삽입</h2>
             <p class="text-secondary">외부로부터 입력된 값을 검증하지 않고 입·출력 함수의 포맷 문자열로 그대로 사용하는 경우, 메모리 내용 읽기/쓰기 또는 임의 코드 실행을 유발할 수 있습니다.</p>
             <div class="row g-4 mb-4 code-container">
-                <!-- Java Format String - 취약 -->
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
                         <div class="code-block-header bg-danger"><span>Java - 취약한 코드</span><span class="badge bg-light text-dark">직접 포맷스트링 사용</span></div>
                         <pre><code class="language-java">/* 취약한 코드 (Java) */
 public static void main(String[] args) {
-    // 외부 입력값인 args[0]이 포맷 문자열 출력에 값으로 사용됨
-    System.out.printf( args[0] + " did not match! HINT: It was issued on %1$terd 
-    of some month", validate);
+    // 외부 입력값인 args[0]이 포맷 문자열 출력에 값으로 사용됨
+    System.out.printf( args[0] + " did not match! HINT: It was issued on %1$terd 
+    of some month", validate);
 }
-</code></pre>
-                    </div>
-                </div>
-                <!-- Python Format String - 취약 -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-danger"><span>Python - 취약한 코드</span><span class="badge bg-light text-dark">직접 포맷스트링 사용</span></div>
-                        <pre><code class="language-python"># 취약한 코드 (Python)
-def make_user_message(request):
-    format_string = request.POST.get('msg_format', '')
-    
-    # 사용자가 입력한 문자열을 포맷 문자열로 사용하고 있어 안전하지 않다
-    message = format_string.format(user=user_info)
-    # -> 공격자가 내부 전역 변수에 접근하는 문자열 입력 가능
 </code></pre>
                     </div>
                 </div>
@@ -1124,26 +594,12 @@ def make_user_message(request):
                         <div class="code-block-header bg-success"><span>Java - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 상수 포맷 사용</span></div>
                         <pre><code class="language-java">/* 안전한 코드 (Java) */
 public static void main(String[] args) {
-    // 1. 포맷 문자열로 상수를 사용
-    System.out.printf("%s did not match! HINT: It was issued on %2$terd of some
-    month", args[0], validate);
+    // 1. 포맷 문자열로 상수를 사용
+    System.out.printf("%s did not match! HINT: It was issued on %2$terd of some
+    month", args[0], validate);
 }
 </code></pre>
-                </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="code-block-header bg-success"><span>Python - 안전한 코드</span><span class="badge bg-light text-dark">Fix: 상수 포맷 사용</span></div>
-                        <pre><code class="language-python"># 안전한 코드 (Python)
-def make_user_message(request):
-    user_info = get_user_info(request.POST.get('user_id', ''))
-    
-    # 1. 포맷 문자열로 상수를 사용
-    # 2. 사용자 입력값은 포맷 지정자를 이용해 바인딩하여 사용해야 안전하다
-    message = 'user name is {0}'.format(user_info.name) 
-    
-</code></pre>
-                </div>
+                    </div>
                 </div>
             </div>
 
@@ -1154,11 +610,10 @@ def make_user_message(request):
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', (event) => {
-        Prism.highlightAll();
-    });
+    document.addEventListener('DOMContentLoaded', (event) => {
+        Prism.highlightAll();
+    });
 </script>
 
 </body>
