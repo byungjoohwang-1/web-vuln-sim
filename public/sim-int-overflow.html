@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integer Overflow 실습 시뮬레이터</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 20px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .mode-tab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .mode-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .mode-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .mode-desc {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .content-wrapper {
+            display: none;
+        }
+
+        .content-wrapper.active {
+            display: block;
+        }
+
+        .progress-indicator {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .progress-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checklist-item.completed {
+            background: #d4edda;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-vulnerable { background: #dc3545; color: white; }
+        .status-secure { background: #28a745; color: white; }
+        .status-editing { background: #ffc107; color: #000; }
+
+        .code-editor {
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .editor-toolbar {
+            background: #2d2d2d;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3e3e3e;
+        }
+
+        .toolbar-title {
+            color: #d4d4d4;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .toolbar-hint {
+            color: #ffc107;
+            font-size: 12px;
+        }
+
+        .code-textarea {
+            width: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            resize: vertical;
+            min-height: 450px;
+            outline: none;
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-validate {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-validate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-hint {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 20px;
+        }
+
+        .feedback-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .feedback-error {
+            background: #fff5f5;
+            border-left: 4px solid #dc3545;
+        }
+
+        .feedback-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .feedback-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .feedback-message {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .hint-panel {
+            background: #fff8dc;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .hint-panel.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .hint-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .hint-step {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #ffc107;
+        }
+
+        .hint-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            margin-top: 8px;
+            overflow-x: auto;
+        }
+
+        .bank-system {
+            background: white;
+            border-radius: 15px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .bank-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .bank-logo {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .bank-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .bank-content {
+            padding: 30px;
+        }
+
+        .transaction-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Consolas', monospace;
+        }
+
+        .attack-toggle {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #ffc107;
+        }
+
+        .toggle-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .toggle-label {
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .switch.active {
+            background: #dc3545;
+        }
+
+        .switch-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .switch.active .switch-thumb {
+            left: 33px;
+        }
+
+        .payload-hint {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            margin-top: 10px;
+            font-family: 'Consolas', monospace;
+            color: #dc3545;
+        }
+
+        .btn-query {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-query:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(30, 60, 114, 0.4);
+        }
+
+        .btn-query.attack {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .result-panel {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .result-panel.active {
+            display: block;
+        }
+
+        .transaction-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .transaction-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+
+        .transaction-date {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .transaction-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .error-display {
+            background: #fff5f5;
+            border: 3px solid #dc3545;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .error-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: #721c24;
+            font-family: 'Consolas', monospace;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .attack-result {
+            background: #fff5f5;
+            border: 3px solid #dc3545;
+            border-radius: 10px;
+            padding: 20px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .attack-result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .attack-result-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #dc3545;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .info-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-content {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            color: #e83e8c;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔢 Integer Overflow 실습 시뮬레이터</h1>
+            <p>정수형 오버플로우 취약점 실습 & 금융권 시스템 공격 체험</p>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('coding')">
+                <div class="mode-icon">✏️</div>
+                <div class="mode-title">코드 수정 실습</div>
+                <div class="mode-desc">예외처리 & 범위 검증</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('banking')">
+                <div class="mode-icon">🏦</div>
+                <div class="mode-title">금융권 모의해킹</div>
+                <div class="mode-desc">거래 조회 시스템 공격</div>
+            </button>
+        </div>
+
+        <!-- 코드 수정 실습 모드 -->
+        <div id="coding-mode" class="content-wrapper active">
+            <div class="progress-indicator">
+                <div class="progress-title">✅ 학습 진행도</div>
+                <ul class="checklist" id="progressChecklist">
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>취약점 진단 완료</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>try-catch 예외처리 추가</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>음수 검증 (< 0)</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>최대값 검증</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>검증 통과</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">✏️ 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatus">취약한 코드</span>
+                    </div>
+
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">MessageService.java</span>
+                            <span class="toolbar-hint">💡 try-catch와 범위 검증 추가</span>
+                        </div>
+                        <textarea class="code-textarea" id="codeEditor" spellcheck="false">public String processMessage(HttpServletRequest request) {
+    String msg_str = "";
+    String tmp = request.getParameter("slf_msg_param_num");
+    tmp = StringUtil.isNullTrim(tmp);
+    
+    if (tmp.equals("0")) {
+        msg_str = PropertyUtil.getValue(msg_id);
+    } else {
+        // TODO: 외부 입력값을 정수형으로 사용할 때 입력값의 크기를 검증하고 사용
+        // 힌트: try-catch로 감싸고, 음수 체크 (< 0), 최대값 체크 추가
+        
+        int param_ct = Integer.parseInt(tmp);
+        String[] strArr = new String[param_ct];
+        
+        // 배열 사용 코드...
+    }
+    
+    return msg_str;
+}</textarea>
+                    </div>
+
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeCode()">
+                            🔍 진단하기
+                        </button>
+                        <button class="btn btn-validate" onclick="validateCode()" id="validateBtn" disabled>
+                            ✅ 검증하기
+                        </button>
+                        <button class="btn btn-hint" onclick="toggleHint()">
+                            💡 힌트 보기
+                        </button>
+                        <button class="btn btn-reset" onclick="resetCoding()">
+                            🔄 초기화
+                        </button>
+                    </div>
+
+                    <div class="feedback" id="feedback"></div>
+
+                    <div class="hint-panel" id="hintPanel">
+                        <div class="hint-title">💡 수정 가이드</div>
+                        
+                        <div class="hint-step">
+                            <strong>Step 1: try-catch 블록 추가</strong>
+                            <div class="hint-code">try {
+    int param_ct = Integer.parseInt(tmp);
+    // ... 배열 생성 코드
+} catch(Exception e) {
+    msg_str = "잘못된 입력(접근) 입니다.";
+}</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>Step 2: 음수 검증 추가</strong>
+                            <div class="hint-code">int param_ct = Integer.parseInt(tmp);
+if (param_ct < 0) {
+    throw new Exception();
+}</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>Step 3: 최대값 검증 추가 (선택)</strong>
+                            <div class="hint-code">if (param_ct > 1000) {
+    throw new Exception("크기 제한 초과");
+}</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>완성 예시:</strong>
+                            <div class="hint-code">try {
+    int param_ct = Integer.parseInt(tmp);
+    if (param_ct < 0) {
+        throw new Exception();
+    }
+    String[] strArr = new String[param_ct];
+} catch(Exception e) {
+    msg_str = "잘못된 입력(접근) 입니다.";
+}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 실시간 피드백</span>
+                    </div>
+                    <div id="rightPanel">
+                        <div class="info-section">
+                            <div class="info-title">🎯 목표</div>
+                            <div class="info-content">
+                                <p>외부 입력값을 배열 크기로 사용할 때 안전하게 검증하세요.</p>
+                                <ul style="margin-top: 10px;">
+                                    <li>try-catch 예외 처리</li>
+                                    <li>음수 값 검증 (< 0)</li>
+                                    <li>범위 초과 검증</li>
+                                    <li>에러 메시지 처리</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">
+                                    현재 코드는 Integer Overflow에 취약합니다!
+                                </p>
+                                <p style="margin-top: 10px;">
+                                    공격자가 <code>-1</code>이나 <code>999999999</code>를 입력하면 
+                                    시스템이 다운될 수 있습니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">📖 Integer Overflow란?</div>
+                    <div class="info-content">
+                        <p>정수형 오버플로우는 외부 입력값을 정수형으로 변환할 때 값의 범위를 검증하지 않아 발생하는 보안 취약점입니다.</p>
+                        <ul>
+                            <li><strong>음수 공격:</strong> 음수 값으로 배열 생성 시 NegativeArraySizeException</li>
+                            <li><strong>과도한 값:</strong> 매우 큰 값으로 OutOfMemoryError 유발</li>
+                            <li><strong>DoS 공격:</strong> 시스템 리소스 고갈로 서비스 거부</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 금융권 모의해킹 모드 -->
+        <div id="banking-mode" class="content-wrapper">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #1e3c72;" id="queryAttempts">0</div>
+                    <div class="stat-label">조회 시도</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #dc3545;" id="attackSuccess">0</div>
+                    <div class="stat-label">공격 성공</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #28a745;" id="attackBlocked">0</div>
+                    <div class="stat-label">공격 차단</div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="bank-system">
+                    <div class="bank-header">
+                        <div class="bank-logo">🏦</div>
+                        <div class="bank-name">한국금융은행</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">거래 내역 조회 시스템</div>
+                    </div>
+
+                    <div class="bank-content">
+                        <div class="attack-toggle">
+                            <div class="toggle-header">
+                                <span class="toggle-label" id="attackModeLabel">일반 조회 모드</span>
+                                <div class="switch" id="attackSwitch" onclick="toggleAttackMode()">
+                                    <div class="switch-thumb"></div>
+                                </div>
+                            </div>
+                            <div id="attackHint" style="display: none;">
+                                <div class="payload-hint">
+                                    💡 공격 1: -1 (음수)<br>
+                                    💡 공격 2: 999999999 (과도한 값)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="transaction-form">
+                            <div class="form-group">
+                                <label class="form-label">📊 조회할 거래 건수</label>
+                                <input type="text" class="form-input" id="transactionCount" 
+                                       placeholder="예: 10">
+                                <small style="color: #666; display: block; margin-top: 5px;">
+                                    최근 거래 내역을 조회할 건수를 입력하세요 (1-100)
+                                </small>
+                            </div>
+
+                            <button class="btn-query" id="queryBtn" onclick="executeQuery()">
+                                조회하기
+                            </button>
+                        </div>
+
+                        <div class="result-panel" id="resultPanel">
+                            <div id="resultContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 공격 분석</span>
+                    </div>
+                    <div id="attackAnalysis">
+                        <div class="info-section">
+                            <div class="info-title">💡 사용 방법</div>
+                            <div class="info-content">
+                                <p><strong>1단계:</strong> 일반 조회 시도 (예: 10)</p>
+                                <p style="margin-top: 8px;"><strong>2단계:</strong> "공격 모드" 활성화</p>
+                                <p style="margin-top: 8px;"><strong>3단계:</strong> Integer Overflow 공격 실행</p>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">🎯 공격 유형</div>
+                            <div class="info-content">
+                                <ul>
+                                    <li><strong>음수 공격:</strong> -1, -100</li>
+                                    <li><strong>메모리 공격:</strong> 999999999</li>
+                                    <li><strong>Integer.MAX_VALUE:</strong> 2147483647</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">🎯 금융권 Integer Overflow 공격 시나리오</div>
+                    <div class="info-content">
+                        <ul>
+                            <li><strong>거래 조회 시스템:</strong> 배열 크기로 사용되는 입력값 조작</li>
+                            <li><strong>DoS 공격:</strong> 과도한 메모리 할당으로 시스템 다운</li>
+                            <li><strong>서비스 거부:</strong> OutOfMemoryError로 전체 서비스 중단</li>
+                            <li><strong>시스템 불안정:</strong> 음수 입력으로 예외 발생</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🛡️ 금융권 방어 대책</div>
+                    <div class="info-content">
+                        <ul>
+                            <li>입력값 범위 검증 (1 ~ 100)</li>
+                            <li>음수 값 차단</li>
+                            <li>try-catch 예외 처리</li>
+                            <li>최대 허용 크기 제한</li>
+                            <li>에러 로깅 및 모니터링</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'coding';
+        let isAttackMode = false;
+        let progressSteps = [false, false, false, false, false];
+        let attackType = 'negative'; // 'negative' or 'overflow'
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.closest('.mode-tab').classList.add('active');
+            
+            document.querySelectorAll('.content-wrapper').forEach(w => w.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+
+        function updateProgress(step, completed) {
+            progressSteps[step] = completed;
+            const checklist = document.getElementById('progressChecklist');
+            const items = checklist.querySelectorAll('.checklist-item');
+            
+            items[step].className = 'checklist-item' + (completed ? ' completed' : '');
+            items[step].querySelector('.checklist-icon').textContent = completed ? '✅' : '⬜';
+        }
+
+        function analyzeCode() {
+            const code = document.getElementById('codeEditor').value;
+            const feedback = document.getElementById('feedback');
+            
+            updateProgress(0, true);
+            
+            feedback.innerHTML = `
+                <div class="feedback-item feedback-error">
+                    <div class="feedback-header">
+                        <span>🚨</span>
+                        <span>Integer Overflow 취약점 발견</span>
+                    </div>
+                    <div class="feedback-message">
+                        <strong>문제점:</strong><br>
+                        • Integer.parseInt()에 대한 예외 처리 없음<br>
+                        • 음수 값 검증 없음 (배열 크기는 음수 불가)<br>
+                        • 과도하게 큰 값에 대한 제한 없음<br>
+                        • NegativeArraySizeException, OutOfMemoryError 발생 가능
+                    </div>
+                </div>
+                <div class="feedback-item feedback-warning">
+                    <div class="feedback-header">
+                        <span>💡</span>
+                        <span>수정 방법</span>
+                    </div>
+                    <div class="feedback-message">
+                        try-catch 블록으로 감싸고, 음수 및 범위 검증을 추가하세요.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('validateBtn').disabled = false;
+            document.getElementById('codeStatus').textContent = '수정 중';
+            document.getElementById('codeStatus').className = 'status-badge status-editing';
+        }
+
+        function validateCode() {
+            const code = document.getElementById('codeEditor').value;
+            const feedback = document.getElementById('feedback');
+            const rightPanel = document.getElementById('rightPanel');
+            
+            let errors = [];
+            let warnings = [];
+            let success = [];
+            
+            // 검증 1: try-catch 존재
+            if (code.includes('try') && code.includes('catch')) {
+                success.push('✅ try-catch 예외 처리 확인');
+                updateProgress(1, true);
+            } else {
+                errors.push('❌ try-catch 예외 처리가 필요합니다');
+            }
+            
+            // 검증 2: 음수 검증
+            if (code.includes('< 0') || code.includes('<0')) {
+                success.push('✅ 음수 검증 확인');
+                updateProgress(2, true);
+            } else {
+                errors.push('❌ 음수 검증이 필요합니다: if (param_ct < 0)');
+            }
+            
+            // 검증 3: throw Exception
+            if (code.includes('throw new Exception')) {
+                success.push('✅ Exception throw 확인');
+            } else {
+                warnings.push('⚠️ 검증 실패 시 Exception을 throw하는 것이 좋습니다');
+            }
+            
+            // 검증 4: catch 블록에서 에러 메시지
+            if (code.includes('catch') && (code.includes('msg_str =') || code.includes('msg_str='))) {
+                success.push('✅ 에러 메시지 처리 확인');
+            } else {
+                warnings.push('⚠️ catch 블록에서 에러 메시지를 설정하세요');
+            }
+            
+            // 검증 5: 최대값 검증 (선택)
+            if (code.includes('> ') && (code.includes('1000') || code.includes('100') || code.includes('10000'))) {
+                success.push('✅ 최대값 검증 확인 (추가 보안)');
+                updateProgress(3, true);
+            } else {
+                updateProgress(3, true); // 선택 사항이므로 완료 처리
+            }
+            
+            // 검증 6: Integer.parseInt가 try 안에 있는지
+            const tryIndex = code.indexOf('try');
+            const parseIntIndex = code.indexOf('Integer.parseInt');
+            const catchIndex = code.indexOf('catch');
+            
+            if (tryIndex > 0 && parseIntIndex > tryIndex && catchIndex > parseIntIndex) {
+                success.push('✅ Integer.parseInt가 try 블록 내부에 위치');
+            } else if (tryIndex > 0) {
+                warnings.push('⚠️ Integer.parseInt를 try 블록 안에 배치하세요');
+            }
+            
+            // 결과 판정
+            if (errors.length === 0 && success.length >= 3) {
+                updateProgress(4, true);
+                
+                feedback.innerHTML = `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>🎉</span>
+                            <span>검증 통과! 안전한 코드입니다!</span>
+                        </div>
+                        <div class="feedback-message">
+                            <strong>적용된 보안 조치:</strong><br>
+                            ${success.join('<br>')}
+                            ${warnings.length > 0 ? '<br><br><strong>개선 제안:</strong><br>' + warnings.join('<br>') : ''}
+                            <br><br>
+                            <strong style="color: #28a745;">
+                                이제 "금융권 모의해킹" 탭에서 공격이 차단되는지 확인해보세요!
+                            </strong>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('codeStatus').textContent = '안전한 코드';
+                document.getElementById('codeStatus').className = 'status-badge status-secure';
+                
+                rightPanel.innerHTML = `
+                    <div class="info-section">
+                        <div class="info-title">✅ 수정 완료</div>
+                        <div class="info-content">
+                            <p style="color: #28a745; font-weight: bold;">
+                                Integer Overflow 취약점이 해결되었습니다!
+                            </p>
+                            ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <div class="info-title">🎯 다음 단계</div>
+                        <div class="info-content">
+                            <p><strong>"금융권 모의해킹"</strong> 탭으로 이동하여 공격 차단을 확인하세요!</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                feedback.innerHTML = `
+                    ${errors.length > 0 ? `
+                    <div class="feedback-item feedback-error">
+                        <div class="feedback-header">
+                            <span>❌</span>
+                            <span>수정이 필요합니다</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${errors.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${warnings.length > 0 ? `
+                    <div class="feedback-item feedback-warning">
+                        <div class="feedback-header">
+                            <span>⚠️</span>
+                            <span>개선 권장</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${warnings.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${success.length > 0 ? `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>✅</span>
+                            <span>잘하고 있습니다!</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${success.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+            }
+        }
+
+        function toggleHint() {
+            document.getElementById('hintPanel').classList.toggle('active');
+        }
+
+        function resetCoding() {
+            document.getElementById('codeEditor').value = `public String processMessage(HttpServletRequest request) {
+    String msg_str = "";
+    String tmp = request.getParameter("slf_msg_param_num");
+    tmp = StringUtil.isNullTrim(tmp);
+    
+    if (tmp.equals("0")) {
+        msg_str = PropertyUtil.getValue(msg_id);
+    } else {
+        // TODO: 외부 입력값을 정수형으로 사용할 때 입력값의 크기를 검증하고 사용
+        // 힌트: try-catch로 감싸고, 음수 체크 (< 0), 최대값 체크 추가
+        
+        int param_ct = Integer.parseInt(tmp);
+        String[] strArr = new String[param_ct];
+        
+        // 배열 사용 코드...
+    }
+    
+    return msg_str;
+}`;
+            
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('validateBtn').disabled = true;
+            document.getElementById('codeStatus').textContent = '취약한 코드';
+            document.getElementById('codeStatus').className = 'status-badge status-vulnerable';
+            document.getElementById('hintPanel').classList.remove('active');
+            
+            progressSteps = [false, false, false, false, false];
+            for (let i = 0; i < 5; i++) {
+                updateProgress(i, false);
+            }
+            
+            document.getElementById('rightPanel').innerHTML = `
+                <div class="info-section">
+                    <div class="info-title">🎯 목표</div>
+                    <div class="info-content">
+                        <p>외부 입력값을 배열 크기로 사용할 때 안전하게 검증하세요.</p>
+                        <ul style="margin-top: 10px;">
+                            <li>try-catch 예외 처리</li>
+                            <li>음수 값 검증 (< 0)</li>
+                            <li>범위 초과 검증</li>
+                            <li>에러 메시지 처리</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">⚠️ 취약점</div>
+                    <div class="info-content">
+                        <p style="color: #dc3545; font-weight: bold;">
+                            현재 코드는 Integer Overflow에 취약합니다!
+                        </p>
+                        <p style="margin-top: 10px;">
+                            공격자가 <code>-1</code>이나 <code>999999999</code>를 입력하면 
+                            시스템이 다운될 수 있습니다.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 금융권 모의해킹 함수들
+        function toggleAttackMode() {
+            isAttackMode = !isAttackMode;
+            const switchEl = document.getElementById('attackSwitch');
+            const hintEl = document.getElementById('attackHint');
+            const labelEl = document.getElementById('attackModeLabel');
+            const queryBtn = document.getElementById('queryBtn');
+            
+            if (isAttackMode) {
+                switchEl.classList.add('active');
+                hintEl.style.display = 'block';
+                labelEl.textContent = '🚨 공격 모드';
+                queryBtn.textContent = '공격 실행';
+                queryBtn.classList.add('attack');
+                
+                // 랜덤하게 음수 또는 오버플로우 공격
+                attackType = Math.random() > 0.5 ? 'negative' : 'overflow';
+                document.getElementById('transactionCount').value = attackType === 'negative' ? '-1' : '999999999';
+            } else {
+                switchEl.classList.remove('active');
+                hintEl.style.display = 'none';
+                labelEl.textContent = '일반 조회 모드';
+                queryBtn.textContent = '조회하기';
+                queryBtn.classList.remove('attack');
+                document.getElementById('transactionCount').value = '';
+            }
+        }
+
+        function executeQuery() {
+            const count = document.getElementById('transactionCount').value;
+            const queryBtn = document.getElementById('queryBtn');
+            const resultPanel = document.getElementById('resultPanel');
+            const resultContent = document.getElementById('resultContent');
+            
+            queryBtn.innerHTML = '<span class="loading"></span> 처리 중...';
+            queryBtn.disabled = true;
+
+            const attempts = parseInt(document.getElementById('queryAttempts').textContent);
+            document.getElementById('queryAttempts').textContent = attempts + 1;
+
+            resultPanel.classList.add('active');
+
+            setTimeout(() => {
+                if (isAttackMode) {
+                    // 공격 성공
+                    const success = parseInt(document.getElementById('attackSuccess').textContent);
+                    document.getElementById('attackSuccess').textContent = success + 1;
+                    
+                    if (attackType === 'negative') {
+                        showNegativeAttack(count);
+                    } else {
+                        showOverflowAttack(count);
+                    }
+                } else {
+                    // 일반 조회
+                    const countNum = parseInt(count);
+                    if (isNaN(countNum) || countNum <= 0 || countNum > 100) {
+                        resultContent.innerHTML = `
+                            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px; padding: 20px;">
+                                <div style="font-size: 18px; font-weight: bold; color: #856404; margin-bottom: 10px;">
+                                    ⚠️ 잘못된 입력
+                                </div>
+                                <p style="color: #856404;">
+                                    1부터 100 사이의 숫자를 입력해주세요.
+                                </p>
+                            </div>
+                        `;
+                    } else {
+                        showNormalQuery(countNum);
+                    }
+                }
+
+                queryBtn.innerHTML = isAttackMode ? '공격 실행' : '조회하기';
+                queryBtn.disabled = false;
+            }, 2000);
+        }
+
+        function showNormalQuery(count) {
+            const resultContent = document.getElementById('resultContent');
+            
+            let transactions = '';
+            for (let i = 0; i < count; i++) {
+                const amount = Math.floor(Math.random() * 500000) + 10000;
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                
+                transactions += `
+                    <div class="transaction-item">
+                        <div class="transaction-date">${date.toLocaleDateString('ko-KR')}</div>
+                        <div class="transaction-amount">${amount.toLocaleString()}원 출금</div>
+                    </div>
+                `;
+            }
+            
+            resultContent.innerHTML = `
+                <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+                    <div style="font-size: 18px; font-weight: bold; color: #155724; margin-bottom: 10px;">
+                        ✅ 조회 성공
+                    </div>
+                    <p style="color: #155724;">
+                        최근 ${count}건의 거래 내역을 조회했습니다.
+                    </p>
+                </div>
+                <div class="transaction-list">
+                    <h3 style="margin-bottom: 15px;">거래 내역</h3>
+                    ${transactions}
+                </div>
+            `;
+        }
+
+        function showNegativeAttack(count) {
+            const resultContent = document.getElementById('resultContent');
+            const analysisPanel = document.getElementById('attackAnalysis');
+            
+            resultContent.innerHTML = `
+                <div class="error-display">
+                    <div class="error-title">🚨 시스템 에러 발생!</div>
+                    <div class="error-message">
+                        java.lang.NegativeArraySizeException: ${count}
+                        <br>at MessageService.processMessage(MessageService.java:12)
+                        <br>at TransactionController.query(TransactionController.java:45)
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 5px;">
+                        <strong>에러 원인:</strong><br>
+                        배열 크기로 음수 값을 사용할 수 없습니다.
+                    </div>
+                </div>
+
+                <div class="attack-result">
+                    <div class="attack-result-header">
+                        <span style="font-size: 24px;">🚨</span>
+                        <span class="attack-result-title">Integer Overflow 공격 성공!</span>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <strong>⚠️ 보안 경고</strong><br>
+                        음수 입력으로 시스템 예외가 발생했습니다!
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <strong>입력한 값:</strong>
+                        <div style="background: #1e1e1e; color: #dc3545; padding: 10px; border-radius: 5px; font-family: 'Consolas', monospace; margin-top: 8px;">
+                            ${count}
+                        </div>
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <strong>실행된 코드:</strong>
+                        <div style="background: #1e1e1e; color: #fff; padding: 10px; border-radius: 5px; font-family: 'Consolas', monospace; margin-top: 8px;">
+                            int param_ct = Integer.parseInt("${count}");<br>
+                            <span style="color: #dc3545;">String[] strArr = new String[${count}];</span> // 에러!
+                        </div>
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <strong>공격 원리:</strong>
+                        <p style="margin-top: 10px; line-height: 1.6;">
+                            1. 거래 건수에 <code>-1</code> 입력<br>
+                            2. Integer.parseInt() 성공 (음수 파싱 가능)<br>
+                            3. 배열 생성 시도: <code>new String[-1]</code><br>
+                            4. <strong>NegativeArraySizeException</strong> 발생<br>
+                            5. 시스템 에러로 서비스 중단
+                        </p>
+                    </div>
+
+                    <div class="warning-box" style="background: #fff5f5; border-color: #dc3545;">
+                        <strong>💀 시스템 영향:</strong><br>
+                        • 거래 조회 서비스 중단<br>
+                        • 스택 트레이스 노출 (보안 정보 유출)<br>
+                        • 반복 공격 시 서비스 거부 (DoS)<br>
+                        • 에러 로그 과다 생성
+                    </div>
+                </div>
+            `;
+
+            analysisPanel.innerHTML = `
+                <div class="info-section">
+                    <div class="info-title">🔍 공격 분석</div>
+                    <div class="info-content">
+                        <p style="color: #dc3545; font-weight: bold;">
+                            ✗ 음수 검증 없음<br>
+                            ✗ try-catch 예외 처리 없음<br>
+                            ✗ 배열 크기 범위 검증 없음
+                        </p>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">💀 추가 공격 가능</div>
+                    <div class="info-content">
+                        <ul style="color: #dc3545;">
+                            <li><code>-100</code> - 더 큰 음수</li>
+                            <li><code>-2147483648</code> - Integer.MIN_VALUE</li>
+                            <li><code>999999999</code> - 메모리 고갈</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">✅ 방어 방법</div>
+                    <div class="info-content">
+                        <p style="color: #28a745; font-weight: bold;">
+                            ✓ try-catch 예외 처리<br>
+                            ✓ 음수 검증: if (count < 0)<br>
+                            ✓ 범위 검증: if (count > 100)<br>
+                            ✓ 에러 메시지 반환
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showOverflowAttack(count) {
+            const resultContent = document.getElementById('resultContent');
+            const analysisPanel = document.getElementById('attackAnalysis');
+            
+            resultContent.innerHTML = `
+                <div class="error-display">
+                    <div class="error-title">🚨 시스템 크래시!</div>
+                    <div class="error-message">
+                        java.lang.OutOfMemoryError: Java heap space
+                        <br>at MessageService.processMessage(MessageService.java:12)
+                        <br>at TransactionController.query(TransactionController.java:45)
+                        <br><br>
+                        시도한 메모리 할당: ${(parseInt(count) * 4 / 1024 / 1024).toFixed(2)} MB
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 5px;">
+                        <strong>시스템 상태:</strong><br>
+                        JVM 메모리 고갈 - 서비스 전체 중단
+                    </div>
+                </div>
+
+                <div class="attack-result">
+                    <div class="attack-result-header">
+                        <span style="font-size: 24px;">🚨</span>
+                        <span class="attack-result-title">메모리 오버플로우 공격 성공!</span>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <strong>⚠️ 심각한 보안 경고</strong><br>
+                        과도한 메모리 할당으로 시스템 전체가 다운되었습니다!
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <strong>입력한 값:</strong>
+                        <div style="background: #1e1e1e; color: #dc3545; padding: 10px; border-radius: 5px; font-family: 'Consolas', monospace; margin-top: 8px;">
+                            ${count}
+                        </div>
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <strong>메모리 할당 시도:</strong>
+                        <div style="background: #1e1e1e; color: #fff; padding: 10px; border-radius: 5px; font-family: 'Consolas', monospace; margin-top: 8px;">
+                            int param_ct = ${count};<br>
+                            <span style="color: #dc3545;">String[] strArr = new String[${count}];</span><br>
+                            // 약 ${(parseInt(count) * 4 / 1024 / 1024).toFixed(0)}MB 메모리 필요
+                        </div>
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <strong>공격 원리:</strong>
+                        <p style="margin-top: 10px; line-height: 1.6;">
+                            1. 거래 건수에 <code>999999999</code> 입력<br>
+                            2. Integer.parseInt() 성공 (범위 내 값)<br>
+                            3. 배열 생성 시도: 약 3.7GB 메모리 필요<br>
+                            4. <strong>OutOfMemoryError</strong> 발생<br>
+                            5. JVM 크래시로 전체 서비스 중단
+                        </p>
+                    </div>
+
+                    <div class="warning-box" style="background: #fff5f5; border-color: #dc3545;">
+                        <strong>💀 심각한 시스템 영향:</strong><br>
+                        • <strong>전체 서비스 중단 (DoS)</strong><br>
+                        • 다른 사용자의 거래도 모두 중단<br>
+                        • 시스템 재시작 필요<br>
+                        • 데이터 손실 가능성<br>
+                        • 금융 사고로 이어질 수 있음
+                    </div>
+                </div>
+            `;
+
+            analysisPanel.innerHTML = `
+                <div class="info-section">
+                    <div class="info-title">🔍 공격 분석</div>
+                    <div class="info-content">
+                        <p style="color: #dc3545; font-weight: bold;">
+                            ✗ 최대값 검증 없음<br>
+                            ✗ 메모리 할당 제한 없음<br>
+                            ✗ DoS 방어 메커니즘 없음
+                        </p>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">💀 실제 피해 규모</div>
+                    <div class="info-content">
+                        <ul style="color: #dc3545;">
+                            <li>서비스 다운타임: 10분 이상</li>
+                            <li>영향받은 사용자: 전체</li>
+                            <li>거래 손실: 수천 건</li>
+                            <li>금융감독원 제재 가능</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">✅ 방어 방법</div>
+                    <div class="info-content">
+                        <p style="color: #28a745; font-weight: bold;">
+                            ✓ 최대값 제한: if (count > 100)<br>
+                            ✓ 메모리 사용량 모니터링<br>
+                            ✓ Rate Limiting 적용<br>
+                            ✓ Circuit Breaker 패턴
+                        </p>
+                        <p style="margin-top: 15px;">
+                            "코드 수정 실습" 탭에서 안전한 코드를 작성해보세요!
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
