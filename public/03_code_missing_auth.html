@@ -194,6 +194,28 @@
         .toolbar-hint {
             color: #ffc107;
             font-size: 12px;
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .edit-toggle-btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .edit-toggle-btn:hover {
+            background: #005a9e;
+        }
+
+        .edit-toggle-btn.editing {
+            background: #28a745;
         }
 
         .code-display {
@@ -224,6 +246,26 @@
             border: 2px solid #007acc;
             padding: 5px;
             border-radius: 3px;
+        }
+
+        .code-textarea {
+            width: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 450px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .code-textarea:focus {
+            outline: 2px solid #007acc;
+            outline-offset: -2px;
         }
 
         /* Custom syntax highlighting colors to match VS Code */
@@ -714,8 +756,9 @@
                         <div class="editor-toolbar">
                             <span class="toolbar-title">MemberController.java</span>
                             <span class="toolbar-hint">💡 사용자 일치 검증 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
                         </div>
-                        <div class="code-display">
+                        <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplay">@RequestMapping(value = "/modify.do", method = RequestMethod.POST)
 public ModelAndView memberModifyProcess(
     @ModelAttribute("MemberModel") MemberModel memberModel,
@@ -746,10 +789,7 @@ public ModelAndView memberModifyProcess(
     }
 }</code></pre>
                         </div>
-                    </div>
-
-                    <!-- Hidden textarea for editing -->
-                    <textarea id="codeEditor" style="display: none;">@RequestMapping(value = "/modify.do", method = RequestMethod.POST)
+                        <textarea class="code-textarea" id="codeEditor" style="display: none;" spellcheck="false">@RequestMapping(value = "/modify.do", method = RequestMethod.POST)
 public ModelAndView memberModifyProcess(
     @ModelAttribute("MemberModel") MemberModel memberModel,
     BindingResult result,
@@ -778,6 +818,7 @@ public ModelAndView memberModifyProcess(
         return mav;
     }
 }</textarea>
+                    </div>
 
                     <div class="control-panel">
                         <button class="btn btn-analyze" onclick="analyzeCode()">
@@ -930,8 +971,9 @@ if (service.modifyMember(memberModel)) { ... }</div>
                         <div class="editor-toolbar">
                             <span class="toolbar-title">views.py (Django)</span>
                             <span class="toolbar-hint">💡 인증 및 현재 비밀번호 검증 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
                         </div>
-                        <div class="code-display">
+                        <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">from django.shortcuts import render
 from re import escape
 import hashlib
@@ -948,9 +990,7 @@ def change_password(request):
     
     return render(request, '/success.html')</code></pre>
                         </div>
-                    </div>
-
-                    <textarea id="codeEditorPython" style="display: none;">from django.shortcuts import render
+                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">from django.shortcuts import render
 from re import escape
 import hashlib
 
@@ -965,6 +1005,7 @@ def change_password(request):
     update_password_from_db(user, sha.hexdigest())
     
     return render(request, '/success.html')</textarea>
+                    </div>
 
                     <div class="control-panel">
                         <button class="btn btn-analyze" onclick="analyzeCodePython()">
@@ -1102,6 +1143,7 @@ def change_password(request):
     <script>
         let currentMode = 'java';
         let progressSteps = [false, false, false, false, false];
+        let isEditingJava = false;
 
         // 코드 디스플레이 업데이트 함수
         function updateCodeDisplay(code) {
@@ -1116,28 +1158,40 @@ def change_password(request):
             
             // Prism.js로 구문 강조 재적용
             Prism.highlightElement(codeDisplay);
+            
+            // 편집 모드였다면 해제
+            if (isEditingJava) {
+                toggleEditModeJava();
+            }
         }
 
-        // 편집 모드 활성화
-        function enableEditMode() {
+        // Java 편집 모드 토글
+        function toggleEditModeJava() {
+            const displayContainer = document.getElementById('codeDisplayContainerJava');
+            const textarea = document.getElementById('codeEditor');
+            const editBtn = document.getElementById('editBtnJava');
             const codeDisplay = document.getElementById('codeDisplay');
-            codeDisplay.setAttribute('contenteditable', 'true');
-            codeDisplay.style.border = '2px solid #007acc';
-            codeDisplay.focus();
-        }
-
-        // 코드 변경사항 저장
-        function saveCodeChanges() {
-            const codeDisplay = document.getElementById('codeDisplay');
-            const codeEditor = document.getElementById('codeEditor');
             
-            // contenteditable에서 텍스트 추출 (HTML 태그 제거)
-            const code = codeDisplay.textContent;
-            codeEditor.value = code;
+            isEditingJava = !isEditingJava;
             
-            // 구문 강조 재적용
-            codeDisplay.textContent = code;
-            Prism.highlightElement(codeDisplay);
+            if (isEditingJava) {
+                // 편집 모드로 전환
+                displayContainer.style.display = 'none';
+                textarea.style.display = 'block';
+                textarea.value = codeDisplay.textContent;
+                editBtn.textContent = '💾 저장';
+                editBtn.classList.add('editing');
+                textarea.focus();
+            } else {
+                // 보기 모드로 전환
+                const code = textarea.value;
+                codeDisplay.textContent = code;
+                Prism.highlightElement(codeDisplay);
+                displayContainer.style.display = 'block';
+                textarea.style.display = 'none';
+                editBtn.textContent = '✏️ 편집';
+                editBtn.classList.remove('editing');
+            }
         }
 
         function switchMode(mode) {
@@ -1385,6 +1439,11 @@ public ModelAndView memberModifyProcess(
 
             updateCodeDisplay(initialCode);
             
+            // 편집 모드 해제
+            if (isEditingJava) {
+                toggleEditModeJava();
+            }
+            
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('validateBtn').disabled = true;
             document.getElementById('codeStatus').textContent = '취약한 코드';
@@ -1429,6 +1488,36 @@ public ModelAndView memberModifyProcess(
 
         // ===== Python 모드 함수들 =====
         let progressStepsPython = [false, false, false, false, false];
+        let isEditingPython = false;
+
+        // Python 편집 모드 토글
+        function toggleEditModePython() {
+            const displayContainer = document.getElementById('codeDisplayContainerPython');
+            const textarea = document.getElementById('codeEditorPython');
+            const editBtn = document.getElementById('editBtnPython');
+            const codeDisplay = document.getElementById('codeDisplayPython');
+            
+            isEditingPython = !isEditingPython;
+            
+            if (isEditingPython) {
+                // 편집 모드로 전환
+                displayContainer.style.display = 'none';
+                textarea.style.display = 'block';
+                textarea.value = codeDisplay.textContent;
+                editBtn.textContent = '💾 저장';
+                editBtn.classList.add('editing');
+                textarea.focus();
+            } else {
+                // 보기 모드로 전환
+                const code = textarea.value;
+                codeDisplay.textContent = code;
+                Prism.highlightElement(codeDisplay);
+                displayContainer.style.display = 'block';
+                textarea.style.display = 'none';
+                editBtn.textContent = '✏️ 편집';
+                editBtn.classList.remove('editing');
+            }
+        }
 
         function updateProgressPython(step, completed) {
             progressStepsPython[step] = completed;
@@ -1446,6 +1535,11 @@ public ModelAndView memberModifyProcess(
             codeEditor.value = code;
             codeDisplay.textContent = code;
             Prism.highlightElement(codeDisplay);
+            
+            // 편집 모드였다면 해제
+            if (isEditingPython) {
+                toggleEditModePython();
+            }
         }
 
         function analyzeCodePython() {
@@ -1636,6 +1730,11 @@ def change_password(request):
 
             updateCodeDisplayPython(initialCode);
             
+            // 편집 모드 해제
+            if (isEditingPython) {
+                toggleEditModePython();
+            }
+            
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
             document.getElementById('codeStatusPython').textContent = '취약한 코드';
@@ -1681,49 +1780,6 @@ def change_password(request):
         // 페이지 로드 시 Prism 초기화
         document.addEventListener('DOMContentLoaded', function() {
             Prism.highlightAll();
-            
-            // Java 코드 블록 클릭 시 편집 모드 활성화
-            const codeDisplay = document.getElementById('codeDisplay');
-            
-            codeDisplay.addEventListener('click', function() {
-                enableEditMode();
-            });
-            
-            codeDisplay.addEventListener('blur', function() {
-                saveCodeChanges();
-                codeDisplay.removeAttribute('contenteditable');
-                codeDisplay.style.border = 'none';
-            });
-            
-            codeDisplay.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    codeDisplay.blur();
-                }
-            });
-            
-            // Python 코드 블록 클릭 시 편집 모드 활성화
-            const codeDisplayPython = document.getElementById('codeDisplayPython');
-            
-            codeDisplayPython.addEventListener('click', function() {
-                codeDisplayPython.setAttribute('contenteditable', 'true');
-                codeDisplayPython.style.border = '2px solid #007acc';
-                codeDisplayPython.focus();
-            });
-            
-            codeDisplayPython.addEventListener('blur', function() {
-                const code = codeDisplayPython.textContent;
-                document.getElementById('codeEditorPython').value = code;
-                codeDisplayPython.textContent = code;
-                Prism.highlightElement(codeDisplayPython);
-                codeDisplayPython.removeAttribute('contenteditable');
-                codeDisplayPython.style.border = 'none';
-            });
-            
-            codeDisplayPython.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    codeDisplayPython.blur();
-                }
-            });
         });
     </script>
 </body>
