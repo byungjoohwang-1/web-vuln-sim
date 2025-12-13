@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부적절한 인가 - 실습 시뮬레이터</title>
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .vulnerability-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-tab {
+            flex: 1;
+            background: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .mode-tab:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-5px);
+        }
+
+        .mode-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .mode-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .mode-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .content-wrapper {
+            display: none;
+        }
+
+        .content-wrapper.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .progress-indicator {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .progress-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 15px;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .checklist-item.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .checklist-icon {
+            font-size: 20px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-vulnerable {
+            background: #dc3545;
+        }
+
+        .status-secure {
+            background: #28a745;
+        }
+
+        .status-editing {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .code-editor {
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .editor-toolbar {
+            background: #2d2d2d;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3e3e3e;
+        }
+
+        .toolbar-title {
+            color: #d4d4d4;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .toolbar-hint {
+            color: #ffc107;
+            font-size: 12px;
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .edit-toggle-btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .edit-toggle-btn:hover {
+            background: #005a9e;
+        }
+
+        .edit-toggle-btn.editing {
+            background: #28a745;
+        }
+
+        .code-display {
+            background: #1e1e1e;
+            padding: 15px;
+            overflow-x: auto;
+            max-height: 550px;
+            overflow-y: auto;
+            cursor: text;
+        }
+
+        .code-display pre {
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-display pre code {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+            outline: none;
+        }
+
+        .code-display pre code[contenteditable="true"] {
+            border: 2px solid #007acc;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .code-textarea {
+            width: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 350px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .code-textarea:focus {
+            outline: 2px solid #007acc;
+            outline-offset: -2px;
+        }
+
+        /* Custom syntax highlighting colors to match VS Code */
+        .token.comment { color: #6a9955; }
+        .token.keyword { color: #569cd6; }
+        .token.string { color: #ce9178; }
+        .token.function { color: #dcdcaa; }
+        .token.class-name { color: #4ec9b0; }
+        .token.annotation { color: #dcdcaa; }
+        .token.operator { color: #d4d4d4; }
+        .token.punctuation { color: #d4d4d4; }
+
+        .control-panel {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-validate {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-validate:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-hint {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        .feedback {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .feedback-item {
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .feedback-header {
+            padding: 12px 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feedback-message {
+            padding: 15px;
+            line-height: 1.6;
+        }
+
+        .feedback-error {
+            background: #fff5f5;
+            border: 1px solid #dc3545;
+        }
+
+        .feedback-error .feedback-header {
+            background: #dc3545;
+            color: white;
+        }
+
+        .feedback-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+        }
+
+        .feedback-warning .feedback-header {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .feedback-success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+        }
+
+        .feedback-success .feedback-header {
+            background: #28a745;
+            color: white;
+        }
+
+        .hint-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #f8f9fa;
+            margin: 0 20px 20px 20px;
+            border-radius: 8px;
+        }
+
+        .hint-panel.active {
+            max-height: 1000px;
+            padding: 20px;
+        }
+
+        .hint-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 15px;
+        }
+
+        .hint-step {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .hint-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            margin-top: 8px;
+            overflow-x: auto;
+        }
+
+        .info-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .info-content {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .info-content ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-content li {
+            margin-bottom: 8px;
+        }
+
+        .info-content code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            color: #dc3545;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ 부적절한 인가 (Improper Authorization)</h1>
+            <p>
+                적절한 권한 검증 없이 중요한 기능을 수행할 수 있는 보안 취약점을 학습합니다.
+                사용자의 권한을 확인하지 않고 삭제, 수정 등의 작업을 허용하면 권한 없는 사용자가 시스템을 조작할 수 있습니다.
+            </p>
+            <span class="vulnerability-badge">CWE-285: Improper Authorization</span>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('java')">
+                <div class="mode-icon">☕</div>
+                <div class="mode-title">Java 코드 수정</div>
+                <div class="mode-desc">게시물 삭제 권한 검증</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('python')">
+                <div class="mode-icon">🐍</div>
+                <div class="mode-title">Python 코드 수정</div>
+                <div class="mode-desc">컨텐츠 삭제 권한 검증</div>
+            </button>
+        </div>
+
+        <!-- Java 코드 수정 모드 -->
+        <div id="java-mode" class="content-wrapper active">
+            <div class="progress-indicator">
+                <div class="progress-title">✅ 학습 진행도</div>
+                <ul class="checklist" id="progressChecklistJava">
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>취약점 진단 완료</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>세션에서 User 객체 가져오기</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>권한 검증 함수 호출</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>권한 없을 시 처리</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>검증 통과</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">☕ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                    </div>
+
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">BoardController.java</span>
+                            <span class="toolbar-hint">💡 사용자 권한 검증 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                        </div>
+                        <div class="code-display" id="codeDisplayContainerJava">
+                            <pre><code class="language-java" id="codeDisplayJava">private BoardDao boardDao;
+String action = request.getParameter("action");
+String contentId = request.getParameter("contentId");
+//요청을 하는 사용자의 delete 작업 권한 확인 없이 수행하고 있어 안전하지 않다.
+if (action != null && action.equals("delete")) {
+    boardDao.delete(contentId);
+}</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false">private BoardDao boardDao;
+String action = request.getParameter("action");
+String contentId = request.getParameter("contentId");
+//요청을 하는 사용자의 delete 작업 권한 확인 없이 수행하고 있어 안전하지 않다.
+if (action != null && action.equals("delete")) {
+    boardDao.delete(contentId);
+}</textarea>
+                    </div>
+
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">
+                            🔍 진단하기
+                        </button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>
+                            ✅ 검증하기
+                        </button>
+                        <button class="btn btn-hint" onclick="toggleHintJava()">
+                            💡 힌트 보기
+                        </button>
+                        <button class="btn btn-reset" onclick="resetCodingJava()">
+                            🔄 초기화
+                        </button>
+                    </div>
+
+                    <div class="feedback" id="feedbackJava"></div>
+
+                    <div class="hint-panel" id="hintPanelJava">
+                        <div class="hint-title">💡 수정 가이드</div>
+                        
+                        <div class="hint-step">
+                            <strong>Step 1: 세션에서 User 객체 가져오기</strong>
+                            <div class="hint-code">User user = (User)session.getAttribute("user");</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>Step 2: 권한 검증 조건 추가</strong>
+                            <div class="hint-code">if (action != null && action.equals("delete") && 
+    checkAccessControlList(user, action)) {
+    // 권한이 있을 때만 실행
+}</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>완성 예시:</strong>
+                            <div class="hint-code">private BoardDao boardDao;
+String action = request.getParameter("action");
+String contentId = request.getParameter("contentId");
+// 세션에 저장된 사용자 정보를 읽어온다.
+User user = (User)session.getAttribute("user");
+// 사용자정보에 해당 사용자가 delete작업의 권한이 있는지 확인한 후 작업을 수행한다.
+if (action != null && action.equals("delete") && 
+    checkAccessControlList(user, action)) {
+    boardDao.delete(contentId);
+}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 실시간 피드백</span>
+                    </div>
+                    <div id="rightPanelJava">
+                        <div class="info-section">
+                            <div class="info-title">🎯 목표</div>
+                            <div class="info-content">
+                                <p>게시물 삭제 시 사용자의 권한을 검증하세요.</p>
+                                <ul style="margin-top: 10px;">
+                                    <li>User user = (User)session.getAttribute("user")</li>
+                                    <li>checkAccessControlList(user, action) 호출</li>
+                                    <li>권한이 있을 때만 delete 수행</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">
+                                    현재 코드는 권한 검증이 없습니다!
+                                </p>
+                                <p style="margin-top: 10px;">
+                                    사용자의 delete 권한 확인 없이 삭제를 수행하므로,
+                                    권한 없는 사용자도 게시물을 삭제할 수 있습니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">📖 부적절한 인가 취약점이란?</div>
+                    <div class="info-content">
+                        <p>사용자의 권한을 적절히 검증하지 않아 권한 없는 작업을 수행할 수 있는 보안 취약점입니다.</p>
+                        <ul>
+                            <li><strong>권한 검증 누락:</strong> ACL(Access Control List) 확인 없이 작업 수행</li>
+                            <li><strong>수평적 권한 상승:</strong> 같은 권한 레벨의 다른 사용자 데이터 접근</li>
+                            <li><strong>수직적 권한 상승:</strong> 일반 사용자가 관리자 기능 실행</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🎯 공격 시나리오</div>
+                    <div class="info-content">
+                        <ul>
+                            <li><strong>게시물 삭제:</strong> 읽기 권한만 있는 사용자가 타인의 게시물 삭제</li>
+                            <li><strong>데이터 수정:</strong> 권한 없는 사용자가 중요 설정 변경</li>
+                            <li><strong>기능 접근:</strong> 일반 사용자가 관리자 페이지 접근</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🛡️ 방어 대책</div>
+                    <div class="info-content">
+                        <ul>
+                            <li>모든 중요 작업 전 권한 검증 (ACL, RBAC)</li>
+                            <li>세션의 사용자 정보로 권한 확인</li>
+                            <li>최소 권한 원칙 적용</li>
+                            <li>권한 검증 실패 시 적절한 에러 처리</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Python 코드 수정 모드 -->
+        <div id="python-mode" class="content-wrapper">
+            <div class="progress-indicator">
+                <div class="progress-title">✅ 학습 진행도</div>
+                <ul class="checklist" id="progressChecklistPython">
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>취약점 진단 완료</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>login_required 데코레이터 추가</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>permission_required 데코레이터 추가</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>raise_exception=True 설정</span>
+                    </li>
+                    <li class="checklist-item">
+                        <span class="checklist-icon">⬜</span>
+                        <span>검증 통과</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                    </div>
+
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">views.py (Django)</span>
+                            <span class="toolbar-hint">💡 권한 검증 데코레이터 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                        </div>
+                        <div class="code-display" id="codeDisplayContainerPython">
+                            <pre><code class="language-python" id="codeDisplayPython">from django.shortcuts import import render
+from .model import Content
+
+def delete_content(request):
+    action = request.POST.get('action', "")
+    content_id = request.POST.get('content_id', "")
+    # 작업 요청을 하는 사용자의 권한 확인 없이 delete를 수행함
+    if action is not None and action == 'delete':
+        Content.objects.filter(id=content_id).delete()
+        return render(request, '/success.html')
+    else:
+        return render(request, '/error.html', {'error':'잘못 권한이 없습니다.'})</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">from django.shortcuts import import render
+from .model import Content
+
+def delete_content(request):
+    action = request.POST.get('action', "")
+    content_id = request.POST.get('content_id', "")
+    # 작업 요청을 하는 사용자의 권한 확인 없이 delete를 수행함
+    if action is not None and action == 'delete':
+        Content.objects.filter(id=content_id).delete()
+        return render(request, '/success.html')
+    else:
+        return render(request, '/error.html', {'error':'잘못 권한이 없습니다.'})</textarea>
+                    </div>
+
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()">
+                            🔍 진단하기
+                        </button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>
+                            ✅ 검증하기
+                        </button>
+                        <button class="btn btn-hint" onclick="toggleHintPython()">
+                            💡 힌트 보기
+                        </button>
+                        <button class="btn btn-reset" onclick="resetCodingPython()">
+                            🔄 초기화
+                        </button>
+                    </div>
+
+                    <div class="feedback" id="feedbackPython"></div>
+
+                    <div class="hint-panel" id="hintPanelPython">
+                        <div class="hint-title">💡 수정 가이드</div>
+                        
+                        <div class="hint-step">
+                            <strong>Step 1: 필요한 데코레이터 import</strong>
+                            <div class="hint-code">from django.contrib.auth.decorators import login_required, permission_required</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>Step 2: @login_required 추가</strong>
+                            <div class="hint-code">@login_required
+def delete_content(request):</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>Step 3: @permission_required 추가</strong>
+                            <div class="hint-code">@login_required
+@permission_required('content.delete', raise_exception=True)
+def delete_content(request):</div>
+                        </div>
+
+                        <div class="hint-step">
+                            <strong>완성 예시:</strong>
+                            <div class="hint-code">from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import import render
+from .model import Content
+
+@login_required
+# 해당 기능을 수행할 권한이 있는지 확인
+@permission_required('content.delete', raise_exception=True)
+def delete_content(request):
+    action = request.POST.get('action', "")
+    content_id = request.POST.get('content_id', "")
+    
+    if action is not None and action == 'delete':
+        Content.objects.filter(id=content_id).delete()
+        return render(request, '/success.html')
+    else:
+        return render(request, '/error.html', {'error':'삭제 실패'})</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 실시간 피드백</span>
+                    </div>
+                    <div id="rightPanelPython">
+                        <div class="info-section">
+                            <div class="info-title">🎯 목표</div>
+                            <div class="info-content">
+                                <p>컨텐츠 삭제 시 사용자의 권한을 검증하세요.</p>
+                                <ul style="margin-top: 10px;">
+                                    <li>@login_required 데코레이터 추가</li>
+                                    <li>@permission_required('content.delete') 추가</li>
+                                    <li>raise_exception=True 파라미터 설정</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">
+                                    현재 코드는 권한 검증이 없습니다!
+                                </p>
+                                <p style="margin-top: 10px;">
+                                    로그인 검증도, 삭제 권한 검증도 없어<br>
+                                    누구나 컨텐츠를 삭제할 수 있습니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">📖 Django 권한 시스템</div>
+                    <div class="info-content">
+                        <p>Django는 권한 검증을 위한 데코레이터를 제공합니다.</p>
+                        <ul>
+                            <li><strong>@login_required:</strong> 로그인한 사용자만 접근</li>
+                            <li><strong>@permission_required:</strong> 특정 권한을 가진 사용자만 접근</li>
+                            <li><strong>raise_exception=True:</strong> 권한 없을 시 403 에러 발생</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🎯 권한 체계</div>
+                    <div class="info-content">
+                        <ul>
+                            <li><strong>앱명.동작:</strong> 'content.delete', 'content.add', 'content.change'</li>
+                            <li><strong>User permissions:</strong> user.has_perm('content.delete')</li>
+                            <li><strong>Group permissions:</strong> 그룹 단위 권한 관리</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prism.js for Syntax Highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    
+    <script>
+        let currentMode = 'java';
+        let progressStepsJava = [false, false, false, false, false];
+        let progressStepsPython = [false, false, false, false, false];
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.closest('.mode-tab').classList.add('active');
+            
+            document.querySelectorAll('.content-wrapper').forEach(w => w.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+
+        // ===== Java 모드 함수들 =====
+        let isEditingJava = false;
+
+        function toggleEditModeJava() {
+            const displayContainer = document.getElementById('codeDisplayContainerJava');
+            const textarea = document.getElementById('codeEditorJava');
+            const editBtn = document.getElementById('editBtnJava');
+            const codeDisplay = document.getElementById('codeDisplayJava');
+            
+            isEditingJava = !isEditingJava;
+            
+            if (isEditingJava) {
+                // 편집 모드로 전환
+                displayContainer.style.display = 'none';
+                textarea.style.display = 'block';
+                textarea.value = codeDisplay.textContent;
+                editBtn.textContent = '💾 저장';
+                editBtn.classList.add('editing');
+                textarea.focus();
+            } else {
+                // 보기 모드로 전환
+                const code = textarea.value;
+                codeDisplay.textContent = code;
+                Prism.highlightElement(codeDisplay);
+                displayContainer.style.display = 'block';
+                textarea.style.display = 'none';
+                editBtn.textContent = '✏️ 편집';
+                editBtn.classList.remove('editing');
+            }
+        }
+
+        function updateProgressJava(step, completed) {
+            progressStepsJava[step] = completed;
+            const checklist = document.getElementById('progressChecklistJava');
+            const items = checklist.querySelectorAll('.checklist-item');
+            
+            items[step].className = 'checklist-item' + (completed ? ' completed' : '');
+            items[step].querySelector('.checklist-icon').textContent = completed ? '✅' : '⬜';
+        }
+
+        function updateCodeDisplayJava(code) {
+            const codeDisplay = document.getElementById('codeDisplayJava');
+            const codeEditor = document.getElementById('codeEditorJava');
+            
+            codeEditor.value = code;
+            codeDisplay.textContent = code;
+            Prism.highlightElement(codeDisplay);
+            
+            // 편집 모드였다면 해제
+            if (isEditingJava) {
+                toggleEditModeJava();
+            }
+        }
+
+        function analyzeCodeJava() {
+            const code = document.getElementById('codeEditorJava').value;
+            const feedback = document.getElementById('feedbackJava');
+            
+            updateProgressJava(0, true);
+            
+            feedback.innerHTML = `
+                <div class="feedback-item feedback-error">
+                    <div class="feedback-header">
+                        <span>🚨</span>
+                        <span>부적절한 인가 취약점 발견</span>
+                    </div>
+                    <div class="feedback-message">
+                        <strong>문제점:</strong><br>
+                        • 사용자 권한 검증 없이 delete 수행<br>
+                        • 세션에서 User 객체를 가져오지 않음<br>
+                        • checkAccessControlList() 호출 없음<br>
+                        • 권한 없는 사용자도 게시물 삭제 가능
+                    </div>
+                </div>
+                <div class="feedback-item feedback-warning">
+                    <div class="feedback-header">
+                        <span>💡</span>
+                        <span>수정 방법</span>
+                    </div>
+                    <div class="feedback-message">
+                        1. User user = (User)session.getAttribute("user")<br>
+                        2. checkAccessControlList(user, action) 조건 추가<br>
+                        3. 권한이 있을 때만 delete 수행
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('validateBtnJava').disabled = false;
+            document.getElementById('codeStatusJava').textContent = '수정 중';
+            document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+        }
+
+        function validateCodeJava() {
+            const code = document.getElementById('codeEditorJava').value;
+            const feedback = document.getElementById('feedbackJava');
+            const rightPanel = document.getElementById('rightPanelJava');
+            
+            let errors = [];
+            let warnings = [];
+            let success = [];
+            
+            // 검증 1: User 객체 가져오기
+            if (code.includes('User user') && code.includes('session.getAttribute')) {
+                success.push('✅ 세션에서 User 객체 가져오기 확인');
+                updateProgressJava(1, true);
+            } else {
+                errors.push('❌ User user = (User)session.getAttribute("user"); 가 필요합니다');
+            }
+            
+            // 검증 2: checkAccessControlList 호출
+            if (code.includes('checkAccessControlList')) {
+                success.push('✅ 권한 검증 함수 호출 확인');
+                updateProgressJava(2, true);
+            } else {
+                errors.push('❌ checkAccessControlList(user, action) 호출이 필요합니다');
+            }
+            
+            // 검증 3: 조건문에 권한 검증 포함
+            if (code.includes('checkAccessControlList') && 
+                (code.includes('if (') || code.includes('if(')) &&
+                code.includes('&&')) {
+                success.push('✅ 권한 검증 조건 추가 확인');
+                updateProgressJava(3, true);
+            } else {
+                warnings.push('⚠️ if 조건에 checkAccessControlList를 포함해야 합니다');
+            }
+            
+            // 결과 판정
+            if (errors.length === 0 && success.length >= 3) {
+                updateProgressJava(4, true);
+                
+                feedback.innerHTML = `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>🎉</span>
+                            <span>검증 통과! 안전한 코드입니다!</span>
+                        </div>
+                        <div class="feedback-message">
+                            <strong>적용된 보안 조치:</strong><br>
+                            ${success.join('<br>')}
+                            ${warnings.length > 0 ? '<br><br><strong>개선 제안:</strong><br>' + warnings.join('<br>') : ''}
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('codeStatusJava').textContent = '안전한 코드';
+                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
+                
+                rightPanel.innerHTML = `
+                    <div class="info-section">
+                        <div class="info-title">✅ 수정 완료</div>
+                        <div class="info-content">
+                            <p style="color: #28a745; font-weight: bold;">
+                                부적절한 인가 취약점이 해결되었습니다!
+                            </p>
+                            ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                feedback.innerHTML = `
+                    ${errors.length > 0 ? `
+                    <div class="feedback-item feedback-error">
+                        <div class="feedback-header">
+                            <span>❌</span>
+                            <span>수정이 필요합니다</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${errors.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${warnings.length > 0 ? `
+                    <div class="feedback-item feedback-warning">
+                        <div class="feedback-header">
+                            <span>⚠️</span>
+                            <span>개선 권장</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${warnings.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${success.length > 0 ? `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>✅</span>
+                            <span>잘하고 있습니다!</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${success.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+            }
+        }
+
+        function toggleHintJava() {
+            document.getElementById('hintPanelJava').classList.toggle('active');
+        }
+
+        function resetCodingJava() {
+            const initialCode = `private BoardDao boardDao;
+String action = request.getParameter("action");
+String contentId = request.getParameter("contentId");
+//요청을 하는 사용자의 delete 작업 권한 확인 없이 수행하고 있어 안전하지 않다.
+if (action != null && action.equals("delete")) {
+    boardDao.delete(contentId);
+}`;
+
+            updateCodeDisplayJava(initialCode);
+            
+            // 편집 모드 해제
+            if (isEditingJava) {
+                toggleEditModeJava();
+            }
+            
+            document.getElementById('feedbackJava').innerHTML = '';
+            document.getElementById('validateBtnJava').disabled = true;
+            document.getElementById('codeStatusJava').textContent = '취약한 코드';
+            document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
+            document.getElementById('hintPanelJava').classList.remove('active');
+            
+            progressStepsJava = [false, false, false, false, false];
+            for (let i = 0; i < 5; i++) {
+                updateProgressJava(i, false);
+            }
+            
+            document.getElementById('rightPanelJava').innerHTML = `
+                <div class="info-section">
+                    <div class="info-title">🎯 목표</div>
+                    <div class="info-content">
+                        <p>게시물 삭제 시 사용자의 권한을 검증하세요.</p>
+                        <ul style="margin-top: 10px;">
+                            <li>User user = (User)session.getAttribute("user")</li>
+                            <li>checkAccessControlList(user, action) 호출</li>
+                            <li>권한이 있을 때만 delete 수행</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">⚠️ 취약점</div>
+                    <div class="info-content">
+                        <p style="color: #dc3545; font-weight: bold;">
+                            현재 코드는 권한 검증이 없습니다!
+                        </p>
+                        <p style="margin-top: 10px;">
+                            사용자의 delete 권한 확인 없이 삭제를 수행하므로,
+                            권한 없는 사용자도 게시물을 삭제할 수 있습니다.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== Python 모드 함수들 =====
+        let isEditingPython = false;
+
+        function toggleEditModePython() {
+            const displayContainer = document.getElementById('codeDisplayContainerPython');
+            const textarea = document.getElementById('codeEditorPython');
+            const editBtn = document.getElementById('editBtnPython');
+            const codeDisplay = document.getElementById('codeDisplayPython');
+            
+            isEditingPython = !isEditingPython;
+            
+            if (isEditingPython) {
+                // 편집 모드로 전환
+                displayContainer.style.display = 'none';
+                textarea.style.display = 'block';
+                textarea.value = codeDisplay.textContent;
+                editBtn.textContent = '💾 저장';
+                editBtn.classList.add('editing');
+                textarea.focus();
+            } else {
+                // 보기 모드로 전환
+                const code = textarea.value;
+                codeDisplay.textContent = code;
+                Prism.highlightElement(codeDisplay);
+                displayContainer.style.display = 'block';
+                textarea.style.display = 'none';
+                editBtn.textContent = '✏️ 편집';
+                editBtn.classList.remove('editing');
+            }
+        }
+
+        function updateProgressPython(step, completed) {
+            progressStepsPython[step] = completed;
+            const checklist = document.getElementById('progressChecklistPython');
+            const items = checklist.querySelectorAll('.checklist-item');
+            
+            items[step].className = 'checklist-item' + (completed ? ' completed' : '');
+            items[step].querySelector('.checklist-icon').textContent = completed ? '✅' : '⬜';
+        }
+
+        function updateCodeDisplayPython(code) {
+            const codeDisplay = document.getElementById('codeDisplayPython');
+            const codeEditor = document.getElementById('codeEditorPython');
+            
+            codeEditor.value = code;
+            codeDisplay.textContent = code;
+            Prism.highlightElement(codeDisplay);
+            
+            // 편집 모드였다면 해제
+            if (isEditingPython) {
+                toggleEditModePython();
+            }
+        }
+
+        function analyzeCodePython() {
+            const code = document.getElementById('codeEditorPython').value;
+            const feedback = document.getElementById('feedbackPython');
+            
+            updateProgressPython(0, true);
+            
+            feedback.innerHTML = `
+                <div class="feedback-item feedback-error">
+                    <div class="feedback-header">
+                        <span>🚨</span>
+                        <span>부적절한 인가 취약점 발견</span>
+                    </div>
+                    <div class="feedback-message">
+                        <strong>문제점:</strong><br>
+                        • @login_required 데코레이터 없음<br>
+                        • @permission_required 데코레이터 없음<br>
+                        • 권한 검증 없이 delete 수행<br>
+                        • 누구나 컨텐츠 삭제 가능
+                    </div>
+                </div>
+                <div class="feedback-item feedback-warning">
+                    <div class="feedback-header">
+                        <span>💡</span>
+                        <span>수정 방법</span>
+                    </div>
+                    <div class="feedback-message">
+                        1. @login_required 데코레이터 추가<br>
+                        2. @permission_required('content.delete', raise_exception=True) 추가<br>
+                        3. 필요한 import 문 추가
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('validateBtnPython').disabled = false;
+            document.getElementById('codeStatusPython').textContent = '수정 중';
+            document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+        }
+
+        function validateCodePython() {
+            const code = document.getElementById('codeEditorPython').value;
+            const feedback = document.getElementById('feedbackPython');
+            const rightPanel = document.getElementById('rightPanelPython');
+            
+            let errors = [];
+            let warnings = [];
+            let success = [];
+            
+            // 검증 1: @login_required
+            if (code.includes('@login_required')) {
+                success.push('✅ @login_required 데코레이터 추가 확인');
+                updateProgressPython(1, true);
+            } else {
+                errors.push('❌ @login_required 데코레이터가 필요합니다');
+            }
+            
+            // 검증 2: @permission_required
+            if (code.includes('@permission_required')) {
+                success.push('✅ @permission_required 데코레이터 추가 확인');
+                updateProgressPython(2, true);
+            } else {
+                errors.push('❌ @permission_required 데코레이터가 필요합니다');
+            }
+            
+            // 검증 3: permission_required 파라미터
+            if (code.includes("'content.delete'") || code.includes('"content.delete"')) {
+                success.push('✅ content.delete 권한 지정 확인');
+            } else {
+                warnings.push('⚠️ @permission_required("content.delete") 형식이 필요합니다');
+            }
+            
+            // 검증 4: raise_exception
+            if (code.includes('raise_exception=True')) {
+                success.push('✅ raise_exception=True 설정 확인');
+                updateProgressPython(3, true);
+            } else {
+                warnings.push('⚠️ raise_exception=True 파라미터 권장');
+            }
+            
+            // 검증 5: import
+            if (code.includes('from django.contrib.auth.decorators import') && 
+                code.includes('permission_required')) {
+                success.push('✅ 필요한 import 확인');
+            } else {
+                warnings.push('⚠️ from django.contrib.auth.decorators import 필요');
+            }
+            
+            // 결과 판정
+            if (errors.length === 0 && success.length >= 3) {
+                updateProgressPython(4, true);
+                
+                feedback.innerHTML = `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>🎉</span>
+                            <span>검증 통과! 안전한 코드입니다!</span>
+                        </div>
+                        <div class="feedback-message">
+                            <strong>적용된 보안 조치:</strong><br>
+                            ${success.join('<br>')}
+                            ${warnings.length > 0 ? '<br><br><strong>개선 제안:</strong><br>' + warnings.join('<br>') : ''}
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
+                
+                rightPanel.innerHTML = `
+                    <div class="info-section">
+                        <div class="info-title">✅ 수정 완료</div>
+                        <div class="info-content">
+                            <p style="color: #28a745; font-weight: bold;">
+                                부적절한 인가 취약점이 해결되었습니다!
+                            </p>
+                            ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                feedback.innerHTML = `
+                    ${errors.length > 0 ? `
+                    <div class="feedback-item feedback-error">
+                        <div class="feedback-header">
+                            <span>❌</span>
+                            <span>수정이 필요합니다</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${errors.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${warnings.length > 0 ? `
+                    <div class="feedback-item feedback-warning">
+                        <div class="feedback-header">
+                            <span>⚠️</span>
+                            <span>개선 권장</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${warnings.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${success.length > 0 ? `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>✅</span>
+                            <span>잘하고 있습니다!</span>
+                        </div>
+                        <div class="feedback-message">
+                            ${success.join('<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+            }
+        }
+
+        function toggleHintPython() {
+            document.getElementById('hintPanelPython').classList.toggle('active');
+        }
+
+        function resetCodingPython() {
+            const initialCode = `from django.shortcuts import import render
+from .model import Content
+
+def delete_content(request):
+    action = request.POST.get('action', "")
+    content_id = request.POST.get('content_id', "")
+    # 작업 요청을 하는 사용자의 권한 확인 없이 delete를 수행함
+    if action is not None and action == 'delete':
+        Content.objects.filter(id=content_id).delete()
+        return render(request, '/success.html')
+    else:
+        return render(request, '/error.html', {'error':'잘못 권한이 없습니다.'})`;
+
+            updateCodeDisplayPython(initialCode);
+            
+            // 편집 모드 해제
+            if (isEditingPython) {
+                toggleEditModePython();
+            }
+            
+            document.getElementById('feedbackPython').innerHTML = '';
+            document.getElementById('validateBtnPython').disabled = true;
+            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
+            document.getElementById('hintPanelPython').classList.remove('active');
+            
+            progressStepsPython = [false, false, false, false, false];
+            for (let i = 0; i < 5; i++) {
+                updateProgressPython(i, false);
+            }
+            
+            document.getElementById('rightPanelPython').innerHTML = `
+                <div class="info-section">
+                    <div class="info-title">🎯 목표</div>
+                    <div class="info-content">
+                        <p>컨텐츠 삭제 시 사용자의 권한을 검증하세요.</p>
+                        <ul style="margin-top: 10px;">
+                            <li>@login_required 데코레이터 추가</li>
+                            <li>@permission_required('content.delete') 추가</li>
+                            <li>raise_exception=True 파라미터 설정</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">⚠️ 취약점</div>
+                    <div class="info-content">
+                        <p style="color: #dc3545; font-weight: bold;">
+                            현재 코드는 권한 검증이 없습니다!
+                        </p>
+                        <p style="margin-top: 10px;">
+                            로그인 검증도, 삭제 권한 검증도 없어<br>
+                            누구나 컨텐츠를 삭제할 수 있습니다.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 페이지 로드 시 Prism 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            Prism.highlightAll();
+        });
+    </script>
+</body>
+</html>
