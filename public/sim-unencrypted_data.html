@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>암호화 되지 않은 중요정보 - 금융권 모의해킹 시뮬레이터</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .vulnerability-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-tab {
+            flex: 1;
+            background: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .mode-tab:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-5px);
+        }
+
+        .mode-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .mode-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .mode-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .content-wrapper {
+            display: none;
+        }
+
+        .content-wrapper.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-vulnerable {
+            background: #dc3545;
+        }
+
+        .status-secure {
+            background: #28a745;
+        }
+
+        .bank-system {
+            padding: 20px;
+        }
+
+        .bank-header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bank-logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .bank-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .scenario-selector {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 15px;
+        }
+
+        .scenario-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .scenario-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .scenario-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .attack-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #dee2e6;
+        }
+
+        .attack-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .data-display {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .data-label {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+
+        .data-value {
+            color: #ce9178;
+        }
+
+        .data-plain {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .data-encrypted {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .btn-attack {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-attack:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-attack:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .attack-result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .attack-result.success {
+            background: #fff5f5;
+            border: 2px solid #dc3545;
+            display: block;
+        }
+
+        .attack-result.blocked {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            display: block;
+        }
+
+        .result-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-header.success {
+            color: #dc3545;
+        }
+
+        .result-header.blocked {
+            color: #28a745;
+        }
+
+        .result-content {
+            line-height: 1.8;
+        }
+
+        .stolen-data {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Consolas', monospace;
+            line-height: 1.8;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .info-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .info-content {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .info-content ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-content li {
+            margin-bottom: 8px;
+        }
+
+        .info-content code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            color: #dc3545;
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+
+        .comparison-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .comparison-table .vulnerable {
+            background: #fff5f5;
+            color: #dc3545;
+        }
+
+        .comparison-table .secure {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Burp Suite UI 스타일 */
+        .burp-container {
+            background: #2b2b2b;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .burp-menubar {
+            background: #1e1e1e;
+            padding: 8px 15px;
+            display: flex;
+            gap: 20px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .burp-menu-item {
+            color: #d4d4d4;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .burp-menu-item:hover {
+            background: #3c3c3c;
+        }
+
+        .burp-menu-item.active {
+            background: #ff6633;
+            color: white;
+        }
+
+        .burp-tabs {
+            background: #252525;
+            padding: 0;
+            display: flex;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .burp-tab {
+            padding: 12px 20px;
+            background: #2b2b2b;
+            color: #999;
+            border: none;
+            border-right: 1px solid #3c3c3c;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .burp-tab:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        .burp-tab.active {
+            background: #ff6633;
+            color: white;
+        }
+
+        .burp-content {
+            background: #2b2b2b;
+            min-height: 500px;
+        }
+
+        .burp-panel {
+            display: none;
+            padding: 15px;
+        }
+
+        .burp-panel.active {
+            display: block;
+        }
+
+        .burp-toolbar {
+            background: #252525;
+            padding: 10px 15px;
+            border-bottom: 1px solid #3c3c3c;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .burp-btn {
+            background: #ff6633;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .burp-btn:hover {
+            background: #ff8855;
+        }
+
+        .burp-btn.off {
+            background: #666;
+        }
+
+        .burp-btn.off:hover {
+            background: #777;
+        }
+
+        .burp-status {
+            color: #4ec9b0;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .burp-http-history {
+            background: #2b2b2b;
+        }
+
+        .burp-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .burp-table th {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .burp-table td {
+            background: #2b2b2b;
+            color: #d4d4d4;
+            padding: 10px;
+            font-size: 12px;
+            border-bottom: 1px solid #3c3c3c;
+            cursor: pointer;
+        }
+
+        .burp-table tr:hover td {
+            background: #333;
+        }
+
+        .burp-table tr.selected td {
+            background: #ff6633;
+            color: white;
+        }
+
+        .burp-request-response {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #3c3c3c;
+            margin-top: 1px;
+        }
+
+        .burp-pane {
+            background: #2b2b2b;
+        }
+
+        .burp-pane-header {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: bold;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .burp-pane-content {
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .burp-pane-content textarea {
+            width: 100%;
+            min-height: 350px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: 1px solid #3c3c3c;
+            padding: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .http-method {
+            color: #ff6633;
+            font-weight: bold;
+        }
+
+        .http-header {
+            color: #4ec9b0;
+        }
+
+        .http-value {
+            color: #ce9178;
+        }
+
+        .sensitive-data {
+            background: #3c1f1f;
+            color: #ff6b6b;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .intercept-alert {
+            background: #3c2a1f;
+            border: 2px solid #ff6633;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px;
+            color: #ffc107;
+        }
+
+        .burp-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #252525;
+            border-top: 1px solid #3c3c3c;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .action-forward {
+            background: #28a745;
+            color: white;
+        }
+
+        .action-forward:hover {
+            background: #218838;
+        }
+
+        .action-drop {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-drop:hover {
+            background: #c82333;
+        }
+
+        .action-modify {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .action-modify:hover {
+            background: #e0a800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔓 암호화 되지 않은 중요정보</h1>
+            <p>
+                중요한 정보를 암호화하지 않고 평문으로 저장하거나 전송하면 공격자가 쉽게 탈취할 수 있습니다.
+                금융권에서 고객의 개인정보, 계좌번호, 비밀번호 등을 암호화 없이 처리하면 심각한 보안 사고로 이어집니다.
+            </p>
+            <span class="vulnerability-badge">CWE-311: Missing Encryption of Sensitive Data</span>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('burp')">
+                <div class="mode-icon">🎯</div>
+                <div class="mode-title">Burp Suite 실습</div>
+                <div class="mode-desc">실전 모의해킹 도구</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('network')">
+                <div class="mode-icon">🌐</div>
+                <div class="mode-title">네트워크 스니핑</div>
+                <div class="mode-desc">평문 전송 데이터 가로채기</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('database')">
+                <div class="mode-icon">💾</div>
+                <div class="mode-title">데이터베이스 탈취</div>
+                <div class="mode-desc">평문 저장 데이터 유출</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('log')">
+                <div class="mode-icon">📝</div>
+                <div class="mode-title">로그 파일 유출</div>
+                <div class="mode-desc">로그에 남은 평문 정보</div>
+            </button>
+        </div>
+
+
+        <!-- Burp Suite 실습 모드 -->
+        <div id="burp-mode" class="content-wrapper active">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="burpRequests">0</div>
+                    <div class="stat-label">인터셉트된 요청</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="burpModified">0</div>
+                    <div class="stat-label">수정된 요청</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="burpExploited">0</div>
+                    <div class="stat-label">취약점 발견</div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🎯 Burp Suite Professional</span>
+                        <span class="status-badge status-vulnerable" id="burpStatus">Intercepting</span>
+                    </div>
+
+                    <div class="burp-container">
+                        <div class="burp-menubar">
+                            <div class="burp-menu-item active">Proxy</div>
+                            <div class="burp-menu-item">Target</div>
+                            <div class="burp-menu-item">Repeater</div>
+                            <div class="burp-menu-item">Intruder</div>
+                            <div class="burp-menu-item">Scanner</div>
+                        </div>
+
+                        <div class="burp-tabs">
+                            <button class="burp-tab active" onclick="switchBurpTab('intercept')">Intercept</button>
+                            <button class="burp-tab" onclick="switchBurpTab('history')">HTTP history</button>
+                            <button class="burp-tab" onclick="switchBurpTab('options')">Options</button>
+                        </div>
+
+                        <div class="burp-content">
+                            <!-- Intercept 탭 -->
+                            <div id="burp-intercept" class="burp-panel active">
+                                <div class="burp-toolbar">
+                                    <button class="burp-btn" id="interceptToggle" onclick="toggleIntercept()">
+                                        Intercept is on
+                                    </button>
+                                    <span class="burp-status" id="interceptStatus">Waiting for requests...</span>
+                                </div>
+
+                                <div id="interceptContent" style="display: none;">
+                                    <div class="intercept-alert">
+                                        🚨 <strong>요청이 가로채졌습니다!</strong> 평문으로 전송되는 민감정보를 확인할 수 있습니다.
+                                    </div>
+
+                                    <div class="burp-pane">
+                                        <div class="burp-pane-header">🔴 Intercepted Request - HTTP (Unencrypted)</div>
+                                        <div class="burp-pane-content">
+                                            <textarea id="interceptedRequest" spellcheck="false">POST /api/login HTTP/1.1
+Host: bank.example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 68
+Cookie: session=abc123
+User-Agent: Mozilla/5.0
+
+username=hong123&password=myPassword1234!&account=1234-5678-9012</textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="burp-actions">
+                                        <button class="action-btn action-forward" onclick="forwardRequest()">
+                                            ▶ Forward
+                                        </button>
+                                        <button class="action-btn action-drop" onclick="dropRequest()">
+                                            ✖ Drop
+                                        </button>
+                                        <button class="action-btn action-modify" onclick="modifyRequest()">
+                                            ✏ Modify & Forward
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="noIntercept">
+                                    <div style="padding: 50px; text-align: center; color: #999;">
+                                        <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+                                        <div style="font-size: 16px;">대기 중... 은행 로그인을 시도하면 요청이 여기에 표시됩니다.</div>
+                                        <button class="burp-btn" style="margin-top: 20px;" onclick="simulateLogin()">
+                                            🏦 은행 로그인 시뮬레이션
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- HTTP History 탭 -->
+                            <div id="burp-history" class="burp-panel">
+                                <div class="burp-http-history">
+                                    <table class="burp-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Method</th>
+                                                <th>URL</th>
+                                                <th>Status</th>
+                                                <th>Length</th>
+                                                <th>MIME</th>
+                                                <th>Protocol</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="httpHistoryTable">
+                                            <tr onclick="selectHistoryItem(1)">
+                                                <td>1</td>
+                                                <td><span class="http-method">POST</span></td>
+                                                <td>http://bank.example.com/api/login</td>
+                                                <td><span style="color: #28a745;">200</span></td>
+                                                <td>342</td>
+                                                <td>JSON</td>
+                                                <td><span style="color: #dc3545;">HTTP</span></td>
+                                            </tr>
+                                            <tr onclick="selectHistoryItem(2)">
+                                                <td>2</td>
+                                                <td><span class="http-method">GET</span></td>
+                                                <td>http://bank.example.com/api/account/1234</td>
+                                                <td><span style="color: #28a745;">200</span></td>
+                                                <td>1024</td>
+                                                <td>JSON</td>
+                                                <td><span style="color: #dc3545;">HTTP</span></td>
+                                            </tr>
+                                            <tr onclick="selectHistoryItem(3)">
+                                                <td>3</td>
+                                                <td><span class="http-method">POST</span></td>
+                                                <td>http://bank.example.com/api/transfer</td>
+                                                <td><span style="color: #28a745;">200</span></td>
+                                                <td>156</td>
+                                                <td>JSON</td>
+                                                <td><span style="color: #dc3545;">HTTP</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="burp-request-response" id="historyDetail" style="display: none; margin-top: 15px;">
+                                    <div class="burp-pane">
+                                        <div class="burp-pane-header">📤 Request</div>
+                                        <div class="burp-pane-content">
+                                            <div><span class="http-method">POST</span> /api/login HTTP/1.1</div>
+                                            <div><span class="http-header">Host:</span> <span class="http-value">bank.example.com</span></div>
+                                            <div><span class="http-header">Content-Type:</span> <span class="http-value">application/x-www-form-urlencoded</span></div>
+                                            <div style="margin-top: 10px;"></div>
+                                            <div>username=<span class="sensitive-data">hong123</span>&password=<span class="sensitive-data">myPassword1234!</span>&account=<span class="sensitive-data">1234-5678-9012</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="burp-pane">
+                                        <div class="burp-pane-header">📥 Response</div>
+                                        <div class="burp-pane-content">
+                                            <div>HTTP/1.1 <span style="color: #28a745;">200 OK</span></div>
+                                            <div><span class="http-header">Content-Type:</span> <span class="http-value">application/json</span></div>
+                                            <div style="margin-top: 10px;"></div>
+                                            <div>{</div>
+                                            <div>  "status": "success",</div>
+                                            <div>  "token": "<span class="sensitive-data">eyJhbGciOiJIUzI1NiIs...</span>",</div>
+                                            <div>  "user": {</div>
+                                            <div>    "id": "<span class="sensitive-data">hong123</span>",</div>
+                                            <div>    "balance": <span class="sensitive-data">"₩15,430,000"</span></div>
+                                            <div>  }</div>
+                                            <div>}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Options 탭 -->
+                            <div id="burp-options" class="burp-panel">
+                                <div style="padding: 20px; color: #d4d4d4;">
+                                    <h3 style="color: #ff6633; margin-bottom: 15px;">🔧 Proxy Settings</h3>
+                                    <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                        <div style="margin-bottom: 10px;">
+                                            <strong>Proxy Listener:</strong>
+                                        </div>
+                                        <div style="color: #4ec9b0;">
+                                            ✓ Running on 127.0.0.1:8080
+                                        </div>
+                                    </div>
+
+                                    <h3 style="color: #ff6633; margin-bottom: 15px;">⚠️ 발견된 취약점</h3>
+                                    <div style="background: #3c1f1f; border: 2px solid #dc3545; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                        <div style="color: #ff6b6b; font-weight: bold; margin-bottom: 10px;">
+                                            🚨 HIGH: Unencrypted Communication
+                                        </div>
+                                        <div style="line-height: 1.8;">
+                                            • HTTP 프로토콜 사용 (암호화 없음)<br>
+                                            • 민감정보 평문 전송 (비밀번호, 계좌번호)<br>
+                                            • MITM 공격에 취약<br>
+                                            • 권장: HTTPS (TLS 1.2 이상) 적용
+                                        </div>
+                                    </div>
+
+                                    <div style="background: #3c2a1f; border: 2px solid #ffc107; padding: 15px; border-radius: 8px;">
+                                        <div style="color: #ffc107; font-weight: bold; margin-bottom: 10px;">
+                                            ⚠️ MEDIUM: Sensitive Data Exposure
+                                        </div>
+                                        <div style="line-height: 1.8;">
+                                            • Response에 민감정보 노출<br>
+                                            • 잔액 정보가 암호화 없이 전송됨<br>
+                                            • 권장: 데이터 암호화 적용
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 모의해킹 분석</span>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="info-section">
+                            <div class="info-title">🎯 Burp Suite 사용법</div>
+                            <div class="info-content">
+                                <p><strong>1단계: Proxy 설정</strong></p>
+                                <p style="margin-top: 8px; margin-left: 15px;">
+                                    • 브라우저 프록시: 127.0.0.1:8080<br>
+                                    • Burp Suite Proxy Listener 활성화
+                                </p>
+                                
+                                <p style="margin-top: 15px;"><strong>2단계: Intercept ON</strong></p>
+                                <p style="margin-top: 8px; margin-left: 15px;">
+                                    • "Intercept is on" 버튼 활성화<br>
+                                    • 모든 HTTP 요청이 가로채짐
+                                </p>
+                                
+                                <p style="margin-top: 15px;"><strong>3단계: 요청 분석</strong></p>
+                                <p style="margin-top: 8px; margin-left: 15px;">
+                                    • Request 내용 확인<br>
+                                    • 평문으로 전송되는 민감정보 식별
+                                </p>
+                                
+                                <p style="margin-top: 15px;"><strong>4단계: 수정 및 재전송</strong></p>
+                                <p style="margin-top: 8px; margin-left: 15px;">
+                                    • 요청 내용 수정 가능<br>
+                                    • Forward로 서버에 전송
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">💀 발견된 문제점</div>
+                            <div class="info-content">
+                                <ul>
+                                    <li><strong>HTTP 사용:</strong> 평문 통신으로 모든 데이터 노출</li>
+                                    <li><strong>비밀번호:</strong> 암호화 없이 그대로 전송</li>
+                                    <li><strong>계좌번호:</strong> 중요 금융정보 평문 전송</li>
+                                    <li><strong>세션토큰:</strong> Response에 민감정보 포함</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">🛡️ 실전 대응 방안</div>
+                            <div class="info-content">
+                                <p style="color: #28a745; font-weight: bold;">
+                                    금융권 필수 보안 조치:
+                                </p>
+                                <ul style="margin-top: 10px;">
+                                    <li><strong>HTTPS 필수:</strong> TLS 1.2 이상 사용</li>
+                                    <li><strong>HSTS 적용:</strong> HTTP 강제 차단</li>
+                                    <li><strong>Certificate Pinning:</strong> 인증서 고정</li>
+                                    <li><strong>End-to-End 암호화:</strong> 클라이언트-서버 암호화</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">📚 참고 자료</div>
+                            <div class="info-content">
+                                <ul>
+                                    <li>Burp Suite Documentation</li>
+                                    <li>OWASP Testing Guide</li>
+                                    <li>전자금융거래법 보안성 심의 기준</li>
+                                    <li>금융보안원 보안 가이드라인</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">📖 Burp Suite란?</div>
+                    <div class="info-content">
+                        <p>웹 애플리케이션 보안 테스팅을 위한 통합 플랫폼으로, 모의해킹 전문가들이 가장 많이 사용하는 도구입니다.</p>
+                        <ul>
+                            <li><strong>Proxy:</strong> HTTP/HTTPS 트래픽 가로채기</li>
+                            <li><strong>Repeater:</strong> 요청 수정 및 재전송</li>
+                            <li><strong>Intruder:</strong> 자동화된 공격 수행</li>
+                            <li><strong>Scanner:</strong> 자동 취약점 스캔 (Professional)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🎓 학습 포인트</div>
+                    <div class="info-content">
+                        <p><strong>이 시뮬레이터로 배울 수 있는 것:</strong></p>
+                        <ul>
+                            <li>Burp Suite의 기본 인터페이스</li>
+                            <li>Intercept 기능으로 요청 가로채기</li>
+                            <li>HTTP History에서 트래픽 분석</li>
+                            <li>평문 전송의 위험성 실습</li>
+                            <li>실제 모의해킹 시나리오 체험</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 네트워크 스니핑 모드 -->
+        <div id="network-mode" class="content-wrapper">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="networkAttempts">0</div>
+                    <div class="stat-label">스니핑 시도</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="dataStolen">0</div>
+                    <div class="stat-label">데이터 탈취</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="attackBlocked">0</div>
+                    <div class="stat-label">공격 차단</div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🏦 한국금융은행 로그인 시스템</span>
+                        <span class="status-badge status-vulnerable" id="networkStatus">취약</span>
+                    </div>
+
+                    <div class="bank-system">
+                        <div class="bank-header">
+                            <div class="bank-logo">🏦</div>
+                            <div class="bank-name">한국금융은행</div>
+                            <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">인터넷뱅킹 로그인</div>
+                        </div>
+
+                        <div class="scenario-selector">
+                            <div class="attack-title">⚙️ 전송 방식 선택</div>
+                            <button class="scenario-btn active" onclick="selectProtocol('http')">
+                                <span class="scenario-icon">🔓</span>
+                                <strong>HTTP (평문 전송)</strong><br>
+                                <small style="opacity: 0.8;">암호화 없이 데이터 전송 - 취약</small>
+                            </button>
+                            <button class="scenario-btn" onclick="selectProtocol('https')">
+                                <span class="scenario-icon">🔒</span>
+                                <strong>HTTPS (암호화 전송)</strong><br>
+                                <small style="opacity: 0.8;">TLS/SSL로 암호화 - 안전</small>
+                            </button>
+                        </div>
+
+                        <div class="attack-panel">
+                            <div class="attack-title">📡 네트워크 패킷</div>
+                            <div class="data-display" id="networkPacket">
+                                <div><span class="data-label">Method:</span> POST /api/login</div>
+                                <div><span class="data-label">Host:</span> bank.example.com</div>
+                                <div><span class="data-label">Content-Type:</span> application/x-www-form-urlencoded</div>
+                                <div style="margin-top: 10px;"></div>
+                                <div><span class="data-label">Body:</span></div>
+                                <div id="packetBody" class="data-plain">
+username=hong123&password=myPassword1234!&account=1234-5678-9012
+                                </div>
+                            </div>
+
+                            <button class="btn-attack" id="sniffBtn" onclick="executeSniffing()">
+                                🎯 네트워크 스니핑 실행
+                            </button>
+
+                            <div class="attack-result" id="sniffResult"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 공격 분석</span>
+                    </div>
+                    <div id="networkAnalysis" style="padding: 20px;">
+                        <div class="info-section">
+                            <div class="info-title">💡 공격 시나리오</div>
+                            <div class="info-content">
+                                <p><strong>1단계:</strong> HTTP 프로토콜로 로그인 시도</p>
+                                <p style="margin-top: 8px;"><strong>2단계:</strong> 네트워크 스니핑 도구 실행</p>
+                                <p style="margin-top: 8px;"><strong>3단계:</strong> 평문으로 전송되는 패킷 가로채기</p>
+                                <p style="margin-top: 8px;"><strong>4단계:</strong> 사용자 ID, 비밀번호, 계좌번호 탈취</p>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">🔧 사용 도구</div>
+                            <div class="info-content">
+                                <ul>
+                                    <li><strong>Wireshark:</strong> 네트워크 패킷 캡처 및 분석</li>
+                                    <li><strong>tcpdump:</strong> 명령줄 패킷 스니핑</li>
+                                    <li><strong>mitmproxy:</strong> MITM 공격 프록시</li>
+                                    <li><strong>Burp Suite:</strong> 웹 트래픽 가로채기</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">
+                                    HTTP는 평문으로 데이터를 전송합니다!
+                                </p>
+                                <p style="margin-top: 10px;">
+                                    • 사용자 ID, 비밀번호가 그대로 노출<br>
+                                    • 계좌번호, 거래내역 모두 열람 가능<br>
+                                    • 공용 Wi-Fi에서 특히 위험<br>
+                                    • MITM 공격에 무방비 상태
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">📖 네트워크 스니핑이란?</div>
+                    <div class="info-content">
+                        <p>네트워크를 통해 전송되는 데이터 패킷을 가로채서 내용을 확인하는 공격 기법입니다.</p>
+                        <ul>
+                            <li><strong>평문 전송:</strong> 암호화 없이 데이터를 그대로 전송</li>
+                            <li><strong>MITM:</strong> 중간자 공격으로 통신 가로채기</li>
+                            <li><strong>패킷 캡처:</strong> Wireshark 등으로 패킷 분석</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🛡️ 방어 대책</div>
+                    <div class="info-content">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>구분</th>
+                                    <th>취약한 방식</th>
+                                    <th>안전한 방식</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>프로토콜</strong></td>
+                                    <td class="vulnerable">HTTP (평문)</td>
+                                    <td class="secure">HTTPS (TLS/SSL)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>비밀번호</strong></td>
+                                    <td class="vulnerable">평문 전송</td>
+                                    <td class="secure">해시 + 암호화</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>계좌정보</strong></td>
+                                    <td class="vulnerable">암호화 없음</td>
+                                    <td class="secure">AES-256 암호화</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>세션</strong></td>
+                                    <td class="vulnerable">평문 쿠키</td>
+                                    <td class="secure">암호화된 토큰</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 데이터베이스 탈취 모드 -->
+        <div id="database-mode" class="content-wrapper">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="dbAttempts">0</div>
+                    <div class="stat-label">DB 침투 시도</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="dbStolen">0</div>
+                    <div class="stat-label">데이터 유출</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="dbBlocked">0</div>
+                    <div class="stat-label">유출 차단</div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">💾 고객 정보 데이터베이스</span>
+                        <span class="status-badge status-vulnerable" id="dbStatus">취약</span>
+                    </div>
+
+                    <div class="bank-system">
+                        <div class="bank-header">
+                            <div class="bank-logo">💾</div>
+                            <div class="bank-name">고객정보 DB</div>
+                            <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">Users Table</div>
+                        </div>
+
+                        <div class="scenario-selector">
+                            <div class="attack-title">⚙️ 저장 방식 선택</div>
+                            <button class="scenario-btn active" onclick="selectStorage('plain')">
+                                <span class="scenario-icon">🔓</span>
+                                <strong>평문 저장</strong><br>
+                                <small style="opacity: 0.8;">암호화 없이 저장 - 취약</small>
+                            </button>
+                            <button class="scenario-btn" onclick="selectStorage('encrypted')">
+                                <span class="scenario-icon">🔒</span>
+                                <strong>암호화 저장</strong><br>
+                                <small style="opacity: 0.8;">AES-256 암호화 - 안전</small>
+                            </button>
+                        </div>
+
+                        <div class="attack-panel">
+                            <div class="attack-title">🗄️ 데이터베이스 내용</div>
+                            <div class="data-display" id="dbContent">
+                                <div style="color: #4ec9b0;">SELECT * FROM users LIMIT 3;</div>
+                                <div style="margin-top: 10px;"></div>
+                                <div id="dbData">
+<div>ID: 1, Name: 홍길동, SSN: <span class="data-plain">850101-1234567</span></div>
+<div>Password: <span class="data-plain">myPassword123!</span></div>
+<div>Account: <span class="data-plain">1234-5678-9012-3456</span></div>
+<div>Balance: <span class="data-plain">₩15,430,000</span></div>
+<div style="margin-top: 10px;"></div>
+<div>ID: 2, Name: 김철수, SSN: <span class="data-plain">920303-2345678</span></div>
+<div>Password: <span class="data-plain">password1234</span></div>
+<div>Account: <span class="data-plain">9876-5432-1098-7654</span></div>
+<div>Balance: <span class="data-plain">₩8,750,000</span></div>
+                                </div>
+                            </div>
+
+                            <button class="btn-attack" id="dbAttackBtn" onclick="executeDBAttack()">
+                                🎯 SQL Injection으로 DB 탈취
+                            </button>
+
+                            <div class="attack-result" id="dbResult"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 공격 분석</span>
+                    </div>
+                    <div id="dbAnalysis" style="padding: 20px;">
+                        <div class="info-section">
+                            <div class="info-title">💡 공격 시나리오</div>
+                            <div class="info-content">
+                                <p><strong>1단계:</strong> SQL Injection으로 DB 접근 권한 획득</p>
+                                <p style="margin-top: 8px;"><strong>2단계:</strong> 고객 정보 테이블 조회</p>
+                                <p style="margin-top: 8px;"><strong>3단계:</strong> 평문으로 저장된 개인정보 확인</p>
+                                <p style="margin-top: 8px;"><strong>4단계:</strong> 주민번호, 계좌번호, 비밀번호 대량 유출</p>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">💀 유출 가능 정보</div>
+                            <div class="info-content">
+                                <ul>
+                                    <li><strong>주민등록번호:</strong> 평문 저장 시 그대로 노출</li>
+                                    <li><strong>비밀번호:</strong> 해시 없이 원본 그대로</li>
+                                    <li><strong>계좌번호:</strong> 암호화 없이 조회 가능</li>
+                                    <li><strong>잔액정보:</strong> 금융 정보 전부 유출</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">⚠️ 법적 책임</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">
+                                    개인정보보호법 위반 시 과징금 부과!
+                                </p>
+                                <p style="margin-top: 10px;">
+                                    • 주민번호 평문 저장: 최대 3억원 과태료<br>
+                                    • 암호화 의무 위반: 매출액의 3% 과징금<br>
+                                    • 전자금융거래법 위반: 영업정지 가능<br>
+                                    • 집단소송 및 손해배상 청구
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">📖 DB 암호화의 중요성</div>
+                    <div class="info-content">
+                        <p>데이터베이스에 중요 정보를 평문으로 저장하면 DB가 유출될 경우 모든 정보가 그대로 노출됩니다.</p>
+                        <ul>
+                            <li><strong>주민번호:</strong> 개인정보보호법상 암호화 필수</li>
+                            <li><strong>비밀번호:</strong> bcrypt, PBKDF2 등 단방향 해시</li>
+                            <li><strong>계좌정보:</strong> AES-256 등 양방향 암호화</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🛡️ 암호화 방법</div>
+                    <div class="info-content">
+                        <ul>
+                            <li><strong>비밀번호:</strong> bcrypt.hashpw(password, salt)</li>
+                            <li><strong>주민번호:</strong> AES-256-CBC 암호화</li>
+                            <li><strong>계좌번호:</strong> 애플리케이션 레벨 암호화</li>
+                            <li><strong>TDE:</strong> 데이터베이스 전체 암호화 (Transparent Data Encryption)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 로그 파일 유출 모드 -->
+        <div id="log-mode" class="content-wrapper">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="logAttempts">0</div>
+                    <div class="stat-label">로그 접근 시도</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="logStolen">0</div>
+                    <div class="stat-label">정보 유출</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #fff;" id="logBlocked">0</div>
+                    <div class="stat-label">유출 차단</div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📝 애플리케이션 로그</span>
+                        <span class="status-badge status-vulnerable" id="logStatus">취약</span>
+                    </div>
+
+                    <div class="bank-system">
+                        <div class="bank-header">
+                            <div class="bank-logo">📝</div>
+                            <div class="bank-name">시스템 로그</div>
+                            <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">app.log</div>
+                        </div>
+
+                        <div class="scenario-selector">
+                            <div class="attack-title">⚙️ 로깅 방식 선택</div>
+                            <button class="scenario-btn active" onclick="selectLogging('plain')">
+                                <span class="scenario-icon">🔓</span>
+                                <strong>상세 로깅 (평문)</strong><br>
+                                <small style="opacity: 0.8;">모든 정보 기록 - 취약</small>
+                            </button>
+                            <button class="scenario-btn" onclick="selectLogging('masked')">
+                                <span class="scenario-icon">🔒</span>
+                                <strong>마스킹 로깅</strong><br>
+                                <small style="opacity: 0.8;">민감정보 마스킹 - 안전</small>
+                            </button>
+                        </div>
+
+                        <div class="attack-panel">
+                            <div class="attack-title">📄 로그 파일 내용</div>
+                            <div class="data-display" id="logContent" style="max-height: 400px; overflow-y: auto;">
+                                <div id="logData">
+<div>[2024-12-14 09:23:15] INFO: Login attempt - user=hong123</div>
+<div>[2024-12-14 09:23:16] DEBUG: Password validation - <span class="data-plain">password=myPassword123!</span></div>
+<div>[2024-12-14 09:23:17] INFO: Login successful</div>
+<div>[2024-12-14 09:25:42] INFO: Transfer request - from=<span class="data-plain">1234-5678-9012</span></div>
+<div>[2024-12-14 09:25:42] DEBUG: Transfer to=<span class="data-plain">9876-5432-1098</span>, amount=<span class="data-plain">₩1,500,000</span></div>
+<div>[2024-12-14 09:25:43] INFO: OTP verification - code=<span class="data-plain">847293</span></div>
+<div>[2024-12-14 09:25:44] INFO: Transfer completed</div>
+<div>[2024-12-14 10:14:23] INFO: Login attempt - user=kim456</div>
+<div>[2024-12-14 10:14:24] DEBUG: Password check - <span class="data-plain">password=password1234</span></div>
+<div>[2024-12-14 10:14:25] ERROR: Login failed - invalid credentials</div>
+<div>[2024-12-14 11:03:11] INFO: Account inquiry - SSN=<span class="data-plain">850101-1234567</span></div>
+<div>[2024-12-14 11:03:12] DEBUG: Card number=<span class="data-plain">1234-5678-9012-3456</span>, CVV=<span class="data-plain">123</span></div>
+                                </div>
+                            </div>
+
+                            <button class="btn-attack" id="logAttackBtn" onclick="executeLogAttack()">
+                                🎯 로그 파일 유출 시도
+                            </button>
+
+                            <div class="attack-result" id="logResult"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 공격 분석</span>
+                    </div>
+                    <div id="logAnalysis" style="padding: 20px;">
+                        <div class="info-section">
+                            <div class="info-title">💡 공격 시나리오</div>
+                            <div class="info-content">
+                                <p><strong>1단계:</strong> 서버 취약점으로 로그 파일 접근</p>
+                                <p style="margin-top: 8px;"><strong>2단계:</strong> app.log 파일 다운로드</p>
+                                <p style="margin-top: 8px;"><strong>3단계:</strong> 로그에 기록된 평문 정보 확인</p>
+                                <p style="margin-top: 8px;"><strong>4단계:</strong> 비밀번호, OTP, 계좌번호 등 수집</p>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">💀 로그에 남는 정보</div>
+                            <div class="info-content">
+                                <ul>
+                                    <li><strong>비밀번호:</strong> DEBUG 레벨 로깅 시 평문 기록</li>
+                                    <li><strong>OTP 코드:</strong> 인증번호가 그대로 노출</li>
+                                    <li><strong>계좌번호:</strong> 거래 로그에 포함</li>
+                                    <li><strong>주민번호:</strong> 조회 로그에 기록</li>
+                                    <li><strong>카드정보:</strong> 카드번호, CVV 노출</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-title">⚠️ 개발자 실수</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">
+                                    디버깅 중 민감정보를 로그에 남기는 실수!
+                                </p>
+                                <p style="margin-top: 10px;">
+                                    • logger.debug("Password: " + password)<br>
+                                    • System.out.println("Card: " + cardNumber)<br>
+                                    • console.log("SSN: " + ssn)<br>
+                                    • 운영 환경에서 DEBUG 레벨 활성화
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <div class="info-title">📖 안전한 로깅</div>
+                    <div class="info-content">
+                        <p>로그는 문제 해결을 위해 필요하지만, 민감정보가 포함되면 안 됩니다.</p>
+                        <ul>
+                            <li><strong>마스킹:</strong> 비밀번호는 ****, 계좌는 1234-****-9012</li>
+                            <li><strong>로그 레벨:</strong> 운영 환경에서는 INFO 이상만</li>
+                            <li><strong>로그 암호화:</strong> 중요 로그는 암호화하여 저장</li>
+                            <li><strong>접근 제어:</strong> 로그 파일 권한 엄격히 관리</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">🛡️ 로깅 모범 사례</div>
+                    <div class="info-content">
+                        <ul>
+                            <li><strong>절대 금지:</strong> 비밀번호, 주민번호, 카드번호 로깅</li>
+                            <li><strong>마스킹 필수:</strong> 계좌번호, 전화번호 등</li>
+                            <li><strong>로그 순환:</strong> 일정 기간 후 자동 삭제</li>
+                            <li><strong>암호화 저장:</strong> 민감한 로그는 암호화</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'burp';
+        let currentProtocol = 'http';
+        let currentStorage = 'plain';
+        let currentLogging = 'plain';
+        let isInterceptOn = true;
+        let currentBurpTab = 'intercept';
+
+        // 통계
+        let stats = {
+            burp: { requests: 0, modified: 0, exploited: 0 },
+            network: { attempts: 0, stolen: 0, blocked: 0 },
+            database: { attempts: 0, stolen: 0, blocked: 0 },
+            log: { attempts: 0, stolen: 0, blocked: 0 }
+        };
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.closest('.mode-tab').classList.add('active');
+            
+            document.querySelectorAll('.content-wrapper').forEach(w => w.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+
+        // ===== 네트워크 스니핑 모드 =====
+        function selectProtocol(protocol) {
+            currentProtocol = protocol;
+            
+            document.querySelectorAll('#network-mode .scenario-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.scenario-btn').classList.add('active');
+            
+            const packetBody = document.getElementById('packetBody');
+            const status = document.getElementById('networkStatus');
+            
+            if (protocol === 'http') {
+                packetBody.className = 'data-plain';
+                packetBody.textContent = 'username=hong123&password=myPassword1234!&account=1234-5678-9012';
+                status.textContent = '취약';
+                status.className = 'status-badge status-vulnerable';
+            } else {
+                packetBody.className = 'data-encrypted';
+                packetBody.textContent = '�ñ���E�#�Ϫ���8�~�!n��j��۱�H���....[암호화된 데이터]';
+                status.textContent = '안전';
+                status.className = 'status-badge status-secure';
+            }
+            
+            document.getElementById('sniffResult').style.display = 'none';
+        }
+
+        function executeSniffing() {
+            const btn = document.getElementById('sniffBtn');
+            const result = document.getElementById('sniffResult');
+            
+            btn.innerHTML = '<span class="loading"></span> 스니핑 중...';
+            btn.disabled = true;
+            
+            stats.network.attempts++;
+            document.getElementById('networkAttempts').textContent = stats.network.attempts;
+            
+            setTimeout(() => {
+                if (currentProtocol === 'http') {
+                    // 공격 성공
+                    stats.network.stolen++;
+                    document.getElementById('dataStolen').textContent = stats.network.stolen;
+                    
+                    result.className = 'attack-result success';
+                    result.innerHTML = `
+                        <div class="result-header success">
+                            <span style="font-size: 32px;">🚨</span>
+                            <span>네트워크 스니핑 공격 성공!</span>
+                        </div>
+                        <div class="result-content">
+                            <div class="warning-box">
+                                <strong>⚠️ 보안 경고</strong><br>
+                                HTTP 평문 전송으로 인해 모든 데이터가 노출되었습니다!
+                            </div>
+                            
+                            <div class="stolen-data">
+                                <div style="color: #ffc107; font-weight: bold; margin-bottom: 10px;">💀 탈취된 정보:</div>
+                                <div>👤 사용자 ID: <span style="color: #dc3545;">hong123</span></div>
+                                <div>🔑 비밀번호: <span style="color: #dc3545;">myPassword1234!</span></div>
+                                <div>🏦 계좌번호: <span style="color: #dc3545;">1234-5678-9012</span></div>
+                            </div>
+
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #dc3545;">공격 성공 이유:</strong><br>
+                                1. HTTP는 암호화 없이 데이터를 전송<br>
+                                2. Wireshark로 패킷 캡처 가능<br>
+                                3. 패킷 내용을 평문으로 확인<br>
+                                4. 사용자 인증 정보 완전 노출
+                            </div>
+
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #dc3545;">가능한 2차 공격:</strong><br>
+                                • 탈취한 계정으로 로그인<br>
+                                • 계좌 이체 및 출금<br>
+                                • 개인정보 열람<br>
+                                • 추가 금융사기
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 공격 차단
+                    stats.network.blocked++;
+                    document.getElementById('attackBlocked').textContent = stats.network.blocked;
+                    
+                    result.className = 'attack-result blocked';
+                    result.innerHTML = `
+                        <div class="result-header blocked">
+                            <span style="font-size: 32px;">✅</span>
+                            <span>HTTPS 암호화로 공격 차단!</span>
+                        </div>
+                        <div class="result-content">
+                            <div style="background: #d4edda; border: 2px solid #28a745; padding: 15px; border-radius: 8px;">
+                                <strong>🛡️ 보안 성공</strong><br>
+                                TLS/SSL 암호화로 데이터가 보호되었습니다!
+                            </div>
+                            
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #28a745;">차단 이유:</strong><br>
+                                1. HTTPS는 TLS/SSL로 모든 데이터 암호화<br>
+                                2. 패킷을 캡처해도 암호문만 보임<br>
+                                3. 복호화 키 없이는 해독 불가능<br>
+                                4. 중간자 공격(MITM)도 차단
+                            </div>
+
+                            <div style="margin-top: 15px; background: #1e1e1e; color: #28a745; padding: 12px; border-radius: 8px; font-family: 'Consolas', monospace;">
+                                [암호화된 패킷]<br>
+                                �ñ���E�#�Ϫ���8�~�!n��j��۱�H���...<br>
+                                → 복호화 불가능 ✅
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                btn.innerHTML = '🎯 네트워크 스니핑 실행';
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        // ===== 데이터베이스 탈취 모드 =====
+        function selectStorage(storage) {
+            currentStorage = storage;
+            
+            document.querySelectorAll('#database-mode .scenario-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.scenario-btn').classList.add('active');
+            
+            const dbData = document.getElementById('dbData');
+            const status = document.getElementById('dbStatus');
+            
+            if (storage === 'plain') {
+                dbData.innerHTML = `
+<div>ID: 1, Name: 홍길동, SSN: <span class="data-plain">850101-1234567</span></div>
+<div>Password: <span class="data-plain">myPassword123!</span></div>
+<div>Account: <span class="data-plain">1234-5678-9012-3456</span></div>
+<div>Balance: <span class="data-plain">₩15,430,000</span></div>
+<div style="margin-top: 10px;"></div>
+<div>ID: 2, Name: 김철수, SSN: <span class="data-plain">920303-2345678</span></div>
+<div>Password: <span class="data-plain">password1234</span></div>
+<div>Account: <span class="data-plain">9876-5432-1098-7654</span></div>
+<div>Balance: <span class="data-plain">₩8,750,000</span></div>
+                `;
+                status.textContent = '취약';
+                status.className = 'status-badge status-vulnerable';
+            } else {
+                dbData.innerHTML = `
+<div>ID: 1, Name: 홍길동, SSN: <span class="data-encrypted">$aes256$8f3e2a...</span></div>
+<div>Password: <span class="data-encrypted">$2b$10$N9qo8uLO...</span></div>
+<div>Account: <span class="data-encrypted">$aes256$3d7f9b...</span></div>
+<div>Balance: <span class="data-encrypted">$aes256$5c2e1a...</span></div>
+<div style="margin-top: 10px;"></div>
+<div>ID: 2, Name: 김철수, SSN: <span class="data-encrypted">$aes256$7a4c3f...</span></div>
+<div>Password: <span class="data-encrypted">$2b$10$E8vxkM2D...</span></div>
+<div>Account: <span class="data-encrypted">$aes256$9e6b5d...</span></div>
+<div>Balance: <span class="data-encrypted">$aes256$4f8c2b...</span></div>
+                `;
+                status.textContent = '안전';
+                status.className = 'status-badge status-secure';
+            }
+            
+            document.getElementById('dbResult').style.display = 'none';
+        }
+
+        function executeDBAttack() {
+            const btn = document.getElementById('dbAttackBtn');
+            const result = document.getElementById('dbResult');
+            
+            btn.innerHTML = '<span class="loading"></span> DB 침투 중...';
+            btn.disabled = true;
+            
+            stats.database.attempts++;
+            document.getElementById('dbAttempts').textContent = stats.database.attempts;
+            
+            setTimeout(() => {
+                if (currentStorage === 'plain') {
+                    // 공격 성공
+                    stats.database.stolen++;
+                    document.getElementById('dbStolen').textContent = stats.database.stolen;
+                    
+                    result.className = 'attack-result success';
+                    result.innerHTML = `
+                        <div class="result-header success">
+                            <span style="font-size: 32px;">🚨</span>
+                            <span>데이터베이스 탈취 성공!</span>
+                        </div>
+                        <div class="result-content">
+                            <div class="warning-box">
+                                <strong>⚠️ 대규모 개인정보 유출</strong><br>
+                                평문 저장으로 인해 전체 고객 정보가 노출되었습니다!
+                            </div>
+                            
+                            <div class="stolen-data">
+                                <div style="color: #ffc107; font-weight: bold; margin-bottom: 10px;">💀 유출된 정보 (2명 샘플):</div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong>[고객 1] 홍길동</strong><br>
+                                    주민번호: <span style="color: #dc3545;">850101-1234567</span><br>
+                                    비밀번호: <span style="color: #dc3545;">myPassword123!</span><br>
+                                    계좌번호: <span style="color: #dc3545;">1234-5678-9012-3456</span><br>
+                                    잔액: <span style="color: #dc3545;">₩15,430,000</span>
+                                </div>
+                                <div>
+                                    <strong>[고객 2] 김철수</strong><br>
+                                    주민번호: <span style="color: #dc3545;">920303-2345678</span><br>
+                                    비밀번호: <span style="color: #dc3545;">password1234</span><br>
+                                    계좌번호: <span style="color: #dc3545;">9876-5432-1098-7654</span><br>
+                                    잔액: <span style="color: #dc3545;">₩8,750,000</span>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #dc3545;">공격 시나리오:</strong><br>
+                                1. SQL Injection으로 DB 접근<br>
+                                2. SELECT * FROM users로 전체 조회<br>
+                                3. 평문으로 저장된 모든 정보 확인<br>
+                                4. 수십만 고객 정보 일괄 다운로드
+                            </div>
+
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #dc3545;">법적 처벌:</strong><br>
+                                • 개인정보보호법 위반: 과징금 최대 3억원<br>
+                                • 주민번호 평문 저장: 과태료 3억원<br>
+                                • 전자금융거래법 위반: 영업정지<br>
+                                • 집단 손해배상 소송
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 공격 차단
+                    stats.database.blocked++;
+                    document.getElementById('dbBlocked').textContent = stats.database.blocked;
+                    
+                    result.className = 'attack-result blocked';
+                    result.innerHTML = `
+                        <div class="result-header blocked">
+                            <span style="font-size: 32px;">✅</span>
+                            <span>암호화로 정보 보호 성공!</span>
+                        </div>
+                        <div class="result-content">
+                            <div style="background: #d4edda; border: 2px solid #28a745; padding: 15px; border-radius: 8px;">
+                                <strong>🛡️ 데이터 암호화 적용</strong><br>
+                                AES-256 암호화로 DB가 유출되어도 정보 해독 불가!
+                            </div>
+                            
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #28a745;">방어 성공:</strong><br>
+                                1. DB 접근은 성공했으나<br>
+                                2. 모든 중요 정보가 암호화되어 있음<br>
+                                3. 암호화 키 없이는 복호화 불가능<br>
+                                4. 비밀번호는 단방향 해시로 원본 확인 불가
+                            </div>
+
+                            <div style="margin-top: 15px; background: #1e1e1e; color: #28a745; padding: 12px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px;">
+                                암호화된 데이터:<br>
+                                SSN: $aes256$8f3e2a7c9d1b...<br>
+                                Password: $2b$10$N9qo8uLO...<br>
+                                Account: $aes256$3d7f9b4e6c...<br>
+                                → 복호화 불가능 ✅
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                btn.innerHTML = '🎯 SQL Injection으로 DB 탈취';
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        // ===== 로그 파일 유출 모드 =====
+        function selectLogging(logging) {
+            currentLogging = logging;
+            
+            document.querySelectorAll('#log-mode .scenario-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.scenario-btn').classList.add('active');
+            
+            const logData = document.getElementById('logData');
+            const status = document.getElementById('logStatus');
+            
+            if (logging === 'plain') {
+                logData.innerHTML = `
+<div>[2024-12-14 09:23:15] INFO: Login attempt - user=hong123</div>
+<div>[2024-12-14 09:23:16] DEBUG: Password validation - <span class="data-plain">password=myPassword123!</span></div>
+<div>[2024-12-14 09:23:17] INFO: Login successful</div>
+<div>[2024-12-14 09:25:42] INFO: Transfer request - from=<span class="data-plain">1234-5678-9012</span></div>
+<div>[2024-12-14 09:25:42] DEBUG: Transfer to=<span class="data-plain">9876-5432-1098</span>, amount=<span class="data-plain">₩1,500,000</span></div>
+<div>[2024-12-14 09:25:43] INFO: OTP verification - code=<span class="data-plain">847293</span></div>
+<div>[2024-12-14 09:25:44] INFO: Transfer completed</div>
+<div>[2024-12-14 10:14:23] INFO: Login attempt - user=kim456</div>
+<div>[2024-12-14 10:14:24] DEBUG: Password check - <span class="data-plain">password=password1234</span></div>
+<div>[2024-12-14 10:14:25] ERROR: Login failed - invalid credentials</div>
+<div>[2024-12-14 11:03:11] INFO: Account inquiry - SSN=<span class="data-plain">850101-1234567</span></div>
+<div>[2024-12-14 11:03:12] DEBUG: Card number=<span class="data-plain">1234-5678-9012-3456</span>, CVV=<span class="data-plain">123</span></div>
+                `;
+                status.textContent = '취약';
+                status.className = 'status-badge status-vulnerable';
+            } else {
+                logData.innerHTML = `
+<div>[2024-12-14 09:23:15] INFO: Login attempt - user=hong123</div>
+<div>[2024-12-14 09:23:16] DEBUG: Password validation - <span class="data-encrypted">password=****</span></div>
+<div>[2024-12-14 09:23:17] INFO: Login successful</div>
+<div>[2024-12-14 09:25:42] INFO: Transfer request - from=<span class="data-encrypted">1234-****-9012</span></div>
+<div>[2024-12-14 09:25:42] DEBUG: Transfer to=<span class="data-encrypted">9876-****-1098</span>, amount=<span class="data-encrypted">₩1,5**,***</span></div>
+<div>[2024-12-14 09:25:43] INFO: OTP verification - code=<span class="data-encrypted">***293</span></div>
+<div>[2024-12-14 09:25:44] INFO: Transfer completed</div>
+<div>[2024-12-14 10:14:23] INFO: Login attempt - user=kim456</div>
+<div>[2024-12-14 10:14:24] DEBUG: Password check - <span class="data-encrypted">password=****</span></div>
+<div>[2024-12-14 10:14:25] ERROR: Login failed - invalid credentials</div>
+<div>[2024-12-14 11:03:11] INFO: Account inquiry - SSN=<span class="data-encrypted">850101-*******</span></div>
+<div>[2024-12-14 11:03:12] DEBUG: Card number=<span class="data-encrypted">1234-****-****-3456</span>, CVV=<span class="data-encrypted">***</span></div>
+                `;
+                status.textContent = '안전';
+                status.className = 'status-badge status-secure';
+            }
+            
+            document.getElementById('logResult').style.display = 'none';
+        }
+
+        function executeLogAttack() {
+            const btn = document.getElementById('logAttackBtn');
+            const result = document.getElementById('logResult');
+            
+            btn.innerHTML = '<span class="loading"></span> 로그 파일 접근 중...';
+            btn.disabled = true;
+            
+            stats.log.attempts++;
+            document.getElementById('logAttempts').textContent = stats.log.attempts;
+            
+            setTimeout(() => {
+                if (currentLogging === 'plain') {
+                    // 공격 성공
+                    stats.log.stolen++;
+                    document.getElementById('logStolen').textContent = stats.log.stolen;
+                    
+                    result.className = 'attack-result success';
+                    result.innerHTML = `
+                        <div class="result-header success">
+                            <span style="font-size: 32px;">🚨</span>
+                            <span>로그 파일 유출 성공!</span>
+                        </div>
+                        <div class="result-content">
+                            <div class="warning-box">
+                                <strong>⚠️ 민감정보 로그 유출</strong><br>
+                                로그에 평문으로 기록된 모든 정보가 노출되었습니다!
+                            </div>
+                            
+                            <div class="stolen-data">
+                                <div style="color: #ffc107; font-weight: bold; margin-bottom: 10px;">💀 로그에서 추출한 정보:</div>
+                                <div>🔑 비밀번호: <span style="color: #dc3545;">myPassword123!, password1234</span></div>
+                                <div>🏦 계좌번호: <span style="color: #dc3545;">1234-5678-9012, 9876-5432-1098</span></div>
+                                <div>📱 OTP 코드: <span style="color: #dc3545;">847293</span></div>
+                                <div>🆔 주민번호: <span style="color: #dc3545;">850101-1234567</span></div>
+                                <div>💳 카드정보: <span style="color: #dc3545;">1234-5678-9012-3456, CVV: 123</span></div>
+                                <div>💰 거래금액: <span style="color: #dc3545;">₩1,500,000</span></div>
+                            </div>
+
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #dc3545;">공격 경로:</strong><br>
+                                1. 서버 취약점(LFI, 권한 상승)으로 로그 파일 접근<br>
+                                2. /var/log/app.log 다운로드<br>
+                                3. DEBUG 레벨 로그에서 평문 정보 추출<br>
+                                4. grep으로 password, account 등 키워드 검색
+                            </div>
+
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #dc3545;">개발자의 실수:</strong><br>
+                                • logger.debug("Password: " + password) ← 절대 금지!<br>
+                                • 운영 환경에서 DEBUG 레벨 활성화<br>
+                                • 민감정보를 로그에 직접 기록<br>
+                                • 로그 파일 접근 권한 미설정
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 공격 차단
+                    stats.log.blocked++;
+                    document.getElementById('logBlocked').textContent = stats.log.blocked;
+                    
+                    result.className = 'attack-result blocked';
+                    result.innerHTML = `
+                        <div class="result-header blocked">
+                            <span style="font-size: 32px;">✅</span>
+                            <span>마스킹으로 정보 보호 성공!</span>
+                        </div>
+                        <div class="result-content">
+                            <div style="background: #d4edda; border: 2px solid #28a745; padding: 15px; border-radius: 8px;">
+                                <strong>🛡️ 안전한 로깅 적용</strong><br>
+                                민감정보 마스킹으로 로그가 유출되어도 정보 확인 불가!
+                            </div>
+                            
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #28a745;">방어 성공:</strong><br>
+                                1. 로그 파일 접근은 허용했으나<br>
+                                2. 모든 민감정보가 마스킹 처리됨<br>
+                                3. 비밀번호: **** (완전 마스킹)<br>
+                                4. 계좌번호: 1234-****-9012 (중간 마스킹)
+                            </div>
+
+                            <div style="margin-top: 15px; background: #1e1e1e; color: #28a745; padding: 12px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px;">
+                                마스킹된 로그:<br>
+                                password=****<br>
+                                account=1234-****-9012<br>
+                                SSN=850101-*******<br>
+                                OTP=***293<br>
+                                → 원본 정보 확인 불가 ✅
+                            </div>
+
+                            <div style="margin-top: 15px; line-height: 1.8;">
+                                <strong style="color: #28a745;">적용된 보안 조치:</strong><br>
+                                • 비밀번호 완전 마스킹 (****)<br>
+                                • 계좌번호 중간 4자리 마스킹<br>
+                                • 주민번호 뒷자리 마스킹<br>
+                                • 운영 환경 INFO 레벨 이상만 로깅
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                btn.innerHTML = '🎯 로그 파일 유출 시도';
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        // ===== Burp Suite 모드 함수들 =====
+        function switchBurpTab(tab) {
+            currentBurpTab = tab;
+            
+            // 탭 활성화
+            document.querySelectorAll('.burp-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 패널 표시
+            document.querySelectorAll('.burp-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('burp-' + tab).classList.add('active');
+        }
+
+        function toggleIntercept() {
+            isInterceptOn = !isInterceptOn;
+            const btn = document.getElementById('interceptToggle');
+            const status = document.getElementById('interceptStatus');
+            
+            if (isInterceptOn) {
+                btn.textContent = 'Intercept is on';
+                btn.classList.remove('off');
+                status.textContent = 'Waiting for requests...';
+            } else {
+                btn.textContent = 'Intercept is off';
+                btn.classList.add('off');
+                status.textContent = 'Requests will be forwarded automatically';
+                document.getElementById('interceptContent').style.display = 'none';
+                document.getElementById('noIntercept').style.display = 'block';
+            }
+        }
+
+        function simulateLogin() {
+            if (!isInterceptOn) {
+                alert('⚠️ Intercept를 먼저 활성화하세요!');
+                return;
+            }
+            
+            stats.burp.requests++;
+            document.getElementById('burpRequests').textContent = stats.burp.requests;
+            
+            document.getElementById('noIntercept').style.display = 'none';
+            document.getElementById('interceptContent').style.display = 'block';
+            document.getElementById('interceptStatus').textContent = '🔴 Request intercepted!';
+        }
+
+        function forwardRequest() {
+            const result = confirm('요청을 그대로 전송하시겠습니까?\n\n⚠️ 평문으로 전송되므로 민감정보가 노출됩니다!');
+            
+            if (result) {
+                stats.burp.exploited++;
+                document.getElementById('burpExploited').textContent = stats.burp.exploited;
+                
+                alert('✅ 요청이 전송되었습니다.\n\n💀 탈취 가능한 정보:\n• 사용자ID: hong123\n• 비밀번호: myPassword1234!\n• 계좌번호: 1234-5678-9012');
+                
+                resetIntercept();
+            }
+        }
+
+        function dropRequest() {
+            const result = confirm('요청을 Drop하시겠습니까?\n\n서버로 전송되지 않습니다.');
+            
+            if (result) {
+                alert('🗑️ 요청이 Drop되었습니다.');
+                resetIntercept();
+            }
+        }
+
+        function modifyRequest() {
+            const textarea = document.getElementById('interceptedRequest');
+            const originalText = textarea.value;
+            
+            // 수정된 요청 (HTTPS로 변경)
+            const modifiedText = originalText
+                .replace('POST /api/login HTTP/1.1', 'POST https://bank.example.com/api/login HTTP/1.1')
+                .replace('password=myPassword1234!', 'password=[ENCRYPTED]')
+                .replace('account=1234-5678-9012', 'account=[ENCRYPTED]');
+            
+            const result = confirm('요청을 수정하여 전송하시겠습니까?\n\n✅ 보안 개선:\n• HTTPS 프로토콜 사용\n• 민감정보 암호화');
+            
+            if (result) {
+                stats.burp.modified++;
+                document.getElementById('burpModified').textContent = stats.burp.modified;
+                
+                textarea.value = modifiedText;
+                
+                setTimeout(() => {
+                    alert('✅ 수정된 요청이 전송되었습니다!\n\n🛡️ 적용된 보안:\n• HTTPS 프로토콜\n• 데이터 암호화\n• 안전한 전송');
+                    resetIntercept();
+                }, 1000);
+            }
+        }
+
+        function resetIntercept() {
+            document.getElementById('interceptContent').style.display = 'none';
+            document.getElementById('noIntercept').style.display = 'block';
+            document.getElementById('interceptStatus').textContent = 'Waiting for requests...';
+            
+            // Request 초기화
+            document.getElementById('interceptedRequest').value = `POST /api/login HTTP/1.1
+Host: bank.example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 68
+Cookie: session=abc123
+User-Agent: Mozilla/5.0
+
+username=hong123&password=myPassword1234!&account=1234-5678-9012`;
+        }
+
+        function selectHistoryItem(num) {
+            // 선택된 행 표시
+            document.querySelectorAll('.burp-table tr').forEach(tr => tr.classList.remove('selected'));
+            event.target.closest('tr').classList.add('selected');
+            
+            // Request/Response 상세 표시
+            document.getElementById('historyDetail').style.display = 'grid';
+        }
+    </script>
+</body>
+</html>
