@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 경쟁 조건 실전 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .animate-blink { animation: blink 1s infinite; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse-slow { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-bounce-slow { animation: bounce 2s infinite; }
+    </style>
+</head>
+<body class="bg-gray-900 p-4">
+
+    <!-- 타이틀 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-bolt text-3xl"></i>
+                    <div>
+                        <h1 class="font-bold text-xl">금융권 경쟁 조건 (Race Condition) 실전 시나리오</h1>
+                        <p class="text-sm">가이드 49 제3장-1: TOCTOU | 위험도: 5 (매우 높음)</p>
+                    </div>
+                </div>
+                <button onclick="resetAll()" class="bg-white text-red-600 px-4 py-2 rounded font-bold hover:bg-gray-100">
+                    <i class="fas fa-redo"></i> 처음부터
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- 좌측: 공격 시각화 -->
+        <div class="space-y-4">
+            
+            <!-- 타임라인 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-orange-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-clock text-orange-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">⏱️ 경쟁 조건 타임라인</h2>
+                        <p class="text-sm text-gray-400" id="timelineStatus">시나리오를 시작하세요</p>
+                    </div>
+                </div>
+                
+                <!-- 타임라인 시각화 -->
+                <div class="bg-black rounded-lg p-4 min-h-[400px]" id="timeline">
+                    <div class="text-center text-gray-500 py-20">
+                        <i class="fas fa-hourglass-half text-6xl mb-4"></i>
+                        <p>Thread 실행 순서가 여기 표시됩니다</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 계좌 잔액 실시간 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-green-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-wallet text-green-400 text-2xl"></i>
+                    <h3 class="font-bold">💰 계좌 잔액 (실시간)</h3>
+                </div>
+                
+                <div class="bg-black rounded-lg p-4">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400 mb-2">현재 잔액</p>
+                        <p class="text-4xl font-bold code-font" id="currentBalance">
+                            <span class="text-green-400">1,000,000</span>
+                            <span class="text-gray-400 text-2xl ml-2">원</span>
+                        </p>
+                        
+                        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                            <div class="bg-blue-900 p-3 rounded">
+                                <p class="text-blue-400 mb-1">Thread 1 출금액</p>
+                                <p class="code-font font-bold" id="thread1Amount">-</p>
+                            </div>
+                            <div class="bg-purple-900 p-3 rounded">
+                                <p class="text-purple-400 mb-1">Thread 2 출금액</p>
+                                <p class="code-font font-bold" id="thread2Amount">-</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 bg-red-900 p-3 rounded" id="finalBalance" style="display: none;">
+                            <p class="text-red-400 mb-1">최종 잔액</p>
+                            <p class="text-2xl font-bold code-font" id="finalBalanceAmount"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 공격 단계 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-list-ol text-orange-400"></i>
+                    공격 진행 단계
+                </h3>
+                <div id="attackSteps" class="space-y-2 text-sm max-h-[250px] overflow-auto">
+                    <div class="text-gray-500">시나리오를 시작하세요...</div>
+                </div>
+            </div>
+
+            <!-- 시나리오 선택 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-flask text-orange-400"></i>
+                    실전 공격 시나리오
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="startScenario(1)" 
+                            class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-money-bill-wave"></i> <strong>시나리오 1:</strong> 잔액 부족 우회 - 동시 출금
+                    </button>
+                    <button onclick="startScenario(2)" 
+                            class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-exchange-alt"></i> <strong>시나리오 2:</strong> 중복 송금 - 더블클릭
+                    </button>
+                    <button onclick="startScenario(3)" 
+                            class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm transition">
+                        <i class="fas fa-gift"></i> <strong>시나리오 3:</strong> 포인트 중복 사용
+                    </button>
+                </div>
+            </div>
+
+            <!-- 취약한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-red-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-red-400">
+                        <i class="fas fa-bug"></i> 취약한 코드 (Race Condition)
+                    </h3>
+                    <span class="text-xs bg-red-600 px-2 py-1 rounded">TOCTOU</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[700px]"><code><span class="text-gray-500">// Java - 취약한 출금 코드</span>
+
+@Service
+public class AccountService {
+    
+    @Autowired
+    private AccountRepository accountRepository;
+    
+    <span class="text-red-400">// ❌ 동기화 없음!</span>
+    public void withdraw(String accountId, BigDecimal amount) {
+        
+        Account account = accountRepository.findById(accountId);
+        
+        <span class="text-red-400">// ❌ TOCTOU: Time of Check</span>
+        if (account.getBalance().compareTo(amount) >= 0) {
+            
+            <span class="text-red-400">// ⚠️ 여기서 다른 Thread가 끼어들 수 있음!</span>
+            
+            <span class="text-red-400">// ❌ TOCTOU: Time of Use</span>
+            account.setBalance(
+                account.getBalance().subtract(amount)
+            );
+            
+            accountRepository.save(account);
+        } else {
+            throw new InsufficientFundsException();
+        }
+    }
+}
+
+<span class="text-gray-500">// 공격 시나리오</span>
+
+<span class="text-red-400">// 초기 잔액: 1,000,000원</span>
+
+<span class="text-cyan-400">Thread 1:</span> withdraw(accountId, 800,000)
+  → 잔액 확인: 1,000,000 >= 800,000 ✓
+  
+<span class="text-purple-400">Thread 2:</span> withdraw(accountId, 800,000)
+  → 잔액 확인: 1,000,000 >= 800,000 ✓
+  
+<span class="text-cyan-400">Thread 1:</span> 잔액 = 1,000,000 - 800,000 = 200,000
+  → DB 저장: 200,000
+
+<span class="text-purple-400">Thread 2:</span> 잔액 = 1,000,000 - 800,000 = 200,000
+  → DB 저장: 200,000
+
+<span class="text-red-400">// 최종 잔액: 200,000 (예상: -600,000)</span>
+<span class="text-red-400">// 손실: 1,400,000원!</span>
+
+<span class="text-gray-500">// Python Flask - 취약한 송금</span>
+
+@app.route('/transfer', methods=['POST'])
+def transfer():
+    from_account = request.json['from_account']
+    amount = request.json['amount']
+    
+    <span class="text-red-400"># ❌ Lock 없음!</span>
+    account = get_account(from_account)
+    
+    <span class="text-red-400"># TOCTOU: Check</span>
+    if account['balance'] >= amount:
+        
+        <span class="text-red-400"># ⚠️ 다른 요청이 끼어들 수 있음</span>
+        
+        <span class="text-red-400"># TOCTOU: Use</span>
+        new_balance = account['balance'] - amount
+        
+        update_balance(from_account, new_balance)
+        
+        return jsonify({"status": "success"})
+    else:
+        return jsonify({"error": "잔액 부족"}), 400
+
+<span class="text-gray-500">// Node.js - 취약한 포인트 사용</span>
+
+app.post('/use-points', async (req, res) => {
+    const { userId, points } = req.body;
+    
+    <span class="text-red-400">// ❌ 동시성 제어 없음</span>
+    const user = await User.findById(userId);
+    
+    <span class="text-red-400">// TOCTOU: Check</span>
+    if (user.points >= points) {
+        
+        <span class="text-red-400">// ⚠️ Race Condition!</span>
+        
+        <span class="text-red-400">// TOCTOU: Use</span>
+        user.points -= points;
+        await user.save();
+        
+        res.json({ status: 'success' });
+    } else {
+        res.status(400).json({ error: '포인트 부족' });
+    }
+});</code></pre>
+            </div>
+
+        </div>
+
+        <!-- 우측: 서버 로그 & 분석 -->
+        <div class="space-y-4">
+            
+            <!-- 서버 로그 -->
+            <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg border-2 border-blue-500">
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fas fa-server text-blue-400 text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold text-lg">🔵 서버 처리 로그</h2>
+                        <p class="text-sm text-gray-400">동시 요청 처리</p>
+                    </div>
+                </div>
+                
+                <!-- 서버 로그 -->
+                <div class="bg-black rounded-lg p-4 min-h-[450px] max-h-[550px] overflow-auto">
+                    <div id="serverLog" class="code-font text-xs space-y-1">
+                        <div class="text-gray-500">[SERVER] Waiting...</div>
+                    </div>
+                </div>
+                
+                <!-- 상태 -->
+                <div class="mt-3 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">서버 상태:</span>
+                    <span id="serverStatus" class="text-xs bg-green-600 px-3 py-1 rounded">RUNNING</span>
+                </div>
+            </div>
+
+            <!-- 공격 결과 -->
+            <div id="attackResult" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg border-2 border-red-500">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-circle text-red-400 text-xl animate-pulse"></i>
+                    <h3 class="font-bold">💥 경쟁 조건 발생!</h3>
+                </div>
+                <div id="attackResultContent" class="text-sm"></div>
+            </div>
+
+            <!-- 문제점 분석 -->
+            <div id="problemBox" class="hidden bg-red-900 text-white p-4 rounded-lg shadow-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl animate-blink"></i>
+                    <h3 class="font-bold">🚨 문제점 분석</h3>
+                </div>
+                <div id="problemContent" class="text-sm space-y-2"></div>
+            </div>
+
+            <!-- 안전한 코드 -->
+            <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-green-500">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-green-400">
+                        <i class="fas fa-shield-halved"></i> 안전한 코드 (동시성 제어)
+                    </h3>
+                    <span class="text-xs bg-green-600 px-2 py-1 rounded">해결책</span>
+                </div>
+                <pre class="code-font text-xs overflow-x-auto max-h-[1100px]"><code><span class="text-gray-500">// Java - 안전한 출금 (방법 1: synchronized)</span>
+
+@Service
+public class SecureAccountService {
+    
+    @Autowired
+    private AccountRepository accountRepository;
+    
+    <span class="text-green-400">// ✅ synchronized 키워드</span>
+    public synchronized void withdraw(
+        String accountId, 
+        BigDecimal amount
+    ) {
+        Account account = accountRepository
+            .findById(accountId);
+        
+        if (account.getBalance().compareTo(amount) >= 0) {
+            account.setBalance(
+                account.getBalance().subtract(amount)
+            );
+            accountRepository.save(account);
+        } else {
+            throw new InsufficientFundsException();
+        }
+    }
+}
+
+<span class="text-gray-500">// 방법 2: DB Lock (권장)</span>
+
+@Service
+public class SecureAccountService {
+    
+    @Autowired
+    private AccountRepository accountRepository;
+    
+    <span class="text-green-400">// ✅ SERIALIZABLE 격리 수준</span>
+    @Transactional(
+        isolation = Isolation.SERIALIZABLE
+    )
+    public void withdraw(
+        String accountId, 
+        BigDecimal amount
+    ) {
+        <span class="text-green-400">// ✅ SELECT FOR UPDATE (비관적 락)</span>
+        Account account = accountRepository
+            .findByIdForUpdate(accountId);
+        
+        if (account.getBalance().compareTo(amount) >= 0) {
+            account.setBalance(
+                account.getBalance().subtract(amount)
+            );
+            accountRepository.save(account);
+        } else {
+            throw new InsufficientFundsException();
+        }
+    }
+}
+
+<span class="text-gray-500">// Repository - SELECT FOR UPDATE</span>
+
+@Repository
+public interface AccountRepository 
+    extends JpaRepository<Account, String> {
+    
+    <span class="text-green-400">// ✅ 비관적 락</span>
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Account a WHERE a.id = :id")
+    Account findByIdForUpdate(@Param("id") String id);
+}
+
+<span class="text-gray-500">// 방법 3: 낙관적 락</span>
+
+@Entity
+public class Account {
+    
+    @Id
+    private String id;
+    
+    private BigDecimal balance;
+    
+    <span class="text-green-400">// ✅ 버전 필드</span>
+    @Version
+    private Long version;
+    
+    // getters/setters
+}
+
+@Service
+public class OptimisticLockService {
+    
+    @Transactional
+    public void withdraw(
+        String accountId, 
+        BigDecimal amount
+    ) {
+        try {
+            Account account = accountRepository
+                .findById(accountId);
+            
+            if (account.getBalance().compareTo(amount) >= 0) {
+                account.setBalance(
+                    account.getBalance().subtract(amount)
+                );
+                <span class="text-green-400">// 버전 불일치 시 예외 발생</span>
+                accountRepository.save(account);
+            }
+        } catch (OptimisticLockException e) {
+            <span class="text-green-400">// ✅ 재시도</span>
+            throw new ConcurrentModificationException(
+                "다시 시도해주세요"
+            );
+        }
+    }
+}
+
+<span class="text-gray-500">// 방법 4: ReentrantLock</span>
+
+@Service
+public class LockBasedService {
+    
+    <span class="text-green-400">// ✅ 계좌별 Lock Map</span>
+    private final ConcurrentHashMap<String, ReentrantLock> 
+        locks = new ConcurrentHashMap<>();
+    
+    public void withdraw(
+        String accountId, 
+        BigDecimal amount
+    ) {
+        <span class="text-green-400">// 계좌별 Lock 획득</span>
+        ReentrantLock lock = locks.computeIfAbsent(
+            accountId, 
+            k -> new ReentrantLock()
+        );
+        
+        lock.lock();
+        try {
+            Account account = accountRepository
+                .findById(accountId);
+            
+            if (account.getBalance().compareTo(amount) >= 0) {
+                account.setBalance(
+                    account.getBalance().subtract(amount)
+                );
+                accountRepository.save(account);
+            } else {
+                throw new InsufficientFundsException();
+            }
+        } finally {
+            <span class="text-green-400">// ✅ 반드시 unlock</span>
+            lock.unlock();
+        }
+    }
+}
+
+<span class="text-gray-500">// Python Flask - 안전한 송금</span>
+
+from threading import Lock
+from flask import Flask, request, jsonify
+
+<span class="text-green-400"># ✅ 계좌별 Lock 딕셔너리</span>
+account_locks = {}
+
+def get_lock(account_id):
+    if account_id not in account_locks:
+        account_locks[account_id] = Lock()
+    return account_locks[account_id]
+
+@app.route('/transfer', methods=['POST'])
+def transfer():
+    from_account = request.json['from_account']
+    amount = request.json['amount']
+    
+    <span class="text-green-400"># ✅ Lock 획득</span>
+    lock = get_lock(from_account)
+    
+    with lock:
+        account = get_account(from_account)
+        
+        if account['balance'] >= amount:
+            new_balance = account['balance'] - amount
+            update_balance(from_account, new_balance)
+            
+            return jsonify({"status": "success"})
+        else:
+            return jsonify({"error": "잔액 부족"}), 400
+
+<span class="text-gray-500"># Django - 트랜잭션 + SELECT FOR UPDATE</span>
+
+from django.db import transaction
+from django.db.models import F
+
+@transaction.atomic
+def secure_withdraw(account_id, amount):
+    
+    <span class="text-green-400"># ✅ SELECT FOR UPDATE</span>
+    account = Account.objects.select_for_update().get(
+        id=account_id
+    )
+    
+    if account.balance >= amount:
+        <span class="text-green-400"># ✅ F() 객체로 원자적 연산</span>
+        account.balance = F('balance') - amount
+        account.save()
+        
+        <span class="text-green-400"># refresh로 최신 값 가져오기</span>
+        account.refresh_from_db()
+        
+        return account
+    else:
+        raise ValueError("잔액 부족")
+
+<span class="text-gray-500">// Node.js - Sequelize Lock</span>
+
+const { Sequelize, Op } = require('sequelize');
+
+app.post('/use-points', async (req, res) => {
+    const { userId, points } = req.body;
+    
+    <span class="text-green-400">// ✅ 트랜잭션 + Lock</span>
+    const t = await sequelize.transaction({
+        isolationLevel: 
+            Sequelize.Transaction.ISOLATION_LEVELS
+                .SERIALIZABLE
+    });
+    
+    try {
+        <span class="text-green-400">// ✅ FOR UPDATE 락</span>
+        const user = await User.findByPk(userId, {
+            lock: t.LOCK.UPDATE,
+            transaction: t
+        });
+        
+        if (user.points >= points) {
+            user.points -= points;
+            await user.save({ transaction: t });
+            
+            await t.commit();
+            res.json({ status: 'success' });
+        } else {
+            await t.rollback();
+            res.status(400).json({ error: '포인트 부족' });
+        }
+    } catch (error) {
+        await t.rollback();
+        res.status(500).json({ error: error.message });
+    }
+});
+
+<span class="text-gray-500">// MongoDB - Optimistic Locking</span>
+
+const pointSchema = new Schema({
+    userId: String,
+    points: Number,
+    <span class="text-green-400">// ✅ 버전 필드</span>
+    __v: { type: Number, default: 0 }
+});
+
+async function usePoints(userId, points) {
+    const maxRetries = 3;
+    
+    for (let i = 0; i < maxRetries; i++) {
+        const user = await User.findOne({ userId });
+        
+        if (user.points >= points) {
+            <span class="text-green-400">// ✅ 버전 체크 업데이트</span>
+            const result = await User.updateOne(
+                { 
+                    userId: userId, 
+                    __v: user.__v  // 버전 확인
+                },
+                { 
+                    $inc: { 
+                        points: -points,
+                        __v: 1  // 버전 증가
+                    }
+                }
+            );
+            
+            if (result.modifiedCount > 0) {
+                return { status: 'success' };
+            }
+            <span class="text-green-400">// 버전 불일치 -> 재시도</span>
+        } else {
+            throw new Error('포인트 부족');
+        }
+    }
+    
+    throw new Error('동시성 충돌, 재시도 초과');
+}
+
+<span class="text-gray-500">// Redis - 분산 락</span>
+
+const Redis = require('ioredis');
+const redis = new Redis();
+
+async function withdrawWithRedisLock(accountId, amount) {
+    const lockKey = `lock:account:${accountId}`;
+    const lockValue = Date.now() + 10000; // 10초 타임아웃
+    
+    <span class="text-green-400">// ✅ 분산 락 획득 시도</span>
+    const acquired = await redis.set(
+        lockKey, 
+        lockValue, 
+        'PX', 10000,  // 10초 후 자동 만료
+        'NX'          // 없을 때만 설정
+    );
+    
+    if (!acquired) {
+        throw new Error('다른 처리가 진행 중입니다');
+    }
+    
+    try {
+        <span class="text-green-400">// 출금 처리</span>
+        const account = await getAccount(accountId);
+        
+        if (account.balance >= amount) {
+            account.balance -= amount;
+            await saveAccount(account);
+            return { status: 'success' };
+        } else {
+            throw new Error('잔액 부족');
+        }
+    } finally {
+        <span class="text-green-400">// ✅ 락 해제</span>
+        await redis.del(lockKey);
+    }
+}</code></pre>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+        let currentBalance = 1000000;
+
+        function resetAll() {
+            isRunning = false;
+            currentBalance = 1000000;
+            
+            document.getElementById('timelineStatus').textContent = '시나리오를 시작하세요';
+            
+            document.getElementById('timeline').innerHTML = 
+                '<div class="text-center text-gray-500 py-20">' +
+                '<i class="fas fa-hourglass-half text-6xl mb-4"></i>' +
+                '<p>Thread 실행 순서가 여기 표시됩니다</p>' +
+                '</div>';
+            
+            document.getElementById('currentBalance').innerHTML = 
+                '<span class="text-green-400">1,000,000</span>' +
+                '<span class="text-gray-400 text-2xl ml-2">원</span>';
+            
+            document.getElementById('thread1Amount').textContent = '-';
+            document.getElementById('thread2Amount').textContent = '-';
+            document.getElementById('finalBalance').style.display = 'none';
+            
+            document.getElementById('serverLog').innerHTML = 
+                '<div class="text-gray-500">[SERVER] Waiting...</div>';
+            
+            document.getElementById('serverStatus').textContent = 'RUNNING';
+            document.getElementById('serverStatus').className = 'text-xs bg-green-600 px-3 py-1 rounded';
+            
+            document.getElementById('attackSteps').innerHTML = 
+                '<div class="text-gray-500">시나리오를 시작하세요...</div>';
+            
+            document.getElementById('attackResult').classList.add('hidden');
+            document.getElementById('problemBox').classList.add('hidden');
+        }
+
+        async function startScenario(scenario) {
+            if (isRunning) return;
+            isRunning = true;
+            
+            resetAll();
+            await sleep(300);
+            
+            if (scenario === 1) {
+                await scenario1_ConcurrentWithdraw();
+            } else if (scenario === 2) {
+                await scenario2_DoubleClick();
+            } else if (scenario === 3) {
+                await scenario3_PointDuplication();
+            }
+            
+            isRunning = false;
+        }
+
+        // 시나리오 1: 잔액 부족 우회 - 동시 출금
+        async function scenario1_ConcurrentWithdraw() {
+            updateStep('🎯 시나리오 1: 경쟁 조건 - 잔액 부족 우회');
+            await sleep(1000);
+            
+            currentBalance = 1000000;
+            updateBalance(1000000);
+            
+            updateStep('1️⃣ 초기 상태: 잔액 1,000,000원');
+            document.getElementById('timelineStatus').textContent = '동시 출금 공격 시작...';
+            
+            await addServerLog('[INFO] Account balance: 1,000,000원', 'text-green-400');
+            await sleep(500);
+            await addServerLog('[INFO] Withdrawal service ready', 'text-blue-400');
+            await sleep(1000);
+            
+            updateStep('2️⃣ Thread 1과 Thread 2가 동시에 800,000원 출금 요청');
+            
+            document.getElementById('thread1Amount').textContent = '800,000원';
+            document.getElementById('thread2Amount').textContent = '800,000원';
+            
+            // 타임라인 초기화
+            let timelineHTML = '<div class="space-y-2">';
+            
+            // Thread 1 시작
+            await addServerLog('');
+            await addServerLog('[Thread-1] 출금 요청: 800,000원', 'text-cyan-400');
+            await sleep(300);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Thread 1</div>' +
+                '<div class="flex-1 bg-cyan-900 p-2 rounded text-xs">' +
+                '<i class="fas fa-play mr-2"></i>출금 시작: 800,000원' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(500);
+            
+            // Thread 2 시작
+            await addServerLog('[Thread-2] 출금 요청: 800,000원', 'text-purple-400');
+            await sleep(300);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Thread 2</div>' +
+                '<div class="flex-1 bg-purple-900 p-2 rounded text-xs">' +
+                '<i class="fas fa-play mr-2"></i>출금 시작: 800,000원' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(800);
+            
+            updateStep('3️⃣ <span class="text-yellow-500 font-bold">TOCTOU: Time of Check (잔액 확인)</span>');
+            
+            // Thread 1 잔액 확인
+            await addServerLog('[Thread-1] SELECT balance FROM accounts', 'text-cyan-400');
+            await sleep(300);
+            await addServerLog('[Thread-1] 잔액: 1,000,000 >= 800,000 ✓', 'text-green-400');
+            await sleep(500);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Thread 1</div>' +
+                '<div class="flex-1 bg-green-900 p-2 rounded text-xs">' +
+                '<i class="fas fa-check mr-2"></i>잔액 확인: 1,000,000원 ≥ 800,000원 ✓' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(500);
+            
+            // Thread 2 잔액 확인
+            await addServerLog('[Thread-2] SELECT balance FROM accounts', 'text-purple-400');
+            await sleep(300);
+            await addServerLog('[Thread-2] 잔액: 1,000,000 >= 800,000 ✓', 'text-green-400');
+            await sleep(500);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Thread 2</div>' +
+                '<div class="flex-1 bg-green-900 p-2 rounded text-xs">' +
+                '<i class="fas fa-check mr-2"></i>잔액 확인: 1,000,000원 ≥ 800,000원 ✓' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('4️⃣ <span class="text-orange-500">⚠️ 경쟁 조건 구간 (Race Window)</span>');
+            
+            timelineHTML += 
+                '<div class="bg-red-900 p-3 rounded my-2 animate-pulse">' +
+                '<div class="text-red-400 font-bold text-center">' +
+                '<i class="fas fa-exclamation-triangle mr-2"></i>' +
+                '⚠️ RACE CONDITION WINDOW ⚠️' +
+                '</div>' +
+                '<div class="text-xs text-gray-300 text-center mt-1">' +
+                '두 Thread 모두 잔액이 충분하다고 판단!' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1500);
+            
+            updateStep('5️⃣ <span class="text-red-500 font-bold">TOCTOU: Time of Use (출금 실행)</span>');
+            
+            // Thread 1 출금
+            await addServerLog('[Thread-1] 출금 실행...', 'text-cyan-400');
+            await sleep(300);
+            await addServerLog('[Thread-1] 새 잔액 = 1,000,000 - 800,000', 'text-yellow-400');
+            await sleep(300);
+            await addServerLog('[Thread-1] UPDATE balance = 200,000', 'text-cyan-400');
+            await sleep(500);
+            
+            updateBalance(200000);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Thread 1</div>' +
+                '<div class="flex-1 bg-yellow-900 p-2 rounded text-xs">' +
+                '<i class="fas fa-minus mr-2"></i>출금 실행: 1,000,000 - 800,000 = 200,000원' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(800);
+            
+            // Thread 2 출금
+            await addServerLog('[Thread-2] 출금 실행...', 'text-purple-400');
+            await sleep(300);
+            await addServerLog('[Thread-2] 새 잔액 = 1,000,000 - 800,000', 'text-yellow-400');
+            await sleep(300);
+            await addServerLog('[Thread-2] UPDATE balance = 200,000', 'text-red-400');
+            await sleep(500);
+            
+            updateBalance(200000);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Thread 2</div>' +
+                '<div class="flex-1 bg-red-900 p-2 rounded text-xs">' +
+                '<i class="fas fa-minus mr-2"></i>출금 실행: 1,000,000 - 800,000 = 200,000원' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('6️⃣ <span class="text-red-500 font-bold">💥 최종 잔액: 200,000원 (예상: -600,000원)</span>');
+            
+            document.getElementById('finalBalance').style.display = 'block';
+            document.getElementById('finalBalanceAmount').innerHTML = 
+                '<span class="text-red-400">200,000원</span>' +
+                '<div class="text-xs text-gray-300 mt-1">(예상: -600,000원)</div>' +
+                '<div class="text-xs text-yellow-300">손실: 1,400,000원!</div>';
+            
+            await addServerLog('');
+            await addServerLog('[RESULT] 최종 잔액: 200,000원', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[ERROR] 경쟁 조건 발생!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[ALERT] 예상 손실: 1,400,000원', 'text-red-400');
+            
+            timelineHTML += 
+                '<div class="bg-red-900 p-4 rounded mt-3 border-2 border-red-500">' +
+                '<div class="text-red-400 font-bold text-center mb-2">' +
+                '<i class="fas fa-skull-crossbones mr-2"></i>경쟁 조건 발생!' +
+                '</div>' +
+                '<div class="grid grid-cols-2 gap-2 text-xs">' +
+                '<div class="bg-black p-2 rounded">' +
+                '<div class="text-gray-400">최종 잔액</div>' +
+                '<div class="text-red-400 font-bold">200,000원</div>' +
+                '</div>' +
+                '<div class="bg-black p-2 rounded">' +
+                '<div class="text-gray-400">예상 잔액</div>' +
+                '<div class="text-yellow-400 font-bold">-600,000원</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="text-center mt-2 text-yellow-400 font-bold">' +
+                '💰 손실: 1,400,000원!' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            document.getElementById('attackResult').classList.remove('hidden');
+            document.getElementById('attackResultContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">💰 재무 손실:</p>' +
+                '<div class="grid grid-cols-2 gap-2 text-sm">' +
+                '<div class="bg-red-800 p-2 rounded">' +
+                '<div class="text-gray-300">총 출금액</div>' +
+                '<div class="font-bold">1,600,000원</div>' +
+                '</div>' +
+                '<div class="bg-red-800 p-2 rounded">' +
+                '<div class="text-gray-300">실제 차감</div>' +
+                '<div class="font-bold">800,000원</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="mt-2 text-yellow-400 font-bold text-center">' +
+                '손실: 800,000원 (50%)' +
+                '</div>' +
+                '</div>';
+            
+            showResults('scenario1');
+        }
+
+        // 시나리오 2: 중복 송금
+        async function scenario2_DoubleClick() {
+            updateStep('🎯 시나리오 2: 중복 송금 - 더블클릭 공격');
+            await sleep(1000);
+            
+            currentBalance = 1000000;
+            updateBalance(1000000);
+            
+            updateStep('1️⃣ 송금 페이지에서 500,000원 송금 시도');
+            document.getElementById('timelineStatus').textContent = '송금 버튼 더블클릭...';
+            
+            await addServerLog('[INFO] Transfer page loaded', 'text-blue-400');
+            await sleep(500);
+            await addServerLog('[INFO] From: 110-123-456789', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] To: 110-987-654321', 'text-gray-400');
+            await sleep(300);
+            await addServerLog('[INFO] Amount: 500,000원', 'text-gray-400');
+            await sleep(1000);
+            
+            updateStep('2️⃣ <span class="text-orange-500">송금 버튼을 빠르게 2번 클릭 (더블클릭)</span>');
+            
+            document.getElementById('thread1Amount').textContent = '500,000원';
+            document.getElementById('thread2Amount').textContent = '500,000원';
+            
+            let timelineHTML = '<div class="space-y-2">';
+            
+            await addServerLog('');
+            await addServerLog('[Request-1] POST /transfer', 'text-cyan-400');
+            await sleep(200);
+            await addServerLog('[Request-2] POST /transfer', 'text-purple-400');
+            await sleep(500);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Request 1</div>' +
+                '<div class="flex-1 bg-cyan-900 p-2 rounded text-xs">' +
+                '송금 요청: 500,000원' +
+                '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Request 2</div>' +
+                '<div class="flex-1 bg-purple-900 p-2 rounded text-xs">' +
+                '송금 요청: 500,000원 (0.05초 후)' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('3️⃣ 두 요청이 동시에 잔액 확인');
+            
+            await addServerLog('[Request-1] 잔액 확인: 1,000,000원', 'text-cyan-400');
+            await sleep(300);
+            await addServerLog('[Request-2] 잔액 확인: 1,000,000원', 'text-purple-400');
+            await sleep(500);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Request 1</div>' +
+                '<div class="flex-1 bg-green-900 p-2 rounded text-xs">' +
+                '✓ 잔액 충분: 1,000,000원 ≥ 500,000원' +
+                '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Request 2</div>' +
+                '<div class="flex-1 bg-green-900 p-2 rounded text-xs">' +
+                '✓ 잔액 충분: 1,000,000원 ≥ 500,000원' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('4️⃣ <span class="text-red-500 font-bold">송금 2번 실행!</span>');
+            
+            await addServerLog('[Request-1] 송금 실행...', 'text-cyan-400');
+            await sleep(300);
+            await addServerLog('[Request-1] 잔액 = 1,000,000 - 500,000', 'text-yellow-400');
+            await sleep(300);
+            
+            updateBalance(500000);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Request 1</div>' +
+                '<div class="flex-1 bg-yellow-900 p-2 rounded text-xs">' +
+                '송금 완료: 잔액 500,000원' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(500);
+            
+            await addServerLog('[Request-2] 송금 실행...', 'text-purple-400');
+            await sleep(300);
+            await addServerLog('[Request-2] 잔액 = 1,000,000 - 500,000', 'text-yellow-400');
+            await sleep(300);
+            
+            updateBalance(500000);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Request 2</div>' +
+                '<div class="flex-1 bg-red-900 p-2 rounded text-xs">' +
+                '송금 완료: 잔액 500,000원 (중복!)' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('5️⃣ <span class="text-red-500 font-bold">💥 500,000원 2번 송금 = 1,000,000원 손실!</span>');
+            
+            document.getElementById('finalBalance').style.display = 'block';
+            document.getElementById('finalBalanceAmount').innerHTML = 
+                '<span class="text-red-400">500,000원</span>' +
+                '<div class="text-xs text-gray-300 mt-1">(예상: 500,000원)</div>' +
+                '<div class="text-xs text-yellow-300">중복 송금: 1,000,000원!</div>';
+            
+            await addServerLog('');
+            await addServerLog('[RESULT] 총 송금액: 1,000,000원', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[ERROR] 중복 송금 발생!', 'text-red-400');
+            
+            timelineHTML += 
+                '<div class="bg-red-900 p-4 rounded mt-3 border-2 border-red-500">' +
+                '<div class="text-red-400 font-bold text-center mb-2">' +
+                '💸 중복 송금 발생!' +
+                '</div>' +
+                '<div class="text-xs text-center text-gray-300">' +
+                '500,000원 × 2회 = 1,000,000원 송금' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            document.getElementById('attackResult').classList.remove('hidden');
+            document.getElementById('attackResultContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">💸 중복 송금:</p>' +
+                '<div class="space-y-1 text-sm">' +
+                '<div>• 의도한 송금: 500,000원 × 1회</div>' +
+                '<div>• 실제 송금: 500,000원 × 2회</div>' +
+                '<div class="text-red-400 font-bold">• 추가 손실: 500,000원</div>' +
+                '</div>' +
+                '</div>';
+            
+            showResults('scenario2');
+        }
+
+        // 시나리오 3: 포인트 중복 사용
+        async function scenario3_PointDuplication() {
+            updateStep('🎯 시나리오 3: 포인트 중복 사용 - 동시 결제');
+            await sleep(1000);
+            
+            currentBalance = 50000; // 포인트
+            updateBalance(50000);
+            
+            document.getElementById('currentBalance').innerHTML = 
+                '<span class="text-green-400">50,000</span>' +
+                '<span class="text-gray-400 text-2xl ml-2">P</span>';
+            
+            updateStep('1️⃣ 보유 포인트: 50,000P');
+            document.getElementById('timelineStatus').textContent = '포인트 중복 사용 시도...';
+            
+            await addServerLog('[INFO] User points: 50,000P', 'text-green-400');
+            await sleep(1000);
+            
+            updateStep('2️⃣ 2개 탭에서 동시에 각각 40,000P 사용 시도');
+            
+            document.getElementById('thread1Amount').textContent = '40,000P';
+            document.getElementById('thread2Amount').textContent = '40,000P';
+            
+            let timelineHTML = '<div class="space-y-2">';
+            
+            await addServerLog('');
+            await addServerLog('[Tab-1] 40,000P 사용 요청', 'text-cyan-400');
+            await sleep(200);
+            await addServerLog('[Tab-2] 40,000P 사용 요청', 'text-purple-400');
+            await sleep(500);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Tab 1</div>' +
+                '<div class="flex-1 bg-cyan-900 p-2 rounded text-xs">' +
+                '포인트 사용: 40,000P' +
+                '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Tab 2</div>' +
+                '<div class="flex-1 bg-purple-900 p-2 rounded text-xs">' +
+                '포인트 사용: 40,000P' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('3️⃣ 두 요청 모두 포인트 충분 확인');
+            
+            await addServerLog('[Tab-1] 포인트 확인: 50,000P >= 40,000P ✓', 'text-cyan-400');
+            await sleep(300);
+            await addServerLog('[Tab-2] 포인트 확인: 50,000P >= 40,000P ✓', 'text-purple-400');
+            await sleep(500);
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Tab 1</div>' +
+                '<div class="flex-1 bg-green-900 p-2 rounded text-xs">' +
+                '✓ 포인트 충분: 50,000P ≥ 40,000P' +
+                '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Tab 2</div>' +
+                '<div class="flex-1 bg-green-900 p-2 rounded text-xs">' +
+                '✓ 포인트 충분: 50,000P ≥ 40,000P' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('4️⃣ <span class="text-red-500 font-bold">포인트 2번 차감!</span>');
+            
+            await addServerLog('[Tab-1] 차감: 50,000 - 40,000 = 10,000P', 'text-cyan-400');
+            await sleep(500);
+            
+            currentBalance = 10000;
+            document.getElementById('currentBalance').innerHTML = 
+                '<span class="text-yellow-400">10,000</span>' +
+                '<span class="text-gray-400 text-2xl ml-2">P</span>';
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-cyan-400 text-xs">Tab 1</div>' +
+                '<div class="flex-1 bg-yellow-900 p-2 rounded text-xs">' +
+                '차감 완료: 50,000 - 40,000 = 10,000P' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(500);
+            
+            await addServerLog('[Tab-2] 차감: 50,000 - 40,000 = 10,000P', 'text-purple-400');
+            await sleep(500);
+            
+            currentBalance = 10000;
+            document.getElementById('currentBalance').innerHTML = 
+                '<span class="text-red-400">10,000</span>' +
+                '<span class="text-gray-400 text-2xl ml-2">P</span>';
+            
+            timelineHTML += 
+                '<div class="flex items-center gap-2 slide-in">' +
+                '<div class="w-24 text-purple-400 text-xs">Tab 2</div>' +
+                '<div class="flex-1 bg-red-900 p-2 rounded text-xs">' +
+                '차감 완료: 50,000 - 40,000 = 10,000P (중복!)' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            await sleep(1000);
+            
+            updateStep('5️⃣ <span class="text-red-500 font-bold">💥 40,000P 2번 사용 (80,000P 혜택)</span>');
+            
+            document.getElementById('finalBalance').style.display = 'block';
+            document.getElementById('finalBalanceAmount').innerHTML = 
+                '<span class="text-red-400">10,000P</span>' +
+                '<div class="text-xs text-gray-300 mt-1">(예상: -30,000P)</div>' +
+                '<div class="text-xs text-yellow-300">부정 사용: 40,000P!</div>';
+            
+            await addServerLog('');
+            await addServerLog('[RESULT] 최종 포인트: 10,000P', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[ERROR] 중복 사용 발생!', 'text-red-400');
+            await sleep(300);
+            await addServerLog('[ALERT] 부정 사용: 40,000P', 'text-red-400');
+            
+            timelineHTML += 
+                '<div class="bg-red-900 p-4 rounded mt-3 border-2 border-red-500">' +
+                '<div class="text-red-400 font-bold text-center mb-2">' +
+                '🎁 포인트 중복 사용!' +
+                '</div>' +
+                '<div class="grid grid-cols-2 gap-2 text-xs">' +
+                '<div class="bg-black p-2 rounded">' +
+                '<div class="text-gray-400">총 사용</div>' +
+                '<div class="text-red-400 font-bold">80,000P</div>' +
+                '</div>' +
+                '<div class="bg-black p-2 rounded">' +
+                '<div class="text-gray-400">실제 차감</div>' +
+                '<div class="text-yellow-400 font-bold">40,000P</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="text-center mt-2 text-yellow-400 font-bold">' +
+                '부정 사용: 40,000P' +
+                '</div>' +
+                '</div>';
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            document.getElementById('attackResult').classList.remove('hidden');
+            document.getElementById('attackResultContent').innerHTML = 
+                '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                '<p class="font-bold mb-2">🎁 포인트 부정 사용:</p>' +
+                '<div class="space-y-1 text-sm">' +
+                '<div>• 총 사용: 80,000P (40,000 × 2)</div>' +
+                '<div>• 실제 차감: 40,000P</div>' +
+                '<div class="text-red-400 font-bold">• 부정 혜택: 40,000P</div>' +
+                '</div>' +
+                '</div>';
+            
+            showResults('scenario3');
+        }
+
+        function showResults(scenario) {
+            document.getElementById('problemBox').classList.remove('hidden');
+            
+            let problems = '';
+            if (scenario === 'scenario1') {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ 경쟁 조건 문제:</p>' +
+                    '<div class="space-y-1 ml-4 text-xs">' +
+                    '<div>1. Check와 Use 사이 시간차 존재</div>' +
+                    '<div>2. 동기화 메커니즘 없음</div>' +
+                    '<div>3. DB Lock 미사용</div>' +
+                    '<div>4. 두 Thread가 같은 값 읽음</div>' +
+                    '</div></div>' +
+                    '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                    '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                    '<div class="space-y-1 ml-4 text-xs">' +
+                    '<div>• 잔액 부족 우회</div>' +
+                    '<div>• 마이너스 통장 발생</div>' +
+                    '<div>• 은행 손실: 1,400,000원</div>' +
+                    '<div>• 대량 발생 시 파산 위험</div>' +
+                    '</div></div>';
+            } else if (scenario === 'scenario2') {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ 중복 송금 문제:</p>' +
+                    '<div class="space-y-1 ml-4 text-xs">' +
+                    '<div>1. 버튼 중복 클릭 방지 없음</div>' +
+                    '<div>2. 요청 중복 처리 방지 없음</div>' +
+                    '<div>3. 멱등성(Idempotency) 미보장</div>' +
+                    '<div>4. 트랜잭션 ID 없음</div>' +
+                    '</div></div>' +
+                    '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                    '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                    '<div class="space-y-1 ml-4 text-xs">' +
+                    '<div>• 의도하지 않은 중복 송금</div>' +
+                    '<div>• 고객 불만 및 환불 요청</div>' +
+                    '<div>• 운영 비용 증가</div>' +
+                    '</div></div>';
+            } else {
+                problems = 
+                    '<div class="bg-black bg-opacity-30 p-3 rounded">' +
+                    '<p class="font-bold mb-2">❌ 포인트 중복 사용:</p>' +
+                    '<div class="space-y-1 ml-4 text-xs">' +
+                    '<div>1. 포인트 차감 원자성 미보장</div>' +
+                    '<div>2. 다중 탭/디바이스 동시 사용</div>' +
+                    '<div>3. 낙관적 락 미사용</div>' +
+                    '<div>4. 사용 이력 중복 생성</div>' +
+                    '</div></div>' +
+                    '<div class="bg-black bg-opacity-30 p-3 rounded mt-2">' +
+                    '<p class="font-bold mb-2">💥 예상 피해:</p>' +
+                    '<div class="space-y-1 ml-4 text-xs">' +
+                    '<div>• 포인트 부정 사용</div>' +
+                    '<div>• 마케팅 비용 증가</div>' +
+                    '<div>• 악용 사례 확산</div>' +
+                    '</div></div>';
+            }
+            
+            document.getElementById('problemContent').innerHTML = problems;
+        }
+
+        function updateBalance(balance) {
+            currentBalance = balance;
+            const color = balance >= 0 ? 'text-green-400' : 'text-red-400';
+            document.getElementById('currentBalance').innerHTML = 
+                `<span class="${color}">${balance.toLocaleString()}</span>` +
+                '<span class="text-gray-400 text-2xl ml-2">원</span>';
+        }
+
+        function updateStep(html) {
+            const steps = document.getElementById('attackSteps');
+            const div = document.createElement('div');
+            div.className = 'p-2 bg-gray-700 rounded text-sm slide-in';
+            div.innerHTML = html;
+            steps.appendChild(div);
+            steps.scrollTop = steps.scrollHeight;
+        }
+
+        async function addServerLog(message, colorClass = 'text-green-400') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.textContent = message;
+            const container = document.getElementById('serverLog');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            await sleep(50);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
