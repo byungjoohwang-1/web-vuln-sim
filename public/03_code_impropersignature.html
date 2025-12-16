@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부적절한 전자서명 확인 - 실습 시뮬레이터</title>
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        /* 공통 스타일 적용 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .header { background: white; padding: 30px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; border-bottom: 5px solid #6c5ce7; }
+        .header h1 { color: #6c5ce7; font-size: 32px; margin-bottom: 10px; }
+        .header p { color: #666; font-size: 16px; }
+        .mode-tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+        .mode-tab { flex: 1; padding: 20px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: left; }
+        .mode-tab:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .mode-tab.active { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); color: white; }
+        .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .mode-desc { font-size: 13px; opacity: 0.8; }
+        .content-wrapper { display: none; }
+        .content-wrapper.active { display: block; }
+        .progress-indicator { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .progress-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #2c3e50; }
+        .checklist { list-style: none; padding: 0; display: flex; gap: 15px; flex-wrap: wrap; }
+        .checklist-item { padding: 8px 15px; background: #f8f9fa; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 14px; border: 1px solid #e9ecef; }
+        .checklist-item.completed { background: #d4edda; border-color: #c3e6cb; color: #155724; font-weight: bold; }
+        .main-content { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; margin-bottom: 20px; }
+        .panel { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; height: 100%; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #f0f0f0; }
+        .panel-title { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .status-badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+        .status-vulnerable { background: #dc3545; color: white; }
+        .status-secure { background: #28a745; color: white; }
+        .status-editing { background: #ffc107; color: #000; }
+        .code-editor { background: #1e1e1e; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex-grow: 1; min-height: 500px; }
+        .editor-toolbar { background: #2d2d2d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e3e; }
+        .toolbar-title { color: #d4d4d4; font-size: 13px; font-weight: bold; }
+        .edit-toggle-btn { background: #007acc; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .edit-toggle-btn.editing { background: #28a745; }
+        .code-display { background: #1e1e1e; padding: 15px; overflow: auto; flex-grow: 1; }
+        .code-display pre { margin: 0; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.6; }
+        .code-textarea { width: 100%; height: 100%; background: #1e1e1e; color: #d4d4d4; border: none; padding: 15px; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.6; resize: none; outline: none; }
+        .control-panel { display: flex; gap: 15px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .btn-analyze { background: #6c5ce7; color: white; }
+        .btn-validate { background: #28a745; color: white; }
+        .btn-hint { background: #ffc107; color: #000; }
+        .btn-reset { background: #6c757d; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .feedback { margin-top: 20px; }
+        .feedback-item { padding: 15px; margin-bottom: 10px; border-radius: 8px; animation: slideIn 0.3s ease-out; }
+        .feedback-error { background: #fff5f5; border-left: 4px solid #dc3545; }
+        .feedback-success { background: #d4edda; border-left: 4px solid #28a745; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .hint-panel { background: #fff8dc; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin-top: 20px; display: none; }
+        .hint-panel.active { display: block; animation: slideIn 0.3s ease-out; }
+        .hint-step { background: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid #ffc107; }
+        .hint-code { background: #1e1e1e; color: #d4d4d4; padding: 8px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 13px; margin-top: 5px; }
+        .info-section { margin-bottom: 20px; }
+        .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #6c5ce7; }
+        .info-content { color: #555; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✍️ 부적절한 전자서명 확인 - 실습 시뮬레이터</h1>
+            <p>CWE-347: Improper Verification of Cryptographic Signature</p>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('java')">
+                <div class="mode-title">Java 시큐어 코딩</div>
+                <div class="mode-desc">Signature.verify() 검증 추가</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('python')">
+                <div class="mode-title">Python 시큐어 코딩</div>
+                <div class="mode-desc">verify() 예외 처리</div>
+            </button>
+        </div>
+
+        <!-- Java 모드 -->
+        <div id="java-mode" class="content-wrapper active">
+            <div class="progress-indicator">
+                <div class="progress-title">✅ 학습 진행도</div>
+                <ul class="checklist" id="progressChecklistJava">
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 무조건 True 반환 제거</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> verify() 결과 확인</li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                    </div>
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">SignatureVerifier.java</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                        </div>
+                        <div class="code-display" id="codeDisplayContainerJava">
+                            <pre><code class="language-java" id="codeDisplayJava">import java.security.Signature;
+
+public class SignatureVerifier {
+    public boolean verifySignature(byte[] data, byte[] sign, java.security.PublicKey key) throws Exception {
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(key);
+        verifier.update(data);
+        
+        // [취약점] verify() 메서드를 호출하지만 그 결과를 확인하지 않고
+        // 무조건 true를 반환하여 서명 검증을 우회함
+        verifier.verify(sign);
+        return true; 
+    }
+}</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false">import java.security.Signature;
+
+public class SignatureVerifier {
+    public boolean verifySignature(byte[] data, byte[] sign, java.security.PublicKey key) throws Exception {
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(key);
+        verifier.update(data);
+        
+        // [취약점] verify() 메서드를 호출하지만 그 결과를 확인하지 않고
+        // 무조건 true를 반환하여 서명 검증을 우회함
+        verifier.verify(sign);
+        return true; 
+    }
+}</textarea>
+                    </div>
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                    </div>
+                    <div class="feedback" id="feedbackJava"></div>
+                    <div class="hint-panel" id="hintPanelJava">
+                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="hint-step">
+                            <strong>1. verify() 반환값 확인</strong>
+                            <p>verify() 메서드는 서명이 유효하면 true, 아니면 false를 반환합니다. 이 값을 리턴하세요.</p>
+                            <div class="hint-code">return verifier.verify(sign);</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 분석 결과</span>
+                    </div>
+                    <div id="rightPanelJava">
+                        <div class="info-section">
+                            <div class="info-title">🎯 목표</div>
+                            <div class="info-content">
+                                <p>전자서명 검증 기능은 데이터의 무결성과 인증을 보장합니다. 서명 검증 함수의 결과값을 무시하고 무조건 성공(true)을 반환하는 코드를 수정하여 실제 검증 결과를 반환하도록 하세요.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Python 모드 -->
+        <div id="python-mode" class="content-wrapper">
+            <div class="progress-indicator">
+                <div class="progress-title">✅ 학습 진행도</div>
+                <ul class="checklist" id="progressChecklistPython">
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> verify() 예외 처리 추가</li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                    </div>
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">verify_signature.py</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                        </div>
+                        <div class="code-display" id="codeDisplayContainerPython">
+                            <pre><code class="language-python" id="codeDisplayPython">from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+
+def verify_data(public_key, signature, data):
+    try:
+        # [취약점] verify 함수는 서명이 유효하지 않으면 예외(InvalidSignature)를 발생시킴
+        # 하지만 예외를 잡아서 처리하지 않고 통과시키거나, 로직이 누락됨
+        public_key.verify(
+            signature,
+            data,
+            padding.PKCS1v15(),
+            hashes.SHA256()
+        )
+        # 예외가 발생해도 프로그램이 종료되지 않도록 처리 필요
+        print("Verification attempted")
+        return True
+    except:
+        # 모든 예외를 무시하고 True 반환 (매우 위험)
+        return True</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+
+def verify_data(public_key, signature, data):
+    try:
+        # [취약점] verify 함수는 서명이 유효하지 않으면 예외(InvalidSignature)를 발생시킴
+        # 하지만 예외를 잡아서 처리하지 않고 통과시키거나, 로직이 누락됨
+        public_key.verify(
+            signature,
+            data,
+            padding.PKCS1v15(),
+            hashes.SHA256()
+        )
+        # 예외가 발생해도 프로그램이 종료되지 않도록 처리 필요
+        print("Verification attempted")
+        return True
+    except:
+        # 모든 예외를 무시하고 True 반환 (매우 위험)
+        return True</textarea>
+                    </div>
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                    </div>
+                    <div class="feedback" id="feedbackPython"></div>
+                    <div class="hint-panel" id="hintPanelPython">
+                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="hint-step">
+                            <strong>1. 예외 처리 수정</strong>
+                            <p>InvalidSignature 예외 발생 시 False를 반환해야 합니다.</p>
+                            <div class="hint-code">except InvalidSignature: return False</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 분석 결과</span>
+                    </div>
+                    <div id="rightPanelPython">
+                        <div class="info-section">
+                            <div class="info-title">🎯 목표</div>
+                            <div class="info-content">
+                                <p>Python의 cryptography 라이브러리는 서명 검증 실패 시 예외를 발생시킵니다. 이를 적절히 catch하여 유효하지 않은 서명일 경우 False를 반환하도록 수정하세요.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    
+    <script>
+        // 공통 로직
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.closest('.mode-tab').classList.add('active');
+            document.querySelectorAll('.content-wrapper').forEach(w => w.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+        function toggleHint(mode) {
+            document.getElementById('hintPanel' + (mode === 'java' ? 'Java' : 'Python')).classList.toggle('active');
+        }
+        function updateChecklist(listId, index, status) {
+            const list = document.getElementById(listId);
+            const items = list.getElementsByTagName('li');
+            if (items[index]) {
+                const icon = items[index].querySelector('.checklist-icon');
+                if (status) { items[index].classList.add('completed'); icon.textContent = '✅'; }
+                else { items[index].classList.remove('completed'); icon.textContent = '⬜'; }
+            }
+        }
+
+        // Java 로직
+        let isEditingJava = false;
+        function toggleEditModeJava() {
+            const display = document.getElementById('codeDisplayContainerJava');
+            const editor = document.getElementById('codeEditorJava');
+            const btn = document.getElementById('editBtnJava');
+            isEditingJava = !isEditingJava;
+            if(isEditingJava) {
+                display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayJava').textContent;
+                btn.textContent = '💾 저장'; btn.classList.add('editing');
+            } else {
+                display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayJava').textContent = editor.value;
+                Prism.highlightElement(document.getElementById('codeDisplayJava')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+            }
+        }
+        function analyzeCodeJava() {
+            updateChecklist('progressChecklistJava', 0, true);
+            document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">🚨 서명 검증 결과가 무시되고 있습니다.</div>';
+            document.getElementById('validateBtnJava').disabled = false;
+            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+        }
+        function validateCodeJava() {
+            const code = document.getElementById('codeEditorJava').value;
+            let passed = true;
+            if (code.includes('return true;') && !code.includes('return verifier.verify')) {
+                passed = false;
+                updateChecklist('progressChecklistJava', 1, false);
+            } else {
+                updateChecklist('progressChecklistJava', 1, true);
+            }
+            if (code.includes('return verifier.verify(sign)')) {
+                updateChecklist('progressChecklistJava', 2, true);
+            } else {
+                passed = false;
+            }
+
+            if(passed) {
+                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 서명 검증 결과를 올바르게 반환합니다.</div>';
+                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
+                document.getElementById('codeStatusJava').textContent = '안전한 코드';
+            } else {
+                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">❌ verify() 메서드의 결과를 반환하도록 수정하세요.</div>';
+            }
+        }
+        function resetCoding(mode) {
+            if(mode === 'java') {
+                const init = `import java.security.Signature;
+
+public class SignatureVerifier {
+    public boolean verifySignature(byte[] data, byte[] sign, java.security.PublicKey key) throws Exception {
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(key);
+        verifier.update(data);
+        
+        // [취약점] verify() 메서드를 호출하지만 그 결과를 확인하지 않고
+        // 무조건 true를 반환하여 서명 검증을 우회함
+        verifier.verify(sign);
+        return true; 
+    }
+}`;
+                document.getElementById('codeEditorJava').value = init;
+                document.getElementById('codeDisplayJava').textContent = init;
+                Prism.highlightElement(document.getElementById('codeDisplayJava'));
+                document.getElementById('feedbackJava').innerHTML = '';
+            } else {
+                // Python reset
+                const initPy = `from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+
+def verify_data(public_key, signature, data):
+    try:
+        # [취약점] verify 함수는 서명이 유효하지 않으면 예외(InvalidSignature)를 발생시킴
+        # 하지만 예외를 잡아서 처리하지 않고 통과시키거나, 로직이 누락됨
+        public_key.verify(
+            signature,
+            data,
+            padding.PKCS1v15(),
+            hashes.SHA256()
+        )
+        # 예외가 발생해도 프로그램이 종료되지 않도록 처리 필요
+        print("Verification attempted")
+        return True
+    except:
+        # 모든 예외를 무시하고 True 반환 (매우 위험)
+        return True`;
+                document.getElementById('codeEditorPython').value = initPy;
+                document.getElementById('codeDisplayPython').textContent = initPy;
+                Prism.highlightElement(document.getElementById('codeDisplayPython'));
+                document.getElementById('feedbackPython').innerHTML = '';
+            }
+        }
+
+        // Python 로직
+        let isEditingPython = false;
+        function toggleEditModePython() {
+            const display = document.getElementById('codeDisplayContainerPython');
+            const editor = document.getElementById('codeEditorPython');
+            const btn = document.getElementById('editBtnPython');
+            isEditingPython = !isEditingPython;
+            if(isEditingPython) {
+                display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayPython').textContent;
+                btn.textContent = '💾 저장'; btn.classList.add('editing');
+            } else {
+                display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayPython').textContent = editor.value;
+                Prism.highlightElement(document.getElementById('codeDisplayPython')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+            }
+        }
+        function analyzeCodePython() {
+            updateChecklist('progressChecklistPython', 0, true);
+            document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">🚨 예외 발생 시에도 True를 반환하는 위험한 로직입니다.</div>';
+            document.getElementById('validateBtnPython').disabled = false;
+            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+        }
+        function validateCodePython() {
+            const code = document.getElementById('codeEditorPython').value;
+            if (code.includes('return False') && (code.includes('except') || code.includes('InvalidSignature'))) {
+                updateChecklist('progressChecklistPython', 1, true);
+                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 예외 상황에서 False를 반환하여 안전합니다.</div>';
+                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
+                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+            } else {
+                updateChecklist('progressChecklistPython', 1, false);
+                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">❌ except 블록에서 return False를 해야 합니다.</div>';
+            }
+        }
+    </script>
+</body>
+</html>
