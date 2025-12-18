@@ -1,6 +1,6 @@
 -----
 
-# 📚 WEB-VULN-SIM: 웹 취약점 시뮬레이터 (v0.4)
+# 📚 WEB-VULN-SIM: 웹 취약점 시뮬레이터 (v0.5)
 Link https://vuln-sim-test.web.app/
 Notice: This similator with secure coding is for education only. If you have any questions, please feel free to contact me to jackhwang0210@gmail.com
 Copyright 2025 Jack Hwang. This program is complied with Apache License 2.0.
@@ -14,7 +14,8 @@ Copyright 2025 Jack Hwang. This program is complied with Apache License 2.0.
   * **기술 기반**: Google Firebase Hosting을 기반으로 동작하여 접근성과 배포 용이성을 확보했습니다.
   * **보안 가이드**: KISA(한국인터넷진흥원)의 **SW 개발 보안 약점 가이드**와 파이썬 코딩 가이드라인을 참고하여 **취약점별 방어(Secure Coding) 방법**을 상세히 설명합니다.
 
------
+V0.5 주요 기능 추가(2025-12-16)
+1) 웹 보안 취약점 시뮬레이터를 20개로 추가 했습니다-2) KISA 기준으로 보안 기능에 대해 직접 실습 할 수 있는 16개의 취약점 기능을 추가 했습니다.(Korean Only)
 
 ## ✨ 주요 시뮬레이션 및 학습 항목
 
@@ -240,8 +241,4 @@ The Hosting URL will be displayed upon completion.
 
 This application is created for **educational purposes only**. The attack techniques demonstrated here must **NEVER** be used on systems you do not own or have explicit permission to test.
 
------
 
-이 `README`를 `README.md` 파일로 저장하여 GitHub 리포지토리에 사용하시면 됩니다.
-
-혹시 이 내용에 덧붙이고 싶은 상세 정보나 섹션이 있으신가요?
