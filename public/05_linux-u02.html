@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-02 패스워드 복잡성 설정 - 실습 시뮬레이터</title>
+    <!-- Prism for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        /* 헤더 스타일 - UNIX 테마 (진한 네이비/블루) */
+        .header { background: white; padding: 30px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; border-bottom: 5px solid #0d6efd; }
+        .header h1 { color: #0d6efd; font-size: 32px; margin-bottom: 10px; font-weight: 800; }
+        .header p { color: #666; font-size: 16px; }
+        
+        /* 탭 스타일 */
+        .mode-tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+        .mode-tab { flex: 1; padding: 20px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: left; position: relative; overflow: hidden; }
+        .mode-tab:hover { transform: translateY(-3px); }
+        .mode-tab.active { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; }
+        .mode-icon { font-size: 32px; margin-bottom: 10px; }
+        .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .mode-desc { font-size: 13px; opacity: 0.8; }
+        
+        /* 컨텐츠 영역 */
+        .content-wrapper { display: none; }
+        .content-wrapper.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 체크리스트 */
+        .progress-indicator { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .progress-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #2c3e50; }
+        .checklist { list-style: none; padding: 0; display: flex; gap: 15px; flex-wrap: wrap; }
+        .checklist-item { padding: 8px 15px; background: #f8f9fa; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 14px; border: 1px solid #e9ecef; transition: all 0.3s; }
+        .checklist-item.completed { background: #d4edda; border-color: #c3e6cb; color: #155724; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* 메인 패널 그리드 */
+        .main-content { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; margin-bottom: 20px; }
+        .panel { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; height: 100%; }
+        
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #f0f0f0; }
+        .panel-title { font-size: 20px; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
+        
+        .status-badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+        .status-vulnerable { background: #dc3545; color: white; }
+        .status-secure { background: #198754; color: white; }
+        .status-editing { background: #ffc107; color: #000; }
+
+        /* 터미널 에디터 스타일 */
+        .code-editor { background: #2d2d2d; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex-grow: 1; min-height: 500px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+        .editor-toolbar { background: #404040; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #505050; }
+        .toolbar-title { color: #fff; font-size: 13px; font-weight: bold; font-family: 'Consolas', monospace; }
+        .toolbar-hint { color: #ffc107; font-size: 12px; margin-left: 15px; flex: 1; }
+        
+        .edit-toggle-btn { background: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.3s; }
+        .edit-toggle-btn:hover { background: #0b5ed7; }
+        .edit-toggle-btn.editing { background: #198754; }
+
+        .code-display { background: #2d2d2d; padding: 15px; overflow: auto; flex-grow: 1; color: #f8f8f2; }
+        .code-display pre { margin: 0; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; }
+        
+        .code-textarea { width: 100%; height: 100%; background: #2d2d2d; color: #f8f8f2; border: none; padding: 15px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; resize: none; outline: none; flex-grow: 1; display: none; }
+        .code-textarea:focus { outline: none; background: #333; }
+
+        /* 버튼 그룹 */
+        .control-panel { display: flex; gap: 15px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-analyze { background: #dc3545; color: white; }
+        .btn-validate { background: #198754; color: white; }
+        .btn-hint { background: #ffc107; color: #000; }
+        .btn-reset { background: #6c757d; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        /* 피드백 및 힌트 */
+        .feedback { margin-top: 20px; }
+        .feedback-item { padding: 15px; margin-bottom: 10px; border-radius: 8px; animation: slideIn 0.3s ease-out; }
+        .feedback-error { background: #fff5f5; border-left: 4px solid #dc3545; color: #842029; }
+        .feedback-success { background: #d4edda; border-left: 4px solid #198754; color: #0f5132; }
+        .feedback-warning { background: #fff3cd; border-left: 4px solid #ffc107; color: #664d03; }
+        
+        .hint-panel { background: #fff8dc; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin-top: 20px; display: none; }
+        .hint-panel.active { display: block; animation: slideIn 0.3s ease-out; }
+        .hint-step { background: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid #ffc107; }
+        .hint-code { background: #2d2d2d; color: #f8f8f2; padding: 8px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 13px; margin-top: 5px; border: 1px solid #444; }
+
+        /* 정보 섹션 */
+        .info-section { margin-bottom: 20px; }
+        .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #0d6efd; display: flex; align-items: center; gap: 8px; }
+        .info-content { color: #555; line-height: 1.6; font-size: 15px; }
+        
+        .kisa-badge { display: inline-block; padding: 4px 8px; background: #6c757d; color: white; border-radius: 4px; font-size: 12px; margin-bottom: 5px; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <span class="kisa-badge">주요정보통신기반시설 기술적 취약점 가이드</span>
+            <h1>🛡️ U-02 패스워드 복잡성 설정</h1>
+            <p>시스템 계정의 패스워드 설정 시 영문, 숫자, 특수문자 등을 조합하여 유추하기 어렵게 설정하는지 점검합니다.</p>
+        </div>
+
+        <!-- 탭 메뉴 (RHEL vs Debian) -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('rhel')">
+                <div class="mode-icon"><i class="fa-brands fa-redhat"></i></div>
+                <div class="mode-title">RHEL/CentOS 설정</div>
+                <div class="mode-desc">/etc/security/pwquality.conf 점검</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('debian')">
+                <div class="mode-icon"><i class="fa-brands fa-ubuntu"></i></div>
+                <div class="mode-title">Ubuntu/Debian 설정</div>
+                <div class="mode-desc">/etc/pam.d/common-password 점검</div>
+            </button>
+        </div>
+
+        <!-- =========================
+             1. RHEL/CentOS 모드 (/etc/security/pwquality.conf)
+             ========================= -->
+        <div id="rhel-mode" class="content-wrapper active">
+            <div class="progress-indicator">
+                <div class="progress-title">✅ 점검 진행도</div>
+                <ul class="checklist" id="progressChecklistRHEL">
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 설정 파일 확인</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약한 설정 식별</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 보안 조치 완료</li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <!-- 왼쪽: 에디터 패널 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title"><i class="fa-regular fa-file-code"></i> 설정 파일 편집기</span>
+                        <span class="status-badge status-vulnerable" id="statusRHEL">취약함</span>
+                    </div>
+
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">/etc/security/pwquality.conf</span>
+                            <span class="toolbar-hint">💡 최소 길이 및 문자 조합 설정을 확인하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnRHEL" onclick="toggleEdit('rhel')">✏️ 편집 (vi)</button>
+                        </div>
+                        <div class="code-display">
+                            <pre><code class="language-bash" id="codeDisplayRHEL"># Configuration for pam_pwquality.so
+#
+# [취약] 모든 설정이 주석 처리되어 기본값(미흡)으로 동작함
+#
+# minlen = 8
+# dcredit = 0
+# ucredit = 0
+# lcredit = 0
+# ocredit = 0</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="editorRHEL" spellcheck="false"># Configuration for pam_pwquality.so
+#
+# [취약] 모든 설정이 주석 처리되어 기본값(미흡)으로 동작함
+#
+# minlen = 8
+# dcredit = 0
+# ucredit = 0
+# lcredit = 0
+# ocredit = 0</textarea>
+                    </div>
+
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeRHEL()">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateRHEL()" id="validateBtnRHEL" disabled>✅ 이행검증</button>
+                        <button class="btn btn-hint" onclick="toggleHint('rhel')">💡 가이드</button>
+                        <button class="btn btn-reset" onclick="resetRHEL()">🔄 초기화</button>
+                    </div>
+
+                    <div class="feedback" id="feedbackRHEL"></div>
+
+                    <div class="hint-panel" id="hintPanelRHEL">
+                        <div class="info-title">💡 KISA 조치 가이드 (RHEL/CentOS)</div>
+                        <div class="hint-step">
+                            <strong>1. 설정 파일 수정</strong>
+                            <p><code>/etc/security/pwquality.conf</code> 파일에서 다음 옵션들의 주석을 해제하고 값을 설정합니다.</p>
+                            <ul style="list-style-type: disc; margin-left: 20px; margin-bottom: 10px;">
+                                <li><code>minlen</code>: 패스워드 최소 길이 (8 이상 권장)</li>
+                                <li><code>dcredit</code>: 숫자 포함 여부 (음수 값 입력 시 필수 포함)</li>
+                                <li><code>ucredit</code>: 대문자 포함 여부</li>
+                                <li><code>lcredit</code>: 소문자 포함 여부</li>
+                                <li><code>ocredit</code>: 특수문자 포함 여부</li>
+                            </ul>
+                            <div class="hint-code">
+# 예시: 영문, 숫자, 특수문자 조합 8자리 이상
+minlen = 8
+dcredit = -1
+ucredit = -1
+lcredit = -1
+ocredit = -1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 설명 패널 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 취약점 상세 분석</span>
+                    </div>
+                    <div>
+                        <div class="info-section">
+                            <div class="info-title"><i class="fa-solid fa-bullseye"></i> 점검 목적</div>
+                            <div class="info-content">
+                                패스워드 복잡성 설정을 통해 무작위 대입 공격(Brute Force) 및 사전 대입 공격(Dictionary Attack)에 대비하고, 유추하기 어려운 패스워드를 사용하도록 강제하기 위함입니다.
+                            </div>
+                        </div>
+                        <div class="info-section">
+                            <div class="info-title"><i class="fa-solid fa-triangle-exclamation"></i> 위험성</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">[상] 매우 위험</p>
+                                <p>패스워드 복잡성이 낮을 경우, 공격자가 쉽게 패스워드를 추측하거나 자동화된 도구를 통해 크랙킹하여 시스템에 접근할 수 있습니다.</p>
+                            </div>
+                        </div>
+                        <div class="info-section">
+                            <div class="info-title"><i class="fa-solid fa-check-double"></i> 판단 기준</div>
+                            <div class="info-content">
+                                <ul style="list-style-type: disc; margin-left: 20px;">
+                                    <li><strong>양호:</strong> 영문(대/소문자), 숫자, 특수문자 중 2종류 이상 조합하여 최소 10자리 이상 또는 3종류 이상 조합하여 최소 8자리 이상의 패스워드 설정이 적용된 경우</li>
+                                    <li><strong>취약:</strong> 패스워드 복잡성 설정이 되어 있지 않거나, 기준에 미흡한 경우</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================
+             2. Ubuntu/Debian 모드 (/etc/pam.d/common-password)
+             ========================= -->
+        <div id="debian-mode" class="content-wrapper">
+            <div class="progress-indicator">
+                <div class="progress-title">✅ 점검 진행도</div>
+                <ul class="checklist" id="progressChecklistDebian">
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 설정 파일 확인</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약한 설정 식별</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 보안 조치 완료</li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <!-- 왼쪽: 에디터 패널 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title"><i class="fa-regular fa-file-code"></i> 설정 파일 편집기</span>
+                        <span class="status-badge status-vulnerable" id="statusDebian">취약함</span>
+                    </div>
+
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">/etc/pam.d/common-password</span>
+                            <span class="toolbar-hint">💡 pam_cracklib.so 모듈 설정을 확인하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnDebian" onclick="toggleEdit('debian')">✏️ 편집 (vi)</button>
+                        </div>
+                        <div class="code-display">
+                            <pre><code class="language-bash" id="codeDisplayDebian"># /etc/pam.d/common-password
+
+# [취약] 복잡성 검증 모듈이 주석 처리됨
+# password requisite pam_cracklib.so retry=3 minlen=8 difok=3
+
+password        [success=1 default=ignore]      pam_unix.so obscure sha512
+password        required                        pam_deny.so
+password        required                        pam_permit.so</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="editorDebian" spellcheck="false"># /etc/pam.d/common-password
+
+# [취약] 복잡성 검증 모듈이 주석 처리됨
+# password requisite pam_cracklib.so retry=3 minlen=8 difok=3
+
+password        [success=1 default=ignore]      pam_unix.so obscure sha512
+password        required                        pam_deny.so
+password        required                        pam_permit.so</textarea>
+                    </div>
+
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeDebian()">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateDebian()" id="validateBtnDebian" disabled>✅ 이행검증</button>
+                        <button class="btn btn-hint" onclick="toggleHint('debian')">💡 가이드</button>
+                        <button class="btn btn-reset" onclick="resetDebian()">🔄 초기화</button>
+                    </div>
+
+                    <div class="feedback" id="feedbackDebian"></div>
+
+                    <div class="hint-panel" id="hintPanelDebian">
+                        <div class="info-title">💡 KISA 조치 가이드 (Ubuntu/Debian)</div>
+                        <div class="hint-step">
+                            <strong>1. pam_cracklib 모듈 활성화</strong>
+                            <p><code>/etc/pam.d/common-password</code> 파일에서 <code>pam_cracklib.so</code> 라인의 주석을 해제하고 옵션을 설정합니다.</p>
+                            <div class="hint-code">
+password requisite pam_cracklib.so retry=3 minlen=8 difok=3 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1
+                            </div>
+                            <p class="mt-2"><small>※ 시스템에 따라 <code>pam_pwquality.so</code>를 사용할 수도 있습니다.</small></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 설명 패널 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">📊 취약점 상세 분석</span>
+                    </div>
+                    <div>
+                        <div class="info-section">
+                            <div class="info-title"><i class="fa-solid fa-bullseye"></i> 점검 목적</div>
+                            <div class="info-content">
+                                패스워드 복잡성 설정을 통해 무작위 대입 공격 및 사전 대입 공격에 대비하고, 유추하기 어려운 패스워드를 사용하도록 강제하기 위함입니다.
+                            </div>
+                        </div>
+                        <div class="info-section">
+                            <div class="info-title"><i class="fa-solid fa-triangle-exclamation"></i> 위험성</div>
+                            <div class="info-content">
+                                <p style="color: #dc3545; font-weight: bold;">[상] 매우 위험</p>
+                                <p>패스워드 복잡성이 낮을 경우, 공격자가 쉽게 패스워드를 추측하거나 크랙킹하여 시스템에 접근할 수 있습니다.</p>
+                            </div>
+                        </div>
+                        <div class="info-section">
+                            <div class="info-title"><i class="fa-solid fa-check-double"></i> 판단 기준</div>
+                            <div class="info-content">
+                                <ul style="list-style-type: disc; margin-left: 20px;">
+                                    <li><strong>양호:</strong> 영문(대/소문자), 숫자, 특수문자 중 2종류 이상 조합하여 최소 10자리 이상 또는 3종류 이상 조합하여 최소 8자리 이상의 패스워드 설정이 적용된 경우</li>
+                                    <li><strong>취약:</strong> 패스워드 복잡성 설정이 되어 있지 않거나, 기준에 미흡한 경우</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    
+    <script>
+        // === 공통 유틸리티 ===
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            document.querySelectorAll('.content-wrapper').forEach(w => w.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+
+        function toggleHint(mode) {
+            const panelId = mode === 'rhel' ? 'hintPanelRHEL' : 'hintPanelDebian';
+            document.getElementById(panelId).classList.toggle('active');
+        }
+
+        function updateChecklist(listId, index, isCompleted) {
+            const list = document.getElementById(listId);
+            const items = list.getElementsByTagName('li');
+            if (items[index]) {
+                const icon = items[index].querySelector('.checklist-icon');
+                if (isCompleted) {
+                    items[index].classList.add('completed');
+                    icon.textContent = '✅';
+                } else {
+                    items[index].classList.remove('completed');
+                    icon.textContent = '⬜';
+                }
+            }
+        }
+
+        function setStatus(suffix, status) {
+            const el = document.getElementById(`status${suffix}`);
+            if(status === 'vulnerable') {
+                el.textContent = '취약함';
+                el.className = 'status-badge status-vulnerable';
+            } else if (status === 'secure') {
+                el.textContent = '양호';
+                el.className = 'status-badge status-secure';
+            } else {
+                el.textContent = '수정 중';
+                el.className = 'status-badge status-editing';
+            }
+        }
+
+        function toggleEdit(mode) {
+            const isRHEL = mode === 'rhel';
+            const suffix = isRHEL ? 'RHEL' : 'Debian';
+            
+            const displayEl = document.querySelector(`#codeDisplay${suffix}`).parentElement;
+            const editorEl = document.getElementById(`editor${suffix}`);
+            const btn = document.getElementById(`editBtn${suffix}`);
+            const codeEl = document.getElementById(`codeDisplay${suffix}`);
+
+            const isEditing = isRHEL ? isEditingRHEL : isEditingDebian;
+
+            if (!isEditing) {
+                displayEl.style.display = 'none';
+                editorEl.style.display = 'block';
+                editorEl.value = codeEl.textContent;
+                editorEl.focus();
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> 저장 (:wq)';
+                btn.classList.add('editing');
+            } else {
+                displayEl.style.display = 'block';
+                editorEl.style.display = 'none';
+                codeEl.textContent = editorEl.value;
+                if(window.Prism) Prism.highlightElement(codeEl);
+                btn.innerHTML = '✏️ 편집 (vi)';
+                btn.classList.remove('editing');
+                setStatus(suffix, 'editing');
+            }
+
+            if(isRHEL) isEditingRHEL = !isEditingRHEL;
+            else isEditingDebian = !isEditingDebian;
+        }
+
+        // === 1. RHEL/CentOS Logic (/etc/security/pwquality.conf) ===
+        let isEditingRHEL = false;
+
+        function analyzeRHEL() {
+            updateChecklist('progressChecklistRHEL', 0, true);
+            const code = document.getElementById('editorRHEL').value;
+            
+            // 모든 설정이 주석 처리되어 있는지 확인
+            const lines = code.split('\n');
+            let isVulnerable = true;
+            for(let line of lines) {
+                line = line.trim();
+                if(!line.startsWith('#') && line.includes('=')) {
+                    isVulnerable = false;
+                    break;
+                }
+            }
+            
+            if (isVulnerable) {
+                updateChecklist('progressChecklistRHEL', 1, true);
+                document.getElementById('feedbackRHEL').innerHTML = 
+                    `<div class="feedback-item feedback-error">
+                        <strong>🚨 취약점 발견 (VULNERABLE)</strong>
+                        <p>모든 복잡성 설정이 주석 처리되어 기본값(미흡)으로 동작하고 있습니다.</p>
+                     </div>`;
+                document.getElementById('validateBtnRHEL').disabled = false;
+                setStatus('RHEL', 'vulnerable');
+            }
+        }
+
+        function validateRHEL() {
+            const code = document.getElementById('editorRHEL').value;
+            
+            // 간단한 유효성 검사: minlen이 주석 해제되고 8 이상인지, credit 설정이 하나라도 있는지 확인
+            const minlenMatch = code.match(/^[^#]*minlen\s*=\s*(\d+)/m);
+            const hasCredit = /^[^#]*(dcredit|ucredit|lcredit|ocredit)\s*=\s*-\d+/m.test(code);
+
+            let isSecure = false;
+            if (minlenMatch && parseInt(minlenMatch[1]) >= 8 && hasCredit) {
+                isSecure = true;
+            }
+
+            if (isSecure) {
+                updateChecklist('progressChecklistRHEL', 2, true);
+                document.getElementById('feedbackRHEL').innerHTML = 
+                    `<div class="feedback-item feedback-success">
+                        <strong>🎉 조치 완료 (SECURE)</strong>
+                        <p>패스워드 최소 길이 및 문자 조합 설정이 올바르게 적용되었습니다.</p>
+                     </div>`;
+                setStatus('RHEL', 'secure');
+            } else {
+                updateChecklist('progressChecklistRHEL', 2, false);
+                document.getElementById('feedbackRHEL').innerHTML = 
+                    `<div class="feedback-item feedback-warning">
+                        <strong>⚠️ 조치 미흡</strong>
+                        <p><code>minlen</code>을 8 이상으로 설정하고, 문자 조합(credit) 설정을 적용해야 합니다.</p>
+                     </div>`;
+                setStatus('RHEL', 'editing');
+            }
+        }
+
+        function resetRHEL() {
+            const initialCode = `# Configuration for pam_pwquality.so
+#
+# [취약] 모든 설정이 주석 처리되어 기본값(미흡)으로 동작함
+#
+# minlen = 8
+# dcredit = 0
+# ucredit = 0
+# lcredit = 0
+# ocredit = 0`;
+            document.getElementById('editorRHEL').value = initialCode;
+            document.getElementById('codeDisplayRHEL').textContent = initialCode;
+            if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayRHEL'));
+            
+            document.getElementById('feedbackRHEL').innerHTML = '';
+            document.getElementById('validateBtnRHEL').disabled = true;
+            setStatus('RHEL', 'vulnerable');
+            
+            updateChecklist('progressChecklistRHEL', 0, false);
+            updateChecklist('progressChecklistRHEL', 1, false);
+            updateChecklist('progressChecklistRHEL', 2, false);
+        }
+
+        // === 2. Ubuntu/Debian Logic (/etc/pam.d/common-password) ===
+        let isEditingDebian = false;
+
+        function analyzeDebian() {
+            updateChecklist('progressChecklistDebian', 0, true);
+            const code = document.getElementById('editorDebian').value;
+            
+            // pam_cracklib.so 가 주석 처리되어 있는지 확인
+            const isVulnerable = /^#\s*password\s+requisite\s+pam_cracklib.so/m.test(code);
+
+            if (isVulnerable) {
+                updateChecklist('progressChecklistDebian', 1, true);
+                document.getElementById('feedbackDebian').innerHTML = 
+                    `<div class="feedback-item feedback-error">
+                        <strong>🚨 취약점 발견 (VULNERABLE)</strong>
+                        <p>패스워드 복잡성을 검증하는 <code>pam_cracklib.so</code> 모듈이 비활성화되어 있습니다.</p>
+                     </div>`;
+                document.getElementById('validateBtnDebian').disabled = false;
+                setStatus('Debian', 'vulnerable');
+            }
+        }
+
+        function validateDebian() {
+            const code = document.getElementById('editorDebian').value;
+            
+            // pam_cracklib.so 주석 해제 및 옵션 확인
+            const cracklibMatch = code.match(/^[^#\s]*\s*password\s+requisite\s+pam_cracklib.so(.*)/m);
+            
+            let isSecure = false;
+            if (cracklibMatch) {
+                const options = cracklibMatch[1];
+                if (options.includes('minlen=') && options.includes('credit=')) {
+                    isSecure = true;
+                }
+            }
+
+            if (isSecure) {
+                updateChecklist('progressChecklistDebian', 2, true);
+                document.getElementById('feedbackDebian').innerHTML = 
+                    `<div class="feedback-item feedback-success">
+                        <strong>🎉 조치 완료 (SECURE)</strong>
+                        <p><code>pam_cracklib.so</code> 모듈이 활성화되었고 복잡성 옵션이 적용되었습니다.</p>
+                     </div>`;
+                setStatus('Debian', 'secure');
+            } else {
+                updateChecklist('progressChecklistDebian', 2, false);
+                document.getElementById('feedbackDebian').innerHTML = 
+                    `<div class="feedback-item feedback-warning">
+                        <strong>⚠️ 조치 미흡</strong>
+                        <p><code>pam_cracklib.so</code> 모듈의 주석을 해제하고 <code>minlen</code> 등의 옵션을 추가하세요.</p>
+                     </div>`;
+                 setStatus('Debian', 'editing');
+            }
+        }
+
+        function resetDebian() {
+            const initialCode = `# /etc/pam.d/common-password
+
+# [취약] 복잡성 검증 모듈이 주석 처리됨
+# password requisite pam_cracklib.so retry=3 minlen=8 difok=3
+
+password        [success=1 default=ignore]      pam_unix.so obscure sha512
+password        required                        pam_deny.so
+password        required                        pam_permit.so`;
+            document.getElementById('editorDebian').value = initialCode;
+            document.getElementById('codeDisplayDebian').textContent = initialCode;
+            if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayDebian'));
+
+            document.getElementById('feedbackDebian').innerHTML = '';
+            document.getElementById('validateBtnDebian').disabled = true;
+            setStatus('Debian', 'vulnerable');
+            
+            updateChecklist('progressChecklistDebian', 0, false);
+            updateChecklist('progressChecklistDebian', 1, false);
+            updateChecklist('progressChecklistDebian', 2, false);
+        }
+    </script>
+</body>
+</html>
