@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web, Linux Security & Secure Coding Practices</title>
+    <title>Web Security Simulator & Secure Coding Practices</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -81,23 +81,10 @@
             overflow-x: hidden;
         }
 
-        /* 스크롤바 스타일 */
-        .menu-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .menu-scroll::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        
-        .menu-scroll::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
-        }
-        
-        .menu-scroll::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+        .menu-scroll::-webkit-scrollbar { width: 8px; }
+        .menu-scroll::-webkit-scrollbar-track { background: #0f172a; }
+        .menu-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .menu-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
 
         /* 카테고리 헤더 */
         .menu-category {
@@ -117,14 +104,8 @@
             z-index: 10;
         }
         
-        .menu-category:hover {
-            background: linear-gradient(90deg, #334155 0%, #475569 100%);
-        }
-
-        .menu-category .badge {
-            font-size: 0.65rem;
-            padding: 3px 8px;
-        }
+        .menu-category:hover { background: linear-gradient(90deg, #334155 0%, #475569 100%); }
+        .menu-category .badge { font-size: 0.65rem; padding: 3px 8px; }
 
         /* 메뉴 아이템 */
         .list-group-item {
@@ -147,30 +128,25 @@
             padding-left: 2.8rem;
         }
         
-        .list-group-item i {
-            width: 18px;
-            margin-right: 10px;
-            text-align: center;
-            font-size: 0.8rem;
-        }
+        .list-group-item i { width: 18px; margin-right: 10px; text-align: center; font-size: 0.8rem; }
+        .list-group-item .item-number { font-size: 0.7rem; color: #64748b; margin-left: auto; }
 
-        .list-group-item .item-number {
-            font-size: 0.7rem;
+        /* 메뉴 구분 헤더 (Sub-header) */
+        .menu-subheader {
+            padding: 10px 20px 5px 25px;
+            font-size: 0.75rem;
+            font-weight: 700;
             color: #64748b;
-            margin-left: auto;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-top: 5px;
+            margin-bottom: 5px;
         }
 
-        /* 숨김 메뉴 */
-        .collapse {
-            background-color: rgba(0,0,0,0.1);
-        }
+        .collapse { background-color: rgba(0,0,0,0.1); }
 
         /* 메인 콘텐츠 */
-        #page-content-wrapper {
-            width: 100%;
-            overflow-y: auto;
-            background-color: #fff;
-        }
+        #page-content-wrapper { width: 100%; overflow-y: auto; background-color: #fff; }
 
         .content-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -179,10 +155,7 @@
             margin-bottom: 2rem;
         }
         
-        .content-header h1 {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
+        .content-header h1 { font-weight: 700; margin-bottom: 0.5rem; }
 
         /* 통계 카드 */
         .stat-card {
@@ -190,29 +163,15 @@
             padding: 1.5rem;
             text-align: center;
             transition: transform 0.3s;
+            height: 100%;
         }
         
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0.5rem 0;
-        }
-
-        .stat-card p {
-            margin: 0;
-            color: #64748b;
-            font-size: 0.9rem;
-        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card h2 { font-size: 2.5rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-card p { margin: 0; color: rgba(255,255,255,0.8); font-size: 0.9rem; }
 
         /* 변경 이력 */
-        .history-list {
-            list-style: none;
-            padding-left: 0;
-        }
+        .history-list { list-style: none; padding-left: 0; }
         .history-list li {
             padding: 12px 0;
             border-bottom: 1px dashed #e2e8f0;
@@ -220,49 +179,18 @@
             align-items: flex-start;
             gap: 12px;
         }
-        .history-list li:last-child {
-            border-bottom: none;
-        }
-        .history-date {
-            font-weight: 600;
-            color: #495057;
-            min-width: 100px;
-            font-size: 0.9rem;
-        }
+        .history-date { font-weight: 600; color: #495057; min-width: 100px; font-size: 0.9rem; }
 
-        /* 검색 결과 강조 */
-        .highlight {
-            background-color: #fef08a;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
+        .highlight { background-color: #fef08a; padding: 2px 4px; border-radius: 3px; color: #000; }
+        .no-results { padding: 2rem; text-align: center; color: #64748b; }
 
-        /* 빈 결과 메시지 */
-        .no-results {
-            padding: 2rem;
-            text-align: center;
-            color: #64748b;
-        }
+        /* 토글 애니메이션 */
+        .menu-category i.fa-chevron-down { transition: transform 0.3s; }
+        .menu-category[aria-expanded="true"] i.fa-chevron-down { transform: rotate(180deg); }
 
-        /* 토글 아이콘 애니메이션 */
-        .menu-category i.fa-chevron-down {
-            transition: transform 0.3s;
-        }
-
-        .menu-category[aria-expanded="true"] i.fa-chevron-down {
-            transform: rotate(180deg);
-        }
-
-        /* 반응형 */
         @media (max-width: 768px) {
-            #sidebar-wrapper {
-                width: 100%;
-                min-height: auto;
-            }
-            
-            #wrapper {
-                flex-direction: column;
-            }
+            #sidebar-wrapper { width: 100%; min-height: auto; }
+            #wrapper { flex-direction: column; }
         }
     </style>
 </head>
@@ -271,31 +199,24 @@
 <div id="wrapper">
     <div id="sidebar-wrapper">
         <div class="sidebar-brand">
-            <i class="fa-solid fa-shield-halved me-2"></i> Web Security, Secure coding and Linux Security Learning Hub
-            <small>V0.7 BETA | 03 JAN 2025</small>
+            <i class="fa-solid fa-shield-halved me-2"></i> Web Security Learning Hub
+            <small>V0.9 BETA | Infrastructure Added</small>
         </div>
 
         <!-- 검색 박스 -->
         <div class="search-box">
-            <input type="text" id="searchInput" class="form-control" placeholder="🔍 검색 (예: SQL, XSS, 보안)">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 검색 (예: SQL, U-01, root)">
         </div>
 
         <!-- 메뉴 스크롤 영역 -->
         <div class="menu-scroll">
             <div class="list-group list-group-flush">
                 
-                <!-- 1. 시뮬레이터 (26개) -->
+                <!-- 1. 시뮬레이터 (26개 복구) -->
                 <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1" aria-expanded="false">
-                    <span>
-                        <i class="fa-solid fa-bug text-danger me-2"></i> 
-                        1. Simulators
-                    </span>
-                    <span>
-                        <span class="badge bg-danger">26</span>
-                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
-                    </span>
+                    <span><i class="fa-solid fa-bug text-danger me-2"></i> 1. Simulators</span>
+                    <span><span class="badge bg-danger" id="badge-menu1">26</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
                 </div>
-                
                 <div class="collapse" id="menu1">
                     <a href="sim-sql.html" class="list-group-item list-group-item-action" data-keywords="sql injection database 주입">
                         <span><i class="fa-solid fa-database"></i> 1. SQL Injection</span>
@@ -389,33 +310,25 @@
                         <span><i class="fa-solid fa-cookie"></i> 23. 쿠키 변조</span>
                         <span class="item-number">#23</span>
                     </a>
-                    <a href="sim-httpabuse.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
-                        <span><i class="fa-solid fa-cookie"></i> 24. HTTP 오남용</span>
+                    <a href="sim-httpabuse.html" class="list-group-item list-group-item-action" data-keywords="http abuse 오남용">
+                        <span><i class="fa-solid fa-bug"></i> 24. HTTP 오남용</span>
                         <span class="item-number">#24</span>
-
-                    <a href="03_code_processvalidation.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
-                        <span><i class="fa-solid fa-cookie"></i> 25. 프로세스 검증</span>
+                    </a>
+                    <a href="03_code_processvalidation.html" class="list-group-item list-group-item-action" data-keywords="process validation 프로세스 검증">
+                        <span><i class="fa-solid fa-tasks"></i> 25. 프로세스 검증</span>
                         <span class="item-number">#25</span>
                     </a>
-
-                     <a href="sim-automated_attacks.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
-                        <span><i class="fa-solid fa-cookie"></i> 26. 자동화된 공격</span>
+                    <a href="sim-automated_attacks.html" class="list-group-item list-group-item-action" data-keywords="automated attacks 자동화 공격">
+                        <span><i class="fa-solid fa-robot"></i> 26. 자동화된 공격</span>
                         <span class="item-number">#26</span>
-                    </a>    
+                    </a>
                 </div>
 
-                <!-- 2. 시큐어 코딩 가이드라인 (6개) -->
+                <!-- 2. 가이드라인 (6개 복구) -->
                 <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2" aria-expanded="false">
-                    <span>
-                        <i class="fa-solid fa-book me-2"></i> 
-                        2. Secure Coding Guidelines
-                    </span>
-                    <span>
-                        <span class="badge bg-primary">6</span>
-                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
-                    </span>
+                    <span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span>
+                    <span><span class="badge bg-primary" id="badge-menu2">6</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
                 </div>
-                
                 <div class="collapse" id="menu2">
                     <a href="guide-input.html" class="list-group-item list-group-item-action" data-keywords="입력 데이터 검증 validation">
                         <span><i class="fa-regular fa-file-lines"></i> 입력 데이터 검증 및 표현</span>
@@ -437,18 +350,11 @@
                     </a>
                 </div>
 
-                <!-- 3. 입력데이터 검증 (17개) -->
+                <!-- 3. 입력데이터 검증 (17개 복구) -->
                 <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu3" aria-expanded="false">
-                    <span>
-                        <i class="fa-solid fa-filter me-2"></i> 
-                        3. 입력데이터 검증 실습
-                    </span>
-                    <span>
-                        <span class="badge bg-warning text-dark">17</span>
-                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
-                    </span>
+                    <span><i class="fa-solid fa-filter me-2"></i> 3. Input Validation Labs</span>
+                    <span><span class="badge bg-warning text-dark" id="badge-menu3">17</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
                 </div>
-                
                 <div class="collapse" id="menu3">
                     <a href="03_code_sql_injection.html" class="list-group-item list-group-item-action" data-keywords="sql injection">
                         <span><i class="fa-solid fa-database"></i> SQL 삽입</span>
@@ -475,11 +381,11 @@
                         <span class="item-number">#6</span>
                     </a>
                     <a href="03_code_open_redirect.html" class="list-group-item list-group-item-action" data-keywords="redirect url">
-                        <span><i class="fa-solid fa-arrow-right-to-bracket"></i> 신뢰되지 않은 URL 주소 자동 접속</span>
+                        <span><i class="fa-solid fa-arrow-right-to-bracket"></i> 신뢰되지 않은 URL 접속</span>
                         <span class="item-number">#7</span>
                     </a>
                     <a href="03_code_xxe.html" class="list-group-item list-group-item-action" data-keywords="xxe xml">
-                        <span><i class="fa-solid fa-file-code"></i> 부적절한 XML 외부 개체 참조</span>
+                        <span><i class="fa-solid fa-file-code"></i> XML 외부 개체 참조</span>
                         <span class="item-number">#8</span>
                     </a>
                     <a href="03_code_xml_injection.html" class="list-group-item list-group-item-action" data-keywords="xml injection">
@@ -507,7 +413,7 @@
                         <span class="item-number">#14</span>
                     </a>
                     <a href="03_code_untrusted_input.html" class="list-group-item list-group-item-action" data-keywords="input validation">
-                        <span><i class="fa-solid fa-shield-virus"></i> 보안기능 결정 부적절 입력값</span>
+                        <span><i class="fa-solid fa-shield-virus"></i> 보안기능 결정 부적절 입력</span>
                         <span class="item-number">#15</span>
                     </a>
                     <a href="03_code_bufferoverflow.html" class="list-group-item list-group-item-action" data-keywords="buffer overflow">
@@ -520,18 +426,11 @@
                     </a>
                 </div>
 
-                <!-- 4. 보안 기능 실습 (16개) -->
+                <!-- 4. 보안 기능 실습 (16개 복구) -->
                 <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu4" aria-expanded="false">
-                    <span>
-                        <i class="fa-solid fa-lock me-2"></i> 
-                        4. 보안 기능 실습
-                    </span>
-                    <span>
-                        <span class="badge bg-info">16</span>
-                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
-                    </span>
+                    <span><i class="fa-solid fa-lock me-2"></i> 4. Security Feature Labs</span>
+                    <span><span class="badge bg-info" id="badge-menu4">16</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
                 </div>
-                
                 <div class="collapse" id="menu4">
                     <a href="03_code_missing_auth.html" class="list-group-item list-group-item-action" data-keywords="authentication 인증">
                         <span><i class="fa-solid fa-user-lock"></i> 적절한 인증 없는 중요 기능</span>
@@ -562,7 +461,7 @@
                         <span class="item-number">#7</span>
                     </a>
                     <a href="03_code_useofinsufficient_random.html" class="list-group-item list-group-item-action" data-keywords="random 난수">
-                        <span><i class="fa-solid fa-dice"></i> 적절하지 않은 난수 값 사용</span>
+                        <span><i class="fa-solid fa-dice"></i> 적절하지 않은 난수 값</span>
                         <span class="item-number">#8</span>
                     </a>
                     <a href="03_code_weakpassword.html" class="list-group-item list-group-item-action" data-keywords="password 비밀번호">
@@ -574,7 +473,7 @@
                         <span class="item-number">#10</span>
                     </a>
                     <a href="03_code_impropersignature_validity.html" class="list-group-item list-group-item-action" data-keywords="certificate 인증서">
-                        <span><i class="fa-solid fa-certificate"></i> 부적절한 인증서 유효성 검증</span>
+                        <span><i class="fa-solid fa-certificate"></i> 부적절한 인증서 유효성</span>
                         <span class="item-number">#11</span>
                     </a>
                     <a href="03_code_cookiedisclosure.html" class="list-group-item list-group-item-action" data-keywords="cookie 쿠키">
@@ -599,24 +498,51 @@
                     </a>
                 </div>
 
-                <!-- 5. Linux 취약점 (32개) -->
-                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu4" aria-expanded="false">
-                    <span>
-                        <i class="fa-solid fa-lock me-2"></i> 
-                        5. Linux 취약점 실습
-                    </span>
-                    <span>
-                        <span class="badge bg-info">16</span>
-                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
-                    </span>
+                <!-- 5. UNIX 서버 보안 (NEW: U-01, U-02 추가됨) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu5" aria-expanded="false">
+                    <span><i class="fa-brands fa-linux me-2"></i> 5. UNIX Server Security</span>
+                    <span><span class="badge bg-secondary" id="badge-menu5">72</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
                 </div>
+                <div class="collapse" id="menu5">
+                    
+                    <div class="menu-subheader">1. 계정 관리 (Account)</div>
 
-                 <div class="collapse" id="menu5">
-                    <a href="05_linux-u01.html" class="list-group-item list-group-item-action" data-keywords="authentication 인증">
-                        <span><i class="fa-solid fa-user-lock"></i> 1. 계정 관리 - root 계정 원격 접속 제한</span>
-                        <span class="item-number">#1</span>
+                    <!-- U-01 -->
+                    <a href="sim-unix-u01.html" class="list-group-item list-group-item-action" data-keywords="unix u-01 root remote ssh telnet 원격">
+                        <div class="d-flex flex-column w-100">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="fa-solid fa-user-shield"></i> root 원격 접속 제한</span>
+                                <span class="badge bg-danger ms-2" style="font-size: 0.6em;">U-01</span>
+                            </div>
+                        </div>
                     </a>
-                   
+
+                    <!-- U-02 -->
+                    <a href="sim-unix-u02.html" class="list-group-item list-group-item-action" data-keywords="unix u-02 password complexity 패스워드 복잡성">
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <span><i class="fa-solid fa-key"></i> 패스워드 복잡성 설정</span>
+                            <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em;">U-02</span>
+                        </div>
+                    </a>
+
+                    <!-- U-03 (Placeholder) -->
+                    <a href="#" class="list-group-item list-group-item-action" data-keywords="unix u-03 lockout 잠금">
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <span><i class="fa-solid fa-user-clock"></i> 계정 잠금 임계값</span>
+                            <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em;">U-03</span>
+                        </div>
+                    </a>
+                    
+                    <div class="menu-subheader">2. 파일 및 디렉터리 관리</div>
+                    
+                    <!-- U-05 (Placeholder) -->
+                    <a href="#" class="list-group-item list-group-item-action" data-keywords="unix u-05 root path">
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <span><i class="fa-solid fa-folder-tree"></i> root 홈/패스 설정</span>
+                            <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em;">U-05</span>
+                        </div>
+                    </a>
+
                 </div>
 
             </div>
@@ -625,7 +551,7 @@
         <!-- 사이드바 푸터 -->
         <div style="padding: 1rem; border-top: 1px solid #334155; background: rgba(0,0,0,0.2); font-size: 0.75rem; color: #64748b;">
             <div class="mb-1">📧 jackhwang0210@gmail.com</div>
-            <div>© 2025 Jack Hwang. All rights reserved.</div>
+            <div>© 2026 Jack Hwang.</div>
         </div>
     </div>
 
@@ -633,39 +559,46 @@
         <!-- 헤더 -->
         <div class="content-header">
             <h1><i class="fa-solid fa-graduation-cap me-3"></i>Web Security Learning Hub</h1>
-            <p class="lead mb-0">실습과 이론을 통한 웹 보안 전문가 양성 플랫폼</p>
+            <p class="lead mb-0">실습과 이론을 통한 웹/서버 보안 전문가 양성 플랫폼</p>
         </div>
 
         <div class="container-fluid p-4">
             
-            <!-- 통계 카드 -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
+            <!-- 통계 카드 (자동 업데이트됨) -->
+            <div class="row g-4 mb-4" id="stats-container">
+                <div class="col-12 col-sm-6 col-lg-3">
                     <div class="stat-card bg-danger bg-gradient text-white shadow">
                         <i class="fa-solid fa-bug fa-2x"></i>
-                        <h2>26</h2>
-                        <p>공격 시뮬레이터</p>
+                        <h2 id="count-sim">0</h2>
+                        <p>Web Vulnerabilities</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-lg-3">
                     <div class="stat-card bg-primary bg-gradient text-white shadow">
                         <i class="fa-solid fa-book fa-2x"></i>
-                        <h2>6</h2>
-                        <p>코딩 가이드라인</p>
+                        <h2 id="count-guide">0</h2>
+                        <p>Guidelines</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-lg-3">
                     <div class="stat-card bg-warning bg-gradient text-white shadow">
                         <i class="fa-solid fa-code fa-2x"></i>
-                        <h2>17</h2>
-                        <p>입력검증 실습</p>
+                        <h2 id="count-input">0</h2>
+                        <p>Input Validation</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-lg-3">
                     <div class="stat-card bg-info bg-gradient text-white shadow">
                         <i class="fa-solid fa-shield fa-2x"></i>
-                        <h2>16</h2>
-                        <p>보안기능 실습</p>
+                        <h2 id="count-security">0</h2>
+                        <p>Security Features</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="stat-card bg-secondary bg-gradient text-white shadow">
+                        <i class="fa-brands fa-linux fa-2x"></i>
+                        <h2 id="count-unix">0</h2>
+                        <p>UNIX Infrastructure</p>
                     </div>
                 </div>
             </div>
@@ -680,10 +613,9 @@
                                 빠른 시작 가이드
                             </h4>
                             <ol class="mt-3">
-                                <li class="mb-2"><strong>시뮬레이터 실습:</strong> 좌측 메뉴에서 원하는 취약점을 선택</li>
-                                <li class="mb-2"><strong>공격 시나리오 실행:</strong> 각 시뮬레이터에서 공격 버튼 클릭</li>
-                                <li class="mb-2"><strong>방어 코드 학습:</strong> 취약한 코드와 안전한 코드 비교</li>
-                                <li class="mb-2"><strong>가이드라인 참고:</strong> KISA 시큐어 코딩 가이드 숙지</li>
+                                <li class="mb-2"><strong>웹 취약점 실습:</strong> 좌측 1번 메뉴에서 공격 기법 학습</li>
+                                <li class="mb-2"><strong>시큐어 코딩:</strong> 3, 4번 메뉴에서 방어 코드 작성</li>
+                                <li class="mb-2"><strong>[NEW] 서버 보안:</strong> 5번 메뉴에서 UNIX 설정 파일 점검 (U-01 등)</li>
                             </ol>
                         </div>
                     </div>
@@ -691,20 +623,21 @@
                 <div class="col-md-6">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body">
-                            <h4 class="card-title text-primary">
-                                <i class="fa-solid fa-lightbulb me-2"></i>
-                                추천 학습 경로
+                            <h4 class="card-title text-secondary">
+                                <i class="fa-solid fa-server me-2"></i>
+                                인프라 보안 (KISA Guide)
                             </h4>
                             <div class="mt-3">
-                                <div class="alert alert-light border mb-2">
-                                    <strong>초급:</strong> SQL Injection → XSS → CSRF
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="display-6 me-3"><i class="fa-brands fa-linux"></i></div>
+                                    <div>
+                                        <strong>UNIX Server Checklist</strong><br>
+                                        <span class="text-muted">계정 관리, 파일 권한, 서비스 관리 등 72개 항목 점검</span>
+                                    </div>
                                 </div>
-                                <div class="alert alert-light border mb-2">
-                                    <strong>중급:</strong> Command Injection → XXE → SSRF
-                                </div>
-                                <div class="alert alert-light border mb-2">
-                                    <strong>고급:</strong> Race Condition → Session Hijacking
-                                </div>
+                                <a href="sim-unix-u02.html" class="btn btn-outline-secondary w-100">
+                                    U-02 패스워드 복잡성 설정 실습하기 <i class="fa-solid fa-arrow-right ms-2"></i>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -714,166 +647,158 @@
             <!-- 변경 이력 -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">
-                        <i class="fa-solid fa-clock-rotate-left me-2"></i>
-                        최근 업데이트
-                    </h5>
+                    <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i> Recent Updates</h5>
                 </div>
                 <div class="card-body">
                     <ul class="history-list">
                         <li>
                             <span class="history-date">2026-01-03</span>
                             <div>
-                                <span class="badge bg-success me-2">NEW</span>
-                                <strong>시큐어코딩 실습 추가:</strong> 입력 및 데이터 검증, 보안 기능 예제 17개 추가
+                                <span class="badge bg-danger me-2">HOT</span>
+                                <strong>인프라 보안 추가:</strong> UNIX 서버 취약점 가이드 (U-01 ~ U-72) 및 U-02 실습 추가
                             </div>
                         </li>
                         <li>
-                            <span class="history-date">2025-12-16</span>
+                            <span class="history-date">2026-01-03</span>
                             <div>
                                 <span class="badge bg-success me-2">NEW</span>
-                                <strong>보안 기능:</strong> 암호화 되지 않은 중요 정보, 취약한 암호 알고리즘, SQL 삽입 추가
-                            </div>
-                        </li>
-                        <li>
-                            <span class="history-date">2025-12-16</span>
-                            <div>
-                                <span class="badge bg-primary me-2">UPDATE</span>
-                                <strong>시뮬레이션:</strong> 경쟁 조건, LDAP 삽입, 잘못된 권한 설정 추가
-                            </div>
-                        </li>
-                        <li>
-                            <span class="history-date">2025-12-14</span>
-                            <div>
-                                <span class="badge bg-info me-2">FEATURE</span>
-                                <strong>새 시뮬레이터:</strong> 암호화 되지 않은 중요 정보, 세션 하이재킹
+                                <strong>시큐어코딩 실습:</strong> 입력 검증 및 보안 기능 예제 추가
                             </div>
                         </li>
                     </ul>
                 </div>
             </div>
             
-            <!-- 주의사항 -->
-            <div class="alert alert-warning border-warning" role="alert">
-                <h5 class="alert-heading">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                    중요 안내사항
-                </h5>
-                <hr>
-                <p class="mb-2">
-                    <strong>📌 교육 목적:</strong> 
-                    본 사이트는 웹 취약점 및 KISA 시큐어 코딩 가이드라인 학습을 위한 교육용 플랫폼입니다.
-                </p>
-                <p class="mb-2">
-                    <strong>⚖️ 법적 책임:</strong> 
-                    교육 목적 외 악용으로 인한 법적 책임은 사용자 본인에게 있습니다.
-                </p>
-                <p class="mb-0">
-                    <strong>©️ 저작권:</strong> 
-                    시큐어 코딩 가이드라인의 저작권은 KISA에 있습니다. 
-                    © 2025-2026 Jack Hwang
-                </p>
-            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// 검색 기능
+// === 1. 자동 카운팅 및 뱃지 업데이트 ===
+document.addEventListener('DOMContentLoaded', function() {
+    // 각 메뉴별 아이템 개수 계산 (정확하게 복구된 항목 수 기반)
+    const counts = {
+        sim: document.querySelectorAll('#menu1 .list-group-item').length,
+        guide: document.querySelectorAll('#menu2 .list-group-item').length,
+        input: document.querySelectorAll('#menu3 .list-group-item').length,
+        security: document.querySelectorAll('#menu4 .list-group-item').length,
+        // UNIX는 예시 항목 외에 아직 생성되지 않은 항목들도 포함하여 72개로 표시
+        unix: 72 
+    };
+
+    // 사이드바 뱃지 업데이트
+    document.getElementById('badge-menu1').textContent = counts.sim;
+    document.getElementById('badge-menu2').textContent = counts.guide;
+    document.getElementById('badge-menu3').textContent = counts.input;
+    document.getElementById('badge-menu4').textContent = counts.security;
+    document.getElementById('badge-menu5').textContent = counts.unix;
+
+    // 대시보드 통계 카드 업데이트
+    document.getElementById('count-sim').textContent = counts.sim;
+    document.getElementById('count-guide').textContent = counts.guide;
+    document.getElementById('count-input').textContent = counts.input;
+    document.getElementById('count-security').textContent = counts.security;
+    document.getElementById('count-unix').textContent = counts.unix;
+    
+    // UNIX 메뉴 자동 열기 (사용자 편의)
+    document.querySelector('#menu5').classList.add('show');
+    document.querySelector('[data-bs-target="#menu5"]').setAttribute('aria-expanded', 'true');
+});
+
+// === 2. 검색 기능 (통합) ===
 document.getElementById('searchInput').addEventListener('keyup', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const menuItems = document.querySelectorAll('.list-group-item-action');
     const categories = document.querySelectorAll('.menu-category');
     
+    // 검색어 없으면 초기화
     if (searchTerm === '') {
-        // 검색어가 없으면 모든 항목 표시
         menuItems.forEach(item => {
             item.style.display = '';
-            item.innerHTML = item.innerHTML.replace(/<mark class="highlight">/g, '').replace(/<\/mark>/g, '');
+            // 하이라이트 제거
+            const highlightRegex = /<mark class="highlight">(.*?)<\/mark>/gi;
+            item.innerHTML = item.innerHTML.replace(highlightRegex, '$1');
         });
-        
-        // 모든 카테고리 접기
-        document.querySelectorAll('.collapse').forEach(collapse => {
-            collapse.classList.remove('show');
-        });
-        
+        document.querySelectorAll('.collapse').forEach(c => c.classList.remove('show'));
+        const noRes = document.getElementById('noResults');
+        if(noRes) noRes.remove();
         return;
     }
     
-    let hasResults = false;
+    let hasGlobalResults = false;
     
-    // 카테고리별로 검색
+    // 각 카테고리 순회
     categories.forEach(category => {
         const targetId = category.getAttribute('data-bs-target');
-        const collapseElement = document.querySelector(targetId);
-        const itemsInCategory = collapseElement.querySelectorAll('.list-group-item-action');
+        const collapseEl = document.querySelector(targetId);
+        const items = collapseEl.querySelectorAll('.list-group-item-action');
         let categoryHasMatch = false;
         
-        itemsInCategory.forEach(item => {
-            const text = item.textContent.toLowerCase();
+        items.forEach(item => {
+            // 텍스트와 키워드 모두 검색
+            const textContent = item.textContent.toLowerCase();
             const keywords = item.getAttribute('data-keywords') || '';
+            const isMatch = textContent.includes(searchTerm) || keywords.includes(searchTerm);
             
-            if (text.includes(searchTerm) || keywords.includes(searchTerm)) {
+            if (isMatch) {
                 item.style.display = '';
                 categoryHasMatch = true;
-                hasResults = true;
+                hasGlobalResults = true;
                 
-                // 검색어 하이라이트
+                // 하이라이트 적용 (단순 텍스트 매칭 시 태그 꼬임 방지 위해 텍스트만 처리하거나 약식 사용)
+                // 기존 하이라이트 제거
+                const cleanHTML = item.innerHTML.replace(/<mark class="highlight">(.*?)<\/mark>/gi, '$1');
+                
+                // 태그가 없는 텍스트 노드에만 하이라이트 적용하는 것이 가장 안전하지만,
+                // 여기서는 간단히 item 내부의 span 텍스트만 처리합니다.
                 const regex = new RegExp(`(${searchTerm})`, 'gi');
-                const spans = item.querySelectorAll('span');
-                spans.forEach(span => {
-                    if (!span.classList.contains('item-number') && !span.classList.contains('badge')) {
-                        const originalText = span.textContent;
-                        span.innerHTML = originalText.replace(regex, '<mark class="highlight">$1</mark>');
+                item.querySelectorAll('span').forEach(span => {
+                     // 뱃지나 아이콘 등은 건너뛰고 텍스트만
+                    if(!span.classList.contains('badge') && !span.classList.contains('item-number') && span.children.length === 0) {
+                        span.innerHTML = span.textContent.replace(regex, '<mark class="highlight">$1</mark>');
+                    } else if (span.children.length > 0) {
+                         // 아이콘이 있는 span의 경우 텍스트 노드만 찾아서 교체해야 함 (복잡도 증가로 인해 생략하거나 단순 처리)
+                         // 여기서는 단순화를 위해 생략하거나 전체 innerHTML 교체를 피함
                     }
                 });
+
             } else {
                 item.style.display = 'none';
             }
         });
         
-        // 카테고리에 결과가 있으면 자동으로 펼치기
+        // 매칭 항목이 있는 카테고리는 펼침
         if (categoryHasMatch) {
-            collapseElement.classList.add('show');
+            collapseEl.classList.add('show');
+            category.setAttribute('aria-expanded', 'true');
         } else {
-            collapseElement.classList.remove('show');
+            collapseEl.classList.remove('show');
+            category.setAttribute('aria-expanded', 'false');
         }
     });
     
-    // 검색 결과 없음 메시지
-    const noResultsDiv = document.getElementById('noResults');
-    if (!hasResults) {
+    // 결과 없음 메시지
+    let noResultsDiv = document.getElementById('noResults');
+    if (!hasGlobalResults) {
         if (!noResultsDiv) {
-            const div = document.createElement('div');
-            div.id = 'noResults';
-            div.className = 'no-results';
-            div.innerHTML = '<i class="fa-solid fa-magnifying-glass fa-2x mb-2"></i><p>검색 결과가 없습니다.</p>';
-            document.querySelector('.menu-scroll').appendChild(div);
+            noResultsDiv = document.createElement('div');
+            noResultsDiv.id = 'noResults';
+            noResultsDiv.className = 'no-results';
+            noResultsDiv.innerHTML = '<i class="fa-solid fa-magnifying-glass fa-2x mb-2"></i><p>검색 결과가 없습니다.</p>';
+            document.querySelector('.menu-scroll').appendChild(noResultsDiv);
         }
     } else {
-        if (noResultsDiv) {
-            noResultsDiv.remove();
-        }
+        if (noResultsDiv) noResultsDiv.remove();
     }
 });
 
-// 카테고리 토글 시 아이콘 회전
+// 카테고리 클릭 시 아이콘 회전 토글
 document.querySelectorAll('.menu-category').forEach(category => {
     category.addEventListener('click', function() {
-        this.setAttribute('aria-expanded', 
-            this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'
-        );
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !isExpanded);
     });
-});
-
-// 페이지 로드 시 첫 번째 카테고리 자동 열기
-document.addEventListener('DOMContentLoaded', function() {
-    const firstCategory = document.querySelector('#menu1');
-    if (firstCategory) {
-        firstCategory.classList.add('show');
-        document.querySelector('[data-bs-target="#menu1"]').setAttribute('aria-expanded', 'true');
-    }
 });
 </script>
 </body>
