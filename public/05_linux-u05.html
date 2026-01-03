@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-05: UID 0 계정 확인 | 교육 시뮬레이터</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #e91e63;
+            --primary-dark: #e91e63;
+            --danger: #f44336;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --dark: #1a1a2e;
+            --light: #f5f7fa;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: #e0e0e0;
+        }
+        body {
+            font-family: 'Lora', serif;
+            background: linear-gradient(135deg, #e91e63 0%, rgba(0, 0, 0, 0.2) 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #e91e63 0%, rgba(0, 0, 0, 0.15) 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 48px; font-weight: 700; margin-bottom: 15px; }
+        .header p { font-size: 18px; opacity: 0.95; margin-bottom: 20px; }
+        .badge { display: inline-block; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); margin: 5px; }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 50px 40px; }
+        @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .section { display: flex; flex-direction: column; }
+        .section-title { font-size: 24px; font-weight: 700; margin-bottom: 30px; color: var(--text-primary); padding-bottom: 15px; border-bottom: 3px solid #e91e63; }
+        .info-card { background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%); border-left: 5px solid #e91e63; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .info-card strong { color: #e91e63; font-family: 'JetBrains Mono', monospace; display: block; margin-bottom: 8px; }
+        .card-content { color: var(--text-secondary); line-height: 1.7; font-size: 15px; }
+        .status-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .status-box { padding: 25px; border-radius: 12px; text-align: center; }
+        .status-box.vulnerable { background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); border: 2px solid var(--danger); }
+        .status-box.secure { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid var(--success); }
+        .status-icon { font-size: 48px; margin-bottom: 12px; }
+        .status-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+        .terminal { background: var(--dark); color: #00ff00; padding: 25px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8; margin-bottom: 20px; overflow-x: auto; border: 2px solid #333; position: relative; }
+        .terminal::before { content: '⬤ ⬤ ⬤'; position: absolute; top: 8px; left: 12px; color: #999; letter-spacing: 8px; font-size: 10px; }
+        .terminal-content { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; white-space: pre-wrap; word-wrap: break-word; }
+        .prompt { color: #4ec9b0; font-weight: bold; white-space: nowrap; }
+        .command { color: #ce9178; }
+        .output { color: #d4d4d4; }
+        .code-block { background: var(--dark); color: #d4d4d4; padding: 20px; border-radius: 8px; margin-bottom: 15px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+        .step-item { background: var(--light); padding: 20px; margin-bottom: 15px; border-radius: 10px; border-left: 5px solid #e91e63; position: relative; padding-left: 45px; }
+        .step-item::before { content: attr(data-step); position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: #e91e63; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .step-title { font-weight: 700; margin-bottom: 8px; }
+        .step-desc { color: var(--text-secondary); font-size: 14px; margin-bottom: 12px; }
+        .button-group { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 150px; padding: 15px 25px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-family: 'Lora', serif; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-primary { background: linear-gradient(135deg, #e91e63 0%, rgba(0, 0, 0, 0.1) 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .result-message { padding: 20px; border-radius: 10px; margin-top: 20px; display: none; border-left: 5px solid; }
+        .result-message.show { display: block; }
+        .result-message.success { background: #e8f5e9; border-color: var(--success); color: #2e7d32; }
+        .result-message.error { background: #ffebee; border-color: var(--danger); color: #c62828; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .comparison-table th { background: var(--light); padding: 15px; text-align: left; font-weight: 700; border-bottom: 2px solid var(--border); }
+        .comparison-table td { padding: 12px 15px; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-size: 14px; }
+        .table-before { color: var(--danger); font-weight: 600; }
+        .table-after { color: var(--success); font-weight: 600; }
+        .threat-box { background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.05) 100%); padding: 20px; border-radius: 12px; border-left: 5px solid var(--danger); margin-bottom: 20px; }
+        .threat-box strong { color: var(--danger); }
+        .threat-item { display: flex; gap: 10px; margin-bottom: 8px; }
+        .threat-icon { color: var(--danger); font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+        hr { border: none; border-top: 2px solid var(--border); margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 UID 0 계정 확인</h1>
+            <p>root 이외의 UID 0 계정 탐지 및 제거</p>
+            <div>
+                <span class="badge">U-05</span>
+                <span class="badge">⭐ 중요도: 상</span>
+                <span class="badge">보안 강화</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="section">
+                <h2 class="section-title">📋 취약점 정보</h2>
+
+                <div class="info-card">
+                    <strong>🚨 취약점 개요</strong>
+                    <div class="card-content">
+                        UID 0 계정 확인은(는) 시스템 보안을 강화하기 위해 필수적인 설정입니다. 잘못된 설정은 시스템 보안을 심각하게 손상시킬 수 있습니다.
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <strong>📌 점검 대상</strong>
+                    <div class="card-content">
+                        <strong>파일/디렉토리:</strong> /etc/passwd<br>
+                        <strong>중요도:</strong> 상<br>
+                        <strong>권장사항:</strong> 즉시 조치 필요
+                    </div>
+                </div>
+
+                <div class="threat-box">
+                    <strong>🚨 보안 위협</strong>
+                    <div class="threat-item"><div class="threat-icon">⚠️</div><div>권한 상승 공격 가능</div></div><div class="threat-item"><div class="threat-icon">⚠️</div><div>숨겨진 root 계정 생성</div></div><div class="threat-item"><div class="threat-icon">⚠️</div><div>시스템 완전 제어 위험</div></div>
+                </div>
+
+                <h3 class="section-title" style="margin-top: 30px; font-size: 18px;">상태 비교</h3>
+                <div class="status-comparison">
+                    <div class="status-box vulnerable">
+                        <div class="status-icon">❌</div>
+                        <div class="status-title">취약한 상태</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">root 외 UID 0 계정 존재</div>
+                    </div>
+                    <div class="status-box secure">
+                        <div class="status-icon">✅</div>
+                        <div class="status-title">보안 상태</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">root만 UID 0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🖥️ 실습 환경</h2>
+
+                <div style="margin-bottom: 30px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <span style="font-size: 20px;">❌</span>
+                        <h3 style="font-size: 16px; font-weight: 700; color: var(--danger);">현재 상태: 취약</h3>
+                    </div>
+                    
+                    <div class="terminal">
+                        <div class="terminal-content">$ grep ':0:' /etc/passwd
+
+root:x:0:0:root:/root:/bin/bash
+admin:x:0:0:administrator:/home/admin:/bin/bash</div>
+                    </div>
+
+                    <div style="background: #ffebee; padding: 20px; border-radius: 12px; border-left: 5px solid var(--danger);">
+                        <strong style="color: var(--danger);">⚠️ 현재 상태</strong>
+                        <div style="color: var(--text-secondary); margin-top: 8px; font-size: 14px;">
+                            • root 외 UID 0 계정 존재<br>
+                            • 보안 설정이 미흡한 상태<br>
+                            • 즉시 조치 필요
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <span style="font-size: 20px;">✅</span>
+                        <h3 style="font-size: 16px; font-weight: 700; color: var(--success);">목표 상태: 보안</h3>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="step-item" data-step="1">
+                            <div class="step-title">현재 상태 확인</div>
+                            <div class="step-desc">UID가 0인 모든 계정을 확인합니다:</div>
+                            <div class="code-block">$ grep ':0:' /etc/passwd
+
+root:x:0:0:root:/root:/bin/bash
+admin:x:0:0:administrator:/home/admin:/bin/bash</div>
+                        </div>
+
+                        <div class="step-item" data-step="2">
+                            <div class="step-title">취약한 계정 확인</div>
+                            <div class="step-desc">root 이외의 UID 0 계정 확인:</div>
+                            <div class="code-block">$ awk -F: '$3 == 0 {print $1}' /etc/passwd
+
+root
+admin</div>
+                        </div>
+
+                        <div class="step-item" data-step="3">
+                            <div class="step-title">계정 삭제 또는 UID 변경</div>
+                            <div class="step-desc">root가 아닌 UID 0 계정을 삭제하거나 UID를 변경합니다:</div>
+                            <div class="code-block"># 계정 삭제
+$ sudo userdel admin
+
+# 또는 UID 변경
+$ sudo usermod -u 1000 admin</div>
+                        </div>
+
+                        <div class="step-item" data-step="4">
+                            <div class="step-title">설정 검증</div>
+                            <div class="step-desc">변경이 올바르게 적용되었는지 확인합니다:</div>
+                            <div class="code-block">$ grep ':0:' /etc/passwd
+
+<span style="color: #89d185;">root:x:0:0:root:/root:/bin/bash</span>
+
+(root만 UID 0)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 40px 40px 40px;">
+            <h2 class="section-title" style="margin-bottom: 30px;">⚖️ 수정 전/후 비교</h2>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>항목</th><th>수정 전 (취약)</th><th>수정 후 (보안)</th><th>효과</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>UID 0 계정</strong></td><td class="table-before">root, admin, test</td><td class="table-after">root만</td><td>⭐ 권한 상승 공격 차단</td></tr><tr><td><strong>보안 수준</strong></td><td class="table-before">⚠️ 높음</td><td class="table-after">✓ 안전</td><td>접근 제어 강화</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="padding: 0 40px 40px 40px;">
+            <h2 class="section-title" style="margin-bottom: 30px;">🎮 실제 명령 실행 시뮬레이션</h2>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="simulateVulnerable()">
+                    🔓 취약 상태 시뮬레이션
+                </button>
+                <button class="btn btn-primary" onclick="simulateSecure()">
+                    🔒 보안 상태 시뮬레이션
+                </button>
+            </div>
+            <div id="result" class="result-message"></div>
+        </div>
+    </div>
+
+    <script>
+        function simulateVulnerable() {
+            document.getElementById('result').className = 'result-message show error';
+            document.getElementById('result').innerHTML = `
+                <strong>❌ 취약한 상태 시뮬레이션</strong>
+                <div style="margin-top: 10px; font-size: 14px;">
+                    <strong>현재 상태:</strong> root 외 UID 0 계정 존재<br>
+                    <strong>위험도:</strong> ⚠️⚠️⚠️ (높음)<br>
+                    <br>
+                    <strong>위협 요소:</strong><br>
+                    • 권한 상승 공격 가능<br>• 숨겨진 root 계정 생성<br>• 시스템 완전 제어 위험<br>
+                    <br>
+                    <strong>조치:</strong> 즉시 보안 설정을 적용해야 합니다.
+                </div>
+            `;
+        }
+        function simulateSecure() {
+            document.getElementById('result').className = 'result-message show success';
+            document.getElementById('result').innerHTML = `
+                <strong>✅ 보안 상태 시뮬레이션</strong>
+                <div style="margin-top: 10px; font-size: 14px;">
+                    <strong>목표 상태:</strong> root만 UID 0<br>
+                    <strong>위험도:</strong> ✓ (낮음)<br>
+                    <br>
+                    <strong>보안 효과:</strong><br>
+                    • 시스템 보안 강화<br>
+                    • 권한 상승 공격 차단<br>
+                    • 규정 준수 달성<br>
+                    • 정기적 모니터링 필수
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
