@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LDAP 삽입 - 실습 시뮬레이터</title>
+    <title>서버사이드 요청 위조 (SSRF) - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
-        /* CSS는 이전 파일들과 동일하게 유지 */
+        /* 동일한 CSS 스타일 사용 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #1c92d2 0%, #f2fcfe 100%); min-height: 100vh; padding: 20px; color: #333; }
         .container { max-width: 1600px; margin: 0 auto; }
@@ -71,20 +71,20 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>💉 LDAP 삽입 (LDAP Injection) - 실습 시뮬레이터</h1>
-            <p>CWE-90: Improper Neutralization of Special Elements used in an LDAP Query</p>
+            <h1>🌐 서버사이드 요청 위조 (SSRF) - 실습 시뮬레이터</h1>
+            <p>CWE-918: Server-Side Request Forgery (SSRF)</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
                 <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">KISA 가이드: 특수문자 이스케이프</div>
+                <div class="mode-desc">URL Whitelist (KISA 가이드)</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
                 <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">ldap3 escape_filter_chars</div>
+                <div class="mode-desc">requests 도메인 검증</div>
             </button>
         </div>
 
@@ -94,8 +94,8 @@
                 <div class="progress-title">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
                     <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 이스케이프 함수 구현</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> SSRF 취약점 식별</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> Whitelist 검증 구현</li>
                 </ul>
             </div>
 
@@ -108,29 +108,25 @@
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
-                            <span class="toolbar-title">LdapService.java</span>
-                            <span class="toolbar-hint">💡 입력값의 특수문자를 이스케이프(replace)하세요.</span>
+                            <span class="toolbar-title">ImageProxy.java</span>
+                            <span class="toolbar-hint">💡 허용된 호스트(trusted.com)인지 확인하세요.</span>
                             <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
-                            <pre><code class="language-java" id="codeDisplayJava">public void searchUser(String user) throws NamingException {
-    DirContext ctx = new InitialDirContext(env);
-    
-    // [취약한 코드] 입력값을 검증 없이 LDAP 필터 생성에 사용
-    // user에 "*)(cn=*" 입력 시 모든 사용자 검색 가능
-    String filter = "(cn=" + user + ")";
-    
-    NamingEnumeration&lt;SearchResult&gt; results = ctx.search("ou=users,dc=example,dc=com", filter, controls);
+                            <pre><code class="language-java" id="codeDisplayJava">public void fetchImage(String userUrl) throws IOException {
+    // [취약한 코드] 입력값을 그대로 URL 객체로 생성하여 요청
+    // 공격자가 "http://localhost:8080/admin" 입력 시 내부망 접근 가능
+    URL url = new URL(userUrl);
+    InputStream in = url.openStream();
+    // ... 이미지 처리 ...
 }</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false">public void searchUser(String user) throws NamingException {
-    DirContext ctx = new InitialDirContext(env);
-    
-    // [취약한 코드] 입력값을 검증 없이 LDAP 필터 생성에 사용
-    // user에 "*)(cn=*" 입력 시 모든 사용자 검색 가능
-    String filter = "(cn=" + user + ")";
-    
-    NamingEnumeration&lt;SearchResult&gt; results = ctx.search("ou=users,dc=example,dc=com", filter, controls);
+                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false">public void fetchImage(String userUrl) throws IOException {
+    // [취약한 코드] 입력값을 그대로 URL 객체로 생성하여 요청
+    // 공격자가 "http://localhost:8080/admin" 입력 시 내부망 접근 가능
+    URL url = new URL(userUrl);
+    InputStream in = url.openStream();
+    // ... 이미지 처리 ...
 }</textarea>
                     </div>
 
@@ -144,18 +140,16 @@
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드 (KISA 가이드 기준)</div>
+                        <div class="info-title">💡 수정 가이드 (KISA 가이드)</div>
                         <div class="hint-step">
-                            <strong>1. 특수문자 이스케이프</strong>
-                            <p>LDAP 필터에서 특별한 의미를 갖는 문자들(*, (, ), \, /)을 이스케이프합니다.</p>
+                            <strong>1. 호스트 Whitelist 검증</strong>
+                            <p>URL 객체의 getHost() 메소드를 사용하여 허용된 도메인인지 확인합니다.</p>
                             <div class="hint-code">
-user = user.replace("\\", "\\5c")
-           .replace("*", "\\2a")
-           .replace("(", "\\28")
-           .replace(")", "\\29")
-           .replace("/", "\\2f")
-           .replace("\0", "\\00");
-String filter = "(cn=" + user + ")";
+URL url = new URL(userUrl);
+if (!"trusted.com".equals(url.getHost())) {
+    throw new SecurityException("Not allowed host");
+}
+InputStream in = url.openStream();
                             </div>
                         </div>
                     </div>
@@ -169,14 +163,14 @@ String filter = "(cn=" + user + ")";
                         <div class="info-section">
                             <div class="info-title">🎯 목표</div>
                             <div class="info-content">
-                                <p>LDAP 쿼리 구성 시 사용자 입력값에 포함된 특수문자가 쿼리의 구조를 변경하지 못하도록 필터링해야 합니다.</p>
+                                <p>서버가 외부 리소스를 가져올 때, 내부 IP나 허용되지 않은 도메인으로의 요청을 차단하여 내부망 스캔 및 정보 유출을 방지해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
                             <div class="info-title">⚠️ 현재 취약점</div>
                             <div class="info-content">
-                                <p style="color: #dc3545; font-weight: bold;">LDAP Injection</p>
-                                <p>공격자가 입력값을 조작하여 의도하지 않은 LDAP 쿼리를 실행하고 디렉터리 정보를 열람하거나 수정할 수 있습니다.</p>
+                                <p style="color: #dc3545; font-weight: bold;">SSRF</p>
+                                <p>공격자가 서버를 경유하여 내부 시스템에 접근하거나 클라우드 메타데이터를 탈취할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -190,8 +184,8 @@ String filter = "(cn=" + user + ")";
                 <div class="progress-title">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
                     <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> escape_filter_chars 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> requests 취약점 식별</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> hostname 검증 적용</li>
                 </ul>
             </div>
 
@@ -204,26 +198,26 @@ String filter = "(cn=" + user + ")";
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
-                            <span class="toolbar-title">ldap_utils.py</span>
-                            <span class="toolbar-hint">💡 ldap3.utils.conv.escape_filter_chars를 사용하세요</span>
+                            <span class="toolbar-title">crawler.py</span>
+                            <span class="toolbar-hint">💡 urlparse로 hostname을 추출하여 허용 목록과 비교하세요.</span>
                             <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
-                            <pre><code class="language-python" id="codeDisplayPython">from ldap3 import Connection
+                            <pre><code class="language-python" id="codeDisplayPython">import requests
 
-def find_user(conn, username):
-    # [취약한 코드] 문자열 포맷팅으로 필터 생성
-    # username에 *)(cn=* 입력 시 모든 사용자 검색 가능
-    search_filter = "(cn=%s)" % username
-    conn.search('dc=example,dc=com', search_filter)</code></pre>
+def fetch_site(url):
+    # [취약한 코드] 입력받은 URL로 검증 없이 요청 전송
+    # AWS 메타데이터(169.254.169.254) 등에 접근 가능
+    response = requests.get(url)
+    return response.content</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">from ldap3 import Connection
+                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">import requests
 
-def find_user(conn, username):
-    # [취약한 코드] 문자열 포맷팅으로 필터 생성
-    # username에 *)(cn=* 입력 시 모든 사용자 검색 가능
-    search_filter = "(cn=%s)" % username
-    conn.search('dc=example,dc=com', search_filter)</textarea>
+def fetch_site(url):
+    # [취약한 코드] 입력받은 URL로 검증 없이 요청 전송
+    # AWS 메타데이터(169.254.169.254) 등에 접근 가능
+    response = requests.get(url)
+    return response.content</textarea>
                     </div>
 
                     <div class="control-panel">
@@ -236,13 +230,17 @@ def find_user(conn, username):
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드 (Python 가이드 기준)</div>
+                        <div class="info-title">💡 수정 가이드 (파이썬 가이드)</div>
                         <div class="hint-step">
-                            <strong>1. escape_filter_chars 사용</strong>
-                            <p>ldap3 라이브러리의 유틸리티 함수를 사용하여 특수문자를 이스케이프합니다.</p>
+                            <strong>1. 도메인 Whitelist 검증</strong>
+                            <p>urlparse를 사용하여 hostname을 추출하고, 허용된 도메인 목록에 포함되는지 확인합니다.</p>
                             <div class="hint-code">
-from ldap3.utils.conv import escape_filter_chars
-search_filter = "(cn=%s)" % escape_filter_chars(username)
+from urllib.parse import urlparse
+
+parsed = urlparse(url)
+if parsed.hostname not in ['example.com', 'api.google.com']:
+    raise ValueError("Forbidden host")
+response = requests.get(url)
                             </div>
                         </div>
                     </div>
@@ -256,14 +254,14 @@ search_filter = "(cn=%s)" % escape_filter_chars(username)
                         <div class="info-section">
                             <div class="info-title">🎯 목표</div>
                             <div class="info-content">
-                                <p>Python LDAP 라이브러리 사용 시에도 입력값 검증 및 이스케이프 처리가 필수적입니다.</p>
+                                <p>임의의 외부 리소스 접근을 차단하고, 정의된 안전한 도메인으로만 요청을 보내도록 제한해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
                             <div class="info-title">⚠️ 현재 취약점</div>
                             <div class="info-content">
-                                <p style="color: #dc3545; font-weight: bold;">LDAP Injection</p>
-                                <p>이스케이프되지 않은 입력값은 필터 로직을 우회할 수 있습니다.</p>
+                                <p style="color: #dc3545; font-weight: bold;">SSRF Vulnerability</p>
+                                <p>입력 URL에 대한 통제가 없어 공격자가 서버를 악용하여 내부/외부 네트워크를 공격할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -277,7 +275,7 @@ search_filter = "(cn=%s)" % escape_filter_chars(username)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
-        // 공통 로직
+        // === 공통 로직 ===
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
             event.target.closest('.mode-tab').classList.add('active');
@@ -288,14 +286,14 @@ search_filter = "(cn=%s)" % escape_filter_chars(username)
         function updateChecklist(listId, index, status) {
             const list = document.getElementById(listId);
             const items = list.getElementsByTagName('li');
-            if(items[index]) {
+            if (items[index]) {
                 const icon = items[index].querySelector('.checklist-icon');
-                if(status) { items[index].classList.add('completed'); icon.textContent = '✅'; }
+                if (status) { items[index].classList.add('completed'); icon.textContent = '✅'; }
                 else { items[index].classList.remove('completed'); icon.textContent = '⬜'; }
             }
         }
 
-        // Java Logic
+        // === Java Logic ===
         let isEditingJava = false;
         function toggleEditModeJava() {
             const displayDiv = document.getElementById('codeDisplayContainerJava');
@@ -317,33 +315,31 @@ search_filter = "(cn=%s)" % escape_filter_chars(username)
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             updateChecklist('progressChecklistJava', 1, true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 그대로 LDAP 필터에 연결하고 있습니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>URL 객체 생성 전 호스트 검증 과정이 누락되었습니다.</p></div>`;
             document.getElementById('validateBtnJava').disabled = false;
             document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
-            // replace 로직 확인
-            if (code.includes('.replace') && code.includes('\\\\2a')) {
+            // KISA 가이드 기준: URL 객체 생성 후 getHost() 검증
+            if (code.includes('new URL') && code.includes('getHost()') && code.includes('equals')) {
                 updateChecklist('progressChecklistJava', 2, true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>LDAP 특수문자를 이스케이프 처리하여 인젝션을 방지했습니다.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>허용된 호스트인지 확인하는 로직이 올바르게 구현되었습니다.</p></div>`;
                 document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값 무해화가 적용되었습니다.</p></div></div>`;
+                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>KISA 가이드에 따라 호스트 Whitelist 검증을 적용했습니다.</p></div></div>`;
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>replace()를 사용하여 *, (, ), \\ 등의 특수문자를 16진수 코드로 변환하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>URL 객체의 getHost() 메소드를 사용하여 허용된 도메인과 비교하세요.</p></div>`;
             }
         }
         function resetCoding(mode) {
              if (mode === 'java') {
-                const initial = `public void searchUser(String user) throws NamingException {
-    DirContext ctx = new InitialDirContext(env);
-    
-    // [취약한 코드] 입력값을 검증 없이 LDAP 필터 생성에 사용
-    // user에 "*)(cn=*" 입력 시 모든 사용자 검색 가능
-    String filter = "(cn=" + user + ")";
-    
-    NamingEnumeration&lt;SearchResult&gt; results = ctx.search("ou=users,dc=example,dc=com", filter, controls);
+                const initial = `public void fetchImage(String userUrl) throws IOException {
+    // [취약한 코드] 입력값을 그대로 URL 객체로 생성하여 요청
+    // 공격자가 "http://localhost:8080/admin" 입력 시 내부망 접근 가능
+    URL url = new URL(userUrl);
+    InputStream in = url.openStream();
+    // ... 이미지 처리 ...
 }`;
                 document.getElementById('codeEditorJava').value = initial;
                 document.getElementById('codeDisplayJava').textContent = initial;
@@ -356,7 +352,7 @@ search_filter = "(cn=%s)" % escape_filter_chars(username)
             } else { resetCodingPython(); }
         }
 
-        // Python Logic
+        // === Python Logic ===
         let isEditingPython = false;
         function toggleEditModePython() {
             const displayDiv = document.getElementById('codeDisplayContainerPython');
@@ -378,30 +374,31 @@ search_filter = "(cn=%s)" % escape_filter_chars(username)
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             updateChecklist('progressChecklistPython', 1, true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 그대로 LDAP 필터에 사용하고 있습니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>임의의 URL로 요청을 보낼 수 있어 내부망 정보 유출 위험이 있습니다.</p></div>`;
             document.getElementById('validateBtnPython').disabled = false;
             document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
-            if (code.includes('escape_filter_chars')) {
+            // 파이썬 가이드 기준: urlparse 및 hostname 검증
+            if (code.includes('urlparse') && code.includes('hostname') && (code.includes('if') || code.includes('in'))) {
                 updateChecklist('progressChecklistPython', 2, true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>escape_filter_chars 함수를 사용하여 안전하게 처리했습니다.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>hostname 검증을 통해 SSRF 취약점을 해결했습니다.</p></div>`;
                 document.getElementById('codeStatusPython').textContent = '안전한 코드'; document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>LDAP 인젝션 방어가 적용되었습니다.</p></div></div>`;
+                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>파이썬 가이드에 따른 도메인 검증이 적용되었습니다.</p></div></div>`;
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p><code>ldap3.utils.conv</code>의 <code>escape_filter_chars</code> 함수를 사용하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>urllib.parse의 urlparse를 사용하여 hostname을 추출하고 허용 목록과 비교하세요.</p></div>`;
             }
         }
         function resetCodingPython() {
-            const initial = `from ldap3 import Connection
+            const initial = `import requests
 
-def find_user(conn, username):
-    # [취약한 코드] 문자열 포맷팅으로 필터 생성
-    # username에 *)(cn=* 입력 시 모든 사용자 검색 가능
-    search_filter = "(cn=%s)" % username
-    conn.search('dc=example,dc=com', search_filter)`;
+def fetch_site(url):
+    # [취약한 코드] 입력받은 URL로 검증 없이 요청 전송
+    # AWS 메타데이터(169.254.169.254) 등에 접근 가능
+    response = requests.get(url)
+    return response.content`;
             document.getElementById('codeEditorPython').value = initial;
             document.getElementById('codeDisplayPython').textContent = initial;
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));

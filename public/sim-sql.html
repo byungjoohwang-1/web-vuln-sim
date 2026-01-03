@@ -3,940 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL Injection 실습 시뮬레이터 - 직접 코드 수정</title>
+    <title>금융 보안 특화: SQL Injection 모의해킹</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bank-primary: #003876; /* 신뢰감을 주는 금융 네이비 */
+            --bank-secondary: #005eb8;
+            --bank-bg: #f3f4f6;
+            --text-dark: #1a1a1a;
+            --danger: #d32f2f;
+            --success: #2e7d32;
+            --warning: #ed6c02;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Malgun Gothic', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background: var(--bank-bg);
+            color: var(--text-dark);
             padding: 20px;
+            line-height: 1.5;
         }
 
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1400px; margin: 0 auto; }
 
+        /* 상단 헤더 */
         .header {
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-
-        .header h1 {
-            color: #2c3e50;
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: #666;
-            font-size: 16px;
-        }
-
-        .mode-tabs {
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            border-left: 6px solid var(--bank-primary);
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .mode-tab {
-            flex: 1;
-            padding: 20px;
-            background: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .header h1 { font-size: 24px; color: var(--bank-primary); display: flex; align-items: center; gap: 12px; }
+        .badge {
+            background: #e3f2fd; color: #1565c0; padding: 4px 10px; 
+            border-radius: 6px; font-size: 12px; font-weight: 700;
         }
 
-        .mode-tab:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        /* 탭 네비게이션 */
+        .tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+        .tab {
+            flex: 1; padding: 18px; background: white; border-radius: 10px;
+            cursor: pointer; font-weight: 600; color: #666; transition: 0.3s;
+            border: 2px solid transparent; display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
+        .tab:hover { transform: translateY(-2px); }
+        .tab.active { border-color: var(--bank-primary); color: var(--bank-primary); background: #eef5ff; }
 
-        .mode-tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
+        /* 메인 레이아웃 */
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .content-section { display: none; animation: fadeIn 0.4s ease; }
+        .content-section.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .mode-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .mode-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .mode-desc {
-            font-size: 13px;
-            opacity: 0.8;
-        }
-
-        .content-wrapper {
-            display: none;
-        }
-
-        .content-wrapper.active {
-            display: block;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
+        /* 패널 스타일 */
         .panel {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: white; border-radius: 12px; padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 25px;
         }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #f0f0f0;
-        }
-
         .panel-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #2c3e50;
+            font-size: 18px; font-weight: 700; color: #333; margin-bottom: 20px;
+            padding-bottom: 12px; border-bottom: 2px solid #f0f0f0;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .status-badge {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
+        /* 뱅킹 로그인 폼 */
+        .banking-login {
+            max-width: 480px; margin: 20px auto; padding: 40px;
+            background: white; border: 1px solid #e0e0e0; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); position: relative;
         }
+        .bank-logo { text-align: center; margin-bottom: 30px; }
+        .bank-logo h2 { color: var(--bank-primary); font-size: 28px; letter-spacing: -1px; }
 
-        .status-vulnerable { background: #dc3545; color: white; }
-        .status-secure { background: #28a745; color: white; }
-        .status-editing { background: #ffc107; color: #000; }
+        .input-group { margin-bottom: 20px; }
+        .input-label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px; }
+        .form-control {
+            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 15px; transition: 0.3s; font-family: 'Consolas', monospace;
+        }
+        .form-control:focus { border-color: var(--bank-primary); outline: none; box-shadow: 0 0 0 3px rgba(0,56,118,0.1); }
+        
+        .btn-submit {
+            width: 100%; padding: 16px; background: var(--bank-primary); color: white;
+            border: none; border-radius: 6px; font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: 0.3s;
+        }
+        .btn-submit:hover { background: #002a5c; }
+        .btn-submit.hacked { background: var(--danger); }
 
+        /* 공격 제어 패널 */
+        .attack-controls {
+            background: #212121; color: #fff; padding: 20px; border-radius: 10px;
+            margin-bottom: 20px; border: 1px solid #333;
+        }
+        .toggle-switch {
+            display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+        }
+        .toggle-status { font-family: 'Consolas', monospace; color: #00ff00; }
+
+        /* 터미널 로그 */
+        .terminal {
+            background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px;
+            font-family: 'Consolas', monospace; font-size: 13px; height: 250px;
+            overflow-y: auto; line-height: 1.6; border: 1px solid #333;
+        }
+        .log-time { color: #569cd6; margin-right: 8px; }
+        .log-error { color: #f48771; }
+        .log-success { color: #89d185; }
+        .log-warn { color: #cca700; }
+
+        /* 데이터 테이블 */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .data-table th { background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; color: #555; }
+        .data-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .data-table tr:hover { background: #f8f9fa; }
+        .amount { font-family: 'Consolas', monospace; font-weight: 700; color: var(--bank-primary); text-align: right; }
+
+        /* 법규 위반 경고창 */
+        .compliance-alert {
+            background: #fff5f5; border: 1px solid #ffcdd2; padding: 15px;
+            border-radius: 8px; margin-top: 15px; font-size: 13px; color: #b71c1c;
+            display: none; animation: slideDown 0.3s;
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 코드 에디터 */
         .code-editor {
-            background: #1e1e1e;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .editor-toolbar {
-            background: #2d2d2d;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #3e3e3e;
-        }
-
-        .toolbar-title {
-            color: #d4d4d4;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .toolbar-hint {
-            color: #ffc107;
-            font-size: 12px;
-        }
-
-        .code-textarea {
-            width: 100%;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            border: none;
-            padding: 15px;
-            font-family: 'Consolas', monospace;
-            font-size: 14px;
-            line-height: 1.8;
-            resize: vertical;
-            min-height: 400px;
-            outline: none;
-        }
-
-        .code-textarea:focus {
-            background: #252526;
-        }
-
-        .control-panel {
-            display: flex;
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-analyze {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-analyze:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-validate {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-        }
-
-        .btn-validate:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
-        }
-
-        .btn-hint {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .btn-hint:hover {
-            background: #e0a800;
-        }
-
-        .btn-reset {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .feedback {
-            margin-top: 20px;
-        }
-
-        .feedback-item {
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .feedback-error {
-            background: #fff5f5;
-            border-left: 4px solid #dc3545;
-        }
-
-        .feedback-success {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-        }
-
-        .feedback-warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .feedback-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .feedback-message {
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .hint-panel {
-            background: #fff8dc;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .hint-panel.active {
-            display: block;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .hint-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #856404;
-            margin-bottom: 15px;
-        }
-
-        .hint-step {
-            background: white;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            border-left: 3px solid #ffc107;
-        }
-
-        .hint-code {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
-            margin-top: 8px;
-            overflow-x: auto;
-        }
-
-        /* 금융권 스타일 (이전과 동일) */
-        .bank-system {
-            background: white;
-            border-radius: 15px;
-            padding: 0;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .bank-header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 25px;
-            text-align: center;
-        }
-
-        .bank-logo {
-            font-size: 36px;
-            margin-bottom: 10px;
-        }
-
-        .bank-name {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .bank-content {
-            padding: 30px;
-        }
-
-        .login-form {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Consolas', monospace;
-        }
-
-        .attack-toggle {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 2px solid #ffc107;
-        }
-
-        .toggle-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .toggle-label {
-            font-weight: bold;
-            color: #856404;
-        }
-
-        .switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            background: #ccc;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .switch.active {
-            background: #dc3545;
-        }
-
-        .switch-thumb {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            transition: all 0.3s;
-        }
-
-        .switch.active .switch-thumb {
-            left: 33px;
-        }
-
-        .payload-hint {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 13px;
-            margin-top: 10px;
-            font-family: 'Consolas', monospace;
-            color: #dc3545;
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-login.attack {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        }
-
-        .account-dashboard {
-            display: none;
-        }
-
-        .account-dashboard.active {
-            display: block;
-        }
-
-        .account-header {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .accounts-list {
-            margin-top: 20px;
-        }
-
-        .account-card {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .account-card.hacked {
-            border-color: #dc3545;
-            background: #fff5f5;
-        }
-
-        .account-number {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .account-balance {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .account-owner {
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .attack-result {
-            background: #fff5f5;
-            border: 3px solid #dc3545;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            animation: slideIn 0.4s ease-out;
-        }
-
-        .attack-result-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .attack-result-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #dc3545;
-        }
-
-        .sql-query {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
-            margin: 10px 0;
-            overflow-x: auto;
-        }
-
-        .warning-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
-        }
-
-        .info-panel {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .info-section {
-            margin-bottom: 20px;
-        }
-
-        .info-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .info-content {
-            color: #555;
-            line-height: 1.8;
-        }
-
-        .progress-indicator {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .progress-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        .checklist {
-            list-style: none;
-            padding: 0;
-        }
-
-        .checklist-item {
-            padding: 10px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .checklist-item.completed {
-            background: #d4edda;
-        }
-
-        .checklist-icon {
-            font-size: 20px;
-        }
-
-        ul {
-            margin-left: 20px;
-            margin-top: 10px;
-        }
-
-        li {
-            margin: 5px 0;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
+            width: 100%; height: 350px; background: #282c34; color: #abb2bf;
+            padding: 20px; border-radius: 8px; border: none; font-family: 'Consolas', monospace;
+            font-size: 14px; line-height: 1.6; resize: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>💻 SQL Injection 실습 시뮬레이터</h1>
-            <p>직접 코드를 수정하고 금융권 시스템 공격을 체험하세요</p>
-        </div>
 
-        <div class="mode-tabs">
-            <button class="mode-tab active" onclick="switchMode('coding')">
-                <div class="mode-icon">✏️</div>
-                <div class="mode-title">코드 수정 실습</div>
-                <div class="mode-desc">직접 안전한 코드로 수정</div>
-            </button>
-            <button class="mode-tab" onclick="switchMode('banking')">
-                <div class="mode-icon">🏦</div>
-                <div class="mode-title">금융권 모의해킹</div>
-                <div class="mode-desc">실제 공격 시나리오 체험</div>
-            </button>
+<div class="container">
+    <div class="header">
+        <h1>
+            <span>🏦</span>
+            금융 보안 모의해킹 시뮬레이터
+            <span class="badge">Session: 2026-SEC-AUDIT</span>
+        </h1>
+        <div style="text-align: right; font-size: 13px; color: #555;">
+            Target: <strong>Core Banking System (Web)</strong><br>
+            Scenario: <strong>SQL Injection & Data Leakage</strong>
         </div>
+    </div>
 
-        <!-- 코드 수정 실습 모드 -->
-        <div id="coding-mode" class="content-wrapper active">
-            <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
-                <ul class="checklist" id="progressChecklist">
-                    <li class="checklist-item">
-                        <span class="checklist-icon">⬜</span>
-                        <span>취약점 진단 완료</span>
-                    </li>
-                    <li class="checklist-item">
-                        <span class="checklist-icon">⬜</span>
-                        <span>코드 수정 시작</span>
-                    </li>
-                    <li class="checklist-item">
-                        <span class="checklist-icon">⬜</span>
-                        <span>PreparedStatement 적용</span>
-                    </li>
-                    <li class="checklist-item">
-                        <span class="checklist-icon">⬜</span>
-                        <span>파라미터 바인딩 완료</span>
-                    </li>
-                    <li class="checklist-item">
-                        <span class="checklist-icon">⬜</span>
-                        <span>검증 통과</span>
-                    </li>
-                </ul>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
+        <div class="tab" onclick="switchTab('defense')">🛡️ 시큐어 코딩 실습 (Blue Team)</div>
+    </div>
+
+    <div id="tab-attack" class="content-section active">
+        <div class="grid-container">
+            <div>
+                <div class="panel">
+                    <div class="panel-title">
+                        <span>인터넷 뱅킹 로그인</span>
+                        <span style="font-size: 12px; color: #666; font-weight: normal;">🔒 Verisign Secured</span>
+                    </div>
+
+                    <div class="attack-controls">
+                        <div class="toggle-switch" onclick="toggleAttack()">
+                            <div>
+                                <strong>⚡ SQL Injection 공격 모드</strong><br>
+                                <span style="font-size: 12px; opacity: 0.7;">Authentication Bypass Payload</span>
+                            </div>
+                            <div class="toggle-status" id="attackStatus">OFF</div>
+                        </div>
+                    </div>
+
+                    <div id="loginView">
+                        <div class="banking-login">
+                            <div class="bank-logo">
+                                <h2>K-Financial Group</h2>
+                                <p style="font-size: 13px; color: #777;">기업자금관리 시스템 (CMS)</p>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label class="input-label">이용자 ID</label>
+                                <input type="text" id="userId" class="form-control" placeholder="아이디 입력">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">비밀번호</label>
+                                <input type="password" id="userPw" class="form-control" placeholder="비밀번호 입력">
+                            </div>
+
+                            <div style="background: #f5f5f5; padding: 10px; margin-bottom: 20px; border-radius: 4px; font-size: 12px; color: #666; text-align: center;">
+                                ⌨️ 보안 키패드 작동 중 | 마우스 입력 권장
+                            </div>
+
+                            <button class="btn-submit" id="loginBtn" onclick="executeLogin()">로그인</button>
+                        </div>
+                    </div>
+
+                    <div id="hackedView" style="display: none;">
+                        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bbdefb;">
+                            <h3 style="color: var(--bank-primary); margin-bottom: 5px;">관리자(SYSTEM) 권한 접속됨</h3>
+                            <p style="font-size: 13px;">최종 접속: <span id="lastLoginTime"></span> | IP: 192.168.0.1 (Internal)</p>
+                        </div>
+
+                        <h4 style="margin-bottom: 10px; color: var(--danger);">🚨 [경고] 민감 정보 노출 (Customer Data)</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>계좌번호</th>
+                                    <th>예금주</th>
+                                    <th>등급</th>
+                                    <th>잔액 (KRW)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountTableBody"></tbody>
+                        </table>
+
+                        <div style="margin-top: 20px; text-align: right;">
+                            <button onclick="resetSim()" style="padding: 8px 15px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="main-content">
+            <div>
                 <div class="panel">
-                    <div class="panel-header">
-                        <span class="panel-title">✏️ 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatus">취약한 코드</span>
-                    </div>
-
-                    <div class="code-editor">
-                        <div class="editor-toolbar">
-                            <span class="toolbar-title">doLogin.java</span>
-                            <span class="toolbar-hint">💡 직접 수정해보세요</span>
-                        </div>
-                        <textarea class="code-textarea" id="codeEditor" spellcheck="false">public void doLogin(String username, String password) {
-    Connection connection = getConnection();
-    
-    String pwd = HashUtil.hashPassword(password);
-    String sqlString = "SELECT * FROM db_user WHERE username = '" 
-        + username + "' AND password = '" + pwd + "'";
-    
-    Statement stmt = connection.createStatement();
-    ResultSet rs = stmt.executeQuery(sqlString);
-    
-    if (rs.next()) {
-        // 로그인 성공
-    }
-}</textarea>
-                    </div>
-
-                    <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCode()">
-                            🔍 진단하기
-                        </button>
-                        <button class="btn btn-validate" onclick="validateCode()" id="validateBtn" disabled>
-                            ✅ 검증하기
-                        </button>
-                        <button class="btn btn-hint" onclick="toggleHint()">
-                            💡 힌트 보기
-                        </button>
-                        <button class="btn btn-reset" onclick="resetCoding()">
-                            🔄 초기화
-                        </button>
-                    </div>
-
-                    <div class="feedback" id="feedback"></div>
-
-                    <div class="hint-panel" id="hintPanel">
-                        <div class="hint-title">💡 수정 가이드</div>
-                        
-                        <div class="hint-step">
-                            <strong>Step 1:</strong> Statement를 PreparedStatement로 변경
-                            <div class="hint-code">Statement stmt = connection.createStatement();
-↓
-PreparedStatement pstmt = connection.prepareStatement(sqlString);</div>
-                        </div>
-
-                        <div class="hint-step">
-                            <strong>Step 2:</strong> SQL 쿼리에서 문자열 연결(+) 제거하고 ? 사용
-                            <div class="hint-code">String sqlString = "... WHERE username = '" + username + "' ...";
-↓
-String sqlString = "... WHERE username = ? AND password = ?";</div>
-                        </div>
-
-                        <div class="hint-step">
-                            <strong>Step 3:</strong> setString()으로 파라미터 바인딩
-                            <div class="hint-code">pstmt.setString(1, username);
-pstmt.setString(2, pwd);</div>
-                        </div>
-
-                        <div class="hint-step">
-                            <strong>Step 4:</strong> executeQuery() 수정
-                            <div class="hint-code">ResultSet rs = stmt.executeQuery(sqlString);
-↓
-ResultSet rs = pstmt.executeQuery();</div>
-                        </div>
+                    <div class="panel-title">🖥️ WAS / DB 시스템 로그</div>
+                    <div class="terminal" id="systemLog">
+                        <div><span class="log-time">[SYSTEM]</span> Web Application Server started.</div>
+                        <div><span class="log-time">[SYSTEM]</span> DB Connection Pool initialized.</div>
+                        <div><span class="log-time">[INFO]</span> Waiting for user request...</div>
                     </div>
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">
-                        <span class="panel-title">📊 실시간 피드백</span>
+                    <div class="panel-title">⚖️ 컴플라이언스 위반 분석</div>
+                    <div id="complianceReport" style="color: #666; font-size: 14px; text-align: center; padding: 20px;">
+                        공격 실행 후 분석 결과가 표시됩니다.
                     </div>
-                    <div id="rightPanel">
-                        <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
-                            <div class="info-content">
-                                <p>취약한 코드를 <strong>PreparedStatement</strong>를 사용하는 안전한 코드로 수정하세요.</p>
-                                <ul style="margin-top: 10px;">
-                                    <li>Statement → PreparedStatement</li>
-                                    <li>문자열 연결(+) → 파라미터 바인딩(?)</li>
-                                    <li>setString() 메소드 사용</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="info-section">
-                            <div class="info-title">⚠️ 취약점</div>
-                            <div class="info-content">
-                                <p style="color: #dc3545; font-weight: bold;">
-                                    현재 코드는 SQL Injection에 취약합니다!
-                                </p>
-                                <p style="margin-top: 10px;">
-                                    사용자가 <code>admin' OR '1'='1'--</code>를 입력하면 인증을 우회할 수 있습니다.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-panel">
-                <div class="info-section">
-                    <div class="info-title">📖 학습 가이드</div>
-                    <div class="info-content">
-                        <p><strong>1단계:</strong> "🔍 진단하기" 버튼을 클릭하여 취약점을 확인하세요.</p>
-                        <p style="margin-top: 8px;"><strong>2단계:</strong> 코드 에디터에서 직접 코드를 수정하세요.</p>
-                        <p style="margin-top: 8px;"><strong>3단계:</strong> "✅ 검증하기" 버튼으로 수정 결과를 확인하세요.</p>
-                        <p style="margin-top: 8px;"><strong>4단계:</strong> 모든 검증을 통과하면 금융권 모의해킹을 체험하세요!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 금융권 모의해킹 모드 -->
-        <div id="banking-mode" class="content-wrapper">
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-value" style="color: #1e3c72;" id="bankAttempts">0</div>
-                    <div class="stat-label">로그인 시도</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: #dc3545;" id="bankAttacks">0</div>
-                    <div class="stat-label">공격 성공</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: #28a745;" id="bankBlocked">0</div>
-                    <div class="stat-label">공격 차단</div>
-                </div>
-            </div>
-
-            <div class="main-content">
-                <div class="bank-system">
-                    <div class="bank-header">
-                        <div class="bank-logo">🏦</div>
-                        <div class="bank-name">한국금융은행</div>
-                        <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">Korea Financial Bank</div>
-                    </div>
-
-                    <div class="bank-content">
-                        <div id="loginSection">
-                            <div class="attack-toggle">
-                                <div class="toggle-header">
-                                    <span class="toggle-label" id="attackModeLabel">일반 로그인 모드</span>
-                                    <div class="switch" id="attackSwitch" onclick="toggleAttackMode()">
-                                        <div class="switch-thumb"></div>
-                                    </div>
-                                </div>
-                                <div id="attackHint" style="display: none;">
-                                    <div class="payload-hint">
-                                        💡 공격 페이로드: admin' OR '1'='1'--
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="login-form">
-                                <div class="form-group">
-                                    <label class="form-label">사용자 ID</label>
-                                    <input type="text" class="form-input" id="username" 
-                                           placeholder="사용자 ID를 입력하세요">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">비밀번호</label>
-                                    <input type="password" class="form-input" id="password" 
-                                           placeholder="비밀번호를 입력하세요">
-                                </div>
-
-                                <button class="btn-login" id="loginBtn" onclick="attemptLogin()">
-                                    로그인
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="dashboardSection" class="account-dashboard">
-                            <div class="account-header">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="font-size: 18px; font-weight: bold;">
-                                        <span id="loggedUser">홍길동</span> 님
-                                    </div>
-                                    <button class="btn btn-reset" onclick="logout()" style="padding: 10px 20px; flex: none;">
-                                        로그아웃
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div id="accountsList" class="accounts-list"></div>
-                            <div id="attackResultPanel"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <span class="panel-title">📊 공격 시나리오 분석</span>
-                    </div>
-                    <div id="attackAnalysis">
-                        <div class="info-section">
-                            <div class="info-title">💡 사용 방법</div>
-                            <div class="info-content">
-                                <p><strong>1단계:</strong> 일반 로그인 시도 (user1 / pass123)</p>
-                                <p style="margin-top: 8px;"><strong>2단계:</strong> "공격 모드" 활성화</p>
-                                <p style="margin-top: 8px;"><strong>3단계:</strong> SQL Injection 공격 실행</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-panel">
-                <div class="info-section">
-                    <div class="info-title">🎯 금융권 SQL Injection 공격 시나리오</div>
-                    <div class="info-content">
-                        <ul>
-                            <li><strong>인증 우회:</strong> 관리자 계정으로 로그인</li>
-                            <li><strong>정보 유출:</strong> 모든 고객 계좌 정보 접근</li>
-                            <li><strong>거래 조작:</strong> 계좌 잔액 및 거래 내역 조회</li>
+                    
+                    <div id="violationAlert" class="compliance-alert">
+                        <strong>[심각] 전자금융감독규정 위반 감지</strong>
+                        <ul style="margin-top: 8px; margin-left: 20px; list-style-type: circle;">
+                            <li>제34조(해킹방지대책): SQL Injection 방지 미흡</li>
+                            <li>개인정보보호법 제29조: 안전조치 의무 위반</li>
+                            <li>신용정보법 제19조: 신용정보 누설 금지 위반</li>
                         </ul>
                     </div>
                 </div>
@@ -944,481 +262,226 @@ ResultSet rs = pstmt.executeQuery();</div>
         </div>
     </div>
 
-    <script>
-        let currentMode = 'coding';
-        let isAttackMode = false;
-        let isDiagnosed = false;
-        let progressSteps = [false, false, false, false, false];
+    <div id="tab-defense" class="content-section">
+        <div class="grid-container">
+            <div class="panel">
+                <div class="panel-title">🛡️ 시큐어 코딩 (Secure Coding)</div>
+                <p style="font-size: 14px; color: #555; margin-bottom: 15px;">
+                    아래는 SQL Injection에 취약한 Legacy 코드입니다. <strong>PreparedStatement</strong>를 사용하여 안전하게 수정하세요.
+                </p>
+                <textarea id="codeEditor" class="code-editor">
+// [취약한 코드] - Statement 사용
+public void login(String id, String pw) {
+    String sql = "SELECT * FROM users WHERE id='" + id + "' AND pw='" + pw + "'";
+    
+    Statement stmt = conn.createStatement();
+    ResultSet rs = stmt.executeQuery(sql); // 🚨 SQL Injection 가능
+    
+    if (rs.next()) {
+        // 로그인 성공 처리
+    }
+}</textarea>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button onclick="verifyCode()" class="btn-submit" style="width: auto; background: var(--success);">코드 검증</button>
+                    <button onclick="showHint()" style="padding: 16px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;">힌트 보기</button>
+                </div>
+                <div id="codeResult" style="margin-top: 15px;"></div>
+            </div>
 
-        function switchMode(mode) {
-            currentMode = mode;
-            
-            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.closest('.mode-tab').classList.add('active');
-            
-            document.querySelectorAll('.content-wrapper').forEach(w => w.classList.remove('active'));
-            document.getElementById(mode + '-mode').classList.add('active');
-            
-            if (mode === 'banking') {
-                logout();
-            }
-        }
-
-        function updateProgress(step, completed) {
-            progressSteps[step] = completed;
-            const checklist = document.getElementById('progressChecklist');
-            const items = checklist.querySelectorAll('.checklist-item');
-            
-            items[step].className = 'checklist-item' + (completed ? ' completed' : '');
-            items[step].querySelector('.checklist-icon').textContent = completed ? '✅' : '⬜';
-        }
-
-        function analyzeCode() {
-            const code = document.getElementById('codeEditor').value;
-            const feedback = document.getElementById('feedback');
-            
-            isDiagnosed = true;
-            updateProgress(0, true);
-            
-            feedback.innerHTML = `
-                <div class="feedback-item feedback-error">
-                    <div class="feedback-header">
-                        <span>🚨</span>
-                        <span>SQL Injection 취약점 발견</span>
+            <div class="panel">
+                <div class="panel-title">📚 KISA 기술적 취약점 가이드</div>
+                <div style="font-size: 14px; line-height: 1.6; color: #444;">
+                    <div style="margin-bottom: 20px;">
+                        <strong style="color: var(--bank-primary);">1. 점검 항목</strong><br>
+                        웹 서비스 > 1. 웹 애플리케이션 > <strong>SQL Injection</strong>
                     </div>
-                    <div class="feedback-message">
-                        <strong>문제점:</strong><br>
-                        • Statement를 사용하여 SQL 쿼리 실행<br>
-                        • 문자열 연결(+)로 사용자 입력을 SQL에 직접 삽입<br>
-                        • 파라미터 바인딩 미사용
+                    <div style="margin-bottom: 20px;">
+                        <strong style="color: var(--bank-primary);">2. 위험 분석</strong><br>
+                        - 공격자가 입력폼에 SQL 쿼리문을 주입하여 인증 우회<br>
+                        - DB 데이터 유출, 변조, 삭제 가능<br>
+                        - 관리자 권한 획득 후 시스템 장악 가능
+                    </div>
+                    <div>
+                        <strong style="color: var(--bank-primary);">3. 조치 방법</strong><br>
+                        - 동적 SQL 대신 <strong>정적 SQL(PreparedStatement)</strong> 사용<br>
+                        - 입력값에 대한 특수문자(', ", --, # 등) 필터링<br>
+                        - DB 에러 메시지의 사용자 노출 차단
                     </div>
                 </div>
-                <div class="feedback-item feedback-warning">
-                    <div class="feedback-header">
-                        <span>💡</span>
-                        <span>수정 방법</span>
-                    </div>
-                    <div class="feedback-message">
-                        코드 에디터에서 직접 수정한 후 "✅ 검증하기" 버튼을 클릭하세요.
-                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 가상 금융 데이터
+    const bankData = [
+        { account: '110-392-102931', name: '홍길동', grade: 'VIP', balance: 1450000000 },
+        { account: '110-441-203912', name: '(주)삼성전자', grade: 'CORP', balance: 54000000000 },
+        { account: '110-123-551231', name: '관리자(System)', grade: 'ADMIN', balance: 0 },
+        { account: '110-592-111222', name: '김철수', grade: 'NORMAL', balance: 3500000 },
+        { account: '110-999-888777', name: '이영희', grade: 'NORMAL', balance: 12500000 }
+    ];
+
+    let isAttackOn = false;
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
+        
+        event.target.classList.add('active');
+        document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    function toggleAttack() {
+        isAttackOn = !isAttackOn;
+        const status = document.getElementById('attackStatus');
+        const loginBtn = document.getElementById('loginBtn');
+        const userId = document.getElementById('userId');
+        const userPw = document.getElementById('userPw');
+
+        if(isAttackOn) {
+            status.innerText = "ON (Injecting...)";
+            status.style.color = "#ff4444";
+            userId.value = "admin' OR '1'='1' --";
+            userId.style.color = "red";
+            userId.style.fontWeight = "bold";
+            userPw.value = "anything";
+            userPw.disabled = true;
+            loginBtn.innerText = "취약점 공격 실행 (Execute)";
+            loginBtn.classList.add("hacked");
+            addLog("[ATTACK] Payload injected into ID field: admin' OR '1'='1' --", "warn");
+        } else {
+            status.innerText = "OFF";
+            status.style.color = "#00ff00";
+            userId.value = "";
+            userId.style.color = "black";
+            userId.style.fontWeight = "normal";
+            userPw.value = "";
+            userPw.disabled = false;
+            loginBtn.innerText = "로그인";
+            loginBtn.classList.remove("hacked");
+            addLog("[INFO] Attack mode disabled.", "success");
+        }
+    }
+
+    function addLog(msg, type="info") {
+        const logBox = document.getElementById('systemLog');
+        const time = new Date().toLocaleTimeString('ko-KR');
+        let color = "#d4d4d4";
+        if(type === "error") color = "#f48771";
+        if(type === "warn") color = "#cca700";
+        if(type === "success") color = "#89d185";
+
+        const logEntry = document.createElement('div');
+        logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span style="color:${color}">${msg}</span>`;
+        logBox.appendChild(logEntry);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function executeLogin() {
+        const userId = document.getElementById('userId').value;
+        const btn = document.getElementById('loginBtn');
+
+        btn.innerText = "처리 중...";
+        addLog(`[REQUEST] Login attempt ID: ${userId}`);
+
+        setTimeout(() => {
+            if(isAttackOn) {
+                // 공격 성공 시나리오
+                addLog("[DB] Executing Query: SELECT * FROM users WHERE id='admin' OR '1'='1' --' AND pw='...'", "warn");
+                addLog("[DB] Result: True (Bypassed authentication)", "error");
+                addLog("[ALERT] Unusual data access detected! Dumping all customer data...", "error");
+                
+                showHackedView();
+                showComplianceReport();
+            } else {
+                // 일반 로그인 실패 (DB 미연동 시뮬레이터라 실패처리)
+                addLog("[DB] Executing Query: SELECT * FROM users WHERE id='...' AND pw='...'", "info");
+                addLog("[DB] Result: 0 rows found.", "info");
+                alert("로그인 정보가 올바르지 않습니다.");
+                btn.innerText = "로그인";
+            }
+        }, 1000);
+    }
+
+    function showHackedView() {
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('hackedView').style.display = 'block';
+        document.getElementById('lastLoginTime').innerText = new Date().toLocaleString();
+
+        const tbody = document.getElementById('accountTableBody');
+        tbody.innerHTML = bankData.map(row => `
+            <tr>
+                <td>${row.account}</td>
+                <td>${row.name}</td>
+                <td><span style="background:${row.grade === 'VIP' ? '#ffd700' : '#eee'}; padding:2px 6px; border-radius:4px; font-size:11px;">${row.grade}</span></td>
+                <td class="amount">${row.balance.toLocaleString()}</td>
+            </tr>
+        `).join('');
+    }
+
+    function showComplianceReport() {
+        document.getElementById('complianceReport').style.display = 'none';
+        document.getElementById('violationAlert').style.display = 'block';
+    }
+
+    function resetSim() {
+        document.getElementById('loginView').style.display = 'block';
+        document.getElementById('hackedView').style.display = 'none';
+        document.getElementById('complianceReport').style.display = 'block';
+        document.getElementById('violationAlert').style.display = 'none';
+        
+        // 공격 모드 리셋
+        isAttackOn = true; 
+        toggleAttack(); // false로 전환
+        
+        addLog("[SYSTEM] Session terminated. User logged out.");
+    }
+
+    function verifyCode() {
+        const code = document.getElementById('codeEditor').value;
+        const result = document.getElementById('codeResult');
+
+        if(code.includes("PreparedStatement") && code.includes("?")) {
+            result.innerHTML = `
+                <div style="background:#e8f5e9; color:#2e7d32; padding:10px; border-radius:6px; font-weight:bold;">
+                    ✅ 보안 조치 완료 (Secure)<br>
+                    <span style="font-size:12px; font-weight:normal;">PreparedStatement 사용으로 SQL Injection이 원천 차단되었습니다.</span>
                 </div>
             `;
-            
-            document.getElementById('validateBtn').disabled = false;
-            document.getElementById('codeStatus').textContent = '수정 중';
-            document.getElementById('codeStatus').className = 'status-badge status-editing';
+            addLog("[DEFENSE] Secure code verified. Vulnerability patched.", "success");
+        } else {
+            result.innerHTML = `
+                <div style="background:#ffebee; color:#c62828; padding:10px; border-radius:6px; font-weight:bold;">
+                    ❌ 여전히 취약함 (Vulnerable)<br>
+                    <span style="font-size:12px; font-weight:normal;">PreparedStatement와 바인딩 변수(?)를 사용해야 합니다.</span>
+                </div>
+            `;
         }
+    }
 
-        function validateCode() {
-            const code = document.getElementById('codeEditor').value;
-            const feedback = document.getElementById('feedback');
-            const rightPanel = document.getElementById('rightPanel');
-            
-            let errors = [];
-            let warnings = [];
-            let success = [];
-            
-            // 검증 1: PreparedStatement 사용
-            if (code.includes('PreparedStatement')) {
-                success.push('✅ PreparedStatement 사용 확인');
-                updateProgress(2, true);
-            } else {
-                errors.push('❌ PreparedStatement를 사용해야 합니다');
-            }
-            
-            // 검증 2: Statement 제거
-            if (code.includes('Statement stmt') || code.includes('createStatement')) {
-                errors.push('❌ Statement를 사용하지 마세요');
-            } else {
-                success.push('✅ Statement 제거 확인');
-            }
-            
-            // 검증 3: 파라미터 바인딩 (?)
-            if (code.includes('username = ?') && code.includes('password = ?')) {
-                success.push('✅ 파라미터 바인딩(?) 사용 확인');
-            } else {
-                errors.push('❌ SQL 쿼리에 ? 를 사용해야 합니다');
-            }
-            
-            // 검증 4: 문자열 연결 제거
-            if (code.includes('+ username +') || code.includes('+ pwd +')) {
-                errors.push('❌ 문자열 연결(+)을 제거해야 합니다');
-            } else {
-                success.push('✅ 문자열 연결 제거 확인');
-            }
-            
-            // 검증 5: setString 사용
-            if (code.includes('setString(1') && code.includes('setString(2')) {
-                success.push('✅ setString() 메소드 사용 확인');
-                updateProgress(3, true);
-            } else {
-                errors.push('❌ setString() 메소드로 파라미터를 설정해야 합니다');
-            }
-            
-            // 검증 6: prepareStatement 사용
-            if (code.includes('prepareStatement(')) {
-                success.push('✅ prepareStatement() 호출 확인');
-            } else {
-                errors.push('❌ prepareStatement()를 호출해야 합니다');
-            }
-            
-            // 검증 7: executeQuery() 수정
-            if (code.includes('pstmt.executeQuery()')) {
-                success.push('✅ executeQuery() 수정 확인');
-            } else if (code.includes('executeQuery(sqlString)')) {
-                warnings.push('⚠️ executeQuery()에 파라미터를 전달하지 마세요');
-            }
-            
-            updateProgress(1, true);
-            
-            // 결과 표시
-            if (errors.length === 0) {
-                updateProgress(4, true);
-                
-                feedback.innerHTML = `
-                    <div class="feedback-item feedback-success">
-                        <div class="feedback-header">
-                            <span>🎉</span>
-                            <span>검증 통과! 완벽한 코드입니다!</span>
-                        </div>
-                        <div class="feedback-message">
-                            <strong>모든 보안 검증을 통과했습니다:</strong><br>
-                            ${success.join('<br>')}
-                            <br><br>
-                            <strong style="color: #28a745;">
-                                이제 "금융권 모의해킹" 탭에서 실제 공격을 막을 수 있는지 확인해보세요!
-                            </strong>
-                        </div>
-                    </div>
-                `;
-                
-                document.getElementById('codeStatus').textContent = '안전한 코드';
-                document.getElementById('codeStatus').className = 'status-badge status-secure';
-                
-                rightPanel.innerHTML = `
-                    <div class="info-section">
-                        <div class="info-title">✅ 수정 완료</div>
-                        <div class="info-content">
-                            <p style="color: #28a745; font-weight: bold;">
-                                모든 취약점이 해결되었습니다!
-                            </p>
-                            ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="info-section">
-                        <div class="info-title">🎯 다음 단계</div>
-                        <div class="info-content">
-                            <p><strong>"금융권 모의해킹"</strong> 탭으로 이동하여 실제 공격 시나리오를 체험해보세요!</p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                feedback.innerHTML = `
-                    ${errors.length > 0 ? `
-                    <div class="feedback-item feedback-error">
-                        <div class="feedback-header">
-                            <span>❌</span>
-                            <span>수정이 필요합니다</span>
-                        </div>
-                        <div class="feedback-message">
-                            ${errors.join('<br>')}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    ${warnings.length > 0 ? `
-                    <div class="feedback-item feedback-warning">
-                        <div class="feedback-header">
-                            <span>⚠️</span>
-                            <span>경고</span>
-                        </div>
-                        <div class="feedback-message">
-                            ${warnings.join('<br>')}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    ${success.length > 0 ? `
-                    <div class="feedback-item feedback-success">
-                        <div class="feedback-header">
-                            <span>✅</span>
-                            <span>잘하고 있습니다!</span>
-                        </div>
-                        <div class="feedback-message">
-                            ${success.join('<br>')}
-                        </div>
-                    </div>
-                    ` : ''}
-                `;
-                
-                rightPanel.innerHTML = `
-                    <div class="info-section">
-                        <div class="info-title">📝 수정 사항</div>
-                        <div class="info-content">
-                            <p style="color: #dc3545; font-weight: bold;">
-                                ${errors.length}개 항목을 수정해야 합니다.
-                            </p>
-                            <p style="margin-top: 10px;">
-                                "💡 힌트 보기" 버튼을 클릭하면 자세한 가이드를 볼 수 있습니다.
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function toggleHint() {
-            const hintPanel = document.getElementById('hintPanel');
-            hintPanel.classList.toggle('active');
-        }
-
-        function resetCoding() {
-            document.getElementById('codeEditor').value = `public void doLogin(String username, String password) {
-    Connection connection = getConnection();
+    function showHint() {
+        const editor = document.getElementById('codeEditor');
+        editor.value = `// [안전한 코드] - PreparedStatement 사용
+public void login(String id, String pw) {
+    String sql = "SELECT * FROM users WHERE id = ? AND pw = ?";
     
-    String pwd = HashUtil.hashPassword(password);
-    String sqlString = "SELECT * FROM db_user WHERE username = '" 
-        + username + "' AND password = '" + pwd + "'";
+    // 1. 쿼리를 미리 컴파일 (Pre-compile)
+    PreparedStatement pstmt = conn.prepareStatement(sql);
     
-    Statement stmt = connection.createStatement();
-    ResultSet rs = stmt.executeQuery(sqlString);
+    // 2. 입력값을 바인딩 변수로 처리 (Binding)
+    pstmt.setString(1, id);
+    pstmt.setString(2, pw);
+    
+    ResultSet rs = pstmt.executeQuery();
     
     if (rs.next()) {
         // 로그인 성공
     }
 }`;
-            
-            document.getElementById('feedback').innerHTML = '';
-            document.getElementById('validateBtn').disabled = true;
-            document.getElementById('codeStatus').textContent = '취약한 코드';
-            document.getElementById('codeStatus').className = 'status-badge status-vulnerable';
-            document.getElementById('hintPanel').classList.remove('active');
-            
-            progressSteps = [false, false, false, false, false];
-            for (let i = 0; i < 5; i++) {
-                updateProgress(i, false);
-            }
-            
-            isDiagnosed = false;
-            
-            document.getElementById('rightPanel').innerHTML = `
-                <div class="info-section">
-                    <div class="info-title">🎯 목표</div>
-                    <div class="info-content">
-                        <p>취약한 코드를 <strong>PreparedStatement</strong>를 사용하는 안전한 코드로 수정하세요.</p>
-                        <ul style="margin-top: 10px;">
-                            <li>Statement → PreparedStatement</li>
-                            <li>문자열 연결(+) → 파라미터 바인딩(?)</li>
-                            <li>setString() 메소드 사용</li>
-                        </ul>
-                    </div>
-                </div>
+    }
+</script>
 
-                <div class="info-section">
-                    <div class="info-title">⚠️ 취약점</div>
-                    <div class="info-content">
-                        <p style="color: #dc3545; font-weight: bold;">
-                            현재 코드는 SQL Injection에 취약합니다!
-                        </p>
-                        <p style="margin-top: 10px;">
-                            사용자가 <code>admin' OR '1'='1'--</code>를 입력하면 인증을 우회할 수 있습니다.
-                        </p>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 금융권 모의해킹 함수들
-        const bankAccounts = [
-            { id: 1, number: '110-123-456789', owner: '관리자', balance: 50000000 },
-            { id: 2, number: '110-234-567890', owner: '홍길동', balance: 3250000 },
-            { id: 3, number: '110-345-678901', owner: '김영희', balance: 12500000 },
-            { id: 4, number: '110-456-789012', owner: '박철수', balance: 8900000 },
-            { id: 5, number: '110-567-890123', owner: '이순신', balance: 25000000 }
-        ];
-
-        function toggleAttackMode() {
-            isAttackMode = !isAttackMode;
-            const switchEl = document.getElementById('attackSwitch');
-            const hintEl = document.getElementById('attackHint');
-            const labelEl = document.getElementById('attackModeLabel');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            if (isAttackMode) {
-                switchEl.classList.add('active');
-                hintEl.style.display = 'block';
-                labelEl.textContent = '🚨 공격 모드';
-                loginBtn.textContent = '공격 실행';
-                loginBtn.classList.add('attack');
-                document.getElementById('username').value = "admin' OR '1'='1'--";
-                document.getElementById('password').value = 'anything';
-            } else {
-                switchEl.classList.remove('active');
-                hintEl.style.display = 'none';
-                labelEl.textContent = '일반 로그인 모드';
-                loginBtn.textContent = '로그인';
-                loginBtn.classList.remove('attack');
-                document.getElementById('username').value = '';
-                document.getElementById('password').value = '';
-            }
-        }
-
-        function attemptLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-            
-            loginBtn.innerHTML = '<span class="loading"></span> 처리 중...';
-            loginBtn.disabled = true;
-
-            const attempts = parseInt(document.getElementById('bankAttempts').textContent);
-            document.getElementById('bankAttempts').textContent = attempts + 1;
-
-            setTimeout(() => {
-                if (isAttackMode) {
-                    const attacks = parseInt(document.getElementById('bankAttacks').textContent);
-                    document.getElementById('bankAttacks').textContent = attacks + 1;
-                    showDashboard(true);
-                    showAttackResult(username, password);
-                } else {
-                    if (username === 'user1' && password === 'pass123') {
-                        showDashboard(false);
-                    } else {
-                        alert('로그인 실패: 사용자 ID 또는 비밀번호가 올바르지 않습니다.');
-                        loginBtn.innerHTML = '로그인';
-                        loginBtn.disabled = false;
-                    }
-                }
-            }, 1500);
-        }
-
-        function showDashboard(isHacked) {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('dashboardSection').classList.add('active');
-            
-            const accountsList = document.getElementById('accountsList');
-            
-            if (isHacked) {
-                accountsList.innerHTML = '<h3 style="margin-bottom: 15px;">🚨 전체 고객 계좌 정보 (권한 없음 접근!)</h3>' +
-                    bankAccounts.map(acc => `
-                        <div class="account-card hacked">
-                            <div class="account-number">${acc.number}</div>
-                            <div class="account-owner">소유자: ${acc.owner}</div>
-                            <div class="account-balance">${acc.balance.toLocaleString()}원</div>
-                        </div>
-                    `).join('');
-            } else {
-                accountsList.innerHTML = '<h3 style="margin-bottom: 15px;">내 계좌</h3>' +
-                    `<div class="account-card">
-                        <div class="account-number">110-234-567890</div>
-                        <div class="account-balance">3,250,000원</div>
-                    </div>`;
-            }
-        }
-
-        function showAttackResult(username, password) {
-            const resultPanel = document.getElementById('attackResultPanel');
-            const analysisPanel = document.getElementById('attackAnalysis');
-            
-            const executedQuery = `SELECT * FROM accounts 
-WHERE username = 'admin' OR '1'='1'-- AND password = 'anything'`;
-
-            resultPanel.innerHTML = `
-                <div class="attack-result">
-                    <div class="attack-result-header">
-                        <span style="font-size: 24px;">🚨</span>
-                        <span class="attack-result-title">SQL Injection 공격 성공!</span>
-                    </div>
-                    
-                    <div class="warning-box">
-                        <strong>⚠️ 보안 경고</strong><br>
-                        인증 우회를 통해 관리자 권한으로 모든 계좌 정보에 접근했습니다!
-                    </div>
-
-                    <div style="margin: 15px 0;">
-                        <strong>입력한 페이로드:</strong>
-                        <div class="sql-query">${username}</div>
-                    </div>
-
-                    <div style="margin: 15px 0;">
-                        <strong>실행된 SQL 쿼리:</strong>
-                        <div class="sql-query">${executedQuery}</div>
-                    </div>
-
-                    <div style="margin: 15px 0;">
-                        <strong>공격 원리:</strong>
-                        <p style="margin-top: 10px; line-height: 1.6;">
-                            1. <code>admin' OR '1'='1'--</code> 입력<br>
-                            2. <code>WHERE username = 'admin'</code> (실패)<br>
-                            3. <code>OR '1'='1'</code> (항상 참!) ← 인증 우회<br>
-                            4. <code>--</code> (이후 코드 주석 처리)<br>
-                            5. 결과: 모든 계정 정보 조회 성공
-                        </p>
-                    </div>
-
-                    <div class="warning-box" style="background: #fff5f5; border-color: #dc3545;">
-                        <strong>🔓 유출된 정보:</strong><br>
-                        • 전체 고객 수: ${bankAccounts.length}명<br>
-                        • 총 자산: ${bankAccounts.reduce((sum, acc) => sum + acc.balance, 0).toLocaleString()}원<br>
-                        • 계좌 번호, 소유자명, 잔액 전체 노출
-                    </div>
-                </div>
-            `;
-
-            analysisPanel.innerHTML = `
-                <div class="info-section">
-                    <div class="info-title">🔍 공격 분석</div>
-                    <div class="info-content">
-                        <p style="color: #dc3545; font-weight: bold;">
-                            ✗ Statement 사용<br>
-                            ✗ 입력값 검증 없음<br>
-                            ✗ SQL과 데이터 미분리
-                        </p>
-                    </div>
-                </div>
-
-                <div class="info-section">
-                    <div class="info-title">✅ 방어 방법</div>
-                    <div class="info-content">
-                        <p style="color: #28a745; font-weight: bold;">
-                            ✓ PreparedStatement 사용<br>
-                            ✓ 파라미터 바인딩<br>
-                            ✓ 입력값 검증<br>
-                            ✓ 최소 권한 원칙
-                        </p>
-                        <p style="margin-top: 15px;">
-                            "코드 수정 실습" 탭에서 안전한 코드를 작성해보세요!
-                        </p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function logout() {
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('dashboardSection').classList.remove('active');
-            document.getElementById('attackResultPanel').innerHTML = '';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('loginBtn').innerHTML = '로그인';
-            document.getElementById('loginBtn').disabled = false;
-            
-            if (isAttackMode) {
-                toggleAttackMode();
-            }
-
-            document.getElementById('attackAnalysis').innerHTML = `
-                <div class="info-section">
-                    <div class="info-title">💡 사용 방법</div>
-                    <div class="info-content">
-                        <p><strong>1단계:</strong> 일반 로그인 시도 (user1 / pass123)</p>
-                        <p style="margin-top: 8px;"><strong>2단계:</strong> "공격 모드" 활성화</p>
-                        <p style="margin-top: 8px;"><strong>3단계:</strong> SQL Injection 공격 실행</p>
-                    </div>
-                </div>
-            `;
-        }
-    </script>
 </body>
 </html>

