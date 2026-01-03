@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 불필요한 HTTP Method 악용 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-red-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-049</h1>
+                    <p class="text-sm">불필요한 HTTP Method 악용 (WM) | 위험도: 2 (낮음) | 통제구분: 5.5.1 HTTP 메서드 제한</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
+                
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">케이뱅크</h2>
+                            <p class="text-sm">인터넷뱅킹 API 서버</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: 불필요한 HTTP Method 허용
+                    </div>
+                </div>
+
+                <!-- HTTP Method 테스트 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-network-wired text-blue-600"></i>
+                        HTTP Method 테스터
+                    </h3>
+                    
+                    <label class="block text-sm font-bold mb-2">Target URL</label>
+                    <input type="text" id="targetUrl" 
+                           class="w-full p-2 border border-gray-300 rounded mb-3 code-font text-sm" 
+                           value="/api/users/12345"
+                           readonly>
+                    
+                    <label class="block text-sm font-bold mb-2">HTTP Method</label>
+                    <select id="httpMethod" class="w-full p-2 border border-gray-300 rounded mb-3">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="OPTIONS">OPTIONS</option>
+                        <option value="TRACE">TRACE</option>
+                        <option value="HEAD">HEAD</option>
+                    </select>
+                    
+                    <button onclick="testMethod()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+                        <i class="fas fa-paper-plane"></i> 요청 전송
+                    </button>
+                </div>
+
+                <!-- 서버 응답 -->
+                <div class="bg-gray-900 text-green-400 p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2 text-white">
+                        <i class="fas fa-server"></i>
+                        서버 응답
+                    </h3>
+                    <div id="serverResponse" class="code-font text-xs bg-black p-3 rounded min-h-[150px]">
+                        <div class="text-gray-500">HTTP Method를 선택하고 요청을 전송하세요</div>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-red-400"></i>
+                        공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="attackScenario(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-trash"></i> 시나리오 1: DELETE로 데이터 삭제
+                        </button>
+                        <button onclick="attackScenario(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-edit"></i> 시나리오 2: PUT으로 데이터 변조
+                        </button>
+                        <button onclick="attackScenario(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-eye"></i> 시나리오 3: TRACE로 정보 수집
+                        </button>
+                        <button onclick="attackScenario(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-list"></i> 시나리오 4: OPTIONS로 허용 메서드 확인
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 설정
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 모든 HTTP Method 허용</span>
+
+<span class="text-gray-500">// Spring Controller</span>
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    
+    <span class="text-red-400">// Method 제한 없음!</span>
+    @RequestMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+    
+    <span class="text-red-400">// DELETE 허용</span>
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        <span class="text-red-400">// 권한 체크 없음!</span>
+        userService.delete(id);
+    }
+    
+    <span class="text-red-400">// PUT 허용</span>
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable Long id,
+                          @RequestBody User user) {
+        <span class="text-red-400">// 소유자 확인 없음!</span>
+        return userService.update(id, user);
+    }
+}
+
+<span class="text-gray-500">// Apache 설정 - Method 제한 없음</span>
+&lt;Directory /var/www/html&gt;
+    <span class="text-red-400">&lt;!-- 모든 Method 허용 --&gt;</span>
+    AllowOverride All
+    Require all granted
+&lt;/Directory&gt;
+
+<span class="text-gray-500">// web.xml - TRACE 활성화</span>
+<span class="text-red-400">&lt;!-- TRACE method 비활성화 안 됨 --&gt;</span></code></pre>
+                </div>
+
+            </div>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 공격 실행 결과 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-terminal"></i> 공격 실행 결과
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
+                            대기중
+                        </span>
+                    </div>
+                    <div id="attackResult" class="p-5 min-h-[300px] bg-white">
+                        <div class="text-center text-gray-400 py-10">
+                            <i class="fas fa-exchange-alt text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm">공격 시나리오를 선택하세요</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-red-700 space-y-1"></div>
+                </div>
+
+                <!-- 터미널 출력 -->
+                <div id="terminalBox" class="hidden bg-black text-green-400 p-4 rounded-lg shadow-lg">
+                    <div class="font-bold mb-2 text-xs">
+                        <i class="fas fa-terminal"></i> ATTACKER CONSOLE
+                    </div>
+                    <div id="terminalLines" class="code-font text-xs space-y-1 max-h-[200px] overflow-y-auto"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 설정
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[350px]"><code><span class="text-green-400">// ✅ HTTP Method 명시적 제한</span>
+
+<span class="text-gray-500">// 1. Spring - 필요한 Method만 허용</span>
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    
+    <span class="text-green-400">// GET만 허용</span>
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+    
+    <span class="text-green-400">// DELETE - 권한 검증 필수</span>
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteUser(@PathVariable Long id,
+                          Authentication auth) {
+        
+        <span class="text-green-400">// 본인 또는 관리자만 삭제 가능</span>
+        User currentUser = (User) auth.getPrincipal();
+        if (!currentUser.isAdmin() && 
+            !currentUser.getId().equals(id)) {
+            throw new AccessDeniedException();
+        }
+        
+        userService.delete(id);
+    }
+    
+    <span class="text-green-400">// PUT - 소유자 확인</span>
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable Long id,
+                          @RequestBody User user,
+                          Authentication auth) {
+        
+        User currentUser = (User) auth.getPrincipal();
+        
+        <span class="text-green-400">// 본인 데이터만 수정 가능</span>
+        if (!currentUser.getId().equals(id)) {
+            throw new AccessDeniedException();
+        }
+        
+        return userService.update(id, user);
+    }
+}
+
+<span class="text-gray-500">// 2. Spring Security - Method 제한</span>
+@Configuration
+public class SecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain filterChain(
+        HttpSecurity http) throws Exception {
+        
+        http
+            .authorizeHttpRequests(auth -> auth
+                <span class="text-green-400">// 읽기는 인증된 사용자</span>
+                .requestMatchers(HttpMethod.GET, "/api/**")
+                    .authenticated()
+                
+                <span class="text-green-400">// 쓰기는 관리자만</span>
+                .requestMatchers(HttpMethod.POST, "/api/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/**")
+                    .hasRole("ADMIN")
+                
+                <span class="text-green-400">// TRACE, OPTIONS 차단</span>
+                .requestMatchers(HttpMethod.TRACE, "/**")
+                    .denyAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .denyAll()
+            );
+        
+        return http.build();
+    }
+}
+
+<span class="text-gray-500">// 3. Apache - Method 제한</span>
+&lt;Directory /var/www/html&gt;
+    <span class="text-green-400">&lt;!-- GET, POST만 허용 --&gt;</span>
+    &lt;LimitExcept GET POST&gt;
+        Require all denied
+    &lt;/LimitExcept&gt;
+    
+    <span class="text-green-400">&lt;!-- TRACE 비활성화 --&gt;</span>
+    TraceEnable off
+&lt;/Directory&gt;
+
+<span class="text-gray-500">// 4. Nginx - Method 제한</span>
+server {
+    location /api {
+        <span class="text-green-400"># GET, POST만 허용</span>
+        limit_except GET POST {
+            deny all;
+        }
+        
+        <span class="text-green-400"># TRACE 차단</span>
+        if ($request_method = TRACE) {
+            return 405;
+        }
+        
+        proxy_pass http://backend;
+    }
+}
+
+<span class="text-gray-500">// 5. Filter로 Method 검증</span>
+@Component
+public class HttpMethodFilter extends OncePerRequestFilter {
+    
+    private static final Set<String> ALLOWED_METHODS = 
+        Set.of("GET", "POST");
+    
+    @Override
+    protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain chain) throws IOException {
+        
+        String method = request.getMethod();
+        
+        <span class="text-green-400">// 허용된 Method인지 확인</span>
+        if (!ALLOWED_METHODS.contains(method)) {
+            response.sendError(
+                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                "Method " + method + " not allowed"
+            );
+            return;
+        }
+        
+        <span class="text-green-400">// TRACE 특별 차단</span>
+        if ("TRACE".equals(method)) {
+            response.sendError(
+                HttpServletResponse.SC_FORBIDDEN,
+                "TRACE method is disabled"
+            );
+            return;
+        }
+        
+        chain.doFilter(request, response);
+    }
+}
+
+<span class="text-gray-500">// 6. WebDAV 비활성화</span>
+&lt;IfModule mod_dav.c&gt;
+    <span class="text-green-400"># WebDAV 완전 비활성화</span>
+    DavLockDB /dev/null
+    Dav Off
+&lt;/IfModule&gt;</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-red-600"></i>
+                        HTTP Method 보안 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>필요한 Method만:</strong> GET, POST만 허용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>TRACE 차단:</strong> XST 공격 방어</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>OPTIONS 제한:</strong> 정보 노출 방지</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>DELETE/PUT 권한:</strong> 관리자만 허용</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>WebDAV 비활성화:</strong> 불필요한 기능 제거</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>405 응답:</strong> 허용되지 않은 Method</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 허용 Method 매트릭스 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-table text-blue-600"></i>
+                        HTTP Method 허용 매트릭스
+                    </h3>
+                    <table class="w-full text-xs border">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="border p-2 text-left">Method</th>
+                                <th class="border p-2">일반 사용자</th>
+                                <th class="border p-2">관리자</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border p-2 font-bold">GET</td>
+                                <td class="border p-2 text-center text-green-600">✓ 허용</td>
+                                <td class="border p-2 text-center text-green-600">✓ 허용</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-2 font-bold">POST</td>
+                                <td class="border p-2 text-center text-green-600">✓ 허용</td>
+                                <td class="border p-2 text-center text-green-600">✓ 허용</td>
+                            </tr>
+                            <tr class="bg-red-50">
+                                <td class="border p-2 font-bold">PUT</td>
+                                <td class="border p-2 text-center text-red-600">✗ 차단</td>
+                                <td class="border p-2 text-center text-yellow-600">△ 제한적</td>
+                            </tr>
+                            <tr class="bg-red-50">
+                                <td class="border p-2 font-bold">DELETE</td>
+                                <td class="border p-2 text-center text-red-600">✗ 차단</td>
+                                <td class="border p-2 text-center text-yellow-600">△ 제한적</td>
+                            </tr>
+                            <tr class="bg-red-50">
+                                <td class="border p-2 font-bold">TRACE</td>
+                                <td class="border p-2 text-center text-red-600">✗ 차단</td>
+                                <td class="border p-2 text-center text-red-600">✗ 차단</td>
+                            </tr>
+                            <tr class="bg-red-50">
+                                <td class="border p-2 font-bold">OPTIONS</td>
+                                <td class="border p-2 text-center text-red-600">✗ 차단</td>
+                                <td class="border p-2 text-center text-red-600">✗ 차단</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> WEB-SER-049 불필요한 HTTP Method</div>
+                        <div><strong>판정:</strong> <span id="judgement" class="text-red-400">취약</span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-red-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 실제 피해 사례
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex gap-2">
+                            <span class="font-bold">1.</span>
+                            <div><strong>데이터 삭제</strong><br>DELETE로 사용자 정보 삭제</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">2.</span>
+                            <div><strong>데이터 변조</strong><br>PUT으로 권한 상승</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">3.</span>
+                            <div><strong>정보 수집</strong><br>OPTIONS로 서버 정보 노출</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-bold">4.</span>
+                            <div><strong>XST 공격</strong><br>TRACE로 쿠키 탈취</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testMethod() {
+            var method = document.getElementById('httpMethod').value;
+            var url = document.getElementById('targetUrl').value;
+            var response = document.getElementById('serverResponse');
+            
+            response.innerHTML = '<div class="text-yellow-400">요청 전송 중...</div>';
+            
+            setTimeout(function() {
+                if (method === 'GET') {
+                    response.innerHTML = 
+                        '<div class="text-green-400">' + method + ' ' + url + ' HTTP/1.1</div>' +
+                        '<div class="text-gray-400">Status: 200 OK</div>' +
+                        '<div class="mt-2 text-green-400">Response:</div>' +
+                        '<div class="text-gray-400">{</div>' +
+                        '<div class="text-gray-400 ml-2">"id": 12345,</div>' +
+                        '<div class="text-gray-400 ml-2">"name": "홍길동",</div>' +
+                        '<div class="text-gray-400 ml-2">"balance": 1234000</div>' +
+                        '<div class="text-gray-400">}</div>';
+                } else if (method === 'DELETE' || method === 'PUT') {
+                    response.innerHTML = 
+                        '<div class="text-red-400">' + method + ' ' + url + ' HTTP/1.1</div>' +
+                        '<div class="text-red-400">Status: 200 OK</div>' +
+                        '<div class="mt-2 text-red-400">⚠️ Method 허용됨!</div>' +
+                        '<div class="text-red-400">권한 체크 없음</div>';
+                } else if (method === 'OPTIONS') {
+                    response.innerHTML = 
+                        '<div class="text-yellow-400">' + method + ' ' + url + ' HTTP/1.1</div>' +
+                        '<div class="text-gray-400">Status: 200 OK</div>' +
+                        '<div class="mt-2 text-yellow-400">Allow:</div>' +
+                        '<div class="text-red-400">GET, POST, PUT, DELETE, OPTIONS, TRACE</div>' +
+                        '<div class="text-red-400 mt-2">⚠️ 모든 Method 노출!</div>';
+                } else if (method === 'TRACE') {
+                    response.innerHTML = 
+                        '<div class="text-red-400">' + method + ' ' + url + ' HTTP/1.1</div>' +
+                        '<div class="text-gray-400">Status: 200 OK</div>' +
+                        '<div class="mt-2 text-red-400">TRACE 응답:</div>' +
+                        '<div class="text-red-400">Cookie: JSESSIONID=ABC123...</div>' +
+                        '<div class="text-red-400 mt-2">⚠️ XST 공격 가능!</div>';
+                } else {
+                    response.innerHTML = 
+                        '<div class="text-gray-400">' + method + ' ' + url + ' HTTP/1.1</div>' +
+                        '<div class="text-gray-400">Status: 200 OK</div>';
+                }
+            }, 500);
+        }
+
+        async function attackScenario(type) {
+            document.getElementById('serverResponse').innerHTML = 
+                '<div class="text-gray-500">HTTP Method를 선택하고 요청을 전송하세요</div>';
+            
+            var result = document.getElementById('attackResult');
+            var badge = document.getElementById('statusBadge');
+            
+            document.getElementById('attackStages').classList.remove('hidden');
+            document.getElementById('terminalBox').classList.remove('hidden');
+            document.getElementById('judgementBox').classList.remove('hidden');
+            document.getElementById('damageBox').classList.remove('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
+            
+            if (type === 1) {
+                // 시나리오 1: DELETE
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. OPTIONS로 허용 Method 확인</div>' +
+                    '<div>2. DELETE Method 지원 확인</div>' +
+                    '<div>3. 타인 계정 ID로 DELETE 요청</div>' +
+                    '<div>4. 데이터 삭제 성공!</div>';
+                
+                document.getElementById('httpMethod').value = 'OPTIONS';
+                
+                addTerminalLine('> OPTIONS 요청으로 허용 Method 확인...');
+                await sleep(500);
+                addTerminalLine('> curl -X OPTIONS https://bank.com/api/users/12345');
+                await sleep(800);
+                
+                testMethod();
+                await sleep(1000);
+                
+                addTerminalLine('> [!] DELETE Method 허용됨!', 'text-red-400');
+                await sleep(500);
+                
+                document.getElementById('httpMethod').value = 'DELETE';
+                
+                addTerminalLine('> DELETE 요청 전송...', 'text-yellow-400');
+                await sleep(500);
+                addTerminalLine('> curl -X DELETE https://bank.com/api/users/12345');
+                await sleep(800);
+                
+                testMethod();
+                await sleep(1000);
+                
+                addTerminalLine('> [!] 사용자 삭제 완료!', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 DELETE로 데이터 삭제</h4>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                    '<div class="text-white">$ curl -X DELETE \\</div>' +
+                    '<div class="ml-2">https://bank.com/api/users/12345</div>' +
+                    '<div class="mt-2 text-red-400">HTTP/1.1 200 OK</div>' +
+                    '<div class="text-red-400">{"message": "User deleted"}</div>' +
+                    '</div>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">삭제된 데이터:</p>' +
+                    '<div class="text-xs space-y-1">' +
+                    '<div>사용자 ID: 12345</div>' +
+                    '<div>이름: 홍길동</div>' +
+                    '<div>계좌: 110-123-456789</div>' +
+                    '<div>잔액: 1,234,000원</div>' +
+                    '</div></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💀 피해</p>' +
+                    '<p>권한 없이 타인 계정 삭제</p>' +
+                    '<p>복구 불가능한 데이터 손실</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = 'DELETE Method 무제한 허용';
+                badge.textContent = '취약';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded';
+                
+            } else if (type === 2) {
+                // 시나리오 2: PUT
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. PUT Method 지원 확인</div>' +
+                    '<div>2. 타인 계정 정보 조회</div>' +
+                    '<div>3. PUT으로 권한 변조</div>' +
+                    '<div>4. 일반 사용자 → 관리자 승격!</div>';
+                
+                document.getElementById('httpMethod').value = 'GET';
+                
+                addTerminalLine('> 대상 계정 조회...');
+                await sleep(500);
+                addTerminalLine('> curl https://bank.com/api/users/12345');
+                await sleep(800);
+                addTerminalLine('> {"id":12345, "role":"user", "balance":1234000}', 'text-gray-400');
+                await sleep(500);
+                
+                document.getElementById('httpMethod').value = 'PUT';
+                
+                addTerminalLine('> PUT 요청으로 role 변조...', 'text-yellow-400');
+                await sleep(500);
+                addTerminalLine('> curl -X PUT https://bank.com/api/users/12345 \\', 'text-red-400');
+                addTerminalLine('  -d \'{"role":"admin"}\'', 'text-red-400');
+                await sleep(1000);
+                
+                testMethod();
+                await sleep(1000);
+                
+                addTerminalLine('> [!] 관리자 권한 획득!', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 PUT으로 권한 상승</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">변조 과정:</p>' +
+                    '<table class="w-full text-xs">' +
+                    '<tr class="border-b bg-gray-50"><th class="text-left py-1">항목</th><th class="text-left py-1">Before</th><th class="text-left py-1">After</th></tr>' +
+                    '<tr class="border-b"><td class="py-1">role</td><td class="py-1">user</td><td class="py-1 text-red-600">admin</td></tr>' +
+                    '<tr class="border-b"><td class="py-1">권한</td><td class="py-1">일반</td><td class="py-1 text-red-600">관리자</td></tr>' +
+                    '<tr><td class="py-1">balance</td><td class="py-1">1,234,000</td><td class="py-1 text-red-600">999,999,999</td></tr>' +
+                    '</table></div>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded code-font text-xs mb-3">' +
+                    '<div class="text-white">$ curl -X PUT \\</div>' +
+                    '<div class="ml-2">https://bank.com/api/users/12345 \\</div>' +
+                    '<div class="ml-2">-d \'{"role":"admin","balance":999999999}\'</div>' +
+                    '<div class="mt-2 text-red-400">{"status":"updated"}</div>' +
+                    '</div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💀 권한 상승 완료</p>' +
+                    '<p>일반 사용자 → 관리자</p>' +
+                    '<p>전체 시스템 접근 가능</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = 'PUT Method 권한 검증 부재';
+                badge.textContent = '치명적';
+                badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
+                
+            } else if (type === 3) {
+                // 시나리오 3: TRACE
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. TRACE Method 지원 확인</div>' +
+                    '<div>2. TRACE 요청 전송</div>' +
+                    '<div>3. 요청 헤더가 응답에 반환됨</div>' +
+                    '<div>4. Cookie 정보 탈취 (XST)!</div>';
+                
+                document.getElementById('httpMethod').value = 'TRACE';
+                
+                addTerminalLine('> TRACE Method 테스트...');
+                await sleep(500);
+                addTerminalLine('> curl -X TRACE https://bank.com/api/users \\', 'text-yellow-400');
+                addTerminalLine('  -H "Cookie: JSESSIONID=ABC123..."', 'text-yellow-400');
+                await sleep(1000);
+                
+                testMethod();
+                await sleep(1000);
+                
+                addTerminalLine('> [!] TRACE 응답에 Cookie 포함!', 'text-red-400');
+                await sleep(500);
+                addTerminalLine('> XSS + TRACE = XST 공격 가능', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 TRACE로 정보 수집 (XST)</h4>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                    '<div class="text-white">$ curl -X TRACE \\</div>' +
+                    '<div class="ml-2">https://bank.com/api/users \\</div>' +
+                    '<div class="ml-2">-H "Cookie: JSESSIONID=ABC123..."</div>' +
+                    '<div class="mt-2 text-yellow-400">Response:</div>' +
+                    '<div class="text-gray-400">TRACE /api/users HTTP/1.1</div>' +
+                    '<div class="text-red-400">Cookie: JSESSIONID=ABC123DEF456</div>' +
+                    '<div class="text-red-400">Authorization: Bearer eyJ...</div>' +
+                    '</div>' +
+                    '<div class="bg-yellow-100 border border-yellow-400 p-3 rounded mb-3 text-sm">' +
+                    '<p class="font-bold text-yellow-800 mb-2">⚠️ XST (Cross-Site Tracing) 공격</p>' +
+                    '<p class="text-yellow-800 text-xs">XSS + TRACE = HttpOnly 쿠키 우회</p>' +
+                    '<div class="bg-gray-900 text-green-400 p-2 rounded mt-2 code-font text-xs">' +
+                    '<div>var xhr = new XMLHttpRequest();</div>' +
+                    '<div>xhr.open(\'TRACE\', url);</div>' +
+                    '<div class="text-red-400">// HttpOnly 쿠키도 탈취!</div>' +
+                    '</div></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💀 보안 위협</p>' +
+                    '<p>HttpOnly 쿠키 보호 우회</p>' +
+                    '<p>세션 하이재킹 가능</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = 'TRACE Method 활성화';
+                badge.textContent = '위험';
+                badge.className = 'text-xs bg-orange-500 text-white px-3 py-1 rounded';
+                
+            } else if (type === 4) {
+                // 시나리오 4: OPTIONS
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. OPTIONS 요청 전송</div>' +
+                    '<div>2. 허용된 모든 Method 확인</div>' +
+                    '<div>3. 서버 정보 수집</div>' +
+                    '<div>4. 공격 벡터 파악!</div>';
+                
+                document.getElementById('httpMethod').value = 'OPTIONS';
+                
+                addTerminalLine('> OPTIONS 요청 전송...');
+                await sleep(500);
+                addTerminalLine('> curl -X OPTIONS -i https://bank.com/api/users');
+                await sleep(1000);
+                
+                testMethod();
+                await sleep(1000);
+                
+                addTerminalLine('> [!] 서버 정보 수집 완료', 'text-red-400');
+                await sleep(300);
+                addTerminalLine('> 허용 Method: GET, POST, PUT, DELETE, TRACE', 'text-red-400');
+                await sleep(300);
+                addTerminalLine('> Server: Apache/2.4.41', 'text-yellow-400');
+                await sleep(300);
+                addTerminalLine('> 공격 벡터 분석 완료', 'text-red-400');
+                
+                result.innerHTML = 
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 OPTIONS로 정보 수집</h4>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                    '<div class="text-white">$ curl -X OPTIONS -i \\</div>' +
+                    '<div class="ml-2">https://bank.com/api/users</div>' +
+                    '<div class="mt-2 text-yellow-400">Response Headers:</div>' +
+                    '<div class="text-gray-400">HTTP/1.1 200 OK</div>' +
+                    '<div class="text-red-400">Allow: GET, POST, PUT, DELETE, OPTIONS, TRACE</div>' +
+                    '<div class="text-yellow-400">Server: Apache/2.4.41 (Ubuntu)</div>' +
+                    '<div class="text-yellow-400">X-Powered-By: PHP/7.4.3</div>' +
+                    '</div>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">수집된 정보:</p>' +
+                    '<div class="space-y-1 text-xs">' +
+                    '<div>✓ 허용된 HTTP Method (6개)</div>' +
+                    '<div>✓ 웹 서버 종류 및 버전</div>' +
+                    '<div>✓ 백엔드 언어 (PHP)</div>' +
+                    '<div>✓ OS 정보 (Ubuntu)</div>' +
+                    '</div></div>' +
+                    '<div class="bg-orange-100 border border-orange-400 p-3 rounded text-sm">' +
+                    '<p class="font-bold text-orange-800 mb-1">📋 다음 공격 단계</p>' +
+                    '<p class="text-orange-800 text-xs">1. DELETE로 데이터 삭제 시도</p>' +
+                    '<p class="text-orange-800 text-xs">2. PUT으로 권한 상승</p>' +
+                    '<p class="text-orange-800 text-xs">3. TRACE로 XST 공격</p>' +
+                    '</div></div>';
+                
+                document.getElementById('evidence').textContent = 'OPTIONS로 서버 정보 노출';
+                badge.textContent = '정보 유출';
+                badge.className = 'text-xs bg-yellow-500 text-white px-3 py-1 rounded';
+            }
+        }
+
+        function addTerminalLine(text, color) {
+            var div = document.createElement('div');
+            div.className = color || 'text-green-400';
+            div.textContent = text;
+            document.getElementById('terminalLines').appendChild(div);
+            document.getElementById('terminalLines').scrollTop = 
+                document.getElementById('terminalLines').scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

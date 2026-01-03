@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융권 자동화 공격 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .code-font { font-family: 'Courier New', monospace; }
+        .attack-animation {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <!-- 평가기준 배너 -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <div class="bg-red-600 text-white p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clipboard-check text-2xl"></i>
+                <div>
+                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 - 자동화 공격 방어</h1>
+                    <p class="text-sm">자동화 도구 악용 (Automated Attack) | 위험도: 4 (높음) | 통제구분: 5.4.1 자동화 공격 방어</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- 좌측: 취약한 시스템 -->
+            <div class="space-y-4">
+                
+                <!-- 은행 헤더 -->
+                <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building-columns text-2xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold">카카오뱅크</h2>
+                            <p class="text-sm">인터넷뱅킹 로그인 시스템</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm">
+                        <i class="fas fa-exclamation-triangle"></i> 취약점: 자동화 공격 방어 미흡
+                    </div>
+                </div>
+
+                <!-- 로그인 폼 -->
+                <div class="bg-white p-5 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                        <i class="fas fa-sign-in-alt text-blue-600"></i>
+                        로그인
+                    </h3>
+                    
+                    <label class="block text-sm font-bold mb-2">사용자 ID</label>
+                    <input type="text" id="userId" 
+                           class="w-full p-2 border border-gray-300 rounded mb-3" 
+                           value="admin"
+                           readonly>
+                    
+                    <label class="block text-sm font-bold mb-2">비밀번호</label>
+                    <input type="password" id="userPwd" 
+                           class="w-full p-2 border border-gray-300 rounded mb-3" 
+                           value="????????">
+                    
+                    <div class="bg-gray-100 p-3 rounded mb-3">
+                        <p class="text-xs text-gray-600 mb-2">⚠️ 방어 기능 상태:</p>
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between">
+                                <span>CAPTCHA:</span>
+                                <span class="text-red-600 font-bold">비활성화</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Rate Limiting:</span>
+                                <span class="text-red-600 font-bold">없음</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>로그인 시도 제한:</span>
+                                <span class="text-red-600 font-bold">무제한</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>계정 잠금:</span>
+                                <span class="text-red-600 font-bold">미적용</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="manualLogin()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+                        <i class="fas fa-sign-in-alt"></i> 로그인
+                    </button>
+                </div>
+
+                <!-- 자동화 공격 통계 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-red-400"></i>
+                        실시간 공격 통계
+                    </h3>
+                    <div id="attackStats" class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>총 시도 횟수:</span>
+                            <span id="totalAttempts" class="text-green-400 font-bold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>초당 요청 (RPS):</span>
+                            <span id="rps" class="text-yellow-400 font-bold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>시도한 패스워드:</span>
+                            <span id="testedPasswords" class="text-blue-400 font-bold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>경과 시간:</span>
+                            <span id="elapsedTime" class="text-gray-400">00:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 시나리오 버튼 -->
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-flask text-red-400"></i>
+                        자동화 공격 시나리오
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="attackScenario(1)" 
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-robot"></i> 시나리오 1: Brute Force (무차별 대입)
+                        </button>
+                        <button onclick="attackScenario(2)" 
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-book"></i> 시나리오 2: Dictionary Attack (사전 공격)
+                        </button>
+                        <button onclick="attackScenario(3)" 
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-spider"></i> 시나리오 3: Credential Stuffing
+                        </button>
+                        <button onclick="attackScenario(4)" 
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-globe"></i> 시나리오 4: 웹 크롤링 봇
+                        </button>
+                        <button onclick="stopAttack()" 
+                                class="w-full text-left bg-green-900 hover:bg-green-800 px-3 py-2 rounded text-sm">
+                            <i class="fas fa-stop"></i> 공격 중단
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 취약한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-400">
+                            <i class="fas fa-skull-crossbones"></i> 취약한 코드
+                        </h3>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 자동화 공격 방어 없음</span>
+
+@PostMapping("/login")
+public ResponseEntity<?> login(
+    @RequestParam String username,
+    @RequestParam String password) {
+    
+    <span class="text-red-400">// Rate Limiting 없음!</span>
+    <span class="text-red-400">// CAPTCHA 없음!</span>
+    <span class="text-red-400">// 로그인 시도 횟수 제한 없음!</span>
+    
+    User user = userRepository
+        .findByUsername(username);
+    
+    if (user != null && 
+        passwordEncoder.matches(password, 
+            user.getPassword())) {
+        return ResponseEntity.ok("Success");
+    }
+    
+    <span class="text-red-400">// 실패 시 즉시 응답 (타이밍 공격 가능)</span>
+    return ResponseEntity
+        .status(401)
+        .body("Invalid credentials");
+}
+
+<span class="text-gray-500">// API 엔드포인트 보호 없음</span>
+@GetMapping("/api/users")
+public List<User> getUsers() {
+    <span class="text-red-400">// 누구나 무제한 호출 가능!</span>
+    return userRepository.findAll();
+}
+
+<span class="text-gray-500">// 크롤링 봇 차단 없음</span>
+<span class="text-red-400">// robots.txt 없음</span>
+<span class="text-red-400">// User-Agent 검증 없음</span>
+<span class="text-red-400">// IP 기반 차단 없음</span></code></pre>
+                </div>
+
+            </div>
+
+            <!-- 우측: 결과 및 안전한 코드 -->
+            <div class="space-y-4">
+                
+                <!-- 공격 실행 결과 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">
+                            <i class="fas fa-terminal"></i> 공격 실행 결과
+                        </h3>
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
+                            대기중
+                        </span>
+                    </div>
+                    <div id="attackResult" class="p-5 min-h-[300px] bg-white">
+                        <div class="text-center text-gray-400 py-10">
+                            <i class="fas fa-robot text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm">공격 시나리오를 선택하세요</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공격 단계 -->
+                <div id="attackStages" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-list-ol"></i> 공격 진행 단계
+                    </h4>
+                    <div id="stagesContent" class="text-sm text-red-700 space-y-1"></div>
+                </div>
+
+                <!-- 터미널 출력 -->
+                <div id="terminalBox" class="hidden bg-black text-green-400 p-4 rounded-lg shadow-lg">
+                    <div class="font-bold mb-2 text-xs flex justify-between">
+                        <span><i class="fas fa-terminal"></i> ATTACK AUTOMATION LOG</span>
+                        <span id="terminalSpeed" class="text-yellow-400">Speed: 100 req/sec</span>
+                    </div>
+                    <div id="terminalLines" class="code-font text-xs space-y-1 max-h-[250px] overflow-y-auto"></div>
+                </div>
+
+                <!-- 안전한 코드 -->
+                <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-shield-halved"></i> 안전한 코드
+                        </h3>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                    </div>
+                    <pre class="code-font text-xs overflow-x-auto max-h-[400px]"><code><span class="text-green-400">// ✅ 자동화 공격 방어 적용</span>
+
+<span class="text-gray-500">// 1. Rate Limiting (Bucket4j 사용)</span>
+@Service
+public class RateLimitService {
+    
+    private final Map<String, Bucket> cache = 
+        new ConcurrentHashMap<>();
+    
+    public Bucket resolveBucket(String key) {
+        return cache.computeIfAbsent(key, k -> {
+            <span class="text-green-400">// 1분에 5번만 허용</span>
+            Bandwidth limit = Bandwidth.classic(
+                5, 
+                Refill.intervally(5, Duration.ofMinutes(1))
+            );
+            return Bucket.builder()
+                .addLimit(limit)
+                .build();
+        });
+    }
+}
+
+@PostMapping("/login")
+public ResponseEntity<?> login(
+    @RequestParam String username,
+    @RequestParam String password,
+    HttpServletRequest request) {
+    
+    String clientIP = getClientIP(request);
+    
+    <span class="text-green-400">// IP 기반 Rate Limiting</span>
+    Bucket bucket = rateLimitService
+        .resolveBucket(clientIP);
+    
+    if (!bucket.tryConsume(1)) {
+        return ResponseEntity
+            .status(429)
+            .body("Too many requests. Try again later.");
+    }
+    
+    <span class="text-green-400">// 로그인 시도 횟수 체크</span>
+    int attempts = loginAttemptService
+        .getAttempts(username);
+    
+    if (attempts >= 5) {
+        <span class="text-green-400">// 5회 실패 시 15분 잠금</span>
+        if (!loginAttemptService.isUnlocked(username)) {
+            return ResponseEntity
+                .status(423)
+                .body("Account locked. Try in 15 min.");
+        }
+    }
+    
+    <span class="text-green-400">// CAPTCHA 검증 (3회 실패 후)</span>
+    if (attempts >= 3) {
+        if (!verifyCaptcha(request)) {
+            return ResponseEntity
+                .status(400)
+                .body("Invalid CAPTCHA");
+        }
+    }
+    
+    User user = userRepository
+        .findByUsername(username);
+    
+    <span class="text-green-400">// 타이밍 공격 방어 (일정 시간 대기)</span>
+    Thread.sleep(1000);
+    
+    if (user != null && 
+        passwordEncoder.matches(password, 
+            user.getPassword())) {
+        
+        <span class="text-green-400">// 성공 시 시도 횟수 리셋</span>
+        loginAttemptService.resetAttempts(username);
+        
+        return ResponseEntity.ok("Success");
+    }
+    
+    <span class="text-green-400">// 실패 시 시도 횟수 증가</span>
+    loginAttemptService.loginFailed(username);
+    
+    return ResponseEntity
+        .status(401)
+        .body("Invalid credentials");
+}
+
+<span class="text-gray-500">// 2. 로그인 시도 관리 서비스</span>
+@Service
+public class LoginAttemptService {
+    
+    private final int MAX_ATTEMPT = 5;
+    private final int LOCK_TIME_MINUTES = 15;
+    
+    private LoadingCache<String, Integer> attemptsCache;
+    private LoadingCache<String, LocalDateTime> lockCache;
+    
+    public void loginFailed(String key) {
+        int attempts = attemptsCache.get(key);
+        attempts++;
+        attemptsCache.put(key, attempts);
+        
+        if (attempts >= MAX_ATTEMPT) {
+            lockCache.put(key, 
+                LocalDateTime.now()
+                    .plusMinutes(LOCK_TIME_MINUTES));
+        }
+    }
+    
+    public boolean isUnlocked(String key) {
+        LocalDateTime lockTime = lockCache.get(key);
+        if (lockTime == null) return true;
+        
+        return LocalDateTime.now().isAfter(lockTime);
+    }
+}
+
+<span class="text-gray-500">// 3. IP 기반 차단</span>
+@Component
+public class IpBlockingFilter extends OncePerRequestFilter {
+    
+    private Set<String> blockedIps = 
+        ConcurrentHashMap.newKeySet();
+    
+    @Override
+    protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain chain) {
+        
+        String clientIP = getClientIP(request);
+        
+        <span class="text-green-400">// 차단된 IP 확인</span>
+        if (blockedIps.contains(clientIP)) {
+            response.sendError(403, "IP Blocked");
+            return;
+        }
+        
+        chain.doFilter(request, response);
+    }
+}
+
+<span class="text-gray-500">// 4. Bot 감지 및 차단</span>
+@Component
+public class BotDetectionFilter extends OncePerRequestFilter {
+    
+    @Override
+    protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain chain) {
+        
+        String userAgent = request.getHeader("User-Agent");
+        
+        <span class="text-green-400">// 의심스러운 User-Agent 차단</span>
+        if (isSuspiciousBot(userAgent)) {
+            response.sendError(403, 
+                "Automated access detected");
+            return;
+        }
+        
+        chain.doFilter(request, response);
+    }
+    
+    private boolean isSuspiciousBot(String ua) {
+        if (ua == null || ua.isEmpty()) return true;
+        
+        String[] botPatterns = {
+            "bot", "crawler", "spider", "scraper",
+            "python-requests", "curl", "wget"
+        };
+        
+        String lowerUA = ua.toLowerCase();
+        for (String pattern : botPatterns) {
+            if (lowerUA.contains(pattern)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+}
+
+<span class="text-gray-500">// 5. CAPTCHA 검증</span>
+private boolean verifyCaptcha(HttpServletRequest request) {
+    String captchaResponse = 
+        request.getParameter("g-recaptcha-response");
+    
+    if (captchaResponse == null) return false;
+    
+    <span class="text-green-400">// Google reCAPTCHA v3 검증</span>
+    RestTemplate restTemplate = new RestTemplate();
+    String url = "https://www.google.com/recaptcha/api/siteverify";
+    
+    Map<String, String> params = new HashMap<>();
+    params.put("secret", RECAPTCHA_SECRET);
+    params.put("response", captchaResponse);
+    
+    RecaptchaResponse response = 
+        restTemplate.postForObject(url, params, 
+            RecaptchaResponse.class);
+    
+    return response != null && 
+           response.isSuccess() && 
+           response.getScore() > 0.5;
+}</code></pre>
+                </div>
+
+                <!-- 방어 체크리스트 -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check text-red-600"></i>
+                        자동화 공격 방어 체크리스트
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>Rate Limiting:</strong> IP당 요청 횟수 제한 (분당 5회)</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>계정 잠금:</strong> 5회 실패 시 15분 잠금</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>CAPTCHA:</strong> 3회 실패 후 CAPTCHA 요구</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>타이밍 공격 방어:</strong> 일정 시간 응답 지연</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>Bot 감지:</strong> User-Agent 검증</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>IP 차단:</strong> 의심스러운 IP 자동 차단</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <div><strong>모니터링:</strong> 비정상 트래픽 실시간 감지</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 평가 판정 -->
+                <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                        <i class="fas fa-gavel"></i> 평가 판정
+                    </h3>
+                    <div class="text-xs space-y-1">
+                        <div><strong>평가항목:</strong> 자동화 공격 방어</div>
+                        <div><strong>판정:</strong> <span id="judgement" class="text-red-400">취약</span></div>
+                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                    </div>
+                </div>
+
+                <!-- 피해 시나리오 -->
+                <div id="damageBox" class="hidden bg-red-700 text-white p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-fire"></i> 실제 피해 사례
+                    </h3>
+                    <div id="damageContent" class="space-y-2 text-sm"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let attackInterval = null;
+        let totalAttempts = 0;
+        let startTime = null;
+        let currentScenario = 0;
+
+        function manualLogin() {
+            alert('로그인 실패: 자격 증명이 올바르지 않습니다.');
+        }
+
+        function resetStats() {
+            totalAttempts = 0;
+            document.getElementById('totalAttempts').textContent = '0';
+            document.getElementById('rps').textContent = '0';
+            document.getElementById('testedPasswords').textContent = '0';
+            document.getElementById('elapsedTime').textContent = '00:00';
+        }
+
+        function updateStats(rps) {
+            totalAttempts += rps;
+            document.getElementById('totalAttempts').textContent = totalAttempts.toLocaleString();
+            document.getElementById('rps').textContent = rps;
+            document.getElementById('testedPasswords').textContent = 
+                Math.floor(totalAttempts / 2).toLocaleString();
+            
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('elapsedTime').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+        }
+
+        function stopAttack() {
+            if (attackInterval) {
+                clearInterval(attackInterval);
+                attackInterval = null;
+                document.getElementById('statusBadge').textContent = '중단됨';
+                document.getElementById('statusBadge').className = 
+                    'text-xs bg-yellow-500 text-gray-900 px-3 py-1 rounded';
+            }
+        }
+
+        async function attackScenario(type) {
+            stopAttack();
+            resetStats();
+            startTime = Date.now();
+            currentScenario = type;
+            
+            var result = document.getElementById('attackResult');
+            var badge = document.getElementById('statusBadge');
+            
+            document.getElementById('attackStages').classList.remove('hidden');
+            document.getElementById('terminalBox').classList.remove('hidden');
+            document.getElementById('judgementBox').classList.remove('hidden');
+            document.getElementById('damageBox').classList.remove('hidden');
+            document.getElementById('terminalLines').innerHTML = '';
+            
+            if (type === 1) {
+                // 시나리오 1: Brute Force
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 공격 도구 준비 (Hydra)</div>' +
+                    '<div>2. 대상 URL 설정</div>' +
+                    '<div>3. 모든 조합 시도 (a-z, 0-9)</div>' +
+                    '<div>4. 비밀번호 발견까지 지속!</div>';
+                
+                document.getElementById('terminalSpeed').textContent = 'Speed: 100 req/sec';
+                
+                addTerminalLine('> hydra -l admin -x 4:8:a1 http-post-form');
+                await sleep(500);
+                addTerminalLine('> Target: https://bank.com/login');
+                await sleep(500);
+                addTerminalLine('> Attack Type: Brute Force');
+                await sleep(500);
+                addTerminalLine('> Charset: a-z, A-Z, 0-9, special');
+                await sleep(800);
+                addTerminalLine('> [!] Starting attack...', 'text-yellow-400');
+                await sleep(500);
+                
+                // 공격 시뮬레이션
+                attackInterval = setInterval(() => {
+                    const rps = Math.floor(Math.random() * 50) + 80;
+                    updateStats(rps);
+                    
+                    const passwords = ['pass1234', 'admin123', 'qwerty', 'password', 
+                                     '12345678', 'abc123', 'welcome1'];
+                    const randomPwd = passwords[Math.floor(Math.random() * passwords.length)];
+                    
+                    addTerminalLine(`[ATTEMPT] admin:${randomPwd}`, 'text-gray-500');
+                    
+                    // 5초 후 성공
+                    if (totalAttempts > 400) {
+                        stopAttack();
+                        addTerminalLine('[SUCCESS] Password found: admin123', 'text-red-400');
+                        
+                        result.innerHTML = 
+                            '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                            '<h4 class="font-bold text-red-700 mb-3">🚨 Brute Force 공격 성공</h4>' +
+                            '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                            '<div class="text-white">$ hydra -l admin -x 4:8:a1 \\</div>' +
+                            '<div class="ml-2">http-post-form "/login:username=^USER^&password=^PASS^:F=Invalid"</div>' +
+                            '<div class="mt-2 text-yellow-400">Results:</div>' +
+                            '<div class="text-gray-400">─────────────────────────────</div>' +
+                            '<div class="text-red-400">[+] Host: bank.com</div>' +
+                            '<div class="text-red-400">[+] Login: admin</div>' +
+                            '<div class="text-red-400">[+] Password: admin123</div>' +
+                            '<div class="text-red-400">[+] Attempts: 487</div>' +
+                            '<div class="text-red-400">[+] Time: 00:05</div>' +
+                            '</div>' +
+                            '<div class="bg-white p-3 rounded mb-3 border">' +
+                            '<p class="text-sm font-bold mb-2">공격 통계:</p>' +
+                            '<table class="w-full text-xs">' +
+                            '<tr class="border-b"><td class="py-1">총 시도:</td><td class="py-1 text-right">' + totalAttempts.toLocaleString() + '회</td></tr>' +
+                            '<tr class="border-b"><td class="py-1">초당 요청:</td><td class="py-1 text-right">100 req/s</td></tr>' +
+                            '<tr class="border-b"><td class="py-1">소요 시간:</td><td class="py-1 text-right">5초</td></tr>' +
+                            '<tr><td class="py-1">성공률:</td><td class="py-1 text-right text-red-600">100%</td></tr>' +
+                            '</table></div>' +
+                            '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                            '<p class="font-bold">💀 계정 탈취 완료</p>' +
+                            '<p>방어 장치 없이 무차별 대입 성공</p>' +
+                            '<p>관리자 계정 완전 장악</p>' +
+                            '</div></div>';
+                        
+                        document.getElementById('damageContent').innerHTML = 
+                            '<div><strong>1. 계정 탈취:</strong> 관리자 권한 획득</div>' +
+                            '<div><strong>2. 전체 고객 정보 접근:</strong> 125,847건</div>' +
+                            '<div><strong>3. 불법 이체:</strong> 50억원 자금 이동</div>' +
+                            '<div><strong>4. 서비스 중단:</strong> 3시간 장애</div>';
+                    }
+                }, 100);
+                
+                document.getElementById('evidence').textContent = 'Rate Limiting 미적용';
+                badge.textContent = '공격중';
+                badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded attack-animation';
+                
+            } else if (type === 2) {
+                // 시나리오 2: Dictionary Attack
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 흔한 비밀번호 사전 로딩</div>' +
+                    '<div>2. rockyou.txt (1400만개)</div>' +
+                    '<div>3. 순차적으로 시도</div>' +
+                    '<div>4. 3분 내 발견!</div>';
+                
+                document.getElementById('terminalSpeed').textContent = 'Speed: 200 req/sec';
+                
+                addTerminalLine('> Loading dictionary: rockyou.txt');
+                await sleep(500);
+                addTerminalLine('> Total passwords: 14,344,391');
+                await sleep(500);
+                addTerminalLine('> [!] Starting dictionary attack...', 'text-yellow-400');
+                await sleep(800);
+                
+                const commonPasswords = [
+                    'password', '123456', '123456789', 'qwerty', 'abc123',
+                    'password1', '12345678', '111111', '1234567', 'sunshine',
+                    'princess', 'admin', 'welcome', 'monkey', 'login'
+                ];
+                
+                let idx = 0;
+                attackInterval = setInterval(() => {
+                    const rps = Math.floor(Math.random() * 80) + 150;
+                    updateStats(rps);
+                    
+                    const pwd = commonPasswords[idx % commonPasswords.length];
+                    addTerminalLine(`[${idx + 1}] Trying: ${pwd}`, 'text-gray-500');
+                    idx++;
+                    
+                    if (totalAttempts > 600) {
+                        stopAttack();
+                        addTerminalLine('[SUCCESS] Match found: password123', 'text-red-400');
+                        
+                        result.innerHTML = 
+                            '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                            '<h4 class="font-bold text-red-700 mb-3">🚨 Dictionary Attack 성공</h4>' +
+                            '<div class="bg-white p-3 rounded mb-3 border">' +
+                            '<p class="text-sm font-bold mb-2">사전 파일 정보:</p>' +
+                            '<div class="bg-gray-100 p-2 rounded code-font text-xs">' +
+                            '<div>File: rockyou.txt</div>' +
+                            '<div>Passwords: 14,344,391</div>' +
+                            '<div>Size: 133 MB</div>' +
+                            '<div class="text-red-600 mt-2">Found at position: 487</div>' +
+                            '<div class="text-red-600">Password: password123</div>' +
+                            '</div></div>' +
+                            '<div class="bg-yellow-100 border border-yellow-400 p-3 rounded text-sm mb-3">' +
+                            '<p class="font-bold text-yellow-800 mb-2">⚠️ 흔한 비밀번호 사용의 위험성</p>' +
+                            '<p class="text-yellow-800 text-xs">Top 1000 비밀번호에 포함</p>' +
+                            '<p class="text-yellow-800 text-xs">수초 내 크래킹 가능</p>' +
+                            '</div>' +
+                            '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                            '<p class="font-bold">⏱️ 공격 소요 시간</p>' +
+                            '<p>사전 공격: 3분</p>' +
+                            '<p>시도 횟수: 487회</p>' +
+                            '</div></div>';
+                        
+                        document.getElementById('damageContent').innerHTML = 
+                            '<div><strong>1. 빠른 크래킹:</strong> 3분만에 성공</div>' +
+                            '<div><strong>2. 대량 계정 탈취:</strong> 같은 패턴의 다른 계정들</div>' +
+                            '<div><strong>3. 자동화 스크립트:</strong> 수천개 계정 동시 공격</div>';
+                    }
+                }, 80);
+                
+                document.getElementById('evidence').textContent = '비밀번호 정책 부재';
+                badge.textContent = '사전 공격중';
+                badge.className = 'text-xs bg-orange-500 text-white px-3 py-1 rounded attack-animation';
+                
+            } else if (type === 3) {
+                // 시나리오 3: Credential Stuffing
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 유출된 계정 DB 수집 (다크웹)</div>' +
+                    '<div>2. 500만개 계정 정보</div>' +
+                    '<div>3. 다른 사이트 자격증명 재사용</div>' +
+                    '<div>4. 일치하는 계정 발견!</div>';
+                
+                document.getElementById('terminalSpeed').textContent = 'Speed: 300 req/sec';
+                
+                addTerminalLine('> Loading leaked credentials database...');
+                await sleep(500);
+                addTerminalLine('> Source: 2024 data breach collection');
+                await sleep(500);
+                addTerminalLine('> Total accounts: 5,247,891');
+                await sleep(800);
+                addTerminalLine('> [!] Starting credential stuffing...', 'text-yellow-400');
+                await sleep(500);
+                
+                const usernames = ['john.doe', 'admin', 'user123', 'test@bank.com', 'customer1'];
+                const passwords = ['Summer2024!', 'MyPass@123', 'Welcome2024', 'Secure#45'];
+                
+                let attemptCount = 0;
+                attackInterval = setInterval(() => {
+                    const rps = Math.floor(Math.random() * 100) + 250;
+                    updateStats(rps);
+                    
+                    const user = usernames[attemptCount % usernames.length];
+                    const pwd = passwords[attemptCount % passwords.length];
+                    
+                    addTerminalLine(`[STUFFING] ${user}:${pwd}`, 'text-blue-400');
+                    attemptCount++;
+                    
+                    if (totalAttempts > 900) {
+                        stopAttack();
+                        addTerminalLine('[!] Valid credentials found!', 'text-red-400');
+                        addTerminalLine('user: customer1@bank.com', 'text-red-400');
+                        addTerminalLine('pass: Summer2024!', 'text-red-400');
+                        
+                        result.innerHTML = 
+                            '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                            '<h4 class="font-bold text-red-700 mb-3">🚨 Credential Stuffing 성공</h4>' +
+                            '<div class="bg-white p-3 rounded mb-3 border">' +
+                            '<p class="text-sm font-bold mb-2">유출된 DB 정보:</p>' +
+                            '<table class="w-full text-xs">' +
+                            '<tr class="border-b bg-gray-50"><th class="text-left py-1">출처</th><th class="text-left py-1">계정 수</th></tr>' +
+                            '<tr class="border-b"><td class="py-1">2023 E-commerce Breach</td><td class="py-1">2,100,000</td></tr>' +
+                            '<tr class="border-b"><td class="py-1">2024 Social Media Leak</td><td class="py-1">1,800,000</td></tr>' +
+                            '<tr><td class="py-1">기타 유출</td><td class="py-1">1,347,891</td></tr>' +
+                            '</table></div>' +
+                            '<div class="bg-white p-3 rounded mb-3 border">' +
+                            '<p class="text-sm font-bold mb-2">발견된 유효 계정:</p>' +
+                            '<div class="bg-red-50 p-2 rounded text-xs">' +
+                            '<div>Email: customer1@bank.com</div>' +
+                            '<div>Password: Summer2024!</div>' +
+                            '<div class="text-red-600 mt-2">⚠️ 다른 사이트 비밀번호 재사용</div>' +
+                            '</div></div>' +
+                            '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                            '<p class="font-bold">💀 비밀번호 재사용의 위험성</p>' +
+                            '<p>한 곳 유출 → 모든 계정 위험</p>' +
+                            '<p>검증 성공률: 0.3% (15,000건)</p>' +
+                            '</div></div>';
+                        
+                        document.getElementById('damageContent').innerHTML = 
+                            '<div><strong>1. 대량 계정 탈취:</strong> 15,000개 유효 계정</div>' +
+                            '<div><strong>2. 자금 인출:</strong> 계정당 평균 50만원</div>' +
+                            '<div><strong>3. 총 피해액:</strong> 75억원</div>' +
+                            '<div><strong>4. 개인정보 유출:</strong> 고객 신뢰도 붕괴</div>';
+                    }
+                }, 50);
+                
+                document.getElementById('evidence').textContent = '비밀번호 재사용 감지 없음';
+                badge.textContent = '계정 대입중';
+                badge.className = 'text-xs bg-purple-500 text-white px-3 py-1 rounded attack-animation';
+                
+            } else if (type === 4) {
+                // 시나리오 4: 웹 크롤링 봇
+                document.getElementById('stagesContent').innerHTML = 
+                    '<div>1. 크롤링 봇 실행</div>' +
+                    '<div>2. 전체 페이지 수집</div>' +
+                    '<div>3. 고객 정보 스크래핑</div>' +
+                    '<div>4. DB 구조 파악!</div>';
+                
+                document.getElementById('terminalSpeed').textContent = 'Speed: 500 req/sec';
+                
+                addTerminalLine('> scrapy crawl bank_spider');
+                await sleep(500);
+                addTerminalLine('> User-Agent: Mozilla/5.0 (compatible)');
+                await sleep(500);
+                addTerminalLine('> Starting requests...');
+                await sleep(800);
+                
+                const pages = [
+                    '/users/1', '/users/2', '/api/accounts', 
+                    '/api/transactions', '/admin/dashboard',
+                    '/api/customers', '/reports/daily'
+                ];
+                
+                let pageIdx = 0;
+                attackInterval = setInterval(() => {
+                    const rps = Math.floor(Math.random() * 200) + 400;
+                    updateStats(rps);
+                    
+                    const page = pages[pageIdx % pages.length];
+                    addTerminalLine(`[200] GET ${page}`, 'text-green-400');
+                    
+                    if (Math.random() > 0.7) {
+                        addTerminalLine(`  → Extracted: ${Math.floor(Math.random() * 100)} records`, 'text-yellow-400');
+                    }
+                    
+                    pageIdx++;
+                    
+                    if (totalAttempts > 2000) {
+                        stopAttack();
+                        addTerminalLine('[!] Crawling completed', 'text-red-400');
+                        addTerminalLine('Total pages: 2,847', 'text-red-400');
+                        addTerminalLine('Data extracted: 125,847 records', 'text-red-400');
+                        
+                        result.innerHTML = 
+                            '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                            '<h4 class="font-bold text-red-700 mb-3">🚨 크롤링 봇 공격 성공</h4>' +
+                            '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                            '<div class="text-white">$ scrapy crawl bank_spider -o output.json</div>' +
+                            '<div class="mt-2 text-yellow-400">Crawl Statistics:</div>' +
+                            '<div class="text-gray-400">─────────────────────────────</div>' +
+                            '<div>Pages crawled: 2,847</div>' +
+                            '<div>Requests: 2,847 (500/sec)</div>' +
+                            '<div class="text-red-400">Records extracted: 125,847</div>' +
+                            '<div>Duration: 00:05</div>' +
+                            '</div>' +
+                            '<div class="bg-white p-3 rounded mb-3 border">' +
+                            '<p class="text-sm font-bold mb-2">수집된 데이터:</p>' +
+                            '<div class="space-y-1 text-xs">' +
+                            '<div>✓ 고객 정보: 50,000건 (이름, 주소, 연락처)</div>' +
+                            '<div>✓ 계좌 번호: 50,000건</div>' +
+                            '<div>✓ 거래 내역: 25,847건</div>' +
+                            '<div>✓ API 엔드포인트: 147개 발견</div>' +
+                            '</div></div>' +
+                            '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                            '<p class="font-bold">💀 대량 정보 유출</p>' +
+                            '<p>Rate Limiting 없이 무제한 크롤링</p>' +
+                            '<p>개인정보보호법 위반</p>' +
+                            '<p>예상 과징금: 50억원</p>' +
+                            '</div></div>';
+                        
+                        document.getElementById('damageContent').innerHTML = 
+                            '<div><strong>1. 고객 정보 유출:</strong> 125,847건</div>' +
+                            '<div><strong>2. 개인정보보호법 위반:</strong> 50억원 과징금</div>' +
+                            '<div><strong>3. 브랜드 신뢰도:</strong> 회복 불가능한 손실</div>' +
+                            '<div><strong>4. 집단 소송:</strong> 200억원 배상 청구</div>';
+                    }
+                }, 30);
+                
+                document.getElementById('evidence').textContent = 'Bot 감지 기능 없음';
+                badge.textContent = '크롤링중';
+                badge.className = 'text-xs bg-yellow-500 text-gray-900 px-3 py-1 rounded attack-animation';
+            }
+        }
+
+        function addTerminalLine(text, color) {
+            var div = document.createElement('div');
+            div.className = color || 'text-green-400';
+            div.textContent = text;
+            document.getElementById('terminalLines').appendChild(div);
+            var terminal = document.getElementById('terminalLines');
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // 100줄 이상이면 오래된 줄 삭제
+            if (terminal.children.length > 100) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 페이지 언로드 시 공격 중단
+        window.addEventListener('beforeunload', function() {
+            stopAttack();
+        });
+    </script>
+</body>
+</html>

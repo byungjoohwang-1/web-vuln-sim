@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Security Simulator & Secure coding practices</title>
+    <title>Web Security Simulator & Secure Coding Practices</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -15,26 +15,28 @@
         #wrapper {
             display: flex;
             width: 100%;
-            height: 100vh; /* 전체 높이 사용 */
+            height: 100vh;
         }
         
-        /* 사이드바 스타일 (Dark Navy) */
+        /* 사이드바 스타일 */
         #sidebar-wrapper {
             min-height: 100vh;
-            width: 280px;
-            background-color: #0f172a; /* 스크린샷과 유사한 다크 네이비 */
+            width: 320px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
             color: #94a3b8;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
         }
         
         .sidebar-brand {
             padding: 1.5rem 1.25rem;
             color: #fff;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            border-bottom: 1px solid #1e293b;
+            border-bottom: 2px solid #334155;
+            background: rgba(0,0,0,0.2);
         }
         
         .sidebar-brand small {
@@ -42,46 +44,128 @@
             font-size: 0.65rem;
             color: #64748b;
             margin-top: 5px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* 메뉴 아이템 스타일 */
-        .list-group-item {
-            background-color: transparent;
-            color: #94a3b8;
-            border: none;
-            padding: 0.7rem 1.5rem;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
+        /* 검색 박스 */
+        .search-box {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #334155;
         }
         
-        .list-group-item:hover, .list-group-item:focus {
+        .search-box input {
             background-color: #1e293b;
+            border: 1px solid #334155;
             color: #fff;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
         }
         
-        .list-group-item i {
-            width: 20px;
-            margin-right: 8px;
-            text-align: center;
+        .search-box input::placeholder {
+            color: #64748b;
+        }
+        
+        .search-box input:focus {
+            background-color: #0f172a;
+            border-color: #3b82f6;
+            color: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* 메뉴 스크롤 영역 */
+        .menu-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* 스크롤바 스타일 */
+        .menu-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .menu-scroll::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        
+        .menu-scroll::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        
+        .menu-scroll::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
 
         /* 카테고리 헤더 */
         .menu-category {
-            padding: 12px 20px;
+            padding: 14px 20px;
             color: #fff;
             font-weight: 600;
-            background-color: #1e293b; /* 약간 밝은 배경으로 구분 */
+            background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin-top: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
-        /* 메인 콘텐츠 영역 */
+        .menu-category:hover {
+            background: linear-gradient(90deg, #334155 0%, #475569 100%);
+        }
+
+        .menu-category .badge {
+            font-size: 0.65rem;
+            padding: 3px 8px;
+        }
+
+        /* 메뉴 아이템 */
+        .list-group-item {
+            background-color: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 0.65rem 1.5rem 0.65rem 2.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-group-item:hover, .list-group-item:focus {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            padding-left: 2.8rem;
+        }
+        
+        .list-group-item i {
+            width: 18px;
+            margin-right: 10px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        .list-group-item .item-number {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-left: auto;
+        }
+
+        /* 숨김 메뉴 */
+        .collapse {
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        /* 메인 콘텐츠 */
         #page-content-wrapper {
             width: 100%;
             overflow-y: auto;
@@ -89,19 +173,52 @@
         }
 
         .content-header {
-            padding: 2rem;
-            background-color: #fff;
-            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
         }
         
-        /* 변경 이력 카드 스타일 */
+        .content-header h1 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 통계 카드 */
+        .stat-card {
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .stat-card p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* 변경 이력 */
         .history-list {
             list-style: none;
             padding-left: 0;
         }
         .history-list li {
-            padding: 8px 0;
+            padding: 12px 0;
             border-bottom: 1px dashed #e2e8f0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
         }
         .history-list li:last-child {
             border-bottom: none;
@@ -109,8 +226,43 @@
         .history-date {
             font-weight: 600;
             color: #495057;
-            width: 100px;
-            display: inline-block;
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+
+        /* 검색 결과 강조 */
+        .highlight {
+            background-color: #fef08a;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* 빈 결과 메시지 */
+        .no-results {
+            padding: 2rem;
+            text-align: center;
+            color: #64748b;
+        }
+
+        /* 토글 아이콘 애니메이션 */
+        .menu-category i.fa-chevron-down {
+            transition: transform 0.3s;
+        }
+
+        .menu-category[aria-expanded="true"] i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            #sidebar-wrapper {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            #wrapper {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -119,296 +271,588 @@
 <div id="wrapper">
     <div id="sidebar-wrapper">
         <div class="sidebar-brand">
-            <i class="fa-solid fa-cube me-2"></i> Web Security Vulnerability Simulator & Secure coding practices for Education
-            <small>V0.6 BETA | MADE BY JACK Hwang on 03 JAN 2025</small>
+            <i class="fa-solid fa-shield-halved me-2"></i> Web Security Learning Hub
+            <small>V0.7 BETA | 03 JAN 2025</small>
         </div>
 
-        <div class="list-group list-group-flush mt-2">
-            
-            <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
-                <span><i class="fa-solid fa-bug text-danger me-2"></i> 1. Simulator (20 Attacks)</span>
-                <i class="fa-solid fa-chevron-down fa-xs"></i>
-            </div>
-            
-            <div class="collapse" id="menu1">
-                <a href="sim-sql.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-database"></i> 1. SQL Injection
-                </a>
-                <a href="sim-cmd.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-terminal"></i> 2. Command Injection
-                </a>
-                <a href="sim-xxe.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-file-code"></i> 3. XXE Injection
-                </a>
-                <a href="sim-xss.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code"></i> 4. Reflected XSS
-                </a>
-                <a href="sim-csrf.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-globe"></i> 5. CSRF Attack
-                </a>
-                <a href="sim-ssrf.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-server"></i> 6. SSRF
-                </a>
-                <a href="sim-upload.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-file-arrow-up"></i> 7. File Upload
-                </a>
-                <a href="sim-path.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-folder-open"></i> 8. Path Traversal
-                </a>
-                <a href="sim-split.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-arrows-split-up-and-left"></i> 9. HTTP Splitting
-                </a>
-                <a href="sim-brute.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-lock"></i> 10. Brute Force
-                </a>
-                <a href="sim-idor.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-id-card"></i> 11. IDOR
-                </a>
-                <a href="sim-code.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 12. Code Injection
-                </a>
-                <a href="sim-hardedcode.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 13. Hardcoded 
-                </a>
-                <a href="sim-error-msg.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 14. Error Message Exposure 
-                </a>
-                <a href="sim-no-auth.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 15. Missing Auth for Critical Function 
-                </a>
-                <a href="sim-int-overflow.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 16. Interger Overflow 
-                </a>
-                <a href="sim-unencrypted_data.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 17. 암호화 되지 않은 중요정보 
-                </a>
+        <!-- 검색 박스 -->
+        <div class="search-box">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 검색 (예: SQL, XSS, 보안)">
+        </div>
 
-                <a href="sim-session_hijacking.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 18. 세션 하이재킹  
-                </a>
-
-                <a href="sim-ldap.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 19. LDAP 삽입  
-                </a>
-
-                <a href="sim-racecondition.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 20. 경쟁 조건  
-                </a>
-
-                <a href="sim-password_recovery.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 21. 패스워드 복구  
-                </a>
-                <a href="sim-insufficient_session.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 22. 불충분한 세션  
-                </a>
-
-                 <a href="sim-cookiebyunjo.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-code-branch"></i> 23. 쿠키변조  
-                </a>
-
-            </div> <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
-                <span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span>
-                <i class="fa-solid fa-chevron-down fa-xs"></i>
-            </div>
-            
-            <div class="collapse" id="menu2">
-                <a href="guide-input.html" class="list-group-item list-group-item-action">
-                    <i class="fa-regular fa-file-lines"></i> 2-1. 입력 데이터 검증 및 표현
-                </a>
-                <a href="guide-security.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-shield-halved"></i> 2-2. 보안 기능
-                </a>
+        <!-- 메뉴 스크롤 영역 -->
+        <div class="menu-scroll">
+            <div class="list-group list-group-flush">
                 
-                <a href="sim-time-state.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-hourglass-half"></i> 2-3. 시간 및 상태
-                </a>
-                <a href="sim-error-handling.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-bug"></i> 2-4. 에러 처리
-                </a>
-                <a href="sim-quality.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-check-double"></i> 2-5. 코드 품질
-                </a>
+                <!-- 1. 시뮬레이터 (25개) -->
+                <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1" aria-expanded="false">
+                    <span>
+                        <i class="fa-solid fa-bug text-danger me-2"></i> 
+                        1. Simulators
+                    </span>
+                    <span>
+                        <span class="badge bg-danger">23</span>
+                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
+                    </span>
+                </div>
                 
-                <a href="sim-encap.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-box-open"></i> 2-6. 캡슐화 및 API 오용
-                </a>
-             </div> <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu3">
-                <span><i class="fa-solid fa-vial-virus me-2"></i> 3. Secure Coding Practices - 입력데이터 검증 및 표현 </span>
-                <i class="fa-solid fa-chevron-down fa-xs"></i>
+                <div class="collapse" id="menu1">
+                    <a href="sim-sql.html" class="list-group-item list-group-item-action" data-keywords="sql injection database 주입">
+                        <span><i class="fa-solid fa-database"></i> 1. SQL Injection</span>
+                        <span class="item-number">#1</span>
+                    </a>
+                    <a href="sim-cmd.html" class="list-group-item list-group-item-action" data-keywords="command injection 명령어">
+                        <span><i class="fa-solid fa-terminal"></i> 2. Command Injection</span>
+                        <span class="item-number">#2</span>
+                    </a>
+                    <a href="sim-xxe.html" class="list-group-item list-group-item-action" data-keywords="xxe xml injection">
+                        <span><i class="fa-solid fa-file-code"></i> 3. XXE Injection</span>
+                        <span class="item-number">#3</span>
+                    </a>
+                    <a href="sim-xss.html" class="list-group-item list-group-item-action" data-keywords="xss cross site scripting">
+                        <span><i class="fa-solid fa-code"></i> 4. Reflected XSS</span>
+                        <span class="item-number">#4</span>
+                    </a>
+                    <a href="sim-csrf.html" class="list-group-item list-group-item-action" data-keywords="csrf cross site request forgery">
+                        <span><i class="fa-solid fa-globe"></i> 5. CSRF Attack</span>
+                        <span class="item-number">#5</span>
+                    </a>
+                    <a href="sim-ssrf.html" class="list-group-item list-group-item-action" data-keywords="ssrf server side request forgery">
+                        <span><i class="fa-solid fa-server"></i> 6. SSRF</span>
+                        <span class="item-number">#6</span>
+                    </a>
+                    <a href="sim-upload.html" class="list-group-item list-group-item-action" data-keywords="file upload 파일 업로드">
+                        <span><i class="fa-solid fa-file-arrow-up"></i> 7. File Upload</span>
+                        <span class="item-number">#7</span>
+                    </a>
+                    <a href="sim-path.html" class="list-group-item list-group-item-action" data-keywords="path traversal 경로 조작">
+                        <span><i class="fa-solid fa-folder-open"></i> 8. Path Traversal</span>
+                        <span class="item-number">#8</span>
+                    </a>
+                    <a href="sim-split.html" class="list-group-item list-group-item-action" data-keywords="http splitting response">
+                        <span><i class="fa-solid fa-arrows-split-up-and-left"></i> 9. HTTP Splitting</span>
+                        <span class="item-number">#9</span>
+                    </a>
+                    <a href="sim-brute.html" class="list-group-item list-group-item-action" data-keywords="brute force 무차별 대입">
+                        <span><i class="fa-solid fa-lock"></i> 10. Brute Force</span>
+                        <span class="item-number">#10</span>
+                    </a>
+                    <a href="sim-idor.html" class="list-group-item list-group-item-action" data-keywords="idor insecure direct object reference">
+                        <span><i class="fa-solid fa-id-card"></i> 11. IDOR</span>
+                        <span class="item-number">#11</span>
+                    </a>
+                    <a href="sim-code.html" class="list-group-item list-group-item-action" data-keywords="code injection 코드 주입">
+                        <span><i class="fa-solid fa-code-branch"></i> 12. Code Injection</span>
+                        <span class="item-number">#12</span>
+                    </a>
+                    <a href="sim-hardedcode.html" class="list-group-item list-group-item-action" data-keywords="hardcoded credentials 하드코딩">
+                        <span><i class="fa-solid fa-key"></i> 13. Hardcoded Credentials</span>
+                        <span class="item-number">#13</span>
+                    </a>
+                    <a href="sim-error-msg.html" class="list-group-item list-group-item-action" data-keywords="error message exposure 에러">
+                        <span><i class="fa-solid fa-exclamation-triangle"></i> 14. Error Message Exposure</span>
+                        <span class="item-number">#14</span>
+                    </a>
+                    <a href="sim-no-auth.html" class="list-group-item list-group-item-action" data-keywords="missing authentication 인증">
+                        <span><i class="fa-solid fa-user-lock"></i> 15. Missing Auth for Critical Function</span>
+                        <span class="item-number">#15</span>
+                    </a>
+                    <a href="sim-int-overflow.html" class="list-group-item list-group-item-action" data-keywords="integer overflow 정수 오버플로우">
+                        <span><i class="fa-solid fa-calculator"></i> 16. 정수형 오버플로우</span>
+                        <span class="item-number">#16</span>
+                    </a>
+                    <a href="sim-unencrypted_data.html" class="list-group-item list-group-item-action" data-keywords="unencrypted data 암호화">
+                        <span><i class="fa-solid fa-lock-open"></i> 17. 암호화 되지 않은 중요정보</span>
+                        <span class="item-number">#17</span>
+                    </a>
+                    <a href="sim-session_hijacking.html" class="list-group-item list-group-item-action" data-keywords="session hijacking 세션 하이재킹">
+                        <span><i class="fa-solid fa-user-secret"></i> 18. 세션 하이재킹</span>
+                        <span class="item-number">#18</span>
+                    </a>
+                    <a href="sim-ldap.html" class="list-group-item list-group-item-action" data-keywords="ldap injection">
+                        <span><i class="fa-solid fa-network-wired"></i> 19. LDAP 삽입</span>
+                        <span class="item-number">#19</span>
+                    </a>
+                    <a href="sim-racecondition.html" class="list-group-item list-group-item-action" data-keywords="race condition 경쟁 조건">
+                        <span><i class="fa-solid fa-clock"></i> 20. 경쟁 조건</span>
+                        <span class="item-number">#20</span>
+                    </a>
+                    <a href="sim-password_recovery.html" class="list-group-item list-group-item-action" data-keywords="password recovery 비밀번호 복구">
+                        <span><i class="fa-solid fa-unlock"></i> 21. 패스워드 복구</span>
+                        <span class="item-number">#21</span>
+                    </a>
+                    <a href="sim-insufficient_session.html" class="list-group-item list-group-item-action" data-keywords="session management 세션 관리">
+                        <span><i class="fa-solid fa-hourglass-half"></i> 22. 불충분한 세션</span>
+                        <span class="item-number">#22</span>
+                    </a>
+                    <a href="sim-cookiebyunjo.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
+                        <span><i class="fa-solid fa-cookie"></i> 23. 쿠키 변조</span>
+                        <span class="item-number">#23</span>
+                    </a>
+                    <a href="sim-httpabuse.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
+                        <span><i class="fa-solid fa-cookie"></i> 24. HTTP 오남용</span>
+                        <span class="item-number">#24</span>
+
+                    <a href="code-processvalidation.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
+                        <span><i class="fa-solid fa-cookie"></i> 25. 프로세스 검증</span>
+                        <span class="item-number">#25</span>
+
+                     <a href="sim-automated_attacks.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
+                        <span><i class="fa-solid fa-cookie"></i> 26. 자동화된 공격</span>
+                        <span class="item-number">#26</span>    
+                </div>
+
+                <!-- 2. 시큐어 코딩 가이드라인 (6개) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2" aria-expanded="false">
+                    <span>
+                        <i class="fa-solid fa-book me-2"></i> 
+                        2. Secure Coding Guidelines
+                    </span>
+                    <span>
+                        <span class="badge bg-primary">6</span>
+                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
+                    </span>
+                </div>
+                
+                <div class="collapse" id="menu2">
+                    <a href="guide-input.html" class="list-group-item list-group-item-action" data-keywords="입력 데이터 검증 validation">
+                        <span><i class="fa-regular fa-file-lines"></i> 입력 데이터 검증 및 표현</span>
+                    </a>
+                    <a href="guide-security.html" class="list-group-item list-group-item-action" data-keywords="보안 기능 security">
+                        <span><i class="fa-solid fa-shield-halved"></i> 보안 기능</span>
+                    </a>
+                    <a href="sim-time-state.html" class="list-group-item list-group-item-action" data-keywords="시간 상태 time state">
+                        <span><i class="fa-solid fa-hourglass-half"></i> 시간 및 상태</span>
+                    </a>
+                    <a href="sim-error-handling.html" class="list-group-item list-group-item-action" data-keywords="에러 처리 error">
+                        <span><i class="fa-solid fa-bug"></i> 에러 처리</span>
+                    </a>
+                    <a href="sim-quality.html" class="list-group-item list-group-item-action" data-keywords="코드 품질 quality">
+                        <span><i class="fa-solid fa-check-double"></i> 코드 품질</span>
+                    </a>
+                    <a href="sim-encap.html" class="list-group-item list-group-item-action" data-keywords="캡슐화 api encapsulation">
+                        <span><i class="fa-solid fa-box-open"></i> 캡슐화 및 API 오용</span>
+                    </a>
+                </div>
+
+                <!-- 3. 입력데이터 검증 (17개) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu3" aria-expanded="false">
+                    <span>
+                        <i class="fa-solid fa-filter me-2"></i> 
+                        3. 입력데이터 검증 실습
+                    </span>
+                    <span>
+                        <span class="badge bg-warning text-dark">17</span>
+                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
+                    </span>
+                </div>
+                
+                <div class="collapse" id="menu3">
+                    <a href="03_code_sql_injection.html" class="list-group-item list-group-item-action" data-keywords="sql injection">
+                        <span><i class="fa-solid fa-database"></i> SQL 삽입</span>
+                        <span class="item-number">#1</span>
+                    </a>
+                    <a href="03_code_codeinjection.html" class="list-group-item list-group-item-action" data-keywords="code injection">
+                        <span><i class="fa-solid fa-code"></i> 코드 삽입</span>
+                        <span class="item-number">#2</span>
+                    </a>
+                    <a href="03_code_path_traversal.html" class="list-group-item list-group-item-action" data-keywords="path traversal">
+                        <span><i class="fa-solid fa-folder-tree"></i> 경로 조작 및 삽입</span>
+                        <span class="item-number">#3</span>
+                    </a>
+                    <a href="03_code_xss.html" class="list-group-item list-group-item-action" data-keywords="xss cross site">
+                        <span><i class="fa-solid fa-code"></i> 크로스 사이트 스크립트</span>
+                        <span class="item-number">#4</span>
+                    </a>
+                    <a href="03_code_os_command.html" class="list-group-item list-group-item-action" data-keywords="command injection os">
+                        <span><i class="fa-solid fa-terminal"></i> OS 명령어 삽입</span>
+                        <span class="item-number">#5</span>
+                    </a>
+                    <a href="03_code_dangerous_file_upload.html" class="list-group-item list-group-item-action" data-keywords="file upload">
+                        <span><i class="fa-solid fa-file-upload"></i> 위험한 형식 파일 업로드</span>
+                        <span class="item-number">#6</span>
+                    </a>
+                    <a href="03_code_open_redirect.html" class="list-group-item list-group-item-action" data-keywords="redirect url">
+                        <span><i class="fa-solid fa-arrow-right-to-bracket"></i> 신뢰되지 않은 URL 주소 자동 접속</span>
+                        <span class="item-number">#7</span>
+                    </a>
+                    <a href="03_code_xxe.html" class="list-group-item list-group-item-action" data-keywords="xxe xml">
+                        <span><i class="fa-solid fa-file-code"></i> 부적절한 XML 외부 개체 참조</span>
+                        <span class="item-number">#8</span>
+                    </a>
+                    <a href="03_code_xml_injection.html" class="list-group-item list-group-item-action" data-keywords="xml injection">
+                        <span><i class="fa-solid fa-file-code"></i> XML 삽입</span>
+                        <span class="item-number">#9</span>
+                    </a>
+                    <a href="03_code_ldap.html" class="list-group-item list-group-item-action" data-keywords="ldap">
+                        <span><i class="fa-solid fa-network-wired"></i> LDAP 삽입</span>
+                        <span class="item-number">#10</span>
+                    </a>
+                    <a href="03_code_csrf.html" class="list-group-item list-group-item-action" data-keywords="csrf">
+                        <span><i class="fa-solid fa-globe"></i> CSRF</span>
+                        <span class="item-number">#11</span>
+                    </a>
+                    <a href="03_code_ssrf.html" class="list-group-item list-group-item-action" data-keywords="ssrf">
+                        <span><i class="fa-solid fa-server"></i> SSRF</span>
+                        <span class="item-number">#12</span>
+                    </a>
+                    <a href="03_code_http_split.html" class="list-group-item list-group-item-action" data-keywords="http response splitting">
+                        <span><i class="fa-solid fa-split"></i> HTTP 응답분할</span>
+                        <span class="item-number">#13</span>
+                    </a>
+                    <a href="03_code_integer_overflow.html" class="list-group-item list-group-item-action" data-keywords="integer overflow">
+                        <span><i class="fa-solid fa-calculator"></i> 정수형 오버플로우</span>
+                        <span class="item-number">#14</span>
+                    </a>
+                    <a href="03_code_untrusted_input.html" class="list-group-item list-group-item-action" data-keywords="input validation">
+                        <span><i class="fa-solid fa-shield-virus"></i> 보안기능 결정 부적절 입력값</span>
+                        <span class="item-number">#15</span>
+                    </a>
+                    <a href="03_code_bufferoverflow.html" class="list-group-item list-group-item-action" data-keywords="buffer overflow">
+                        <span><i class="fa-solid fa-memory"></i> 버퍼오버플로우</span>
+                        <span class="item-number">#16</span>
+                    </a>
+                    <a href="03_code_formatstring.html" class="list-group-item list-group-item-action" data-keywords="format string">
+                        <span><i class="fa-solid fa-percent"></i> 포맷스트링 삽입</span>
+                        <span class="item-number">#17</span>
+                    </a>
+                </div>
+
+                <!-- 4. 보안 기능 실습 (16개) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu4" aria-expanded="false">
+                    <span>
+                        <i class="fa-solid fa-lock me-2"></i> 
+                        4. 보안 기능 실습
+                    </span>
+                    <span>
+                        <span class="badge bg-info">16</span>
+                        <i class="fa-solid fa-chevron-down fa-xs ms-2"></i>
+                    </span>
+                </div>
+                
+                <div class="collapse" id="menu4">
+                    <a href="03_code_missing_auth.html" class="list-group-item list-group-item-action" data-keywords="authentication 인증">
+                        <span><i class="fa-solid fa-user-lock"></i> 적절한 인증 없는 중요 기능</span>
+                        <span class="item-number">#1</span>
+                    </a>
+                    <a href="03_code_inapporiate_auth.html" class="list-group-item list-group-item-action" data-keywords="authorization 인가">
+                        <span><i class="fa-solid fa-user-slash"></i> 부적절한 인가</span>
+                        <span class="item-number">#2</span>
+                    </a>
+                    <a href="03_code_wrong_auth.html" class="list-group-item list-group-item-action" data-keywords="permission 권한">
+                        <span><i class="fa-solid fa-ban"></i> 잘못된 권한 설정</span>
+                        <span class="item-number">#3</span>
+                    </a>
+                    <a href="03_code_risky_crypto.html" class="list-group-item list-group-item-action" data-keywords="encryption 암호화">
+                        <span><i class="fa-solid fa-lock-open"></i> 취약한 암호화 알고리즘</span>
+                        <span class="item-number">#4</span>
+                    </a>
+                    <a href="03_code_no_encrypted_info.html" class="list-group-item list-group-item-action" data-keywords="encryption 암호화">
+                        <span><i class="fa-solid fa-unlock"></i> 암호화 되지 않은 중요 정보</span>
+                        <span class="item-number">#5</span>
+                    </a>
+                    <a href="03_code_hardedcode.html" class="list-group-item list-group-item-action" data-keywords="hardcoded 하드코딩">
+                        <span><i class="fa-solid fa-key"></i> 하드코드된 중요 정보</span>
+                        <span class="item-number">#6</span>
+                    </a>
+                    <a href="03_code_notenoughkey.html" class="list-group-item list-group-item-action" data-keywords="key length 키">
+                        <span><i class="fa-solid fa-ruler"></i> 충분하지 않은 키 길이</span>
+                        <span class="item-number">#7</span>
+                    </a>
+                    <a href="03_code_useofinsufficient_random.html" class="list-group-item list-group-item-action" data-keywords="random 난수">
+                        <span><i class="fa-solid fa-dice"></i> 적절하지 않은 난수 값 사용</span>
+                        <span class="item-number">#8</span>
+                    </a>
+                    <a href="03_code_weakpassword.html" class="list-group-item list-group-item-action" data-keywords="password 비밀번호">
+                        <span><i class="fa-solid fa-lock-open"></i> 취약한 비밀번호 허용</span>
+                        <span class="item-number">#9</span>
+                    </a>
+                    <a href="03_code_impropersignature.html" class="list-group-item list-group-item-action" data-keywords="signature 전자서명">
+                        <span><i class="fa-solid fa-signature"></i> 부적절한 전자서명 확인</span>
+                        <span class="item-number">#10</span>
+                    </a>
+                    <a href="03_code_impropersignature_validity.html" class="list-group-item list-group-item-action" data-keywords="certificate 인증서">
+                        <span><i class="fa-solid fa-certificate"></i> 부적절한 인증서 유효성 검증</span>
+                        <span class="item-number">#11</span>
+                    </a>
+                    <a href="03_code_cookiedisclosure.html" class="list-group-item list-group-item-action" data-keywords="cookie 쿠키">
+                        <span><i class="fa-solid fa-cookie"></i> 쿠키를 통한 정보 노출</span>
+                        <span class="item-number">#12</span>
+                    </a>
+                    <a href="03_code_sensitiveinfo_sourcecodecomments.html" class="list-group-item list-group-item-action" data-keywords="comment 주석">
+                        <span><i class="fa-solid fa-comment"></i> 주석문 안 시스템 정보</span>
+                        <span class="item-number">#13</span>
+                    </a>
+                    <a href="03_code_nosalthash.html" class="list-group-item list-group-item-action" data-keywords="hash salt 해시">
+                        <span><i class="fa-solid fa-hashtag"></i> 솔트 없는 일방향 해시</span>
+                        <span class="item-number">#14</span>
+                    </a>
+                    <a href="03_code_nointegritycode.html" class="list-group-item list-group-item-action" data-keywords="integrity 무결성">
+                        <span><i class="fa-solid fa-shield-check"></i> 무결성 검사없는 코드 다운로드</span>
+                        <span class="item-number">#15</span>
+                    </a>
+                    <a href="03_code_improper_auth_attempts.html" class="list-group-item list-group-item-action" data-keywords="brute force 무차별">
+                        <span><i class="fa-solid fa-ban"></i> 반복 인증시도 제한 부재</span>
+                        <span class="item-number">#16</span>
+                    </a>
+                </div>
+
             </div>
+        </div>
+
+        <!-- 사이드바 푸터 -->
+        <div style="padding: 1rem; border-top: 1px solid #334155; background: rgba(0,0,0,0.2); font-size: 0.75rem; color: #64748b;">
+            <div class="mb-1">📧 jackhwang0210@gmail.com</div>
+            <div>© 2025 Jack Hwang. All rights reserved.</div>
+        </div>
+    </div>
+
+    <div id="page-content-wrapper">
+        <!-- 헤더 -->
+        <div class="content-header">
+            <h1><i class="fa-solid fa-graduation-cap me-3"></i>Web Security Learning Hub</h1>
+            <p class="lead mb-0">실습과 이론을 통한 웹 보안 전문가 양성 플랫폼</p>
+        </div>
+
+        <div class="container-fluid p-4">
             
-            <div class="collapse" id="menu3">
-                <a href="03_code_sql_injection.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 1 - SQL 삽입
-                </a>
-                <a href="03_code_codeinjection.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 2 - 코드 삽입
-                </a>
-                <a href="03_code_path_traversal.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 3 - 경로 조작 및 삽입
-                </a>
-                 <a href="03_code_xss.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 4 - 크로스 사이트 스크립트
-                </a> 
-                 <a href="03_code_os_command.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 5 - 운영체제 명령어 삽입
-                </a>
-                 <a href="03_code_dangerous_file_upload.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 6 - 위험한 형식 파일 업로드
-                </a>
-                 <a href="03_code_open_redirect.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 7 - 신뢰되지 않은 URL 주소로 자동 접속 연결
-                </a> 
-                <a href="03_code_xxe.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 8 - 부적절한 XML 외부 개체 참조
-                </a>
-                <a href="03_code_xxe.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 9 - XML 삽입
-                </a>
-                <a href="03_code_xxe.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 10 - LDAP 삽입
-                </a>
-                <a href="03_code_csrf.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 11 - CSRF
-                </a>
-                <a href="03_code_csrf.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 12 - SSRF
-                </a>
-                <a href="03_code_http_split.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 13 - HTTP 응답분할
-                </a>
-                <a href="03_code_http_split.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 14 - 정수형 오버플로우
-                </a> 
-                <a href="03_code_untrusted_input.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 15 - 보안기능 결정에 사용되는 부적절한 입력값
-                </a>
-                <a href="03_code_bufferoverflow.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 16 - 버퍼오버플로우 
-                </a>  
-                <a href="03_code_formatstring.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 입력데이터 검증 및 표현 17 - 포맷스트링 삽입 
-                </a>      
-            </div> <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu3">
-                <span><i class="fa-solid fa-vial-virus me-2"></i> 4. Secure Coding Practices - 보안 기능</span>
-                <i class="fa-solid fa-chevron-down fa-xs"></i>
+            <!-- 통계 카드 -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card bg-danger bg-gradient text-white shadow">
+                        <i class="fa-solid fa-bug fa-2x"></i>
+                        <h2>23</h2>
+                        <p>공격 시뮬레이터</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-primary bg-gradient text-white shadow">
+                        <i class="fa-solid fa-book fa-2x"></i>
+                        <h2>6</h2>
+                        <p>코딩 가이드라인</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-warning bg-gradient text-white shadow">
+                        <i class="fa-solid fa-code fa-2x"></i>
+                        <h2>17</h2>
+                        <p>입력검증 실습</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-info bg-gradient text-white shadow">
+                        <i class="fa-solid fa-shield fa-2x"></i>
+                        <h2>16</h2>
+                        <p>보안기능 실습</p>
+                    </div>
+                </div>
             </div>
-            
-            <div class="collapse" id="menu3">
-                <a href="03_code_missing_auth.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-lock"></i> 2절 보안기능 1 - 적절한 인증 없는 중요 기능 허용
-                </a>
-                <a href="03_code_inapporiate_auth.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 2 - 부적절한 인가
-                </a>
-                </a>
-                <a href="03_code_wrong_auth.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 3 - 중요한 자원에 대한 잘못된 권한 설정 
-                </a>
-                <a href="03_code_risky_crypto.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 4 - 취약한 암호화 알고리즘 
-                </a>
-                <a href="03_code_no_encrypted_info.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 5 - 암호화 되지 않은 중요 정보 
-                </a>
-                <a href="03_code_hardedcode.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 6 - 하드 코드된 중요 정보 
-                </a>
-                <a href="03_code_notenoughkey.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 7 - 충분하지 않은 키 길이 사용  
-                </a>
-                <a href="03_code_useofinsufficient_random.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 8 - 적절하지 않은 난수 값 사용  
-                </a>
-                <a href="03_code_weakpassword.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 9 - 취약한 비밀번호 허용  
-                </a>
-                <a href="03_code_impropersignature.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 10 - 부적절한 전자서명 확인  
-                </a>
-                <a href="03_code_impropersignature_validity.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 11 - 부적절한 인증서 유효성 검증  
-                </a>
-                <a href="03_code_cookiedisclosure.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 12 - 사용자 하드디스크에 저장되는 쿠키를 통한 정보 노출  
-                </a>
-                <a href="03_code_sensitiveinfo_sourcecodecomments.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 13 - 주석문 안에 초함된 시스템 주요정보  
-                </a>
-                 <a href="03_code_nosalthash.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 14 - 솔트 없이 일방향 해시함수 사용  
-                </a>
-                 <a href="03_code_nointegritycode.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 15 - 무결성 검사없는 코드 다운로드  
-                </a>
-                <a href="03_code_improper_auth_attempts.html" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-user-slash"></i> 2절 보안기능 16 - 반복된 인증시도 제한 기능 부재  
-                </a>
-            </div> </div> </div> <div id="page-content-wrapper">
-        <div class="container-fluid p-5">
-            <h1 class="mb-4">Web Security Simulator Dashboard & Secure coding practices</h1>
-            <p class="lead">왼쪽 사이드바에서 실습할 취약점 공격(Simulator) 또는 시큐어 코딩 가이드(Guidelines)를 선택하세요.</p>
-            <hr class="my-4">
-            
+
+            <!-- 빠른 시작 -->
             <div class="row g-4 mb-4">
                 <div class="col-md-6">
-                    <div class="card h-100 shadow-sm border-0 bg-light">
+                    <div class="card h-100 shadow-sm border-0">
                         <div class="card-body">
-                            <h4 class="card-title text-danger"><i class="fa-solid fa-shield-virus"></i> 모의 해킹 실습</h4>
-                            <p class="card-text">SQL Injection, XSS, CSRF 등 20가지 주요 웹 취약점을 직접 공격해보며 원리를 이해할 수 있습니다.</p>
+                            <h4 class="card-title text-danger">
+                                <i class="fa-solid fa-rocket me-2"></i>
+                                빠른 시작 가이드
+                            </h4>
+                            <ol class="mt-3">
+                                <li class="mb-2"><strong>시뮬레이터 실습:</strong> 좌측 메뉴에서 원하는 취약점을 선택</li>
+                                <li class="mb-2"><strong>공격 시나리오 실행:</strong> 각 시뮬레이터에서 공격 버튼 클릭</li>
+                                <li class="mb-2"><strong>방어 코드 학습:</strong> 취약한 코드와 안전한 코드 비교</li>
+                                <li class="mb-2"><strong>가이드라인 참고:</strong> KISA 시큐어 코딩 가이드 숙지</li>
+                            </ol>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="card h-100 shadow-sm border-0 bg-light">
+                    <div class="card h-100 shadow-sm border-0">
                         <div class="card-body">
-                            <h4 class="card-title text-primary"><i class="fa-solid fa-book-open"></i> 시큐어 코딩 가이드</h4>
-                            <p class="card-text">KISA 시큐어 코딩 가이드라인을 기반으로 안전한 코드 작성법과 방어 기법을 학습합니다.</p>
+                            <h4 class="card-title text-primary">
+                                <i class="fa-solid fa-lightbulb me-2"></i>
+                                추천 학습 경로
+                            </h4>
+                            <div class="mt-3">
+                                <div class="alert alert-light border mb-2">
+                                    <strong>초급:</strong> SQL Injection → XSS → CSRF
+                                </div>
+                                <div class="alert alert-light border mb-2">
+                                    <strong>중급:</strong> Command Injection → XXE → SSRF
+                                </div>
+                                <div class="alert alert-light border mb-2">
+                                    <strong>고급:</strong> Race Condition → Session Hijacking
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fa-solid fa-timeline me-2"></i> Change History (변경 이력)</h5>
+            <!-- 변경 이력 -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i>
+                        최근 업데이트
+                    </h5>
                 </div>
                 <div class="card-body">
                     <ul class="history-list">
                         <li>
                             <span class="history-date">2026-01-03</span>
-                            <span class="badge bg-success me-2">NEW</span> 시큐어코딩 - 보안 기능- 입력 및 데이터 검증 시큐어 코딩 예제 추가
+                            <div>
+                                <span class="badge bg-success me-2">NEW</span>
+                                <strong>시큐어코딩 실습 추가:</strong> 입력 및 데이터 검증, 보안 기능 예제 17개 추가
+                            </div>
                         </li>
                         <li>
                             <span class="history-date">2025-12-16</span>
-                            <span class="badge bg-success me-2">NEW</span> 시큐어코딩 - 보안 기능- 암호화 되지 않은 중요 정보, 취약한 암호 알고리즘 사용 추가, 입력 데이터 및 검증 표현 - SQL 삽입 추가
+                            <div>
+                                <span class="badge bg-success me-2">NEW</span>
+                                <strong>보안 기능:</strong> 암호화 되지 않은 중요 정보, 취약한 암호 알고리즘, SQL 삽입 추가
+                            </div>
                         </li>
                         <li>
                             <span class="history-date">2025-12-16</span>
-                            <span class="badge bg-success me-2">NEW</span> 시뮬레이션 경쟁 조건, LDAP 삽입 추가, 시큐어코딩 - 2-3. 보안 기능 - 중요한 자원에 대한 잘못된 권한 설정
+                            <div>
+                                <span class="badge bg-primary me-2">UPDATE</span>
+                                <strong>시뮬레이션:</strong> 경쟁 조건, LDAP 삽입, 잘못된 권한 설정 추가
+                            </div>
                         </li>
                         <li>
                             <span class="history-date">2025-12-14</span>
-                            <span class="badge bg-success me-2">NEW</span> 시뮬레이터 암호화 되지 않은 중요 정보, 세션 하이재킹 추가.
+                            <div>
+                                <span class="badge bg-info me-2">FEATURE</span>
+                                <strong>새 시뮬레이터:</strong> 암호화 되지 않은 중요 정보, 세션 하이재킹
+                            </div>
                         </li>
-                        <li>
-                            <span class="history-date">2025-12-14</span>
-                            <span class="badge bg-primary me-2">NEW</span> 메인 콘텐츠에 Change History 섹션 추가.
-                        </li>
-                       
                     </ul>
                 </div>
             </div>
             
-            <div class="alert alert-info mt-4" role="alert">
-                <i class="fa-solid fa-circle-info me-2"></i> 
-                <strong>Notes 1:</strong> 본 사이트는 웹 취약점 및 KISA에서 발간한 시큐어 코딩 가이드라인 학습을 위한 사이트입니다. 교육 이외 다른 목적에 따른 책임은 지지 않습니다.
-                <strong>Notes 2:</strong> 시큐어 코딩 가이드라인의 저작권은 KISA에 있습니다. Copyright 2025-2026 Jack Hwang E-mail: jackhwang0210@gmail.com 
+            <!-- 주의사항 -->
+            <div class="alert alert-warning border-warning" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    중요 안내사항
+                </h5>
+                <hr>
+                <p class="mb-2">
+                    <strong>📌 교육 목적:</strong> 
+                    본 사이트는 웹 취약점 및 KISA 시큐어 코딩 가이드라인 학습을 위한 교육용 플랫폼입니다.
+                </p>
+                <p class="mb-2">
+                    <strong>⚖️ 법적 책임:</strong> 
+                    교육 목적 외 악용으로 인한 법적 책임은 사용자 본인에게 있습니다.
+                </p>
+                <p class="mb-0">
+                    <strong>©️ 저작권:</strong> 
+                    시큐어 코딩 가이드라인의 저작권은 KISA에 있습니다. 
+                    © 2025-2026 Jack Hwang
+                </p>
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// 검색 기능
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const menuItems = document.querySelectorAll('.list-group-item-action');
+    const categories = document.querySelectorAll('.menu-category');
+    
+    if (searchTerm === '') {
+        // 검색어가 없으면 모든 항목 표시
+        menuItems.forEach(item => {
+            item.style.display = '';
+            item.innerHTML = item.innerHTML.replace(/<mark class="highlight">/g, '').replace(/<\/mark>/g, '');
+        });
+        
+        // 모든 카테고리 접기
+        document.querySelectorAll('.collapse').forEach(collapse => {
+            collapse.classList.remove('show');
+        });
+        
+        return;
+    }
+    
+    let hasResults = false;
+    
+    // 카테고리별로 검색
+    categories.forEach(category => {
+        const targetId = category.getAttribute('data-bs-target');
+        const collapseElement = document.querySelector(targetId);
+        const itemsInCategory = collapseElement.querySelectorAll('.list-group-item-action');
+        let categoryHasMatch = false;
+        
+        itemsInCategory.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            const keywords = item.getAttribute('data-keywords') || '';
+            
+            if (text.includes(searchTerm) || keywords.includes(searchTerm)) {
+                item.style.display = '';
+                categoryHasMatch = true;
+                hasResults = true;
+                
+                // 검색어 하이라이트
+                const regex = new RegExp(`(${searchTerm})`, 'gi');
+                const spans = item.querySelectorAll('span');
+                spans.forEach(span => {
+                    if (!span.classList.contains('item-number') && !span.classList.contains('badge')) {
+                        const originalText = span.textContent;
+                        span.innerHTML = originalText.replace(regex, '<mark class="highlight">$1</mark>');
+                    }
+                });
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // 카테고리에 결과가 있으면 자동으로 펼치기
+        if (categoryHasMatch) {
+            collapseElement.classList.add('show');
+        } else {
+            collapseElement.classList.remove('show');
+        }
+    });
+    
+    // 검색 결과 없음 메시지
+    const noResultsDiv = document.getElementById('noResults');
+    if (!hasResults) {
+        if (!noResultsDiv) {
+            const div = document.createElement('div');
+            div.id = 'noResults';
+            div.className = 'no-results';
+            div.innerHTML = '<i class="fa-solid fa-magnifying-glass fa-2x mb-2"></i><p>검색 결과가 없습니다.</p>';
+            document.querySelector('.menu-scroll').appendChild(div);
+        }
+    } else {
+        if (noResultsDiv) {
+            noResultsDiv.remove();
+        }
+    }
+});
+
+// 카테고리 토글 시 아이콘 회전
+document.querySelectorAll('.menu-category').forEach(category => {
+    category.addEventListener('click', function() {
+        this.setAttribute('aria-expanded', 
+            this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'
+        );
+    });
+});
+
+// 페이지 로드 시 첫 번째 카테고리 자동 열기
+document.addEventListener('DOMContentLoaded', function() {
+    const firstCategory = document.querySelector('#menu1');
+    if (firstCategory) {
+        firstCategory.classList.add('show');
+        document.querySelector('[data-bs-target="#menu1"]').setAttribute('aria-expanded', 'true');
+    }
+});
+</script>
 </body>
 </html>
