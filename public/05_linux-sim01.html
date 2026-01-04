@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linux 보안 실습 시뮬레이터 - 계정 관리</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #0c0c0c;
+      color: #00ff00;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .top-bar {
+      background: #1a1a1a;
+      padding: 10px 20px;
+      border-bottom: 2px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .top-bar h1 {
+      font-size: 1.2em;
+      color: #00ff00;
+    }
+    
+    .status-badge {
+      padding: 5px 15px;
+      border-radius: 5px;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+    
+    .status-vulnerable {
+      background: #ff0000;
+      color: #fff;
+      animation: blink 1s infinite;
+    }
+    
+    .status-secure {
+      background: #00ff00;
+      color: #000;
+    }
+    
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.5; }
+    }
+    
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    /* 왼쪽: 점검 항목 패널 */
+    .checklist-panel {
+      width: 300px;
+      background: #1a1a1a;
+      border-right: 2px solid #333;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    .checklist-item {
+      background: #2a2a2a;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 4px solid #555;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .checklist-item:hover {
+      background: #3a3a3a;
+      border-left-color: #00ff00;
+    }
+    
+    .checklist-item.active {
+      background: #0a3a0a;
+      border-left-color: #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    }
+    
+    .checklist-item.vulnerable {
+      border-left-color: #ff0000;
+    }
+    
+    .checklist-item.secure {
+      border-left-color: #00ff00;
+    }
+    
+    .item-id {
+      font-weight: bold;
+      color: #00ff00;
+      margin-bottom: 5px;
+    }
+    
+    .item-title {
+      font-size: 0.85em;
+      color: #aaa;
+    }
+    
+    .item-status {
+      font-size: 0.75em;
+      margin-top: 5px;
+    }
+    
+    .item-status.vulnerable {
+      color: #ff5555;
+    }
+    
+    .item-status.secure {
+      color: #00ff00;
+    }
+    
+    /* 가운데: 터미널 */
+    .terminal-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #0c0c0c;
+    }
+    
+    .terminal-header {
+      background: #2a2a2a;
+      padding: 10px 20px;
+      border-bottom: 1px solid #444;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .terminal-title {
+      font-size: 0.9em;
+      color: #aaa;
+    }
+    
+    .terminal-controls {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .terminal-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    
+    .btn-close { background: #ff5f56; }
+    .btn-minimize { background: #ffbd2e; }
+    .btn-maximize { background: #27c93f; }
+    
+    .terminal-output {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+    
+    .terminal-line {
+      margin-bottom: 5px;
+    }
+    
+    .prompt {
+      color: #00ff00;
+    }
+    
+    .command {
+      color: #ffff00;
+    }
+    
+    .output {
+      color: #aaa;
+      white-space: pre-wrap;
+    }
+    
+    .error {
+      color: #ff5555;
+    }
+    
+    .success {
+      color: #00ff00;
+    }
+    
+    .terminal-input-container {
+      background: #1a1a1a;
+      padding: 15px 20px;
+      border-top: 1px solid #444;
+      display: flex;
+      align-items: center;
+    }
+    
+    .terminal-prompt {
+      color: #00ff00;
+      margin-right: 10px;
+    }
+    
+    #terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #00ff00;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9em;
+      outline: none;
+    }
+    
+    /* 오른쪽: 가이드 패널 */
+    .guide-panel {
+      width: 400px;
+      background: #1a1a1a;
+      border-left: 2px solid #333;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    .guide-section {
+      margin-bottom: 25px;
+    }
+    
+    .guide-section h3 {
+      color: #00ff00;
+      margin-bottom: 10px;
+      font-size: 1em;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+    }
+    
+    .guide-section p {
+      color: #aaa;
+      font-size: 0.85em;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    
+    .guide-section code {
+      background: #2a2a2a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #ffff00;
+    }
+    
+    .command-example {
+      background: #2a2a2a;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      border-left: 3px solid #00ff00;
+    }
+    
+    .command-example .cmd {
+      color: #ffff00;
+      margin-bottom: 5px;
+    }
+    
+    .command-example .desc {
+      color: #888;
+      font-size: 0.8em;
+    }
+    
+    .fix-button {
+      background: #00ff00;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      transition: all 0.3s;
+    }
+    
+    .fix-button:hover {
+      background: #00dd00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+    
+    .fix-button:disabled {
+      background: #555;
+      color: #888;
+      cursor: not-allowed;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <h1>🛡️ Unix Security Training Simulator (U-01 ~ U-06)</h1>
+    <div>
+      <span class="status-badge" id="overall-status">VULNERABLE</span>
+    </div>
+  </div>
+  
+  <div class="main-container">
+    <!-- 왼쪽: 점검 항목 -->
+    <div class="checklist-panel">
+      <h2 style="margin-bottom: 20px; color: #00ff00;">보안 점검 항목</h2>
+      <div id="checklist"></div>
+    </div>
+    
+    <!-- 가운데: 터미널 -->
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <span class="terminal-title">root@ubuntu:~$</span>
+        <div class="terminal-controls">
+          <div class="terminal-btn btn-close"></div>
+          <div class="terminal-btn btn-minimize"></div>
+          <div class="terminal-btn btn-maximize"></div>
+        </div>
+      </div>
+      
+      <div class="terminal-output" id="terminal-output">
+        <div class="terminal-line">
+          <span class="success">Welcome to Unix Security Training Simulator v1.4</span>
+        </div>
+        <div class="terminal-line">
+          <span class="output">Type 'help' for available commands</span>
+        </div>
+        <div class="terminal-line">
+          <span class="output">Select a security check item from the left panel to start</span>
+        </div>
+        <div class="terminal-line"></div>
+      </div>
+      
+      <div class="terminal-input-container">
+        <span class="terminal-prompt">root@ubuntu:~$</span>
+        <input type="text" id="terminal-input" autofocus autocomplete="off" />
+      </div>
+    </div>
+    
+    <!-- 오른쪽: 가이드 -->
+    <div class="guide-panel" id="guide-panel">
+      <div class="guide-section">
+        <h3>💡 사용 방법</h3>
+        <p>1. 왼쪽에서 점검 항목 선택</p>
+        <p>2. 터미널에 명령어 입력하여 현재 상태 확인</p>
+        <p>3. 취약점 발견 시 수정 명령어 실행</p>
+        <p>4. 상태가 "안전"으로 변경되는지 확인</p>
+      </div>
+      
+      <div class="guide-section">
+        <h3>🔧 기본 명령어</h3>
+        <div class="command-example">
+          <div class="cmd">help</div>
+          <div class="desc">사용 가능한 명령어 목록</div>
+        </div>
+        <div class="command-example">
+          <div class="cmd">clear</div>
+          <div class="desc">터미널 화면 지우기</div>
+        </div>
+        <div class="command-example">
+          <div class="cmd">check</div>
+          <div class="desc">현재 항목 자동 점검</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 가상 파일 시스템
+    const virtualFS = {
+      '/etc/ssh/sshd_config': `# SSH Server Configuration
+Port 22
+PermitRootLogin yes
+PasswordAuthentication yes
+PubkeyAuthentication yes`,
+      '/etc/login.defs': `PASS_MAX_DAYS\t99999
+PASS_MIN_DAYS\t0
+PASS_MIN_LEN\t5
+PASS_WARN_AGE\t7`,
+      '/etc/pam.d/system-auth': `# PAM configuration
+auth required pam_env.so
+auth required pam_unix.so
+account required pam_unix.so
+password required pam_unix.so sha512`,
+      // U-04 실습을 위해 root의 2번째 필드를 해시값으로 설정 (취약 상태)
+      '/etc/passwd': `root:$6$k3b4...:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+testuser:x:1000:1000:Test User:/home/testuser:/bin/bash
+admin:x:0:0:Admin User:/home/admin:/bin/bash`,
+      '/etc/shadow': `-rw-r----- 1 root shadow`,
+      '/etc/group': `root:x:0:
+adm:x:4:ubuntu
+sudo:x:27:ubuntu,testuser
+wheel:x:10:admin`,
+      '/etc/pam.d/su': `# PAM configuration for su
+auth sufficient pam_rootok.so
+# auth required pam_wheel.so use_uid
+auth required pam_unix.so`,
+      '/etc/securetty': `console
+tty1
+tty2`
+    };
+
+    // 점검 항목 데이터
+    const checkItems = [
+      {
+        id: 'U-01',
+        title: 'root 계정 원격 접속 제한',
+        description: 'SSH를 통한 root 계정의 직접 로그인을 차단합니다.',
+        vulnerable: true,
+        checkCommands: [
+          'cat /etc/ssh/sshd_config | grep PermitRootLogin',
+          'cat /etc/securetty'
+        ],
+        fixCommand: 'sed -i "s/PermitRootLogin yes/PermitRootLogin no/g" /etc/ssh/sshd_config',
+        checkFunction: () => {
+          const config = virtualFS['/etc/ssh/sshd_config'];
+          return !config.includes('PermitRootLogin yes');
+        },
+        guide: {
+          risk: 'root 계정으로 직접 SSH 접속이 가능하면 무차별 대입 공격(Brute Force)에 취약합니다.',
+          howToCheck: 'cat /etc/ssh/sshd_config | grep PermitRootLogin',
+          howToFix: 'PermitRootLogin을 no로 변경',
+          fixCmd: 'sed -i "s/PermitRootLogin yes/PermitRootLogin no/g" /etc/ssh/sshd_config'
+        }
+      },
+      {
+        id: 'U-02',
+        title: '비밀번호 정책 설정',
+        description: '비밀번호 최대 사용 기간과 최소 길이를 설정합니다.',
+        vulnerable: true,
+        checkCommands: [
+          'cat /etc/login.defs | grep PASS_MAX_DAYS',
+          'cat /etc/login.defs | grep PASS_MIN_LEN'
+        ],
+        fixCommand: 'sed -i "s/PASS_MAX_DAYS\\t99999/PASS_MAX_DAYS\\t90/g; s/PASS_MIN_LEN\\t5/PASS_MIN_LEN\\t8/g" /etc/login.defs',
+        checkFunction: () => {
+          const config = virtualFS['/etc/login.defs'];
+          return config.includes('PASS_MAX_DAYS\t90') && config.includes('PASS_MIN_LEN\t8');
+        },
+        guide: {
+          risk: '비밀번호 정책이 취약하면 오래된 비밀번호 사용 및 짧은 비밀번호로 인한 보안 위험이 있습니다.',
+          howToCheck: 'cat /etc/login.defs | grep -E "PASS_(MAX_DAYS|MIN_LEN)"',
+          howToFix: 'PASS_MAX_DAYS를 90일, PASS_MIN_LEN을 8자 이상으로 설정',
+          fixCmd: 'sed -i "s/PASS_MAX_DAYS\\t99999/PASS_MAX_DAYS\\t90/g" /etc/login.defs'
+        }
+      },
+      {
+        id: 'U-03',
+        title: '계정 잠금 임계값 설정',
+        description: '로그인 실패 시 계정을 잠그는 임계값을 설정합니다.',
+        vulnerable: true,
+        checkCommands: [
+          'cat /etc/pam.d/system-auth | grep pam_tally2'
+        ],
+        fixCommand: 'sed -i "/auth required pam_env.so/a auth required pam_tally2.so deny=5 unlock_time=120" /etc/pam.d/system-auth',
+        checkFunction: () => {
+          const config = virtualFS['/etc/pam.d/system-auth'];
+          return config.includes('pam_tally2.so') && config.includes('deny=5');
+        },
+        guide: {
+          risk: '임계값이 없으면 공격자가 무제한으로 비밀번호 대입 공격을 시도할 수 있습니다.',
+          howToCheck: 'cat /etc/pam.d/system-auth | grep pam_tally2',
+          howToFix: 'pam_tally2.so 모듈 추가 (deny=5)',
+          fixCmd: 'sed -i "/auth required pam_env.so/a auth required pam_tally2.so deny=5 unlock_time=120" /etc/pam.d/system-auth'
+        }
+      },
+      {
+        id: 'U-04',
+        title: '패스워드 파일 보호',
+        description: '/etc/passwd 파일에 평문/해시 패스워드가 없는지 확인합니다.',
+        vulnerable: true,
+        checkCommands: [
+          'head -n 1 /etc/passwd'
+        ],
+        fixCommand: 'sed -i "s/root:[^:]*:/root:x:/g" /etc/passwd',
+        checkFunction: () => {
+          const passwd = virtualFS['/etc/passwd'];
+          // root:x: 가 있어야 안전함. root:$... 이면 취약.
+          return passwd.includes('root:x:');
+        },
+        guide: {
+          risk: '/etc/passwd 파일에 패스워드 해시가 노출되면 크랙킹 공격에 취약해집니다. Shadow 패스워드(x)를 사용해야 합니다.',
+          howToCheck: 'cat /etc/passwd | grep root',
+          howToFix: '패스워드 필드를 x로 변경하고 쉐도우 파일 사용',
+          fixCmd: 'sed -i "s/root:[^:]*:/root:x:/g" /etc/passwd'
+        }
+      },
+      {
+        id: 'U-05',
+        title: 'UID 0 계정 점검',
+        description: 'root 외에 UID가 0인 계정이 있는지 확인합니다.',
+        vulnerable: true,
+        checkCommands: [
+          "awk -F: '($3 == 0) { print $1 \":\" $3 }' /etc/passwd"
+        ],
+        fixCommand: 'sed -i "/^admin:x:0:/d" /etc/passwd',
+        checkFunction: () => {
+          const passwd = virtualFS['/etc/passwd'];
+          const lines = passwd.split('\n');
+          const uid0Lines = lines.filter(line => {
+            const parts = line.split(':');
+            return parts[2] === '0';
+          });
+          return uid0Lines.length === 1 && uid0Lines[0].startsWith('root:');
+        },
+        guide: {
+          risk: 'UID 0은 시스템 최고 권한입니다. root 외의 계정이 UID 0을 가지면 권한 상승 위험이 있습니다.',
+          howToCheck: "awk -F: '($3 == 0) { print $1 }' /etc/passwd",
+          howToFix: 'root가 아닌 UID 0 계정 삭제',
+          fixCmd: 'userdel admin  # 또는 UID 변경'
+        }
+      },
+      {
+        id: 'U-06',
+        title: 'su 명령어 제한',
+        description: 'su 명령어 사용을 wheel 그룹으로 제한합니다.',
+        vulnerable: true,
+        checkCommands: [
+          'cat /etc/pam.d/su | grep pam_wheel'
+        ],
+        fixCommand: 'sed -i "s/# auth required pam_wheel.so use_uid/auth required pam_wheel.so use_uid/g" /etc/pam.d/su',
+        checkFunction: () => {
+          const config = virtualFS['/etc/pam.d/su'];
+          return config.includes('auth required pam_wheel.so use_uid') && 
+                 !config.includes('# auth required pam_wheel.so use_uid');
+        },
+        guide: {
+          risk: 'su 명령어를 모든 사용자가 사용할 수 있으면 권한 상승 시도가 쉬워집니다.',
+          howToCheck: 'cat /etc/pam.d/su | grep pam_wheel',
+          howToFix: 'pam_wheel.so 줄의 주석(#) 제거',
+          fixCmd: 'sed -i "s/# auth required pam_wheel.so/auth required pam_wheel.so/g" /etc/pam.d/su'
+        }
+      }
+    ];
+
+    let currentItem = null;
+    let terminalHistory = [];
+
+    // 초기화
+    function init() {
+      renderChecklist();
+      updateOverallStatus();
+    }
+
+    // 체크리스트 렌더링
+    function renderChecklist() {
+      const container = document.getElementById('checklist');
+      container.innerHTML = checkItems.map(item => {
+        const isSecure = item.checkFunction();
+        const statusClass = isSecure ? 'secure' : 'vulnerable';
+        const statusText = isSecure ? '✓ 안전' : '✗ 취약';
+        
+        return `
+          <div class="checklist-item ${statusClass} ${currentItem?.id === item.id ? 'active' : ''}" 
+               onclick="selectItem('${item.id}')">
+            <div class="item-id">${item.id}</div>
+            <div class="item-title">${item.title}</div>
+            <div class="item-status ${statusClass}">${statusText}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 항목 선택
+    function selectItem(id) {
+      currentItem = checkItems.find(item => item.id === id);
+      renderChecklist();
+      renderGuide();
+      addToTerminal(`\n선택된 항목: ${currentItem.id} - ${currentItem.title}`, 'success');
+      addToTerminal(`'check' 명령어로 현재 상태를 확인하세요.`, 'output');
+    }
+
+    // 가이드 렌더링
+    function renderGuide() {
+      if (!currentItem) return;
+      
+      const isSecure = currentItem.checkFunction();
+      const panel = document.getElementById('guide-panel');
+      
+      panel.innerHTML = `
+        <div class="guide-section">
+          <h3>${currentItem.id}: ${currentItem.title}</h3>
+          <p>${currentItem.description}</p>
+        </div>
+        
+        <div class="guide-section">
+          <h3>⚠️ 보안 위험</h3>
+          <p>${currentItem.guide.risk}</p>
+        </div>
+        
+        <div class="guide-section">
+          <h3>🔍 권장 명령어 (점검)</h3>
+          ${currentItem.checkCommands.map(cmd => `
+            <div class="command-example">
+              <div class="cmd">${cmd}</div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="guide-section">
+          <h3>🔧 수정 방법</h3>
+          <p>${currentItem.guide.howToFix}</p>
+          <div class="command-example">
+            <div class="cmd">${currentItem.guide.fixCmd}</div>
+          </div>
+          <button class="fix-button" onclick="autoFix()" ${isSecure ? 'disabled' : ''}>
+            ${isSecure ? '✓ 이미 안전함' : '자동 수정 실행'}
+          </button>
+        </div>
+      `;
+    }
+
+    // 터미널에 추가
+    function addToTerminal(text, type = 'output') {
+      const output = document.getElementById('terminal-output');
+      const line = document.createElement('div');
+      line.className = 'terminal-line';
+      line.innerHTML = `<span class="${type}">${text}</span>`;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    // 명령어 실행
+    function executeCommand(cmd) {
+      addToTerminal(`root@ubuntu:~$ ${cmd}`, 'command');
+      
+      const parts = cmd.trim().split(' ');
+      const command = parts[0];
+      
+      switch(command) {
+        case 'help':
+          showHelp();
+          break;
+        case 'clear':
+          document.getElementById('terminal-output').innerHTML = '';
+          break;
+        case 'check':
+          if (!currentItem) {
+            addToTerminal('먼저 왼쪽에서 점검 항목을 선택하세요.', 'error');
+          } else {
+            runCheck();
+          }
+          break;
+        case 'cat':
+          catCommand(parts.slice(1).join(' '));
+          break;
+        case 'grep':
+          grepCommand(cmd);
+          break;
+        case 'awk':
+          awkCommand(cmd);
+          break;
+        case 'sed':
+          sedCommand(cmd);
+          break;
+        case 'ls':
+          lsCommand(parts.slice(1));
+          break;
+        case 'head':
+          headCommand(parts.slice(1).join(' '));
+          break;
+        default:
+          if (cmd.includes('|')) {
+            pipeCommand(cmd);
+          } else {
+            addToTerminal(`Command not found: ${command}`, 'error');
+            addToTerminal(`Type 'help' for available commands`, 'output');
+          }
+      }
+    }
+
+    // 파이프 명령어
+    function pipeCommand(cmd) {
+      const commands = cmd.split('|').map(c => c.trim());
+      let output = null;
+      
+      for (let i = 0; i < commands.length; i++) {
+        const parts = commands[i].split(' ');
+        const command = parts[0];
+        
+        if (command === 'cat') {
+          const file = parts[1];
+          if (virtualFS[file]) {
+            output = virtualFS[file];
+          } else {
+            addToTerminal(`cat: ${file}: No such file or directory`, 'error');
+            return;
+          }
+        } else if (command === 'head') {
+           const file = parts.slice(2).join(' '); // head -n 1 file
+           if (output) { // pipe input
+             output = output.split('\n')[0];
+           } else if (file && virtualFS[file]) {
+             output = virtualFS[file].split('\n')[0];
+           }
+        } else if (command === 'grep') {
+          if (output) {
+            const pattern = parts.slice(1).join(' ');
+            const lines = output.split('\n');
+            output = lines.filter(line => line.includes(pattern.replace(/['"]/g, ''))).join('\n');
+          }
+        } else if (command === 'awk') {
+          // awk 처리 (간단한 버전)
+          if (output && cmd.includes('$3 == 0')) {
+            const lines = output.split('\n');
+            output = lines.filter(line => {
+              const parts = line.split(':');
+              return parts[2] === '0';
+            }).map(line => {
+              const parts = line.split(':');
+              return `${parts[0]}:${parts[2]}`;
+            }).join('\n');
+          }
+        }
+      }
+      
+      if (output) {
+        addToTerminal(output, 'output');
+      }
+    }
+
+    // cat 명령어
+    function catCommand(file) {
+      file = file.trim();
+      if (virtualFS[file]) {
+        addToTerminal(virtualFS[file], 'output');
+      } else {
+        addToTerminal(`cat: ${file}: No such file or directory`, 'error');
+      }
+    }
+
+    // head 명령어
+    function headCommand(argsStr) {
+      // argsStr ex: "-n 1 /etc/passwd"
+      const args = argsStr.split(' ');
+      const file = args[args.length - 1]; // Assume last arg is file
+      if (virtualFS[file]) {
+        const lines = virtualFS[file].split('\n');
+        addToTerminal(lines[0], 'output');
+      } else {
+        addToTerminal(`head: cannot open '${file}' for reading: No such file or directory`, 'error');
+      }
+    }
+
+    // grep 명령어
+    function grepCommand(fullCmd) {
+      const parts = fullCmd.trim().split(' ');
+      let pattern = parts[1];
+      let file = parts[2];
+      
+      if (pattern) pattern = pattern.replace(/['"]/g, '');
+      
+      if (file && virtualFS[file]) {
+        const lines = virtualFS[file].split('\n');
+        const matches = lines.filter(line => line.includes(pattern));
+        if (matches.length > 0) {
+            addToTerminal(matches.join('\n'), 'output');
+        }
+      } else if (file) {
+        addToTerminal(`grep: ${file}: No such file or directory`, 'error');
+      } else {
+        addToTerminal('grep: usage: grep pattern file', 'error');
+      }
+    }
+
+    // awk 명령어
+    function awkCommand(fullCmd) {
+      const parts = fullCmd.trim().split(' ');
+      const fileIndex = parts.length - 1;
+      const file = parts[fileIndex];
+      
+      if (!virtualFS[file]) {
+         addToTerminal(`awk: ${file}: No such file or directory`, 'error');
+         return;
+      }
+      
+      const content = virtualFS[file];
+      const lines = content.split('\n');
+      let output = [];
+
+      if (fullCmd.includes('$3 == 0')) {
+         output = lines.filter(line => {
+             const fields = line.split(':');
+             return fields[2] === '0';
+         }).map(line => {
+             const fields = line.split(':');
+             return `${fields[0]}:${fields[2]}`;
+         });
+      } else {
+         output = lines;
+      }
+      
+      if (output.length > 0) {
+          addToTerminal(output.join('\n'), 'output');
+      }
+    }
+
+    // sed 명령어
+    function sedCommand(cmd) {
+      const match = cmd.match(/sed -i "s\/(.+?)\/(.+?)\/g" (.+)/);
+      
+      // U-04 Handling (regex replace)
+      if (cmd.includes('root:[^:]*:')) {
+         const file = '/etc/passwd';
+         if (virtualFS[file]) {
+            const lines = virtualFS[file].split('\n');
+            const newLines = lines.map(line => {
+                if (line.startsWith('root:')) {
+                    return line.replace(/root:[^:]*:/, 'root:x:');
+                }
+                return line;
+            });
+            virtualFS[file] = newLines.join('\n');
+            addToTerminal('File updated successfully', 'success');
+            updateUI();
+         }
+         return;
+      }
+
+      // U-03 Handling (Insert line /a)
+      if (cmd.includes('/a auth required pam_tally2.so')) {
+         const file = '/etc/pam.d/system-auth';
+         if (virtualFS[file]) {
+             const lines = virtualFS[file].split('\n');
+             const insertIndex = lines.findIndex(l => l.includes('auth required pam_env.so'));
+             if (insertIndex !== -1) {
+                 lines.splice(insertIndex + 1, 0, 'auth required pam_tally2.so deny=5 unlock_time=120');
+                 virtualFS[file] = lines.join('\n');
+                 addToTerminal('File updated successfully', 'success');
+                 updateUI();
+             }
+         }
+         return;
+      }
+
+      if (match) {
+        const [, find, replace, file] = match;
+        if (virtualFS[file]) {
+          virtualFS[file] = virtualFS[file].replace(new RegExp(find, 'g'), replace);
+          addToTerminal('File updated successfully', 'success');
+          updateUI();
+        } else {
+          addToTerminal(`sed: ${file}: No such file or directory`, 'error');
+        }
+      } else if (cmd.includes('sed -i "/^admin:x:0:/d"')) {
+        const file = '/etc/passwd';
+        virtualFS[file] = virtualFS[file].split('\n').filter(line => !line.startsWith('admin:x:0:')).join('\n');
+        addToTerminal('User removed successfully', 'success');
+        updateUI();
+      } else {
+        addToTerminal('sed: invalid command or pattern not supported in simulator', 'error');
+      }
+    }
+
+    // ls 명령어
+    function lsCommand(args) {
+      const files = args.join(' ').trim().split(' ');
+      if (files[0] === '-l') {
+        files.shift();
+      }
+      
+      files.forEach(file => {
+        if (file && virtualFS[file]) {
+          if (file === '/etc/shadow') {
+            addToTerminal(virtualFS[file], 'output');
+          } else {
+            addToTerminal(`-rw-r--r-- 1 root root 512 Jan 1 00:00 ${file}`, 'output');
+          }
+        }
+      });
+    }
+
+    // help 명령어
+    function showHelp() {
+      addToTerminal('Available commands:', 'output');
+      addToTerminal('  help           - Show this help', 'output');
+      addToTerminal('  clear          - Clear terminal', 'output');
+      addToTerminal('  check          - Run security check for current item', 'output');
+      addToTerminal('  cat <file>     - Display file contents', 'output');
+      addToTerminal('  grep <pattern> - Search for pattern', 'output');
+      addToTerminal('  sed            - Edit files', 'output');
+      addToTerminal('  ls -l <file>   - List file permissions', 'output');
+      addToTerminal('  awk            - Text processing', 'output');
+    }
+
+    // 자동 점검
+    function runCheck() {
+      addToTerminal(`\n=== ${currentItem.id} 보안 점검 시작 ===`, 'success');
+      
+      currentItem.checkCommands.forEach(cmd => {
+        addToTerminal(`\n$ ${cmd}`, 'command');
+        executeCommand(cmd);
+      });
+      
+      const isSecure = currentItem.checkFunction();
+      addToTerminal(`\n결과: ${isSecure ? '✓ 안전' : '✗ 취약'}`, isSecure ? 'success' : 'error');
+      
+      if (!isSecure) {
+        addToTerminal(`\n수정 명령어: ${currentItem.fixCommand}`, 'output');
+      }
+    }
+
+    // 자동 수정
+    function autoFix() {
+      if (!currentItem) return;
+      
+      addToTerminal(`\n[Auto-Fix] 자동 조치 실행: ${currentItem.fixCommand}`, 'command');
+      executeCommand(currentItem.fixCommand);
+      
+      setTimeout(() => {
+        const isSecure = currentItem.checkFunction();
+        if (isSecure) {
+          addToTerminal(`\n[System] ✓ ${currentItem.id} 항목이 안전하게 조치되었습니다.`, 'success');
+          
+          // 검증 단계: 권장 명령어를 다시 실행하여 결과를 보여줌
+          addToTerminal(`\n[Verification] 조치 결과 확인 (권장 명령어 실행):`, 'success');
+          currentItem.checkCommands.forEach(cmd => {
+            addToTerminal(`$ ${cmd}`, 'command');
+            executeCommand(cmd);
+          });
+        }
+        renderGuide();
+      }, 500); // 0.5초 지연 후 검증
+    }
+
+    // 전체 상태 업데이트
+    function updateOverallStatus() {
+      const secureCount = checkItems.filter(item => item.checkFunction()).length;
+      const totalCount = checkItems.length;
+      const badge = document.getElementById('overall-status');
+      
+      if (secureCount === totalCount) {
+        badge.textContent = '✓ SECURE';
+        badge.className = 'status-badge status-secure';
+      } else {
+        badge.textContent = `⚠ VULNERABLE (${secureCount}/${totalCount})`;
+        badge.className = 'status-badge status-vulnerable';
+      }
+    }
+    
+    function updateUI() {
+        renderChecklist();
+        renderGuide();
+        updateOverallStatus();
+    }
+
+    // 입력 처리
+    document.getElementById('terminal-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const input = e.target.value.trim();
+        if (input) {
+          executeCommand(input);
+          e.target.value = '';
+        }
+      }
+    });
+
+    // 초기화 실행
+    init();
+  </script>
+</body>
+</html>
