@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unix 파일/디렉터리 보안 시뮬레이터 (U-14 ~ U-29)</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #0d1117;
+      --panel-bg: #161b22;
+      --border-color: #30363d;
+      --text-color: #c9d1d9;
+      --accent-green: #238636;
+      --accent-red: #da3633;
+      --term-green: #3fb950;
+      --term-yellow: #d29922;
+      --term-blue: #58a6ff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-color);
+      color: var(--text-color);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .header {
+      background: var(--panel-bg);
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 { font-size: 1.1rem; color: var(--term-blue); display: flex; align-items: center; gap: 10px; }
+    
+    .score-badge {
+      font-size: 0.85rem;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: #21262d;
+      border: 1px solid var(--border-color);
+    }
+
+    .main-layout { display: flex; flex: 1; overflow: hidden; }
+    
+    .sidebar {
+      width: 320px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); font-weight: bold; color: var(--text-color); }
+    
+    .checklist { flex: 1; overflow-y: auto; padding: 10px; }
+    
+    .check-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #21262d;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .check-item:hover { border-color: var(--term-blue); }
+    .check-item.active { border-color: var(--term-blue); background: #1f2428; box-shadow: 0 0 5px rgba(88, 166, 255, 0.2); }
+    
+    .item-info { display: flex; flex-direction: column; gap: 4px; }
+    .item-code { font-size: 0.8rem; font-weight: bold; color: var(--term-blue); }
+    .item-name { font-size: 0.75rem; color: #8b949e; }
+    
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #444; }
+    .status-dot.vuln { background: var(--accent-red); box-shadow: 0 0 5px var(--accent-red); }
+    .status-dot.safe { background: var(--term-green); box-shadow: 0 0 5px var(--term-green); }
+
+    .terminal-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+      position: relative;
+    }
+    
+    .terminal-header {
+      background: #21262d;
+      padding: 8px 15px;
+      font-size: 0.8rem;
+      color: #8b949e;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+    }
+    
+    .terminal-output {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #c9d1d9;
+    }
+    
+    .term-line { margin-bottom: 4px; word-break: break-all; }
+    .cmd-prompt { color: var(--term-green); margin-right: 8px; }
+    .cmd-input-line { display: flex; padding: 10px 15px; background: #0d1117; border-top: 1px solid var(--border-color); }
+    #cmd-input {
+      flex: 1; background: transparent; border: none; color: #fff; font-family: inherit; font-size: 0.9rem; outline: none;
+    }
+
+    .guide-panel {
+      width: 400px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    
+    .guide-content { padding: 20px; }
+    
+    .guide-section { margin-bottom: 25px; }
+    .guide-title { font-size: 0.95rem; font-weight: bold; color: var(--term-blue); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+    .guide-text { font-size: 0.85rem; color: #8b949e; line-height: 1.6; margin-bottom: 10px; }
+    
+    .cmd-block {
+      display: flex;
+      align-items: center;
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    
+    .cmd-text {
+      flex: 1;
+      padding: 10px;
+      font-size: 0.8rem;
+      color: var(--term-yellow);
+      font-family: 'JetBrains Mono', monospace;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    
+    .run-btn {
+      background: var(--panel-bg);
+      border: none;
+      border-left: 1px solid var(--border-color);
+      color: var(--term-green);
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .run-btn:hover { background: #21262d; color: #fff; }
+    .run-btn:active { background: #30363d; }
+    
+    .main-check-btn {
+        width: 100%;
+        padding: 12px;
+        background: var(--term-blue);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-bottom: 20px;
+        transition: background 0.2s;
+    }
+    .main-check-btn:hover { background: #1f6feb; }
+
+    .refresh-btn {
+        background: #21262d;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+    .refresh-btn:hover { background: #30363d; }
+
+    .text-red { color: #ff7b72; }
+    .text-green { color: #3fb950; }
+    .text-blue { color: #58a6ff; }
+    .text-yellow { color: #d29922; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1><i class="fa-brands fa-linux"></i> Unix 파일/디렉터리 보안 (U-14 ~ U-29)</h1>
+  <div style="display:flex; gap:10px; align-items:center;">
+      <span class="score-badge" id="score-display">안전 항목: 0/16</span>
+      <button class="refresh-btn" onclick="initSystem()"><i class="fa-solid fa-rotate-right"></i> 시스템 초기화</button>
+  </div>
+</div>
+
+<div class="main-layout">
+  <div class="sidebar">
+    <div class="sidebar-header">점검 체크리스트</div>
+    <div class="checklist" id="checklist-container"></div>
+  </div>
+
+  <div class="terminal-wrapper">
+    <div class="terminal-header">
+      <span>root@file-security:~</span>
+      <span style="margin-left:auto;">bash</span>
+    </div>
+    <div class="terminal-output" id="term-output">
+      <div class="term-line"><span class="text-green">Welcome to Unix File Security Simulator v2.1</span></div>
+      <div class="term-line">Type <span class="text-yellow">'help'</span> for commands.</div>
+      <br>
+    </div>
+    <div class="cmd-input-line">
+      <span class="cmd-prompt">[root@localhost ~]#</span>
+      <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+    </div>
+  </div>
+
+  <div class="guide-panel" id="guide-container"></div>
+</div>
+
+<script>
+// ==========================================
+// 1. 파일 시스템 및 상태 정의 (U-14 ~ U-29)
+// ==========================================
+// 초기 파일 권한 상태 (대부분 취약하게 설정)
+const initialPermissions = {
+    '/root': { perm: '755', owner: 'root', group: 'root' },  // U-14 취약 (700이어야 함)
+    '/etc/passwd': { perm: '666', owner: 'root', group: 'root' }, // U-16 취약 (644여야 함)
+    '/etc/shadow': { perm: '644', owner: 'root', group: 'root' }, // U-18 취약 (400이어야 함)
+    '/etc/hosts': { perm: '666', owner: 'root', group: 'root' },  // U-19 취약 (600 권장)
+    '/etc/inetd.conf': { perm: '666', owner: 'root', group: 'root' }, // U-20
+    '/etc/xinetd.conf': { perm: '666', owner: 'root', group: 'root' }, // U-20
+    '/etc/syslog.conf': { perm: '666', owner: 'root', group: 'root' }, // U-21
+    '/etc/services': { perm: '666', owner: 'root', group: 'root' },   // U-22
+    '/etc/rc.d/init.d/functions': { perm: '777', owner: 'root', group: 'root' }, // U-17
+    '/home/user/.profile': { perm: '666', owner: 'user', group: 'user' }, // U-24
+    '/tmp/testfile': { perm: '777', owner: 'user', group: 'user' }, // U-25 World Writable
+    '/tmp/orphan_file': { perm: '644', owner: 'nobody', group: 'nogroup' }, // U-15 Nouser 파일
+    '/usr/bin/passwd': { perm: '4755', owner: 'root', group: 'root' }, // U-23 SUID
+    '/usr/bin/su': { perm: '4755', owner: 'root', group: 'root' },
+    '/dev/random_file': { perm: '644', owner: 'root', group: 'root', type: '-' }, // U-26 일반파일
+    '/home/user/.rhosts': { perm: '644', owner: 'user', group: 'user' }, // U-27
+    '/etc/hosts.equiv': { perm: '644', owner: 'root', group: 'root' }, // U-27
+    '/etc/hosts.lpd': { perm: '666', owner: 'root', group: 'root' } // U-29
+};
+
+let filePermissions = {};
+let pathEnv = ""; 
+let ipRestricted = false;
+
+function initSystem() {
+    filePermissions = JSON.parse(JSON.stringify(initialPermissions));
+    pathEnv = '/usr/local/bin:/usr/bin:.:/bin:/usr/sbin:/sbin'; // U-14 취약 (PATH에 . 포함)
+    ipRestricted = false; // U-28 취약 (미설정)
+
+    renderChecklist();
+    document.getElementById('guide-container').innerHTML = `
+        <div class="guide-content">
+            <p class="guide-text" style="text-align:center; margin-top:50px;">
+                <i class="fa-solid fa-arrow-left"></i> 좌측 메뉴에서 점검 항목을 선택하세요.
+            </p>
+        </div>`;
+    addTermLine("System initialized. All settings reset to VULNERABLE state.", "text-blue");
+    addTermLine("---------------------------------------------------");
+}
+
+// ==========================================
+// 2. 점검 항목 데이터 (U-14 ~ U-29)
+// ==========================================
+const checkItems = [
+    {
+        code: "U-14",
+        title: "root 홈, 패스 설정",
+        desc: "PATH 환경변수에 '.'이 포함되어 있는지, root 홈 권한이 700 이하인지 확인합니다.",
+        checkCmds: ["echo $PATH", "ls -ld /root"],
+        fixCmds: [
+            "export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin",
+            "chmod 700 /root"
+        ],
+        check: () => !pathEnv.includes(':.') && !pathEnv.includes('.:') && filePermissions['/root'].perm === '700'
+    },
+    {
+        code: "U-15",
+        title: "소유자 없는 파일 점검",
+        desc: "시스템에 소유자가 존재하지 않는 파일(nouser)이 있는지 점검합니다.",
+        checkCmds: ["find / -nouser -o -nogroup"],
+        fixCmds: ["rm /tmp/orphan_file"],
+        check: () => !filePermissions['/tmp/orphan_file'] // 파일이 없어야 안전
+    },
+    {
+        code: "U-16",
+        title: "/etc/passwd 파일 권한",
+        desc: "/etc/passwd 파일의 권한을 644 이하로 설정해야 합니다.",
+        checkCmds: ["ls -l /etc/passwd"],
+        fixCmds: ["chmod 644 /etc/passwd", "chown root /etc/passwd"],
+        check: () => filePermissions['/etc/passwd'].perm === '644'
+    },
+    {
+        code: "U-17",
+        title: "시작 스크립트 권한",
+        desc: "시작 스크립트의 권한은 755 이하, 소유자는 root여야 합니다.",
+        checkCmds: ["ls -l /etc/rc.d/init.d/functions"],
+        fixCmds: ["chmod 755 /etc/rc.d/init.d/functions"],
+        check: () => filePermissions['/etc/rc.d/init.d/functions'].perm === '755'
+    },
+    {
+        code: "U-18",
+        title: "/etc/shadow 파일 권한",
+        desc: "암호화된 패스워드가 저장된 shadow 파일은 400 권한이어야 합니다.",
+        checkCmds: ["ls -l /etc/shadow"],
+        fixCmds: ["chmod 400 /etc/shadow"],
+        check: () => filePermissions['/etc/shadow'].perm === '400'
+    },
+    {
+        code: "U-19",
+        title: "/etc/hosts 파일 권한",
+        desc: "/etc/hosts 파일 권한을 600으로 설정하여 변조를 방지합니다.",
+        checkCmds: ["ls -l /etc/hosts"],
+        fixCmds: ["chmod 600 /etc/hosts"],
+        check: () => filePermissions['/etc/hosts'].perm === '600'
+    },
+    {
+        code: "U-20",
+        title: "(x)inetd.conf 파일 권한",
+        desc: "inetd 관련 설정 파일 권한을 600으로 설정합니다.",
+        checkCmds: ["ls -l /etc/xinetd.conf"],
+        fixCmds: ["chmod 600 /etc/xinetd.conf"],
+        check: () => filePermissions['/etc/xinetd.conf'].perm === '600'
+    },
+    {
+        code: "U-21",
+        title: "syslog 설정 파일 권한",
+        desc: "로그 설정 파일의 권한을 644 이하로 관리합니다.",
+        checkCmds: ["ls -l /etc/syslog.conf"],
+        fixCmds: ["chmod 644 /etc/syslog.conf"],
+        check: () => filePermissions['/etc/syslog.conf'].perm === '644'
+    },
+    {
+        code: "U-22",
+        title: "/etc/services 파일 권한",
+        desc: "서비스 포트 정의 파일 권한을 644 이하로 관리합니다.",
+        checkCmds: ["ls -l /etc/services"],
+        fixCmds: ["chmod 644 /etc/services"],
+        check: () => filePermissions['/etc/services'].perm === '644'
+    },
+    {
+        code: "U-23",
+        title: "SUID, SGID 설정 파일",
+        desc: "불필요한 SUID/SGID가 설정된 파일을 제거합니다.",
+        checkCmds: ["ls -l /usr/bin/passwd", "ls -l /usr/bin/su"],
+        fixCmds: ["chmod u-s /usr/bin/passwd", "chmod u-s /usr/bin/su"],
+        check: () => !filePermissions['/usr/bin/passwd'].perm.startsWith('4')
+    },
+    {
+        code: "U-24",
+        title: "사용자 환경변수 파일",
+        desc: "사용자 홈 디렉터리의 환경 설정 파일(.profile 등) 권한을 점검합니다.",
+        checkCmds: ["ls -l /home/user/.profile"],
+        fixCmds: ["chmod 644 /home/user/.profile"],
+        check: () => filePermissions['/home/user/.profile'].perm === '644'
+    },
+    {
+        code: "U-25",
+        title: "World Writable 파일",
+        desc: "누구나 쓰기 가능한(777) 파일을 점검합니다.",
+        checkCmds: ["ls -l /tmp/testfile"],
+        fixCmds: ["chmod 644 /tmp/testfile"],
+        check: () => filePermissions['/tmp/testfile'].perm !== '777'
+    },
+    {
+        code: "U-26",
+        title: "/dev 내 일반 파일",
+        desc: "/dev 디렉터리 내에 디바이스 파일이 아닌 일반 파일 존재 여부를 확인합니다.",
+        checkCmds: ["ls -l /dev/random_file"],
+        fixCmds: ["rm /dev/random_file"],
+        check: () => !filePermissions['/dev/random_file']
+    },
+    {
+        code: "U-27",
+        title: ".rhosts, hosts.equiv",
+        desc: "r-command 인증 관련 파일(.rhosts)을 제거합니다.",
+        checkCmds: ["ls -l /home/user/.rhosts"],
+        fixCmds: ["rm /home/user/.rhosts"],
+        check: () => !filePermissions['/home/user/.rhosts']
+    },
+    {
+        code: "U-28",
+        title: "접속 IP 및 포트 제한",
+        desc: "/etc/hosts.allow 및 deny 파일이 설정되어 있는지 확인합니다.",
+        checkCmds: ["cat /etc/hosts.deny"],
+        fixCmds: ["echo 'ALL: ALL' > /etc/hosts.deny"],
+        check: () => ipRestricted
+    },
+    {
+        code: "U-29",
+        title: "hosts.lpd 파일 권한",
+        desc: "프린터 접근 제어 파일 권한을 600으로 설정합니다.",
+        checkCmds: ["ls -l /etc/hosts.lpd"],
+        fixCmds: ["chmod 600 /etc/hosts.lpd"],
+        check: () => filePermissions['/etc/hosts.lpd'].perm === '600'
+    }
+];
+
+let currentItemIdx = null;
+
+// ==========================================
+// 3. UI 및 가이드 렌더링
+// ==========================================
+function renderChecklist() {
+    const container = document.getElementById('checklist-container');
+    container.innerHTML = '';
+    
+    let safeCount = 0;
+    checkItems.forEach((item, idx) => {
+        const isSafe = item.check();
+        if (isSafe) safeCount++;
+        
+        const div = document.createElement('div');
+        div.className = `check-item ${currentItemIdx === idx ? 'active' : ''}`;
+        div.onclick = () => selectItem(idx);
+        div.innerHTML = `
+            <div class="item-info">
+                <span class="item-code">${item.code}</span>
+                <span class="item-name">${item.title}</span>
+            </div>
+            <div class="status-dot ${isSafe ? 'safe' : 'vuln'}"></div>
+        `;
+        container.appendChild(div);
+    });
+    document.getElementById('score-display').innerText = `안전 항목: ${safeCount}/${checkItems.length}`;
+}
+
+function selectItem(idx) {
+    currentItemIdx = idx;
+    renderChecklist();
+    const item = checkItems[idx];
+    const isSafe = item.check();
+    
+    // 가이드 패널 렌더링
+    const container = document.getElementById('guide-container');
+    container.innerHTML = `
+        <div class="guide-content">
+            <div class="guide-section">
+                <div class="guide-title">${item.code} ${item.title}</div>
+                <div class="guide-text">${item.desc}</div>
+                <div class="guide-text">
+                    상태: <span class="${isSafe ? 'text-green' : 'text-red'}" style="font-weight:bold;">
+                        ${isSafe ? '✅ 양호' : '❌ 취약'}
+                    </span>
+                </div>
+                <button class="main-check-btn" onclick="runCheckCmds(${idx})">
+                    <i class="fa-solid fa-magnifying-glass"></i> 1단계: 점검 명령어 실행 (Check)
+                </button>
+            </div>
+
+            <div class="guide-section" style="${isSafe ? 'opacity:0.5; pointer-events:none;' : ''}">
+                <div class="guide-title">2단계: 조치 명령어 입력 (Fix)</div>
+                <div class="guide-text">아래 재생(▶) 버튼을 눌러 수정 명령어를 실행하세요:</div>
+                ${item.fixCmds.map(cmd => `
+                    <div class="cmd-block">
+                        <div class="cmd-text">${cmd}</div>
+                        <button class="run-btn" onclick="typeAndRun('${cmd}')"><i class="fa-solid fa-play"></i></button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="guide-section" style="${isSafe ? 'opacity:0.5; pointer-events:none;' : ''}">
+                <div class="guide-title">3단계: 결과 확인 (Verify)</div>
+                <div class="guide-text">수정 후 점검 명령어를 다시 실행하여 결과를 확인합니다.</div>
+            </div>
+        </div>
+    `;
+    
+    addTermLine("");
+    addTermLine(`--- Selected: ${item.code} ${item.title} ---`, "text-blue");
+}
+
+// ==========================================
+// 4. 명령어 실행 로직
+// ==========================================
+function runCheckCmds(idx) {
+    const item = checkItems[idx];
+    addTermLine("");
+    addTermLine(`[System] Running checks for ${item.code}...`, "text-yellow");
+    
+    // 점검 명령어 실행 (타이핑 없이 결과만 출력)
+    item.checkCmds.forEach(cmd => {
+        addTermLine(`[root@localhost ~]# ${cmd}`);
+        processCommand(cmd);
+    });
+    
+    // UI 업데이트
+    setTimeout(() => {
+        const isSafe = item.check();
+        if(isSafe) {
+            addTermLine(`[Result] ${item.code}: SECURE (양호)`, "text-green");
+        } else {
+            addTermLine(`[Result] ${item.code}: VULNERABLE (취약)`, "text-red");
+            addTermLine(`[Guide] 우측 패널의 2단계 '조치 명령어'를 실행하세요.`, "text-blue");
+        }
+        renderChecklist();
+    }, 300);
+}
+
+// 타이핑 효과와 함께 명령어 실행 후 -> 결과 확인 로직까지 연결
+function typeAndRun(cmd) {
+    const input = document.getElementById('cmd-input');
+    input.value = "";
+    let i = 0;
+    input.disabled = true;
+    
+    const interval = setInterval(() => {
+        input.value += cmd.charAt(i);
+        i++;
+        if (i >= cmd.length) {
+            clearInterval(interval);
+            setTimeout(() => {
+                addTermLine(`[root@localhost ~]# ${cmd}`);
+                input.value = "";
+                input.disabled = false;
+                input.focus();
+                processCommand(cmd);
+                
+                // 명령어가 실행된 후 검증 단계
+                renderChecklist();
+                const item = checkItems[currentItemIdx];
+                if(item.check()) {
+                    addTermLine(`[Success] 조치 완료. 검증을 위해 점검 명령어를 다시 실행합니다...`, "text-green");
+                    setTimeout(() => runCheckCmds(currentItemIdx), 800); // 자동 검증
+                    
+                    // 우측 패널 갱신 (완료 상태)
+                    selectItem(currentItemIdx);
+                }
+            }, 200);
+        }
+    }, 30);
+}
+
+// 실제 명령어 처리 엔진
+function processCommand(rawCmd) {
+    const args = rawCmd.trim().split(/\s+/);
+    const cmd = args[0];
+
+    // --- ls (권한 확인) ---
+    if (cmd === 'ls') {
+        const path = args[args.length-1];
+        if (filePermissions[path]) {
+            const p = filePermissions[path];
+            const permStr = permToRwx(p.perm);
+            const type = p.type || (path.endsWith('/') ? 'd' : '-');
+            addTermLine(`${type}${permStr} 1 ${p.owner} ${p.group} 1024 Jan 1 00:00 ${path}`);
+        } else {
+            addTermLine(`ls: cannot access '${path}': No such file or directory`, "text-red");
+        }
+        return;
+    }
+
+    // --- chmod (권한 변경) ---
+    if (cmd === 'chmod') {
+        const mode = args[1];
+        const path = args[2];
+        if (filePermissions[path]) {
+            if (mode === 'u-s') {
+                if (filePermissions[path].perm.startsWith('4')) {
+                    filePermissions[path].perm = '755'; 
+                }
+            } else {
+                filePermissions[path].perm = mode;
+            }
+        } else {
+            addTermLine(`chmod: cannot access '${path}': No such file or directory`, "text-red");
+        }
+        return;
+    }
+
+    // --- chown ---
+    if (cmd === 'chown') {
+        const owner = args[1];
+        const path = args[2];
+        if (filePermissions[path]) {
+            filePermissions[path].owner = owner.split(':')[0] || owner;
+        }
+        return;
+    }
+
+    // --- rm ---
+    if (cmd === 'rm') {
+        const path = args[args.length-1];
+        if (filePermissions[path]) {
+            delete filePermissions[path];
+            // 출력 없음 (Unix 스타일)
+        } else {
+            addTermLine(`rm: cannot remove '${path}': No such file or directory`, "text-red");
+        }
+        return;
+    }
+
+    // --- export ---
+    if (cmd === 'export') {
+        if (rawCmd.includes('PATH=')) {
+            const newPath = rawCmd.split('=')[1];
+            pathEnv = newPath;
+        }
+        return;
+    }
+
+    // --- echo ---
+    if (cmd === 'echo') {
+        if (rawCmd.includes('$PATH')) {
+            addTermLine(pathEnv);
+        } else if (rawCmd.includes('>')) {
+            if(rawCmd.includes('/etc/hosts.deny')) ipRestricted = true;
+        } else {
+            addTermLine(rawCmd.substring(5).split("'")[1] || rawCmd.substring(5));
+        }
+        return;
+    }
+
+    // --- find (U-15) ---
+    if (cmd === 'find') {
+        if (rawCmd.includes('-nouser')) {
+            if (filePermissions['/tmp/orphan_file']) {
+                addTermLine("/tmp/orphan_file");
+            }
+        }
+        return;
+    }
+    
+    // --- cat ---
+    if (cmd === 'cat') {
+        const arg1 = args[1];
+        if(arg1 === '/etc/hosts.deny') {
+            if(ipRestricted) addTermLine("ALL: ALL");
+            else addTermLine(""); 
+        }
+        return;
+    }
+
+    if (cmd !== '') addTermLine(`bash: ${cmd}: command not found`, "text-red");
+}
+
+// 8진수 -> rwx 변환
+function permToRwx(perm) {
+    let p = perm;
+    let special = 0;
+    if (p.length === 4) {
+        special = parseInt(p[0]);
+        p = p.substring(1);
+    }
+    const map = { '7': 'rwx', '6': 'rw-', '5': 'r-x', '4': 'r--', '3': '-wx', '2': '-w-', '1': '--x', '0': '---' };
+    let res = map[p[0]] + map[p[1]] + map[p[2]];
+    if (special === 4) res = res.substring(0, 2) + 's' + res.substring(3);
+    return res;
+}
+
+const termOutput = document.getElementById('term-output');
+function addTermLine(text, cssClass = '') {
+    const div = document.createElement('div');
+    div.className = `term-line ${cssClass}`;
+    div.innerText = text;
+    termOutput.appendChild(div);
+    termOutput.scrollTop = termOutput.scrollHeight;
+}
+
+initSystem();
+</script>
+</body>
+</html>
