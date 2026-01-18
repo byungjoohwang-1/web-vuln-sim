@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D-10~12 권한 및 리소스 관리 - DB 보안 시뮬레이터</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: #eef2f5; padding: 20px; }
+        .container-fluid { max-width: 1600px; }
+        
+        /* Header */
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-bottom: 5px solid #00aaaa; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+        
+        /* Layout */
+        .content-row { display: flex; gap: 20px; height: calc(100vh - 140px); }
+        .sidebar { width: 280px; background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; }
+        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        .guide-panel { width: 380px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; border-left: 4px solid #0d6efd; }
+
+        /* Menu Items */
+        .menu-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-weight: 600; color: #555; display: flex; align-items: center; }
+        .menu-item:hover { background: #f8f9fa; border-color: #dee2e6; }
+        .menu-item.active { background: #e3f2fd; color: #0d6efd; border-color: #0d6efd; }
+        .menu-item i { width: 25px; text-align: center; margin-right: 10px; }
+        .badge-risk { font-size: 0.7em; padding: 4px 8px; border-radius: 6px; margin-left: auto; background: #dc3545; color: white; }
+        .badge-risk.mid { background: #ffc107; color: #000; }
+
+        /* DB Tabs */
+        .db-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .db-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; background: #e9ecef; color: #6c757d; }
+        .db-tab.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .db-tab i { margin-right: 8px; }
+
+        /* Terminal */
+        .terminal-container { background: #1e1e1e; border-radius: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .terminal-header { background: #2d2d2d; padding: 8px 15px; color: #aaa; font-size: 0.85em; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .terminal-body { flex: 1; padding: 15px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.95rem; line-height: 1.5; color: #f1f1f1; }
+        
+        .term-line { margin-bottom: 5px; word-break: break-all; }
+        .prompt-oracle { color: #00ffff; font-weight: bold; }
+        .prompt-mysql { color: #ffa500; font-weight: bold; }
+        .vuln { color: #ff5555; font-weight: bold; }
+        .secure { color: #50fa7b; font-weight: bold; }
+        .cmd { color: #f1fa8c; }
+        .comment { color: #6272a4; font-style: italic; }
+
+        /* Guide Styles */
+        .guide-title { font-size: 1.1rem; font-weight: 800; color: #2c3e50; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        .guide-section { margin-bottom: 20px; }
+        .guide-label { font-size: 0.85rem; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .code-block { background: #f8f9fa; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid #e9ecef; color: #d63384; word-break: break-all; }
+        
+        .btn-fix { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #198754 0%, #157347 100%); color: white; font-weight: bold; margin-top: auto; transition: 0.3s; }
+        .btn-fix:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); }
+        .btn-fix:disabled { background: #6c757d; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .reset-btn { background: #6c757d; border: none; color: white; padding: 5px 15px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+        .badge-na { background: #6c757d; color: white; font-size: 0.8em; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="header">
+        <div>
+            <span class="badge bg-warning text-dark mb-1">KISA 주요정보통신기반시설 가이드</span>
+            <h1>🗄️ 권한 및 리소스 관리 (D-10 ~ D-12)</h1>
+        </div>
+        <button class="reset-btn" onclick="resetAll()">🔄 전체 초기화</button>
+    </div>
+
+    <div class="content-row">
+        <!-- Sidebar Menu -->
+        <div class="sidebar">
+            <h6 class="text-muted fw-bold ps-2 mb-3">점검 항목</h6>
+            <div class="menu-item active" onclick="loadItem('d10', this)">
+                <i class="fa-solid fa-table"></i> D-10 Tablespace
+                <span class="badge-risk">상</span>
+            </div>
+            <div class="menu-item" onclick="loadItem('d11', this)">
+                <i class="fa-solid fa-user-gear"></i> D-11 관리자 권한
+                <span class="badge-risk">상</span>
+            </div>
+            <div class="menu-item" onclick="loadItem('d12', this)">
+                <i class="fa-solid fa-users-gear"></i> D-12 권한 부여 옵션
+                <span class="badge-risk">상</span>
+            </div>
+        </div>
+
+        <!-- Main Terminal Panel -->
+        <div class="main-panel">
+            <div class="db-tabs">
+                <button class="db-tab active" id="tab-oracle" onclick="setDB('oracle')"><i class="fa-solid fa-database"></i> Oracle Database</button>
+                <button class="db-tab" id="tab-mysql" onclick="setDB('mysql')"><i class="fa-solid fa-server"></i> MySQL / MariaDB</button>
+            </div>
+
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <span id="term-title">Oracle SQL*Plus - Connected as SYSDBA</span>
+                    <span id="term-status" class="text-warning">● Ready</span>
+                </div>
+                <div class="terminal-body" id="terminal">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Guide Panel -->
+        <div class="guide-panel">
+            <div class="guide-title" id="guide-title">D-10 사용자별 Default Tablespace</div>
+            
+            <div class="guide-section">
+                <span class="guide-label">🔍 점검 내용</span>
+                <p class="small text-muted" id="guide-desc">
+                    비인가자 혹은 일반 사용자의 기본 테이블스페이스가 SYSTEM으로 설정되어 있는지 점검합니다.
+                </p>
+            </div>
+
+            <div class="guide-section">
+                <span class="guide-label">⚠️ 보안 위협</span>
+                <p class="small text-muted" id="guide-risk">
+                    일반 사용자가 SYSTEM 테이블스페이스를 사용하면 데이터 조각화가 발생하여 시스템 성능이 저하될 수 있습니다.
+                </p>
+            </div>
+
+            <div class="guide-section">
+                <span class="guide-label">🔧 조치 방법 (KISA)</span>
+                <div id="guide-fix" class="code-block">
+                    ALTER USER [USER] DEFAULT TABLESPACE USERS;
+                </div>
+            </div>
+
+            <button id="btn-fix" class="btn-fix" onclick="runFix()">🛡️ 조치 실행 (Auto Fix)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === Data Definition ===
+    const data = {
+        d10: {
+            title: "D-10 사용자별 Default Tablespace 설정",
+            desc: "일반 사용자의 기본 테이블스페이스가 SYSTEM으로 설정되어 있는지 점검합니다.",
+            risk: "SYSTEM 테이블스페이스에 일반 데이터가 저장되면 DB 성능 저하 및 관리상의 문제가 발생할 수 있습니다.",
+            oracle: {
+                check: "SELECT USERNAME, DEFAULT_TABLESPACE FROM DBA_USERS WHERE USERNAME = 'SCOTT';",
+                vuln: `USERNAME        DEFAULT_TABLESPACE
+--------------- ------------------
+SCOTT           SYSTEM             <-- [취약]`,
+                fix: [
+                    "CREATE TABLESPACE USERS DATAFILE 'users01.dbf' SIZE 100M;",
+                    "ALTER USER SCOTT DEFAULT TABLESPACE USERS;",
+                    "ALTER USER SCOTT QUOTA 0 ON SYSTEM;"
+                ],
+                fixDesc: "ALTER USER [계정] DEFAULT TABLESPACE USERS;\nALTER USER [계정] QUOTA 0 ON SYSTEM;",
+                secure: "SCOTT 사용자의 기본 테이블스페이스가 USERS로 변경되었습니다."
+            },
+            mysql: {
+                check: "-- MySQL은 Tablespace 개념이 Oracle과 다름",
+                vuln: `[N/A] 이 항목은 Oracle DB에 특화된 점검 항목입니다.
+MySQL은 스토리지 엔진(InnoDB 등)이 데이터를 관리하며, 
+사용자별 Default Tablespace 개념이 존재하지 않습니다.`,
+                fix: [],
+                fixDesc: "해당 사항 없음 (양호)",
+                secure: "MySQL 점검 제외 항목"
+            }
+        },
+        d11: {
+            title: "D-11 불필요한 관리자 권한 부여 금지",
+            desc: "일반 사용자에게 불필요하게 DBA 권한(Role)이나 과도한 시스템 권한이 부여되어 있는지 점검합니다.",
+            risk: "일반 사용자에게 관리자 권한 부여 시, 권한 오남용으로 인한 데이터 유출 및 시스템 장애가 발생할 수 있습니다.",
+            oracle: {
+                check: "SELECT GRANTEE, GRANTED_ROLE FROM DBA_ROLE_PRIVS WHERE GRANTED_ROLE = 'DBA' AND GRANTEE NOT IN ('SYS','SYSTEM');",
+                vuln: `GRANTEE         GRANTED_ROLE
+--------------- --------------
+SCOTT           DBA            <-- [취약]`,
+                fix: ["REVOKE DBA FROM SCOTT;", "GRANT CONNECT, RESOURCE TO SCOTT;"],
+                fixDesc: "REVOKE DBA FROM [계정];",
+                secure: "SCOTT 계정에서 DBA 권한이 회수되었습니다."
+            },
+            mysql: {
+                check: "SELECT User, Host, Super_priv FROM mysql.user WHERE Super_priv = 'Y' AND User NOT IN ('root');",
+                vuln: `+------+------+------------+
+| User | Host | Super_priv |
++------+------+------------+
+| test | %    | Y          | <-- [취약]
++------+------+------------+`,
+                fix: ["REVOKE SUPER ON *.* FROM 'test'@'%';", "FLUSH PRIVILEGES;"],
+                fixDesc: "REVOKE SUPER ON *.* FROM '[계정]'@'[호스트]';",
+                secure: "test 계정의 SUPER 권한이 회수되었습니다."
+            }
+        },
+        d12: {
+            title: "D-12 권한 부여 옵션 (Admin Option) 설정",
+            desc: "일반 사용자에게 권한을 부여할 때 'WITH ADMIN OPTION' 또는 'WITH GRANT OPTION'이 포함되어 있는지 점검합니다.",
+            risk: "권한을 부여받은 사용자가 다른 사용자에게 임의로 권한을 재부여할 수 있어 권한 관리의 통제가 불가능해집니다.",
+            oracle: {
+                check: "SELECT GRANTEE, PRIVILEGE, ADMIN_OPTION FROM DBA_SYS_PRIVS WHERE ADMIN_OPTION='YES' AND GRANTEE='SCOTT';",
+                vuln: `GRANTEE    PRIVILEGE         ADMIN_OPTION
+---------- ----------------- ------------
+SCOTT      CREATE SESSION    YES          <-- [취약]`,
+                fix: ["REVOKE CREATE SESSION FROM SCOTT;", "GRANT CREATE SESSION TO SCOTT;"],
+                fixDesc: "REVOKE [권한] FROM [계정];\nGRANT [권한] TO [계정]; (옵션 없이 재부여)",
+                secure: "SCOTT 계정의 ADMIN OPTION이 제거되었습니다."
+            },
+            mysql: {
+                check: "SELECT User, Host, Grant_priv FROM mysql.user WHERE Grant_priv = 'Y' AND User NOT IN ('root');",
+                vuln: `+------+------+------------+
+| User | Host | Grant_priv |
++------+------+------------+
+| web  | %    | Y          | <-- [취약]
++------+------+------------+`,
+                fix: ["UPDATE mysql.user SET Grant_priv='N' WHERE User='web';", "FLUSH PRIVILEGES;"],
+                fixDesc: "REVOKE GRANT OPTION ON *.* FROM '[계정]';\n(또는 UPDATE mysql.user SET Grant_priv='N'...)",
+                secure: "web 계정의 Grant Option이 제거되었습니다."
+            }
+        }
+    };
+
+    // === State Management ===
+    let currentItem = 'd10';
+    let currentDB = 'oracle';
+    let isFixed = { 
+        d10_oracle: false, d10_mysql: true, // MySQL d10 is N/A (Secure by default)
+        d11_oracle: false, d11_mysql: false,
+        d12_oracle: false, d12_mysql: false
+    };
+
+    function init() {
+        loadItem('d10', document.querySelector('.menu-item'));
+    }
+
+    function loadItem(id, el) {
+        currentItem = id;
+        
+        // Update Menu UI
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+        if(el) el.classList.add('active');
+
+        // Check if N/A for MySQL and auto-switch to Oracle if needed, or handle display
+        if (currentDB === 'mysql' && id === 'd10') {
+             // Stay on MySQL but show N/A message
+        }
+
+        updateUI();
+    }
+
+    function setDB(db) {
+        currentDB = db;
+        
+        // Update Tab UI
+        document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + db).classList.add('active');
+        
+        // Update Terminal Header
+        const title = db === 'oracle' ? 'Oracle SQL*Plus - Connected as SYSDBA' : 'MySQL Monitor - Connected as root';
+        document.getElementById('term-title').innerText = title;
+
+        updateUI();
+    }
+
+    function updateUI() {
+        const itemData = data[currentItem];
+        const dbData = itemData[currentDB];
+        const stateKey = `${currentItem}_${currentDB}`;
+        const fixed = isFixed[stateKey];
+
+        // Update Guide Panel
+        document.getElementById('guide-title').innerText = itemData.title;
+        document.getElementById('guide-desc').innerText = itemData.desc;
+        document.getElementById('guide-risk').innerText = itemData.risk;
+        document.getElementById('guide-fix').innerText = dbData.fixDesc;
+        
+        const fixBtn = document.getElementById('btn-fix');
+        
+        // Handle N/A cases (e.g. D-10 MySQL)
+        if (currentItem === 'd10' && currentDB === 'mysql') {
+            fixBtn.disabled = true;
+            fixBtn.innerText = "🚫 해당 사항 없음 (N/A)";
+        } else {
+            fixBtn.disabled = fixed;
+            fixBtn.innerText = fixed ? "✅ 조치 완료 (Secured)" : "🛡️ 조치 실행 (Auto Fix)";
+        }
+
+        // Update Terminal Content
+        const term = document.getElementById('terminal');
+        const prompt = currentDB === 'oracle' ? 'SQL>' : 'mysql>';
+        const promptClass = currentDB === 'oracle' ? 'prompt-oracle' : 'prompt-mysql';
+
+        let html = `<div class="term-line"><span class="${promptClass}">${prompt}</span> ${dbData.check}</div>`;
+        
+        if (currentItem === 'd10' && currentDB === 'mysql') {
+            html += `<div class="term-line info" style="white-space: pre;">${dbData.vuln}</div>`;
+        } else if (fixed) {
+            html += `<div class="term-line secure">${dbData.secure}</div>`;
+        } else {
+            html += `<div class="term-line vuln" style="white-space: pre;">${dbData.vuln}</div>`;
+        }
+        
+        html += `<div class="term-line mt-3"><span class="${promptClass}">${prompt}</span> <span class="cmd">_</span></div>`;
+        term.innerHTML = html;
+    }
+
+    function runFix() {
+        const stateKey = `${currentItem}_${currentDB}`;
+        const itemData = data[currentItem][currentDB];
+        const term = document.getElementById('terminal');
+        const prompt = currentDB === 'oracle' ? 'SQL>' : 'mysql>';
+        const promptClass = currentDB === 'oracle' ? 'prompt-oracle' : 'prompt-mysql';
+
+        // Simulate typing commands
+        let html = term.innerHTML.replace('<span class="cmd">_</span>', ''); 
+        
+        itemData.fix.forEach(cmd => {
+            html += `<div class="term-line"><span class="${promptClass}">${prompt}</span> ${cmd}</div>`;
+            html += `<div class="term-line info">Command processed.</div>`;
+        });
+
+        html += `<div class="term-line secure mt-2">>> [System] Vulnerability Patched.</div>`;
+        html += `<div class="term-line mt-2"><span class="${promptClass}">${prompt}</span> <span class="cmd">_</span></div>`;
+        
+        term.innerHTML = html;
+        term.scrollTop = term.scrollHeight;
+
+        isFixed[stateKey] = true;
+        updateUI(); // To update button state
+    }
+
+    function resetAll() {
+        // Reset states
+        isFixed = { 
+            d10_oracle: false, d10_mysql: true, 
+            d11_oracle: false, d11_mysql: false,
+            d12_oracle: false, d12_mysql: false
+        };
+        updateUI();
+    }
+
+    // Initialize
+    init();
+
+</script>
+</body>
+</html>

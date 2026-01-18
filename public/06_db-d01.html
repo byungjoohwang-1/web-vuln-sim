@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D-01 기본 계정 관리 - DB 보안 시뮬레이터</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: #eef2f5; padding: 20px; }
+        .container-fluid { max-width: 1600px; }
+        
+        /* Header */
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-bottom: 5px solid #00aaaa; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+        
+        /* Layout */
+        .content-row { display: flex; gap: 20px; height: calc(100vh - 140px); }
+        .sidebar { width: 280px; background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; }
+        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        .guide-panel { width: 400px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; border-left: 4px solid #0d6efd; }
+
+        /* Menu Items */
+        .menu-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-weight: 600; color: #555; display: flex; align-items: center; }
+        .menu-item:hover { background: #f8f9fa; border-color: #dee2e6; }
+        .menu-item.active { background: #e3f2fd; color: #0d6efd; border-color: #0d6efd; }
+        .menu-item i { width: 25px; text-align: center; margin-right: 10px; }
+        .badge-risk { font-size: 0.7em; padding: 4px 8px; border-radius: 6px; margin-left: auto; background: #dc3545; color: white; }
+
+        /* DB Tabs */
+        .db-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .db-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; background: #e9ecef; color: #6c757d; }
+        .db-tab.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .db-tab i { margin-right: 8px; }
+
+        /* Terminal */
+        .terminal-container { background: #1e1e1e; border-radius: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .terminal-header { background: #2d2d2d; padding: 8px 15px; color: #aaa; font-size: 0.85em; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .terminal-body { flex: 1; padding: 15px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.95rem; line-height: 1.5; color: #f1f1f1; }
+        
+        .term-line { margin-bottom: 5px; word-break: break-all; }
+        .prompt-oracle { color: #00ffff; font-weight: bold; }
+        .prompt-mysql { color: #ffa500; font-weight: bold; }
+        .vuln { color: #ff5555; font-weight: bold; }
+        .secure { color: #50fa7b; font-weight: bold; }
+        .cmd { color: #f1fa8c; }
+        .comment { color: #6272a4; font-style: italic; }
+
+        /* Guide Styles */
+        .guide-title { font-size: 1.1rem; font-weight: 800; color: #2c3e50; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        .guide-section { margin-bottom: 20px; }
+        .guide-label { font-size: 0.85rem; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .code-block { background: #f8f9fa; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid #e9ecef; color: #d63384; word-break: break-all; white-space: pre-wrap; }
+        
+        .btn-fix { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #198754 0%, #157347 100%); color: white; font-weight: bold; margin-top: auto; transition: 0.3s; }
+        .btn-fix:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); }
+        .btn-fix:disabled { background: #6c757d; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .reset-btn { background: #6c757d; border: none; color: white; padding: 5px 15px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="header">
+        <div>
+            <span class="badge bg-warning text-dark mb-1">KISA 주요정보통신기반시설 가이드</span>
+            <h1>🗄️ D-01 기본 계정 및 불필요한 계정 제거</h1>
+        </div>
+        <button class="reset-btn" onclick="resetAll()">🔄 전체 초기화</button>
+    </div>
+
+    <div class="content-row">
+        <!-- Sidebar Menu -->
+        <div class="sidebar">
+            <h6 class="text-muted fw-bold ps-2 mb-3">점검 항목</h6>
+            <div class="menu-item active">
+                <i class="fa-solid fa-users-slash"></i> D-01 기본 계정
+                <span class="badge-risk">상</span>
+            </div>
+        </div>
+
+        <!-- Main Terminal Panel -->
+        <div class="main-panel">
+            <div class="db-tabs">
+                <button class="db-tab active" id="tab-oracle" onclick="setDB('oracle')"><i class="fa-solid fa-database"></i> Oracle Database</button>
+                <button class="db-tab" id="tab-mysql" onclick="setDB('mysql')"><i class="fa-solid fa-server"></i> MySQL / MariaDB</button>
+            </div>
+
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <span id="term-title">Oracle SQL*Plus - Connected as SYSDBA</span>
+                    <span id="term-status" class="text-warning">● Ready</span>
+                </div>
+                <div class="terminal-body" id="terminal">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Guide Panel -->
+        <div class="guide-panel">
+            <div class="guide-title" id="guide-title">D-01 기본 계정 관리</div>
+            
+            <div class="guide-section">
+                <span class="guide-label">🔍 점검 내용</span>
+                <p class="small text-muted" id="guide-desc">
+                    DBMS 설치 시 기본적으로 생성되는 계정(Scott, Guest 등) 및 불필요한 계정의 존재 여부를 점검합니다.
+                </p>
+            </div>
+
+            <div class="guide-section">
+                <span class="guide-label">⚠️ 보안 위협</span>
+                <p class="small text-muted" id="guide-risk">
+                    기본 계정은 널리 알려진 초기 패스워드를 사용하는 경우가 많아, 공격자의 1차 타겟이 되며 시스템 권한 탈취 시도로 이어질 수 있습니다.
+                </p>
+            </div>
+
+            <div class="guide-section">
+                <span class="guide-label">🔧 조치 방법 (KISA)</span>
+                <div id="guide-fix" class="code-block"></div>
+            </div>
+
+            <button id="btn-fix" class="btn-fix" onclick="runFix()">🛡️ 조치 실행 (Auto Fix)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === Data Definition ===
+    const data = {
+        oracle: {
+            title: "D-01 기본 계정 관리 (Oracle)",
+            desc: "Oracle 설치 시 생성되는 기본 계정(SCOTT, OUTLN, MDSYS 등)의 활성화 여부를 점검합니다.",
+            risk: "기본 계정을 방치할 경우, Default Password를 이용한 비인가 접속 위험이 매우 높습니다.",
+            checkCmd: "SELECT USERNAME, ACCOUNT_STATUS FROM DBA_USERS WHERE USERNAME IN ('SCOTT','OUTLN','MDSYS','ORDSYS','DBSNMP','CTXSYS','ANONYMOUS');",
+            vulnData: [
+                { name: 'SCOTT', status: 'OPEN' },
+                { name: 'OUTLN', status: 'OPEN' },
+                { name: 'MDSYS', status: 'EXPIRED & LOCKED' },
+                { name: 'ORDSYS', status: 'OPEN' },
+                { name: 'DBSNMP', status: 'OPEN' },
+                { name: 'CTXSYS', status: 'EXPIRED & LOCKED' },
+                { name: 'ANONYMOUS', status: 'OPEN' }
+            ],
+            fixDesc: "ALTER USER [계정명] ACCOUNT LOCK;\n또는 DROP USER [계정명] CASCADE;",
+            fixCmds: [] // Generated dynamically
+        },
+        mysql: {
+            title: "D-01 기본 계정 관리 (MySQL)",
+            desc: "MySQL 설치 시 생성되는 익명 계정('') 및 테스트 계정('test') 존재 여부를 점검합니다.",
+            risk: "익명 계정 및 테스트 계정은 패스워드 없이 접속 가능한 경우가 많아 심각한 보안 홀이 됩니다.",
+            checkCmd: "SELECT User, Host FROM mysql.user WHERE User = '' OR User = 'test';",
+            vulnData: [
+                { user: 'root', host: 'localhost' }, // Normal
+                { user: '', host: 'localhost' },     // Vuln
+                { user: 'test', host: '%' },         // Vuln
+                { user: 'admin', host: '%' }         // Normal
+            ],
+            fixDesc: "DELETE FROM mysql.user WHERE User = '';\nDELETE FROM mysql.user WHERE User = 'test';\nFLUSH PRIVILEGES;",
+            fixCmds: [
+                "DELETE FROM mysql.user WHERE User = '';",
+                "DELETE FROM mysql.user WHERE User = 'test';",
+                "FLUSH PRIVILEGES;"
+            ]
+        }
+    };
+
+    // === State Management ===
+    let currentDB = 'oracle';
+    let isFixed = { oracle: false, mysql: false };
+
+    function init() {
+        setDB('oracle');
+    }
+
+    function setDB(db) {
+        currentDB = db;
+        
+        // Update Tab UI
+        document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + db).classList.add('active');
+        
+        // Update Terminal Header
+        const title = db === 'oracle' ? 'Oracle SQL*Plus - Connected as SYSDBA' : 'MySQL Monitor - Connected as root';
+        document.getElementById('term-title').innerText = title;
+
+        updateUI();
+        
+        // Clear terminal and run check automatically
+        document.getElementById('terminal').innerHTML = '';
+        setTimeout(runCheck, 300);
+    }
+
+    function updateUI() {
+        const dbData = data[currentDB];
+        const fixed = isFixed[currentDB];
+
+        // Update Guide Panel
+        document.getElementById('guide-title').innerText = dbData.title;
+        document.getElementById('guide-desc').innerText = dbData.desc;
+        document.getElementById('guide-risk').innerText = dbData.risk;
+        document.getElementById('guide-fix').innerText = dbData.fixDesc;
+        
+        const fixBtn = document.getElementById('btn-fix');
+        fixBtn.disabled = fixed;
+        fixBtn.innerText = fixed ? "✅ 조치 완료 (Secured)" : "🛡️ 조치 실행 (Auto Fix)";
+    }
+
+    function log(msg, type='output') {
+        const term = document.getElementById('terminal');
+        const prompt = currentDB === 'oracle' ? 'SQL>' : 'mysql>';
+        const promptClass = currentDB === 'oracle' ? 'prompt-oracle' : 'prompt-mysql';
+        let html = '';
+        
+        if (type === 'cmd') {
+            html = `<div class="term-line"><span class="${promptClass}">${prompt}</span> <span class="cmd">${msg}</span></div>`;
+        } else if (type === 'vuln') {
+            html = `<div class="term-line vuln" style="white-space: pre;">${msg}</div>`;
+        } else if (type === 'secure') {
+            html = `<div class="term-line secure" style="white-space: pre;">${msg}</div>`;
+        } else {
+            html = `<div class="term-line" style="white-space: pre;">${msg}</div>`;
+        }
+        
+        term.innerHTML += html;
+        term.scrollTop = term.scrollHeight;
+    }
+
+    function runCheck() {
+        const dbData = data[currentDB];
+        const fixed = isFixed[currentDB];
+        
+        log(dbData.checkCmd, 'cmd');
+        
+        if (currentDB === 'oracle') {
+            log("USERNAME        ACCOUNT_STATUS");
+            log("--------------- --------------");
+            let hasVuln = false;
+            dbData.vulnData.forEach(acc => {
+                let status = acc.status;
+                if (fixed && acc.status === 'OPEN') status = 'EXPIRED & LOCKED';
+                
+                let style = '';
+                if (status === 'OPEN') {
+                    style = 'vuln';
+                    hasVuln = true;
+                } else {
+                    style = 'secure';
+                }
+                log(`${acc.name.padEnd(15)} ${status}`, style);
+            });
+
+            if (!hasVuln) log("\n[System] All default accounts are secured.", 'secure');
+            else log("\n[System] Vulnerable accounts found.", 'vuln');
+
+        } else { // MySQL
+            log("+------+-----------+");
+            log("| User | Host      |");
+            log("+------+-----------+");
+            
+            let hasVuln = false;
+            dbData.vulnData.forEach(acc => {
+                if (fixed && (acc.user === '' || acc.user === 'test')) return; // Don't show if fixed
+                
+                if (acc.user === '' || acc.user === 'test') {
+                    hasVuln = true;
+                    log(`| ${acc.user.padEnd(4)} | ${acc.host.padEnd(9)} |  <-- [Vuln]`, 'vuln');
+                } else {
+                    log(`| ${acc.user.padEnd(4)} | ${acc.host.padEnd(9)} |`);
+                }
+            });
+            log("+------+-----------+");
+            
+            if (!hasVuln) log("\n[System] No anonymous or test users found.", 'secure');
+            else log("\n[System] 2 rows in set (Vulnerable users found).", 'vuln');
+        }
+        
+        log("", 'prompt');
+    }
+
+    function runFix() {
+        const dbData = data[currentDB];
+        const prompt = currentDB === 'oracle' ? 'SQL>' : 'mysql>';
+        const promptClass = currentDB === 'oracle' ? 'prompt-oracle' : 'prompt-mysql';
+        const term = document.getElementById('terminal');
+        
+        // Remove cursor
+        term.innerHTML = term.innerHTML.replace('<span class="cmd">_</span>', '');
+
+        if (currentDB === 'oracle') {
+            dbData.vulnData.forEach(acc => {
+                if (acc.status === 'OPEN') {
+                    const cmd = `ALTER USER ${acc.name} ACCOUNT LOCK;`;
+                    log(cmd, 'cmd');
+                    log("User altered.", 'info');
+                }
+            });
+        } else {
+            dbData.fixCmds.forEach(cmd => {
+                log(cmd, 'cmd');
+                log("Query OK, 0 rows affected (0.01 sec)", 'info');
+            });
+        }
+
+        setTimeout(() => {
+            log(`\n[System] ${currentDB.toUpperCase()} Vulnerabilities Patched.`, 'secure');
+            log("", 'prompt');
+            isFixed[currentDB] = true;
+            updateUI();
+            // Re-run check to show clean state
+            setTimeout(runCheck, 1000);
+        }, 500);
+    }
+
+    function resetAll() {
+        isFixed = { oracle: false, mysql: false };
+        document.getElementById('terminal').innerHTML = '<div class="term-line info">System reset complete.</div>';
+        updateUI();
+        setTimeout(runCheck, 500);
+    }
+
+    // Initialize
+    init();
+
+</script>
+</body>
+</html>

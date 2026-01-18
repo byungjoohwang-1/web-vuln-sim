@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>D-08 세션 타임아웃 설정 - DB 보안</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #eef2f5; padding: 30px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .main-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .left-panel { background: #222; color: #00ff00; padding: 20px; font-family: 'Consolas', monospace; min-height: 500px; display: flex; flex-direction: column; }
+        .right-panel { padding: 30px; }
+        
+        .term-line { margin-bottom: 5px; }
+        .term-prompt { color: #00ffff; font-weight: bold; }
+        .term-cursor { display: inline-block; width: 8px; height: 15px; background: #00ff00; animation: blink 1s infinite; vertical-align: middle; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .param-table { width: 100%; border: 1px solid #444; color: #ddd; margin: 10px 0; font-size: 0.9em; }
+        .param-table th { border-bottom: 1px solid #444; padding: 5px; text-align: left; color: #aaa; }
+        .param-table td { padding: 5px; }
+        .vuln-val { color: #ff5555; }
+        .secure-val { color: #50fa7b; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="main-card row g-0">
+        <!-- 터미널 시뮬레이터 -->
+        <div class="col-lg-7 left-panel">
+            <div class="mb-3 border-bottom border-secondary pb-2">
+                <i class="fa-solid fa-terminal me-2"></i>Oracle SQL*Plus Terminal
+            </div>
+            
+            <div id="terminal-content">
+                <div class="term-line">SQL*Plus: Release 19.0.0.0.0 - Production</div>
+                <div class="term-line">Copyright (c) 1982, 2025, Oracle. All rights reserved.</div>
+                <div class="term-line"><br></div>
+                <div class="term-line">SQL> <span class="text-white">-- Checking IDLE_TIME Configuration</span></div>
+            </div>
+            
+            <!-- Dynamic Content Area -->
+            <div id="query-result"></div>
+
+            <div class="mt-auto">
+                <span class="term-prompt">SQL></span> <span class="term-cursor"></span>
+            </div>
+        </div>
+
+        <!-- 컨트롤 패널 -->
+        <div class="col-lg-5 right-panel">
+            <h3 class="mb-3 text-primary fw-bold">D-08 세션 타임아웃</h3>
+            <p class="text-muted">사용자가 일정 시간 동안 아무런 작업을 수행하지 않을 경우, 세션을 자동으로 종료하여 비인가자의 접근을 차단해야 합니다.</p>
+            
+            <div class="alert alert-warning">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>점검 포인트 (2가지 필수)</strong>
+                <ul class="mb-0 ps-3 mt-2 small">
+                    <li>프로파일의 <code>IDLE_TIME</code> 설정 (60분 이하)</li>
+                    <li>시스템 파라미터 <code>RESOURCE_LIMIT = TRUE</code> 설정</li>
+                </ul>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <button class="btn btn-outline-dark text-start p-3" onclick="runCheck()">
+                    <i class="fa-solid fa-magnifying-glass me-2"></i> <strong>Step 1.</strong> 현재 설정 조회
+                </button>
+                <button class="btn btn-outline-danger text-start p-3" onclick="runFixProfile()">
+                    <i class="fa-solid fa-clock me-2"></i> <strong>Step 2.</strong> IDLE_TIME 설정 (60분)
+                </button>
+                <button class="btn btn-outline-success text-start p-3" onclick="runFixSystem()">
+                    <i class="fa-solid fa-power-off me-2"></i> <strong>Step 3.</strong> 리소스 제한 활성화
+                </button>
+                <button class="btn btn-secondary mt-3" onclick="reset()">
+                    <i class="fa-solid fa-rotate-left me-2"></i> 시뮬레이션 초기화
+                </button>
+            </div>
+            
+            <div id="status-msg" class="mt-4 text-center fw-bold text-danger">현재 상태: 취약함 (Vulnerable)</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let state = {
+        idleTime: 'UNLIMITED',
+        resourceLimit: 'FALSE'
+    };
+
+    function log(msg, type='cmd') {
+        const div = document.createElement('div');
+        div.className = 'term-line';
+        if(type === 'cmd') {
+            div.innerHTML = `<span class="term-prompt">SQL></span> ${msg}`;
+        } else {
+            div.innerHTML = msg;
+        }
+        document.getElementById('query-result').appendChild(div);
+    }
+
+    function runCheck() {
+        log("SELECT RESOURCE_NAME, LIMIT FROM DBA_PROFILES WHERE RESOURCE_NAME='IDLE_TIME';");
+        log(`
+<table class="param-table">
+<tr><th>RESOURCE_NAME</th><th>LIMIT</th></tr>
+<tr><td>IDLE_TIME</td><td class="${state.idleTime === 'UNLIMITED' ? 'vuln-val' : 'secure-val'}">${state.idleTime}</td></tr>
+</table>`, 'html');
+
+        log("SHOW PARAMETER RESOURCE_LIMIT;");
+        log(`
+<table class="param-table">
+<tr><th>NAME</th><th>TYPE</th><th>VALUE</th></tr>
+<tr><td>resource_limit</td><td>boolean</td><td class="${state.resourceLimit === 'FALSE' ? 'vuln-val' : 'secure-val'}">${state.resourceLimit}</td></tr>
+</table>`, 'html');
+        
+        checkStatus();
+    }
+
+    function runFixProfile() {
+        log("ALTER PROFILE DEFAULT LIMIT IDLE_TIME 60;");
+        state.idleTime = '60';
+        log("Profile altered.");
+        checkStatus();
+    }
+
+    function runFixSystem() {
+        log("ALTER SYSTEM SET RESOURCE_LIMIT = TRUE;");
+        state.resourceLimit = 'TRUE';
+        log("System altered.");
+        checkStatus();
+    }
+
+    function checkStatus() {
+        const msg = document.getElementById('status-msg');
+        if (state.idleTime === '60' && state.resourceLimit === 'TRUE') {
+            msg.className = "mt-4 text-center fw-bold text-success";
+            msg.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i> 현재 상태: 양호 (Secure)';
+        } else {
+            msg.className = "mt-4 text-center fw-bold text-danger";
+            msg.innerText = '현재 상태: 취약함 (Vulnerable)';
+        }
+    }
+
+    function reset() {
+        state = { idleTime: 'UNLIMITED', resourceLimit: 'FALSE' };
+        document.getElementById('query-result').innerHTML = '';
+        log("-- System Reset Complete --", 'html');
+        checkStatus();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D-18/19 리스너 및 접근 제어 - DB 보안 시뮬레이터</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: #eef2f5; padding: 20px; }
+        .container-fluid { max-width: 1600px; }
+        
+        /* Header */
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-bottom: 5px solid #00aaaa; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+        
+        /* Layout */
+        .content-row { display: flex; gap: 20px; height: calc(100vh - 140px); }
+        .sidebar { width: 300px; background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; }
+        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        .guide-panel { width: 420px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; border-left: 4px solid #0d6efd; }
+
+        /* Menu Items */
+        .menu-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-weight: 600; color: #555; display: flex; align-items: center; }
+        .menu-item:hover { background: #f8f9fa; border-color: #dee2e6; }
+        .menu-item.active { background: #e3f2fd; color: #0d6efd; border-color: #0d6efd; }
+        .menu-item i { width: 25px; text-align: center; margin-right: 10px; }
+        .badge-risk { font-size: 0.7em; padding: 4px 8px; border-radius: 6px; margin-left: auto; background: #dc3545; color: white; }
+
+        /* DB Tabs */
+        .db-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .db-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; background: #e9ecef; color: #6c757d; }
+        .db-tab.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .db-tab i { margin-right: 8px; }
+
+        /* Terminal */
+        .terminal-container { background: #1e1e1e; border-radius: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .terminal-header { background: #2d2d2d; padding: 8px 15px; color: #aaa; font-size: 0.85em; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .terminal-body { flex: 1; padding: 15px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.95rem; line-height: 1.5; color: #f1f1f1; }
+        
+        .term-line { margin-bottom: 5px; word-break: break-all; }
+        .prompt { color: #00ffff; font-weight: bold; }
+        .vuln { color: #ff5555; font-weight: bold; }
+        .secure { color: #50fa7b; font-weight: bold; }
+        .cmd { color: #f1fa8c; }
+        .info { color: #8be9fd; }
+        .guide-title { font-size: 1.1rem; font-weight: 800; color: #2c3e50; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        .guide-label { font-size: 0.85rem; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .code-block { background: #f8f9fa; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid #e9ecef; color: #d63384; word-break: break-all; white-space: pre-wrap; }
+        .btn-fix { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #198754 0%, #157347 100%); color: white; font-weight: bold; margin-top: auto; transition: 0.3s; }
+        .btn-fix:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); }
+        .btn-fix:disabled { background: #6c757d; cursor: not-allowed; }
+        .reset-btn { background: #6c757d; border: none; color: white; padding: 5px 15px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="header">
+        <div>
+            <span class="badge bg-warning text-dark mb-1">KISA 주요정보통신기반시설 가이드 (상)</span>
+            <h1>🗄️ Public Role 및 옵션 관리 (D-18 ~ D-19)</h1>
+        </div>
+        <button class="reset-btn" onclick="resetAll()">🔄 전체 초기화</button>
+    </div>
+    <div class="content-row">
+        <div class="sidebar">
+            <h6 class="text-muted fw-bold ps-2 mb-3">점검 항목</h6>
+            <div class="menu-item active" onclick="loadItem('d18', this)">
+                <i class="fa-solid fa-users-viewfinder"></i> D-18 Public Role
+                <span class="badge-risk">상</span>
+            </div>
+            <div class="menu-item" onclick="loadItem('d19', this)">
+                <i class="fa-solid fa-gears"></i> D-19 옵션 관리
+                <span class="badge-risk">상</span>
+            </div>
+        </div>
+        <div class="main-panel">
+            <div class="db-tabs">
+                <button class="db-tab active" id="tab-oracle" onclick="setDB(event, 'oracle')"><i class="fa-solid fa-database"></i> Oracle Database</button>
+                <button class="db-tab" id="tab-mysql" onclick="setDB(event, 'mysql')"><i class="fa-solid fa-server"></i> MySQL / MariaDB</button>
+            </div>
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <span id="term-title">Oracle SQL*Plus - Connected as SYSDBA</span>
+                    <span id="term-status" class="text-warning">● Ready</span>
+                </div>
+                <div class="terminal-body" id="terminal"></div>
+            </div>
+        </div>
+        <div class="guide-panel">
+            <div class="guide-title" id="guide-title"></div>
+            <div class="guide-section">
+                <span class="guide-label">🔍 점검 내용</span>
+                <p class="small text-muted" id="guide-desc"></p>
+            </div>
+            <div class="guide-section">
+                <span class="guide-label">⚠️ 보안 위협</span>
+                <p class="small text-muted" id="guide-risk"></p>
+            </div>
+            <div class="guide-section">
+                <span class="guide-label">🔧 조치 방법 (KISA)</span>
+                <div id="guide-fix" class="code-block"></div>
+            </div>
+            <button id="btn-fix" class="btn-fix" onclick="runFix()">🛡️ 조치 실행 (Auto Fix)</button>
+        </div>
+    </div>
+</div>
+<script>
+    const data = {
+        d18: {
+            title: "D-18 Public Role 설정 제한",
+            desc: "응용 프로그램 또는 DBA 계정의 Role이 Public으로 설정되어 있는지 점검합니다.",
+            risk: "DBA Role이 Public으로 설정된 경우 일반 계정에서도 DBA 테이블에 접근할 수 있어 중요 정보 유출 위험이 존재합니다.",
+            checkCmd: "SELECT granted_role FROM dba_role_privs WHERE grantee = 'PUBLIC';",
+            vulnOutput: `GRANTED_ROLE
+------------------------------
+CONNECT
+RESOURCE
+DBA          <-- [취약] DBA Role이 PUBLIC에 부여됨`,
+            fixDesc: "DBA 계정의 Role 설정에서 Public 그룹 권한 취소\n\nSQL> REVOKE DBA FROM PUBLIC;",
+            fixCmds: ["REVOKE DBA FROM PUBLIC;"],
+            secureOutput: `GRANTED_ROLE
+------------------------------
+CONNECT
+RESOURCE
+(0 rows selected for DBA)`
+        },
+        d19: {
+            title: "D-19 취약한 옵션 설정 제거",
+            desc: "OS_ROLES, REMOTE_OS_AUTHENTICATION, REMOTE_OS_ROLES가 FALSE로 설정되어 있는지 점검합니다.",
+            risk: "해당 옵션들이 TRUE인 경우, OS 인증을 통한 비인가 접속이나 권한 상승(Spoofing) 위협이 존재합니다.",
+            checkCmd: "SHOW PARAMETER os_roles;\nSHOW PARAMETER remote_os_authent;\nSHOW PARAMETER remote_os_roles;",
+            vulnOutput: `NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+os_roles                             boolean     TRUE   <-- [취약]
+remote_os_authent                    boolean     TRUE   <-- [취약]
+remote_os_roles                      boolean     TRUE   <-- [취약]`,
+            fixDesc: "init.ora 또는 SPFILE에서 해당 파라미터를 FALSE로 변경\n\nSQL> ALTER SYSTEM SET OS_ROLES=FALSE SCOPE=SPFILE;\nSQL> ALTER SYSTEM SET REMOTE_OS_AUTHENT=FALSE ...",
+            fixCmds: [
+                "ALTER SYSTEM SET OS_ROLES=FALSE SCOPE=SPFILE;",
+                "ALTER SYSTEM SET REMOTE_OS_AUTHENT=FALSE SCOPE=SPFILE;",
+                "ALTER SYSTEM SET REMOTE_OS_ROLES=FALSE SCOPE=SPFILE;"
+            ],
+            secureOutput: `NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+os_roles                             boolean     FALSE
+remote_os_authent                    boolean     FALSE
+remote_os_roles                      boolean     FALSE`
+        }
+    };
+
+    let currentItem = 'd18';
+    let currentDB = 'oracle';
+    let isFixed = { 
+        d18_oracle: false, d18_mysql: true,
+        d19_oracle: false, d19_mysql: true 
+    };
+
+    function init() {
+        // Wait for DOM to be ready
+        setTimeout(() => {
+            const firstMenuItem = document.querySelector('.menu-item');
+            if (firstMenuItem) {
+                loadItem('d18', firstMenuItem);
+            }
+        }, 100);
+    }
+
+    function loadItem(id, el) {
+        currentItem = id;
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+        if(el) el.classList.add('active');
+        
+        // Reset DB tab when switching items
+        setDB(null, currentDB); 
+    }
+
+    function setDB(event, db) {
+        currentDB = db;
+        
+        // Tab UI
+        document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('active'));
+        const activeTab = document.getElementById('tab-' + db);
+        if (activeTab) activeTab.classList.add('active');
+        
+        // Terminal Header
+        const title = db === 'oracle' ? 'Oracle SQL*Plus - Connected as SYSDBA' : 'MySQL Monitor - Connected as root';
+        const titleEl = document.getElementById('term-title');
+        if (titleEl) titleEl.innerText = title;
+
+        updateUI();
+        
+        // Clear terminal and run check
+        const term = document.getElementById('terminal');
+        if (term) term.innerHTML = '';
+        setTimeout(runCheck, 300);
+    }
+
+    function updateUI() {
+        const d = data[currentItem];
+        const dbData = d[currentDB]; // Access nested DB specific data
+        const stateKey = `${currentItem}_${currentDB}`;
+        const fixed = isFixed[stateKey];
+        
+        document.getElementById('guide-title').innerText = d.title;
+        document.getElementById('guide-desc').innerText = d.desc;
+        document.getElementById('guide-risk').innerText = d.risk;
+        document.getElementById('guide-fix').innerText = dbData.fixDesc; // Use DB specific fix desc
+        
+        const btn = document.getElementById('btn-fix');
+        if (dbData.check.includes('N/A')) {
+             btn.disabled = true;
+             btn.innerText = "🚫 해당 사항 없음 (N/A)";
+        } else {
+             btn.disabled = fixed;
+             btn.innerText = fixed ? "✅ 조치 완료 (Secured)" : "🛡️ 조치 실행 (Auto Fix)";
+        }
+    }
+
+    function log(msg, type='output') {
+        const term = document.getElementById('terminal');
+        if (!term) return;
+        
+        const prompt = currentDB === 'oracle' ? 'SQL>' : 'mysql>';
+        let html = '';
+        if (type === 'cmd') html = `<div class="term-line"><span class="prompt">${prompt}</span> <span class="cmd">${msg}</span></div>`;
+        else if (type === 'vuln') html = `<div class="term-line vuln" style="white-space: pre;">${msg}</div>`;
+        else if (type === 'secure') html = `<div class="term-line secure" style="white-space: pre;">${msg}</div>`;
+        else html = `<div class="term-line" style="white-space: pre;">${msg}</div>`;
+        
+        term.innerHTML += html;
+        term.scrollTop = term.scrollHeight;
+    }
+
+    function runCheck() {
+        const dbData = data[currentItem][currentDB];
+        const stateKey = `${currentItem}_${currentDB}`;
+        const fixed = isFixed[stateKey];
+        
+        // Multi-line check commands
+        const cmds = dbData.check.split('\n');
+        cmds.forEach(c => log(c, 'cmd'));
+
+        setTimeout(() => {
+            if (dbData.check.includes('N/A')) {
+                log(dbData.vulnOutput, 'info');
+            } else if (fixed) {
+                log(dbData.secureOutput, 'secure');
+                log("[System] Status: Secure", 'secure');
+            } else {
+                log(dbData.vulnOutput, 'vuln');
+                log("[System] Status: Vulnerable", 'vuln');
+            }
+            // Add prompt
+            const prompt = currentDB === 'oracle' ? 'SQL>' : 'mysql>';
+            const term = document.getElementById('terminal');
+            term.innerHTML += `<div class="term-line mt-2"><span class="prompt">${prompt}</span> <span class="cmd">_</span></div>`;
+            term.scrollTop = term.scrollHeight;
+        }, 500);
+    }
+
+    function runFix() {
+        const dbData = data[currentItem][currentDB];
+        const stateKey = `${currentItem}_${currentDB}`;
+        
+        // Remove cursor
+        const term = document.getElementById('terminal');
+        term.innerHTML = term.innerHTML.replace('<span class="cmd">_</span>', '');
+
+        let delay = 0;
+        dbData.fixCmds.forEach(cmd => {
+            setTimeout(() => {
+                log(cmd, 'cmd');
+                log("System altered.", 'info');
+            }, delay);
+            delay += 600;
+        });
+
+        setTimeout(() => {
+            log(`[System] Vulnerability Patched.`, 'secure');
+            isFixed[stateKey] = true;
+            updateUI();
+            setTimeout(runCheck, 1000);
+        }, delay + 500);
+    }
+
+    function resetAll() {
+        isFixed = { 
+            d18_oracle: false, d18_mysql: true,
+            d19_oracle: false, d19_mysql: true 
+        };
+        const term = document.getElementById('terminal');
+        if(term) term.innerHTML = '<div class="term-line info">System reset complete.</div>';
+        updateUI();
+        setTimeout(runCheck, 500);
+    }
+
+    init();
+</script>
+</body>
+</html>

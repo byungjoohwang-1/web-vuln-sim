@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DB 보안 실습 시뮬레이터 (Oracle)</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #0c0c0c; color: #00ffff; height: 100vh; display: flex; flex-direction: column; }
+    
+    .top-bar { background: #102027; padding: 10px 20px; border-bottom: 2px solid #00aaaa; display: flex; justify-content: space-between; align-items: center; }
+    .top-bar h1 { font-size: 1.2em; color: #00ffff; font-weight: bold; }
+    
+    .status-group { display: flex; align-items: center; gap: 15px; }
+    
+    .status-badge { padding: 6px 12px; border-radius: 4px; font-size: 0.85em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .status-vulnerable { background: #ff0055; color: #fff; box-shadow: 0 0 10px rgba(255, 0, 85, 0.4); animation: pulse 2s infinite; }
+    .status-secure { background: #00aaaa; color: #fff; box-shadow: 0 0 10px rgba(0, 170, 170, 0.4); }
+    
+    .reset-btn { background: transparent; border: 1px solid #ffbd2e; color: #ffbd2e; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono'; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; }
+    .reset-btn:hover { background: #ffbd2e; color: #000; box-shadow: 0 0 10px rgba(255, 189, 46, 0.5); }
+
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    
+    .main-container { display: flex; flex: 1; overflow: hidden; }
+    
+    /* Checklist Panel */
+    .checklist-panel { width: 360px; background: #101518; border-right: 1px solid #333; overflow-y: auto; padding: 0; }
+    .checklist-header { padding: 20px; border-bottom: 1px solid #333; background: #151a1e; position: sticky; top: 0; z-index: 10; }
+    .checklist-header h2 { color: #00ffff; font-size: 1.1em; margin: 0; }
+    
+    .checklist-item { padding: 18px 20px; border-bottom: 1px solid #222; border-left: 4px solid #444; cursor: pointer; transition: all 0.2s; position: relative; }
+    .checklist-item:hover { background: #1a2024; }
+    .checklist-item.active { background: #1f262b; border-left-color: #00ffff; }
+    .checklist-item.vulnerable { border-left-color: #ff0055; }
+    .checklist-item.secure { border-left-color: #00aaaa; }
+    
+    .item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .item-id { font-weight: bold; color: #fff; background: #333; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; }
+    .item-status { font-size: 0.75em; font-weight: bold; }
+    .item-status.vulnerable { color: #ff0055; }
+    .item-status.secure { color: #50fa7b; }
+    .item-title { font-size: 0.9em; color: #ccc; line-height: 1.4; }
+    
+    /* Terminal Panel */
+    .terminal-panel { flex: 1; display: flex; flex-direction: column; background: #0c0c0c; position: relative; }
+    .terminal-header { background: #151a1e; padding: 12px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; font-size: 0.9em; color: #888; }
+    .terminal-output { flex: 1; padding: 20px; overflow-y: auto; font-size: 0.95em; line-height: 1.6; font-family: 'JetBrains Mono', monospace; }
+    .terminal-line { margin-bottom: 4px; word-break: break-all; }
+    
+    .prompt { color: #00ffff; font-weight: bold; }
+    .command { color: #fff; font-weight: bold; }
+    .keyword { color: #ff79c6; }
+    .string { color: #f1fa8c; }
+    .error { color: #ff5555; }
+    .success { color: #50fa7b; }
+    .info { color: #8be9fd; }
+    .comment { color: #6272a4; font-style: italic; }
+    
+    .terminal-input-container { background: #151a1e; padding: 15px 20px; border-top: 1px solid #333; display: flex; align-items: center; }
+    .terminal-prompt { color: #00ffff; margin-right: 12px; font-weight: bold; }
+    #terminal-input { flex: 1; background: transparent; border: none; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 1.1em; outline: none; }
+    
+    /* Guide Panel */
+    .guide-panel { width: 440px; background: #101518; border-left: 1px solid #333; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 25px; }
+    .guide-card { background: #1a2024; border-radius: 8px; padding: 20px; border: 1px solid #333; }
+    .guide-card h3 { color: #00ffff; margin-bottom: 15px; font-size: 1em; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .guide-desc { color: #ccc; font-size: 0.9em; line-height: 1.6; margin-bottom: 15px; }
+    
+    .cmd-box { background: #000; padding: 12px; border-radius: 5px; border-left: 3px solid #50fa7b; font-size: 0.85em; margin-bottom: 15px; }
+    .cmd-box.fix { border-left-color: #ffbd2e; }
+    .cmd-label { color: #888; font-size: 0.8em; margin-bottom: 5px; display: block; }
+    .cmd-text { color: #fff; font-family: 'JetBrains Mono', monospace; }
+    
+    .fix-btn { background: linear-gradient(135deg, #00aaaa, #008888); color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: auto; }
+    .fix-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 170, 170, 0.3); }
+    .fix-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* SQL Table Style */
+    .sql-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9em; border: 1px solid #444; }
+    .sql-table th { text-align: left; padding: 8px; background: #222; color: #00ffff; border-bottom: 1px solid #444; }
+    .sql-table td { padding: 8px; border-bottom: 1px solid #333; color: #ddd; }
+    .sql-table tr:last-child td { border-bottom: none; }
+    .val-bad { color: #ff5555; font-weight: bold; }
+    .val-good { color: #50fa7b; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <h1>🗄️ Database Security Simulator (Oracle 19c)</h1>
+    <div class="status-group">
+        <button class="reset-btn" onclick="resetSimulation()">
+            <span>🔄</span> 초기화
+        </button>
+        <span class="status-badge" id="overall-status">Initializing...</span>
+    </div>
+  </div>
+  
+  <div class="main-container">
+    <!-- Checklist -->
+    <div class="checklist-panel">
+      <div class="checklist-header">
+        <h2>보안 점검 항목 (D-Code)</h2>
+      </div>
+      <div id="checklist"></div>
+    </div>
+    
+    <!-- Terminal -->
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <span>Session: SYS AS SYSDBA</span>
+        <span style="color: #50fa7b;">● Connected</span>
+      </div>
+      <div class="terminal-output" id="terminal-output">
+        <div class="terminal-line"><span class="success">SQL*Plus: Release 19.0.0.0.0 - Production</span></div>
+        <div class="terminal-line"><span class="output">Copyright (c) 1982, 2025, Oracle. All rights reserved.</span></div>
+        <div class="terminal-line"><br></div>
+        <div class="terminal-line"><span class="output">Connected to:</span></div>
+        <div class="terminal-line"><span class="output">Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production</span></div>
+        <div class="terminal-line"><br></div>
+        <div class="terminal-line"><span class="comment">-- Select a vulnerability item from the left to start.</span></div>
+      </div>
+      <div class="terminal-input-container">
+        <span class="terminal-prompt">SQL&gt;</span>
+        <input type="text" id="terminal-input" autofocus autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+    
+    <!-- Guide -->
+    <div class="guide-panel" id="guide-panel">
+      <div class="guide-card">
+        <h3>💡 Security Officer Mode</h3>
+        <p class="guide-desc">
+          금융권 및 주요정보통신기반시설 기술적 취약점 평가기준(2026)에 따른 Oracle DB 보안 점검을 수행합니다.
+        </p>
+        <p class="guide-desc" style="color: #8be9fd;">
+          좌측 메뉴에서 점검할 항목을 선택하세요.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 1. Initial State Factory (초기 취약 상태 생성)
+    const getInitialDB = () => ({
+        dba_users: [
+            { USERNAME: 'SYS', ACCOUNT_STATUS: 'OPEN', DEFAULT_TABLESPACE: 'SYSTEM' },
+            { USERNAME: 'SYSTEM', ACCOUNT_STATUS: 'OPEN', DEFAULT_TABLESPACE: 'SYSTEM' },
+            { USERNAME: 'SCOTT', ACCOUNT_STATUS: 'OPEN', DEFAULT_TABLESPACE: 'SYSTEM' }, // D-01, D-10
+            { USERNAME: 'DBSNMP', ACCOUNT_STATUS: 'OPEN', DEFAULT_TABLESPACE: 'SYSAUX' }
+        ],
+        dba_profiles: [
+            { PROFILE: 'DEFAULT', RESOURCE_NAME: 'FAILED_LOGIN_ATTEMPTS', LIMIT: 'UNLIMITED' }, // D-02
+            { PROFILE: 'DEFAULT', RESOURCE_NAME: 'PASSWORD_LIFE_TIME', LIMIT: 'UNLIMITED' },    // D-03
+            { PROFILE: 'DEFAULT', RESOURCE_NAME: 'PASSWORD_VERIFY_FUNCTION', LIMIT: 'NULL' },     // D-04
+            { PROFILE: 'DEFAULT', RESOURCE_NAME: 'PASSWORD_REUSE_MAX', LIMIT: 'UNLIMITED' },      // D-05
+            { PROFILE: 'DEFAULT', RESOURCE_NAME: 'IDLE_TIME', LIMIT: 'UNLIMITED' }                // D-08
+        ],
+        dba_role_privs: [
+            { GRANTEE: 'SYS', GRANTED_ROLE: 'DBA' },
+            { GRANTEE: 'SYSTEM', GRANTED_ROLE: 'DBA' },
+            { GRANTEE: 'SCOTT', GRANTED_ROLE: 'DBA' }, // D-11
+            { GRANTEE: 'SCOTT', GRANTED_ROLE: 'CONNECT' },
+            { GRANTEE: 'SCOTT', GRANTED_ROLE: 'RESOURCE' }
+        ],
+        dba_tab_privs: [
+            { GRANTEE: 'PUBLIC', TABLE_NAME: 'UTL_FILE', PRIVILEGE: 'EXECUTE' },  // D-23
+            { GRANTEE: 'PUBLIC', TABLE_NAME: 'UTL_TCP', PRIVILEGE: 'EXECUTE' },   // D-24
+            { GRANTEE: 'PUBLIC', TABLE_NAME: 'UTL_HTTP', PRIVILEGE: 'EXECUTE' },  // D-24
+            { GRANTEE: 'PUBLIC', TABLE_NAME: 'DBMS_RANDOM', PRIVILEGE: 'EXECUTE' }
+        ],
+        v_parameter: [
+            { NAME: 'resource_limit', VALUE: 'FALSE' }, // D-08
+            { NAME: 'audit_trail', VALUE: 'NONE' },     // D-25
+            { NAME: 'remote_os_authent', VALUE: 'TRUE' },
+            { NAME: 'utl_file_dir', VALUE: '*' }        // D-23 (Old style but educational)
+        ],
+        // OS Files Simulation
+        listener_ora: { use_password: false }, // D-19
+        sqlnet_ora: { validnode_checking: 'no', invited_nodes: [] } // D-26
+    });
+
+    // Global State
+    let virtualDB = getInitialDB();
+
+    // 2. Check Items (D-Code Mappings)
+    const checkItems = [
+        {
+            id: 'D-01',
+            title: '기본 계정 및 불필요한 계정 제거',
+            desc: 'SCOTT, TIGER 등 기본 계정의 활성화 여부를 점검합니다.',
+            checkQuery: "SELECT USERNAME, ACCOUNT_STATUS FROM DBA_USERS WHERE USERNAME = 'SCOTT';",
+            fixQuery: "ALTER USER SCOTT ACCOUNT LOCK;",
+            check: () => {
+                const u = virtualDB.dba_users.find(x => x.USERNAME === 'SCOTT');
+                return u && u.ACCOUNT_STATUS.includes('LOCKED');
+            },
+            risk: '기본 계정은 널리 알려져 있어 공격의 시발점이 됩니다.'
+        },
+        {
+            id: 'D-02',
+            title: '로그인 실패 횟수 제한',
+            desc: '무차별 대입 공격 방지를 위해 로그인 실패 허용 횟수를 5회 이하로 제한합니다.',
+            checkQuery: "SELECT LIMIT FROM DBA_PROFILES WHERE RESOURCE_NAME = 'FAILED_LOGIN_ATTEMPTS';",
+            fixQuery: "ALTER PROFILE DEFAULT LIMIT FAILED_LOGIN_ATTEMPTS 5;",
+            check: () => {
+                const p = virtualDB.dba_profiles.find(x => x.RESOURCE_NAME === 'FAILED_LOGIN_ATTEMPTS');
+                return parseInt(p.LIMIT) <= 5;
+            },
+            risk: '제한이 없으면 비밀번호를 찾을 때까지 무한정 시도할 수 있습니다.'
+        },
+        {
+            id: 'D-03',
+            title: '패스워드 만료 기간 설정',
+            desc: '비밀번호의 영구 사용을 방지하기 위해 최대 사용 기간을 90일 이하로 설정합니다.',
+            checkQuery: "SELECT LIMIT FROM DBA_PROFILES WHERE RESOURCE_NAME = 'PASSWORD_LIFE_TIME';",
+            fixQuery: "ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME 90;",
+            check: () => {
+                const p = virtualDB.dba_profiles.find(x => x.RESOURCE_NAME === 'PASSWORD_LIFE_TIME');
+                return parseInt(p.LIMIT) <= 90;
+            },
+            risk: '유출된 비밀번호가 장기간 악용될 수 있습니다.'
+        },
+        {
+            id: 'D-04',
+            title: '패스워드 복잡성 설정',
+            desc: '비밀번호 생성 시 복잡도 검증 함수를 적용해야 합니다.',
+            checkQuery: "SELECT LIMIT FROM DBA_PROFILES WHERE RESOURCE_NAME = 'PASSWORD_VERIFY_FUNCTION';",
+            fixQuery: "ALTER PROFILE DEFAULT LIMIT PASSWORD_VERIFY_FUNCTION VERIFY_FUNCTION_11G;",
+            check: () => {
+                const p = virtualDB.dba_profiles.find(x => x.RESOURCE_NAME === 'PASSWORD_VERIFY_FUNCTION');
+                return p.LIMIT !== 'NULL';
+            },
+            risk: '단순한 비밀번호 사용으로 계정 탈취 위험이 증가합니다.'
+        },
+        {
+            id: 'D-05',
+            title: '패스워드 재사용 방지',
+            desc: '이전 비밀번호 재사용을 3회 이상 제한합니다.',
+            checkQuery: "SELECT LIMIT FROM DBA_PROFILES WHERE RESOURCE_NAME = 'PASSWORD_REUSE_MAX';",
+            fixQuery: "ALTER PROFILE DEFAULT LIMIT PASSWORD_REUSE_MAX 3;",
+            check: () => {
+                const p = virtualDB.dba_profiles.find(x => x.RESOURCE_NAME === 'PASSWORD_REUSE_MAX');
+                return parseInt(p.LIMIT) >= 3;
+            },
+            risk: '재사용 허용 시 주기적 변경의 효과가 사라집니다.'
+        },
+        {
+            id: 'D-08',
+            title: '세션 타임아웃 설정',
+            desc: '유휴 세션을 60분 이내에 자동 로그아웃 시키도록 설정합니다.',
+            checkQuery: "SELECT LIMIT FROM DBA_PROFILES WHERE RESOURCE_NAME = 'IDLE_TIME';",
+            fixQuery: "ALTER PROFILE DEFAULT LIMIT IDLE_TIME 60;\nALTER SYSTEM SET RESOURCE_LIMIT = TRUE;",
+            check: () => {
+                const p = virtualDB.dba_profiles.find(x => x.RESOURCE_NAME === 'IDLE_TIME');
+                const param = virtualDB.v_parameter.find(x => x.NAME === 'resource_limit');
+                return parseInt(p.LIMIT) <= 60 && param.VALUE === 'TRUE';
+            },
+            risk: '관리자 부재 시 열린 세션을 통한 비인가 조작 위험이 있습니다.'
+        },
+        {
+            id: 'D-10',
+            title: '사용자별 Default Tablespace',
+            desc: '일반 사용자의 기본 테이블스페이스를 SYSTEM으로 설정하지 않아야 합니다.',
+            checkQuery: "SELECT USERNAME, DEFAULT_TABLESPACE FROM DBA_USERS WHERE USERNAME = 'SCOTT';",
+            fixQuery: "ALTER USER SCOTT DEFAULT TABLESPACE USERS;",
+            check: () => {
+                const u = virtualDB.dba_users.find(x => x.USERNAME === 'SCOTT');
+                return u.DEFAULT_TABLESPACE !== 'SYSTEM';
+            },
+            risk: 'SYSTEM 테이블스페이스에 데이터 저장 시 DB 성능 저하 및 관리 문제가 발생합니다.'
+        },
+        {
+            id: 'D-11',
+            title: '불필요한 권한 부여 금지',
+            desc: '일반 사용자에게 DBA 등 과도한 권한이 부여되지 않도록 합니다.',
+            checkQuery: "SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTED_ROLE='DBA' AND GRANTEE='SCOTT';",
+            fixQuery: "REVOKE DBA FROM SCOTT;",
+            check: () => {
+                return !virtualDB.dba_role_privs.some(p => p.GRANTEE === 'SCOTT' && p.GRANTED_ROLE === 'DBA');
+            },
+            risk: '과도한 권한 부여는 내부 보안 위협을 증가시킵니다.'
+        },
+        {
+            id: 'D-19',
+            title: '리스너 패스워드 설정',
+            desc: 'Oracle Listener에 패스워드를 설정하여 원격 제어를 차단해야 합니다.',
+            checkQuery: "HOST lsnrctl status",
+            fixQuery: "HOST lsnrctl change_password",
+            check: () => virtualDB.listener_ora.use_password === true,
+            risk: '원격에서 리스너를 중지시키거나 조작할 수 있습니다.'
+        },
+        {
+            id: 'D-23',
+            title: '주요 파일 접근 통제 (UTL_FILE)',
+            desc: 'UTL_FILE 패키지에 대한 실행 권한을 PUBLIC에서 회수해야 합니다.',
+            checkQuery: "SELECT * FROM DBA_TAB_PRIVS WHERE TABLE_NAME='UTL_FILE' AND GRANTEE='PUBLIC';",
+            fixQuery: "REVOKE EXECUTE ON UTL_FILE FROM PUBLIC;",
+            check: () => {
+                return !virtualDB.dba_tab_privs.some(p => p.TABLE_NAME === 'UTL_FILE' && p.GRANTEE === 'PUBLIC');
+            },
+            risk: 'OS 파일 시스템에 임의로 접근하거나 파일을 조작할 수 있습니다.'
+        },
+        {
+            id: 'D-24',
+            title: '불필요한 네트워크 패키지 권한',
+            desc: 'UTL_TCP, UTL_HTTP 등 네트워크 통신 패키지의 PUBLIC 실행 권한을 회수해야 합니다.',
+            checkQuery: "SELECT * FROM DBA_TAB_PRIVS WHERE TABLE_NAME IN ('UTL_TCP','UTL_HTTP') AND GRANTEE='PUBLIC';",
+            fixQuery: "REVOKE EXECUTE ON UTL_TCP FROM PUBLIC;\nREVOKE EXECUTE ON UTL_HTTP FROM PUBLIC;",
+            check: () => {
+                return !virtualDB.dba_tab_privs.some(p => ['UTL_TCP', 'UTL_HTTP'].includes(p.TABLE_NAME) && p.GRANTEE === 'PUBLIC');
+            },
+            risk: 'DB를 경유하여 외부 네트워크 공격을 수행하거나 내부망을 스캔할 수 있습니다.'
+        },
+        {
+            id: 'D-25',
+            title: '감사 로그(Audit Trail) 활성화',
+            desc: 'DB 감사 기능을 활성화하여 주요 작업 이력을 기록해야 합니다.',
+            checkQuery: "SHOW PARAMETER AUDIT_TRAIL",
+            fixQuery: "ALTER SYSTEM SET AUDIT_TRAIL=DB SCOPE=SPFILE;",
+            check: () => {
+                const p = virtualDB.v_parameter.find(x => x.NAME === 'audit_trail');
+                return p.VALUE !== 'NONE';
+            },
+            risk: '침해사고 발생 시 원인 규명 및 추적이 불가능합니다.'
+        },
+        {
+            id: 'D-26',
+            title: 'IP 접근 통제 (validnode_checking)',
+            desc: 'sqlnet.ora 파일에 접속 허용 IP를 명시하여 접근을 통제해야 합니다.',
+            checkQuery: "HOST cat $ORACLE_HOME/network/admin/sqlnet.ora",
+            fixQuery: "HOST echo 'tcp.validnode_checking = yes' >> sqlnet.ora",
+            check: () => virtualDB.sqlnet_ora.validnode_checking === 'yes',
+            risk: '인가되지 않은 IP에서의 무단 접속 시도를 차단할 수 없습니다.'
+        }
+    ];
+
+    let currentItem = null;
+
+    function init() {
+        renderChecklist();
+        updateStatus();
+    }
+
+    function resetSimulation() {
+        virtualDB = getInitialDB();
+        currentItem = null;
+        document.getElementById('terminal-output').innerHTML = `
+            <div class="terminal-line"><span class="success">System Reset Complete.</span></div>
+            <div class="terminal-line"><span class="output">All settings restored to vulnerable state.</span></div>
+            <div class="terminal-line"><br></div>
+        `;
+        renderChecklist();
+        renderGuide();
+        updateStatus();
+    }
+
+    function renderChecklist() {
+        const list = document.getElementById('checklist');
+        list.innerHTML = checkItems.map(item => {
+            const isSecure = item.check();
+            const statusClass = isSecure ? 'secure' : 'vulnerable';
+            const statusText = isSecure ? 'SECURE' : 'VULNERABLE';
+            return `
+                <div class="checklist-item ${statusClass} ${currentItem?.id === item.id ? 'active' : ''}" onclick="selectItem('${item.id}')">
+                    <div class="item-top">
+                        <span class="item-id">${item.id}</span>
+                        <span class="item-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="item-title">${item.title}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function selectItem(id) {
+        currentItem = checkItems.find(i => i.id === id);
+        renderChecklist();
+        renderGuide();
+        printTerminal(`\nSQL> -- Selected: ${currentItem.id} (${currentItem.title})`, 'comment');
+    }
+
+    function renderGuide() {
+        const panel = document.getElementById('guide-panel');
+        if (!currentItem) {
+            panel.innerHTML = `<div class="guide-card"><h3>💡 Security Officer Mode</h3><p class="guide-desc">좌측 메뉴에서 점검할 항목을 선택하세요.</p></div>`;
+            return;
+        }
+        const isSecure = currentItem.check();
+        panel.innerHTML = `
+            <div class="guide-card">
+                <h3>🔍 ${currentItem.id} 점검</h3>
+                <p class="guide-desc">${currentItem.desc}</p>
+                <div class="cmd-box"><span class="cmd-label">Check Query:</span><span class="cmd-text">${currentItem.checkQuery}</span></div>
+            </div>
+            <div class="guide-card">
+                <h3>⚠️ 위협 (Risk)</h3>
+                <p class="guide-desc" style="color:#ff79c6">${currentItem.risk}</p>
+            </div>
+            <div class="guide-card">
+                <h3>🔧 조치 (Fix)</h3>
+                <div class="cmd-box fix"><span class="cmd-label">Fix Query:</span><span class="cmd-text" style="white-space:pre-wrap;">${currentItem.fixQuery}</span></div>
+                <button class="fix-btn" onclick="runAutoFix()" ${isSecure ? 'disabled' : ''}>
+                    ${isSecure ? '✓ 조치 완료' : '⚡ 자동 조치 (Auto Fix)'}
+                </button>
+            </div>
+        `;
+    }
+
+    function printTerminal(text, type = 'output') {
+        const output = document.getElementById('terminal-output');
+        const line = document.createElement('div');
+        line.className = 'terminal-line';
+        if (type === 'command') text = text.replace(/(SELECT|FROM|WHERE|ALTER|USER|PROFILE|LIMIT|SYSTEM|SET|AND|OR|SHOW|PARAMETER|REVOKE|GRANT|TABLESPACE|HOST)/gi, '<span class="keyword">$1</span>');
+        line.innerHTML = `<span class="${type}">${text}</span>`;
+        output.appendChild(line);
+        output.scrollTop = output.scrollHeight;
+    }
+
+    function printTable(data, cols) {
+        if (!data || data.length === 0) { printTerminal('no rows selected', 'output'); return; }
+        let html = '<table class="sql-table"><thead><tr>';
+        cols.forEach(c => html += `<th>${c}</th>`);
+        html += '</tr></thead><tbody>';
+        data.forEach(row => {
+            html += '<tr>';
+            cols.forEach(c => {
+                let val = row[c] || '';
+                let style = (val === 'UNLIMITED' || val === 'NULL' || val === 'FALSE' || val === 'OPEN' || val === 'SYSTEM' || val === 'DBA' || val === 'PUBLIC' || val === 'NONE') ? 'class="val-bad"' : 'class="val-good"';
+                if(['USERNAME','GRANTEE','TABLE_NAME','PROFILE','RESOURCE_NAME','NAME'].includes(c)) style = '';
+                html += `<td ${style}>${val}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        document.getElementById('terminal-output').appendChild(div);
+        document.getElementById('terminal-output').scrollTop = document.getElementById('terminal-output').scrollHeight;
+    }
+
+    function executeSQL(rawCmd) {
+        const cmd = rawCmd.trim().toUpperCase();
+        if (!cmd) return;
+        printTerminal(rawCmd, 'command');
+
+        if (cmd === 'CLEAR') { document.getElementById('terminal-output').innerHTML = ''; return; }
+        if (cmd === 'CHECK' && currentItem) { executeSQL(currentItem.checkQuery); return; }
+
+        // SQL Parser Logic
+        let handled = false;
+
+        // SELECT
+        if (cmd.startsWith('SELECT')) {
+            if (cmd.includes('DBA_USERS')) {
+                let d = virtualDB.dba_users;
+                if (cmd.includes("'SCOTT'")) d = d.filter(u => u.USERNAME === 'SCOTT');
+                printTable(d, ['USERNAME', 'ACCOUNT_STATUS', 'DEFAULT_TABLESPACE']);
+            } 
+            else if (cmd.includes('DBA_PROFILES')) {
+                let d = virtualDB.dba_profiles;
+                const m = cmd.match(/RESOURCE_NAME\s*=\s*'([^']+)'/);
+                if (m) d = d.filter(p => p.RESOURCE_NAME === m[1]);
+                printTable(d, ['PROFILE', 'RESOURCE_NAME', 'LIMIT']);
+            }
+            else if (cmd.includes('DBA_ROLE_PRIVS')) {
+                let d = virtualDB.dba_role_privs;
+                if (cmd.includes("'DBA'") && cmd.includes("'SCOTT'")) d = d.filter(p => p.GRANTED_ROLE === 'DBA' && p.GRANTEE === 'SCOTT');
+                printTable(d, ['GRANTEE', 'GRANTED_ROLE']);
+            }
+            else if (cmd.includes('DBA_TAB_PRIVS')) {
+                let d = virtualDB.dba_tab_privs;
+                if (cmd.includes("'PUBLIC'")) d = d.filter(p => p.GRANTEE === 'PUBLIC');
+                if (cmd.includes("'UTL_FILE'")) d = d.filter(p => p.TABLE_NAME === 'UTL_FILE');
+                if (cmd.includes("IN ('UTL_TCP','UTL_HTTP')")) d = d.filter(p => ['UTL_TCP','UTL_HTTP'].includes(p.TABLE_NAME));
+                printTable(d, ['GRANTEE', 'TABLE_NAME', 'PRIVILEGE']);
+            }
+            handled = true;
+        }
+        // SHOW PARAMETER
+        else if (cmd.startsWith('SHOW PARAMETER')) {
+            if(cmd.includes('AUDIT_TRAIL')) printTable(virtualDB.v_parameter.filter(p=>p.NAME==='audit_trail'), ['NAME','VALUE']);
+            else printTable(virtualDB.v_parameter, ['NAME', 'VALUE']);
+            handled = true;
+        }
+        // ALTER / REVOKE
+        else if (cmd.startsWith('ALTER') || cmd.startsWith('REVOKE')) {
+            let changed = false;
+            // D-01, D-10: User
+            if (cmd.includes('USER SCOTT')) {
+                const u = virtualDB.dba_users.find(x => x.USERNAME === 'SCOTT');
+                if (u) {
+                    if (cmd.includes('LOCK')) { u.ACCOUNT_STATUS = 'EXPIRED & LOCKED'; changed = true; }
+                    if (cmd.includes('DEFAULT TABLESPACE')) { u.DEFAULT_TABLESPACE = 'USERS'; changed = true; }
+                }
+            }
+            // D-11: Revoke Role
+            else if (cmd.includes('REVOKE DBA')) {
+                virtualDB.dba_role_privs = virtualDB.dba_role_privs.filter(p => !(p.GRANTEE === 'SCOTT' && p.GRANTED_ROLE === 'DBA'));
+                changed = true;
+            }
+            // D-23, D-24: Revoke Obj Priv
+            else if (cmd.includes('REVOKE EXECUTE ON')) {
+                const target = cmd.match(/ON\s+([^\s]+)/)[1];
+                virtualDB.dba_tab_privs = virtualDB.dba_tab_privs.filter(p => !(p.TABLE_NAME === target && p.GRANTEE === 'PUBLIC'));
+                changed = true;
+            }
+            // D-08, D-25: System Param
+            else if (cmd.includes('SYSTEM SET')) {
+                if (cmd.includes('RESOURCE_LIMIT')) { virtualDB.v_parameter.find(p=>p.NAME==='resource_limit').VALUE = 'TRUE'; changed = true; }
+                if (cmd.includes('AUDIT_TRAIL')) { virtualDB.v_parameter.find(p=>p.NAME==='audit_trail').VALUE = 'DB'; changed = true; }
+            }
+            // Profiles
+            else if (cmd.includes('PROFILE')) {
+                const limits = {
+                    'FAILED_LOGIN_ATTEMPTS': '5', 'PASSWORD_LIFE_TIME': '90',
+                    'PASSWORD_VERIFY_FUNCTION': 'VERIFY_FUNCTION_11G', 'PASSWORD_REUSE_MAX': '3', 'IDLE_TIME': '60'
+                };
+                for (let k in limits) {
+                    if (cmd.includes(k)) {
+                        virtualDB.dba_profiles.find(p => p.RESOURCE_NAME === k).LIMIT = limits[k];
+                        changed = true;
+                    }
+                }
+            }
+            
+            if (changed) { printTerminal('Command processed successfully.', 'success'); updateUI(); }
+            else printTerminal('No changes made or invalid command.', 'error');
+            handled = true;
+        }
+        // HOST (OS Cmds)
+        else if (cmd.startsWith('HOST')) {
+            const os = cmd.replace('HOST', '').trim();
+            if (os.includes('lsnrctl status')) {
+                const s = virtualDB.listener_ora.use_password ? 'ON' : 'OFF';
+                printTerminal(`LSNRCTL Status... Security ${s}`, 'output');
+            }
+            else if (os.includes('lsnrctl change_password')) {
+                virtualDB.listener_ora.use_password = true;
+                printTerminal('Listener password set.', 'success'); updateUI();
+            }
+            else if (os.includes('cat') && os.includes('sqlnet.ora')) {
+                printTerminal(`tcp.validnode_checking = ${virtualDB.sqlnet_ora.validnode_checking}`, 'output');
+            }
+            else if (os.includes('echo') && os.includes('sqlnet.ora')) {
+                virtualDB.sqlnet_ora.validnode_checking = 'yes';
+                printTerminal('Configuration appended to sqlnet.ora', 'success'); updateUI();
+            }
+            handled = true;
+        }
+
+        if (!handled) printTerminal('ORA-00900: invalid SQL statement', 'error');
+    }
+
+    function runAutoFix() {
+        if (!currentItem) return;
+        const qs = currentItem.fixQuery.split('\n');
+        qs.forEach(q => executeSQL(q));
+    }
+
+    function updateStatus() {
+        const secure = checkItems.filter(i => i.check()).length;
+        const total = checkItems.length;
+        const b = document.getElementById('overall-status');
+        b.innerText = secure === total ? "✓ ALL SECURE" : `⚠ VULNERABLE (${secure}/${total})`;
+        b.className = secure === total ? "status-badge status-secure" : "status-badge status-vulnerable";
+    }
+
+    function updateUI() {
+        renderChecklist();
+        renderGuide();
+        updateStatus();
+    }
+
+    document.getElementById('terminal-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { executeSQL(e.target.value); e.target.value = ''; }
+    });
+
+    init();
+  </script>
+</body>
+</html>
