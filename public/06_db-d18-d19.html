@@ -111,41 +111,60 @@
             title: "D-18 Public Role 설정 제한",
             desc: "응용 프로그램 또는 DBA 계정의 Role이 Public으로 설정되어 있는지 점검합니다.",
             risk: "DBA Role이 Public으로 설정된 경우 일반 계정에서도 DBA 테이블에 접근할 수 있어 중요 정보 유출 위험이 존재합니다.",
-            checkCmd: "SELECT granted_role FROM dba_role_privs WHERE grantee = 'PUBLIC';",
-            vulnOutput: `GRANTED_ROLE
+            oracle: {
+                check: "SELECT granted_role FROM dba_role_privs WHERE grantee = 'PUBLIC';",
+                vulnOutput: `GRANTED_ROLE
 ------------------------------
 CONNECT
 RESOURCE
 DBA          <-- [취약] DBA Role이 PUBLIC에 부여됨`,
-            fixDesc: "DBA 계정의 Role 설정에서 Public 그룹 권한 취소\n\nSQL> REVOKE DBA FROM PUBLIC;",
-            fixCmds: ["REVOKE DBA FROM PUBLIC;"],
-            secureOutput: `GRANTED_ROLE
+                fixDesc: "DBA 계정의 Role 설정에서 Public 그룹 권한 취소\n\nSQL> REVOKE DBA FROM PUBLIC;",
+                fixCmds: ["REVOKE DBA FROM PUBLIC;"],
+                secureOutput: `GRANTED_ROLE
 ------------------------------
 CONNECT
 RESOURCE
 (0 rows selected for DBA)`
+            },
+            mysql: {
+                check: "-- MySQL N/A (Role 개념 상이)",
+                vulnOutput: `[N/A] MySQL은 Oracle의 Role/Public 개념과 다르게 권한을 관리합니다.
+사용자별 권한(mysql.user, db)을 직접 점검해야 합니다.`,
+                fixDesc: "해당 사항 없음 (양호)",
+                fixCmds: [],
+                secureOutput: `[N/A] MySQL 점검 제외 항목`
+            }
         },
         d19: {
             title: "D-19 취약한 옵션 설정 제거",
             desc: "OS_ROLES, REMOTE_OS_AUTHENTICATION, REMOTE_OS_ROLES가 FALSE로 설정되어 있는지 점검합니다.",
             risk: "해당 옵션들이 TRUE인 경우, OS 인증을 통한 비인가 접속이나 권한 상승(Spoofing) 위협이 존재합니다.",
-            checkCmd: "SHOW PARAMETER os_roles;\nSHOW PARAMETER remote_os_authent;\nSHOW PARAMETER remote_os_roles;",
-            vulnOutput: `NAME                                 TYPE        VALUE
+            oracle: {
+                check: "SHOW PARAMETER os_roles;\nSHOW PARAMETER remote_os_authent;\nSHOW PARAMETER remote_os_roles;",
+                vulnOutput: `NAME                                 TYPE        VALUE
 ------------------------------------ ----------- ------------------------------
 os_roles                             boolean     TRUE   <-- [취약]
 remote_os_authent                    boolean     TRUE   <-- [취약]
 remote_os_roles                      boolean     TRUE   <-- [취약]`,
-            fixDesc: "init.ora 또는 SPFILE에서 해당 파라미터를 FALSE로 변경\n\nSQL> ALTER SYSTEM SET OS_ROLES=FALSE SCOPE=SPFILE;\nSQL> ALTER SYSTEM SET REMOTE_OS_AUTHENT=FALSE ...",
-            fixCmds: [
-                "ALTER SYSTEM SET OS_ROLES=FALSE SCOPE=SPFILE;",
-                "ALTER SYSTEM SET REMOTE_OS_AUTHENT=FALSE SCOPE=SPFILE;",
-                "ALTER SYSTEM SET REMOTE_OS_ROLES=FALSE SCOPE=SPFILE;"
-            ],
-            secureOutput: `NAME                                 TYPE        VALUE
+                fixDesc: "init.ora 또는 SPFILE에서 해당 파라미터를 FALSE로 변경\n\nSQL> ALTER SYSTEM SET OS_ROLES=FALSE SCOPE=SPFILE;\nSQL> ALTER SYSTEM SET REMOTE_OS_AUTHENT=FALSE ...",
+                fixCmds: [
+                    "ALTER SYSTEM SET OS_ROLES=FALSE SCOPE=SPFILE;",
+                    "ALTER SYSTEM SET REMOTE_OS_AUTHENT=FALSE SCOPE=SPFILE;",
+                    "ALTER SYSTEM SET REMOTE_OS_ROLES=FALSE SCOPE=SPFILE;"
+                ],
+                secureOutput: `NAME                                 TYPE        VALUE
 ------------------------------------ ----------- ------------------------------
 os_roles                             boolean     FALSE
 remote_os_authent                    boolean     FALSE
 remote_os_roles                      boolean     FALSE`
+            },
+            mysql: {
+                check: "-- MySQL N/A",
+                vulnOutput: `[N/A] 해당 항목은 Oracle DB 구조에 특화된 옵션 점검 항목입니다.`,
+                fixDesc: "해당 사항 없음 (양호)",
+                fixCmds: [],
+                secureOutput: `[N/A] MySQL 점검 제외 항목`
+            }
         }
     };
 
@@ -199,6 +218,10 @@ remote_os_roles                      boolean     FALSE`
     function updateUI() {
         const d = data[currentItem];
         const dbData = d[currentDB]; // Access nested DB specific data
+        
+        // Safety check for dbData
+        if (!dbData) return;
+        
         const stateKey = `${currentItem}_${currentDB}`;
         const fixed = isFixed[stateKey];
         
@@ -234,6 +257,8 @@ remote_os_roles                      boolean     FALSE`
 
     function runCheck() {
         const dbData = data[currentItem][currentDB];
+        if (!dbData) return;
+
         const stateKey = `${currentItem}_${currentDB}`;
         const fixed = isFixed[stateKey];
         
@@ -261,6 +286,8 @@ remote_os_roles                      boolean     FALSE`
 
     function runFix() {
         const dbData = data[currentItem][currentDB];
+        if (!dbData) return;
+
         const stateKey = `${currentItem}_${currentDB}`;
         
         // Remove cursor
