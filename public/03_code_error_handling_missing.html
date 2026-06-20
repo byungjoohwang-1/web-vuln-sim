@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오류상황 대응 부재 - 실습 시뮬레이터</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #1c92d2 0%, #f2fcfe 100%); min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .top-nav { margin-bottom: 15px; }
+        .top-nav a { color: #fff; text-decoration: none; background: rgba(0,0,0,0.25); padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; }
+        .top-nav a:hover { background: rgba(0,0,0,0.4); }
+        .header { background: white; padding: 30px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; border-bottom: 5px solid #d9534f; }
+        .header h1 { color: #d9534f; font-size: 32px; margin-bottom: 10px; }
+        .header p { color: #666; font-size: 16px; }
+        .header .kisa-tag { display:inline-block; margin-top:10px; background:#eef6ff; color:#1c5fb0; border:1px solid #cfe2ff; padding:4px 12px; border-radius:20px; font-size:13px; }
+        .mode-tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+        .mode-tab { flex: 1; padding: 20px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: left; position: relative; overflow: hidden; }
+        .mode-tab.active { background: linear-gradient(135deg, #d9534f 0%, #a94442 100%); color: white; }
+        .mode-icon { font-size: 32px; margin-bottom: 10px; }
+        .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .mode-desc { font-size: 13px; opacity: 0.8; }
+        .content-wrapper { display: none; }
+        .content-wrapper.active { display: block; }
+        .progress-indicator { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .progress-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #2c3e50; }
+        .checklist { list-style: none; padding: 0; display: flex; gap: 15px; flex-wrap: wrap; }
+        .checklist-item { padding: 8px 15px; background: #f8f9fa; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 14px; border: 1px solid #e9ecef; transition: all 0.3s; }
+        .checklist-item.completed { background: #d4edda; border-color: #c3e6cb; color: #155724; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .main-content { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; margin-bottom: 20px; }
+        .panel { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; height: 100%; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #f0f0f0; }
+        .panel-title { font-size: 20px; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
+        .status-badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+        .status-vulnerable { background: #dc3545; color: white; }
+        .status-secure { background: #28a745; color: white; }
+        .status-editing { background: #ffc107; color: #000; }
+        .code-editor { background: #1e1e1e; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex-grow: 1; min-height: 420px; }
+        .editor-toolbar { background: #2d2d2d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e3e; }
+        .toolbar-title { color: #d4d4d4; font-size: 13px; font-weight: bold; }
+        .toolbar-hint { color: #ffc107; font-size: 12px; margin-left: 15px; flex: 1; }
+        .edit-toggle-btn { background: #007acc; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.3s; }
+        .edit-toggle-btn.editing { background: #28a745; }
+        .code-display { background: #1e1e1e; padding: 15px; overflow: auto; flex-grow: 1; }
+        .code-display pre { margin: 0; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.6; }
+        .code-textarea { width: 100%; height: 100%; background: #1e1e1e; color: #d4d4d4; border: none; padding: 15px; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.6; resize: none; outline: none; flex-grow: 1; }
+        .code-textarea:focus { outline: 2px solid #007acc; outline-offset: -2px; }
+        .control-panel { display: flex; gap: 15px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-analyze { background: #d9534f; color: white; }
+        .btn-validate { background: #28a745; color: white; }
+        .btn-hint { background: #ffc107; color: #000; }
+        .btn-reset { background: #6c757d; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .feedback { margin-top: 20px; }
+        .feedback-item { padding: 15px; margin-bottom: 10px; border-radius: 8px; animation: slideIn 0.3s ease-out; }
+        .feedback-error { background: #fff5f5; border-left: 4px solid #dc3545; }
+        .feedback-success { background: #d4edda; border-left: 4px solid #28a745; }
+        .feedback-warning { background: #fff3cd; border-left: 4px solid #ffc107; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .hint-panel { background: #fff8dc; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin-top: 20px; display: none; }
+        .hint-panel.active { display: block; animation: slideIn 0.3s ease-out; }
+        .hint-step { background: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid #ffc107; }
+        .hint-code { background: #1e1e1e; color: #d4d4d4; padding: 8px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 13px; margin-top: 5px; white-space: pre-wrap; }
+        .info-section { margin-bottom: 20px; }
+        .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
+        .info-content { color: #555; line-height: 1.6; }
+        @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+        <div class="header">
+            <h1>🕳️ 오류상황 대응 부재 - 실습 시뮬레이터</h1>
+            <p>CWE-391: Unchecked Error Condition</p>
+            <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · 에러처리</span>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('java')">
+                <div class="mode-icon">&#9749;</div>
+                <div class="mode-title">Java 시큐어 코딩</div>
+                <div class="mode-desc">빈 catch 제거</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('python')">
+                <div class="mode-icon">&#128013;</div>
+                <div class="mode-title">Python 시큐어 코딩</div>
+                <div class="mode-desc">except pass 제거</div>
+            </button>
+        </div>
+
+        <div id="java-mode" class="content-wrapper active">
+            <div class="progress-indicator">
+                <div class="progress-title">&#9989; 학습 진행도</div>
+                <ul class="checklist" id="progressChecklistJava">
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 빈 catch 식별</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 대응 로직 추가</li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">&#9749; Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                    </div>
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">Transfer.java</span>
+                            <span class="toolbar-hint">&#128161; 예외를 무시하지 말고 로깅/재시도/예외전파로 대응하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">&#9999;&#65039; 편집</button>
+                        </div>
+                        <div class="code-display" id="codeDisplayContainerJava">
+                            <pre><code class="language-java" id="codeDisplayJava">try {
+    int amount = Integer.parseInt(input);
+    transfer(amount);
+} catch (NumberFormatException e) {
+    // [취약] 예외를 잡고도 아무 대응이 없음(빈 catch)
+}</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="codeEditorJava" style="display:none;" spellcheck="false">try {
+    int amount = Integer.parseInt(input);
+    transfer(amount);
+} catch (NumberFormatException e) {
+    // [취약] 예외를 잡고도 아무 대응이 없음(빈 catch)
+}</textarea>
+                    </div>
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')">&#128260; 초기화</button>
+                    </div>
+                    <div class="feedback" id="feedbackJava"></div>
+                    <div class="hint-panel" id="hintPanelJava">
+                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="hint-step">
+                            <strong>1. 명시적 대응</strong>
+                            <p>로깅 후 사용자 안내 또는 예외 전파.</p>
+                            <div class="hint-code">} catch (NumberFormatException e) {
+    logger.warn("잘못된 금액 입력: {}", input, e);
+    throw new InvalidInputException("금액 형식이 올바르지 않습니다.");
+}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div id="rightPanelJava">
+                        <div class="info-section">
+                            <div class="info-title">&#127919; 목표</div>
+                            <div class="info-content"><p>발생한 오류를 무시하지 않고 적절히 처리·전파해야 합니다.</p></div>
+                        </div>
+                        <div class="info-section">
+                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-content">
+                                <p style="color:#dc3545; font-weight:bold;">Unchecked Error</p>
+                                <p>빈 catch로 인해 실패가 은폐되어 데이터 무결성이 깨집니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="python-mode" class="content-wrapper">
+            <div class="progress-indicator">
+                <div class="progress-title">&#9989; 학습 진행도</div>
+                <ul class="checklist" id="progressChecklistPython">
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 예외 무시 식별</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 대응 로직 추가</li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">&#128013; Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                    </div>
+                    <div class="code-editor">
+                        <div class="editor-toolbar">
+                            <span class="toolbar-title">transfer.py</span>
+                            <span class="toolbar-hint">&#128161; except: pass 대신 logging/raise로 대응하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">&#9999;&#65039; 편집</button>
+                        </div>
+                        <div class="code-display" id="codeDisplayContainerPython">
+                            <pre><code class="language-python" id="codeDisplayPython">try:
+    amount = int(user_input)
+    transfer(amount)
+except ValueError:
+    pass   # [취약] 예외를 무시(대응 부재)</code></pre>
+                        </div>
+                        <textarea class="code-textarea" id="codeEditorPython" style="display:none;" spellcheck="false">try:
+    amount = int(user_input)
+    transfer(amount)
+except ValueError:
+    pass   # [취약] 예외를 무시(대응 부재)</textarea>
+                    </div>
+                    <div class="control-panel">
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')">&#128260; 초기화</button>
+                    </div>
+                    <div class="feedback" id="feedbackPython"></div>
+                    <div class="hint-panel" id="hintPanelPython">
+                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="hint-step">
+                            <strong>1. 명시적 대응</strong>
+                            <p>로깅 후 예외 전파 또는 복구.</p>
+                            <div class="hint-code">except ValueError:
+    logging.warning("잘못된 금액 입력: %s", user_input)
+    raise InvalidInput("금액 형식 오류")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div id="rightPanelPython">
+                        <div class="info-section">
+                            <div class="info-title">&#127919; 목표</div>
+                            <div class="info-content"><p>오류 상황을 무시하지 않고 처리·전파합니다.</p></div>
+                        </div>
+                        <div class="info-section">
+                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-content">
+                                <p style="color:#dc3545; font-weight:bold;">Unchecked Error</p>
+                                <p>예외 무시로 실패가 은폐됩니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        const VULN_JAVA = `try {
+    int amount = Integer.parseInt(input);
+    transfer(amount);
+} catch (NumberFormatException e) {
+    // [취약] 예외를 잡고도 아무 대응이 없음(빈 catch)
+}`;
+        const VULN_PY = `try:
+    amount = int(user_input)
+    transfer(amount)
+except ValueError:
+    pass   # [취약] 예외를 무시(대응 부재)`;
+        const CHECK_JAVA = [[`logger`, `log.error`, `throw new`, `return`]];
+        const CHECK_PY = [[`logging`, `logger`, `raise`]];
+
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.closest('.mode-tab').classList.add('active');
+            document.querySelectorAll('.content-wrapper').forEach(w => w.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+        function toggleHint(mode) { document.getElementById(mode === 'java' ? 'hintPanelJava' : 'hintPanelPython').classList.toggle('active'); }
+        function updateChecklist(listId, index, status) {
+            const list = document.getElementById(listId);
+            const items = list.getElementsByTagName('li');
+            if(items[index]) {
+                const icon = items[index].querySelector('.checklist-icon');
+                if(status) { items[index].classList.add('completed'); icon.textContent = '✅'; }
+                else { items[index].classList.remove('completed'); icon.textContent = '⬜'; }
+            }
+        }
+        function passesChecks(code, checks) {
+            const c = code.replace(/\s+/g,' ');
+            // 각 그룹: 양성 토큰(하나라도 포함) AND 음성 토큰('NOT:'접두, 모두 미포함)
+            return checks.every(grp => {
+                const pos = grp.filter(t => !t.startsWith('NOT:'));
+                const neg = grp.filter(t => t.startsWith('NOT:')).map(t => t.slice(4));
+                const posOk = pos.length === 0 ? true : pos.some(t => c.includes(t.replace(/\s+/g,' ')));
+                const negOk = neg.every(t => !c.includes(t.replace(/\s+/g,' ')));
+                return posOk && negOk;
+            });
+        }
+
+        // ===== Java =====
+        let isEditingJava = false;
+        function toggleEditModeJava() {
+            const d=document.getElementById('codeDisplayContainerJava'), e=document.getElementById('codeEditorJava'),
+                  b=document.getElementById('editBtnJava'), p=document.getElementById('codeDisplayJava');
+            isEditingJava=!isEditingJava;
+            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+        }
+        function analyzeCodeJava() {
+            updateChecklist('progressChecklistJava',0,true); updateChecklist('progressChecklistJava',1,true);
+            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>오류를 삼켜버려 실패가 드러나지 않고 잘못된 상태로 진행됩니다.</p></div>`;
+            document.getElementById('validateBtnJava').disabled=false;
+            const s=document.getElementById('codeStatusJava'); s.textContent='수정 중'; s.className='status-badge status-editing';
+        }
+        function validateCodeJava() {
+            const code=document.getElementById('codeEditorJava').value;
+            if(passesChecks(code, CHECK_JAVA)){
+                updateChecklist('progressChecklistJava',2,true);
+                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>예외 상황에 대해 로깅/전파 등 대응 로직을 추가했습니다.</p></div>`;
+                const s=document.getElementById('codeStatusJava'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>오류 상황이 적절히 처리/전파됩니다.</p></div></div>`;
+            } else {
+                updateChecklist('progressChecklistJava',2,false);
+                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>catch 블록에서 logger 기록 또는 throw/return 등 대응을 추가하세요.</p></div>`;
+            }
+        }
+        function resetCoding(mode) {
+            if(mode==='java'){
+                document.getElementById('codeEditorJava').value=VULN_JAVA;
+                document.getElementById('codeDisplayJava').textContent=VULN_JAVA;
+                if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayJava'));
+                document.getElementById('feedbackJava').innerHTML='';
+                document.getElementById('validateBtnJava').disabled=true;
+                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+                for(let i=0;i<3;i++) updateChecklist('progressChecklistJava',i,false);
+            } else { resetCodingPython(); }
+        }
+
+        // ===== Python =====
+        let isEditingPython=false;
+        function toggleEditModePython() {
+            const d=document.getElementById('codeDisplayContainerPython'), e=document.getElementById('codeEditorPython'),
+                  b=document.getElementById('editBtnPython'), p=document.getElementById('codeDisplayPython');
+            isEditingPython=!isEditingPython;
+            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+        }
+        function analyzeCodePython() {
+            updateChecklist('progressChecklistPython',0,true); updateChecklist('progressChecklistPython',1,true);
+            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>예외를 pass로 삼켜 오류가 보고되지 않습니다.</p></div>`;
+            document.getElementById('validateBtnPython').disabled=false;
+            const s=document.getElementById('codeStatusPython'); s.textContent='수정 중'; s.className='status-badge status-editing';
+        }
+        function validateCodePython() {
+            const code=document.getElementById('codeEditorPython').value;
+            if(passesChecks(code, CHECK_PY)){
+                updateChecklist('progressChecklistPython',2,true);
+                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>logging/raise로 오류에 대응하도록 수정했습니다.</p></div>`;
+                const s=document.getElementById('codeStatusPython'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>오류가 적절히 처리/전파됩니다.</p></div></div>`;
+            } else {
+                updateChecklist('progressChecklistPython',2,false);
+                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>except 블록에 logging 기록 또는 raise를 추가하세요.</p></div>`;
+            }
+        }
+        function resetCodingPython() {
+            document.getElementById('codeEditorPython').value=VULN_PY;
+            document.getElementById('codeDisplayPython').textContent=VULN_PY;
+            if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayPython'));
+            document.getElementById('feedbackPython').innerHTML='';
+            document.getElementById('validateBtnPython').disabled=true;
+            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+            for(let i=0;i<3;i++) updateChecklist('progressChecklistPython',i,false);
+        }
+    </script>
+</body>
+</html>

@@ -17,6 +17,11 @@ Copyright 2025 Jack Hwang. This program is complied with Apache License 2.0.
 V0.5 주요 기능 추가(2025-12-16)
 1) 웹 보안 취약점 시뮬레이터를 20개로 추가 했습니다-2) KISA 기준으로 보안 기능에 대해 직접 실습 할 수 있는 16개의 취약점 기능을 추가 했습니다.(Korean Only)
 
+V0.6 주요 기능 추가(2026-06-20)
+1) **전자금융 보안 특화 시뮬레이터 10종** 신설 — 거래정보 무결성/재사용(리플레이) 방지, 금융형 IDOR(소유주 검증), 거래 인증수단 검증, 고정 인증코드, 루팅·탈옥 탐지, 앱 위·변조/안티디버깅, HTS 실행 파라미터 재사용, 초기화 비밀번호 규칙성, 유추 가능한 인증정보(복잡도). (출처: 금융보안원 「전자금융기반시설 보안 취약점 평가기준(제2026-1호)」 개념 재구성)
+2) **시큐어 코딩 KISA 49개 보안약점 100% 커버 완성** — 기존 입력검증(17)·보안기능(16)에 더해 시간/상태(2), 에러처리(3), 코드오류(5: Null Pointer 역참조·자원 해제·Use-After-Free·미초기화 변수·역직렬화), 캡슐화(4), API 오용(2) 등 16개 시큐어 코딩 랩 추가.
+3) **인프라 점검 확장** — UNIX 서비스 관리 18종(U-34~U-61: finger/r-command/NFS/RPC/NIS/Sendmail/DNS/SNMP 등) 및 DBMS 14종(D-05~D-24) 추가로 DB 점검 D-26까지 완성. 기존 깨진 내부 링크도 정리.
+
 ## ✨ 주요 시뮬레이션 및 학습 항목
 
 | 분류 | 취약점 파일명 | 내용 |
@@ -240,5 +245,15 @@ The Hosting URL will be displayed upon completion.
 ## ⚠️ Disclaimer
 
 This application is created for **educational purposes only**. The attack techniques demonstrated here must **NEVER** be used on systems you do not own or have explicit permission to test.
+
+## 📑 출처 및 참고자료 (References)
+
+본 시뮬레이터의 점검 항목은 아래 공개 가이드라인을 **개념적으로 재구성**한 교육용 콘텐츠이며, 원문을 복제하지 않습니다.
+
+- KISA, 「소프트웨어 보안약점 진단가이드」(2021) — 시큐어 코딩 49개 보안약점
+- KISA, 「주요정보통신기반시설 기술적 취약점 분석·평가 방법 상세가이드」 — UNIX/DBMS/웹 등 기술적 점검
+- 금융보안원, 「전자금융기반시설 보안 취약점 평가기준(제2026-1호)」 — 전자금융 보안 특화 항목
+
+각 자료의 저작권은 해당 기관에 있으며, 평가기준 문서의 무단 배포는 금지됩니다.
 
 

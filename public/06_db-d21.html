@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D-21: 백업 및 복구 절차 | 교육 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#1a1a2e; --text:#2c3e50; --muted:#7f8c8d; --border:#e0e0e0; }
+body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:40px 20px; color:var(--text); }
+.container { max-width:1200px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,.3); overflow:hidden; }
+.topbar { background:#0f0f1e; padding:10px 24px; }
+.topbar a { color:#9aa6ff; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:42px 40px; text-align:center; }
+.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:14px; letter-spacing:1px; }
+.header h1 { font-size:30px; margin-bottom:10px; }
+.header p { opacity:.9; font-size:15px; }
+.sev { display:inline-block; margin-top:14px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.sev-상 { background:var(--danger); } .sev-중 { background:var(--warning); } .sev-하 { background:var(--success); }
+.body { padding:36px 40px; }
+.section { margin-bottom:30px; }
+.section h2 { font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }
+.desc { background:#f7f8ff; border-left:4px solid var(--primary); padding:16px 18px; border-radius:8px; line-height:1.7; font-size:15px; }
+.tabs { display:flex; gap:10px; margin-bottom:16px; }
+.state-tab { flex:1; padding:14px; border:2px solid var(--border); border-radius:10px; background:white; cursor:pointer; font-family:'Lora',serif; font-weight:700; font-size:15px; transition:.2s; }
+.state-tab.vuln.active { border-color:var(--danger); background:#fff5f5; color:var(--danger); }
+.state-tab.secure.active { border-color:var(--success); background:#f1f8f1; color:var(--success); }
+.terminal { background:var(--dark); border-radius:10px; padding:0; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,.2); }
+.terminal-head { background:#12122a; padding:10px 16px; display:flex; align-items:center; gap:8px; }
+.dot { width:12px; height:12px; border-radius:50%; } .dot.r { background:#ff5f56; } .dot.y { background:#ffbd2e; } .dot.g { background:#27c93f; }
+.terminal-title { color:#888; font-family:'JetBrains Mono',monospace; font-size:12px; margin-left:8px; }
+.terminal-body { padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.8; color:#d4d4d4; white-space:pre-wrap; min-height:160px; }
+.prompt { color:#27c93f; } .cmt { color:#6a9955; } .bad { color:#ff6b6b; } .good { color:#73d13d; } .warn { color:#ffd166; }
+.fix-steps { counter-reset:step; list-style:none; }
+.fix-steps li { position:relative; padding:14px 16px 14px 52px; margin-bottom:12px; background:#f7f8ff; border-radius:10px; line-height:1.6; }
+.fix-steps li::before { counter-increment:step; content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
+.fix-steps code, .inline-code { font-family:'JetBrains Mono',monospace; background:#1a1a2e; color:#9cdcfe; padding:2px 7px; border-radius:5px; font-size:13px; }
+.checklist { list-style:none; }
+.checklist li { padding:12px 16px; margin-bottom:10px; background:#fafbff; border:1px solid var(--border); border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:.2s; }
+.checklist li:hover { background:#f0f2ff; }
+.checklist li.done { background:#f1f8f1; border-color:#c8e6c9; }
+.checklist .box { width:22px; height:22px; border:2px solid var(--primary); border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; }
+.checklist li.done .box { background:var(--success); border-color:var(--success); }
+.kref { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }
+.footer { text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+@media (max-width:700px) { .tabs { flex-direction:column; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar"><a href="index.html">&larr; cd /index</a></div>
+  <div class="header">
+    <div class="code-badge">D-21</div>
+    <h1>💾 백업 및 복구 절차</h1>
+    <p>데이터베이스 보안</p>
+    <span class="sev sev-중">위험도: 중</span>
+  </div>
+  <div class="body">
+    <div class="section">
+      <h2>📋 취약점 개요</h2>
+      <div class="desc">정기 백업과 복구 절차가 없으면 장애·랜섬웨어 시 데이터를 복구할 수 없습니다. 백업을 자동화하고 복구 테스트를 수행해야 합니다.</div>
+    </div>
+
+    <div class="section">
+      <h2>🖥️ 상태 비교 시뮬레이션</h2>
+      <div class="tabs">
+        <button class="state-tab vuln active" onclick="setState('vuln')">⚠️ 취약한 상태</button>
+        <button class="state-tab secure" onclick="setState('secure')">✅ 안전한 상태</button>
+      </div>
+      <div class="terminal">
+        <div class="terminal-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="terminal-title" id="termTitle">root@server:~# (취약)</span></div>
+        <div class="terminal-body" id="termBody"><span class="cmt">-- 백업 이력 확인</span>
+<span class="prompt">RMAN&gt; </span>
+LIST BACKUP SUMMARY;
+<span class="bad">specification does not match any backup</span>
+<span class="warn">→ 백업 미수행 (취약)</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔧 조치 방법</h2>
+      <ol class="fix-steps"><li>RMAN 등으로 전체/증분 백업을 자동화하고 보관 주기를 정의합니다.</li><li>백업본을 분리 저장(오프사이트)하고 접근을 제한합니다.</li><li>정기적으로 복구 테스트를 수행합니다.</li></ol>
+    </div>
+
+    <div class="section">
+      <h2>✅ 점검 체크리스트</h2>
+      <ul class="checklist" id="checklist"><li><span class="box"></span><span>정기 백업이 수행되는가</span></li><li><span class="box"></span><span>복구 절차/테스트가 마련됨</span></li><li><span class="box"></span><span>백업본이 분리 보관됨</span></li></ul>
+      <div class="kref">점검기준: 데이터베이스 &gt; 백업 및 복구</div>
+    </div>
+  </div>
+  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+</div>
+<script>
+const VULN_TERM = `<span class="cmt">-- 백업 이력 확인</span>
+<span class="prompt">RMAN&gt; </span>
+LIST BACKUP SUMMARY;
+<span class="bad">specification does not match any backup</span>
+<span class="warn">→ 백업 미수행 (취약)</span>`;
+const SECURE_TERM = `<span class="cmt">-- 정기 백업 수행</span>
+<span class="prompt">RMAN&gt; </span>
+BACKUP DATABASE PLUS ARCHIVELOG;
+<span class="good">Finished backup at ...</span>
+<span class="good">→ 정기 백업/복구 절차 운영 (양호)</span>`;
+function setState(s){
+  document.querySelectorAll('.state-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.state-tab.'+s).classList.add('active');
+  document.getElementById('termBody').innerHTML = (s==='vuln')?VULN_TERM:SECURE_TERM;
+  document.getElementById('termTitle').textContent = (s==='vuln')?'root@server:~# (취약)':'root@server:~# (안전)';
+}
+document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{
+  li.classList.toggle('done');
+  li.querySelector('.box').textContent = li.classList.contains('done')?'✓':'';
+}));
+</script>
+</body>
+</html>
