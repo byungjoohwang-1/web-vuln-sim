@@ -62,7 +62,7 @@ ok(!runErr, 'no runtime error on load');
 
 // 데이터
 ok(E.CONCEPTS.length===49, 'CONCEPTS=49 (got '+E.CONCEPTS.length+')');
-ok(E.PRACTICAL.length===59, 'PRACTICAL=59 (got '+E.PRACTICAL.length+')');
+ok(E.PRACTICAL.length===67, 'PRACTICAL=67 (got '+E.PRACTICAL.length+')');
 ok(E.THEORY.length>=26, 'THEORY>=26 (got '+E.THEORY.length+')');
 console.log('CONCEPTS',E.CONCEPTS.length,'QUIZ',E.QUIZ.length,'PRACTICAL',E.PRACTICAL.length,'THEORY',E.THEORY.length);
 
