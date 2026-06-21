@@ -60,6 +60,9 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
 .kisa-ref {{ font-size:14px; line-height:1.7; color:#444; }}
 .kisa-ref h4 {{ color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }}
 .kisa-ref ul {{ margin-left:18px; }}
+.easybox {{ background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }}
+.easybox .tag {{ display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }}
+.easybox b {{ color:#c0392b; }}
 @media (max-width:1000px) {{ .grid-container {{ grid-template-columns:1fr; }} }}
 </style>
 </head>
@@ -73,6 +76,8 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
       평가기준: <span class="risk">위험도 {risk}</span> <span class="badge">{item_code}</span>
     </div>
   </div>
+
+  <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>{easy}</div>
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
@@ -193,11 +198,12 @@ function showCompliance(){{
   document.getElementById('violationAlert').style.display='block';
 }}
 function verifyCode(){{
-  const code=document.getElementById('codeEditor').value.replace(/\s+/g,' ');
+  const norm=s=>s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  const code=norm(document.getElementById('codeEditor').value);
   const r=document.getElementById('codeResult');
   const ok=CHECKS.every(grp=>{{
     const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
-    return (pos.length===0||pos.some(t=>code.includes(t.replace(/\s+/g,' ')))) && neg.every(t=>!code.includes(t.replace(/\s+/g,' ')));
+    return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
   }});
   if(ok){{ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">{success_msg}</span></div>'; }}
   else {{ r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">{fail_msg}</span></div>'; }}
@@ -222,7 +228,9 @@ def esc(s):
 
 
 def render(s):
+    from easy_text import EASY
     return PAGE.format(
+        easy=s.get('easy', EASY.get(s['file'], '')),
         title=esc(s['title']), icon=s['icon'], target=esc(s['target']), risk=s['risk'],
         item_code=esc(s['item_code']),
         attack_panel_title=esc(s['attack_panel_title']),
@@ -243,12 +251,16 @@ def render(s):
 
 
 def main():
-    from specs_fin import SPECS
-    for s in SPECS:
-        with open(os.path.join(OUT_DIR, s['file']), 'w', encoding='utf-8') as f:
-            f.write(render(s))
-        print('wrote', s['file'])
-    print('TOTAL', len(SPECS))
+    import importlib, sys
+    mods = sys.argv[1:] or ['specs_fin']
+    total = 0
+    for m in mods:
+        for s in importlib.import_module(m).SPECS:
+            with open(os.path.join(OUT_DIR, s['file']), 'w', encoding='utf-8') as f:
+                f.write(render(s))
+            print('wrote', s['file'])
+            total += 1
+    print('TOTAL', total)
 
 
 if __name__ == '__main__':

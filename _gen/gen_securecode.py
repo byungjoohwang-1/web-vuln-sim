@@ -78,6 +78,9 @@ PAGE = r'''<!DOCTYPE html>
         .info-section {{ margin-bottom: 20px; }}
         .info-title {{ font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }}
         .info-content {{ color: #555; line-height: 1.6; }}
+        .easybox {{ background: linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:20px; font-size:15.5px; line-height:1.75; color:#333; }}
+        .easybox .tag {{ display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }}
+        .easybox b {{ color:#c0392b; }}
         @media (max-width: 1200px) {{ .main-content {{ grid-template-columns: 1fr; }} }}
     </style>
 </head>
@@ -89,6 +92,8 @@ PAGE = r'''<!DOCTYPE html>
             <p>{cwe}</p>
             <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · {category}</span>
         </div>
+
+        <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>{easy}</div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
@@ -133,13 +138,15 @@ PAGE = r'''<!DOCTYPE html>
             }}
         }}
         function passesChecks(code, checks) {{
-            const c = code.replace(/\s+/g,' ');
+            // 공백 정규화 + 비교 연산자 주변 공백 제거(사용자 포맷 차이 허용)
+            const norm = s => s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+            const c = norm(code);
             // 각 그룹: 양성 토큰(하나라도 포함) AND 음성 토큰('NOT:'접두, 모두 미포함)
             return checks.every(grp => {{
                 const pos = grp.filter(t => !t.startsWith('NOT:'));
                 const neg = grp.filter(t => t.startsWith('NOT:')).map(t => t.slice(4));
-                const posOk = pos.length === 0 ? true : pos.some(t => c.includes(t.replace(/\s+/g,' ')));
-                const negOk = neg.every(t => !c.includes(t.replace(/\s+/g,' ')));
+                const posOk = pos.length === 0 ? true : pos.some(t => c.includes(norm(t)));
+                const negOk = neg.every(t => !c.includes(norm(t)));
                 return posOk && negOk;
             }});
         }}
@@ -316,8 +323,10 @@ def render_block(lang, d, active):
 
 
 def render(spec):
+    from easy_text import EASY
     j, p = spec['java'], spec['python']
     page = PAGE.format(
+        easy=spec.get('easy', EASY.get(spec['file'], '')),
         title=esc(spec['title']), icon=spec['icon'], cwe=esc(spec['cwe']), category=esc(spec['category']),
         java_subtitle=esc(j['subtitle']), py_subtitle=esc(p['subtitle']),
         java_block=render_block('java', j, True), python_block=render_block('python', p, False),

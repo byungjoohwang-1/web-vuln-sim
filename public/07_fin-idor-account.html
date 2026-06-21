@@ -49,12 +49,15 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+.easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
+.easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox b { color:#c0392b; }
 @media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="vuln-hub.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🪪</span> 전자금융 보안 모의해킹 &middot; 거래 시 소유주 검증 (금융 IDOR)</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -62,6 +65,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
       평가기준: <span class="risk">위험도 5</span> <span class="badge">WEB-SER 부적절한 이용자 인가</span>
     </div>
   </div>
+
+  <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>내 계좌번호 칸에 <b>남의 번호를 적었더니 남의 잔액이 보인다면?</b> 서버가 "이 계좌가 정말 당신 것인지" 확인하지 않은 탓입니다. 거래마다 소유주를 확인해야 합니다.</div>
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
@@ -205,11 +210,12 @@ function showCompliance(){
   document.getElementById('violationAlert').style.display='block';
 }
 function verifyCode(){
-  const code=document.getElementById('codeEditor').value.replace(/\s+/g,' ');
+  const norm=s=>s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  const code=norm(document.getElementById('codeEditor').value);
   const r=document.getElementById('codeResult');
   const ok=CHECKS.every(grp=>{
     const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
-    return (pos.length===0||pos.some(t=>code.includes(t.replace(/\s+/g,' ')))) && neg.every(t=>!code.includes(t.replace(/\s+/g,' ')));
+    return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
   });
   if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">세션 이용자–계좌 소유주 매핑 검증으로 IDOR이 차단됩니다.</span></div>'; }
   else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">세션 이용자가 해당 계좌의 소유주인지 서버에서 검증해야 합니다.</span></div>'; }

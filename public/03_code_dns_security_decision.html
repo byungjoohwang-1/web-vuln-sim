@@ -68,17 +68,22 @@
         .info-section { margin-bottom: 20px; }
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
+        .easybox { background: linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:20px; font-size:15.5px; line-height:1.75; color:#333; }
+        .easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+        .easybox b { color:#c0392b; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+        <div class="top-nav"><a href="vuln-hub.html">&larr; 메인으로</a></div>
         <div class="header">
             <h1>🌐 DNS lookup에 의존한 보안결정 - 실습 시뮬레이터</h1>
             <p>CWE-350: Reliance on Reverse DNS Resolution for Security Decision</p>
             <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · API 오용</span>
         </div>
+
+        <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br><b>"옆 동네에서 왔다"는 말(DNS 이름)만 믿고</b> 권한을 주면 거짓말(스푸핑)에 속습니다. 인증 토큰으로 신원을 확인해야 합니다.</div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
@@ -271,13 +276,15 @@ if name.endswith(".trusted.com"):
             }
         }
         function passesChecks(code, checks) {
-            const c = code.replace(/\s+/g,' ');
+            // 공백 정규화 + 비교 연산자 주변 공백 제거(사용자 포맷 차이 허용)
+            const norm = s => s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+            const c = norm(code);
             // 각 그룹: 양성 토큰(하나라도 포함) AND 음성 토큰('NOT:'접두, 모두 미포함)
             return checks.every(grp => {
                 const pos = grp.filter(t => !t.startsWith('NOT:'));
                 const neg = grp.filter(t => t.startsWith('NOT:')).map(t => t.slice(4));
-                const posOk = pos.length === 0 ? true : pos.some(t => c.includes(t.replace(/\s+/g,' ')));
-                const negOk = neg.every(t => !c.includes(t.replace(/\s+/g,' ')));
+                const posOk = pos.length === 0 ? true : pos.some(t => c.includes(norm(t)));
+                const negOk = neg.every(t => !c.includes(norm(t)));
                 return posOk && negOk;
             });
         }
@@ -358,5 +365,19 @@ if name.endswith(".trusted.com"):
             for(let i=0;i<3;i++) updateChecklist('progressChecklistPython',i,false);
         }
     </script>
+<!-- REF-CARD -->
+<div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
+  <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
+      <div style="margin-bottom:12px;">2008년 <b>Kaminsky DNS 캐시 포이즈닝</b>으로 DNS 응답을 신뢰한 시스템들이 위조 주소로 유도될 수 있었습니다.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-350</span>
+        
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

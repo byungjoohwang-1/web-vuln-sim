@@ -79,7 +79,7 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
         <button class="state-tab secure" onclick="setState('secure')">✅ 안전한 상태</button>
       </div>
       <div class="terminal">
-        <div class="terminal-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="terminal-title" id="termTitle">root@server:~# (취약)</span></div>
+        <div class="terminal-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="terminal-title" id="termTitle">{host} (취약)</span></div>
         <div class="terminal-body" id="termBody">{vuln_term}</div>
       </div>
     </div>
@@ -100,11 +100,12 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
 <script>
 const VULN_TERM = {vuln_term_js};
 const SECURE_TERM = {secure_term_js};
+const HOST = {host_js};
 function setState(s){{
   document.querySelectorAll('.state-tab').forEach(t=>t.classList.remove('active'));
   document.querySelector('.state-tab.'+s).classList.add('active');
   document.getElementById('termBody').innerHTML = (s==='vuln')?VULN_TERM:SECURE_TERM;
-  document.getElementById('termTitle').textContent = (s==='vuln')?'root@server:~# (취약)':'root@server:~# (안전)';
+  document.getElementById('termTitle').textContent = HOST + ((s==='vuln')?' (취약)':' (안전)');
 }}
 document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{{
   li.classList.toggle('done');
@@ -137,11 +138,13 @@ def render(s):
     st = term_html(s['secure_term'])
     fix = ''.join('<li>%s</li>' % f for f in s['fix_steps'])
     chk = ''.join('<li><span class="box"></span><span>%s</span></li>' % esc(c) for c in s['checklist'])
+    host = s.get('host', 'root@server:~#')
     return PAGE.format(
         code=esc(s['code']), title=esc(s['title']), icon=s['icon'], category=esc(s['category']),
         severity=s['severity'], description=s['description'],
         vuln_term=vt, secure_term=st, vuln_term_js=jss(vt), secure_term_js=jss(st),
         fix_steps=fix, checklist=chk, kisa_ref=esc(s['kisa_ref']),
+        host=esc(host), host_js=jss(host),
     )
 
 

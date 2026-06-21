@@ -7,31 +7,49 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#1a1a2e; --text:#2c3e50; --muted:#7f8c8d; --border:#e0e0e0; }
+:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#16162a; --text:#2c3e50; --muted:#7f8c8d; --border:#e6e6ef; }
 body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:40px 20px; color:var(--text); }
 .container { max-width:1200px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,.3); overflow:hidden; }
 .topbar { background:#0f0f1e; padding:10px 24px; }
 .topbar a { color:#9aa6ff; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
-.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:42px 40px; text-align:center; }
-.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:14px; letter-spacing:1px; }
-.header h1 { font-size:30px; margin-bottom:10px; }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:38px 40px; text-align:center; }
+.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:12px; letter-spacing:1px; }
+.header h1 { font-size:30px; margin-bottom:8px; }
 .header p { opacity:.9; font-size:15px; }
-.sev { display:inline-block; margin-top:14px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.sev { display:inline-block; margin-top:12px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
 .sev-상 { background:var(--danger); } .sev-중 { background:var(--warning); } .sev-하 { background:var(--success); }
-.body { padding:36px 40px; }
-.section { margin-bottom:30px; }
+.body { padding:34px 40px; }
+.section { margin-bottom:28px; }
 .section h2 { font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }
-.desc { background:#f7f8ff; border-left:4px solid var(--primary); padding:16px 18px; border-radius:8px; line-height:1.7; font-size:15px; }
-.tabs { display:flex; gap:10px; margin-bottom:16px; }
-.state-tab { flex:1; padding:14px; border:2px solid var(--border); border-radius:10px; background:white; cursor:pointer; font-family:'Lora',serif; font-weight:700; font-size:15px; transition:.2s; }
-.state-tab.vuln.active { border-color:var(--danger); background:#fff5f5; color:var(--danger); }
-.state-tab.secure.active { border-color:var(--success); background:#f1f8f1; color:var(--success); }
-.terminal { background:var(--dark); border-radius:10px; padding:0; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,.2); }
-.terminal-head { background:#12122a; padding:10px 16px; display:flex; align-items:center; gap:8px; }
-.dot { width:12px; height:12px; border-radius:50%; } .dot.r { background:#ff5f56; } .dot.y { background:#ffbd2e; } .dot.g { background:#27c93f; }
-.terminal-title { color:#888; font-family:'JetBrains Mono',monospace; font-size:12px; margin-left:8px; }
-.terminal-body { padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.8; color:#d4d4d4; white-space:pre-wrap; min-height:160px; }
+.easy { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }
+.easy .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }
+.easy b { color:#c0392b; }
+/* 직접 해보기 */
+.lab { border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }
+.lab-toolbar { background:#1c1c33; padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.state-switch { display:flex; background:#0d0d1c; border-radius:10px; padding:4px; gap:4px; }
+.state-switch button { border:none; background:transparent; color:#9aa6c0; font-family:'Lora',serif; font-weight:700; font-size:14px; padding:9px 16px; border-radius:8px; cursor:pointer; transition:.2s; }
+.state-switch button.on.vuln { background:var(--danger); color:white; }
+.state-switch button.on.secure { background:var(--success); color:white; }
+.run-btn { margin-left:auto; background:var(--primary); color:white; border:none; padding:11px 22px; border-radius:10px; font-family:'Lora',serif; font-weight:700; font-size:15px; cursor:pointer; transition:.2s; box-shadow:0 4px 12px rgba(102,126,234,.4); }
+.run-btn:hover { transform:translateY(-1px); }
+.run-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.state-hint { color:#cfd3e6; font-size:13px; }
+.hackterm { background:#0a0a14; min-height:230px; padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.85; color:#d4d4d4; white-space:pre-wrap; }
+.hackterm .role { color:#ff7b7b; font-weight:700; } .hackterm .sys { color:#7aa2ff; }
+.cur { display:inline-block; width:9px; height:16px; background:#7CFC00; vertical-align:-3px; animation:blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.outcome { display:none; padding:16px 20px; font-size:15px; font-weight:700; align-items:center; gap:12px; }
+.outcome.breach { display:flex; background:#2a0e0e; color:#ff9b9b; border-top:2px solid var(--danger); }
+.outcome.blocked { display:flex; background:#0e2a14; color:#9bffb0; border-top:2px solid var(--success); }
+.outcome .big { font-size:30px; }
+.outcome small { display:block; font-weight:400; opacity:.85; margin-top:3px; }
 .prompt { color:#27c93f; } .cmt { color:#6a9955; } .bad { color:#ff6b6b; } .good { color:#73d13d; } .warn { color:#ffd166; }
+.cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.cmp .card { border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.cmp .ct { padding:9px 14px; font-weight:700; font-size:13px; color:white; font-family:'JetBrains Mono',monospace; }
+.cmp .ct.v { background:var(--danger); } .cmp .ct.s { background:var(--success); }
+.cmp .cb { background:var(--dark); padding:14px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#d4d4d4; white-space:pre-wrap; min-height:120px; }
 .fix-steps { counter-reset:step; list-style:none; }
 .fix-steps li { position:relative; padding:14px 16px 14px 52px; margin-bottom:12px; background:#f7f8ff; border-radius:10px; line-height:1.6; }
 .fix-steps li::before { counter-increment:step; content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
@@ -44,12 +62,12 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
 .checklist li.done .box { background:var(--success); border-color:var(--success); }
 .kref { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }
 .footer { text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
-@media (max-width:700px) { .tabs { flex-direction:column; } }
+@media (max-width:740px) { .cmp { grid-template-columns:1fr; } .run-btn { margin-left:0; } }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="topbar"><a href="index.html">&larr; cd /index</a></div>
+  <div class="topbar"><a href="vuln-hub.html">&larr; cd /index</a></div>
   <div class="header">
     <div class="code-badge">D-21</div>
     <h1>💾 백업 및 복구 절차</h1>
@@ -57,24 +75,42 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
     <span class="sev sev-중">위험도: 중</span>
   </div>
   <div class="body">
+
     <div class="section">
-      <h2>📋 취약점 개요</h2>
-      <div class="desc">정기 백업과 복구 절차가 없으면 장애·랜섬웨어 시 데이터를 복구할 수 없습니다. 백업을 자동화하고 복구 테스트를 수행해야 합니다.</div>
+      <div class="easy"><span class="tag">💡 쉽게 말하면</span><br>소중한 사진을 <b>한 곳에만 저장</b>해 두면, 그 기기가 망가지거나 랜섬웨어에 걸리는 순간 영영 잃습니다. 정기 백업과 복구 연습이 없으면 DB도 마찬가지입니다. 그래서 <b>백업을 자동화하고 복구를 미리 시험</b>해 두어야 합니다.</div>
     </div>
 
     <div class="section">
-      <h2>🖥️ 상태 비교 시뮬레이션</h2>
-      <div class="tabs">
-        <button class="state-tab vuln active" onclick="setState('vuln')">⚠️ 취약한 상태</button>
-        <button class="state-tab secure" onclick="setState('secure')">✅ 안전한 상태</button>
+      <h2>🎯 직접 해보기 — 공격을 실행해 보세요</h2>
+      <p style="color:#555; margin-bottom:14px; line-height:1.6;">아래에서 시스템 상태를 <b style="color:#c0392b">취약</b> 또는 <b style="color:#2e7d32">안전(조치 적용)</b>으로 바꾼 뒤 <b>공격 실행</b>을 눌러, 같은 공격이 어떻게 다르게 끝나는지 직접 확인하세요.</p>
+      <div class="lab">
+        <div class="lab-toolbar">
+          <div class="state-switch">
+            <button id="btnVuln" class="on vuln" onclick="setState('vuln')">⚠️ 취약한 설정</button>
+            <button id="btnSecure" class="secure" onclick="setState('secure')">🛡️ 보안 조치 적용</button>
+          </div>
+          <span class="state-hint" id="stateHint">현재: 취약한 설정 — 공격이 통할까요?</span>
+          <button class="run-btn" id="runBtn" onclick="runAttack()">▶ 공격 실행</button>
+        </div>
+        <div class="hackterm" id="hackTerm"><span class="cmt"># 공격자가 랜섬웨어로 DB를 암호화하는데 백업이 없다</span>
+<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span></div>
+        <div class="outcome" id="outcome"></div>
       </div>
-      <div class="terminal">
-        <div class="terminal-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="terminal-title" id="termTitle">root@server:~# (취약)</span></div>
-        <div class="terminal-body" id="termBody"><span class="cmt">-- 백업 이력 확인</span>
+    </div>
+
+    <div class="section">
+      <h2>📋 설정 비교 (왜 막혔나?)</h2>
+      <div class="cmp">
+        <div class="card"><div class="ct v">✗ 취약한 설정</div><div class="cb"><span class="cmt">-- 백업 이력 확인</span>
 <span class="prompt">RMAN&gt; </span>
 LIST BACKUP SUMMARY;
 <span class="bad">specification does not match any backup</span>
-<span class="warn">→ 백업 미수행 (취약)</span></div>
+<span class="warn">→ 백업 미수행 (취약)</span></div></div>
+        <div class="card"><div class="ct s">✓ 안전한 설정</div><div class="cb"><span class="cmt">-- 정기 백업 수행</span>
+<span class="prompt">RMAN&gt; </span>
+BACKUP DATABASE PLUS ARCHIVELOG;
+<span class="good">Finished backup at ...</span>
+<span class="good">→ 정기 백업/복구 절차 운영 (양호)</span></div></div>
       </div>
     </div>
 
@@ -92,21 +128,52 @@ LIST BACKUP SUMMARY;
   <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
 </div>
 <script>
-const VULN_TERM = `<span class="cmt">-- 백업 이력 확인</span>
-<span class="prompt">RMAN&gt; </span>
-LIST BACKUP SUMMARY;
-<span class="bad">specification does not match any backup</span>
-<span class="warn">→ 백업 미수행 (취약)</span>`;
-const SECURE_TERM = `<span class="cmt">-- 정기 백업 수행</span>
-<span class="prompt">RMAN&gt; </span>
-BACKUP DATABASE PLUS ARCHIVELOG;
-<span class="good">Finished backup at ...</span>
-<span class="good">→ 정기 백업/복구 절차 운영 (양호)</span>`;
+const ATTACK = { vuln: [[`cmt`, `# 정기 백업이 없어 복구 수단이 전무`], [`prompt`, `attacker$ ransomware --encrypt /oradata/*.dbf`], [`prompt`, `DBA&gt; RMAN&gt; LIST BACKUP SUMMARY;`], [``, `specification does not match any backup`], [`bad`, `&gt;&gt; 전 데이터파일 암호화 — 복구할 백업이 없음`], [`bad`, `&gt;&gt; 업무 중단·몸값 요구, 데이터 영구 손실 위험`]], secure: [[`cmt`, `# 동일하게 랜섬웨어가 데이터파일을 암호화`], [`prompt`, `attacker$ ransomware --encrypt /oradata/*.dbf`], [`good`, `&gt;&gt; 오프사이트 백업 보관 + 복구 테스트 완료 상태`], [`warn`, `&gt;&gt; RMAN RESTORE/RECOVER 로 수 시간 내 정상 복구`]] };
+const OUTCOME = { vuln: {emoji: `🔓`, title: `공격 성공 — 복구 불가`, desc: `백업이 없어 랜섬웨어로 데이터파일이 암호화되자 복구할 방법이 전혀 없습니다.`}, secure: {emoji: `🛡️`, title: `공격 차단 — 백업 복구`, desc: `정기 백업과 분리 보관, 복구 테스트가 갖춰져 있어 랜섬웨어 피해 후에도 데이터를 되살립니다.`} };
+let state = 'vuln', running = false, timer = null;
+
 function setState(s){
-  document.querySelectorAll('.state-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelector('.state-tab.'+s).classList.add('active');
-  document.getElementById('termBody').innerHTML = (s==='vuln')?VULN_TERM:SECURE_TERM;
-  document.getElementById('termTitle').textContent = (s==='vuln')?'root@server:~# (취약)':'root@server:~# (안전)';
+  if(running) return;
+  state = s;
+  document.getElementById('btnVuln').classList.toggle('on', s==='vuln');
+  document.getElementById('btnSecure').classList.toggle('on', s==='secure');
+  document.getElementById('stateHint').textContent = (s==='vuln')
+    ? '현재: 취약한 설정 — 공격이 통할까요?' : '현재: 보안 조치 적용 — 공격을 막을 수 있을까요?';
+  resetTerm();
+}
+function resetTerm(){
+  document.getElementById('outcome').className = 'outcome';
+  document.getElementById('hackTerm').innerHTML =
+    '<span class="cmt"># 공격자가 랜섬웨어로 DB를 암호화하는데 백업이 없다</span>\n<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span>';
+}
+function runAttack(){
+  if(running) return;
+  running = true;
+  const term = document.getElementById('hackTerm');
+  const out = document.getElementById('outcome');
+  out.className = 'outcome';
+  term.innerHTML = '';
+  document.getElementById('runBtn').disabled = true;
+  const lines = ATTACK[state];
+  let i = 0;
+  function step(){
+    if(i < lines.length){
+      const [cls, text] = lines[i];
+      const span = cls ? `<span class="${cls}">${text}</span>` : text;
+      term.innerHTML += (i? '\n':'') + span + ' <span class="cur"></span>';
+      term.innerHTML = term.innerHTML.replace(/ <span class="cur"><\/span>(?=[\s\S]*<span class="cur">)/,'');
+      i++;
+      timer = setTimeout(step, 620);
+    } else {
+      term.innerHTML = term.innerHTML.replace(/ ?<span class="cur"><\/span>/g,'');
+      const o = OUTCOME[state];
+      out.className = 'outcome ' + (state==='vuln' ? 'breach':'blocked');
+      out.innerHTML = `<span class="big">${o.emoji}</span><div><div>${o.title}</div><small>${o.desc}</small></div>`;
+      document.getElementById('runBtn').disabled = false;
+      running = false;
+    }
+  }
+  step();
 }
 document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{
   li.classList.toggle('done');

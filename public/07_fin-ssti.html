@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전자금융 보안: 서버 사이드 템플릿 인젝션(SSTI)</title>
+<style>
+:root { --bank-primary:#003876; --bank-secondary:#005eb8; --bank-bg:#f3f4f6; --text-dark:#1a1a1a; --danger:#d32f2f; --success:#2e7d32; --warning:#ed6c02; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,sans-serif; background:var(--bank-bg); color:var(--text-dark); padding:20px; line-height:1.5; }
+.container { max-width:1400px; margin:0 auto; }
+.top-nav { margin-bottom:15px; }
+.top-nav a { color:var(--bank-primary); text-decoration:none; font-weight:700; font-size:14px; }
+.header { background:white; padding:20px 30px; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; border-left:6px solid var(--bank-primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.header h1 { font-size:22px; color:var(--bank-primary); display:flex; align-items:center; gap:12px; }
+.badge { background:#e3f2fd; color:#1565c0; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; }
+.risk { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#fff; background:var(--danger); }
+.tabs { display:flex; gap:15px; margin-bottom:20px; }
+.tab { flex:1; padding:18px; background:white; border-radius:10px; cursor:pointer; font-weight:600; color:#666; transition:.3s; border:2px solid transparent; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+.tab:hover { transform:translateY(-2px); }
+.tab.active { border-color:var(--bank-primary); color:var(--bank-primary); background:#eef5ff; }
+.grid-container { display:grid; grid-template-columns:1fr 1fr; gap:25px; }
+.content-section { display:none; animation:fadeIn .4s ease; }
+.content-section.active { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.panel { background:white; border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; }
+.panel-title { font-size:18px; font-weight:700; color:#333; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; }
+.scenario { background:#f8fbff; border:1px solid #d6e6fb; border-radius:8px; padding:15px; font-size:14px; color:#33475b; margin-bottom:18px; }
+.scenario b { color:var(--bank-primary); }
+.attack-controls { background:#212121; color:#fff; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #333; }
+.toggle-switch { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.toggle-status { font-family:'Consolas',monospace; color:#00ff00; font-weight:700; }
+.req-label { display:block; font-size:12px; font-weight:700; color:#555; margin:14px 0 6px; }
+.req-box { width:100%; background:#0d1b2a; color:#7ddcff; border:1px solid #1b3a5b; border-radius:8px; padding:14px; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; min-height:140px; }
+.btn-submit { width:100%; padding:15px; background:var(--bank-primary); color:white; border:none; border-radius:6px; font-size:15px; font-weight:700; cursor:pointer; transition:.3s; margin-top:16px; }
+.btn-submit:hover { background:#002a5c; }
+.btn-submit.hacked { background:var(--danger); }
+.terminal { background:#1e1e1e; color:#d4d4d4; padding:15px; border-radius:8px; font-family:'Consolas',monospace; font-size:13px; height:240px; overflow-y:auto; line-height:1.6; border:1px solid #333; }
+.log-time { color:#569cd6; margin-right:8px; }
+.result-card { display:none; margin-top:18px; border-radius:8px; padding:16px; animation:fadeIn .3s; }
+.result-breach { background:#fff5f5; border:1px solid #ffcdd2; color:#b71c1c; }
+.result-blocked { background:#e8f5e9; border:1px solid #c8e6c9; color:#1b5e20; }
+.data-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.data-table th { background:#f8f9fa; padding:10px; text-align:left; border-bottom:2px solid #ddd; color:#555; }
+.data-table td { padding:10px; border-bottom:1px solid #eee; }
+.amount { font-family:'Consolas',monospace; font-weight:700; color:var(--bank-primary); text-align:right; }
+.compliance-alert { background:#fff5f5; border:1px solid #ffcdd2; padding:15px; border-radius:8px; margin-top:15px; font-size:13px; color:#b71c1c; display:none; animation:fadeIn .3s; }
+.code-editor { width:100%; height:320px; background:#282c34; color:#abb2bf; padding:20px; border-radius:8px; border:none; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; }
+.kisa-ref { font-size:14px; line-height:1.7; color:#444; }
+.kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
+.kisa-ref ul { margin-left:18px; }
+.easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
+.easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox b { color:#c0392b; }
+@media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-nav"><a href="vuln-hub.html">&larr; 메인으로</a></div>
+  <div class="header">
+    <h1><span>🧨</span> 전자금융 보안 모의해킹 &middot; 서버 사이드 템플릿 인젝션(SSTI)</h1>
+    <div style="text-align:right; font-size:13px; color:#555;">
+      Target: <strong>템플릿 기반 화면/메일 생성</strong><br>
+      평가기준: <span class="risk">위험도 5</span> <span class="badge">WEB-SER SSTI</span>
+    </div>
+  </div>
+
+  <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>빈칸에 적은 글이 그대로 출력될 줄 알았는데, 서버가 <b>{{7*7}}</b>을 보고 진짜로 <b>49</b>를 계산해 버립니다. 입력은 항상 <b>글자(값)</b>로만 다루고 수식으로 계산하지 못하게 막아야 합니다.</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
+    <div class="tab" onclick="switchTab('defense')">🛡️ 대응 방안 (Blue Team)</div>
+  </div>
+
+  <div id="tab-attack" class="content-section active">
+    <div class="grid-container">
+      <div>
+        <div class="panel">
+          <div class="panel-title"><span>템플릿 입력 처리</span><span style="font-size:12px; color:#666; font-weight:normal;">🔒 Secured Channel</span></div>
+          <div class="scenario">사용자 입력이 <b>서버 템플릿 엔진</b>에 그대로 합쳐져 평가되면, 공격자가 <b>{{7*7}}</b> 같은 표현식을 주입했을 때 서버가 이를 <b>49</b>로 계산합니다. 이를 발판으로 <b>원격 코드 실행(RCE)·내부 정보 노출</b>까지 이어집니다.</div>
+          <div class="attack-controls">
+            <div class="toggle-switch" onclick="toggleAttack()">
+              <div><strong>⚡ 템플릿 표현식 주입(SSTI)</strong><br><span style="font-size:12px; opacity:.7;">{{7*7}}→49 확인 후 RCE 페이로드</span></div>
+              <div class="toggle-status" id="attackStatus">OFF</div>
+            </div>
+          </div>
+          <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <textarea class="req-box" id="reqBox" spellcheck="false">POST /greeting
+{
+  "name": "홍길동"
+}
+# 출력: 안녕하세요, 홍길동님</textarea>
+          <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
+          <div class="result-card" id="resultCard"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">🖥️ 금융 시스템 처리 로그</div>
+          <div class="terminal" id="systemLog">
+            <div><span class="log-time">[SYSTEM]</span> Core Banking Channel ready.</div>
+            <div><span class="log-time">[INFO]</span> 거래 요청 대기 중...</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">⚖️ 컴플라이언스 위반 분석</div>
+          <div id="complianceReport" style="color:#666; font-size:14px; text-align:center; padding:20px;">공격 실행 후 분석 결과가 표시됩니다.</div>
+          <div id="violationAlert" class="compliance-alert">
+            <strong>[심각] 전자금융 보안 기준 위반 감지</strong>
+            <ul style="margin-top:8px; margin-left:20px; list-style:circle;"><li>평가기준 [전자금융] 서버 사이드 템플릿 인젝션 방지(위험도 5)</li><li>입력값 검증 부재 / 코드 인젝션(IN)</li><li>신뢰할 수 없는 데이터의 동적 코드 평가</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-defense" class="content-section">
+    <div class="grid-container">
+      <div class="panel">
+        <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
+        <p style="font-size:14px; color:#555; margin-bottom:15px;">사용자 입력을 <strong>템플릿 소스로 합치지 말고</strong>, 미리 정의된 템플릿에 <strong>데이터 모델(변수)로만 바인딩</strong>하고 <strong>샌드박스/이스케이프</strong>를 적용해야 합니다. 템플릿 처리 로직을 보완하세요.</p>
+        <textarea id="codeEditor" class="code-editor">// [취약] 사용자 입력을 템플릿 소스로 직접 평가
+public String render(String name) {
+    // 입력이 그대로 템플릿 문법으로 해석됨
+    Template t = engine.parse("안녕하세요, " + name + "님");
+    return t.evaluate();
+}</textarea>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+          <button onclick="verifyCode()" class="btn-submit" style="width:auto; background:var(--success); margin-top:0;">코드 검증</button>
+          <button onclick="showHint()" style="padding:15px; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer;">힌트(정답) 보기</button>
+        </div>
+        <div id="codeResult" style="margin-top:15px;"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📚 금융보안원 평가기준 / 조치 가이드</div>
+        <div class="kisa-ref"><h4>1. 점검 항목</h4>입력값 검증 &gt; <b>서버 사이드 템플릿 인젝션(SSTI) 방지</b><h4>2. 위험 분석</h4><ul><li>표현식 평가로 원격 코드 실행(RCE)</li><li>서버 내부 객체·환경변수 등 정보 노출</li></ul><h4>3. 조치 방법</h4><ul><li>사용자 입력을 <b>템플릿 소스로 결합 금지</b></li><li>고정 템플릿에 <b>데이터 모델 바인딩</b>만 사용</li><li>템플릿 <b>샌드박스·이스케이프</b> 적용</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NORMAL_REQ = `POST /greeting
+{
+  "name": "홍길동"
+}
+# 출력: 안녕하세요, 홍길동님`;
+const ATTACK_REQ = `POST /greeting
+{
+  "name": "{{7*7}}"
+}
+# 출력: 안녕하세요, 49님   <-- 서버가 표현식 평가
+# 이어서 RCE 시도:
+# {{T(java.lang.Runtime).getRuntime().exec('calc')}}`;
+const SECURE_HINT = `// [안전] 고정 템플릿 + 데이터 바인딩 + 샌드박스/이스케이프
+private final Template TPL = engine.parse("안녕하세요, \${name}님");
+public String render(String name) {
+    Map<String, Object> model = new HashMap<>();
+    model.put("name", escape(name));   // 값으로만 주입, 표현식 평가 안함
+    return TPL.evaluateSandboxed(model); // 제한된 샌드박스 평가
+}`;
+const CHECKS = [[`escape`], [`evaluateSandboxed`, `sandbox`, `Sandboxed`]];
+let isAttackOn = false;
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content-section').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function addLog(msg,type='info'){
+  const box=document.getElementById('systemLog'); const time=new Date().toLocaleTimeString('ko-KR');
+  let color='#d4d4d4'; if(type==='error')color='#f48771'; if(type==='warn')color='#cca700'; if(type==='success')color='#89d185';
+  const d=document.createElement('div'); d.innerHTML=`<span class="log-time">[${time}]</span> <span style="color:${color}">${msg}</span>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+function toggleAttack(){
+  isAttackOn=!isAttackOn;
+  const s=document.getElementById('attackStatus'), btn=document.getElementById('sendBtn'), req=document.getElementById('reqBox');
+  if(isAttackOn){
+    s.innerText='ON (Tampering...)'; s.style.color='#ff4444';
+    req.value=ATTACK_REQ; req.style.color='#ff6b6b';
+    btn.innerText='변조 요청 전송 (Execute)'; btn.classList.add('hacked');
+    addLog('[ATTACK] 요청 데이터 변조 활성화', 'warn');
+  } else {
+    s.innerText='OFF'; s.style.color='#00ff00';
+    req.value=NORMAL_REQ; req.style.color='#7ddcff';
+    btn.innerText='요청 전송'; btn.classList.remove('hacked');
+    addLog('[INFO] 공격 모드 해제', 'success');
+  }
+}
+function sendRequest(){
+  const btn=document.getElementById('sendBtn'); btn.innerText='처리 중...';
+  addLog('[REQUEST] 금융 거래 요청 수신');
+  setTimeout(()=>{
+    if(isAttackOn){ addLog('[INPUT] name={{7*7}} 주입','warn'); addLog('[ENGINE] 사용자 입력을 템플릿 소스로 직접 평가 → 49 반환','error'); addLog('[SSTI] 표현식 평가 확인 → RCE 페이로드 주입','error'); addLog('[RCE] Runtime.exec 호출 → 시스템 명령 실행','error'); showBreach(); showCompliance(); }
+    else { addLog('[OK] 정상 거래 처리 완료', 'success'); showNormal(); }
+    btn.innerText = isAttackOn ? '변조 요청 전송 (Execute)' : '요청 전송';
+  }, 900);
+}
+function showBreach(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-breach'; c.style.display='block';
+  c.innerHTML = `<strong>🚨 SSTI → RCE 성공</strong><br>사용자 입력이 템플릿으로 평가되어 <b>{{7*7}} → 49</b>가 확인되었고, 이어진 페이로드로 서버 명령이 실행되었습니다.`;
+}
+function showNormal(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-blocked'; c.style.display='block';
+  c.innerHTML = '<strong>✅ 정상 거래</strong><br>요청이 검증을 통과하여 정상 처리되었습니다. (공격 모드를 켜고 변조를 시도해 보세요)';
+}
+function showCompliance(){
+  document.getElementById('complianceReport').style.display='none';
+  document.getElementById('violationAlert').style.display='block';
+}
+function verifyCode(){
+  const norm=s=>s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  const code=norm(document.getElementById('codeEditor').value);
+  const r=document.getElementById('codeResult');
+  const ok=CHECKS.every(grp=>{
+    const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
+    return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
+  });
+  if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">고정 템플릿에 값만 바인딩하고 이스케이프·샌드박스를 적용해 SSTI가 차단됩니다.</span></div>'; }
+  else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">사용자 입력을 템플릿 소스로 합치지 말고 데이터 바인딩과 이스케이프/샌드박스를 적용해야 합니다.</span></div>'; }
+}
+function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
+</script>
+</body>
+</html>

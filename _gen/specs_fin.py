@@ -161,7 +161,7 @@ SPECS = [
  'title':'HTS 실행 파라미터 재사용',
  'icon':'💹', 'target':'HTS 데스크톱 클라이언트', 'risk':'5', 'item_code':'HTS-FIN 실행 파라미터 재사용 방지',
  'attack_panel_title':'HTS 구동 파라미터',
- 'scenario_html':'HTS가 웹 연동 로그인 후 <b>실행 파라미터(세션키 등)로 데스크톱 클라이언트를 구동</b>할 때, 그 파라미터가 <b>재사용 가능</b>하면 노출된 값으로 별도 인증 없이 <b>타인 HTS 계정에 로그인</b>할 수 있습니다. 명령줄에 중요정보가 평문 노출되기도 합니다.</b>',
+ 'scenario_html':'HTS가 웹 연동 로그인 후 <b>실행 파라미터(세션키 등)로 데스크톱 클라이언트를 구동</b>할 때, 그 파라미터가 <b>재사용 가능</b>하면 노출된 값으로 별도 인증 없이 <b>타인 HTS 계정에 로그인</b>할 수 있습니다. 명령줄에 중요정보가 평문 노출되기도 합니다.',
  'attack_name':'실행 파라미터 재사용', 'attack_sub':'명령줄에서 추출한 sessionKey 재구동',
  'normal_req':'hts.exe --user=user_1023 --sessionKey=AB12CD (1회용)',
  'attack_req':'# 프로세스 명령줄에서 평문 추출 후 재사용\nhts.exe --user=user_1023 --sessionKey=AB12CD   // 동일 키 재구동',

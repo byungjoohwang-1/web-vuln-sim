@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SD-02: XML 조회 및 결과 검증 (설계) | 교육 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#16162a; --text:#2c3e50; --muted:#7f8c8d; --border:#e6e6ef; }
+body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:40px 20px; color:var(--text); }
+.container { max-width:1200px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,.3); overflow:hidden; }
+.topbar { background:#0f0f1e; padding:10px 24px; }
+.topbar a { color:#9aa6ff; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:38px 40px; text-align:center; }
+.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:12px; letter-spacing:1px; }
+.header h1 { font-size:30px; margin-bottom:8px; }
+.header p { opacity:.9; font-size:15px; }
+.sev { display:inline-block; margin-top:12px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.sev-상 { background:var(--danger); } .sev-중 { background:var(--warning); } .sev-하 { background:var(--success); }
+.body { padding:34px 40px; }
+.section { margin-bottom:28px; }
+.section h2 { font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }
+.easy { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }
+.easy .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }
+.easy b { color:#c0392b; }
+/* 직접 해보기 */
+.lab { border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }
+.lab-toolbar { background:#1c1c33; padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.state-switch { display:flex; background:#0d0d1c; border-radius:10px; padding:4px; gap:4px; }
+.state-switch button { border:none; background:transparent; color:#9aa6c0; font-family:'Lora',serif; font-weight:700; font-size:14px; padding:9px 16px; border-radius:8px; cursor:pointer; transition:.2s; }
+.state-switch button.on.vuln { background:var(--danger); color:white; }
+.state-switch button.on.secure { background:var(--success); color:white; }
+.run-btn { margin-left:auto; background:var(--primary); color:white; border:none; padding:11px 22px; border-radius:10px; font-family:'Lora',serif; font-weight:700; font-size:15px; cursor:pointer; transition:.2s; box-shadow:0 4px 12px rgba(102,126,234,.4); }
+.run-btn:hover { transform:translateY(-1px); }
+.run-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.state-hint { color:#cfd3e6; font-size:13px; }
+.hackterm { background:#0a0a14; min-height:230px; padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.85; color:#d4d4d4; white-space:pre-wrap; }
+.hackterm .role { color:#ff7b7b; font-weight:700; } .hackterm .sys { color:#7aa2ff; }
+.cur { display:inline-block; width:9px; height:16px; background:#7CFC00; vertical-align:-3px; animation:blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.outcome { display:none; padding:16px 20px; font-size:15px; font-weight:700; align-items:center; gap:12px; }
+.outcome.breach { display:flex; background:#2a0e0e; color:#ff9b9b; border-top:2px solid var(--danger); }
+.outcome.blocked { display:flex; background:#0e2a14; color:#9bffb0; border-top:2px solid var(--success); }
+.outcome .big { font-size:30px; }
+.outcome small { display:block; font-weight:400; opacity:.85; margin-top:3px; }
+.prompt { color:#27c93f; } .cmt { color:#6a9955; } .bad { color:#ff6b6b; } .good { color:#73d13d; } .warn { color:#ffd166; }
+.cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.cmp .card { border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.cmp .ct { padding:9px 14px; font-weight:700; font-size:13px; color:white; font-family:'JetBrains Mono',monospace; }
+.cmp .ct.v { background:var(--danger); } .cmp .ct.s { background:var(--success); }
+.cmp .cb { background:var(--dark); padding:14px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#d4d4d4; white-space:pre-wrap; min-height:120px; }
+.fix-steps { counter-reset:step; list-style:none; }
+.fix-steps li { position:relative; padding:14px 16px 14px 52px; margin-bottom:12px; background:#f7f8ff; border-radius:10px; line-height:1.6; }
+.fix-steps li::before { counter-increment:step; content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
+.fix-steps code, .inline-code { font-family:'JetBrains Mono',monospace; background:#1a1a2e; color:#9cdcfe; padding:2px 7px; border-radius:5px; font-size:13px; }
+.checklist { list-style:none; }
+.checklist li { padding:12px 16px; margin-bottom:10px; background:#fafbff; border:1px solid var(--border); border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:.2s; }
+.checklist li:hover { background:#f0f2ff; }
+.checklist li.done { background:#f1f8f1; border-color:#c8e6c9; }
+.checklist .box { width:22px; height:22px; border:2px solid var(--primary); border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; }
+.checklist li.done .box { background:var(--success); border-color:var(--success); }
+.kref { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }
+.footer { text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+@media (max-width:740px) { .cmp { grid-template-columns:1fr; } .run-btn { margin-left:0; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar"><a href="vuln-hub.html">&larr; cd /index</a></div>
+  <div class="header">
+    <div class="code-badge">SD-02</div>
+    <h1>📑 XML 조회 및 결과 검증 (설계)</h1>
+    <p>설계단계 보안설계 · 입력검증</p>
+    <span class="sev sev-상">위험도: 상</span>
+  </div>
+  <div class="body">
+
+    <div class="section">
+      <div class="easy"><span class="tag">💡 쉽게 말하면</span><br>XML을 읽을 때 외부 문서를 마음대로 불러오게 두면, 편지 속에 적힌 <b>다른 주소로 심부름</b>을 보내는 것과 같습니다. 외부 엔터티와 DTD를 <b>꺼두고(비활성화)</b>, 검색 조건은 <b>변수 칸에 따로 넣어</b> 본문과 섞이지 않게 설계해야 합니다.</div>
+    </div>
+
+    <div class="section">
+      <h2>🎯 직접 해보기 — 공격을 실행해 보세요</h2>
+      <p style="color:#555; margin-bottom:14px; line-height:1.6;">아래에서 시스템 상태를 <b style="color:#c0392b">취약</b> 또는 <b style="color:#2e7d32">안전(조치 적용)</b>으로 바꾼 뒤 <b>공격 실행</b>을 눌러, 같은 공격이 어떻게 다르게 끝나는지 직접 확인하세요.</p>
+      <div class="lab">
+        <div class="lab-toolbar">
+          <div class="state-switch">
+            <button id="btnVuln" class="on vuln" onclick="setState('vuln')">⚠️ 취약한 설정</button>
+            <button id="btnSecure" class="secure" onclick="setState('secure')">🛡️ 보안 조치 적용</button>
+          </div>
+          <span class="state-hint" id="stateHint">현재: 취약한 설정 — 공격이 통할까요?</span>
+          <button class="run-btn" id="runBtn" onclick="runAttack()">▶ 공격 실행</button>
+        </div>
+        <div class="hackterm" id="hackTerm"><span class="cmt"># XML에 외부 엔터티를 심어 서버 내부 파일을 읽으려 한다</span>
+<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span></div>
+        <div class="outcome" id="outcome"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📋 설정 비교 (왜 막혔나?)</h2>
+      <div class="cmp">
+        <div class="card"><div class="ct v">✗ 취약한 설정</div><div class="cb"><span class="cmt"># 설계 결정</span>
+<span class="bad">XPath에 입력값 직접 결합</span>
+<span class="bad">XML 파서 외부 엔터티 허용(기본값)</span>
+<span class="warn">→ XPath 인젝션 / XXE</span></div></div>
+        <div class="card"><div class="ct s">✓ 안전한 설정</div><div class="cb"><span class="cmt"># 설계 결정</span>
+<span class="good">XPath 변수 바인딩 사용</span>
+<span class="good">외부 엔터티·DTD 비활성 표준화</span>
+<span class="good">→ 질의 변조·외부참조 차단</span></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔧 조치 방법</h2>
+      <ol class="fix-steps"><li>XPath/XQuery는 변수 바인딩 방식으로 입력값을 분리하도록 설계합니다.</li><li>XML 파서의 외부 엔터티(DTD/External Entity)를 비활성화하는 것을 공통 설정으로 강제합니다.</li><li>허용 스키마(XSD)로 구조 검증을 설계에 포함합니다.</li></ol>
+    </div>
+
+    <div class="section">
+      <h2>✅ 점검 체크리스트</h2>
+      <ul class="checklist" id="checklist"><li><span class="box"></span><span>XPath 변수 바인딩이 표준화됨</span></li><li><span class="box"></span><span>외부 엔터티/DTD 비활성이 강제됨</span></li><li><span class="box"></span><span>스키마 검증이 설계됨</span></li></ul>
+      <div class="kref">점검기준: 개발보안 설계기준 1.2 XML 조회 및 결과 검증</div>
+    </div>
+  </div>
+  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+</div>
+<script>
+const ATTACK = { vuln: [[`cmt`, `# 외부 엔터티/DTD를 그대로 허용하는 파서 설계`], [`prompt`, `attacker$ POST &lt;!ENTITY xxe SYSTEM file:///etc/passwd&gt;`], [`bad`, `&gt;&gt; 파서가 외부 파일을 그대로 읽어옴`], [`bad`, `&gt;&gt; 서버 내부 계정 파일이 응답에 노출됨`]], secure: [[`cmt`, `# 외부 엔터티/DTD 비활성 + XPath 변수 바인딩 설계`], [`prompt`, `attacker$ POST &lt;!ENTITY xxe SYSTEM file:///etc/passwd&gt;`], [`good`, `&gt;&gt; 외부 엔터티 처리 거부 (DTD 비활성)`], [`warn`, `&gt;&gt; 입력은 데이터로만 취급 — 파일 접근 불가`]] };
+const OUTCOME = { vuln: {emoji: `🔓`, title: `공격 성공 — 내부 파일 유출`, desc: `외부 엔터티를 허용하는 파서 설계라 임의 파일을 끌어옵니다.`}, secure: {emoji: `🛡️`, title: `공격 차단 — 엔터티 비활성`, desc: `외부 참조를 끄는 설계라 파일 끌어오기가 막힙니다.`} };
+let state = 'vuln', running = false, timer = null;
+
+function setState(s){
+  if(running) return;
+  state = s;
+  document.getElementById('btnVuln').classList.toggle('on', s==='vuln');
+  document.getElementById('btnSecure').classList.toggle('on', s==='secure');
+  document.getElementById('stateHint').textContent = (s==='vuln')
+    ? '현재: 취약한 설정 — 공격이 통할까요?' : '현재: 보안 조치 적용 — 공격을 막을 수 있을까요?';
+  resetTerm();
+}
+function resetTerm(){
+  document.getElementById('outcome').className = 'outcome';
+  document.getElementById('hackTerm').innerHTML =
+    '<span class="cmt"># XML에 외부 엔터티를 심어 서버 내부 파일을 읽으려 한다</span>\n<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span>';
+}
+function runAttack(){
+  if(running) return;
+  running = true;
+  const term = document.getElementById('hackTerm');
+  const out = document.getElementById('outcome');
+  out.className = 'outcome';
+  term.innerHTML = '';
+  document.getElementById('runBtn').disabled = true;
+  const lines = ATTACK[state];
+  let i = 0;
+  function step(){
+    if(i < lines.length){
+      const [cls, text] = lines[i];
+      const span = cls ? `<span class="${cls}">${text}</span>` : text;
+      term.innerHTML += (i? '\n':'') + span + ' <span class="cur"></span>';
+      term.innerHTML = term.innerHTML.replace(/ <span class="cur"><\/span>(?=[\s\S]*<span class="cur">)/,'');
+      i++;
+      timer = setTimeout(step, 620);
+    } else {
+      term.innerHTML = term.innerHTML.replace(/ ?<span class="cur"><\/span>/g,'');
+      const o = OUTCOME[state];
+      out.className = 'outcome ' + (state==='vuln' ? 'breach':'blocked');
+      out.innerHTML = `<span class="big">${o.emoji}</span><div><div>${o.title}</div><small>${o.desc}</small></div>`;
+      document.getElementById('runBtn').disabled = false;
+      running = false;
+    }
+  }
+  step();
+}
+document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{
+  li.classList.toggle('done');
+  li.querySelector('.box').textContent = li.classList.contains('done')?'✓':'';
+}));
+</script>
+</body>
+</html>

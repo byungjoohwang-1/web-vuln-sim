@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Security Simulator, Linux security, DB security with Secure Coding Practices</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+        }
+        #wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        /* 사이드바 스타일 */
+        #sidebar-wrapper {
+            min-height: 100vh;
+            width: 320px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: #94a3b8;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem 1.25rem;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-bottom: 2px solid #334155;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .sidebar-brand small {
+            display: block;
+            font-size: 0.65rem;
+            color: #64748b;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 검색 박스 */
+        .search-box {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .search-box input {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: #fff;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .search-box input::placeholder {
+            color: #64748b;
+        }
+        
+        .search-box input:focus {
+            background-color: #0f172a;
+            border-color: #3b82f6;
+            color: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* 메뉴 스크롤 영역 */
+        .menu-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .menu-scroll::-webkit-scrollbar { width: 8px; }
+        .menu-scroll::-webkit-scrollbar-track { background: #0f172a; }
+        .menu-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .menu-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* 카테고리 헤더 */
+        .menu-category {
+            padding: 14px 20px;
+            color: #fff;
+            font-weight: 600;
+            background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin-top: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .menu-category:hover { background: linear-gradient(90deg, #334155 0%, #475569 100%); }
+        .menu-category .badge { font-size: 0.65rem; padding: 3px 8px; }
+
+        /* ===== 상위 가이드 그룹 (3대 가이드) ===== */
+        .guide-group {
+            padding: 16px 18px; color:#fff; font-weight:800; font-size:0.95rem;
+            display:flex; justify-content:space-between; align-items:center;
+            cursor:pointer; transition:all .25s; letter-spacing:.2px;
+            border-left:4px solid transparent; margin-top:6px;
+        }
+        .guide-group.gA { background:linear-gradient(90deg,#0f3d2e,#155e44); border-left-color:#34d399; }
+        .guide-group.gB { background:linear-gradient(90deg,#1e2a52,#2d4385); border-left-color:#60a5fa; }
+        .guide-group.gC { background:linear-gradient(90deg,#4a2410,#7a3d18); border-left-color:#fbbf24; }
+        .guide-group:hover { filter:brightness(1.15); }
+        .guide-group .badge { font-size:0.7rem; padding:3px 9px; }
+        .guide-group i.fa-chevron-down { transition:transform .3s; }
+        .guide-group[aria-expanded="true"] i.fa-chevron-down { transform:rotate(180deg); }
+        /* 그룹 내부 서브카테고리: 작게 + 들여쓰기, sticky 해제 */
+        .guide-body .menu-category { font-size:0.82rem; padding-left:30px; position:static; background:linear-gradient(90deg,#172033,#28344b); }
+        .guide-body .menu-category .badge.bg-info { background:#475569 !important; }
+        .guide-body .list-group-item { padding-left:3rem; }
+
+        /* 메뉴 아이템 */
+        .list-group-item {
+            background-color: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 0.65rem 1.5rem 0.65rem 2.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-group-item:hover, .list-group-item:focus {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            padding-left: 2.8rem;
+        }
+        
+        .list-group-item i { width: 18px; margin-right: 10px; text-align: center; font-size: 0.8rem; }
+        .list-group-item .item-number { font-size: 0.7rem; color: #64748b; margin-left: auto; }
+
+        /* 메뉴 구분 헤더 (Sub-header) */
+        .menu-subheader {
+            padding: 10px 20px 5px 25px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .collapse { background-color: rgba(0,0,0,0.1); }
+
+        /* 메인 콘텐츠 */
+        #page-content-wrapper { width: 100%; overflow-y: auto; background-color: #fff; }
+
+        .content-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .content-header h1 { font-weight: 700; margin-bottom: 0.5rem; }
+
+        /* 통계 카드 */
+        .stat-card {
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s;
+            height: 100%;
+        }
+        
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card h2 { font-size: 2.5rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-card p { margin: 0; color: rgba(255,255,255,0.8); font-size: 0.9rem; }
+
+        /* 변경 이력 */
+        .history-list { list-style: none; padding-left: 0; }
+        .history-list li {
+            padding: 12px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .history-date { font-weight: 600; color: #495057; min-width: 100px; font-size: 0.9rem; }
+
+        .highlight { background-color: #fef08a; padding: 2px 4px; border-radius: 3px; color: #000; }
+        .no-results { padding: 2rem; text-align: center; color: #64748b; }
+
+        /* 토글 애니메이션 */
+        .menu-category i.fa-chevron-down { transition: transform 0.3s; }
+        .menu-category[aria-expanded="true"] i.fa-chevron-down { transform: rotate(180deg); }
+
+        @media (max-width: 768px) {
+            #sidebar-wrapper { width: 100%; min-height: auto; }
+            #wrapper { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+    <div id="sidebar-wrapper">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-shield-halved me-2"></i> Various Security Learning Hub
+            <small>V0.9 | 3대 가이드 체계 통합</small>
+        </div>
+
+        <!-- 검색 박스 -->
+        <div class="search-box">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 검색 (예: SQL, D-01, root)">
+        </div>
+
+        <!-- 메뉴 스크롤 영역 -->
+        <div class="menu-scroll">
+            <div class="list-group list-group-flush">
+
+                <!-- 홈(학습 트랙 선택) -->
+                <a href="index.html" class="text-decoration-none">
+                  <div class="menu-category" style="background:linear-gradient(90deg,#0f172a,#334155);border-left:4px solid #94a3b8;">
+                    <span>🏠 학습 트랙 선택 (홈)</span>
+                    <span><span class="badge bg-light text-dark">←</span></span>
+                  </div>
+                </a>
+
+                <!-- 개발보안 학습 포털 (featured) -->
+                <a href="secure-dev-portal.html" class="text-decoration-none">
+                  <div class="menu-category" style="background:linear-gradient(90deg,#6366f1,#8b5cf6);border-left:4px solid #c4b5fd;">
+                    <span>🎓 개발보안 학습 포털</span>
+                    <span><span class="badge bg-light text-dark">HUB</span></span>
+                  </div>
+                </a>
+                <a href="secure-dev-academy.html" class="text-decoration-none">
+                  <div class="menu-category" style="background:linear-gradient(90deg,#312e81,#6d28d9);border-left:4px solid #c4b5fd;">
+                    <span>🧠 진단원 학습 센터</span>
+                    <span><span class="badge bg-light text-dark">6모드</span></span>
+                  </div>
+                </a>
+
+                <!-- ========== KISA 시큐어 코딩 가이드 ========== -->
+                <div class="guide-group gA" data-bs-toggle="collapse" data-bs-target="#groupA" aria-expanded="true">
+                    <span>🛡️ KISA 시큐어 코딩 가이드</span>
+                    <span><span class="badge bg-light text-dark" id="badge-groupA">0</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse show guide-body" id="groupA">
+                <!-- 3. 입력데이터 검증 (17개) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu3" aria-expanded="false">
+                    <span><i class="fa-solid fa-filter me-2"></i> A-1. 입력데이터 검증 및 표현</span>
+                    <span><span class="badge bg-warning text-dark" id="badge-menu3">17</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu3">
+                    <a href="03_code_sql_injection.html" class="list-group-item list-group-item-action" data-keywords="sql injection">
+                        <span><i class="fa-solid fa-database"></i> SQL 삽입</span>
+                        <span class="item-number">#1</span>
+                    </a>
+                    <a href="03_code_codeinjection.html" class="list-group-item list-group-item-action" data-keywords="code injection">
+                        <span><i class="fa-solid fa-code"></i> 코드 삽입</span>
+                        <span class="item-number">#2</span>
+                    </a>
+                    <a href="03_code_path_traversal.html" class="list-group-item list-group-item-action" data-keywords="path traversal">
+                        <span><i class="fa-solid fa-folder-tree"></i> 경로 조작 및 삽입</span>
+                        <span class="item-number">#3</span>
+                    </a>
+                    <a href="03_code_xss.html" class="list-group-item list-group-item-action" data-keywords="xss cross site">
+                        <span><i class="fa-solid fa-code"></i> 크로스 사이트 스크립트</span>
+                        <span class="item-number">#4</span>
+                    </a>
+                    <a href="03_code_os_command.html" class="list-group-item list-group-item-action" data-keywords="command injection os">
+                        <span><i class="fa-solid fa-terminal"></i> OS 명령어 삽입</span>
+                        <span class="item-number">#5</span>
+                    </a>
+                    <a href="03_code_dangerous_file_upload.html" class="list-group-item list-group-item-action" data-keywords="file upload">
+                        <span><i class="fa-solid fa-file-upload"></i> 위험한 형식 파일 업로드</span>
+                        <span class="item-number">#6</span>
+                    </a>
+                    <a href="03_code_open_redirect.html" class="list-group-item list-group-item-action" data-keywords="redirect url">
+                        <span><i class="fa-solid fa-arrow-right-to-bracket"></i> 신뢰되지 않은 URL 접속</span>
+                        <span class="item-number">#7</span>
+                    </a>
+                    <a href="03_code_xxe.html" class="list-group-item list-group-item-action" data-keywords="xxe xml">
+                        <span><i class="fa-solid fa-file-code"></i> XML 외부 개체 참조</span>
+                        <span class="item-number">#8</span>
+                    </a>
+                    <a href="03_code_xml.html" class="list-group-item list-group-item-action" data-keywords="xml injection">
+                        <span><i class="fa-solid fa-file-code"></i> XML 삽입</span>
+                        <span class="item-number">#9</span>
+                    </a>
+                    <a href="03_code_ldap_injection.html" class="list-group-item list-group-item-action" data-keywords="ldap">
+                        <span><i class="fa-solid fa-network-wired"></i> LDAP 삽입</span>
+                        <span class="item-number">#10</span>
+                    </a>
+                    <a href="03_code_csrf.html" class="list-group-item list-group-item-action" data-keywords="csrf">
+                        <span><i class="fa-solid fa-globe"></i> CSRF</span>
+                        <span class="item-number">#11</span>
+                    </a>
+                    <a href="03_code_ssrf.html" class="list-group-item list-group-item-action" data-keywords="ssrf">
+                        <span><i class="fa-solid fa-server"></i> SSRF</span>
+                        <span class="item-number">#12</span>
+                    </a>
+                    <a href="03_code_http_split.html" class="list-group-item list-group-item-action" data-keywords="http response splitting">
+                        <span><i class="fa-solid fa-split"></i> HTTP 응답분할</span>
+                        <span class="item-number">#13</span>
+                    </a>
+                    <a href="03_code_integer_overflow.html" class="list-group-item list-group-item-action" data-keywords="integer overflow">
+                        <span><i class="fa-solid fa-calculator"></i> 정수형 오버플로우</span>
+                        <span class="item-number">#14</span>
+                    </a>
+                    <a href="03_code_untrusted_input.html" class="list-group-item list-group-item-action" data-keywords="input validation">
+                        <span><i class="fa-solid fa-shield-virus"></i> 보안기능 결정 부적절 입력</span>
+                        <span class="item-number">#15</span>
+                    </a>
+                    <a href="03_code_bufferoverflow.html" class="list-group-item list-group-item-action" data-keywords="buffer overflow">
+                        <span><i class="fa-solid fa-memory"></i> 버퍼오버플로우</span>
+                        <span class="item-number">#16</span>
+                    </a>
+                    <a href="03_code_formatstring.html" class="list-group-item list-group-item-action" data-keywords="format string">
+                        <span><i class="fa-solid fa-percent"></i> 포맷스트링 삽입</span>
+                        <span class="item-number">#17</span>
+                    </a>
+                </div>
+
+                <!-- 4. 보안 기능 실습 (16개) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu4" aria-expanded="false">
+                    <span><i class="fa-solid fa-lock me-2"></i> A-2. 보안 기능</span>
+                    <span><span class="badge bg-info" id="badge-menu4">16</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu4">
+                    <a href="03_code_missing_auth.html" class="list-group-item list-group-item-action" data-keywords="authentication 인증">
+                        <span><i class="fa-solid fa-user-lock"></i> 적절한 인증 없는 중요 기능</span>
+                        <span class="item-number">#1</span>
+                    </a>
+                    <a href="03_code_inapporiate_auth.html" class="list-group-item list-group-item-action" data-keywords="authorization 인가">
+                        <span><i class="fa-solid fa-user-slash"></i> 부적절한 인가</span>
+                        <span class="item-number">#2</span>
+                    </a>
+                    <a href="03_code_wrong_auth.html" class="list-group-item list-group-item-action" data-keywords="permission 권한">
+                        <span><i class="fa-solid fa-ban"></i> 잘못된 권한 설정</span>
+                        <span class="item-number">#3</span>
+                    </a>
+                    <a href="03_code_risky_crypto.html" class="list-group-item list-group-item-action" data-keywords="encryption 암호화">
+                        <span><i class="fa-solid fa-lock-open"></i> 취약한 암호화 알고리즘</span>
+                        <span class="item-number">#4</span>
+                    </a>
+                    <a href="03_code_no_encrypted_info.html" class="list-group-item list-group-item-action" data-keywords="encryption 암호화">
+                        <span><i class="fa-solid fa-unlock"></i> 암호화 되지 않은 중요 정보</span>
+                        <span class="item-number">#5</span>
+                    </a>
+                    <a href="03_code_hardedcode.html" class="list-group-item list-group-item-action" data-keywords="hardcoded 하드코딩">
+                        <span><i class="fa-solid fa-key"></i> 하드코드된 중요 정보</span>
+                        <span class="item-number">#6</span>
+                    </a>
+                    <a href="03_code_notenoughkey.html" class="list-group-item list-group-item-action" data-keywords="key length 키">
+                        <span><i class="fa-solid fa-ruler"></i> 충분하지 않은 키 길이</span>
+                        <span class="item-number">#7</span>
+                    </a>
+                    <a href="03_code_useofinsufficient_random.html" class="list-group-item list-group-item-action" data-keywords="random 난수">
+                        <span><i class="fa-solid fa-dice"></i> 적절하지 않은 난수 값</span>
+                        <span class="item-number">#8</span>
+                    </a>
+                    <a href="03_code_weakpassword.html" class="list-group-item list-group-item-action" data-keywords="password 비밀번호">
+                        <span><i class="fa-solid fa-lock-open"></i> 취약한 비밀번호 허용</span>
+                        <span class="item-number">#9</span>
+                    </a>
+                    <a href="03_code_impropersignature.html" class="list-group-item list-group-item-action" data-keywords="signature 전자서명">
+                        <span><i class="fa-solid fa-signature"></i> 부적절한 전자서명 확인</span>
+                        <span class="item-number">#10</span>
+                    </a>
+                    <a href="03_code_impropersignature_validity.html" class="list-group-item list-group-item-action" data-keywords="certificate 인증서">
+                        <span><i class="fa-solid fa-certificate"></i> 부적절한 인증서 유효성</span>
+                        <span class="item-number">#11</span>
+                    </a>
+                    <a href="03_code_cookiedisclosure.html" class="list-group-item list-group-item-action" data-keywords="cookie 쿠키">
+                        <span><i class="fa-solid fa-cookie"></i> 쿠키를 통한 정보 노출</span>
+                        <span class="item-number">#12</span>
+                    </a>
+                    <a href="03_code_sensitiveinfo_sourcecodecomments.html" class="list-group-item list-group-item-action" data-keywords="comment 주석">
+                        <span><i class="fa-solid fa-comment"></i> 주석문 안 시스템 정보</span>
+                        <span class="item-number">#13</span>
+                    </a>
+                    <a href="03_code_nosalthash.html" class="list-group-item list-group-item-action" data-keywords="hash salt 해시">
+                        <span><i class="fa-solid fa-hashtag"></i> 솔트 없는 일방향 해시</span>
+                        <span class="item-number">#14</span>
+                    </a>
+                    <a href="03_code_nointegritycode.html" class="list-group-item list-group-item-action" data-keywords="integrity 무결성">
+                        <span><i class="fa-solid fa-shield-check"></i> 무결성 검사없는 코드 다운로드</span>
+                        <span class="item-number">#15</span>
+                    </a>
+                    <a href="03_code_improper_auth_attempts.html" class="list-group-item list-group-item-action" data-keywords="brute force 무차별">
+                        <span><i class="fa-solid fa-ban"></i> 반복 인증시도 제한 부재</span>
+                        <span class="item-number">#16</span>
+                    </a>
+                </div>
+
+                <!-- 8. 코드오류·캡슐화·API Labs (KISA 49 완성) NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu8" aria-expanded="false">
+                    <span><i class="fa-solid fa-bug-slash me-2"></i> A-3. 코드오류 · 캡슐화 · API</span>
+                    <span><span class="badge bg-warning text-dark" id="badge-menu8">16</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu8">
+                    <a href="03_code_race_condition.html" class="list-group-item list-group-item-action" data-keywords="race condition toctou 경쟁조건 시간 상태">
+                        <span><i class="fa-solid fa-stopwatch"></i> 경쟁조건 (TOCTOU)</span>
+                        <span class="item-number">시간/상태</span>
+                    </a>
+                    <a href="03_code_infinite_loop.html" class="list-group-item list-group-item-action" data-keywords="infinite loop recursion 무한 반복 재귀">
+                        <span><i class="fa-solid fa-infinity"></i> 종료되지 않는 반복·재귀</span>
+                        <span class="item-number">시간/상태</span>
+                    </a>
+                    <a href="03_code_error_message.html" class="list-group-item list-group-item-action" data-keywords="error message disclosure 오류 메시지 정보노출 스택트레이스">
+                        <span><i class="fa-solid fa-bullhorn"></i> 오류메시지 정보노출</span>
+                        <span class="item-number">에러처리</span>
+                    </a>
+                    <a href="03_code_error_handling_missing.html" class="list-group-item list-group-item-action" data-keywords="missing error handling 오류 대응 부재 빈 catch">
+                        <span><i class="fa-solid fa-triangle-exclamation"></i> 오류상황 대응 부재</span>
+                        <span class="item-number">에러처리</span>
+                    </a>
+                    <a href="03_code_improper_exception.html" class="list-group-item list-group-item-action" data-keywords="improper exception generic 부적절한 예외처리">
+                        <span><i class="fa-solid fa-masks-theater"></i> 부적절한 예외처리</span>
+                        <span class="item-number">에러처리</span>
+                    </a>
+                    <a href="03_code_null_pointer.html" class="list-group-item list-group-item-action" data-keywords="null pointer dereference 널 포인터 역참조">
+                        <span><i class="fa-solid fa-ban"></i> Null Pointer 역참조</span>
+                        <span class="item-number">코드오류</span>
+                    </a>
+                    <a href="03_code_improper_resource_release.html" class="list-group-item list-group-item-action" data-keywords="resource release leak 자원 해제 누수">
+                        <span><i class="fa-solid fa-droplet"></i> 부적절한 자원 해제</span>
+                        <span class="item-number">코드오류</span>
+                    </a>
+                    <a href="03_code_use_after_free.html" class="list-group-item list-group-item-action" data-keywords="use after free 해제된 자원 사용">
+                        <span><i class="fa-solid fa-recycle"></i> 해제된 자원 사용 (UAF)</span>
+                        <span class="item-number">코드오류</span>
+                    </a>
+                    <a href="03_code_uninitialized_variable.html" class="list-group-item list-group-item-action" data-keywords="uninitialized variable 초기화되지 않은 변수">
+                        <span><i class="fa-solid fa-circle-plus"></i> 초기화되지 않은 변수</span>
+                        <span class="item-number">코드오류</span>
+                    </a>
+                    <a href="03_code_deserialization.html" class="list-group-item list-group-item-action" data-keywords="deserialization untrusted pickle 역직렬화 rce">
+                        <span><i class="fa-solid fa-box-open"></i> 신뢰할 수 없는 역직렬화</span>
+                        <span class="item-number">코드오류</span>
+                    </a>
+                    <a href="03_code_session_data_exposure.html" class="list-group-item list-group-item-action" data-keywords="wrong session data exposure 세션 데이터 노출">
+                        <span><i class="fa-solid fa-share-nodes"></i> 잘못된 세션 데이터 노출</span>
+                        <span class="item-number">캡슐화</span>
+                    </a>
+                    <a href="03_code_debug_code.html" class="list-group-item list-group-item-action" data-keywords="active debug code backdoor 디버그 코드 백도어">
+                        <span><i class="fa-solid fa-bug"></i> 제거되지 않은 디버그 코드</span>
+                        <span class="item-number">캡슐화</span>
+                    </a>
+                    <a href="03_code_private_array_return.html" class="list-group-item list-group-item-action" data-keywords="private array return 방어적 복사">
+                        <span><i class="fa-solid fa-arrow-up-from-bracket"></i> Private 배열 반환</span>
+                        <span class="item-number">캡슐화</span>
+                    </a>
+                    <a href="03_code_public_to_private_array.html" class="list-group-item list-group-item-action" data-keywords="public data private array 입력 복사">
+                        <span><i class="fa-solid fa-arrow-down-to-bracket"></i> Private 배열에 Public 할당</span>
+                        <span class="item-number">캡슐화</span>
+                    </a>
+                    <a href="03_code_dns_security_decision.html" class="list-group-item list-group-item-action" data-keywords="dns reverse lookup security decision 보안결정">
+                        <span><i class="fa-solid fa-globe"></i> DNS 의존 보안결정</span>
+                        <span class="item-number">API오용</span>
+                    </a>
+                    <a href="03_code_vulnerable_api.html" class="list-group-item list-group-item-action" data-keywords="vulnerable obsolete dangerous api 취약한 api">
+                        <span><i class="fa-solid fa-triangle-exclamation"></i> 취약한 API 사용</span>
+                        <span class="item-number">API오용</span>
+                    </a>
+                </div>
+
+                <!-- 2. 가이드라인 (6개) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2" aria-expanded="false">
+                    <span><i class="fa-solid fa-book me-2"></i> A-4. 가이드 · 시간/상태 · 에러처리</span>
+                    <span><span class="badge bg-primary" id="badge-menu2">6</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu2">
+                    <a href="guide-input.html" class="list-group-item list-group-item-action" data-keywords="입력 데이터 검증 validation python java">
+                        <span><i class="fa-regular fa-file-lines"></i> 입력 데이터 검증 및 표현</span>
+                        <span class="badge bg-success ms-2">Python+Java</span>
+                    </a>
+                    <a href="guide-security.html" class="list-group-item list-group-item-action" data-keywords="보안 기능 security">
+                        <span><i class="fa-solid fa-shield-halved"></i> 보안 기능</span>
+                    </a>
+                    <a href="sim-time-state.html" class="list-group-item list-group-item-action" data-keywords="시간 상태 time state">
+                        <span><i class="fa-solid fa-hourglass-half"></i> 시간 및 상태</span>
+                    </a>
+                    <a href="sim-error-handling.html" class="list-group-item list-group-item-action" data-keywords="에러 처리 error">
+                        <span><i class="fa-solid fa-bug"></i> 에러 처리</span>
+                    </a>
+                    <a href="sim-quality.html" class="list-group-item list-group-item-action" data-keywords="코드 품질 quality">
+                        <span><i class="fa-solid fa-check-double"></i> 코드 품질</span>
+                    </a>
+                    <a href="sim-encap.html" class="list-group-item list-group-item-action" data-keywords="캡슐화 api encapsulation">
+                        <span><i class="fa-solid fa-box-open"></i> 캡슐화 및 API 오용</span>
+                    </a>
+                </div>
+
+                <!-- A-5. 설계단계 보안설계 (개발보안 가이드) NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menuDesign" aria-expanded="false">
+                    <span><i class="fa-solid fa-compass-drafting me-2"></i> A-5. 설계단계 보안설계</span>
+                    <span><span class="badge bg-info" id="badge-menuDesign">20</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menuDesign">
+                    <a href="04_design-sd01.html" class="list-group-item list-group-item-action" data-keywords="design 설계 sql dbms 조회 결과 검증 바인딩 sd-01">
+                        <span><i class="fa-solid fa-database"></i> SD-01 DBMS 조회 및 결과 검증</span>
+                        <span class="item-number">SD-01</span>
+                    </a>
+                    <a href="04_design-sd02.html" class="list-group-item list-group-item-action" data-keywords="design 설계 xml xpath xxe 외부엔터티 sd-02">
+                        <span><i class="fa-solid fa-file-code"></i> SD-02 XML 조회 및 결과 검증</span>
+                        <span class="item-number">SD-02</span>
+                    </a>
+                    <a href="04_design-sd03.html" class="list-group-item list-group-item-action" data-keywords="design 설계 ldap 디렉토리 인젝션 이스케이프 sd-03">
+                        <span><i class="fa-solid fa-folder-tree"></i> SD-03 디렉토리 서비스 조회 검증</span>
+                        <span class="item-number">SD-03</span>
+                    </a>
+                    <a href="04_design-sd04.html" class="list-group-item list-group-item-action" data-keywords="design 설계 명령어 command injection path traversal 경로 sd-04">
+                        <span><i class="fa-solid fa-terminal"></i> SD-04 시스템자원·명령어 입력검증</span>
+                        <span class="item-number">SD-04</span>
+                    </a>
+                    <a href="04_design-sd05.html" class="list-group-item list-group-item-action" data-keywords="design 설계 ssrf xss 웹서비스 요청 결과 인코딩 sd-05">
+                        <span><i class="fa-solid fa-globe"></i> SD-05 웹 서비스 요청·결과 검증</span>
+                        <span class="item-number">SD-05</span>
+                    </a>
+                    <a href="04_design-sd06.html" class="list-group-item list-group-item-action" data-keywords="design 설계 csrf 재실행 nonce 중요기능 유효성 sd-06">
+                        <span><i class="fa-solid fa-user-lock"></i> SD-06 중요기능 요청 유효성 검증</span>
+                        <span class="item-number">SD-06</span>
+                    </a>
+                    <a href="04_design-sd07.html" class="list-group-item list-group-item-action" data-keywords="design 설계 http 응답분할 오픈 리다이렉트 헤더 sd-07">
+                        <span><i class="fa-solid fa-envelope-open-text"></i> SD-07 HTTP 프로토콜 유효성 검증</span>
+                        <span class="item-number">SD-07</span>
+                    </a>
+                    <a href="04_design-sd08.html" class="list-group-item list-group-item-action" data-keywords="design 설계 buffer integer overflow 메모리 경계 c cpp sd-08">
+                        <span><i class="fa-solid fa-memory"></i> SD-08 허용된 범위 내 메모리 접근</span>
+                        <span class="item-number">SD-08</span>
+                    </a>
+                    <a href="04_design-sd09.html" class="list-group-item list-group-item-action" data-keywords="design 설계 보안기능 입력검증 서버측 파라미터 변조 권한 sd-09">
+                        <span><i class="fa-solid fa-shield-halved"></i> SD-09 보안기능 입력값 검증</span>
+                        <span class="item-number">SD-09</span>
+                    </a>
+                    <a href="04_design-sd10.html" class="list-group-item list-group-item-action" data-keywords="design 설계 파일 업로드 다운로드 웹쉘 화이트리스트 sd-10">
+                        <span><i class="fa-solid fa-file-arrow-up"></i> SD-10 업로드·다운로드 파일 검증</span>
+                        <span class="item-number">SD-10</span>
+                    </a>
+                    <a href="04_design-sd11.html" class="list-group-item list-group-item-action" data-keywords="design 설계 인증 대상 방식 mfa 누락 sd-11">
+                        <span><i class="fa-solid fa-key"></i> SD-11 인증 대상 및 방식</span>
+                        <span class="item-number">SD-11</span>
+                    </a>
+                    <a href="04_design-sd12.html" class="list-group-item list-group-item-action" data-keywords="design 설계 인증 수행 제한 무차별 대입 brute force 잠금 sd-12">
+                        <span><i class="fa-solid fa-ban"></i> SD-12 인증 수행 제한</span>
+                        <span class="item-number">SD-12</span>
+                    </a>
+                    <a href="04_design-sd13.html" class="list-group-item list-group-item-action" data-keywords="design 설계 비밀번호 관리 해시 bcrypt argon2 솔트 sd-13">
+                        <span><i class="fa-solid fa-lock"></i> SD-13 비밀번호 관리</span>
+                        <span class="item-number">SD-13</span>
+                    </a>
+                    <a href="04_design-sd14.html" class="list-group-item list-group-item-action" data-keywords="design 설계 접근통제 인가 idor 강제 브라우징 권한 sd-14">
+                        <span><i class="fa-solid fa-traffic-light"></i> SD-14 중요자원 접근통제</span>
+                        <span class="item-number">SD-14</span>
+                    </a>
+                    <a href="04_design-sd15.html" class="list-group-item list-group-item-action" data-keywords="design 설계 암호키 관리 kms hsm 하드코딩 교체 sd-15">
+                        <span><i class="fa-solid fa-key"></i> SD-15 암호키 관리</span>
+                        <span class="item-number">SD-15</span>
+                    </a>
+                    <a href="04_design-sd16.html" class="list-group-item list-group-item-action" data-keywords="design 설계 암호연산 aes sha 취약 알고리즘 md5 csprng 난수 sd-16">
+                        <span><i class="fa-solid fa-flask"></i> SD-16 암호연산</span>
+                        <span class="item-number">SD-16</span>
+                    </a>
+                    <a href="04_design-sd17.html" class="list-group-item list-group-item-action" data-keywords="design 설계 중요정보 저장 암호화 마스킹 평문 sd-17">
+                        <span><i class="fa-solid fa-hard-drive"></i> SD-17 중요정보 저장</span>
+                        <span class="item-number">SD-17</span>
+                    </a>
+                    <a href="04_design-sd18.html" class="list-group-item list-group-item-action" data-keywords="design 설계 중요정보 전송 tls hsts 평문 중간자 sd-18">
+                        <span><i class="fa-solid fa-satellite-dish"></i> SD-18 중요정보 전송</span>
+                        <span class="item-number">SD-18</span>
+                    </a>
+                    <a href="04_design-sd19.html" class="list-group-item list-group-item-action" data-keywords="design 설계 예외처리 에러 스택트레이스 노출 sd-19">
+                        <span><i class="fa-solid fa-fire-extinguisher"></i> SD-19 예외처리</span>
+                        <span class="item-number">SD-19</span>
+                    </a>
+                    <a href="04_design-sd20.html" class="list-group-item list-group-item-action" data-keywords="design 설계 세션통제 세션 고정 탈취 쿠키 httponly samesite sd-20">
+                        <span><i class="fa-solid fa-id-card"></i> SD-20 세션통제</span>
+                        <span class="item-number">SD-20</span>
+                    </a>
+                </div>
+
+                </div>
+
+                <!-- ========== 주요정보통신기반시설 취약점 가이드 ========== -->
+                <div class="guide-group gB" data-bs-toggle="collapse" data-bs-target="#groupB" aria-expanded="true">
+                    <span>🏛️ 주요정보통신기반시설 취약점 가이드</span>
+                    <span><span class="badge bg-light text-dark" id="badge-groupB">0</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse show guide-body" id="groupB">                <!-- 1. 시뮬레이터 (26개) -->
+                <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1" aria-expanded="false">
+                    <span><i class="fa-solid fa-bug text-danger me-2"></i> B-1. 웹 서비스 취약점 (실습)</span>
+                    <span><span class="badge bg-danger" id="badge-menu1">26</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu1">
+                    <a href="sim-sql.html" class="list-group-item list-group-item-action" data-keywords="sql injection database 주입">
+                        <span><i class="fa-solid fa-database"></i> 1. SQL Injection</span>
+                        <span class="item-number">#1</span>
+                    </a>
+                    <a href="sim-cmd.html" class="list-group-item list-group-item-action" data-keywords="command injection 명령어">
+                        <span><i class="fa-solid fa-terminal"></i> 2. Command Injection</span>
+                        <span class="item-number">#2</span>
+                    </a>
+                    <a href="sim-xxe.html" class="list-group-item list-group-item-action" data-keywords="xxe xml injection">
+                        <span><i class="fa-solid fa-file-code"></i> 3. XXE Injection</span>
+                        <span class="item-number">#3</span>
+                    </a>
+                    <a href="sim-xss.html" class="list-group-item list-group-item-action" data-keywords="xss cross site scripting">
+                        <span><i class="fa-solid fa-code"></i> 4. Reflected XSS</span>
+                        <span class="item-number">#4</span>
+                    </a>
+                    <a href="sim-csrf.html" class="list-group-item list-group-item-action" data-keywords="csrf cross site request forgery">
+                        <span><i class="fa-solid fa-globe"></i> 5. CSRF Attack</span>
+                        <span class="item-number">#5</span>
+                    </a>
+                    <a href="sim-ssrf.html" class="list-group-item list-group-item-action" data-keywords="ssrf server side request forgery">
+                        <span><i class="fa-solid fa-server"></i> 6. SSRF</span>
+                        <span class="item-number">#6</span>
+                    </a>
+                    <a href="sim-upload.html" class="list-group-item list-group-item-action" data-keywords="file upload 파일 업로드">
+                        <span><i class="fa-solid fa-file-arrow-up"></i> 7. File Upload</span>
+                        <span class="item-number">#7</span>
+                    </a>
+                    <a href="sim-path.html" class="list-group-item list-group-item-action" data-keywords="path traversal 경로 조작">
+                        <span><i class="fa-solid fa-folder-open"></i> 8. Path Traversal</span>
+                        <span class="item-number">#8</span>
+                    </a>
+                    <a href="sim-split.html" class="list-group-item list-group-item-action" data-keywords="http splitting response">
+                        <span><i class="fa-solid fa-arrows-split-up-and-left"></i> 9. HTTP Splitting</span>
+                        <span class="item-number">#9</span>
+                    </a>
+                    <a href="sim-brute.html" class="list-group-item list-group-item-action" data-keywords="brute force 무차별 대입">
+                        <span><i class="fa-solid fa-lock"></i> 10. Brute Force</span>
+                        <span class="item-number">#10</span>
+                    </a>
+                    <a href="sim-idor.html" class="list-group-item list-group-item-action" data-keywords="idor insecure direct object reference">
+                        <span><i class="fa-solid fa-id-card"></i> 11. IDOR</span>
+                        <span class="item-number">#11</span>
+                    </a>
+                    <a href="sim-code.html" class="list-group-item list-group-item-action" data-keywords="code injection 코드 주입">
+                        <span><i class="fa-solid fa-code-branch"></i> 12. Code Injection</span>
+                        <span class="item-number">#12</span>
+                    </a>
+                    <a href="sim-hardedcode.html" class="list-group-item list-group-item-action" data-keywords="hardcoded credentials 하드코딩">
+                        <span><i class="fa-solid fa-key"></i> 13. Hardcoded Credentials</span>
+                        <span class="item-number">#13</span>
+                    </a>
+                    <a href="sim-error-msg.html" class="list-group-item list-group-item-action" data-keywords="error message exposure 에러">
+                        <span><i class="fa-solid fa-exclamation-triangle"></i> 14. Error Message Exposure</span>
+                        <span class="item-number">#14</span>
+                    </a>
+                    <a href="sim-no-auth.html" class="list-group-item list-group-item-action" data-keywords="missing authentication 인증">
+                        <span><i class="fa-solid fa-user-lock"></i> 15. Missing Auth for Critical Function</span>
+                        <span class="item-number">#15</span>
+                    </a>
+                    <a href="sim-int-overflow.html" class="list-group-item list-group-item-action" data-keywords="integer overflow 정수 오버플로우">
+                        <span><i class="fa-solid fa-calculator"></i> 16. 정수형 오버플로우</span>
+                        <span class="item-number">#16</span>
+                    </a>
+                    <a href="sim-unencrypted_data.html" class="list-group-item list-group-item-action" data-keywords="unencrypted data 암호화">
+                        <span><i class="fa-solid fa-lock-open"></i> 17. 암호화 되지 않은 중요정보</span>
+                        <span class="item-number">#17</span>
+                    </a>
+                    <a href="sim-session_hijacking.html" class="list-group-item list-group-item-action" data-keywords="session hijacking 세션 하이재킹">
+                        <span><i class="fa-solid fa-user-secret"></i> 18. 세션 하이재킹</span>
+                        <span class="item-number">#18</span>
+                    </a>
+                    <a href="sim-ldap.html" class="list-group-item list-group-item-action" data-keywords="ldap injection">
+                        <span><i class="fa-solid fa-network-wired"></i> 19. LDAP 삽입</span>
+                        <span class="item-number">#19</span>
+                    </a>
+                    <a href="sim-racecondition.html" class="list-group-item list-group-item-action" data-keywords="race condition 경쟁 조건">
+                        <span><i class="fa-solid fa-clock"></i> 20. 경쟁 조건</span>
+                        <span class="item-number">#20</span>
+                    </a>
+                    <a href="sim-password_recovery.html" class="list-group-item list-group-item-action" data-keywords="password recovery 비밀번호 복구">
+                        <span><i class="fa-solid fa-unlock"></i> 21. 패스워드 복구</span>
+                        <span class="item-number">#21</span>
+                    </a>
+                    <a href="sim_insufficient_session.html" class="list-group-item list-group-item-action" data-keywords="session management 세션 관리">
+                        <span><i class="fa-solid fa-hourglass-half"></i> 22. 불충분한 세션</span>
+                        <span class="item-number">#22</span>
+                    </a>
+                    <a href="sim-cookiebyunjo.html" class="list-group-item list-group-item-action" data-keywords="cookie manipulation 쿠키 변조">
+                        <span><i class="fa-solid fa-cookie"></i> 23. 쿠키 변조</span>
+                        <span class="item-number">#23</span>
+                    </a>
+                    <a href="sim-httpabuse.html" class="list-group-item list-group-item-action" data-keywords="http abuse 오남용">
+                        <span><i class="fa-solid fa-bug"></i> 24. HTTP 오남용</span>
+                        <span class="item-number">#24</span>
+                    </a>
+                    <a href="03_code_processvalidation.html" class="list-group-item list-group-item-action" data-keywords="process validation 프로세스 검증">
+                        <span><i class="fa-solid fa-tasks"></i> 25. 프로세스 검증</span>
+                        <span class="item-number">#25</span>
+                    </a>
+                    <a href="sim-automated_attacks.html" class="list-group-item list-group-item-action" data-keywords="automated attacks 자동화 공격">
+                        <span><i class="fa-solid fa-robot"></i> 26. 자동화된 공격</span>
+                        <span class="item-number">#26</span>
+                    </a>
+                </div>
+
+                <!-- 5. UNIX 서버 보안 (완전 구성: U-01~U-61 41개) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu5" aria-expanded="false">
+                    <span><i class="fa-brands fa-linux me-2"></i> B-2. UNIX 서버</span>
+                    <span><span class="badge bg-secondary" id="badge-menu5">41</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu5">
+                      <!-- 0. 실습 시뮬레이터 (2개) -->
+                    <div class="menu-subheader"><i class="fa-solid fa-users me-1"></i> 0. 시뮬레이터 (2개)</div>
+                    <a href="05_linux-sim01.html" class="list-group-item list-group-item-action" data-keywords="1. 계정 관리">
+                        <span><i class="fa-solid fa-user-shield"></i> 계정 관리</span>
+                        <span class="item-number">U-01</span>
+                    </a>
+
+                    <a href="05_linux-sim02.html" class="list-group-item list-group-item-action" data-keywords="파일 및 디렉토리 관리">
+                        <span><i class="fa-solid fa-user-shield"></i> 파일 및 디렉토리 관리</span>
+                        <span class="item-number">U-02</span>
+                    </a>
+
+                    <!-- 1. 계정 관리 (6개) -->
+                    <div class="menu-subheader"><i class="fa-solid fa-users me-1"></i> 1. 계정 관리 (6개)</div>
+                    <a href="05_linux-u01.html" class="list-group-item list-group-item-action" data-keywords="u-01 root remote ssh 원격 접속 telnet">
+                        <span><i class="fa-solid fa-user-shield"></i> root 원격 접속 제한</span>
+                        <span class="item-number">U-01</span>
+                    </a>
+                    <a href="05_linux-u02.html" class="list-group-item list-group-item-action" data-keywords="u-02 password policy 비밀번호 정책 복잡도">
+                        <span><i class="fa-solid fa-key"></i> 비밀번호 관리정책 설정</span>
+                        <span class="item-number">U-02</span>
+                    </a>
+                    <a href="05_linux-u03.html" class="list-group-item list-group-item-action" data-keywords="u-03 lockout 잠금 임계값">
+                        <span><i class="fa-solid fa-user-clock"></i> 계정 잠금 임계값 설정</span>
+                        <span class="item-number">U-03</span>
+                    </a>
+                    <a href="05_linux-u04.html" class="list-group-item list-group-item-action" data-keywords="u-04 shadow password 보호 파일">
+                        <span><i class="fa-solid fa-lock"></i> 비밀번호 파일 보호</span>
+                        <span class="item-number">U-04</span>
+                    </a>
+                    <a href="05_linux-u05.html" class="list-group-item list-group-item-action" data-keywords="u-05 uid 0 root 계정">
+                        <span><i class="fa-solid fa-id-card"></i> UID 0 계정 확인</span>
+                        <span class="item-number">U-05</span>
+                    </a>
+                    <a href="05_linux-u06.html" class="list-group-item list-group-item-action" data-keywords="u-06 su 제한 권한 전환">
+                        <span><i class="fa-solid fa-ban"></i> su 기능 제한</span>
+                        <span class="item-number">U-06</span>
+                    </a>
+
+                    <!-- 2. 파일 및 디렉터리 관리 (15개) -->
+                    <div class="menu-subheader mt-2"><i class="fa-solid fa-folder-tree me-1"></i> 2. 파일 및 디렉터리 관리 (15개)</div>
+                    <a href="05_linux-u14.html" class="list-group-item list-group-item-action" data-keywords="u-14 root home path">
+                        <span><i class="fa-solid fa-folder"></i> root 홈 디렉토리 및 PATH 설정</span>
+                        <span class="item-number">U-14</span>
+                    </a>
+                    <a href="05_linux-u15.html" class="list-group-item list-group-item-action" data-keywords="u-15 owner 소유자">
+                        <span><i class="fa-solid fa-user"></i> 파일 및 디렉터리 소유자 설정</span>
+                        <span class="item-number">U-15</span>
+                    </a>
+                    <a href="05_linux-u16.html" class="list-group-item list-group-item-action" data-keywords="u-16 passwd 644">
+                        <span><i class="fa-solid fa-file"></i> /etc/passwd 파일 권한 설정</span>
+                        <span class="item-number">U-16</span>
+                    </a>
+                    <a href="05_linux-u17.html" class="list-group-item list-group-item-action" data-keywords="u-17 init script">
+                        <span><i class="fa-solid fa-rocket"></i> 시스템 시작 스크립트 권한 설정</span>
+                        <span class="item-number">U-17</span>
+                    </a>
+                    <a href="05_linux-u18.html" class="list-group-item list-group-item-action" data-keywords="u-18 shadow 600">
+                        <span><i class="fa-solid fa-lock"></i> /etc/shadow 파일 권한 설정</span>
+                        <span class="item-number">U-18</span>
+                    </a>
+                    <a href="05_linux-u19.html" class="list-group-item list-group-item-action" data-keywords="u-19 hosts">
+                        <span><i class="fa-solid fa-globe"></i> /etc/hosts 파일 권한 설정</span>
+                        <span class="item-number">U-19</span>
+                    </a>
+                    <a href="05_linux-u20.html" class="list-group-item list-group-item-action" data-keywords="u-20 inetd">
+                        <span><i class="fa-solid fa-sliders"></i> /etc/inetd.conf 파일 권한 설정</span>
+                        <span class="item-number">U-20</span>
+                    </a>
+                    <a href="05_linux-u21.html" class="list-group-item list-group-item-action" data-keywords="u-21 rsyslog">
+                        <span><i class="fa-solid fa-scroll"></i> /etc/rsyslog.conf 파일 권한 설정</span>
+                        <span class="item-number">U-21</span>
+                    </a>
+                    <a href="05_linux-u22.html" class="list-group-item list-group-item-action" data-keywords="u-22 services">
+                        <span><i class="fa-solid fa-network-wired"></i> /etc/services 파일 권한 설정</span>
+                        <span class="item-number">U-22</span>
+                    </a>
+                    <a href="05_linux-u23.html" class="list-group-item list-group-item-action" data-keywords="u-23 suid sgid sticky">
+                        <span><i class="fa-solid fa-star"></i> SUID, SGID, Sticky bit 점검</span>
+                        <span class="item-number">U-23</span>
+                    </a>
+                    <a href="05_linux-u24.html" class="list-group-item list-group-item-action" data-keywords="u-24 env">
+                        <span><i class="fa-solid fa-variables"></i> 환경변수 파일 권한 설정</span>
+                        <span class="item-number">U-24</span>
+                    </a>
+                    <a href="05_linux-u25.html" class="list-group-item list-group-item-action" data-keywords="u-25 world">
+                        <span><i class="fa-solid fa-pencil"></i> world writable 파일 점검</span>
+                        <span class="item-number">U-25</span>
+                    </a>
+                    <a href="05_linux-u26.html" class="list-group-item list-group-item-action" data-keywords="u-26 dev">
+                        <span><i class="fa-solid fa-microchip"></i> /dev device 파일 점검</span>
+                        <span class="item-number">U-26</span>
+                    </a>
+                    <a href="05_linux-u27.html" class="list-group-item list-group-item-action" data-keywords="u-27 rhosts">
+                        <span><i class="fa-solid fa-connection"></i> .rhosts 사용 금지</span>
+                        <span class="item-number">U-27</span>
+                    </a>
+                    <a href="05_linux-u28.html" class="list-group-item list-group-item-action" data-keywords="u-28 tcp wrapper">
+                        <span><i class="fa-solid fa-shield"></i> 접속 IP 및 포트 제한</span>
+                        <span class="item-number">U-28</span>
+                    </a>
+
+                    <!-- 3. 서비스 관리 (20개) -->
+                    <div class="menu-subheader mt-2"><i class="fa-solid fa-cog me-1"></i> 3. 서비스 관리 (20개)</div>
+                    
+                    <!-- 3-1: 기본 서비스 -->
+                    <div class="menu-subheader" style="padding: 8px 20px 3px 35px; font-size: 0.7rem;">기본 서비스 비활성화</div>
+                    <a href="05_linux-u34.html" class="list-group-item list-group-item-action" data-keywords="u-34 finger">
+                        <span><i class="fa-solid fa-hand-point-left"></i> Finger 서비스 비활성화</span>
+                        <span class="item-number">U-34</span>
+                    </a>
+                    <a href="05_linux-u35.html" class="list-group-item list-group-item-action" data-keywords="u-35 share">
+                        <span><i class="fa-solid fa-share"></i> 공유 서비스 익명 접근 제한</span>
+                        <span class="item-number">U-35</span>
+                    </a>
+                    <a href="05_linux-u36.html" class="list-group-item list-group-item-action" data-keywords="u-36 rsh rlogin">
+                        <span><i class="fa-solid fa-terminal"></i> r 계열 서비스 비활성화</span>
+                        <span class="item-number">U-36</span>
+                    </a>
+                    <a href="05_linux-u37.html" class="list-group-item list-group-item-action" data-keywords="u-37 crontab">
+                        <span><i class="fa-solid fa-calendar"></i> crontab 권한 설정</span>
+                        <span class="item-number">U-37</span>
+                    </a>
+                    <a href="05_linux-u38.html" class="list-group-item list-group-item-action" data-keywords="u-38 dos">
+                        <span><i class="fa-solid fa-shield-virus"></i> DoS 공격 방어</span>
+                        <span class="item-number">U-38</span>
+                    </a>
+                    <a href="05_linux-u39.html" class="list-group-item list-group-item-action" data-keywords="u-39 nfs">
+                        <span><i class="fa-solid fa-share-nodes"></i> NFS 서비스 비활성화</span>
+                        <span class="item-number">U-39</span>
+                    </a>
+                    <a href="05_linux-u40.html" class="list-group-item list-group-item-action" data-keywords="u-40 nfs access">
+                        <span><i class="fa-solid fa-lock"></i> NFS 접근 통제</span>
+                        <span class="item-number">U-40</span>
+                    </a>
+                    <a href="05_linux-u41.html" class="list-group-item list-group-item-action" data-keywords="u-41 automount">
+                        <span><i class="fa-solid fa-compact-disc"></i> automountd 제거</span>
+                        <span class="item-number">U-41</span>
+                    </a>
+
+                    <!-- 3-2: RPC 및 NIS -->
+                    <div class="menu-subheader" style="padding: 8px 20px 3px 35px; font-size: 0.7rem;">RPC 및 NIS 서비스</div>
+                    <a href="05_linux-u42.html" class="list-group-item list-group-item-action" data-keywords="u-42 rpc">
+                        <span><i class="fa-solid fa-code"></i> RPC 서비스 비활성화</span>
+                        <span class="item-number">U-42</span>
+                    </a>
+                    <a href="05_linux-u43.html" class="list-group-item list-group-item-action" data-keywords="u-43 nis">
+                        <span><i class="fa-solid fa-sitemap"></i> NIS, NIS+ 설정</span>
+                        <span class="item-number">U-43</span>
+                    </a>
+
+                    <!-- 3-3: 메일 서비스 -->
+                    <div class="menu-subheader" style="padding: 8px 20px 3px 35px; font-size: 0.7rem;">메일 서비스</div>
+                    <a href="05_linux-u44.html" class="list-group-item list-group-item-action" data-keywords="u-44 tftp talk">
+                        <span><i class="fa-solid fa-envelope"></i> tftp, talk 서비스 비활성화</span>
+                        <span class="item-number">U-44</span>
+                    </a>
+                    <a href="05_linux-u45.html" class="list-group-item list-group-item-action" data-keywords="u-45 mail">
+                        <span><i class="fa-solid fa-server"></i> 메일 서비스 바인딩 설정</span>
+                        <span class="item-number">U-45</span>
+                    </a>
+                    <a href="05_linux-u46.html" class="list-group-item list-group-item-action" data-keywords="u-46 mail user">
+                        <span><i class="fa-solid fa-user-circle"></i> 메일 서비스 선택 방지</span>
+                        <span class="item-number">U-46</span>
+                    </a>
+                    <a href="05_linux-u47.html" class="list-group-item list-group-item-action" data-keywords="u-47 spam relay">
+                        <span><i class="fa-solid fa-ban"></i> 스팸 메일 릴레이 제한</span>
+                        <span class="item-number">U-47</span>
+                    </a>
+
+                    <!-- 3-4: DNS 서비스 -->
+                    <div class="menu-subheader" style="padding: 8px 20px 3px 35px; font-size: 0.7rem;">DNS 서비스</div>
+                    <a href="05_linux-u49.html" class="list-group-item list-group-item-action" data-keywords="u-49 dns">
+                        <span><i class="fa-solid fa-network-wired"></i> DNS 보안 패치</span>
+                        <span class="item-number">U-49</span>
+                    </a>
+                    <a href="05_linux-u50.html" class="list-group-item list-group-item-action" data-keywords="u-50 zone transfer">
+                        <span><i class="fa-solid fa-transfer"></i> DNS Zone Transfer 설정</span>
+                        <span class="item-number">U-50</span>
+                    </a>
+
+                    <!-- 3-5: SNMP 서비스 -->
+                    <div class="menu-subheader" style="padding: 8px 20px 3px 35px; font-size: 0.7rem;">SNMP 서비스</div>
+                    <a href="05_linux-u59.html" class="list-group-item list-group-item-action" data-keywords="u-59 snmp">
+                        <span><i class="fa-solid fa-gauge"></i> SNMP 버전 설정</span>
+                        <span class="item-number">U-59</span>
+                    </a>
+                    <a href="05_linux-u61.html" class="list-group-item list-group-item-action" data-keywords="u-61 snmp access">
+                        <span><i class="fa-solid fa-shield-halved"></i> SNMP Access Control 설정</span>
+                        <span class="item-number">U-61</span>
+                    </a>
+
+                </div>
+
+                <!-- 9. Windows 서버 보안 NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu9" aria-expanded="false">
+                    <span><i class="fa-brands fa-windows me-2"></i> B-3. Windows 서버</span>
+                    <span><span class="badge bg-info" id="badge-menu9">28</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu9">
+                    <a href="08_win-w01.html" class="list-group-item list-group-item-action" data-keywords="w-01 windows 계정 관리 Administrator 계정 이름 변경">
+                        <span><i class="fa-solid fa-user-shield"></i> W-01 Administrator 계정 이름 변경</span>
+                        <span class="item-number">W-01</span>
+                    </a>
+                    <a href="08_win-w02.html" class="list-group-item list-group-item-action" data-keywords="w-02 windows 계정 관리 Guest 계정 비활성화">
+                        <span><i class="fa-solid fa-user-shield"></i> W-02 Guest 계정 비활성화</span>
+                        <span class="item-number">W-02</span>
+                    </a>
+                    <a href="08_win-w03.html" class="list-group-item list-group-item-action" data-keywords="w-03 windows 계정 관리 불필요한 계정 제거">
+                        <span><i class="fa-solid fa-user-shield"></i> W-03 불필요한 계정 제거</span>
+                        <span class="item-number">W-03</span>
+                    </a>
+                    <a href="08_win-w04.html" class="list-group-item list-group-item-action" data-keywords="w-04 windows 계정 관리 계정 잠금 임계값 설정">
+                        <span><i class="fa-solid fa-user-shield"></i> W-04 계정 잠금 임계값 설정</span>
+                        <span class="item-number">W-04</span>
+                    </a>
+                    <a href="08_win-w05.html" class="list-group-item list-group-item-action" data-keywords="w-05 windows 계정 관리 복구 가능한 암호화로 암호 저장 안 함">
+                        <span><i class="fa-solid fa-user-shield"></i> W-05 복구 가능한 암호화로 암호 저장 안 함</span>
+                        <span class="item-number">W-05</span>
+                    </a>
+                    <a href="08_win-w06.html" class="list-group-item list-group-item-action" data-keywords="w-06 windows 계정 관리 암호 복잡성 설정">
+                        <span><i class="fa-solid fa-user-shield"></i> W-06 암호 복잡성 설정</span>
+                        <span class="item-number">W-06</span>
+                    </a>
+                    <a href="08_win-w07.html" class="list-group-item list-group-item-action" data-keywords="w-07 windows 계정 관리 최소 암호 길이">
+                        <span><i class="fa-solid fa-user-shield"></i> W-07 최소 암호 길이</span>
+                        <span class="item-number">W-07</span>
+                    </a>
+                    <a href="08_win-w08.html" class="list-group-item list-group-item-action" data-keywords="w-08 windows 계정 관리 암호 사용 기간(최대/최소)">
+                        <span><i class="fa-solid fa-user-shield"></i> W-08 암호 사용 기간(최대/최소)</span>
+                        <span class="item-number">W-08</span>
+                    </a>
+                    <a href="08_win-w09.html" class="list-group-item list-group-item-action" data-keywords="w-09 windows 서비스 관리 공유 권한 및 Everyone 제거">
+                        <span><i class="fa-solid fa-gears"></i> W-09 공유 권한 및 Everyone 제거</span>
+                        <span class="item-number">W-09</span>
+                    </a>
+                    <a href="08_win-w10.html" class="list-group-item list-group-item-action" data-keywords="w-10 windows 서비스 관리 기본 공유(C$, ADMIN$) 제거">
+                        <span><i class="fa-solid fa-gears"></i> W-10 기본 공유(C$, ADMIN$) 제거</span>
+                        <span class="item-number">W-10</span>
+                    </a>
+                    <a href="08_win-w11.html" class="list-group-item list-group-item-action" data-keywords="w-11 windows 서비스 관리 불필요한 서비스 제거">
+                        <span><i class="fa-solid fa-gears"></i> W-11 불필요한 서비스 제거</span>
+                        <span class="item-number">W-11</span>
+                    </a>
+                    <a href="08_win-w12.html" class="list-group-item list-group-item-action" data-keywords="w-12 windows 서비스 관리 IIS 디렉터리 리스팅 제거">
+                        <span><i class="fa-solid fa-gears"></i> W-12 IIS 디렉터리 리스팅 제거</span>
+                        <span class="item-number">W-12</span>
+                    </a>
+                    <a href="08_win-w13.html" class="list-group-item list-group-item-action" data-keywords="w-13 windows 서비스 관리 RDP NLA 및 접속 제한">
+                        <span><i class="fa-solid fa-gears"></i> W-13 RDP NLA 및 접속 제한</span>
+                        <span class="item-number">W-13</span>
+                    </a>
+                    <a href="08_win-w14.html" class="list-group-item list-group-item-action" data-keywords="w-14 windows 서비스 관리 SNMP Community String 보안">
+                        <span><i class="fa-solid fa-gears"></i> W-14 SNMP Community String 보안</span>
+                        <span class="item-number">W-14</span>
+                    </a>
+                    <a href="08_win-w15.html" class="list-group-item list-group-item-action" data-keywords="w-15 windows 서비스 관리 DNS Zone Transfer 제한">
+                        <span><i class="fa-solid fa-gears"></i> W-15 DNS Zone Transfer 제한</span>
+                        <span class="item-number">W-15</span>
+                    </a>
+                    <a href="08_win-w16.html" class="list-group-item list-group-item-action" data-keywords="w-16 windows 패치 관리 최신 보안 패치 적용">
+                        <span><i class="fa-solid fa-staff-snake"></i> W-16 최신 보안 패치 적용</span>
+                        <span class="item-number">W-16</span>
+                    </a>
+                    <a href="08_win-w17.html" class="list-group-item list-group-item-action" data-keywords="w-17 windows 로그 관리 감사 정책 설정">
+                        <span><i class="fa-solid fa-file-lines"></i> W-17 감사 정책 설정</span>
+                        <span class="item-number">W-17</span>
+                    </a>
+                    <a href="08_win-w18.html" class="list-group-item list-group-item-action" data-keywords="w-18 windows 로그 관리 원격 레지스트리 접근 경로 제한">
+                        <span><i class="fa-solid fa-file-lines"></i> W-18 원격 레지스트리 접근 경로 제한</span>
+                        <span class="item-number">W-18</span>
+                    </a>
+                    <a href="08_win-w19.html" class="list-group-item list-group-item-action" data-keywords="w-19 windows 로그 관리 이벤트 로그 크기·보관 설정">
+                        <span><i class="fa-solid fa-file-lines"></i> W-19 이벤트 로그 크기·보관 설정</span>
+                        <span class="item-number">W-19</span>
+                    </a>
+                    <a href="08_win-w20.html" class="list-group-item list-group-item-action" data-keywords="w-20 windows 보안 관리 화면 보호기 잠금 설정">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-20 화면 보호기 잠금 설정</span>
+                        <span class="item-number">W-20</span>
+                    </a>
+                    <a href="08_win-w21.html" class="list-group-item list-group-item-action" data-keywords="w-21 windows 보안 관리 로그온 없이 시스템 종료 금지">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-21 로그온 없이 시스템 종료 금지</span>
+                        <span class="item-number">W-21</span>
+                    </a>
+                    <a href="08_win-w22.html" class="list-group-item list-group-item-action" data-keywords="w-22 windows 보안 관리 익명 SID/이름 변환 금지">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-22 익명 SID/이름 변환 금지</span>
+                        <span class="item-number">W-22</span>
+                    </a>
+                    <a href="08_win-w23.html" class="list-group-item list-group-item-action" data-keywords="w-23 windows 보안 관리 익명 사용자 Everyone 권한 제외">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-23 익명 사용자 Everyone 권한 제외</span>
+                        <span class="item-number">W-23</span>
+                    </a>
+                    <a href="08_win-w24.html" class="list-group-item list-group-item-action" data-keywords="w-24 windows 보안 관리 LAN Manager 인증 수준(NTLMv2)">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-24 LAN Manager 인증 수준(NTLMv2)</span>
+                        <span class="item-number">W-24</span>
+                    </a>
+                    <a href="08_win-w25.html" class="list-group-item list-group-item-action" data-keywords="w-25 windows 보안 관리 SAM 계정 익명 열거 제한">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-25 SAM 계정 익명 열거 제한</span>
+                        <span class="item-number">W-25</span>
+                    </a>
+                    <a href="08_win-w26.html" class="list-group-item list-group-item-action" data-keywords="w-26 windows 보안 관리 자동 로그온 비활성화">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-26 자동 로그온 비활성화</span>
+                        <span class="item-number">W-26</span>
+                    </a>
+                    <a href="08_win-w27.html" class="list-group-item list-group-item-action" data-keywords="w-27 windows 보안 관리 백신·악성코드 보호 설치">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-27 백신·악성코드 보호 설치</span>
+                        <span class="item-number">W-27</span>
+                    </a>
+                    <a href="08_win-w28.html" class="list-group-item list-group-item-action" data-keywords="w-28 windows 보안 관리 시스템 로깅(NTP 시각 동기화)">
+                        <span><i class="fa-solid fa-shield-halved"></i> W-28 시스템 로깅(NTP 시각 동기화)</span>
+                        <span class="item-number">W-28</span>
+                    </a>
+                </div>
+
+                <!-- 6. Database Security (NEW) -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu6" aria-expanded="false">
+                    <span><i class="fa-solid fa-database me-2"></i> B-4. DBMS</span>
+                    <span><span class="badge bg-secondary" id="badge-menu6">4</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu6">
+                    <a href="sim-db.html" class="list-group-item list-group-item-action" data-keywords="db oracle security database d-code">
+                        <span><i class="fa-solid fa-server"></i> DB 보안 통합 시뮬레이터</span>
+                        <span class="item-number">ALL</span>
+                    </a>
+                    <a href="06_db-d01.html" class="list-group-item list-group-item-action" data-keywords="d-01 default account scott 기본 계정">
+                        <span><i class="fa-solid fa-user-lock"></i> D-01 기본 계정 관리</span>
+                        <span class="item-number">D-01</span>
+                    </a>
+                    <a href="06_db-password-policy.html" class="list-group-item list-group-item-action" data-keywords="d-02 d-03 d-04 password policy profile 복잡도">
+                        <span><i class="fa-solid fa-key"></i> D-02~04 패스워드 정책</span>
+                        <span class="item-number">D-02~04</span>
+                    </a>
+                    <a href="06_db-d05.html" class="list-group-item list-group-item-action" data-keywords="d-05 password reuse 재사용">
+                        <span><i class="fa-solid fa-rotate"></i> D-05 패스워드 재사용 금지</span>
+                        <span class="item-number">D-05</span>
+                    </a>
+                    <a href="06_db-d06.html" class="list-group-item list-group-item-action" data-keywords="d-06 dba sysdba 권한 최소화">
+                        <span><i class="fa-solid fa-crown"></i> D-06 관리자 권한 최소화</span>
+                        <span class="item-number">D-06</span>
+                    </a>
+                    <a href="06_db-d07.html" class="list-group-item list-group-item-action" data-keywords="d-07 remote os authent 원격 인증">
+                        <span><i class="fa-solid fa-door-closed"></i> D-07 원격 OS 인증 제한</span>
+                        <span class="item-number">D-07</span>
+                    </a>
+                    <a href="06_db-d08.html" class="list-group-item list-group-item-action" data-keywords="d-08 session idle time timeout 타임아웃">
+                        <span><i class="fa-solid fa-hourglass-end"></i> D-08 세션 타임아웃</span>
+                        <span class="item-number">D-08</span>
+                    </a>
+                    <a href="06_db-d09.html" class="list-group-item list-group-item-action" data-keywords="d-09 failed login attempts 잠금 무차별">
+                        <span><i class="fa-solid fa-lock"></i> D-09 로그인 실패 제한</span>
+                        <span class="item-number">D-09</span>
+                    </a>
+                    <a href="06_db-d10-d12.html" class="list-group-item list-group-item-action" data-keywords="d-10 d-11 d-12 public privilege 불필요 권한">
+                        <span><i class="fa-solid fa-users-slash"></i> D-10~12 불필요 계정·권한</span>
+                        <span class="item-number">D-10~12</span>
+                    </a>
+                    <a href="06_db-d13.html" class="list-group-item list-group-item-action" data-keywords="d-13 dictionary accessibility 딕셔너리">
+                        <span><i class="fa-solid fa-book"></i> D-13 데이터 딕셔너리 접근 제한</span>
+                        <span class="item-number">D-13</span>
+                    </a>
+                    <a href="06_db-d14.html" class="list-group-item list-group-item-action" data-keywords="d-14 listener password 리스너">
+                        <span><i class="fa-solid fa-headphones"></i> D-14 리스너 비밀번호</span>
+                        <span class="item-number">D-14</span>
+                    </a>
+                    <a href="06_db-d15.html" class="list-group-item list-group-item-action" data-keywords="d-15 listener logging 로깅">
+                        <span><i class="fa-solid fa-file-lines"></i> D-15 리스너 로깅</span>
+                        <span class="item-number">D-15</span>
+                    </a>
+                    <a href="06_db-d16.html" class="list-group-item list-group-item-action" data-keywords="d-16 db link 데이터베이스 링크">
+                        <span><i class="fa-solid fa-link-slash"></i> D-16 불필요한 DB 링크 제거</span>
+                        <span class="item-number">D-16</span>
+                    </a>
+                    <a href="06_db-d17.html" class="list-group-item list-group-item-action" data-keywords="d-17 audit 감사">
+                        <span><i class="fa-solid fa-magnifying-glass"></i> D-17 감사 기능 활성화</span>
+                        <span class="item-number">D-17</span>
+                    </a>
+                    <a href="06_db-d18-d19.html" class="list-group-item list-group-item-action" data-keywords="d-18 d-19 access network encryption 접근 통제 암호화">
+                        <span><i class="fa-solid fa-network-wired"></i> D-18,19 접근/네트워크 통제</span>
+                        <span class="item-number">D-18~19</span>
+                    </a>
+                    <a href="06_db-d20.html" class="list-group-item list-group-item-action" data-keywords="d-20 tde column encryption 암호화 저장">
+                        <span><i class="fa-solid fa-lock"></i> D-20 중요정보 암호화(TDE)</span>
+                        <span class="item-number">D-20</span>
+                    </a>
+                    <a href="06_db-d21.html" class="list-group-item list-group-item-action" data-keywords="d-21 backup recovery 백업 복구">
+                        <span><i class="fa-solid fa-floppy-disk"></i> D-21 백업 및 복구</span>
+                        <span class="item-number">D-21</span>
+                    </a>
+                    <a href="06_db-d22.html" class="list-group-item list-group-item-action" data-keywords="d-22 log monitoring 로그 모니터링">
+                        <span><i class="fa-solid fa-chart-column"></i> D-22 로그 보관·모니터링</span>
+                        <span class="item-number">D-22</span>
+                    </a>
+                    <a href="06_db-d23.html" class="list-group-item list-group-item-action" data-keywords="d-23 least privilege role 최소 권한">
+                        <span><i class="fa-solid fa-sliders"></i> D-23 최소 권한 원칙</span>
+                        <span class="item-number">D-23</span>
+                    </a>
+                    <a href="06_db-d24.html" class="list-group-item list-group-item-action" data-keywords="d-24 security patch cpu ru 패치">
+                        <span><i class="fa-solid fa-staff-snake"></i> D-24 보안 패치 적용</span>
+                        <span class="item-number">D-24</span>
+                    </a>
+                    <a href="06_db-d25-d26.html" class="list-group-item list-group-item-action" data-keywords="d-25 d-26 audit patch 감사 패치 관리">
+                        <span><i class="fa-solid fa-clipboard-check"></i> D-25,26 감사 로그·패치 관리</span>
+                        <span class="item-number">D-25~26</span>
+                    </a>
+                </div>
+
+                <!-- 10. 네트워크 장비 보안 NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu10" aria-expanded="false">
+                    <span><i class="fa-solid fa-network-wired me-2"></i> B-5. 네트워크 장비</span>
+                    <span><span class="badge bg-secondary" id="badge-menu10">21</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu10">
+                    <a href="09_net-n01.html" class="list-group-item list-group-item-action" data-keywords="n-01 network cisco 계정 관리 enable 비밀번호 설정(secret)">
+                        <span><i class="fa-solid fa-user-shield"></i> N-01 enable 비밀번호 설정(secret)</span>
+                        <span class="item-number">N-01</span>
+                    </a>
+                    <a href="09_net-n02.html" class="list-group-item list-group-item-action" data-keywords="n-02 network cisco 계정 관리 비밀번호 복잡도 정책">
+                        <span><i class="fa-solid fa-user-shield"></i> N-02 비밀번호 복잡도 정책</span>
+                        <span class="item-number">N-02</span>
+                    </a>
+                    <a href="09_net-n03.html" class="list-group-item list-group-item-action" data-keywords="n-03 network cisco 계정 관리 사용자별 계정 및 권한">
+                        <span><i class="fa-solid fa-user-shield"></i> N-03 사용자별 계정 및 권한</span>
+                        <span class="item-number">N-03</span>
+                    </a>
+                    <a href="09_net-n04.html" class="list-group-item list-group-item-action" data-keywords="n-04 network cisco 계정 관리 비밀번호 암호화(service password-encryption)">
+                        <span><i class="fa-solid fa-user-shield"></i> N-04 비밀번호 암호화(service password-encryption)</span>
+                        <span class="item-number">N-04</span>
+                    </a>
+                    <a href="09_net-n05.html" class="list-group-item list-group-item-action" data-keywords="n-05 network cisco 접근 관리 VTY 접근 ACL 제한">
+                        <span><i class="fa-solid fa-door-open"></i> N-05 VTY 접근 ACL 제한</span>
+                        <span class="item-number">N-05</span>
+                    </a>
+                    <a href="09_net-n06.html" class="list-group-item list-group-item-action" data-keywords="n-06 network cisco 접근 관리 SSH 사용 / Telnet 비활성화">
+                        <span><i class="fa-solid fa-door-open"></i> N-06 SSH 사용 / Telnet 비활성화</span>
+                        <span class="item-number">N-06</span>
+                    </a>
+                    <a href="09_net-n07.html" class="list-group-item list-group-item-action" data-keywords="n-07 network cisco 접근 관리 세션 타임아웃(exec-timeout)">
+                        <span><i class="fa-solid fa-door-open"></i> N-07 세션 타임아웃(exec-timeout)</span>
+                        <span class="item-number">N-07</span>
+                    </a>
+                    <a href="09_net-n08.html" class="list-group-item list-group-item-action" data-keywords="n-08 network cisco 접근 관리 로그인 실패 제한 및 경고 배너">
+                        <span><i class="fa-solid fa-door-open"></i> N-08 로그인 실패 제한 및 경고 배너</span>
+                        <span class="item-number">N-08</span>
+                    </a>
+                    <a href="09_net-n09.html" class="list-group-item list-group-item-action" data-keywords="n-09 network cisco 접근 관리 SNMP Community 복잡도 + ACL">
+                        <span><i class="fa-solid fa-door-open"></i> N-09 SNMP Community 복잡도 + ACL</span>
+                        <span class="item-number">N-09</span>
+                    </a>
+                    <a href="09_net-n10.html" class="list-group-item list-group-item-action" data-keywords="n-10 network cisco 접근 관리 SNMP 쓰기(RW) 권한 제한">
+                        <span><i class="fa-solid fa-door-open"></i> N-10 SNMP 쓰기(RW) 권한 제한</span>
+                        <span class="item-number">N-10</span>
+                    </a>
+                    <a href="09_net-n11.html" class="list-group-item list-group-item-action" data-keywords="n-11 network cisco 기능 관리 불필요한 CDP 비활성화">
+                        <span><i class="fa-solid fa-gears"></i> N-11 불필요한 CDP 비활성화</span>
+                        <span class="item-number">N-11</span>
+                    </a>
+                    <a href="09_net-n12.html" class="list-group-item list-group-item-action" data-keywords="n-12 network cisco 기능 관리 HTTP 관리 서비스 제한">
+                        <span><i class="fa-solid fa-gears"></i> N-12 HTTP 관리 서비스 제한</span>
+                        <span class="item-number">N-12</span>
+                    </a>
+                    <a href="09_net-n13.html" class="list-group-item list-group-item-action" data-keywords="n-13 network cisco 기능 관리 불필요 서비스(finger/bootp/source-route)">
+                        <span><i class="fa-solid fa-gears"></i> N-13 불필요 서비스(finger/bootp/source-route)</span>
+                        <span class="item-number">N-13</span>
+                    </a>
+                    <a href="09_net-n14.html" class="list-group-item list-group-item-action" data-keywords="n-14 network cisco 기능 관리 Directed Broadcast 차단">
+                        <span><i class="fa-solid fa-gears"></i> N-14 Directed Broadcast 차단</span>
+                        <span class="item-number">N-14</span>
+                    </a>
+                    <a href="09_net-n15.html" class="list-group-item list-group-item-action" data-keywords="n-15 network cisco 기능 관리 ICMP redirect/unreachable 제한">
+                        <span><i class="fa-solid fa-gears"></i> N-15 ICMP redirect/unreachable 제한</span>
+                        <span class="item-number">N-15</span>
+                    </a>
+                    <a href="09_net-n16.html" class="list-group-item list-group-item-action" data-keywords="n-16 network cisco 기능 관리 Proxy ARP 비활성화">
+                        <span><i class="fa-solid fa-gears"></i> N-16 Proxy ARP 비활성화</span>
+                        <span class="item-number">N-16</span>
+                    </a>
+                    <a href="09_net-n17.html" class="list-group-item list-group-item-action" data-keywords="n-17 network cisco 기능 관리 TFTP/원격 설정 전송 제한">
+                        <span><i class="fa-solid fa-gears"></i> N-17 TFTP/원격 설정 전송 제한</span>
+                        <span class="item-number">N-17</span>
+                    </a>
+                    <a href="09_net-n18.html" class="list-group-item list-group-item-action" data-keywords="n-18 network cisco 패치 관리 최신 OS(IOS) 패치">
+                        <span><i class="fa-solid fa-staff-snake"></i> N-18 최신 OS(IOS) 패치</span>
+                        <span class="item-number">N-18</span>
+                    </a>
+                    <a href="09_net-n19.html" class="list-group-item list-group-item-action" data-keywords="n-19 network cisco 로그 관리 로깅(Syslog) 서버 설정">
+                        <span><i class="fa-solid fa-file-lines"></i> N-19 로깅(Syslog) 서버 설정</span>
+                        <span class="item-number">N-19</span>
+                    </a>
+                    <a href="09_net-n20.html" class="list-group-item list-group-item-action" data-keywords="n-20 network cisco 로그 관리 NTP 시각 동기화">
+                        <span><i class="fa-solid fa-file-lines"></i> N-20 NTP 시각 동기화</span>
+                        <span class="item-number">N-20</span>
+                    </a>
+                    <a href="09_net-n21.html" class="list-group-item list-group-item-action" data-keywords="n-21 network cisco 기능 관리 미사용 인터페이스 셧다운">
+                        <span><i class="fa-solid fa-gears"></i> N-21 미사용 인터페이스 셧다운</span>
+                        <span class="item-number">N-21</span>
+                    </a>
+                </div>
+
+                <!-- 11. 보안장비 보안 NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu11" aria-expanded="false">
+                    <span><i class="fa-solid fa-shield-virus me-2"></i> B-6. 보안장비</span>
+                    <span><span class="badge bg-danger" id="badge-menu11">23</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu11">
+                    <a href="10_sec-s01.html" class="list-group-item list-group-item-action" data-keywords="s-01 security appliance firewall ips ids vpn 계정 관리 기본 관리자 계정 비밀번호 변경">
+                        <span><i class="fa-solid fa-user-shield"></i> S-01 기본 관리자 계정 비밀번호 변경</span>
+                        <span class="item-number">S-01</span>
+                    </a>
+                    <a href="10_sec-s02.html" class="list-group-item list-group-item-action" data-keywords="s-02 security appliance firewall ips ids vpn 계정 관리 비밀번호 복잡도·길이">
+                        <span><i class="fa-solid fa-user-shield"></i> S-02 비밀번호 복잡도·길이</span>
+                        <span class="item-number">S-02</span>
+                    </a>
+                    <a href="10_sec-s03.html" class="list-group-item list-group-item-action" data-keywords="s-03 security appliance firewall ips ids vpn 계정 관리 계정 잠금 임계값">
+                        <span><i class="fa-solid fa-user-shield"></i> S-03 계정 잠금 임계값</span>
+                        <span class="item-number">S-03</span>
+                    </a>
+                    <a href="10_sec-s04.html" class="list-group-item list-group-item-action" data-keywords="s-04 security appliance firewall ips ids vpn 계정 관리 사용자별 계정 분리·권한">
+                        <span><i class="fa-solid fa-user-shield"></i> S-04 사용자별 계정 분리·권한</span>
+                        <span class="item-number">S-04</span>
+                    </a>
+                    <a href="10_sec-s05.html" class="list-group-item list-group-item-action" data-keywords="s-05 security appliance firewall ips ids vpn 접근 관리 원격 관리 접근 IP 제한">
+                        <span><i class="fa-solid fa-door-open"></i> S-05 원격 관리 접근 IP 제한</span>
+                        <span class="item-number">S-05</span>
+                    </a>
+                    <a href="10_sec-s06.html" class="list-group-item list-group-item-action" data-keywords="s-06 security appliance firewall ips ids vpn 접근 관리 안전한 관리 프로토콜">
+                        <span><i class="fa-solid fa-door-open"></i> S-06 안전한 관리 프로토콜</span>
+                        <span class="item-number">S-06</span>
+                    </a>
+                    <a href="10_sec-s07.html" class="list-group-item list-group-item-action" data-keywords="s-07 security appliance firewall ips ids vpn 접근 관리 관리 세션 타임아웃">
+                        <span><i class="fa-solid fa-door-open"></i> S-07 관리 세션 타임아웃</span>
+                        <span class="item-number">S-07</span>
+                    </a>
+                    <a href="10_sec-s08.html" class="list-group-item list-group-item-action" data-keywords="s-08 security appliance firewall ips ids vpn 접근 관리 관리 인터페이스 분리(Out-of-band)">
+                        <span><i class="fa-solid fa-door-open"></i> S-08 관리 인터페이스 분리(Out-of-band)</span>
+                        <span class="item-number">S-08</span>
+                    </a>
+                    <a href="10_sec-s09.html" class="list-group-item list-group-item-action" data-keywords="s-09 security appliance firewall ips ids vpn 접근 관리 SNMP Community 보안">
+                        <span><i class="fa-solid fa-door-open"></i> S-09 SNMP Community 보안</span>
+                        <span class="item-number">S-09</span>
+                    </a>
+                    <a href="10_sec-s10.html" class="list-group-item list-group-item-action" data-keywords="s-10 security appliance firewall ips ids vpn 정책 관리 광범위(Any-Any) 정책 제거">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-10 광범위(Any-Any) 정책 제거</span>
+                        <span class="item-number">S-10</span>
+                    </a>
+                    <a href="10_sec-s11.html" class="list-group-item list-group-item-action" data-keywords="s-11 security appliance firewall ips ids vpn 정책 관리 미사용 룰·객체 정리">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-11 미사용 룰·객체 정리</span>
+                        <span class="item-number">S-11</span>
+                    </a>
+                    <a href="10_sec-s12.html" class="list-group-item list-group-item-action" data-keywords="s-12 security appliance firewall ips ids vpn 정책 관리 기본 정책 Deny">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-12 기본 정책 Deny</span>
+                        <span class="item-number">S-12</span>
+                    </a>
+                    <a href="10_sec-s13.html" class="list-group-item list-group-item-action" data-keywords="s-13 security appliance firewall ips ids vpn 정책 관리 시그니처/패턴 최신 업데이트">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-13 시그니처/패턴 최신 업데이트</span>
+                        <span class="item-number">S-13</span>
+                    </a>
+                    <a href="10_sec-s14.html" class="list-group-item list-group-item-action" data-keywords="s-14 security appliance firewall ips ids vpn 정책 관리 탐지 우회(Evasion) 대응">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-14 탐지 우회(Evasion) 대응</span>
+                        <span class="item-number">S-14</span>
+                    </a>
+                    <a href="10_sec-s15.html" class="list-group-item list-group-item-action" data-keywords="s-15 security appliance firewall ips ids vpn 정책 관리 고가용성(HA)·Fail-secure">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-15 고가용성(HA)·Fail-secure</span>
+                        <span class="item-number">S-15</span>
+                    </a>
+                    <a href="10_sec-s22.html" class="list-group-item list-group-item-action" data-keywords="s-22 security appliance firewall ips ids vpn 정책 관리 불필요한 서비스 비활성화">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-22 불필요한 서비스 비활성화</span>
+                        <span class="item-number">S-22</span>
+                    </a>
+                    <a href="10_sec-s23.html" class="list-group-item list-group-item-action" data-keywords="s-23 security appliance firewall ips ids vpn 정책 관리 관리 접속 경고 배너">
+                        <span><i class="fa-solid fa-shield-halved"></i> S-23 관리 접속 경고 배너</span>
+                        <span class="item-number">S-23</span>
+                    </a>
+                    <a href="10_sec-s16.html" class="list-group-item list-group-item-action" data-keywords="s-16 security appliance firewall ips ids vpn 패치 관리 최신 펌웨어/OS 패치">
+                        <span><i class="fa-solid fa-staff-snake"></i> S-16 최신 펌웨어/OS 패치</span>
+                        <span class="item-number">S-16</span>
+                    </a>
+                    <a href="10_sec-s17.html" class="list-group-item list-group-item-action" data-keywords="s-17 security appliance firewall ips ids vpn 로그 관리 로그 기록·중앙 전송">
+                        <span><i class="fa-solid fa-file-lines"></i> S-17 로그 기록·중앙 전송</span>
+                        <span class="item-number">S-17</span>
+                    </a>
+                    <a href="10_sec-s18.html" class="list-group-item list-group-item-action" data-keywords="s-18 security appliance firewall ips ids vpn 로그 관리 NTP 시각 동기화">
+                        <span><i class="fa-solid fa-file-lines"></i> S-18 NTP 시각 동기화</span>
+                        <span class="item-number">S-18</span>
+                    </a>
+                    <a href="10_sec-s19.html" class="list-group-item list-group-item-action" data-keywords="s-19 security appliance firewall ips ids vpn 로그 관리 로그 보관·무결성">
+                        <span><i class="fa-solid fa-file-lines"></i> S-19 로그 보관·무결성</span>
+                        <span class="item-number">S-19</span>
+                    </a>
+                    <a href="10_sec-s20.html" class="list-group-item list-group-item-action" data-keywords="s-20 security appliance firewall ips ids vpn 보안 관리 관리자 접속 감사·알림">
+                        <span><i class="fa-solid fa-clipboard-check"></i> S-20 관리자 접속 감사·알림</span>
+                        <span class="item-number">S-20</span>
+                    </a>
+                    <a href="10_sec-s21.html" class="list-group-item list-group-item-action" data-keywords="s-21 security appliance firewall ips ids vpn 보안 관리 설정 백업·복구 절차">
+                        <span><i class="fa-solid fa-clipboard-check"></i> S-21 설정 백업·복구 절차</span>
+                        <span class="item-number">S-21</span>
+                    </a>
+                </div>
+
+                <!-- 12. 클라우드/컨테이너 보안 NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu12" aria-expanded="false">
+                    <span><i class="fa-solid fa-cloud me-2"></i> B-7. 클라우드 / 컨테이너</span>
+                    <span><span class="badge bg-info" id="badge-menu12">20</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu12">
+                    <a href="11_cloud-c01.html" class="list-group-item list-group-item-action" data-keywords="c-01 cloud container kubernetes aws 계정/권한 루트 계정 MFA 미적용">
+                        <span><i class="fa-solid fa-user-shield"></i> C-01 루트 계정 MFA 미적용</span>
+                        <span class="item-number">C-01</span>
+                    </a>
+                    <a href="11_cloud-c02.html" class="list-group-item list-group-item-action" data-keywords="c-02 cloud container kubernetes aws 계정/권한 과도한 IAM 권한(AdministratorAccess)">
+                        <span><i class="fa-solid fa-user-shield"></i> C-02 과도한 IAM 권한(AdministratorAccess)</span>
+                        <span class="item-number">C-02</span>
+                    </a>
+                    <a href="11_cloud-c03.html" class="list-group-item list-group-item-action" data-keywords="c-03 cloud container kubernetes aws 계정/권한 액세스 키 노출·장기 미교체">
+                        <span><i class="fa-solid fa-user-shield"></i> C-03 액세스 키 노출·장기 미교체</span>
+                        <span class="item-number">C-03</span>
+                    </a>
+                    <a href="11_cloud-c04.html" class="list-group-item list-group-item-action" data-keywords="c-04 cloud container kubernetes aws 계정/권한 미사용 자격증명 제거">
+                        <span><i class="fa-solid fa-user-shield"></i> C-04 미사용 자격증명 제거</span>
+                        <span class="item-number">C-04</span>
+                    </a>
+                    <a href="11_cloud-c05.html" class="list-group-item list-group-item-action" data-keywords="c-05 cloud container kubernetes aws 스토리지 스토리지 버킷 퍼블릭 노출">
+                        <span><i class="fa-solid fa-database"></i> C-05 스토리지 버킷 퍼블릭 노출</span>
+                        <span class="item-number">C-05</span>
+                    </a>
+                    <a href="11_cloud-c06.html" class="list-group-item list-group-item-action" data-keywords="c-06 cloud container kubernetes aws 스토리지 저장 데이터 암호화 미적용">
+                        <span><i class="fa-solid fa-database"></i> C-06 저장 데이터 암호화 미적용</span>
+                        <span class="item-number">C-06</span>
+                    </a>
+                    <a href="11_cloud-c07.html" class="list-group-item list-group-item-action" data-keywords="c-07 cloud container kubernetes aws 스토리지 스냅샷·이미지 공개 노출">
+                        <span><i class="fa-solid fa-database"></i> C-07 스냅샷·이미지 공개 노출</span>
+                        <span class="item-number">C-07</span>
+                    </a>
+                    <a href="11_cloud-c08.html" class="list-group-item list-group-item-action" data-keywords="c-08 cloud container kubernetes aws 네트워크 보안그룹 전체 개방(0.0.0.0/0)">
+                        <span><i class="fa-solid fa-network-wired"></i> C-08 보안그룹 전체 개방(0.0.0.0/0)</span>
+                        <span class="item-number">C-08</span>
+                    </a>
+                    <a href="11_cloud-c09.html" class="list-group-item list-group-item-action" data-keywords="c-09 cloud container kubernetes aws 네트워크 관리 포트(SSH/RDP) 인터넷 노출">
+                        <span><i class="fa-solid fa-network-wired"></i> C-09 관리 포트(SSH/RDP) 인터넷 노출</span>
+                        <span class="item-number">C-09</span>
+                    </a>
+                    <a href="11_cloud-c10.html" class="list-group-item list-group-item-action" data-keywords="c-10 cloud container kubernetes aws 네트워크 불필요한 퍼블릭 IP 노출">
+                        <span><i class="fa-solid fa-network-wired"></i> C-10 불필요한 퍼블릭 IP 노출</span>
+                        <span class="item-number">C-10</span>
+                    </a>
+                    <a href="11_cloud-c11.html" class="list-group-item list-group-item-action" data-keywords="c-11 cloud container kubernetes aws 로깅 감사 로그(CloudTrail) 미설정">
+                        <span><i class="fa-solid fa-file-lines"></i> C-11 감사 로그(CloudTrail) 미설정</span>
+                        <span class="item-number">C-11</span>
+                    </a>
+                    <a href="11_cloud-c12.html" class="list-group-item list-group-item-action" data-keywords="c-12 cloud container kubernetes aws 로깅 로그 무결성·보관 미흡">
+                        <span><i class="fa-solid fa-file-lines"></i> C-12 로그 무결성·보관 미흡</span>
+                        <span class="item-number">C-12</span>
+                    </a>
+                    <a href="11_cloud-c13.html" class="list-group-item list-group-item-action" data-keywords="c-13 cloud container kubernetes aws 컨테이너 특권(privileged) 컨테이너">
+                        <span><i class="fa-solid fa-cubes"></i> C-13 특권(privileged) 컨테이너</span>
+                        <span class="item-number">C-13</span>
+                    </a>
+                    <a href="11_cloud-c14.html" class="list-group-item list-group-item-action" data-keywords="c-14 cloud container kubernetes aws 컨테이너 컨테이너 이미지 취약점 스캔 미적용">
+                        <span><i class="fa-solid fa-cubes"></i> C-14 컨테이너 이미지 취약점 스캔 미적용</span>
+                        <span class="item-number">C-14</span>
+                    </a>
+                    <a href="11_cloud-c15.html" class="list-group-item list-group-item-action" data-keywords="c-15 cloud container kubernetes aws 컨테이너 시크릿 평문 노출(환경변수/이미지)">
+                        <span><i class="fa-solid fa-cubes"></i> C-15 시크릿 평문 노출(환경변수/이미지)</span>
+                        <span class="item-number">C-15</span>
+                    </a>
+                    <a href="11_cloud-c16.html" class="list-group-item list-group-item-action" data-keywords="c-16 cloud container kubernetes aws 컨테이너 K8s RBAC 과도 권한">
+                        <span><i class="fa-solid fa-cubes"></i> C-16 K8s RBAC 과도 권한</span>
+                        <span class="item-number">C-16</span>
+                    </a>
+                    <a href="11_cloud-c17.html" class="list-group-item list-group-item-action" data-keywords="c-17 cloud container kubernetes aws 컨테이너 K8s API 서버 익명 접근">
+                        <span><i class="fa-solid fa-cubes"></i> C-17 K8s API 서버 익명 접근</span>
+                        <span class="item-number">C-17</span>
+                    </a>
+                    <a href="11_cloud-c18.html" class="list-group-item list-group-item-action" data-keywords="c-18 cloud container kubernetes aws 컨테이너 호스트 경로·네임스페이스 공유">
+                        <span><i class="fa-solid fa-cubes"></i> C-18 호스트 경로·네임스페이스 공유</span>
+                        <span class="item-number">C-18</span>
+                    </a>
+                    <a href="11_cloud-c19.html" class="list-group-item list-group-item-action" data-keywords="c-19 cloud container kubernetes aws 컨테이너 검증 안된 이미지·latest 태그">
+                        <span><i class="fa-solid fa-cubes"></i> C-19 검증 안된 이미지·latest 태그</span>
+                        <span class="item-number">C-19</span>
+                    </a>
+                    <a href="11_cloud-c20.html" class="list-group-item list-group-item-action" data-keywords="c-20 cloud container kubernetes aws 컨테이너 리소스 제한 미설정">
+                        <span><i class="fa-solid fa-cubes"></i> C-20 리소스 제한 미설정</span>
+                        <span class="item-number">C-20</span>
+                    </a>
+                </div>
+
+                <!-- 13. 제어시스템(ICS/SCADA) 보안 NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu13" aria-expanded="false">
+                    <span><i class="fa-solid fa-industry me-2"></i> B-8. 제어시스템 (ICS/SCADA)</span>
+                    <span><span class="badge bg-info" id="badge-menu13">14</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu13">
+                    <a href="12_ics-ics01.html" class="list-group-item list-group-item-action" data-keywords="ics-01 ics scada plc hmi 제어시스템 계정/접근 기본 계정 비밀번호">
+                        <span><i class="fa-solid fa-key"></i> ICS-01 PLC/HMI 기본 계정·비밀번호 사용</span>
+                        <span class="item-number">ICS-01</span>
+                    </a>
+                    <a href="12_ics-ics02.html" class="list-group-item list-group-item-action" data-keywords="ics-02 ics scada 제어시스템 네트워크 IT OT 망분리 세분화 존 도관">
+                        <span><i class="fa-solid fa-layer-group"></i> ICS-02 IT/OT 망 분리(세분화) 미흡</span>
+                        <span class="item-number">ICS-02</span>
+                    </a>
+                    <a href="12_ics-ics03.html" class="list-group-item list-group-item-action" data-keywords="ics-03 ics scada 제어시스템 네트워크 modbus dnp3 평문 인증 프로토콜">
+                        <span><i class="fa-solid fa-satellite-dish"></i> ICS-03 제어 프로토콜 평문·인증 부재</span>
+                        <span class="item-number">ICS-03</span>
+                    </a>
+                    <a href="12_ics-ics04.html" class="list-group-item list-group-item-action" data-keywords="ics-04 ics scada 제어시스템 계정/접근 원격 유지보수 벤더 vpn">
+                        <span><i class="fa-solid fa-tower-broadcast"></i> ICS-04 원격 유지보수 접근 통제 미흡</span>
+                        <span class="item-number">ICS-04</span>
+                    </a>
+                    <a href="12_ics-ics05.html" class="list-group-item list-group-item-action" data-keywords="ics-05 ics scada 제어시스템 시스템 노후 os 미패치 엔지니어링 워크스테이션 hmi">
+                        <span><i class="fa-solid fa-bandage"></i> ICS-05 엔지니어링 워크스테이션 노후 OS·미패치</span>
+                        <span class="item-number">ICS-05</span>
+                    </a>
+                    <a href="12_ics-ics06.html" class="list-group-item list-group-item-action" data-keywords="ics-06 ics scada 제어시스템 시스템 usb 이동식 매체 통제 autorun">
+                        <span><i class="fa-solid fa-plug"></i> ICS-06 이동식 매체(USB) 통제 미흡</span>
+                        <span class="item-number">ICS-06</span>
+                    </a>
+                    <a href="12_ics-ics07.html" class="list-group-item list-group-item-action" data-keywords="ics-07 ics scada 제어시스템 무결성 plc 로직 펌웨어 무결성 체크섬">
+                        <span><i class="fa-solid fa-dna"></i> ICS-07 PLC 로직/펌웨어 무결성 검증 부재</span>
+                        <span class="item-number">ICS-07</span>
+                    </a>
+                    <a href="12_ics-ics08.html" class="list-group-item list-group-item-action" data-keywords="ics-08 ics scada 제어시스템 로깅 감사 모니터링 siem 이상탐지">
+                        <span><i class="fa-solid fa-file-lines"></i> ICS-08 제어망 로깅·모니터링 부재</span>
+                        <span class="item-number">ICS-08</span>
+                    </a>
+                    <a href="12_ics-ics09.html" class="list-group-item list-group-item-action" data-keywords="ics-09 ics scada 제어시스템 시스템 불필요 서비스 포트 telnet ftp">
+                        <span><i class="fa-solid fa-door-open"></i> ICS-09 불필요 서비스·포트 노출</span>
+                        <span class="item-number">ICS-09</span>
+                    </a>
+                    <a href="12_ics-ics10.html" class="list-group-item list-group-item-action" data-keywords="ics-10 ics scada 제어시스템 네트워크 무선 wifi wpa 통제 격리">
+                        <span><i class="fa-solid fa-wifi"></i> ICS-10 무선(Wi-Fi) 제어망 접근 통제 미흡</span>
+                        <span class="item-number">ICS-10</span>
+                    </a>
+                    <a href="12_ics-ics11.html" class="list-group-item list-group-item-action" data-keywords="ics-11 ics scada 제어시스템 운영 백업 복구 오프라인">
+                        <span><i class="fa-solid fa-floppy-disk"></i> ICS-11 백업·복구 체계 미흡</span>
+                        <span class="item-number">ICS-11</span>
+                    </a>
+                    <a href="12_ics-ics12.html" class="list-group-item list-group-item-action" data-keywords="ics-12 ics scada 제어시스템 물리 제어실 출입 통제 cctv 포트">
+                        <span><i class="fa-solid fa-person-digging"></i> ICS-12 제어실·현장 단말 물리 접근 통제 미흡</span>
+                        <span class="item-number">ICS-12</span>
+                    </a>
+                    <a href="12_ics-ics13.html" class="list-group-item list-group-item-action" data-keywords="ics-13 ics scada 제어시스템 시스템 악성코드 화이트리스트 허용목록">
+                        <span><i class="fa-solid fa-virus-slash"></i> ICS-13 악성코드 대응(화이트리스트) 부재</span>
+                        <span class="item-number">ICS-13</span>
+                    </a>
+                    <a href="12_ics-ics14.html" class="list-group-item list-group-item-action" data-keywords="ics-14 ics scada 제어시스템 무결성 plc 쓰기보호 run 운영모드 키스위치">
+                        <span><i class="fa-solid fa-lock"></i> ICS-14 PLC 쓰기보호·운영모드 미설정</span>
+                        <span class="item-number">ICS-14</span>
+                    </a>
+                </div>
+
+                </div>
+
+                <!-- ========== 금융(전자금융기반시설) 취약점 가이드 ========== -->
+                <div class="guide-group gC" data-bs-toggle="collapse" data-bs-target="#groupC" aria-expanded="true">
+                    <span>🏦 금융(전자금융기반시설) 취약점 가이드</span>
+                    <span><span class="badge bg-light text-dark" id="badge-groupC">0</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse show guide-body" id="groupC">
+                <!-- 7. 전자금융 보안 (금융보안원 기준) NEW -->
+                <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu7" aria-expanded="false">
+                    <span><i class="fa-solid fa-building-columns me-2"></i> C-1. 전자금융 보안</span>
+                    <span><span class="badge bg-warning text-dark" id="badge-menu7">10</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
+                </div>
+                <div class="collapse" id="menu7">
+                    <a href="07_fin-transaction-integrity.html" class="list-group-item list-group-item-action" data-keywords="financial transaction integrity 거래정보 무결성 전문 변조 금액 hmac">
+                        <span><i class="fa-solid fa-file-invoice-dollar"></i> 거래정보 무결성 (전문 변조)</span>
+                        <span class="item-number">FIN-1</span>
+                    </a>
+                    <a href="07_fin-replay.html" class="list-group-item list-group-item-action" data-keywords="replay 재사용 리플레이 nonce 중복 결제">
+                        <span><i class="fa-solid fa-rotate"></i> 거래정보 재사용 (Replay)</span>
+                        <span class="item-number">FIN-2</span>
+                    </a>
+                    <a href="07_fin-idor-account.html" class="list-group-item list-group-item-action" data-keywords="financial idor 소유주 검증 계좌 타인 권한 인가">
+                        <span><i class="fa-solid fa-id-card-clip"></i> 거래 시 소유주 검증 (금융 IDOR)</span>
+                        <span class="item-number">FIN-3</span>
+                    </a>
+                    <a href="07_fin-txn-auth.html" class="list-group-item list-group-item-action" data-keywords="transaction auth otp 보안카드 2차 인증 우회">
+                        <span><i class="fa-solid fa-shield-halved"></i> 거래 인증수단 검증 (OTP 우회)</span>
+                        <span class="item-number">FIN-4</span>
+                    </a>
+                    <a href="07_fin-fixed-authcode.html" class="list-group-item list-group-item-action" data-keywords="fixed authcode sms ars 고정 인증코드 난수">
+                        <span><i class="fa-solid fa-comment-sms"></i> 고정·유추가능 인증코드</span>
+                        <span class="item-number">FIN-5</span>
+                    </a>
+                    <a href="07_fin-device-rooting.html" class="list-group-item list-group-item-action" data-keywords="rooting jailbreak 루팅 탈옥 단말 무결성 magisk">
+                        <span><i class="fa-solid fa-mobile-screen-button"></i> 루팅·탈옥 단말 탐지</span>
+                        <span class="item-number">FIN-6</span>
+                    </a>
+                    <a href="07_fin-app-integrity.html" class="list-group-item list-group-item-action" data-keywords="app integrity 위변조 난독화 안티디버깅 obfuscation anti-debugging">
+                        <span><i class="fa-solid fa-puzzle-piece"></i> 앱 위·변조 / 안티디버깅</span>
+                        <span class="item-number">FIN-7</span>
+                    </a>
+                    <a href="07_fin-obfuscation.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 소스코드 난독화 obfuscation decompile jadx proguard r8 020">
+                        <span><i class="fa-solid fa-dna"></i> 소스코드 난독화 적용</span>
+                        <span class="item-number">FIN-7a</span>
+                    </a>
+                    <a href="07_fin-debug-detection.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 디버깅 탐지 anti-debugging frida gdb 후킹 hooking 021">
+                        <span><i class="fa-solid fa-bug"></i> 디버깅 탐지기능 적용</span>
+                        <span class="item-number">FIN-7b</span>
+                    </a>
+                    <a href="07_fin-secprog-update.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 보안프로그램 최신 업데이트 구버전 cve 키보드보안 022">
+                        <span><i class="fa-solid fa-arrow-up-from-bracket"></i> 보안프로그램 최신 업데이트</span>
+                        <span class="item-number">FIN-7c</span>
+                    </a>
+                    <a href="07_fin-hts-param.html" class="list-group-item list-group-item-action" data-keywords="hts parameter reuse 실행 파라미터 재사용 명령줄 sessionkey">
+                        <span><i class="fa-solid fa-chart-line"></i> HTS 실행 파라미터 재사용</span>
+                        <span class="item-number">FIN-8</span>
+                    </a>
+                    <a href="07_fin-predictable-reset.html" class="list-group-item list-group-item-action" data-keywords="predictable reset 초기화 비밀번호 규칙 임시 강제 변경">
+                        <span><i class="fa-solid fa-key"></i> 초기화 비밀번호 규칙성</span>
+                        <span class="item-number">FIN-9</span>
+                    </a>
+                    <a href="07_fin-guessable-cred.html" class="list-group-item list-group-item-action" data-keywords="guessable password 복잡도 유추 약한 비밀번호 정책">
+                        <span><i class="fa-solid fa-brain"></i> 유추 가능한 인증정보 (복잡도)</span>
+                        <span class="item-number">FIN-10</span>
+                    </a>
+                    <a href="07_fin-password-change.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 비밀번호 변경 보안 거래 비밀번호 변경 보안">
+                        <span><i class="fa-solid fa-key"></i> 비밀번호 변경 보안</span>
+                        <span class="item-number">FIN-11</span>
+                    </a>
+                    <a href="07_fin-realname.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 접근매체 발급 실명확인 접근매체 발급 실명확인">
+                        <span><i class="fa-solid fa-id-card"></i> 접근매체 발급 실명확인</span>
+                        <span class="item-number">FIN-12</span>
+                    </a>
+                    <a href="07_fin-input-protection.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 이용자 입력정보 보호(키보드) 이용자 입력정보 보호 (키보드 보안)">
+                        <span><i class="fa-solid fa-keyboard"></i> 이용자 입력정보 보호(키보드)</span>
+                        <span class="item-number">FIN-13</span>
+                    </a>
+                    <a href="07_fin-transport-encryption.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 통신구간 암호화(MITM) 통신구간 암호화 적용">
+                        <span><i class="fa-solid fa-lock"></i> 통신구간 암호화(MITM)</span>
+                        <span class="item-number">FIN-14</span>
+                    </a>
+                    <a href="07_fin-auth-step-bypass.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 화면 강제실행 인증우회 화면 강제실행 인증단계 우회">
+                        <span><i class="fa-solid fa-person-through-window"></i> 화면 강제실행 인증우회</span>
+                        <span class="item-number">FIN-15</span>
+                    </a>
+                    <a href="07_fin-ssti.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 SSTI 템플릿 인젝션 서버 사이드 템플릿 인젝션(SSTI)">
+                        <span><i class="fa-solid fa-code"></i> SSTI 템플릿 인젝션</span>
+                        <span class="item-number">FIN-16</span>
+                    </a>
+                    <a href="07_fin-deeplink.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 모바일 DeepLink 도용 모바일 DeepLink 도용">
+                        <span><i class="fa-solid fa-link"></i> 모바일 DeepLink 도용</span>
+                        <span class="item-number">FIN-17</span>
+                    </a>
+                    <a href="07_fin-malware-protection.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 악성코드 방지 악성코드 방지">
+                        <span><i class="fa-solid fa-virus-slash"></i> 악성코드 방지</span>
+                        <span class="item-number">FIN-18</span>
+                    </a>
+                    <a href="07_fin-security-program.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 보안프로그램 동작·해제 보안프로그램 동작·임의해제 방지">
+                        <span><i class="fa-solid fa-shield-halved"></i> 보안프로그램 동작·해제</span>
+                        <span class="item-number">FIN-19</span>
+                    </a>
+                    <a href="07_fin-device-storage.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 단말 내 중요정보 저장 단말기 내 중요정보 저장 방지">
+                        <span><i class="fa-solid fa-hard-drive"></i> 단말 내 중요정보 저장</span>
+                        <span class="item-number">FIN-20</span>
+                    </a>
+                    <a href="07_fin-memory-protection.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 메모리 중요정보 노출 메모리 내 중요정보 노출 방지">
+                        <span><i class="fa-solid fa-memory"></i> 메모리 중요정보 노출</span>
+                        <span class="item-number">FIN-21</span>
+                    </a>
+                    <a href="07_fin-screen-protection.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 화면 캡처·평문노출 화면 내 중요정보 평문노출·캡처 방지">
+                        <span><i class="fa-solid fa-eye-slash"></i> 화면 캡처·평문노출</span>
+                        <span class="item-number">FIN-22</span>
+                    </a>
+                    <a href="07_fin-source-info-leak.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 앱 소스/디버그 로그 노출 앱 소스/디버그 로그 운영정보 노출">
+                        <span><i class="fa-solid fa-file-code"></i> 앱 소스/디버그 로그 노출</span>
+                        <span class="item-number">FIN-23</span>
+                    </a>
+                    <a href="07_fin-credential-reuse.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 인증정보 재사용 방지 이용자 인증정보 재사용 방지">
+                        <span><i class="fa-solid fa-rotate"></i> 인증정보 재사용 방지</span>
+                        <span class="item-number">FIN-24</span>
+                    </a>
+                    <a href="07_fin-authmeans-owner.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 인증수단 소유자 검증 인증수단 소유자 검증">
+                        <span><i class="fa-solid fa-id-badge"></i> 인증수단 소유자 검증</span>
+                        <span class="item-number">FIN-25</span>
+                    </a>
+                    <a href="07_fin-session-reuse.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 세션정보 재사용 제한 세션정보 재사용 제한">
+                        <span><i class="fa-solid fa-clock-rotate-left"></i> 세션정보 재사용 제한</span>
+                        <span class="item-number">FIN-26</span>
+                    </a>
+                    <a href="07_fin-cert-integrity.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 서버 인증서 무결성 서버 인증서 무결성 검증">
+                        <span><i class="fa-solid fa-certificate"></i> 서버 인증서 무결성</span>
+                        <span class="item-number">FIN-27</span>
+                    </a>
+                    <a href="07_fin-tls-protocol.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 취약 HTTPS 프로토콜 취약한 HTTPS 프로토콜 제한">
+                        <span><i class="fa-solid fa-lock"></i> 취약 HTTPS 프로토콜</span>
+                        <span class="item-number">FIN-28</span>
+                    </a>
+                    <a href="07_fin-tls-cipher.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 취약 HTTPS 암호 알고리즘 취약한 HTTPS 암호 알고리즘 제거">
+                        <span><i class="fa-solid fa-lock"></i> 취약 HTTPS 암호 알고리즘</span>
+                        <span class="item-number">FIN-29</span>
+                    </a>
+                    <a href="07_fin-tls-component.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 취약 HTTPS 컴포넌트 취약한 HTTPS 컴포넌트 제거">
+                        <span><i class="fa-solid fa-lock"></i> 취약 HTTPS 컴포넌트</span>
+                        <span class="item-number">FIN-30</span>
+                    </a>
+                    <a href="07_fin-tls-renegotiation.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 HTTPS 재협상 차단 HTTPS 재협상 차단">
+                        <span><i class="fa-solid fa-lock"></i> HTTPS 재협상 차단</span>
+                        <span class="item-number">FIN-31</span>
+                    </a>
+                    <a href="07_fin-web-methods.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 불필요한 웹 메서드 차단 불필요한 웹 메서드 차단">
+                        <span><i class="fa-solid fa-network-wired"></i> 불필요한 웹 메서드 차단</span>
+                        <span class="item-number">FIN-32</span>
+                    </a>
+                    <a href="07_fin-ssi.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 SSI Injection SSI Injection">
+                        <span><i class="fa-solid fa-file-code"></i> SSI Injection</span>
+                        <span class="item-number">FIN-33</span>
+                    </a>
+                    <a href="07_fin-admin-access.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 관리자 페이지 접근통제 관리자 페이지 접근 통제">
+                        <span><i class="fa-solid fa-user-gear"></i> 관리자 페이지 접근통제</span>
+                        <span class="item-number">FIN-34</span>
+                    </a>
+                    <a href="07_fin-dir-listing.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 디렉토리 목록 노출 디렉토리 목록 노출 방지">
+                        <span><i class="fa-solid fa-folder-open"></i> 디렉토리 목록 노출</span>
+                        <span class="item-number">FIN-35</span>
+                    </a>
+                    <a href="07_fin-file-exposure.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 불필요한 파일 노출 불필요한 파일 노출 방지">
+                        <span><i class="fa-solid fa-file-circle-exclamation"></i> 불필요한 파일 노출</span>
+                        <span class="item-number">FIN-36</span>
+                    </a>
+                    <a href="07_fin-system-info-leak.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 시스템 운영정보 노출 시스템 운영정보 노출 방지">
+                        <span><i class="fa-solid fa-circle-info"></i> 시스템 운영정보 노출</span>
+                        <span class="item-number">FIN-37</span>
+                    </a>
+                    <a href="07_fin-external-info-leak.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 외부사이트 운영정보 노출 외부사이트에 의한 시스템 운영정보 노출">
+                        <span><i class="fa-solid fa-arrow-up-right-from-square"></i> 외부사이트 운영정보 노출</span>
+                        <span class="item-number">FIN-38</span>
+                    </a>
+                    <a href="07_fin-cmdline-exposure.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 명령줄 평문 노출 명령줄 중요정보 평문 노출 방지">
+                        <span><i class="fa-solid fa-terminal"></i> 명령줄 평문 노출</span>
+                        <span class="item-number">FIN-39</span>
+                    </a>
+                    <a href="07_fin-background-screen.html" class="list-group-item list-group-item-action" data-keywords="financial 전자금융 백그라운드 화면 보호 백그라운드 화면 보호">
+                        <span><i class="fa-solid fa-window-restore"></i> 백그라운드 화면 보호</span>
+                        <span class="item-number">FIN-40</span>
+                    </a>
+                </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 사이드바 푸터 -->
+        <div style="padding: 1rem; border-top: 1px solid #334155; background: rgba(0,0,0,0.2); font-size: 0.75rem; color: #64748b;">
+            <div class="mb-1">📧 jackhwang0210@gmail.com</div>
+            <div>© 2026 Jack Hwang.</div>
+        </div>
+    </div>
+
+    <div id="page-content-wrapper">
+        <!-- 헤더 -->
+        <div class="content-header">
+            <h1><i class="fa-solid fa-graduation-cap me-3"></i>Web, Linux, DB security with secure coding Learning Hub</h1>
+            <p class="lead mb-0">실습과 이론을 통한 웹/서버 보안 전문가 양성 플랫폼</p>
+        </div>
+
+        <div class="container-fluid p-4">
+
+            <!-- 개발보안 학습 포털 배너 -->
+            <a href="secure-dev-portal.html" class="text-decoration-none">
+              <div class="mb-4" style="background:linear-gradient(135deg,#6366f1,#8b5cf6 60%,#a855f7);border-radius:18px;padding:26px 30px;color:#fff;display:flex;align-items:center;gap:22px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(99,102,241,.35);transition:.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+                <div style="font-size:46px;">🎓</div>
+                <div style="flex:1;min-width:260px;">
+                  <div style="font-size:12px;letter-spacing:1px;opacity:.85;font-weight:700;">NEW · 행정안전부·KISA 기반</div>
+                  <div style="font-size:23px;font-weight:800;margin:2px 0 4px;">개발보안 학습 포털 바로가기</div>
+                  <div style="opacity:.92;font-size:14.5px;">「소프트웨어 개발보안 가이드」 + 「보안약점 진단가이드」 — SDLC 단계별·7대 유형으로 배우는 시큐어코딩</div>
+                </div>
+                <div style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:30px;padding:11px 22px;font-weight:700;white-space:nowrap;">입장하기 →</div>
+              </div>
+            </a>
+
+            <!-- 통계 카드 (자동 업데이트됨) -->
+            <div class="row g-4 mb-4" id="stats-container">
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-danger bg-gradient text-white shadow">
+                        <i class="fa-solid fa-bug fa-2x"></i>
+                        <h2 id="count-sim">0</h2>
+                        <p>Web Vulns</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-primary bg-gradient text-white shadow">
+                        <i class="fa-solid fa-book fa-2x"></i>
+                        <h2 id="count-guide">0</h2>
+                        <p>Guidelines</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-warning bg-gradient text-white shadow">
+                        <i class="fa-solid fa-code fa-2x"></i>
+                        <h2 id="count-input">0</h2>
+                        <p>Input Validation</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-info bg-gradient text-white shadow">
+                        <i class="fa-solid fa-shield fa-2x"></i>
+                        <h2 id="count-security">0</h2>
+                        <p>Security Features</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-secondary bg-gradient text-white shadow">
+                        <i class="fa-brands fa-linux fa-2x"></i>
+                        <h2 id="count-unix">0</h2>
+                        <p>UNIX Config</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-success bg-gradient text-white shadow">
+                        <i class="fa-solid fa-database fa-2x"></i>
+                        <h2 id="count-db">0</h2>
+                        <p>DB Security</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-gradient text-white shadow" style="background-color:#003876;">
+                        <i class="fa-solid fa-building-columns fa-2x"></i>
+                        <h2 id="count-fin">0</h2>
+                        <p>전자금융 보안</p>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                    <div class="stat-card bg-gradient text-white shadow" style="background-color:#0078d4;">
+                        <i class="fa-brands fa-windows fa-2x"></i>
+                        <h2 id="count-win">0</h2>
+                        <p>Windows 서버</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 빠른 시작 -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <h4 class="card-title text-danger">
+                                <i class="fa-solid fa-rocket me-2"></i>
+                                빠른 시작 가이드
+                            </h4>
+                            <ol class="mt-3">
+                                <li class="mb-2"><strong>웹 취약점 실습:</strong> 1번 메뉴에서 26가지 공격 기법 학습</li>
+                                <li class="mb-2"><strong>시큐어 코딩:</strong>
+                                    <ul style="margin-top: 8px;">
+                                        <li>3번: 입력 검증 (17개, Python+Java)</li>
+                                        <li>4번: 보안 기능 (16개)</li>
+                                    </ul>
+                                </li>
+                                <li class="mb-2"><strong>가이드라인:</strong> 2번 메뉴에서 6가지 보안 원칙 (Python+Java 코드 포함)</li>
+                                <li class="mb-2"><strong>[NEW] 인프라 보안:</strong>
+                                    <ul>
+                                        <li>5번 메뉴: UNIX 설정 파일 점검 (U-01~U-61)</li>
+                                        <li>6번 메뉴: DB 보안 설정 (D-01~D-26)</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <h4 class="card-title text-secondary">
+                                <i class="fa-solid fa-server me-2"></i>
+                                인프라 보안 (KISA Guide)
+                            </h4>
+                            <div class="mt-3">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="display-6 me-3"><i class="fa-solid fa-database text-success"></i></div>
+                                    <div>
+                                        <strong>DB Security Simulator</strong><br>
+                                        <span class="text-muted">기본 계정, 리스너, 감사 로그 등 핵심 취약점 점검</span>
+                                    </div>
+                                </div>
+                                <a href="sim-db.html" class="btn btn-outline-success w-100 mb-3">
+                                    Oracle DB 보안 실습하기 <i class="fa-solid fa-arrow-right ms-2"></i>
+                                </a>
+                                
+                                <hr>
+
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="display-6 me-3"><i class="fa-brands fa-linux"></i></div>
+                                    <div>
+                                        <strong>UNIX Server Checklist</strong><br>
+                                        <span class="text-muted">계정 관리, 파일 권한 등 41개 항목 점검</span>
+                                    </div>
+                                </div>
+                                <a href="05_linux-u02.html" class="btn btn-outline-secondary w-100">
+                                    U-02 패스워드 정책 설정 실습하기 <i class="fa-solid fa-arrow-right ms-2"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 변경 이력 -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i> Recent Updates</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="history-list">
+                        <li>
+                            <span class="history-date">2026-01-18</span>
+                            <div>
+                                <span class="badge bg-success me-2">NEW</span>
+                                <strong>DB 보안 추가:</strong> 6번 메뉴, Oracle DB 취약점 점검 시뮬레이터 (D-01~D-26) 추가
+                            </div>
+                        </li>
+                        <li>
+                            <span class="history-date">2026-01-04</span>
+                            <div>
+                                <span class="badge bg-success me-2">NEW</span>
+                                <strong>리눅스 취약점 추가:</strong> 5번 메뉴, 리눅스 취약점 및 시뮬레이터 추가
+                            </div>
+                        </li>
+                        <li>
+                            <span class="history-date">2026-01-03</span>
+                            <div>
+                                <span class="badge bg-success me-2">NEW</span>
+                                <strong>입력 검증 Python 예제:</strong> 3번 메뉴 - 17개 취약점 분석에 Python+Java 이중 언어 코드 예제 준비 완료
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// === 1. 자동 카운팅 및 뱃지 업데이트 ===
+document.addEventListener('DOMContentLoaded', function() {
+    // 각 메뉴별 아이템 개수 계산
+    const counts = {
+        sim: document.querySelectorAll('#menu1 .list-group-item').length,
+        guide: document.querySelectorAll('#menu2 .list-group-item').length,
+        input: document.querySelectorAll('#menu3 .list-group-item').length,
+        security: document.querySelectorAll('#menu4 .list-group-item').length,
+        unix: document.querySelectorAll('#menu5 .list-group-item').length,
+        db: document.querySelectorAll('#menu6 .list-group-item').length,
+        fin: document.querySelectorAll('#menu7 .list-group-item').length,
+        codeerr: document.querySelectorAll('#menu8 .list-group-item').length,
+        win: document.querySelectorAll('#menu9 .list-group-item').length,
+        net: document.querySelectorAll('#menu10 .list-group-item').length,
+        sec: document.querySelectorAll('#menu11 .list-group-item').length,
+        cloud: document.querySelectorAll('#menu12 .list-group-item').length,
+        ics: document.querySelectorAll('#menu13 .list-group-item').length
+    };
+
+    // 사이드바 뱃지 업데이트
+    document.getElementById('badge-menu1').textContent = counts.sim;
+    document.getElementById('badge-menu2').textContent = counts.guide;
+    document.getElementById('badge-menu3').textContent = counts.input;
+    document.getElementById('badge-menu4').textContent = counts.security;
+    document.getElementById('badge-menu5').textContent = counts.unix;
+    document.getElementById('badge-menu6').textContent = counts.db;
+    document.getElementById('badge-menu7').textContent = counts.fin;
+    document.getElementById('badge-menu8').textContent = counts.codeerr;
+    document.getElementById('badge-menu9').textContent = counts.win;
+    document.getElementById('badge-menu10').textContent = counts.net;
+    document.getElementById('badge-menu11').textContent = counts.sec;
+    document.getElementById('badge-menu12').textContent = counts.cloud;
+    document.getElementById('badge-menu13').textContent = counts.ics;
+
+    // 상위 가이드 그룹 합계 뱃지
+    const _sumG = sels => sels.reduce((a,s)=>a+document.querySelectorAll(s+' .list-group-item').length,0);
+    document.getElementById('badge-menuDesign').textContent = document.querySelectorAll('#menuDesign .list-group-item').length;
+    document.getElementById('badge-groupA').textContent = _sumG(['#menu3','#menu4','#menu8','#menu2','#menuDesign']);
+    document.getElementById('badge-groupB').textContent = _sumG(['#menu1','#menu5','#menu9','#menu6','#menu10','#menu11','#menu12','#menu13']);
+    document.getElementById('badge-groupC').textContent = _sumG(['#menu7']);
+
+    // 대시보드 통계 카드 업데이트
+    document.getElementById('count-sim').textContent = counts.sim;
+    document.getElementById('count-guide').textContent = counts.guide;
+    document.getElementById('count-input').textContent = counts.input;
+    document.getElementById('count-security').textContent = counts.security;
+    document.getElementById('count-unix').textContent = counts.unix;
+    document.getElementById('count-db').textContent = counts.db;
+    document.getElementById('count-fin').textContent = counts.fin;
+    document.getElementById('count-win').textContent = counts.win;
+});
+
+// === 2. 검색 기능 (통합) ===
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const menuItems = document.querySelectorAll('.list-group-item-action');
+    const categories = document.querySelectorAll('.menu-category');
+    
+    // 검색어 없으면 초기화
+    if (searchTerm === '') {
+        menuItems.forEach(item => {
+            item.style.display = '';
+            const highlightRegex = /<mark class="highlight">(.*?)<\/mark>/gi;
+            item.innerHTML = item.innerHTML.replace(highlightRegex, '$1');
+        });
+        document.querySelectorAll('.collapse').forEach(c => c.classList.remove('show'));
+        const noRes = document.getElementById('noResults');
+        if(noRes) noRes.remove();
+        return;
+    }
+    
+    let hasGlobalResults = false;
+    
+    // 각 카테고리 순회
+    categories.forEach(category => {
+        const targetId = category.getAttribute('data-bs-target');
+        const collapseEl = document.querySelector(targetId);
+        const items = collapseEl.querySelectorAll('.list-group-item-action');
+        let categoryHasMatch = false;
+        
+        items.forEach(item => {
+            const textContent = item.textContent.toLowerCase();
+            const keywords = item.getAttribute('data-keywords') || '';
+            const isMatch = textContent.includes(searchTerm) || keywords.includes(searchTerm);
+            
+            if (isMatch) {
+                item.style.display = '';
+                categoryHasMatch = true;
+                hasGlobalResults = true;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // 매칭 항목이 있는 카테고리는 펼침
+        if (categoryHasMatch) {
+            collapseEl.classList.add('show');
+            category.setAttribute('aria-expanded', 'true');
+        } else {
+            collapseEl.classList.remove('show');
+            category.setAttribute('aria-expanded', 'false');
+        }
+    });
+    
+    // 결과 없음 메시지
+    let noResultsDiv = document.getElementById('noResults');
+    if (!hasGlobalResults) {
+        if (!noResultsDiv) {
+            noResultsDiv = document.createElement('div');
+            noResultsDiv.id = 'noResults';
+            noResultsDiv.className = 'no-results';
+            noResultsDiv.innerHTML = '<i class="fa-solid fa-magnifying-glass fa-2x mb-2"></i><p>검색 결과가 없습니다.</p>';
+            document.querySelector('.menu-scroll').appendChild(noResultsDiv);
+        }
+    } else {
+        if (noResultsDiv) noResultsDiv.remove();
+    }
+});
+
+// 카테고리 클릭 시 아이콘 회전 토글
+document.querySelectorAll('.menu-category').forEach(category => {
+    category.addEventListener('click', function() {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !isExpanded);
+    });
+});
+</script>
+</body>
+</html>

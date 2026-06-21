@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개발보안 학습 포털 | 소프트웨어 개발보안 가이드 · 보안약점 진단가이드</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#6366f1;--p2:#8b5cf6;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;--bg:#f1f5f9}
+body{font-family:'Lora',serif;background:var(--bg);color:var(--ink);line-height:1.65}
+a{text-decoration:none;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.topbar{background:#0b1020;padding:10px 0}
+.topbar a{color:#a5b4fc;font-family:'JetBrains Mono',monospace;font-size:13px}
+/* HERO */
+.hero{background:linear-gradient(135deg,#6366f1,#8b5cf6 60%,#a855f7);color:#fff;padding:64px 0 56px;text-align:center}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:6px 16px;border-radius:30px;font-size:13px;font-family:'JetBrains Mono',monospace;margin-bottom:18px}
+.hero h1{font-size:42px;line-height:1.25;margin-bottom:14px;letter-spacing:-.5px}
+.hero p{font-size:17px;opacity:.92;max-width:760px;margin:0 auto 28px}
+.stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:16px 26px;min-width:130px}
+.stat b{display:block;font-size:30px;font-family:'JetBrains Mono',monospace}
+.stat span{font-size:13px;opacity:.9}
+/* SECTIONS */
+section{padding:56px 0}
+.sec-title{text-align:center;margin-bottom:10px;font-size:28px}
+.sec-sub{text-align:center;color:var(--muted);margin-bottom:38px;font-size:15px}
+/* GUIDE CARDS */
+.guides{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(2,6,23,.06);transition:.25s}
+.gcard:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(2,6,23,.12)}
+.gcard .ic{font-size:38px;margin-bottom:14px}
+.gcard h3{font-size:21px;margin-bottom:6px}
+.gcard .tag{display:inline-block;font-size:12px;color:#4338ca;background:#eef2ff;border:1px solid #c7d2fe;border-radius:20px;padding:3px 12px;margin-bottom:14px;font-family:'JetBrains Mono',monospace}
+.gcard p{color:#475569;font-size:14.5px;margin-bottom:14px}
+.gcard ul{list-style:none;font-size:14px}
+.gcard li{padding:5px 0 5px 22px;position:relative;color:#334155}
+.gcard li:before{content:'✓';position:absolute;left:0;color:#22c55e;font-weight:700}
+/* LEGAL BANNER */
+.legal{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:18px;padding:30px 34px;display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.legal .big{font-size:46px}
+.legal h3{color:#fff;font-size:20px;margin-bottom:6px}
+.legal p{font-size:14.5px;opacity:.9;max-width:880px}
+/* SDLC */
+.sdlc{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.phase{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:.2s;position:relative}
+.phase:hover{border-color:var(--p);transform:translateY(-3px)}
+.phase.on{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-color:transparent}
+.phase .n{font-family:'JetBrains Mono',monospace;font-size:12px;opacity:.7}
+.phase .e{font-size:30px;margin:6px 0}
+.phase h4{font-size:15px}
+.phase-detail{background:#fff;border:1px solid var(--line);border-left:4px solid var(--p);border-radius:12px;padding:24px 28px;margin-top:20px}
+.phase-detail h3{font-size:19px;margin-bottom:8px;color:var(--p)}
+.phase-detail p{color:#475569;font-size:14.5px;margin-bottom:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:13px;background:#f8fafc;border:1px solid var(--line);border-radius:20px;padding:6px 14px;transition:.15s}
+.chip:hover{background:#6366f1;color:#fff;border-color:#6366f1}
+/* TYPES */
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
+.tcard{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:.2s}
+.tcard:hover{box-shadow:0 14px 34px rgba(2,6,23,.1)}
+.tcard .th{padding:18px 20px;color:#fff;display:flex;justify-content:space-between;align-items:center}
+.tcard .th h3{font-size:17px}
+.tcard .cnt{font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(255,255,255,.25);padding:3px 11px;border-radius:20px;font-size:13px}
+.tcard .tb{padding:16px 20px}
+.tcard .tb p{font-size:13.5px;color:#64748b;margin-bottom:12px}
+/* LEARNING PATH */
+.tracks{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.track{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;border-top:5px solid var(--p)}
+.track.lv1{border-top-color:#22c55e}.track.lv2{border-top-color:#f59e0b}.track.lv3{border-top-color:#ef4444}
+.track .lv{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;letter-spacing:1px}
+.track.lv1 .lv{color:#16a34a}.track.lv2 .lv{color:#d97706}.track.lv3 .lv{color:#dc2626}
+.track h3{font-size:19px;margin:6px 0 12px}
+.track ol{margin-left:18px;font-size:14px;color:#334155}
+.track li{padding:4px 0}
+/* FOOTER */
+.foot{background:#0b1020;color:#94a3b8;padding:40px 0;font-size:13px;text-align:center;line-height:1.9}
+.foot a{color:#a5b4fc}
+.cta{display:inline-block;margin-top:18px;background:#fff;color:#4338ca;font-weight:700;padding:12px 26px;border-radius:30px;font-size:15px;transition:.2s}
+.cta:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.25)}
+@media(max-width:900px){.guides,.tracks{grid-template-columns:1fr}.sdlc{grid-template-columns:1fr 1fr}.hero h1{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap"><a href="index.html">&larr; 메인 허브로 돌아가기</a></div></div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrap">
+    <div class="badge">행정안전부 · KISA 기반 · 교육용 재구성</div>
+    <h1>개발보안 학습 포털</h1>
+    <p>「소프트웨어 개발보안 가이드」와 「소프트웨어 보안약점 진단가이드」를 한곳에서 —
+       설계부터 구현까지 안전한 소프트웨어 개발을 단계별 실습으로 배웁니다.</p>
+    <div class="stats">
+      <div class="stat"><b>7</b><span>보안약점 유형</span></div>
+      <div class="stat"><b>49</b><span>구현단계 보안약점</span></div>
+      <div class="stat"><b>20</b><span>설계단계 보안항목</span></div>
+      <div class="stat"><b>70+</b><span>인터랙티브 실습</span></div>
+      <div class="stat"><b>40</b><span>점검 퀴즈 문항</span></div>
+    </div>
+    <div style="margin-top:26px;">
+      <a href="secure-dev-academy.html" style="display:inline-block;background:#fff;color:#4338ca;font-weight:800;padding:14px 30px;border-radius:30px;font-size:16px;box-shadow:0 10px 26px rgba(0,0,0,.22);">🎓 진단원 학습 센터 입장 →</a>
+    </div>
+  </div>
+</div>
+
+<!-- 두 가이드 소개 -->
+<section>
+  <div class="wrap">
+    <h2 class="sec-title">📚 두 개의 핵심 가이드</h2>
+    <p class="sec-sub">개발보안 가이드는 <b>'어떻게 만들까'</b>(설계·개발 방법), 진단가이드는 <b>'무엇을 점검할까'</b>(약점 진단 기준)를 다룹니다.</p>
+    <div class="guides">
+      <div class="gcard">
+        <div class="ic">🛠️</div>
+        <span class="tag">소프트웨어 개발보안 가이드</span>
+        <h3>안전하게 '만드는' 방법</h3>
+        <p>소프트웨어 개발 생명주기(SDLC) 전 단계에서 수행할 보안활동과, 구현 단계의 시큐어코딩 기법을 코드 예제로 안내합니다.</p>
+        <ul>
+          <li>분석·설계 단계 보안설계 기준</li>
+          <li>구현 단계 시큐어코딩(7대 유형)</li>
+          <li>언어별 안전/취약 코드 예제</li>
+        </ul>
+      </div>
+      <div class="gcard">
+        <div class="ic">🔍</div>
+        <span class="tag">소프트웨어 보안약점 진단가이드</span>
+        <h3>안전한지 '점검하는' 기준</h3>
+        <p>구현된 소스코드에서 제거해야 할 보안약점 49개 항목의 발생 원인·보안 위협·진단 방법·대응 방안을 정의합니다.</p>
+        <ul>
+          <li>구현단계 보안약점 49개 항목</li>
+          <li>유형별 진단 기준과 대응</li>
+          <li>SW보안약점 진단원 진단 근거</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 법적 근거 -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="legal">
+      <div class="big">⚖️</div>
+      <div>
+        <h3>개발보안 의무제 — 왜 중요한가</h3>
+        <p>대한민국은 2009~2011년 시범사업을 거쳐 <b>2012년 12월부터 소프트웨어 개발보안 의무제</b>를 시행하고 있습니다.
+           「행정기관 및 공공기관 정보시스템 구축·운영 지침」(행정안전부 고시)에 따라 일정 규모 이상의 공공 정보화사업은
+           개발 단계에서 보안약점을 진단·제거해야 합니다. 즉, 시큐어코딩은 권고가 아니라 <b>법적 의무</b>입니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SDLC -->
+<section style="background:#fff">
+  <div class="wrap">
+    <h2 class="sec-title">🔄 SDLC 단계별 보안활동</h2>
+    <p class="sec-sub">소프트웨어 개발 생명주기 각 단계마다 보안활동이 있습니다. 단계를 눌러 해당 실습으로 이동하세요.</p>
+    <div class="sdlc">
+      <div class="phase on" data-k="req" onclick="ph('req')"><div class="n">PHASE 1</div><div class="e">📝</div><h4>요구사항 분석</h4></div>
+      <div class="phase" data-k="design" onclick="ph('design')"><div class="n">PHASE 2</div><div class="e">📐</div><h4>설계</h4></div>
+      <div class="phase" data-k="impl" onclick="ph('impl')"><div class="n">PHASE 3</div><div class="e">⌨️</div><h4>구현</h4></div>
+      <div class="phase" data-k="test" onclick="ph('test')"><div class="n">PHASE 4</div><div class="e">🧪</div><h4>테스트</h4></div>
+      <div class="phase" data-k="maint" onclick="ph('maint')"><div class="n">PHASE 5</div><div class="e">🔧</div><h4>유지보수</h4></div>
+    </div>
+    <div class="phase-detail" id="pd"></div>
+  </div>
+</section>
+
+<!-- 7대 유형 -->
+<section>
+  <div class="wrap">
+    <h2 class="sec-title">🧩 7대 보안약점 유형 (구현단계 49항목)</h2>
+    <p class="sec-sub">진단가이드가 정의한 7가지 분류입니다. 각 유형의 대표 실습으로 바로 이동하세요.</p>
+    <div class="types" id="types"></div>
+  </div>
+</section>
+
+<!-- 학습 경로 -->
+<section style="background:#fff">
+  <div class="wrap">
+    <h2 class="sec-title">🎯 추천 학습 경로</h2>
+    <p class="sec-sub">처음이라면 위에서부터 차례로 따라가 보세요.</p>
+    <div class="tracks">
+      <div class="track lv1">
+        <div class="lv">LEVEL 1 · 입문</div>
+        <h3>가장 흔한 웹 약점</h3>
+        <ol>
+          <li><a href="03_code_sql_injection.html">SQL 인젝션</a></li>
+          <li><a href="03_code_xss.html">크로스사이트 스크립트(XSS)</a></li>
+          <li><a href="03_code_os_command.html">OS 명령어 삽입</a></li>
+          <li><a href="03_code_path_traversal.html">경로 조작</a></li>
+          <li><a href="03_code_dangerous_file_upload.html">위험한 파일 업로드</a></li>
+        </ol>
+      </div>
+      <div class="track lv2">
+        <div class="lv">LEVEL 2 · 보안기능</div>
+        <h3>인증·암호·접근통제</h3>
+        <ol>
+          <li><a href="03_code_missing_auth.html">인증 누락</a></li>
+          <li><a href="03_code_weakpassword.html">약한 비밀번호 정책</a></li>
+          <li><a href="03_code_hardedcode.html">하드코딩된 자격증명</a></li>
+          <li><a href="03_code_nosalthash.html">솔트 없는 해시</a></li>
+          <li><a href="03_code_inapporiate_auth.html">부적절한 인가</a></li>
+        </ol>
+      </div>
+      <div class="track lv3">
+        <div class="lv">LEVEL 3 · 설계·심화</div>
+        <h3>설계 관점 & 메모리</h3>
+        <ol>
+          <li><a href="04_design-sd01.html">설계: DBMS 조회 검증</a></li>
+          <li><a href="04_design-sd15.html">설계: 암호키 관리</a></li>
+          <li><a href="04_design-sd20.html">설계: 세션통제</a></li>
+          <li><a href="03_code_use_after_free.html">Use-After-Free</a></li>
+          <li><a href="03_code_deserialization.html">안전하지 않은 역직렬화</a></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 퀴즈 CTA -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <a href="secure-dev-academy.html" style="display:block;text-decoration:none;">
+      <div style="background:linear-gradient(135deg,#0f172a,#312e81 60%,#6d28d9);border-radius:20px;padding:40px 36px;color:#fff;text-align:center;box-shadow:0 18px 44px rgba(49,46,129,.35);transition:.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:48px;margin-bottom:10px;">🎓</div>
+        <h2 style="font-size:26px;margin-bottom:8px;">보안약점 진단원 학습 센터</h2>
+        <p style="opacity:.9;font-size:15px;max-width:680px;margin:0 auto 20px;">📖 개념학습(49) · 🃏 플래시카드 · 📝 모의고사(타이머·합격선) · 🔍 코드진단 실습 · ❌ 오답노트 · 📊 진도 대시보드 — 진단원 시험을 한곳에서 준비하세요. 모든 진도가 자동 저장됩니다.</p>
+        <span style="display:inline-block;background:#fff;color:#4338ca;font-weight:800;padding:13px 30px;border-radius:30px;font-size:16px;">학습 센터 입장 →</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- 출처 -->
+<div class="foot">
+  <div class="wrap">
+    <div><b>출처 및 참고</b> · 행정안전부·한국인터넷진흥원(KISA) 「소프트웨어 개발보안 가이드」, 「소프트웨어 보안약점 진단가이드」(2021)</div>
+    <div>본 포털의 모든 콘텐츠는 공개 가이드라인을 <b>개념적으로 재구성</b>한 교육용이며 원문을 복제하지 않습니다. 저작권은 해당 기관에 있습니다.</div>
+    <div><a href="https://www.kisa.or.kr/2060204" target="_blank" rel="noopener">KISA 개발보안 자료실 ↗</a></div>
+    <a class="cta" href="index.html">전체 학습 허브 둘러보기 →</a>
+  </div>
+</div>
+
+<script>
+// ---- SDLC phase detail ----
+const PH = {
+  req: {t:'📝 요구사항 분석 단계', d:'보안 요구사항을 도출하는 단계입니다. 처리하는 정보의 중요도를 식별하고, 인증·인가·암호화·로깅 등 필요한 보안기능을 요구사항으로 정의합니다. 법규(개인정보보호법 등) 준수 요건도 이때 반영합니다.',
+        c:[['보안기능 개요: 입력검증','guide-input.html'],['보안기능 개요: 보안기능','guide-security.html']]},
+  design: {t:'📐 설계 단계 — 보안설계 기준 20항목', d:'요구사항을 안전한 구조로 설계하는 단계입니다. 입력검증 지점, 인증·접근통제 방식, 암호키 생명주기, 세션·예외처리 정책 등을 설계 표준으로 확정합니다. "취약한 설계 vs 안전한 설계"를 직접 비교해 보세요.',
+        c:[['SD-01 DBMS 조회 검증','04_design-sd01.html'],['SD-09 보안기능 입력검증','04_design-sd09.html'],['SD-13 비밀번호 관리','04_design-sd13.html'],['SD-15 암호키 관리','04_design-sd15.html'],['SD-18 중요정보 전송','04_design-sd18.html'],['SD-20 세션통제','04_design-sd20.html']]},
+  impl: {t:'⌨️ 구현 단계 — 시큐어코딩 49 보안약점', d:'실제 코드에서 보안약점을 제거하는 단계입니다. 아래 7대 유형의 각 실습에서 취약 코드를 직접 수정하고 검증해 보세요. (아래 "7대 보안약점 유형" 섹션 참고)',
+        c:[['SQL 인젝션','03_code_sql_injection.html'],['XSS','03_code_xss.html'],['역직렬화','03_code_deserialization.html'],['하드코딩','03_code_hardedcode.html'],['Null 역참조','03_code_null_pointer.html']]},
+  test: {t:'🧪 테스트 단계 — 보안약점 진단·점검', d:'구현된 소프트웨어를 공격자 관점에서 점검하는 단계입니다. 인터랙티브 공격 시뮬레이터로 같은 약점이 실제로 어떻게 악용되는지 확인하세요.',
+        c:[['SQL 인젝션 공격 시뮬','sim-sql.html'],['XSS 공격 시뮬','sim-xss.html'],['CSRF 시뮬','sim-csrf.html'],['SSRF 시뮬','sim-ssrf.html'],['파일 업로드 시뮬','sim-upload.html']]},
+  maint: {t:'🔧 유지보수 단계 — 지속 보안관리', d:'운영 중 새로 발견되는 취약점에 대응하는 단계입니다. 알려진 약점(CWE)·실제 사고사례를 학습하고, 패치·구성관리로 보안 수준을 유지합니다. 각 시큐어코딩 페이지 하단의 "실제 사고사례 & 표준 매핑" 카드를 참고하세요.',
+        c:[['에러 메시지 노출','03_code_error_message.html'],['취약한 API 사용','03_code_vulnerable_api.html'],['디버그 코드 잔존','03_code_debug_code.html']]},
+};
+function ph(k){
+  document.querySelectorAll('.phase').forEach(p=>p.classList.toggle('on',p.dataset.k===k));
+  const d=PH[k];
+  document.getElementById('pd').innerHTML =
+    '<h3>'+d.t+'</h3><p>'+d.d+'</p><div class="chips">'+
+    d.c.map(x=>'<a class="chip" href="'+x[1]+'">'+x[0]+' →</a>').join('')+'</div>';
+}
+ph('req');
+
+// ---- 7 types ----
+const TYPES=[
+ {c:'#6366f1',i:'🧹',h:'1. 입력데이터 검증 및 표현',n:17,p:'외부 입력을 신뢰해 발생하는 인젝션·조작 약점',
+  l:[['SQL 인젝션','03_code_sql_injection.html'],['XSS','03_code_xss.html'],['OS 명령 삽입','03_code_os_command.html'],['경로 조작','03_code_path_traversal.html'],['XXE','03_code_xxe.html'],['SSRF','03_code_ssrf.html']]},
+ {c:'#0ea5e9',i:'🔐',h:'2. 보안기능',n:16,p:'인증·인가·암호화·중요정보 처리의 부적절한 구현',
+  l:[['인증 누락','03_code_missing_auth.html'],['약한 비밀번호','03_code_weakpassword.html'],['하드코딩','03_code_hardedcode.html'],['취약한 암호','03_code_risky_crypto.html'],['솔트 없는 해시','03_code_nosalthash.html']]},
+ {c:'#14b8a6',i:'⏱️',h:'3. 시간 및 상태',n:2,p:'동시성·경쟁조건·무한루프 관련 약점',
+  l:[['경쟁 조건(Race)','03_code_race_condition.html'],['무한 루프','03_code_infinite_loop.html']]},
+ {c:'#f59e0b',i:'🧯',h:'4. 에러처리',n:3,p:'예외·오류 처리 미흡으로 인한 정보 노출',
+  l:[['에러 메시지 노출','03_code_error_message.html'],['에러처리 누락','03_code_error_handling_missing.html'],['부적절한 예외처리','03_code_improper_exception.html']]},
+ {c:'#ef4444',i:'🐞',h:'5. 코드오류',n:5,p:'메모리·자원 관리 등 구현상의 결함',
+  l:[['Null 역참조','03_code_null_pointer.html'],['Use-After-Free','03_code_use_after_free.html'],['미초기화 변수','03_code_uninitialized_variable.html'],['자원 미해제','03_code_improper_resource_release.html'],['역직렬화','03_code_deserialization.html']]},
+ {c:'#8b5cf6',i:'📦',h:'6. 캡슐화',n:4,p:'데이터·기능의 부적절한 노출',
+  l:[['디버그 코드','03_code_debug_code.html'],['Private 배열 반환','03_code_private_array_return.html'],['Public→Private 할당','03_code_public_to_private_array.html'],['프로세스 검증','03_code_processvalidation.html']]},
+ {c:'#64748b',i:'🔌',h:'7. API 오용',n:2,p:'위험하거나 잘못된 API 사용',
+  l:[['DNS 보안결정','03_code_dns_security_decision.html'],['취약한 API','03_code_vulnerable_api.html']]},
+];
+document.getElementById('types').innerHTML = TYPES.map(t=>
+ '<div class="tcard"><div class="th" style="background:'+t.c+'"><h3>'+t.i+' '+t.h+'</h3><span class="cnt">'+t.n+'항목</span></div>'+
+ '<div class="tb"><p>'+t.p+'</p><div class="chips">'+
+ t.l.map(x=>'<a class="chip" href="'+x[1]+'">'+x[0]+' →</a>').join('')+'</div></div></div>'
+).join('');
+</script>
+</body>
+</html>
