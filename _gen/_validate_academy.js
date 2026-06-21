@@ -44,7 +44,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady,levelInfo,awardXp,checkBadges,BADGES,gam,todayKey,touchDay,gamHeaderHtml,heatmapHtml,badgesHtml,PATH_STAGES,rPath,learned,flashKnown,buildSarif,rBoard});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady,levelInfo,awardXp,checkBadges,BADGES,gam,todayKey,touchDay,gamHeaderHtml,heatmapHtml,badgesHtml,PATH_STAGES,rPath,learned,flashKnown,buildSarif});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -344,14 +344,10 @@ ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모�
   ok(/data-v="prac"/.test(html), 'SARIF: practical tab present (export entry point)');
 })();
 
-// ===== 리더보드: 미로그인/위젯 미로드 시 graceful 처리(throw 없음) + 탭/규칙 배선 =====
+// ===== Google 인증/로그인 위젯 제거 확인(사용자 요청): 학습 기능은 localStorage로 동작 =====
 (function(){
-  let threw=false; try{ E.rBoard(); }catch(e){ threw=true; console.log('  ✗ rBoard threw:',e.message); }
-  ok(!threw, 'board: rBoard renders without throwing when sdaBoard absent');
-  const bv=document.getElementById('v-board').innerHTML;
-  ok(/리더보드/.test(bv)&&/(로그인|불러오는)/.test(bv), 'board: shows login/loading guidance when not signed in');
-  ok(/data-v="board"/.test(html)&&/🏆 리더보드/.test(html), 'board: tab present in HTML');
-  ok(/window\.sdaBoard/.test(html), 'board: academy calls window.sdaBoard bridge');
+  ok(!/auth-widget\.js/.test(html), 'auth: login widget not injected into academy');
+  ok(!/data-v="board"/.test(html), 'auth: leaderboard tab removed (auth-dependent)');
 })();
 
 console.log(fail===0 ? '\n✅ ACADEMY v3 VALIDATION PASS' : '\n❌ FAIL count='+fail);

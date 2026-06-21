@@ -304,7 +304,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <button class="tab" data-v="exam" onclick="tab('exam')">📝 1교시 이론</button>
   <button class="tab" data-v="prac" onclick="tab('prac')">🧪 2교시 실무</button>
   <button class="tab" data-v="ide" onclick="tab('ide')">💻 코드 실행</button>
-  <button class="tab" data-v="board" onclick="tab('board')">🏆 리더보드</button>
   <button class="tab" data-v="wrong" onclick="tab('wrong')">❌ 오답노트</button>
 </div></div>
 <div class="wrap" id="mainviews">
@@ -316,7 +315,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <div class="view" id="v-exam"></div>
   <div class="view" id="v-prac"></div>
   <div class="view" id="v-ide"></div>
-  <div class="view" id="v-board"></div>
   <div class="view" id="v-wrong"></div>
 </div>
 <div id="printArea" aria-hidden="true"></div>
@@ -542,36 +540,6 @@ function rPath(){
     '<div class="path-list">'+items+'</div>';
 }
 
-// ===== 🏆 리더보드 (Firestore, 로그인·선택 등록) — auth-widget.js의 window.sdaBoard 브리지 사용 =====
-function rBoard(){
-  document.getElementById('v-board').innerHTML='<h2 class="st">🏆 리더보드</h2><p class="sub">로그인하면 XP·레벨 순위에 참여할 수 있습니다. (선택 — "등록" 버튼을 눌러야 공개됩니다)</p><div id="boardBody">불러오는 중…</div>';
-  const api=(typeof window!=='undefined')?window.sdaBoard:null;
-  const body=document.getElementById('boardBody');if(!body)return;
-  if(!api){body.innerHTML='<div class="empty">로그인 위젯을 불러오는 중입니다. 잠시 후 새로고침하거나, 우측 상단의 <b>Google 로그인</b>을 먼저 진행해 주세요.</div>';return;}
-  const u=api.getUser();
-  if(!u){body.innerHTML='<div class="empty">리더보드는 <b>로그인 후</b> 이용할 수 있습니다.<br>우측 상단 <b>Google 로그인</b> 버튼으로 로그인해 주세요.<br><span style="font-size:12px;color:#94a3b8">(관리자가 Firebase 콘솔에서 Google 제공업체를 켜야 동작합니다)</span></div>';return;}
-  const li=levelInfo(gam.xp||0);
-  body.innerHTML='<div class="cert-form"><label>표시 이름 <input id="boardName" type="text" maxlength="24" value="'+esc(gam.name||u.name||'')+'" placeholder="'+esc(u.name)+'"></label><button class="btn" onclick="publishBoard()">📤 내 점수 등록/갱신</button></div>'+
-    '<p class="sub">내 현재: <b>Lv.'+li.level+'</b> · '+(gam.xp||0)+' XP · 🔥'+(gam.streak||0)+'일 연속</p><div id="boardList">순위 불러오는 중…</div>';
-  loadBoard();
-}
-function publishBoard(){
-  const api=(typeof window!=='undefined')?window.sdaBoard:null;if(!api)return;
-  const el=document.getElementById('boardName');if(el){gam.name=(el.value||'').trim();save('gam',gam);}
-  const li=levelInfo(gam.xp||0);
-  api.publish({name:gam.name||(api.getUser()||{}).name,xp:gam.xp||0,level:li.level,streak:gam.streak||0})
-    .then(()=>{announce('리더보드에 등록되었습니다.');gamToast('🏆 리더보드 등록 완료');loadBoard();})
-    .catch(()=>{const b=document.getElementById('boardList');if(b)b.innerHTML='<div class="empty">등록 실패 — 로그인 상태를 확인하세요.</div>';});
-}
-function loadBoard(){
-  const api=(typeof window!=='undefined')?window.sdaBoard:null;const b=document.getElementById('boardList');if(!api||!b)return;
-  api.fetchTop(20).then(rows=>{
-    if(!rows.length){b.innerHTML='<div class="empty">아직 등록된 점수가 없습니다. 첫 번째로 등록해 보세요!</div>';return;}
-    const items=rows.map((r,i)=>'<div class="lb-row'+(r.me?' me':'')+'"><span class="lb-rank">'+(i<3?['🥇','🥈','🥉'][i]:(i+1))+'</span><span class="lb-name">'+esc(r.name)+(r.me?' <b>(나)</b>':'')+'</span><span class="lb-lv">Lv.'+r.level+'</span><span class="lb-xp">'+r.xp+' XP</span><span class="lb-st">🔥'+r.streak+'</span></div>').join('');
-    b.innerHTML='<div class="lb-row lb-head"><span class="lb-rank">#</span><span class="lb-name">이름</span><span class="lb-lv">레벨</span><span class="lb-xp">XP</span><span class="lb-st">연속</span></div>'+items;
-  }).catch(()=>{b.innerHTML='<div class="empty">순위를 불러오지 못했습니다. (로그인·네트워크 확인)</div>';});
-}
-
 function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
 function gnorm(s){return (s||'').toString().toLowerCase().replace(/[\s.,;:!?()\[\]{}"'`]/g,'');}
 // 코드 주석 제거(검증 연극 차단): 주석 속 키워드로 만점받는 우회를 막는다.
@@ -636,7 +604,7 @@ function tab(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
   gam.visited[v]=true;save('gam',gam);
-  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,board:rBoard,wrong:rWrong}[v])();
+  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,wrong:rWrong}[v])();
 }
 // 스크린리더 알림(aria-live)
 function announce(msg){const el=document.getElementById('ariaLive');if(!el)return;el.textContent='';setTimeout(()=>{el.textContent=msg;},40);}
@@ -1161,7 +1129,5 @@ function a11yInit(){
 a11yInit();
 rDash();
 </script>
-<!-- AUTH-WIDGET -->
-<script type="module" src="auth-widget.js"></script>
 </body>
 </html>

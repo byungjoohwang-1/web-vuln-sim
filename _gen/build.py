@@ -40,7 +40,7 @@ def main():
 
     # 2) 주입 — 멱등(이미 있으면 skip), 전 public 페이지 대상
     run('레퍼런스 카드 주입 (inject_refcard)', [sys.executable, 'inject_refcard.py'])
-    run('로그인 위젯 주입 (inject_auth)', [sys.executable, 'inject_auth.py'])
+    # 로그인 위젯(inject_auth)은 사용자 요청으로 비활성화(Google 인증 제거). remove_auth.py로 정리.
 
     if not do_check:
         print('\n빌드 완료 (검증 생략).')
