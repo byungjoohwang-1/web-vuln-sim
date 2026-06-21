@@ -286,6 +286,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .ps-bar i{display:block;height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:6px;transition:width .4s}
 .ps-pct{font-size:11.5px;color:#475569;margin:4px 0 6px;font-weight:600}
 .ps-go{font-size:12px;padding:5px 12px}
+/* 설계 진단(복합서술형) */
+.ds-list{display:flex;flex-direction:column;gap:10px}
+.ds-card{border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fff}
+.ds-card .ds-h{font-size:15px;margin-bottom:4px}.ds-card .ds-sc{font-size:13px;color:#64748b;margin-bottom:10px;line-height:1.55}
+.ds-docs{display:flex;flex-direction:column;gap:10px;margin:8px 0 4px}
+.ds-doc{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+.ds-doc-h{background:#f1f5f9;font-size:12.5px;font-weight:700;color:#334155;padding:7px 12px;border-bottom:1px solid #e2e8f0}
+.ds-doc pre{margin:0;padding:11px 13px;font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;background:#fff;color:#0f172a;font-family:'JetBrains Mono',monospace}
+select.pin{width:100%;max-width:360px;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
 /* 실제 시험 구조 안내 패널 */
 .examinfo{background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0ea5e9;border-radius:10px;padding:12px 16px;margin:4px 0 14px;font-size:13px;color:#0c4a6e}
 .examinfo b{color:#075985}.examinfo ul{margin:7px 0 6px;padding-left:18px}.examinfo li{margin:3px 0;line-height:1.55}
@@ -323,6 +332,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <button class="tab" data-v="flash" onclick="tab('flash')">🃏 플래시카드</button>
   <button class="tab" data-v="exam" onclick="tab('exam')">📝 1교시 이론</button>
   <button class="tab" data-v="prac" onclick="tab('prac')">🧪 2교시 실무</button>
+  <button class="tab" data-v="design" onclick="tab('design')">📐 설계 진단</button>
   <button class="tab" data-v="ide" onclick="tab('ide')">💻 코드 실행</button>
   <button class="tab" data-v="wrong" onclick="tab('wrong')">❌ 오답노트</button>
 </div></div>
@@ -334,6 +344,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <div class="view" id="v-flash"></div>
   <div class="view" id="v-exam"></div>
   <div class="view" id="v-prac"></div>
+  <div class="view" id="v-design"></div>
   <div class="view" id="v-ide"></div>
   <div class="view" id="v-wrong"></div>
 </div>
@@ -349,6 +360,7 @@ const CODE49 = __CODE49__;
 const BASICS = __BASICS__;
 const TOOLS = __TOOLS__;
 const RUNNABLE = __RUNNABLE__;
+const DESIGN = __DESIGN__;
 const KISA49 = CONCEPTS.map(c=>c.name);
 const CATS = ['입력검증','보안기능','시간상태','에러처리','코드오류','캡슐화','API오용'];
 const CCOLOR = {'입력검증':'#6366f1','보안기능':'#0ea5e9','시간상태':'#14b8a6','에러처리':'#f59e0b','코드오류':'#ef4444','캡슐화':'#8b5cf6','API오용':'#64748b'};
@@ -575,7 +587,7 @@ function tab(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
   gam.visited[v]=true;save('gam',gam);
-  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,wrong:rWrong}[v])();
+  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,design:rDesign,ide:rIDE,wrong:rWrong}[v])();
 }
 // 스크린리더 알림(aria-live)
 function announce(msg){const el=document.getElementById('ariaLive');if(!el)return;el.textContent='';setTimeout(()=>{el.textContent=msg;},40);}
@@ -960,6 +972,64 @@ function exportSarif(){
   announce('SARIF 파일을 내보냈습니다.');
 }
 
+// ===== 📐 설계 진단 (복합서술형) — 설계 산출물 검토 → 진단보고서 작성 =====
+const DESIGN_CATS=['입력데이터 검증 및 표현','보안기능','에러처리','세션통제'];
+let dsIdx=-1,dsV=null;
+function rDesign(){
+  const list=DESIGN.map((d,i)=>'<div class="ds-card"><div class="ds-h"><b>'+esc(d.title)+'</b></div><div class="ds-sc">'+esc(d.scenario)+'</div><button class="qbtn" onclick="startDesign('+i+')">📐 진단 시작</button></div>').join('');
+  document.getElementById('v-design').innerHTML='<h2 class="st">📐 설계 진단 (복합서술형)</h2>'+examInfoHtml()+
+   '<p class="sub">실제 2교시 복합서술형: 설계 산출물(요구사항 정의서·아키텍처 설계서·개발 가이드)을 검토해 <b>진단보고서</b>(분류 · 진단결과 Y/N · 현황 및 문제점 · 개선방안)를 작성합니다. ('+DESIGN.length+'개 시나리오)</p>'+
+   '<div class="ds-list">'+list+'</div>';
+}
+function startDesign(i){dsIdx=i;dsV=null;drawDesign();}
+function drawDesign(){
+  const d=DESIGN[dsIdx];
+  const docs=d.docs.map(x=>'<div class="ds-doc"><div class="ds-doc-h">📄 '+esc(x.name)+'</div><pre>'+esc(x.content)+'</pre></div>').join('');
+  const cats=DESIGN_CATS.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+  document.getElementById('v-design').innerHTML='<div class="qbox"><span class="typetag t-PRAC">복합서술형</span> <span class="cat-tag">'+esc(d.title)+'</span>'+
+   '<p class="sub" style="margin-top:8px">'+esc(d.scenario)+'</p>'+
+   '<div class="ds-docs">'+docs+'</div>'+
+   '<div class="flbl">1) 보안약점 분류</div><select class="pin" id="dsCat"><option value="">선택하세요</option>'+cats+'</select>'+
+   '<div class="flbl">2) 진단결과</div><div class="tfrow"><div class="tf tp" id="dsY" onclick="setDsV(true)"><span class="rd"></span>■ Y — 취약점(결함) 있음</div><div class="tf fp" id="dsN" onclick="setDsV(false)"><span class="rd"></span>□ N — 이상 없음</div></div>'+
+   '<div class="flbl">3) 현황 및 문제점 (4점) <span style="font-weight:400;color:#94a3b8">— 어느 산출물의 어떤 부분이 왜 문제인지</span></div><textarea class="parea" id="dsStatus" placeholder="예) 개발가이드의 비밀번호 검증이 length()<6 으로 되어 8자리 규칙보다 짧게 통과됨 …"></textarea>'+
+   '<div class="flbl">4) 개선방안 (4점)</div><textarea class="parea" id="dsFix" placeholder="구체적인 수정·개선 방안을 서술 …"></textarea>'+
+   '<div class="nav"><button class="btn" onclick="submitDesign()">제출 및 채점</button> <button class="btn ghost" onclick="rDesign()">목록</button></div><div id="dsReport"></div></div>';
+  window.scrollTo(0,0);
+}
+function setDsV(v){dsV=v;document.getElementById('dsY').classList.toggle('sel',v===true);document.getElementById('dsN').classList.toggle('sel',v===false);}
+function gradeDesign(d,ans){
+  let parts=[],s=0;
+  const cOK=ans.cat===d.category;parts.push(['보안약점 분류',cOK?20:0,20]);s+=cOK?20:0;
+  const vOK=ans.vuln===d.isVulnerable;parts.push(['진단결과(Y/N)',vOK?20:0,20]);s+=vOK?20:0;
+  const sk=kwScore(ans.status,d.statusKeywords,30);parts.push(['현황 및 문제점',sk,30]);s+=sk;
+  const fk=kwScore(ans.fix,d.fixKeywords,30);parts.push(['개선방안',fk,30]);s+=fk;
+  return {score:Math.round(s),parts:parts,cOK:cOK,vOK:vOK};
+}
+function submitDesign(){
+  const d=DESIGN[dsIdx];
+  if(dsV===null){alert('진단결과(Y/N)를 선택하세요.');return;}
+  const ans={cat:document.getElementById('dsCat').value,vuln:dsV,status:document.getElementById('dsStatus').value,fix:document.getElementById('dsFix').value};
+  const r=gradeDesign(d,ans);
+  awardXp(Math.max(4,Math.round(r.score/4)),'설계 진단 '+r.score+'점');
+  const wkey='[설계 진단] '+d.title;
+  if(r.score<60)addWrong({q:wkey,a:'분류: '+d.category+' / '+(d.isVulnerable?'Y(취약)':'N(이상없음)'),e:d.explanation,tag:'설계',code:'',cat:''});
+  else if(r.score>=70)removeWrong(wkey);
+  const bars=r.parts.map(p=>'<div class="prow2"><div class="l">'+p[0]+'</div><div class="bar"><i style="width:'+Math.round(p[1]/p[2]*100)+'%"></i></div><div class="g">'+p[1]+'/'+p[2]+'</div></div>').join('');
+  const skw=d.statusKeywords.map(k=>'<span class="kw'+(kwHit(ans.status,k)?' hit':'')+'">'+esc(k)+'</span>').join('');
+  const fkw=d.fixKeywords.map(k=>'<span class="kw'+(kwHit(ans.fix,k)?' hit':'')+'">'+esc(k)+'</span>').join('');
+  const pass=r.score>=70;
+  document.getElementById('dsReport').innerHTML='<div class="report"><div class="scoreline"><div class="num '+(pass?'pass':'fail')+'">'+r.score+'점</div><div>'+(r.cOK?'<span class="pass">✔ 분류 정확</span>':'<span class="fail">✗ 분류 오답</span>')+' '+(r.vOK?'<span class="pass">✔ 진단결과 정확</span>':'<span class="fail">✗ 진단결과 오답</span>')+'</div></div>'+bars+
+   '<div class="model"><h4>📋 모범 진단보고서</h4>'+
+   '<div style="font-size:13.5px;margin:6px 0"><b>분류:</b> '+esc(d.category)+' &nbsp; <b>진단결과:</b> '+(d.isVulnerable?'Y (취약)':'N (이상 없음)')+' &nbsp; <b>관련 약점:</b> '+esc(d.weakness)+'</div>'+
+   '<div style="margin:8px 0"><b>현황·문제점 핵심 키워드:</b><br>'+skw+'</div>'+
+   '<div style="font-size:14px;line-height:1.7;margin:6px 0"><b>현황 및 문제점:</b> '+esc(d.modelStatus)+'</div>'+
+   '<div style="margin:8px 0"><b>개선방안 핵심 키워드:</b><br>'+fkw+'</div>'+
+   '<div style="font-size:14px;line-height:1.7;margin:6px 0"><b>개선방안:</b> '+esc(d.modelFix)+'</div>'+
+   '<div style="font-size:13.5px;color:var(--muted);margin-top:8px">💡 '+esc(d.explanation)+'</div></div>'+
+   '<div class="nav" style="display:block"><button class="btn ghost" onclick="rDesign()">← 목록으로</button></div></div>';
+  document.getElementById('dsReport').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
 // ===== 💻 온라인 IDE (Monaco + Pyodide/Piston 실제 실행) =====
 const IDELANGMAP={'Java':'java','C':'c','Python':'python'};
 let ideEditor=null, ideMonacoP=null, ideCur=null, pyodide=null, pyLoadP=null, pistonRuntimes=null;
@@ -1121,6 +1191,7 @@ def main():
     bs = importlib.import_module('_basics')
     tl = importlib.import_module('_tools')
     rn = importlib.import_module('_runnable')
+    dz = importlib.import_module('_design')
     # <script> 조기 종료 방지: 임베드 데이터의 </ 를 <\/ 로 이스케이프(런타임 JS 파싱 동일)
     def jdump(o):
         return json.dumps(o, ensure_ascii=False).replace('</', '<\\/')
@@ -1131,10 +1202,11 @@ def main():
                .replace('__CODE49__', jdump(cc.CODE49))
                .replace('__BASICS__', jdump(bs.BASICS))
                .replace('__TOOLS__', jdump({'tools': tl.TOOLS, 'position': tl.POSITION}))
-               .replace('__RUNNABLE__', jdump(rn.RUNNABLE)))
+               .replace('__RUNNABLE__', jdump(rn.RUNNABLE))
+               .replace('__DESIGN__', jdump(dz.DESIGN)))
     open(os.path.join(OUT, 'secure-dev-academy.html'), 'w', encoding='utf-8').write(html)
-    print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d basics=%d tools=%d runnable=%d'
-          % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY), len(bs.BASICS), len(tl.TOOLS), len(rn.RUNNABLE)))
+    print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d basics=%d tools=%d runnable=%d design=%d'
+          % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY), len(bs.BASICS), len(tl.TOOLS), len(rn.RUNNABLE), len(dz.DESIGN)))
 
 
 if __name__ == '__main__':

@@ -44,7 +44,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady,levelInfo,awardXp,checkBadges,BADGES,gam,todayKey,touchDay,gamHeaderHtml,heatmapHtml,badgesHtml,PATH_STAGES,rPath,learned,flashKnown,buildSarif});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady,levelInfo,awardXp,checkBadges,BADGES,gam,todayKey,touchDay,gamHeaderHtml,heatmapHtml,badgesHtml,PATH_STAGES,rPath,learned,flashKnown,buildSarif,DESIGN,DESIGN_CATS,gradeDesign,rDesign});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -342,6 +342,35 @@ ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모�
   ok(run.results[0].properties&&typeof run.results[0].properties.judgmentCorrect==='boolean', 'SARIF: properties carry judgmentCorrect/score');
   ok(['error','warning','note'].includes(run.results[1].level), 'SARIF: level is a valid SARIF level');
   ok(/data-v="prac"/.test(html), 'SARIF: practical tab present (export entry point)');
+})();
+
+// ===== 설계 진단(복합서술형): 데이터 스키마 + 모범 진단보고서 만점 + 탭/렌더 =====
+(function(){
+  ok(Array.isArray(E.DESIGN)&&E.DESIGN.length>=5, 'design: >=5 scenarios (got '+(E.DESIGN||[]).length+')');
+  let derr=0;
+  E.DESIGN.forEach(d=>{
+    if(!E.DESIGN_CATS.includes(d.category)){derr++;console.log('  ✗ design bad category',d.id,d.category);}
+    if(typeof d.isVulnerable!=='boolean'){derr++;console.log('  ✗ design isVulnerable not bool',d.id);}
+    if(!Array.isArray(d.docs)||!d.docs.length){derr++;console.log('  ✗ design no docs',d.id);}
+    if(!d.modelStatus||!d.modelFix||!d.explanation){derr++;console.log('  ✗ design missing model/explanation',d.id);}
+    [].concat(d.statusKeywords||[],d.fixKeywords||[]).forEach(k=>{ if(E.gnorm(k)===''){derr++;console.log('  ✗ design keyword empty',d.id,JSON.stringify(k));} });
+    if(!(d.statusKeywords||[]).length||!(d.fixKeywords||[]).length){derr++;console.log('  ✗ design empty keyword list',d.id);}
+  });
+  ok(derr===0, 'design: schema clean (cats/bool/docs/model/keywords)');
+  // 모범 진단보고서는 만점(100)
+  let dperf=0;
+  E.DESIGN.forEach(d=>{
+    const r=E.gradeDesign(d,{cat:d.category,vuln:d.isVulnerable,status:d.statusKeywords.join(' '),fix:d.fixKeywords.join(' ')});
+    if(r.score!==100){dperf++;console.log('  ✗ design model not 100',d.id,r.score);}
+  });
+  ok(dperf===0, 'design: model report scores 100 for all scenarios');
+  // 오답(분류·Y/N 반대 + 빈 서술)은 낮은 점수
+  const d0=E.DESIGN[0];
+  const wrong=E.gradeDesign(d0,{cat:'에러처리'===d0.category?'세션통제':'에러처리',vuln:!d0.isVulnerable,status:'',fix:''});
+  ok(wrong.score===0, 'design: wrong category+result+empty scores 0 (got '+wrong.score+')');
+  E.rDesign();
+  ok(/설계 진단/.test(document.getElementById('v-design').innerHTML), 'design: rDesign renders scenario list');
+  ok(/data-v="design"/.test(html)&&/📐 설계 진단/.test(html), 'design: tab present in HTML');
 })();
 
 // ===== Google 인증/로그인 위젯 제거 확인(사용자 요청): 학습 기능은 localStorage로 동작 =====
