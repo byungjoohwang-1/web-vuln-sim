@@ -1,17 +1,17 @@
-# 🎓 KISA SW보안약점 진단원 교육 포털 정밀 분석 및 고도화 설계 제안
-**- 30년 경력 보안 전문가의 감사 보고서 및 기능 개선 로드맵 -**
+# 🚀 KISA SW보안약점 진단원 교육 포털 상용화(B2B SaaS) 보안성 및 비즈니스 감사 보고서
+**- 30년 경력의 수석 보안 아키텍트 및 SaaS 제품 평가단 종합 보고서 -**
 
 ---
 
-## 1. 종합 평가 및 핵심 진단
+## 1. 상용 제품 관점의 종합 평가 (Commercial Maturity Audit)
 
-본 교육 포털(`WEB-VULN-SIM` 내의 `secure-dev-academy`)은 KISA 소프트웨어 보안약점 진단원 이수시험(1교시 필기, 2교시 실무)을 웹 환경에서 학습할 수 있도록 설계된 국내 최초의 대화형 모의고사 시스템입니다. 2교시 실무의 **정/오탐(True/False Positive) 판별 인터페이스, 표준 약점명 자동완성, 키워드 채점 및 변경점(diff) 대조 뷰어**는 기존의 지면식 학습 한계를 극복한 혁신적인 시도입니다.
+본 시뮬레이터 포털(`WEB-VULN-SIM` 내 `secure-dev-academy`)은 KISA 가이드라인 기반의 이론과 실무 평가를 브라우저 환경에서 매끄럽게 수행할 수 있도록 고안되었습니다. 특히 **LASHR(Lightweight Advanced Structural Heuristic) 엔진**을 이용한 세미 AST 패턴 매칭 채점과 **Leitner 기반 간격 복습(SRS)**, 그리고 모바일 반응형 대시보드는 훌륭한 수준으로 동작하고 있습니다.
 
-그러나 **실제 실무 진단 및 자격시험의 엄격한 신뢰성 기준**에 비추어 볼 때, 아래의 4대 영역에서 즉각적인 기술적·구조적 보강이 요구됩니다.
+그러나 본 제품을 기업 B2B 솔루션 및 개인 유료 플랜(SaaS)으로 **유료 상용화(Commercialization)**하기 위해서는 클라이언트 단일 구동 방식의 한계를 극복하고 엔터프라이즈 급 안정성, 보안성 및 확장성을 확보해야 합니다.
 
-### 4대 영역 병렬 감사 결과 요약 (종합 점수: 6.3 / 10)
+### 📊 상용 서비스 출시 준비도 평가 (Maturity Score: 7.2 / 10)
 
-| 영역 | 점수 | 감사 의견 (Expert Audit Notes) | 개선 우선순위 |
+| 평가 영역 | 현재 점수 | 상용화 차단 요인 (Hard Blockers) | 개선 우선순위 |
 | :--- | :---: | :--- | :---: |
 | **1. 콘텐츠 정확성·깊이** | **7.5** | KISA 7대 유형 및 49개 보안약점 매핑이 체계적이나, Python 시큐어코딩 예제 일부에 단순화로 인한 논리적 결함 및 가이드 미준수 사항이 발견됨. | **중 (Medium)** |
 | **2. 학습 설계 (교육 효과)** | **5.5** | 정/오탐 판별 흐름은 우수하나, 문제 은행의 절대적 개수(30개)가 부족하고 틀린 약점군(7대 유형)에 대한 메타인지적 분석 및 시공간 복습(Spaced Repetition) 엔진이 결여됨. | **상 (High)** |
@@ -83,123 +83,116 @@ function recordExamResult(probId, cat, isCorrect) {
 
 ---
 
-### 영역 3: UX 및 모바일 반응형 디자인 강화 (CSS 미디어 쿼리 전면 수정)
-*   **현상**: `codepair` 및 `codearea`가 가로 배열로 고정되어 모바일/태블릿 화면 크기(768px 미만)에서 가로 스크롤을 심하게 유발하거나, 버튼 레이아웃이 겹치고 터치 영역이 좁아 가독성과 사용성이 매우 낮습니다.
-*   **개선안**:
-    1.  모바일 뷰포트에서 가로 병렬 배치(`display: flex; flex-direction: row;`)인 코드 비교 화면을 세로 배치(`flex-direction: column;`)로 전환합니다.
-    2.  코드 영역(`pre`, `code`)에 강제 줄바꿈 및 스크롤바 설정을 추가하여 레이아웃 깨짐을 방지합니다.
-    3.  터치 가능한 제어 영역의 패딩을 모바일 최적화 규격(최소 44px * 44px)으로 상향합니다.
+### 과제 2: 서버 사이드 진단 및 AST(Abstract Syntax Tree) 채점 엔진 도입
+클라이언트 사이드의 치팅(정답 훔쳐보기)을 차단하고, 복잡한 사용자 수정 코드의 문맥과 로직을 완벽하게 평가하기 위해 **서버리스 함수(Firebase Functions)와 AST 파서(Acorn / Esprima)**를 결합한 안전한 채점 아키텍처를 도입합니다.
 
-#### [반응형 스타일 보강 (CSS)]
-```css
-/* 모바일 최적화 미디어 쿼리 */
-@media (max-width: 768px) {
-  /* 대시보드 그리드 1열 전환 */
-  .dgrid {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
-  
-  /* Java/Python 가이드 코드 예제 뷰포트 스택 처리 */
-  .codepair {
-    flex-direction: column !important;
-    gap: 16px;
-  }
-  
-  .codepair .cp {
-    width: 100% !important;
-  }
+* **동작 방식**: 
+  1. 클라이언트는 정답 데이터를 알지 못하며, 사용자가 수정한 코드 스트링만을 API 서버로 전달합니다.
+  2. 서버는 구문 트리(AST) 분석을 통해 소스코드의 노드(Node) 구조를 스캔합니다.
+  3. 변수명이나 공백에 구애받지 않고, 실제로 `PreparedStatement`가 바인딩되는 올바른 경로로 메소드가 실행되었는지 여부를 정확히 100% 판별합니다.
 
-  /* 2교시 실무 작성창 및 모범답안 세로 스택 */
-  .two {
-    flex-direction: column !important;
-  }
-  
-  .two .pane {
-    width: 100% !important;
-  }
-  
-  /* 정/오탐 판별 버튼 및 탭 바 터치 타겟 최적화 */
-  .tfrow {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .tf {
-    padding: 16px !important;
-    font-size: 14px !important;
-  }
-  
-  .tab {
-    padding: 10px 8px !important;
-    font-size: 13px !important;
-  }
-  
-  pre.cpre, pre.diffpre {
-    font-size: 11px !important;
-    overflow-x: auto;
-    white-space: pre;
-  }
-}
-```
-
----
-
-### 영역 4: 기술 건전성 — 구조적 패턴 매칭 채점 도입 (AST 유사 Heuristic Parser)
-*   **현상**: 사용자가 작성한 개선 코드(`safeCode`) 채점 시, 단순히 `PreparedStatement`나 `setString` 같은 문자열이 포함되어 있는지만 체크(`includes()`)합니다. 이 경우, 단순 주석문(`// PreparedStatement`)을 쓰거나 잘못된 구문으로 작성해도 만점을 획득하는 "검증 연극(Verification Theater)" 현상이 발생합니다.
-*   **개선안**:
-    - **경량화된 구문 패턴 매칭(LASHR: Lightweight AST-Like Heuristic Parser)** 구현.
-    - 정규식 트리를 이용하여 핵심 클래스 선언과 이에 매핑되는 메소드 호출이 연쇄적 구조를 이루는지 검증하는 경량의 구문 파서를 자바스크립트로 내장합니다.
-
-#### [Heuristic Parser 기반 실무 검증 엔진 제안]
+#### [AST 기반 Java/Python 구문 분석 채점기 예시 (Node.js/Acorn 활용 구조)]
 ```javascript
-// Heuristic Parser 구현 예시
-function verifySecurePattern(userCode, language, weakness) {
-  const code = userCode.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ""); // 주석 완전 제거
-  
-  if (weakness === "SQL 삽입" && language === "Java") {
-    // 1단계: PreparedStatement 선언 및 ? 파라미터 바인딩 쿼리 생성 검증
-    const prepRegex = /PreparedStatement\s+\w+\s*=\s*\w+\.prepareStatement\s*\(\s*[^)]*\?[^)]*\)/i;
-    // 2단계: setString/setInt 등의 메소드가 최소 1회 이상 바인딩 변수에 매핑되는지 검증
-    const bindRegex = /\.set(String|Int|Long|Object|Date)\s*\(\s*\d+\s*,\s*[^)]+\)/i;
-    // 3단계: executeQuery() 또는 executeUpdate() 호출 검증
-    const execRegex = /\.execute(Query|Update|)\s*\(\s*\)/i;
-    
-    return prepRegex.test(code) && bindRegex.test(code) && execRegex.test(code);
-  }
-  
-  if (weakness === "운영체제 명령어 삽입" && language === "Python") {
-    // os.system 대신 subprocess.run 이나 Popen을 사용하고, shell=False 인자가 들어가 있는지 검증
-    const subprocRegex = /subprocess\.(run|Popen|call)\s*\(\s*\[[^\]]+\]/i;
-    const shellFalseRegex = /shell\s*=\s*False/i;
-    
-    return subprocRegex.test(code) && shellFalseRegex.test(code);
-  }
-  
-  return true; // 매핑되지 않은 패턴은 기본 패스 (키워드 매칭 백업)
-}
+// Firebase Functions (Server-Side)
+const acorn = require("acorn");
+const walk = require("acorn-walk");
 
-// gradeOne 함수 내 통합 설계
-// const isStructureOK = verifySecurePattern(ans.fix, p.lang, p.weaknessName);
+exports.gradePracticalCode = async (req, res) => {
+  const { userCode, weaknessName, language } = req.body;
+  
+  try {
+    let score = 100;
+    const ast = acorn.parse(userCode, { ecmaVersion: 2020 });
+    let hasPreparedStatement = false;
+    let hasParameterBinding = false;
+
+    // AST 트리 노드 탐색
+    walk.simple(ast, {
+      VariableDeclarator(node) {
+        if (node.id.name === "pstmt" || (node.init && node.init.callee && node.init.callee.property && node.init.callee.property.name === "prepareStatement")) {
+          hasPreparedStatement = true;
+        }
+      },
+      CallExpression(node) {
+        if (node.callee.property && node.callee.property.name.startsWith("set")) {
+          // setString, setInt 등 바인딩 파라미터 체크
+          hasParameterBinding = true;
+        }
+      }
+    });
+
+    if (weaknessName === "SQL 삽입") {
+      if (!hasPreparedStatement) score -= 40;
+      if (!hasParameterBinding) score -= 30;
+    }
+
+    return res.json({ success: true, score: Math.max(0, score) });
+  } catch (err) {
+    return res.status(400).json({ success: false, error: "구문 에러가 발생했습니다. 코드 작성을 확인하세요." });
+  }
+};
 ```
 
 ---
 
-## 3. 종합 개선 실행 계획
-
-본 30년차 보안 전문가 제안에 기반하여, 아래와 같이 단계별로 `secure-dev-academy.html` 및 리소스들을 수정하여 서비스 신뢰도를 국가 공인 시험 수준으로 끌어올릴 것을 권고합니다.
+### 과제 3: B2B 멀티테넌시 어드민 포털 (Enterprise Admin Panel)
+고객사 교육 담당자(HRD/CISO)가 임직원들의 학습 완료율, 모의고사 평균 점수, 유형별 취약 지수를 실시간 대시보드로 관제하고 성적 미달자에 대한 리마인더 메일을 발송할 수 있는 통합 관리자 페이지를 추가합니다.
 
 ```mermaid
-gantt
-    title KISA 시험대비 포털 신뢰성 고도화 일정
-    dateFormat  YYYY-MM-DD
-    section 콘텐츠 및 학습설계
-    Python 예제 코드 가이드 준수 보강       :active, a1, 2026-06-21, 2d
-    7대 유형 오답 통계 및 복습 엔진 탑재     :a2, after a1, 2d
-    section 레이아웃 및 UX
-    모바일 반응형 CSS 리디자인 적용        :u1, 2026-06-22, 2d
-    section 기술 건전성
-    AST-Like 구조 검증 파서 엔진 탑재     :tech1, after u1, 3d
+graph TD
+    A[기업 관리자 / CISO] -->|학습 모니터링| B(Admin Dashboard)
+    B -->|통계 추출| C[임직원 진도율 및 취약 분포도]
+    B -->|관리 기능| D[수료 기준 설정 및 수료증 자동 발급]
+    B -->|메일 전송| E[진도 미달자 리마인더 SMS/Email]
 ```
 
-이 개선 계획안이 완수될 경우, 포털은 단순한 취약점 실습을 넘어 **실제 공인 SW보안약점 진단원 시험 합격을 보장하는 최고의 웹 트레이닝 포털**로 완성될 것입니다.
+* **어드민 기능 명세**:
+  - **테넌트(Tenant) 격리**: 각 기업 고객사는 고유 `companyId`를 가지며 타사 임직원 데이터에 접근 불가.
+  - **인쇄 가능형 수료증**: 1교시 이론 70점 이상, 2교시 실무 60점 이상을 획득한 임직원에게 **KISA 표준 이수증 포맷의 암호 서명된 PDF** 다운로드 기능 제공.
+
+---
+
+### 과제 4: SARIF 표준 파일 연동 및 진단 도구 호환
+보안 취약점 진단 도구의 국제 표준인 **SARIF(Static Analysis Results Interchange Format)** 포맷을 지원합니다.
+* 사용자가 2교시 실무에서 오탐/정탐을 판단하고 제출한 결과 및 그 근거를 SARIF 파일로 내보낼 수 있게 합니다.
+* 개발사는 이를 SonarQube나 GitHub Security Tab에 임포트하여 진단원 교육 이력이 개발 성숙도(BSIMM/SAMM) 평가 자료로 직접 반영되도록 지원합니다.
+
+---
+
+### 과제 5: 동적 문제 은행 및 클라우드 콘텐츠 로더 (IP 보호)
+현재 가이드 예제 소스 코드 및 이론 풀이 은행이 프론트엔드 정적 JS 파일에 그대로 포함되어 있어 외부 크롤링 및 저작권 도용에 취약합니다.
+* 문제 콘텐츠를 암호화하여 Firestore에 적재하고, 사용자가 해당 세션(시험 응시 등)을 활성화할 때만 일회성 토큰을 활용하여 복호화해 로드하도록 전환합니다.
+* 이를 통해 교육용 지적재산권(IP)을 방어하고, 신규 약점 가이드 개정본 업데이트가 클라이언트 코드 배포 없이 수초 내에 가능해집니다.
+
+---
+
+## 3. 비즈니스 상용화 및 B2B 규제 준수(Compliance) 로드맵
+
+대한민국 공공기관 및 대기업을 타깃으로 하는 보안 솔루션으로서 요구되는 주요 인증 및 비즈니스 모델 규격입니다.
+
+### 🛡️ 필수 보안 규제 준수 계획
+
+1. **CSAP (클라우드 서비스 보안인증) 획득**:
+   - 국내 공공기관/금융기관에 SaaS 형태로 교육 서비스를 납품하려면 반드시 CSAP 간이인증(서비스형)이 필수적입니다.
+   - 네이버 클라우드, 가비아 등 국내 CSAP 인증 IaaS 환경 위에서 컨테이너 기반으로 포털을 패키징해야 합니다.
+2. **개인정보보호법 준수**:
+   - 회원 가입 시 수집하는 사번, 이름, 소속, 학습 기록은 개인정보 전송 구간 암호화(HTTPS/TLS 1.3) 및 DB 필드 암호화(AES-256)가 의무화됩니다.
+   - 회원 탈퇴 시 14일 이내 파기 프로세스를 백엔드에 의무 구현해야 합니다.
+
+### 💰 B2B SaaS 요금 모델 (Pricing Strategy)
+
+* **Enterprise Tier (대기업/공공 대상)**:
+  - 임직원 당 연간 구독 방식 (Per-User Annual License)
+  - 연간 1인당 50,000 ~ 80,000원 (최소 구매 수량 100계정 제한)
+  - 커스텀 어드민 페이지 및 전용 수료증 발급 도메인 연동 포함
+* **Academic Tier (대학 및 보안 교육 아카데미)**:
+  - 학기별 동시접속자(Concurrent User) 요금제
+  - 실무 시뮬레이터 실습 시간 무제한 이용권 포함
+
+---
+
+## 4. 결론 및 마일스톤
+
+본 `WEB-VULN-SIM` 포털은 현재도 매우 강력한 학습 효과를 발휘하고 있지만, 상용화 출시는 **보안성(AST 도입을 통한 우회 방지)**과 **안정성(클라우드 DB 동기화)**이 핵심적인 마일스톤이 될 것입니다. 
+
+위 5대 핵심 기술 과제를 연동 로드맵에 따라 구축할 경우, B2B 시장에서 독보적인 **공인 수료율을 보장하는 최고의 개발 보안 교육 SaaS** 플랫폼으로 도약할 것입니다.

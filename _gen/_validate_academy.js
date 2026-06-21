@@ -44,7 +44,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady,levelInfo,awardXp,checkBadges,BADGES,gam,todayKey,touchDay,gamHeaderHtml,heatmapHtml,badgesHtml,PATH_STAGES,rPath,learned,flashKnown});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -277,6 +277,51 @@ ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모�
   const codePart = r.parts.find(pt=>pt[0]==='개선 코드');
   ok(codePart && codePart[1]===0, 'verification-theater: comment-only fix scores 0 on code ('+(codePart?codePart[1]:'?')+')');
   ok(r.score < 100, 'verification-theater: comment-only fix cannot reach 100 ('+r.score+')');
+})();
+
+// ===== 게이미피케이션: 레벨 곡선 · XP · 스트릭 · 배지 · 학습경로 =====
+(function(){
+  // 레벨 곡선: 단조 증가, 0 XP=Lv1
+  ok(E.levelInfo(0).level===1, 'gam: 0 XP is level 1');
+  ok(E.levelInfo(100).level===2, 'gam: 100 XP reaches level 2');
+  let prev=0,mono=true;[0,50,100,250,500,1000,2000].forEach(x=>{const l=E.levelInfo(x).level;if(l<prev)mono=false;prev=l;});
+  ok(mono, 'gam: level is monotonic in XP');
+  const li=E.levelInfo(120);ok(li.inLevel>=0&&li.pct>=0&&li.pct<=100, 'gam: levelInfo reports in-level progress 0..100%');
+
+  // XP 적립 + 일일 누적 + 스트릭
+  E.gam.xp=0;E.gam.streak=0;E.gam.lastActive='';E.gam.days={};E.gam.badges={};E.gam.claimed={};E.gam.graduates=0;E.gam.visited={};
+  const before=E.gam.xp;
+  E.awardXp(10,'테스트');
+  ok(E.gam.xp===before+10, 'gam: awardXp adds XP');
+  ok(E.gam.streak===1, 'gam: first activity sets streak=1');
+  ok((E.gam.days[E.todayKey()]||0)>=10, 'gam: today XP recorded for heatmap');
+
+  // claim 키: 같은 키는 1회만 적립(개념/플래시 농사 방지)
+  const x1=E.gam.xp;E.awardXp(10,'개념','c:dup');E.awardXp(10,'개념','c:dup');
+  ok(E.gam.xp===x1+10, 'gam: claimed key awards only once (no farming)');
+
+  // 배지: 누적 XP/연속/레벨 조건 충족 시 자동 부여
+  E.gam.xp=600;const nb=E.checkBadges();
+  ok(E.gam.badges['xp500'], 'gam: xp500 badge unlocks at 600 XP');
+  ok(Array.isArray(nb), 'gam: checkBadges returns newly-unlocked list');
+  E.gam.streak=7;E.checkBadges();
+  ok(E.gam.badges['streak7'], 'gam: streak7 badge unlocks at 7-day streak');
+  ok(E.BADGES.length>=10, 'gam: badge catalog has >=10 (got '+E.BADGES.length+')');
+
+  // 헤더/히트맵/배지 렌더
+  ok(/Lv\./.test(E.gamHeaderHtml())&&/연속/.test(E.gamHeaderHtml()), 'gam: header shows level + streak');
+  ok((E.heatmapHtml().match(/class="hm /g)||[]).length>=84, 'gam: heatmap renders 12 weeks (>=84 cells)');
+  ok(/배지/.test(E.badgesHtml()), 'gam: badgesHtml renders');
+})();
+
+// 학습 경로: 단계 진행률 계산 + 뷰 렌더 + 탭 배선
+(function(){
+  ok(Array.isArray(E.PATH_STAGES)&&E.PATH_STAGES.length>=5, 'path: has >=5 stages');
+  E.PATH_STAGES.forEach((s,i)=>ok(s.name&&s.go&&typeof s.pct==='function', 'path: stage complete #'+i));
+  E.rPath();
+  const pv=document.getElementById('v-path').innerHTML;
+  ok(/학습 경로/.test(pv)&&/다음 추천 단계/.test(pv), 'path: rPath renders roadmap + next-step CTA');
+  ok(/data-v="path"/.test(html)&&/🗺️ 학습 경로/.test(html), 'path: tab present in HTML');
 })();
 
 console.log(fail===0 ? '\n✅ ACADEMY v3 VALIDATION PASS' : '\n❌ FAIL count='+fail);

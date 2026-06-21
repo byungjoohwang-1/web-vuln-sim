@@ -232,6 +232,45 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .ptbl th,.ptbl td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}
 .ptbl th{background:#eef2ff}.ptbl .pcwe{color:#666;font-size:9.5px;font-family:'JetBrains Mono',monospace}
 .ptitle{font-family:'Segoe UI','Malgun Gothic',sans-serif;font-size:18px;margin:0 0 4px}.psub{font-size:11px;color:#555;margin:0 0 10px}
+/* ===== 게이미피케이션: 레벨·XP·스트릭·배지·히트맵·학습경로 ===== */
+.gam-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 16px}
+.gam-lv{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;padding:8px 14px;font-weight:700}
+.gam-lv .lv-num{font-size:15px;white-space:nowrap}
+.gam-lv .lv-bar{width:120px;height:8px;background:rgba(255,255,255,.3);border-radius:6px;overflow:hidden}
+.gam-lv .lv-bar i{display:block;height:100%;background:#fde047;border-radius:6px;transition:width .4s}
+.gam-lv .lv-xp{font-size:12px;opacity:.95;white-space:nowrap}
+.gam-chip{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;color:#334155}
+.gam-chip.streak.active{background:#fff7ed;border-color:#fdba74;color:#c2410c}
+#gamToasts{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.gtoast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transform:translateY(12px);transition:opacity .3s,transform .3s;max-width:280px}
+.gtoast.show{opacity:1;transform:translateY(0)}
+.badges-wrap{margin-top:22px}.badges-wrap h3{margin:0 0 12px;font-size:16px}
+.bgrid-bdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.bdg{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:13px 8px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;opacity:.45;filter:grayscale(1)}
+.bdg.got{opacity:1;filter:none;background:#fff;border-color:#c7d2fe;box-shadow:0 2px 8px rgba(79,70,229,.12)}
+.bdg .bd-i{font-size:26px}.bdg .bd-n{font-size:13px;font-weight:700;color:#1e293b}.bdg .bd-d{font-size:10.5px;color:#64748b}
+.heat-wrap{margin-top:22px}.heat-wrap h3{margin:0 0 12px;font-size:16px}
+.heatmap{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:13px;gap:3px;overflow-x:auto;padding-bottom:4px}
+.hm{width:13px;height:13px;border-radius:3px;background:#ebedf0;display:inline-block}
+.hm0{background:#ebedf0}.hm1{background:#c6e48b}.hm2{background:#7bc96f}.hm3{background:#239a3b}.hm4{background:#196127}
+.heat-legend{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;margin-top:8px}
+.rec-cta{background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:13px 16px;margin:8px 0 18px;font-size:14px;color:#3730a3;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.path-list{display:flex;flex-direction:column;gap:0}
+.pstage{display:flex;gap:14px;align-items:stretch}
+.pstage .ps-line{display:flex;flex-direction:column;align-items:center;width:34px}
+.pstage .ps-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e2e8f0;font-size:17px;flex-shrink:0}
+.pstage.done .ps-icon{background:#dcfce7}.pstage.cur .ps-icon{background:#4f46e5;box-shadow:0 0 0 4px rgba(79,70,229,.2)}
+.pstage .ps-conn{flex:1;width:3px;background:#e2e8f0;min-height:18px}
+.pstage.done .ps-conn{background:#86efac}
+.pstage .ps-body{flex:1;padding:0 0 22px}
+.ps-h{font-size:15px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:8px}
+.ps-now{font-size:11px;font-weight:700;color:#fff;background:#4f46e5;border-radius:20px;padding:2px 9px}
+.ps-d{font-size:12.5px;color:#64748b;margin:2px 0 7px}
+.ps-bar{height:9px;background:#e2e8f0;border-radius:6px;overflow:hidden;max-width:340px}
+.ps-bar i{display:block;height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:6px;transition:width .4s}
+.ps-pct{font-size:11.5px;color:#475569;margin:4px 0 6px;font-weight:600}
+.ps-go{font-size:12px;padding:5px 12px}
+@media(max-width:768px){.gam-lv .lv-bar{width:80px}.gam-row{gap:7px}.gam-chip{font-size:12px;padding:6px 11px}}
 @media print{
   body{background:#fff!important}
   body *{visibility:hidden}
@@ -248,6 +287,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 <div class="hero"><div class="wrap"><h1>🎓 보안약점 진단원 학습 센터</h1><p>개념 학습 · 플래시카드 · 1교시 이론(객관식·OX·단답) · 2교시 실무(정·오탐 판별 + 서술형 채점) · 오답노트 — 진도 자동 저장</p></div></div>
 <div class="tabs"><div class="wrap" role="tablist" aria-label="학습 메뉴">
   <button class="tab on" data-v="dash" onclick="tab('dash')">📊 대시보드</button>
+  <button class="tab" data-v="path" onclick="tab('path')">🗺️ 학습 경로</button>
   <button class="tab" data-v="basics" onclick="tab('basics')">🧱 기초 과정</button>
   <button class="tab" data-v="learn" onclick="tab('learn')">📖 개념학습</button>
   <button class="tab" data-v="flash" onclick="tab('flash')">🃏 플래시카드</button>
@@ -258,6 +298,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 </div></div>
 <div class="wrap" id="mainviews">
   <div class="view on" id="v-dash"></div>
+  <div class="view" id="v-path"></div>
   <div class="view" id="v-basics"></div>
   <div class="view" id="v-learn"></div>
   <div class="view" id="v-flash"></div>
@@ -369,7 +410,7 @@ function srsUpdate(w,quality){
     if(w.rep===1)w.interval=1; else if(w.rep===2)w.interval=6; else w.interval=Math.round((w.interval||6)*w.ef);
     w.ef=Math.max(1.3, w.ef + (0.1-(5-quality)*(0.08+(5-quality)*0.02)));
     w.box=Math.min((w.box||1)+1,5);
-    if(w.rep>=4 && quality>=4){wrongs=wrongs.filter(x=>x!==w);save('wrong',wrongs);return {graduated:true,interval:w.interval};}  // 졸업(반복 숙달)
+    if(w.rep>=4 && quality>=4){wrongs=wrongs.filter(x=>x!==w);save('wrong',wrongs);if(typeof gam!=='undefined'){gam.graduates=(gam.graduates||0)+1;awardXp(8,'복습 졸업');}return {graduated:true,interval:w.interval};}  // 졸업(반복 숙달)
   }else{
     w.rep=0; w.interval=0; w.box=1; w.ef=Math.max(1.3, w.ef-0.2);  // 실패 → 즉시 재출제
   }
@@ -391,6 +432,104 @@ function topWeakHtml(){
   const items=ent.map((e,i)=>'<div class="tw-item"><span class="tw-rank">'+(i+1)+'</span><span class="tw-cat" style="background:'+CCOLOR[e[0]]+'">'+esc(e[0])+'</span><div class="tw-bar"><i style="width:'+Math.round(e[1]/ent[0][1]*100)+'%;background:'+CCOLOR[e[0]]+'"></i></div><span class="tw-cnt">오답 '+e[1]+'회</span></div>').join('');
   return '<div class="topweak"><h3>⚠ 취약 유형 Top 3 — 집중 복습 권장</h3>'+items+'<p class="tw-tip">해당 유형의 개념카드(유형 개요 배너)와 오답 복습(SRS)을 우선 진행하세요.</p></div>';
 }
+
+// ===== 게이미피케이션: XP·레벨·연속학습(스트릭)·배지·일일목표 =====
+// 실제 교육 플랫폼(TryHackMe·Secure Code Warrior·Duolingo)의 동기부여 설계를 무료 클라이언트(localStorage)로 이식.
+let gam = load('gam',{xp:0,streak:0,bestStreak:0,lastActive:'',days:{},badges:{},claimed:{},graduates:0,visited:{}});
+const DAILY_GOAL = 50;            // 하루 권장 XP
+function _pad2(n){return String(n).padStart(2,'0');}
+function todayKey(d){d=d||new Date();return d.getFullYear()+'-'+_pad2(d.getMonth()+1)+'-'+_pad2(d.getDate());}
+function _ymd(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+// 레벨 곡선: 레벨업마다 필요 XP가 1.35배씩 증가(완만한 성장)
+function levelInfo(xp){let l=1,need=100,rem=xp||0;while(rem>=need){rem-=need;l++;need=Math.round(need*1.35);}return {level:l,inLevel:rem,need:need,pct:Math.round(rem/need*100)};}
+function touchDay(){
+  const t=todayKey();
+  if(gam.lastActive!==t){
+    const y=_ymd(new Date());y.setDate(y.getDate()-1);
+    gam.streak=(gam.lastActive===todayKey(y))?((gam.streak||0)+1):1;
+    gam.lastActive=t;
+    if(gam.streak>(gam.bestStreak||0))gam.bestStreak=gam.streak;
+  }
+  if(gam.days[t]==null)gam.days[t]=0;
+}
+function awardXp(n,reason,claimKey){
+  if(claimKey){if(gam.claimed[claimKey])return 0;gam.claimed[claimKey]=1;}
+  if(n>0){touchDay();gam.xp=(gam.xp||0)+n;const t=todayKey();gam.days[t]=(gam.days[t]||0)+n;}
+  const newly=checkBadges();
+  save('gam',gam);
+  if(n>0&&reason)gamToast('+'+n+' XP · '+reason);
+  newly.forEach(b=>gamToast('🏅 배지 획득: '+b.icon+' '+b.name));
+  const dh=document.getElementById('gamHeader');if(dh)dh.innerHTML=gamHeaderHtml();
+  return n;
+}
+const BADGES=[
+  {id:'first_concept',icon:'🌱',name:'첫 걸음',desc:'개념 1개 학습',test:()=>Object.keys(learned).length>=1},
+  {id:'concept_half',icon:'📚',name:'절반 정복',desc:'개념 25개 학습',test:()=>Object.keys(learned).length>=25},
+  {id:'concept_all',icon:'🏆',name:'49개 완주',desc:'전 개념 학습',test:()=>Object.keys(learned).length>=49},
+  {id:'flash_all',icon:'🃏',name:'플래시 마스터',desc:'플래시 49 숙련',test:()=>Object.keys(flashKnown).length>=49},
+  {id:'exam_pass',icon:'✅',name:'1교시 합격',desc:'1교시 70%+',test:()=>examBest!=null&&examBest>=70},
+  {id:'exam_perfect',icon:'💯',name:'1교시 만점',desc:'1교시 100%',test:()=>examBest===100},
+  {id:'prac_pass',icon:'🧪',name:'2교시 합격',desc:'2교시 평균 70%+',test:()=>pracBest!=null&&pracBest>=70},
+  {id:'streak3',icon:'🔥',name:'3일 연속',desc:'3일 연속 학습',test:()=>(gam.streak||0)>=3},
+  {id:'streak7',icon:'🔥',name:'일주일 연속',desc:'7일 연속 학습',test:()=>(gam.streak||0)>=7},
+  {id:'review10',icon:'🔁',name:'복습의 달인',desc:'SRS 졸업 10회',test:()=>(gam.graduates||0)>=10},
+  {id:'xp500',icon:'⚡',name:'500 XP',desc:'누적 500 XP',test:()=>(gam.xp||0)>=500},
+  {id:'xp1000',icon:'⭐',name:'1000 XP',desc:'누적 1000 XP',test:()=>(gam.xp||0)>=1000},
+  {id:'level5',icon:'🎖️',name:'레벨 5',desc:'레벨 5 도달',test:()=>levelInfo(gam.xp).level>=5}
+];
+function checkBadges(){const out=[];BADGES.forEach(b=>{if(!gam.badges[b.id]&&b.test()){gam.badges[b.id]=Date.now();out.push(b);}});return out;}
+function gamToast(msg){
+  if(typeof document==='undefined'||!document.body)return;
+  let host=document.getElementById('gamToasts');
+  if(!host||!host.parentNode){host=document.createElement('div');host.id='gamToasts';document.body.appendChild(host);}
+  const el=document.createElement('div');el.className='gtoast';el.textContent=msg;host.appendChild(el);
+  setTimeout(()=>{el.classList.add('show');},20);
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el);},300);},2600);
+}
+function gamHeaderHtml(){
+  const li=levelInfo(gam.xp||0);const today=gam.days[todayKey()]||0,gpct=Math.min(100,Math.round(today/DAILY_GOAL*100));
+  return '<div class="gam-row">'+
+    '<div class="gam-lv"><span class="lv-num">Lv.'+li.level+'</span><div class="lv-bar"><i style="width:'+li.pct+'%"></i></div><span class="lv-xp">'+(gam.xp||0)+' XP</span></div>'+
+    '<div class="gam-chip streak'+((gam.streak||0)>0?' active':'')+'">🔥 '+(gam.streak||0)+'일 연속</div>'+
+    '<div class="gam-chip">🎯 오늘 '+today+'/'+DAILY_GOAL+' XP'+(gpct>=100?' ✅':'')+'</div>'+
+    '<div class="gam-chip">🏅 배지 '+Object.keys(gam.badges).length+'/'+BADGES.length+'</div></div>';
+}
+function badgesHtml(){
+  const items=BADGES.map(b=>{const got=!!gam.badges[b.id];return '<div class="bdg'+(got?' got':'')+'"><span class="bd-i">'+b.icon+'</span><span class="bd-n">'+esc(b.name)+'</span><span class="bd-d">'+esc(b.desc)+'</span></div>';}).join('');
+  return '<div class="badges-wrap"><h3>🏅 배지 ('+Object.keys(gam.badges).length+'/'+BADGES.length+')</h3><div class="bgrid-bdg">'+items+'</div></div>';
+}
+function heatmapHtml(){
+  const WEEKS=12,cells=[];
+  for(let i=WEEKS*7-1;i>=0;i--){const d=_ymd(new Date());d.setDate(d.getDate()-i);const k=todayKey(d),v=gam.days[k]||0;
+    const lvl=v<=0?0:v<20?1:v<50?2:v<100?3:4;cells.push('<span class="hm hm'+lvl+'" title="'+k+': '+v+' XP"></span>');}
+  return '<div class="heat-wrap"><h3>📅 최근 12주 학습 활동</h3><div class="heatmap">'+cells.join('')+'</div>'+
+    '<div class="heat-legend">적음 <span class="hm hm0"></span><span class="hm hm1"></span><span class="hm hm2"></span><span class="hm hm3"></span><span class="hm hm4"></span> 많음</div></div>';
+}
+
+// ===== 학습 경로(가이드형 커리큘럼) =====
+const PATH_STAGES=[
+  {key:'basics',icon:'🧱',name:'기초 과정',desc:'Java·C·Python 보안 기초',pct:()=>gam.visited.basics?100:0,go:'basics'},
+  {key:'learn',icon:'📖',name:'개념 학습',desc:'49개 보안약점 개념 익히기',pct:()=>Math.round(Object.keys(learned).length/49*100),go:'learn'},
+  {key:'flash',icon:'🃏',name:'플래시카드',desc:'개념 빠른 암기·인출',pct:()=>Math.round(Object.keys(flashKnown).length/49*100),go:'flash'},
+  {key:'exam',icon:'📝',name:'1교시 이론',desc:'합격선 70%+',pct:()=>examBest!=null?Math.min(100,Math.round(examBest/70*100)):0,go:'exam'},
+  {key:'prac',icon:'🧪',name:'2교시 실무',desc:'정·오탐 + 서술형, 평균 70%+',pct:()=>pracBest!=null?Math.min(100,Math.round(pracBest/70*100)):0,go:'prac'},
+  {key:'wrong',icon:'🔁',name:'오답 복습',desc:'SRS 간격 반복으로 약점 제거',pct:()=>wrongs.length?Math.round((wrongs.length-dueCount())/wrongs.length*100):100,go:'wrong'}
+];
+function rPath(){
+  const done=PATH_STAGES.map(s=>s.pct()>=100);
+  let nextIdx=done.findIndex(d=>!d);if(nextIdx<0)nextIdx=PATH_STAGES.length-1;
+  const overall=Math.round(PATH_STAGES.reduce((a,s)=>a+s.pct(),0)/PATH_STAGES.length);
+  const items=PATH_STAGES.map((s,i)=>{const p=s.pct(),cur=i===nextIdx;
+    return '<div class="pstage'+(p>=100?' done':'')+(cur?' cur':'')+'"><div class="ps-line"><span class="ps-icon">'+(p>=100?'✅':s.icon)+'</span>'+(i<PATH_STAGES.length-1?'<span class="ps-conn"></span>':'')+'</div>'+
+      '<div class="ps-body"><div class="ps-h">'+esc(s.name)+(cur?' <span class="ps-now">지금 여기</span>':'')+'</div><div class="ps-d">'+esc(s.desc)+'</div>'+
+      '<div class="ps-bar"><i style="width:'+p+'%"></i></div><div class="ps-pct">'+p+'%</div>'+
+      '<button class="btn ghost ps-go" onclick="tab(\''+s.go+'\')">이동 →</button></div></div>';}).join('');
+  document.getElementById('v-path').innerHTML='<h2 class="st">🗺️ 학습 경로</h2><p class="sub">진단원 준비를 위한 권장 학습 순서입니다. 전체 진행률 <b>'+overall+'%</b>.</p>'+
+    gamHeaderHtml()+
+    '<div class="rec-cta">다음 추천 단계: <b>'+PATH_STAGES[nextIdx].icon+' '+esc(PATH_STAGES[nextIdx].name)+'</b><button class="qbtn" onclick="tab(\''+PATH_STAGES[nextIdx].go+'\')">바로 시작 →</button></div>'+
+    '<div class="path-list">'+items+'</div>';
+}
+
 function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
 function gnorm(s){return (s||'').toString().toLowerCase().replace(/[\s.,;:!?()\[\]{}"'`]/g,'');}
 // 코드 주석 제거(검증 연극 차단): 주석 속 키워드로 만점받는 우회를 막는다.
@@ -454,7 +593,8 @@ function tab(v){
   document.querySelectorAll('.tab').forEach(t=>{const on=t.dataset.v===v;t.classList.toggle('on',on);t.setAttribute('aria-selected',on?'true':'false');});
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
-  ({dash:rDash,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,wrong:rWrong}[v])();
+  gam.visited[v]=true;save('gam',gam);
+  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,wrong:rWrong}[v])();
 }
 // 스크린리더 알림(aria-live)
 function announce(msg){const el=document.getElementById('ariaLive');if(!el)return;el.textContent='';setTimeout(()=>{el.textContent=msg;},40);}
@@ -468,15 +608,18 @@ function rDash(){
     rows+='<div class="prow"><div class="nm">'+c+'</div><div class="bar"><i style="width:'+pct+'%;background:'+CCOLOR[c]+'"></i></div><div class="vv">'+dn+'/'+tot+'</div></div>';});
   document.getElementById('v-dash').innerHTML=
    '<h2 class="st">📊 나의 학습 현황</h2><p class="sub">진도·기록은 이 브라우저에 자동 저장됩니다.</p>'+
+   '<div id="gamHeader">'+gamHeaderHtml()+'</div>'+
    '<div class="dgrid">'+dc(ln+'/49','개념 학습')+dc(fk+'/49','플래시 숙련')+dc(examBest!=null?examBest+'%':'-','1교시 최고점')+dc(pracBest!=null?pracBest+'%':'-','2교시 최고점')+dc(tpCov+'/49','실무 출제 약점')+dc(wrongs.length,'오답노트')+dc(dueCount(),'오늘 복습')+'</div>'+
    topWeakHtml()+
    '<div class="prog-wrap"><h3>유형별 개념 학습 숙련도</h3>'+rows+'</div>'+
-   '<div class="quick"><button class="qbtn" onclick="tab(\'basics\')">🧱 기초 과정</button><button class="qbtn ghost" onclick="tab(\'learn\')">📖 개념 학습</button><button class="qbtn ghost" onclick="tab(\'flash\')">🃏 플래시카드</button><button class="qbtn ghost" onclick="tab(\'exam\')">📝 1교시 이론</button><button class="qbtn ghost" onclick="tab(\'prac\')">🧪 2교시 실무</button></div>'+
+   '<div class="quick"><button class="qbtn" onclick="tab(\'path\')">🗺️ 학습 경로</button><button class="qbtn ghost" onclick="tab(\'basics\')">🧱 기초 과정</button><button class="qbtn ghost" onclick="tab(\'learn\')">📖 개념 학습</button><button class="qbtn ghost" onclick="tab(\'flash\')">🃏 플래시카드</button><button class="qbtn ghost" onclick="tab(\'exam\')">📝 1교시 이론</button><button class="qbtn ghost" onclick="tab(\'prac\')">🧪 2교시 실무</button></div>'+
+   heatmapHtml()+
+   badgesHtml()+
    toolsHtml()+
    '<button class="reset" onclick="resetAll()">↺ 학습 기록 초기화</button>';
 }
 function dc(b,s){return '<div class="dcard"><b>'+b+'</b><span>'+s+'</span></div>';}
-function resetAll(){if(confirm('모든 학습 기록을 초기화할까요?')){['learned','flash','wrong','examBest','pracBest','wrongStats'].forEach(k=>localStorage.removeItem(NS+k));learned={};flashKnown={};wrongs=[];examBest=null;pracBest=null;wrongStats={};rDash();}}
+function resetAll(){if(confirm('모든 학습 기록을 초기화할까요?')){['learned','flash','wrong','examBest','pracBest','wrongStats','gam'].forEach(k=>localStorage.removeItem(NS+k));learned={};flashKnown={};wrongs=[];examBest=null;pracBest=null;wrongStats={};gam={xp:0,streak:0,bestStreak:0,lastActive:'',days:{},badges:{},claimed:{},graduates:0,visited:{}};rDash();}}
 // 상용 SAST 도구 비교 + 포털 위치(정직)
 function toolsHtml(){
   const rows=TOOLS.tools.map(t=>'<tr'+(/LASHR/.test(t.name)?' class="ours"':'')+'><td><b>'+esc(t.name)+'</b><br><span class="tv">'+esc(t.vendor)+'</span></td><td>'+esc(t.license)+'</td><td>'+esc(t.method)+'</td><td>'+esc(t.strong)+'</td><td>'+esc(t.limit)+'</td></tr>').join('');
@@ -488,6 +631,7 @@ function toolsHtml(){
 const BLANGC={'Java':'#b07219','C':'#555555','Python':'#3572A5'};
 let basicLang='Java';
 function rBasics(){
+  awardXp(5,'기초 과정 시작','visit:basics');
   const langs=['Java','C','Python'];
   const chips=langs.map(l=>'<button class="cchip'+(l===basicLang?' on':'')+'" onclick="setBasicLang(\''+l+'\')">'+l+' '+BASICS.filter(b=>b.lang===l).length+'</button>').join('');
   const list=BASICS.filter(b=>b.lang===basicLang);
@@ -552,7 +696,7 @@ function setLang(e,gi,which){
 }
 function setLearnCat(c){learnCat=c;rLearn();}
 function toggleCard(i){document.getElementById('cc'+i).classList.toggle('open');}
-function toggleDone(i){const n=CONCEPTS[i].name;if(learned[n])delete learned[n];else learned[n]=true;save('learned',learned);rLearn();}
+function toggleDone(i){const n=CONCEPTS[i].name;if(learned[n])delete learned[n];else{learned[n]=true;awardXp(10,'개념 학습: '+n,'c:'+n);}save('learned',learned);rLearn();}
 
 // ===== 플래시카드 =====
 let flashCat='전체',flashDeck=[],flashIdx=0,flashFlip=false;
@@ -576,7 +720,7 @@ function drawFlash(){
   stage.innerHTML='<div class="fmeta">'+(flashIdx+1)+' / '+flashDeck.length+' · 숙련 '+known+'/'+pool.length+'</div><div class="flash-stage"><div class="fcard" onclick="flipFlash()">'+(flashFlip?back:front)+'</div><div class="frow"><button class="f-no" onclick="markFlash(false)">아직 모른다</button><button class="f-ok" onclick="markFlash(true)">안다 ✓</button></div></div>';
 }
 function flipFlash(){flashFlip=!flashFlip;drawFlash();}
-function markFlash(ok){const n=flashDeck[flashIdx].name;if(ok)flashKnown[n]=true;else delete flashKnown[n];save('flash',flashKnown);flashIdx++;flashFlip=false;drawFlash();}
+function markFlash(ok){const n=flashDeck[flashIdx].name;if(ok){flashKnown[n]=true;awardXp(5,'플래시 숙련: '+n,'f:'+n);}else delete flashKnown[n];save('flash',flashKnown);flashIdx++;flashFlip=false;drawFlash();}
 function restartDeck(){buildDeck();drawFlash();}
 
 // ===== 1교시 이론 (MC·OX·SHORT) =====
@@ -618,6 +762,7 @@ function gradeExam(){
     rev.push({q,a:exAns[i],ok});
   });
   const pct=Math.round(sc/exN*100),pass=pct>=70;if(examBest==null||pct>examBest){examBest=pct;save('examBest',pct);}
+  awardXp(Math.max(3,Math.round(pct/5)),'1교시 응시 '+pct+'%');
   const reviewHtml=rev.map((r,i)=>{
     const q=r.q;const tag=({MC:'객관식',OX:'OX',SHORT:'단답형'}[q.type]);
     return '<div class="rev '+(r.ok?'ok':'no')+'"><div class="rv-h"><span class="typetag t-'+q.type+'">'+tag+'</span> '+(r.ok?'✔ 정답':'✗ 오답')+' <span class="rv-cat">'+esc(q.c||q.cat||'')+'</span></div>'+
@@ -785,6 +930,7 @@ function nextPrac(){prIdx++;drawPrac();}
 function prResult(){
   clearInterval(prTimer);const avg=prScores.length?Math.round(prScores.reduce((a,b)=>a+b,0)/prScores.length):0;const pass=avg>=70;
   if(pracBest==null||avg>pracBest){pracBest=avg;save('pracBest',avg);}
+  awardXp(Math.max(3,Math.round(avg/5)),'2교시 응시 '+avg+'%');
   document.getElementById('v-prac').innerHTML='<div class="res"><div class="big">'+avg+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (평균 70%+)':'❌ 불합격')+'</div><p class="sub">'+prScores.length+'문항 평균 점수</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rPrac()">다시 응시</button><button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div></div>';
   announce('2교시 채점 완료. 평균 '+avg+'점, '+(pass?'합격':'불합격')+'.');
 }
