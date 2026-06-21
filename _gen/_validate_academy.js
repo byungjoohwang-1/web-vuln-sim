@@ -44,7 +44,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady,levelInfo,awardXp,checkBadges,BADGES,gam,todayKey,touchDay,gamHeaderHtml,heatmapHtml,badgesHtml,PATH_STAGES,rPath,learned,flashKnown});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady,levelInfo,awardXp,checkBadges,BADGES,gam,todayKey,touchDay,gamHeaderHtml,heatmapHtml,badgesHtml,PATH_STAGES,rPath,learned,flashKnown,buildSarif,rBoard});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -322,6 +322,36 @@ ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모�
   const pv=document.getElementById('v-path').innerHTML;
   ok(/학습 경로/.test(pv)&&/다음 추천 단계/.test(pv), 'path: rPath renders roadmap + next-step CTA');
   ok(/data-v="path"/.test(html)&&/🗺️ 학습 경로/.test(html), 'path: tab present in HTML');
+})();
+
+// ===== SARIF 2.1.0 내보내기: 구조·결과·규칙 매핑 =====
+(function(){
+  const tp=E.PRACTICAL.find(p=>p.isTruePositive), fp=E.PRACTICAL.find(p=>!p.isTruePositive);
+  const sample=[
+    {p:tp,ans:{tp:true,name:tp.weaknessName,reason:'테스트 근거',fix:tp.safeCode||''},r:{score:88}},
+    {p:fp,ans:{tp:true,name:'',reason:'오판',fix:''},r:{score:40}}  // 오탐을 정탐으로 오판
+  ];
+  const s=E.buildSarif(sample);
+  ok(s.version==='2.1.0'&&/sarif-2.1.0/.test(s['$schema']), 'SARIF: version 2.1.0 + schema');
+  ok(Array.isArray(s.runs)&&s.runs.length===1, 'SARIF: single run');
+  const run=s.runs[0];
+  ok(run.tool&&run.tool.driver&&run.tool.driver.name, 'SARIF: tool.driver.name present');
+  ok(Array.isArray(run.tool.driver.rules)&&run.tool.driver.rules.length>=1, 'SARIF: rules array populated');
+  ok(run.results.length===2, 'SARIF: one result per diagnosed item');
+  ok(run.results.every(r=>r.ruleId&&r.message&&r.message.text&&r.locations&&r.locations[0].physicalLocation), 'SARIF: results well-formed (ruleId/message/location)');
+  ok(run.results[0].properties&&typeof run.results[0].properties.judgmentCorrect==='boolean', 'SARIF: properties carry judgmentCorrect/score');
+  ok(['error','warning','note'].includes(run.results[1].level), 'SARIF: level is a valid SARIF level');
+  ok(/data-v="prac"/.test(html), 'SARIF: practical tab present (export entry point)');
+})();
+
+// ===== 리더보드: 미로그인/위젯 미로드 시 graceful 처리(throw 없음) + 탭/규칙 배선 =====
+(function(){
+  let threw=false; try{ E.rBoard(); }catch(e){ threw=true; console.log('  ✗ rBoard threw:',e.message); }
+  ok(!threw, 'board: rBoard renders without throwing when sdaBoard absent');
+  const bv=document.getElementById('v-board').innerHTML;
+  ok(/리더보드/.test(bv)&&/(로그인|불러오는)/.test(bv), 'board: shows login/loading guidance when not signed in');
+  ok(/data-v="board"/.test(html)&&/🏆 리더보드/.test(html), 'board: tab present in HTML');
+  ok(/window\.sdaBoard/.test(html), 'board: academy calls window.sdaBoard bridge');
 })();
 
 console.log(fail===0 ? '\n✅ ACADEMY v3 VALIDATION PASS' : '\n❌ FAIL count='+fail);

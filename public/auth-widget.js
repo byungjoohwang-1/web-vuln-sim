@@ -3,7 +3,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
          setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp,
+         collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBaRXs5HJ1ABFcshaTpqNj-uFuq2H9ZOcw",
@@ -114,6 +115,29 @@ async function doLogin(){
     alert(msg);
   }
 }
+
+// ===== 리더보드 브리지: 아카데미(인라인 스크립트)에서 호출하는 공개 API =====
+// leaderboard/{uid} = {name, xp, level, streak, updatedAt}. 본인만 쓰기, 로그인자만 읽기(firestore.rules).
+window.sdaBoard = {
+  getUser(){ return currentUser ? { uid: currentUser.uid, name: currentUser.displayName || currentUser.email || '사용자' } : null; },
+  async publish(p){
+    if (!currentUser) throw new Error('not-logged-in');
+    const name = (p && p.name ? String(p.name) : (currentUser.displayName || '익명')).slice(0, 24);
+    await setDoc(doc(db, 'leaderboard', currentUser.uid), {
+      name, xp: (p && +p.xp) || 0, level: (p && +p.level) || 1, streak: (p && +p.streak) || 0,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return true;
+  },
+  async fetchTop(n){
+    const q = query(collection(db, 'leaderboard'), orderBy('xp', 'desc'), limit(n || 20));
+    const snap = await getDocs(q);
+    const me = currentUser ? currentUser.uid : null;
+    const rows = [];
+    snap.forEach(d => { const v = d.data(); rows.push({ uid: d.id, name: v.name || '익명', xp: v.xp || 0, level: v.level || 1, streak: v.streak || 0, me: d.id === me }); });
+    return rows;
+  }
+};
 
 setPersistence(auth, browserLocalPersistence).catch(() => {});
 onAuthStateChanged(auth, u => u ? onLogin(u) : onLogout());

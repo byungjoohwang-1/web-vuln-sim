@@ -286,7 +286,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .ps-bar i{display:block;height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:6px;transition:width .4s}
 .ps-pct{font-size:11.5px;color:#475569;margin:4px 0 6px;font-weight:600}
 .ps-go{font-size:12px;padding:5px 12px}
-@media(max-width:768px){.gam-lv .lv-bar{width:80px}.gam-row{gap:7px}.gam-chip{font-size:12px;padding:6px 11px}}
+/* 리더보드 */
+.cert-form{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:6px 0 12px}
+.cert-form label{font-size:13px;font-weight:600;color:#334155;display:flex;align-items:center;gap:8px}
+.cert-form input{border:1px solid #cbd5e1;border-radius:8px;padding:8px 11px;font-size:14px;min-width:160px}
+.lb-row{display:grid;grid-template-columns:54px 1fr 76px 96px 64px;align-items:center;gap:6px;padding:11px 12px;border-bottom:1px solid #eef2f7;font-size:14px}
+.lb-row.lb-head{font-size:11.5px;font-weight:700;color:#64748b;background:#f8fafc;border-radius:8px 8px 0 0;border-bottom:2px solid #e2e8f0}
+.lb-row.me{background:#eef2ff;border-radius:8px;font-weight:700}
+.lb-rank{font-size:16px;text-align:center}.lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-lv{color:#7c3aed;font-weight:700;font-size:13px}.lb-xp{font-weight:700;color:#1e293b;text-align:right;font-size:13px}.lb-st{text-align:right;font-size:13px}
+@media(max-width:768px){.gam-lv .lv-bar{width:80px}.gam-row{gap:7px}.gam-chip{font-size:12px;padding:6px 11px}
+  .lb-row{grid-template-columns:38px 1fr 56px 70px;font-size:12.5px}.lb-st{display:none}}
 @media print{
   body{background:#fff!important}
   body *{visibility:hidden}
@@ -310,6 +320,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <button class="tab" data-v="exam" onclick="tab('exam')">📝 1교시 이론</button>
   <button class="tab" data-v="prac" onclick="tab('prac')">🧪 2교시 실무</button>
   <button class="tab" data-v="ide" onclick="tab('ide')">💻 코드 실행</button>
+  <button class="tab" data-v="board" onclick="tab('board')">🏆 리더보드</button>
   <button class="tab" data-v="wrong" onclick="tab('wrong')">❌ 오답노트</button>
 </div></div>
 <div class="wrap" id="mainviews">
@@ -321,6 +332,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <div class="view" id="v-exam"></div>
   <div class="view" id="v-prac"></div>
   <div class="view" id="v-ide"></div>
+  <div class="view" id="v-board"></div>
   <div class="view" id="v-wrong"></div>
 </div>
 <div id="printArea" aria-hidden="true"></div>
@@ -497,6 +509,36 @@ function rPath(){
     '<div class="path-list">'+items+'</div>';
 }
 
+// ===== 🏆 리더보드 (Firestore, 로그인·선택 등록) — auth-widget.js의 window.sdaBoard 브리지 사용 =====
+function rBoard(){
+  document.getElementById('v-board').innerHTML='<h2 class="st">🏆 리더보드</h2><p class="sub">로그인하면 XP·레벨 순위에 참여할 수 있습니다. (선택 — "등록" 버튼을 눌러야 공개됩니다)</p><div id="boardBody">불러오는 중…</div>';
+  const api=(typeof window!=='undefined')?window.sdaBoard:null;
+  const body=document.getElementById('boardBody');if(!body)return;
+  if(!api){body.innerHTML='<div class="empty">로그인 위젯을 불러오는 중입니다. 잠시 후 새로고침하거나, 우측 상단의 <b>Google 로그인</b>을 먼저 진행해 주세요.</div>';return;}
+  const u=api.getUser();
+  if(!u){body.innerHTML='<div class="empty">리더보드는 <b>로그인 후</b> 이용할 수 있습니다.<br>우측 상단 <b>Google 로그인</b> 버튼으로 로그인해 주세요.<br><span style="font-size:12px;color:#94a3b8">(관리자가 Firebase 콘솔에서 Google 제공업체를 켜야 동작합니다)</span></div>';return;}
+  const li=levelInfo(gam.xp||0);
+  body.innerHTML='<div class="cert-form"><label>표시 이름 <input id="boardName" type="text" maxlength="24" value="'+esc(gam.name||u.name||'')+'" placeholder="'+esc(u.name)+'"></label><button class="btn" onclick="publishBoard()">📤 내 점수 등록/갱신</button></div>'+
+    '<p class="sub">내 현재: <b>Lv.'+li.level+'</b> · '+(gam.xp||0)+' XP · 🔥'+(gam.streak||0)+'일 연속</p><div id="boardList">순위 불러오는 중…</div>';
+  loadBoard();
+}
+function publishBoard(){
+  const api=(typeof window!=='undefined')?window.sdaBoard:null;if(!api)return;
+  const el=document.getElementById('boardName');if(el){gam.name=(el.value||'').trim();save('gam',gam);}
+  const li=levelInfo(gam.xp||0);
+  api.publish({name:gam.name||(api.getUser()||{}).name,xp:gam.xp||0,level:li.level,streak:gam.streak||0})
+    .then(()=>{announce('리더보드에 등록되었습니다.');gamToast('🏆 리더보드 등록 완료');loadBoard();})
+    .catch(()=>{const b=document.getElementById('boardList');if(b)b.innerHTML='<div class="empty">등록 실패 — 로그인 상태를 확인하세요.</div>';});
+}
+function loadBoard(){
+  const api=(typeof window!=='undefined')?window.sdaBoard:null;const b=document.getElementById('boardList');if(!api||!b)return;
+  api.fetchTop(20).then(rows=>{
+    if(!rows.length){b.innerHTML='<div class="empty">아직 등록된 점수가 없습니다. 첫 번째로 등록해 보세요!</div>';return;}
+    const items=rows.map((r,i)=>'<div class="lb-row'+(r.me?' me':'')+'"><span class="lb-rank">'+(i<3?['🥇','🥈','🥉'][i]:(i+1))+'</span><span class="lb-name">'+esc(r.name)+(r.me?' <b>(나)</b>':'')+'</span><span class="lb-lv">Lv.'+r.level+'</span><span class="lb-xp">'+r.xp+' XP</span><span class="lb-st">🔥'+r.streak+'</span></div>').join('');
+    b.innerHTML='<div class="lb-row lb-head"><span class="lb-rank">#</span><span class="lb-name">이름</span><span class="lb-lv">레벨</span><span class="lb-xp">XP</span><span class="lb-st">연속</span></div>'+items;
+  }).catch(()=>{b.innerHTML='<div class="empty">순위를 불러오지 못했습니다. (로그인·네트워크 확인)</div>';});
+}
+
 function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
 function gnorm(s){return (s||'').toString().toLowerCase().replace(/[\s.,;:!?()\[\]{}"'`]/g,'');}
 // 코드 주석 제거(검증 연극 차단): 주석 속 키워드로 만점받는 우회를 막는다.
@@ -561,7 +603,7 @@ function tab(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
   gam.visited[v]=true;save('gam',gam);
-  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,wrong:rWrong}[v])();
+  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,board:rBoard,wrong:rWrong}[v])();
 }
 // 스크린리더 알림(aria-live)
 function announce(msg){const el=document.getElementById('ariaLive');if(!el)return;el.textContent='';setTimeout(()=>{el.textContent=msg;},40);}
@@ -745,7 +787,7 @@ function gradeExam(){
 }
 
 // ===== 2교시 실무 (정·오탐 판별 + 서술형 채점) =====
-let prPool=[],prIdx=0,prN=0,prScores=[],prTP=null,prTimer=null,prLeft=0,prDiff='전체';
+let prPool=[],prIdx=0,prN=0,prScores=[],prResults=[],prTP=null,prTimer=null,prLeft=0,prDiff='전체';
 function pracPool(){return prDiff==='전체'?PRACTICAL:PRACTICAL.filter(p=>p.diff===prDiff);}
 function setPrDiff(d){prDiff=d;rPrac();}
 function rPrac(){
@@ -755,7 +797,7 @@ function rPrac(){
    '<div class="catbar">'+chips+'</div>'+
    '<div class="setbox"><h3>실무 평가</h3><p>실제 2교시처럼 서술형으로 진단합니다. (문항당 3분 권장 타이머)<br>현재 출제풀: <b>'+pool.length+'문항</b> (정탐 '+tp+' · 오탐 '+(pool.length-tp)+')</p><div class="setrow"><button class="qbtn ghost" onclick="startPrac(6)">6문항 무작위</button><button class="qbtn" onclick="startPrac(999)">전체 풀이 ('+pool.length+')</button></div>'+(pracBest!=null?'<p>최고 기록: <b>'+pracBest+'%</b></p>':'<p>아직 기록이 없습니다.</p>')+'</div>';
 }
-function startPrac(n){const pool=pracPool();if(!pool.length){alert('해당 난이도 문항이 없습니다.');return;}prPool=shuffle(pool);prPool=prPool.slice(0,Math.min(n,prPool.length));prN=prPool.length;prIdx=0;prScores=[];prLeft=prN*180;
+function startPrac(n){const pool=pracPool();if(!pool.length){alert('해당 난이도 문항이 없습니다.');return;}prPool=shuffle(pool);prPool=prPool.slice(0,Math.min(n,prPool.length));prN=prPool.length;prIdx=0;prScores=[];prResults=[];prLeft=prN*180;
   [...new Set(prPool.map(p=>p.lang))].forEach(l=>{try{loadTreeSitter(l);}catch(e){}});  // AST 파서 사전 로딩(비동기, 폴백 안전)
   startPrTimer();drawPrac();}
 function startPrTimer(){clearInterval(prTimer);prTimer=setInterval(()=>{prLeft--;const t=document.getElementById('prTimer');if(t){const m=Math.floor(prLeft/60),s=prLeft%60;t.textContent='⏱ '+m+':'+String(s).padStart(2,'0');t.classList.toggle('warn',prLeft<=60);}if(prLeft<=0){clearInterval(prTimer);prResult();}},1000);}
@@ -864,7 +906,7 @@ async function submitPrac(){
   const p=prPool[prIdx];
   if(prTP===true){try{await loadTreeSitter(p.lang);}catch(e){}}  // 채점 전 AST 파서 준비(폴백 안전)
   const ans={tp:prTP,name:document.getElementById('prName').value,reason:document.getElementById('prReason').value,fix:document.getElementById('prFix').value};
-  const r=gradeOne(p,ans);prScores.push(r.score);
+  const r=gradeOne(p,ans);prScores.push(r.score);prResults.push({p:p,ans:ans,r:r});
   const wkey='[2교시 실무] '+p.title+' ('+p.lang+')';
   if(r.score<60)addWrong({q:wkey,a:(p.isTruePositive?('정탐 · '+p.weaknessName+(p.cwe?' ('+p.cwe+')':'')):'오탐(안전한 코드)'),e:p.explanation,tag:'2교시',code:p.code||'',cat:p.cat||''});
   else if(r.score>=70)removeWrong(wkey);
@@ -898,8 +940,42 @@ function prResult(){
   clearInterval(prTimer);const avg=prScores.length?Math.round(prScores.reduce((a,b)=>a+b,0)/prScores.length):0;const pass=avg>=70;
   if(pracBest==null||avg>pracBest){pracBest=avg;save('pracBest',avg);}
   awardXp(Math.max(3,Math.round(avg/5)),'2교시 응시 '+avg+'%');
-  document.getElementById('v-prac').innerHTML='<div class="res"><div class="big">'+avg+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (평균 70%+)':'❌ 불합격')+'</div><p class="sub">'+prScores.length+'문항 평균 점수</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rPrac()">다시 응시</button><button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div></div>';
+  const sarifBtn=prResults.length?'<button class="btn ghost" onclick="exportSarif()">📤 SARIF 내보내기</button>':'';
+  document.getElementById('v-prac').innerHTML='<div class="res"><div class="big">'+avg+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (평균 70%+)':'❌ 불합격')+'</div><p class="sub">'+prScores.length+'문항 평균 점수</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rPrac()">다시 응시</button>'+sarifBtn+'<button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div>'+(sarifBtn?'<p class="sub" style="margin-top:8px">SARIF 2.1.0 표준 — SonarQube·GitHub Security 탭에 임포트해 진단 이력으로 활용할 수 있습니다.</p>':'')+'</div>';
   announce('2교시 채점 완료. 평균 '+avg+'점, '+(pass?'합격':'불합격')+'.');
+}
+
+// ===== 📤 SARIF 2.1.0 내보내기 — 2교시 정·오탐 판별 결과를 진단도구 표준 포맷으로 =====
+function slug(s){return (s||'').toString().replace(/[^A-Za-z0-9가-힣]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'item';}
+function buildSarif(results){
+  const EXT={'Java':'java','C':'c','Python':'py'};
+  const ruleMap={};
+  const sarifResults=results.map((it,i)=>{
+    const p=it.p,r=it.r,ans=it.ans||{};
+    const rid=p.isTruePositive?(p.cwe||p.weaknessName||'KISA-WEAKNESS'):'KISA-SAFE';
+    if(!ruleMap[rid])ruleMap[rid]={id:rid,name:(p.isTruePositive?(p.weaknessName||'보안약점'):'안전한 코드(오탐 대상)'),
+      shortDescription:{text:(p.isTruePositive?(p.weaknessName+(p.cwe?(' ('+p.cwe+')'):'')):'정상 코드 — 취약점 없음')},
+      properties:{category:p.cat||'',kisaType:p.cat||''}};
+    const judged=(ans.tp===p.isTruePositive);
+    const uri='practical/'+slug(p.title)+'.'+(EXT[p.lang]||'txt');
+    return {ruleId:rid,
+      level:p.isTruePositive?(judged?'error':'warning'):'note',
+      message:{text:(p.isTruePositive?'정탐(보안약점 존재)':'오탐(안전한 코드)')+' · 응시자 판별: '+(ans.tp?'정탐':'오탐')+' ('+(judged?'정확':'오답')+') · 점수 '+(r?r.score:0)+'/100'+(ans.reason?(' · 근거: '+ans.reason):'')},
+      locations:[{physicalLocation:{artifactLocation:{uri:uri},region:{startLine:1}}}],
+      properties:{isTruePositive:!!p.isTruePositive,userJudgedTruePositive:!!ans.tp,judgmentCorrect:judged,score:(r?r.score:0),language:p.lang,kisaType:p.cat||'',weakness:p.weaknessName||''}};
+  });
+  return {"$schema":"https://json.schemastore.org/sarif-2.1.0.json","version":"2.1.0",
+    runs:[{tool:{driver:{name:"SecureDevAcademy-LASHR",informationUri:"https://vuln-sim.web.app",version:"1.0.0",
+      organization:"KISA 보안약점 진단원 학습 센터",rules:Object.keys(ruleMap).map(k=>ruleMap[k])}},
+      results:sarifResults}]};
+}
+function exportSarif(){
+  const obj=buildSarif(prResults);
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/sarif+json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='secure-dev-academy-result.sarif';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);if(a.parentNode)a.parentNode.removeChild(a);},100);
+  announce('SARIF 파일을 내보냈습니다.');
 }
 
 // ===== 💻 온라인 IDE (Monaco + Pyodide/Piston 실제 실행) =====
