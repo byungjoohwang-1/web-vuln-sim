@@ -7,16 +7,19 @@ if (!m) { console.error('script block not found'); process.exit(1); }
 let code = m[1];
 
 // ---- DOM shim ----
+function htmlEscape(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function mkEl() {
   const el = {
-    _html: '', textContent: '', value: '', disabled: false,
+    _html: '', _text: '', value: '', disabled: false,
     classList: { _s: new Set(), add(){[].forEach.call(arguments,a=>this._s.add(a));}, remove(){[].forEach.call(arguments,a=>this._s.delete(a));}, toggle(c,f){if(f===undefined)f=!this._s.has(c);f?this._s.add(c):this._s.delete(c);return f;}, contains(c){return this._s.has(c);} },
     dataset: {}, style: {},
     setAttribute(){}, getAttribute(){return '';},
     querySelector(){return mkEl();}, querySelectorAll(){return [];},
     addEventListener(){}, scrollIntoView(){}, appendChild(){}, focus(){}
   };
-  Object.defineProperty(el, 'innerHTML', { get(){return this._html;}, set(v){this._html=v;} });
+  // 실제 DOM 모사: textContent 설정 시 innerHTML은 HTML-escape 된 값이 됨 (esc() 정확 동작)
+  Object.defineProperty(el, 'textContent', { get(){return this._text;}, set(v){this._text=v==null?'':String(v);this._html=htmlEscape(this._text);} });
+  Object.defineProperty(el, 'innerHTML', { get(){return this._html;}, set(v){this._html=v;this._text='';} });
   return el;
 }
 const elCache = {};
@@ -38,7 +41,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,KISA49,gradeOne,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,diffBadge,pracPool});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,gradeOne,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,diffBadge,pracPool,codeBlock,codePane});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number };
 sandbox.globalThis = sandbox;
@@ -141,6 +144,24 @@ ok(exPass===exItems.length, 'exCorrect all pass');
 
 // diffBadge
 ok(/난이도 상/.test(E.diffBadge('상')), 'diffBadge renders');
+
+// CODE49: 49개 약점 전부 코드 보유 + 카드 렌더 검증
+const cnames = E.CONCEPTS.map(c=>c.name);
+ok(Object.keys(E.CODE49).length===49, 'CODE49 has 49 entries (got '+Object.keys(E.CODE49).length+')');
+let noCode=cnames.filter(n=>!E.CODE49[n]);
+ok(noCode.length===0, 'every concept has CODE49 entry; missing: '+noCode.join(','));
+let badJava=cnames.filter(n=>{const c=E.CODE49[n];return !c||!c.javaVuln||!c.javaSafe;});
+ok(badJava.length===0, 'every concept has java vuln+safe; missing: '+badJava.join(','));
+const pyMissing=cnames.filter(n=>{const c=E.CODE49[n];return !(c.pyVuln&&c.pySafe);});
+console.log('python-missing (expected 4):', pyMissing.length, pyMissing.join(', '));
+ok(pyMissing.length<=4, 'python missing within expected set');
+// codeBlock 렌더: java 약점은 탭/코드/출처 포함, python 미수록은 note 포함
+const hbJava=E.codeBlock(0, 'SQL 삽입');
+ok(/진단가이드/.test(hbJava)&&/시큐어코딩/.test(hbJava)&&/안전하지 않은 코드/.test(hbJava)&&/안전한 코드/.test(hbJava), 'codeBlock(SQL) has java+python tabs and code panes');
+const hbNoPy=E.codeBlock(1, '메모리 버퍼 오버플로우');
+ok(/수록되어 있지 않|미수록/.test(hbNoPy) && !/Python · 시큐어코딩/.test(hbNoPy), 'codeBlock(memory) shows note, no python tab');
+// javaLang 라벨 반영 (C 항목)
+ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모리 버퍼 오버플로우')), 'C javaLang label rendered');
 
 console.log(fail===0 ? '\n✅ ACADEMY v3 VALIDATION PASS' : '\n❌ FAIL count='+fail);
 process.exit(fail===0?0:1);

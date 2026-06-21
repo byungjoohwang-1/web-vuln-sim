@@ -63,10 +63,22 @@ h2.st{font-size:23px;margin-bottom:6px}.sub{color:var(--muted);font-size:14px;ma
 .ccard .ch h4{font-size:15.5px;line-height:1.4}.ccard .ch .cwe{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
 .ccard .badge{font-size:10.5px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
 .ccard .detail{display:none;padding:0 18px 16px;border-top:1px solid var(--line)}.ccard.open .detail{display:block}
+.ccard.open{grid-column:1/-1}
 .ccard .fld{margin-top:12px}.ccard .fld .lb{font-size:12px;font-weight:700;color:var(--p);margin-bottom:3px}.ccard .fld .tx{font-size:14px;color:#334155;line-height:1.65}
 .ccard .done-btn{margin-top:14px;width:100%;border:1.5px solid var(--ok);background:#fff;color:#16a34a;padding:9px;border-radius:10px;font-family:'Lora',serif;font-weight:700;cursor:pointer;font-size:13.5px}
 .ccard.done .done-btn{background:var(--ok);color:#fff}
 .ccard .simlink{display:inline-block;margin-top:10px;font-size:12.5px;color:var(--p);font-weight:700}
+.lgtabs{display:flex;gap:6px;margin:8px 0 0}
+.lgtab{border:1.5px solid var(--line);border-bottom:none;background:#fff;border-radius:9px 9px 0 0;padding:7px 13px;font-family:'Lora',serif;font-weight:700;font-size:12.5px;cursor:pointer;color:var(--muted)}
+.lgtab.on{background:var(--p);color:#fff;border-color:var(--p)}
+.codepair{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:10px;min-width:0}
+@media(max-width:820px){.codepair{grid-template-columns:1fr}}
+.cp{min-width:0;display:flex;flex-direction:column}
+.cp .cph{font-size:12px;font-weight:700;padding:5px 9px;border-radius:7px 7px 0 0}
+.cph.bad{background:#fef2f2;color:#b91c1c}.cph.good{background:#f0fdf4;color:#15803d}
+.cpre{background:#0b1020;color:#e2e8f0;padding:11px 13px;border-radius:0 0 8px 8px;overflow-x:auto;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;white-space:pre;margin:0;max-height:360px;min-width:0;max-width:100%}
+.cnote{font-size:12px;color:var(--muted);margin-top:8px;background:#f8fafc;border:1px dashed var(--line);border-radius:8px;padding:8px 10px}
+.csrc{font-size:11px;color:var(--muted);margin-top:4px}
 .flash-stage{max-width:560px;margin:0 auto;text-align:center}
 .fcard{background:#fff;border:1px solid var(--line);border-radius:20px;min-height:240px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:34px;cursor:pointer;box-shadow:0 12px 34px rgba(2,6,23,.1);transition:.2s}
 .fcard:hover{transform:translateY(-3px)} .fcard .face-cat{font-size:12px;color:#fff;border-radius:20px;padding:3px 12px;margin-bottom:14px;font-family:'JetBrains Mono',monospace}
@@ -125,7 +137,8 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
 .model h4{font-size:14px;color:var(--p2);margin-bottom:8px}
 .kw{display:inline-block;background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:14px;padding:2px 10px;font-size:12px;margin:2px 3px;font-family:'JetBrains Mono',monospace}
 .kw.hit{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:740px){.two{grid-template-columns:1fr}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}@media(max-width:740px){.two{grid-template-columns:1fr}}
+.two .pane{min-width:0}.two .pane pre{overflow-x:auto;max-width:100%;white-space:pre}
 .two .pane h5{font-size:12px;color:var(--muted);margin-bottom:5px;font-family:'JetBrains Mono',monospace}
 .diffpre{background:#0b1020;border-radius:10px;padding:12px 14px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;margin:0;white-space:pre}
 .diffpre .d-del{display:block;background:rgba(239,68,68,.16);color:#fca5a5}
@@ -170,6 +183,7 @@ const CONCEPTS = __CONCEPTS__;
 const QUIZ = __QUIZ__;
 const PRACTICAL = __PRACTICAL__;
 const THEORY = __THEORY__;
+const CODE49 = __CODE49__;
 const KISA49 = CONCEPTS.map(c=>c.name);
 const CATS = ['입력검증','보안기능','시간상태','에러처리','코드오류','캡슐화','API오용'];
 const CCOLOR = {'입력검증':'#6366f1','보안기능':'#0ea5e9','시간상태':'#14b8a6','에러처리':'#f59e0b','코드오류':'#ef4444','캡슐화':'#8b5cf6','API오용':'#64748b'};
@@ -231,10 +245,32 @@ function rLearn(){
   const cards=list.map(x=>{const gi=CONCEPTS.indexOf(x),done=learned[x.name]?' done':'';
     const sim=SIMMAP[x.name]?'<a class="simlink" href="'+SIMMAP[x.name]+'">🔗 관련 시뮬레이터로 →</a>':'';
     return '<div class="ccard'+done+'" id="cc'+gi+'"><div class="ch" onclick="toggleCard('+gi+')"><div><h4>'+esc(x.name)+'</h4><div class="cwe">'+esc(x.cwe)+'</div></div><span class="badge" style="background:'+CCOLOR[x.cat]+'">'+x.cat+'</span></div>'+
-      '<div class="detail">'+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
-  document.getElementById('v-learn').innerHTML='<h2 class="st">📖 개념 학습 — 49개 보안약점</h2><p class="sub">카드를 눌러 상세를 펼치고 학습 완료를 표시하세요. 관련 시뮬레이터로 바로 이동할 수 있습니다.</p><div class="catbar">'+chips+'</div><div class="cgrid">'+cards+'</div>';
+      '<div class="detail">'+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
+  document.getElementById('v-learn').innerHTML='<h2 class="st">📖 개념 학습 — 49개 보안약점</h2><p class="sub">카드를 펼치면 정의·위협·진단법과 함께 <b>KISA 가이드의 Java·Python 안전하지 않은/안전한 코드 예제</b>를 확인할 수 있습니다. (Java=진단가이드, Python=시큐어코딩 가이드)</p><div class="catbar">'+chips+'</div><div class="cgrid">'+cards+'</div>';
 }
 function fld(l,t){return '<div class="fld"><div class="lb">'+l+'</div><div class="tx">'+esc(t)+'</div></div>';}
+function codePane(vuln,safe){
+  return '<div class="codepair"><div class="cp"><div class="cph bad">🚫 안전하지 않은 코드</div><pre class="cpre">'+esc(vuln||'(예제 없음)')+'</pre></div>'+
+         '<div class="cp"><div class="cph good">✅ 안전한 코드</div><pre class="cpre">'+esc(safe||'(예제 없음)')+'</pre></div></div>';
+}
+function codeBlock(gi,name){
+  const cd=CODE49[name]; if(!cd) return '';
+  const hasPy=!!(cd.pyVuln&&cd.pySafe), jl=cd.javaLang||'Java';
+  let tabs='<div class="lgtabs"><button class="lgtab on" id="lgj'+gi+'" onclick="setLang(event,'+gi+',\'j\')">'+esc(jl)+' · 진단가이드</button>'+
+    (hasPy?'<button class="lgtab" id="lgp'+gi+'" onclick="setLang(event,'+gi+',\'p\')">Python · 시큐어코딩</button>':'')+'</div>';
+  let jpane='<div id="lgjp'+gi+'">'+codePane(cd.javaVuln,cd.javaSafe)+'</div>';
+  let ppane=hasPy?'<div id="lgpp'+gi+'" style="display:none">'+codePane(cd.pyVuln,cd.pySafe)+'</div>':'';
+  let note=(!hasPy)?'<div class="cnote">※ '+esc(cd.note||'해당 약점은 Python 시큐어코딩 가이드에 코드 예제가 수록되어 있지 않습니다.')+'</div>':'';
+  return '<div class="fld"><div class="lb">📑 가이드 코드 예제</div>'+tabs+jpane+ppane+note+
+    '<div class="csrc">출처: 「소프트웨어 보안약점 진단가이드(2021)」(Java/C) · 「Python 시큐어코딩 가이드(2023)」 — KISA</div></div>';
+}
+function setLang(e,gi,which){
+  if(e&&e.stopPropagation)e.stopPropagation();
+  document.getElementById('lgjp'+gi).style.display=which==='j'?'block':'none';
+  const pp=document.getElementById('lgpp'+gi); if(pp)pp.style.display=which==='p'?'block':'none';
+  document.getElementById('lgj'+gi).classList.toggle('on',which==='j');
+  const pb=document.getElementById('lgp'+gi); if(pb)pb.classList.toggle('on',which==='p');
+}
 function setLearnCat(c){learnCat=c;rLearn();}
 function toggleCard(i){document.getElementById('cc'+i).classList.toggle('open');}
 function toggleDone(i){const n=CONCEPTS[i].name;if(learned[n])delete learned[n];else learned[n]=true;save('learned',learned);rLearn();}
@@ -394,10 +430,15 @@ rDash();
 def main():
     a = importlib.import_module('specs_academy')
     pr = importlib.import_module('specs_academy_practical')
-    html = (TPL.replace('__CONCEPTS__', json.dumps(a.CONCEPTS, ensure_ascii=False))
-               .replace('__QUIZ__', get_quiz_bank())
-               .replace('__PRACTICAL__', json.dumps(pr.PRACTICAL, ensure_ascii=False))
-               .replace('__THEORY__', json.dumps(pr.THEORY, ensure_ascii=False)))
+    cc = importlib.import_module('specs_code49')
+    # <script> 조기 종료 방지: 임베드 데이터의 </ 를 <\/ 로 이스케이프(런타임 JS 파싱 동일)
+    def jdump(o):
+        return json.dumps(o, ensure_ascii=False).replace('</', '<\\/')
+    html = (TPL.replace('__CONCEPTS__', jdump(a.CONCEPTS))
+               .replace('__QUIZ__', get_quiz_bank().replace('</', '<\\/'))
+               .replace('__PRACTICAL__', jdump(pr.PRACTICAL))
+               .replace('__THEORY__', jdump(pr.THEORY))
+               .replace('__CODE49__', jdump(cc.CODE49)))
     open(os.path.join(OUT, 'secure-dev-academy.html'), 'w', encoding='utf-8').write(html)
     print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d'
           % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY)))
