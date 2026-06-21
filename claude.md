@@ -11,7 +11,7 @@
   → **https://vuln-sim.web.app** (소유: mibbeuda@gmail.com / Spark 무료 플랜)
   * `public/` 만 서빙된다. `books/`(저작권 PDF 원문)·`_gen/`(생성기)은 **배포되지 않는다.**
   * 로그인/백엔드 없음(클라이언트 + localStorage 단독 구동). Cloud Functions=Blaze 유료라 미사용.
-* **진입**: `index.html`(스플래시) → ① `vuln-hub.html`(취약점 학습 허브) ② `secure-dev-portal.html`(개발보안 학습) ③ `secure-dev-academy.html`(진단원 학습 센터, 플래그십).
+* **진입**: `index.html`(스플래시) → ① `vuln-hub.html`(취약점 학습 허브) ② `secure-dev-portal.html`(개발보안 학습) ③ `secure-dev-academy.html`(진단원 학습 센터, 플래그십) ④ `coding-standards.html`(C/C++ 코딩 표준 레퍼런스, TRACK 03).
 
 ---
 
@@ -53,6 +53,12 @@ XP·레벨 곡선·일일목표(50XP)·연속학습 스트릭·12주 히트맵·
 * 아카데미는 이 구조를 탭 상단 안내 패널로 명시하고, 실전 객관식·설계 진단 모드로 대비한다.
 
 ---
+
+### C/C++ 코딩 표준 레퍼런스 (`coding-standards.html`)
+* `_gen/gen_standards.py` 가 단일 HTML로 생성. 규칙 데이터는 표준별 모듈 `std_misrac`·`std_misracpp`·`std_certc`·`std_certcpp`·`std_autosar`의 `RULES`(스키마 `{id,cat,title,bad,good,why}`)에서 import.
+* 5대 표준 **총 175룰**(MISRA C:2012 34 · MISRA C++:2023 41 · CERT C 31 · CERT C++ 34 · AUTOSAR C++14 35). 탭·표준내 검색·위반↔준수 코드 토글 UI.
+* **KISA 매칭 없음**(사용자 요청). 규칙 ID·제목·분류 체계만 인용, **코드 예제·해설은 전부 자체 작성**(규범 원문 비복제). 페이지 내 viewport+@media 자체 포함(파이프라인 불필요, 독립 생성).
+* 재생성: `cd _gen && PYTHONIOENCODING=utf-8 python gen_standards.py`.
 
 ## 4. 콘텐츠 파이프라인 (`_gen/`)
 
