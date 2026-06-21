@@ -199,6 +199,16 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
 .ttbl th{background:#f1f5f9;font-weight:700;color:#334155}
 .ttbl .tv{color:var(--muted);font-size:11px}
 .ttbl tr.ours{background:#f0fdf4}.ttbl tr.ours td{border-color:#bbf7d0}
+/* 온라인 IDE */
+.ide-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.ide-sel{flex:1;min-width:240px;max-width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;font-family:'Lora',serif;background:#fff}
+.ide-lang{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#fff;background:#334155;border-radius:7px;padding:4px 10px}
+.ide-editor{height:380px;border:1px solid #2a2a45;border-radius:10px;overflow:hidden;background:#1e1e1e;color:#aaa;font-family:'JetBrains Mono',monospace;font-size:12px;padding:8px}
+.ide-note{font-size:12.5px;color:#475569;background:#f8fafc;border-radius:8px;padding:9px 12px;margin:10px 0}
+.ide-out-h{font-size:13px;font-weight:700;color:#334155;margin:12px 0 6px;display:flex;align-items:center;gap:10px}
+.ide-status{font-size:12px;font-weight:600;color:var(--muted)}
+.ide-out{background:#0a0a14;color:#d4d4d4;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;border-radius:10px;padding:14px 16px;min-height:90px;white-space:pre-wrap;overflow-x:auto}
+.ide-fallback{padding:24px;color:#fca5a5;font-size:13px;text-align:center}
 /* 취약 유형 Top 3 (메타인지 학습 안내) */
 .topweak{background:linear-gradient(135deg,#fff7ed,#fff1f2);border:1px solid #fed7aa;border-radius:14px;padding:18px 20px;margin-bottom:18px}
 .topweak h3{font-size:15px;color:#c2410c;margin:0 0 12px}
@@ -257,6 +267,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <button class="tab" data-v="flash" onclick="tab('flash')">🃏 플래시카드</button>
   <button class="tab" data-v="exam" onclick="tab('exam')">📝 1교시 이론</button>
   <button class="tab" data-v="prac" onclick="tab('prac')">🧪 2교시 실무</button>
+  <button class="tab" data-v="ide" onclick="tab('ide')">💻 코드 실행</button>
   <button class="tab" data-v="wrong" onclick="tab('wrong')">❌ 오답노트</button>
 </div></div>
 <div class="wrap" id="mainviews">
@@ -266,6 +277,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <div class="view" id="v-flash"></div>
   <div class="view" id="v-exam"></div>
   <div class="view" id="v-prac"></div>
+  <div class="view" id="v-ide"></div>
   <div class="view" id="v-wrong"></div>
 </div>
 <div id="printArea" aria-hidden="true"></div>
@@ -279,6 +291,7 @@ const THEORY = __THEORY__;
 const CODE49 = __CODE49__;
 const BASICS = __BASICS__;
 const TOOLS = __TOOLS__;
+const RUNNABLE = __RUNNABLE__;
 const KISA49 = CONCEPTS.map(c=>c.name);
 const CATS = ['입력검증','보안기능','시간상태','에러처리','코드오류','캡슐화','API오용'];
 const CCOLOR = {'입력검증':'#6366f1','보안기능':'#0ea5e9','시간상태':'#14b8a6','에러처리':'#f59e0b','코드오류':'#ef4444','캡슐화':'#8b5cf6','API오용':'#64748b'};
@@ -372,7 +385,7 @@ function tab(v){
   document.querySelectorAll('.tab').forEach(t=>{const on=t.dataset.v===v;t.classList.toggle('on',on);t.setAttribute('aria-selected',on?'true':'false');});
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
-  ({dash:rDash,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,wrong:rWrong}[v])();
+  ({dash:rDash,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,ide:rIDE,wrong:rWrong}[v])();
 }
 // 스크린리더 알림(aria-live)
 function announce(msg){const el=document.getElementById('ariaLive');if(!el)return;el.textContent='';setTimeout(()=>{el.textContent=msg;},40);}
@@ -703,6 +716,103 @@ function prResult(){
   announce('2교시 채점 완료. 평균 '+avg+'점, '+(pass?'합격':'불합격')+'.');
 }
 
+// ===== 💻 온라인 IDE (Monaco + Pyodide/Piston 실제 실행) =====
+const IDELANGMAP={'Java':'java','C':'c','Python':'python'};
+let ideEditor=null, ideMonacoP=null, ideCur=null, pyodide=null, pyLoadP=null, pistonRuntimes=null;
+function loadMonaco(){
+  if(window.monaco) return Promise.resolve();
+  if(ideMonacoP) return ideMonacoP;
+  ideMonacoP=new Promise((res,rej)=>{
+    const base='https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs';
+    const s=document.createElement('script');s.src=base+'/loader.js';
+    s.onload=()=>{window.require.config({paths:{vs:base}});window.require(['vs/editor/editor.main'],()=>res());};
+    s.onerror=rej;document.head.appendChild(s);
+  });
+  return ideMonacoP;
+}
+function ideOptions(){
+  let h='<optgroup label="▶ 실행 가능 보안 데모 (취약 vs 안전)">';
+  RUNNABLE.forEach((r,i)=>{h+='<option value="R:'+i+'">['+esc(r.lang)+'] '+esc(r.weakness)+' — '+esc(r.title)+'</option>';});
+  h+='</optgroup><optgroup label="📄 KISA 49개 단편 (편집·실험용)">';
+  CONCEPTS.forEach((c,ci)=>{const cd=CODE49[c.name];if(!cd)return;const jl=cd.javaLang||'Java';
+    if(cd.javaVuln)h+='<option value="C:'+ci+':javaVuln">['+esc(jl)+' 취약] '+esc(c.name)+'</option>';
+    if(cd.javaSafe)h+='<option value="C:'+ci+':javaSafe">['+esc(jl)+' 안전] '+esc(c.name)+'</option>';
+    if(cd.pyVuln)h+='<option value="C:'+ci+':pyVuln">[Python 취약] '+esc(c.name)+'</option>';
+    if(cd.pySafe)h+='<option value="C:'+ci+':pySafe">[Python 안전] '+esc(c.name)+'</option>';
+  });
+  h+='</optgroup>';return h;
+}
+function ideLoad(){
+  const v=document.getElementById('ideExample').value;let code='',lang='Python',note='';
+  if(v[0]==='R'){const r=RUNNABLE[+v.slice(2)];code=r.code;lang=r.lang;note='✅ 실행 가능 데모 — '+r.note;}
+  else{const p=v.split(':');const c=CONCEPTS[+p[1]];const cd=CODE49[c.name];const f=p[2];code=cd[f]||'';
+    lang=(f.indexOf('java')===0)?(cd.javaLang==='C'?'C':'Java'):'Python';
+    note='📄 KISA 가이드 단편 — 프레임워크/문맥에 의존하므로 그대로는 컴파일·실행이 안 될 수 있습니다(편집·실험용). 실행 가능한 데모는 목록 상단에서 선택하세요.';}
+  ideCur={lang};
+  document.getElementById('ideLang').textContent=lang;
+  document.getElementById('ideNote').textContent=note;
+  if(ideEditor){ideEditor.setValue(code);window.monaco.editor.setModelLanguage(ideEditor.getModel(),IDELANGMAP[lang]||'plaintext');}
+}
+function rIDE(){
+  if(ideEditor){try{ideEditor.dispose();}catch(e){}ideEditor=null;}
+  document.getElementById('v-ide').innerHTML=
+    '<h2 class="st">💻 코드 실행 — 온라인 IDE</h2><p class="sub">VS Code 엔진(<b>Monaco</b>)에서 직접 편집·실행합니다. <b>Python</b>은 브라우저 내 실제 실행(Pyodide), <b>Java·C</b>는 무료 외부 실행 API(Piston)로 컴파일·실행합니다. ⚠️ Java/C 실행 시 코드가 외부 서비스로 전송됩니다(교육용 예제 기준).</p>'+
+    '<div class="ide-bar"><select id="ideExample" class="ide-sel" onchange="ideLoad()" aria-label="예제 선택">'+ideOptions()+'</select><span class="ide-lang" id="ideLang"></span><button class="qbtn" id="ideRunBtn" onclick="runIDE()">▶ 실행</button><button class="qbtn ghost" onclick="ideLoad()">↺ 예제 복원</button></div>'+
+    '<div class="ide-note" id="ideNote"></div>'+
+    '<div id="ideEditor" class="ide-editor">에디터를 불러오는 중…</div>'+
+    '<div class="ide-out-h">📤 출력 <span id="ideStatus" class="ide-status"></span></div>'+
+    '<pre class="ide-out" id="ideOut">▶ 실행 버튼을 누르면 결과가 여기에 표시됩니다.</pre>';
+  loadMonaco().then(()=>{
+    document.getElementById('ideEditor').textContent='';
+    ideEditor=window.monaco.editor.create(document.getElementById('ideEditor'),{value:'',language:'python',theme:'vs-dark',fontSize:13.5,minimap:{enabled:false},automaticLayout:true,scrollBeyondLastLine:false});
+    ideLoad();
+  }).catch(()=>{document.getElementById('ideEditor').innerHTML='<div class="ide-fallback">에디터(Monaco)를 불러오지 못했습니다. 네트워크 연결을 확인한 뒤 다시 시도하세요.</div>';});
+}
+function ideStat(t){const e=document.getElementById('ideStatus');if(e)e.textContent=t||'';}
+function ideOut(t){const e=document.getElementById('ideOut');if(e)e.textContent=t;}
+function loadPyodideOnce(){
+  if(pyodide)return Promise.resolve(pyodide);
+  if(pyLoadP)return pyLoadP;
+  pyLoadP=(async()=>{
+    await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    pyodide=await window.loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/'});
+    return pyodide;
+  })();
+  return pyLoadP;
+}
+async function runPython(code){
+  const py=await loadPyodideOnce();
+  py.runPython('import sys,io\n_buf=io.StringIO()\nsys.stdout=_buf\nsys.stderr=_buf');
+  let err='';
+  try{py.runPython(code);}catch(e){err='\n'+String(e.message||e);}
+  let out='';try{out=py.runPython('_buf.getvalue()');}catch(e){}
+  return (out||'')+err;
+}
+async function pistonRun(lang,code){
+  if(!pistonRuntimes){const r=await fetch('https://emkc.org/api/v2/piston/runtimes');pistonRuntimes=await r.json();}
+  const want=(lang==='Java')?['java']:(lang==='C')?['c']:[lang.toLowerCase()];
+  const rt=pistonRuntimes.find(x=>want.includes(x.language)||((x.aliases||[]).some(a=>want.includes(a))));
+  if(!rt)throw new Error('실행 런타임을 찾지 못했습니다: '+lang);
+  const fname=(lang==='Java')?'Main.java':(lang==='C')?'main.c':'main.txt';
+  const r=await fetch('https://emkc.org/api/v2/piston/execute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language:rt.language,version:rt.version,files:[{name:fname,content:code}]})});
+  const j=await r.json();let out='';
+  if(j.message)return '[API 오류] '+j.message;
+  if(j.compile&&(j.compile.stderr||j.compile.code))out+='[컴파일]\n'+(j.compile.stderr||'')+'\n';
+  if(j.run)out+=(j.run.stdout||'')+(j.run.stderr||'');
+  return out||JSON.stringify(j);
+}
+async function runIDE(){
+  if(!ideEditor){alert('에디터를 불러오는 중입니다. 잠시 후 다시 시도하세요.');return;}
+  const code=ideEditor.getValue();const lang=(ideCur&&ideCur.lang)||'Python';
+  const btn=document.getElementById('ideRunBtn');btn.disabled=true;
+  ideStat(lang==='Python'?'Pyodide 실행 중…(최초 1회 로딩 다소 소요)':'Piston 컴파일·실행 중…');ideOut('실행 중…');
+  try{
+    const out=(lang==='Python')?await runPython(code):await pistonRun(lang,code);
+    ideOut(out||'(출력 없음)');ideStat('완료 ✓');announce('코드 실행 완료');
+  }catch(e){ideOut('실행 오류: '+(e.message||e)+'\n(네트워크/외부 API 상태를 확인하세요)');ideStat('오류');}
+  finally{btn.disabled=false;}
+}
+
 // ===== 오답노트 복습 (Leitner SRS 카드) =====
 let rvDeck=[],rvIdx=0,rvFlip=false;
 function rvStart(all){
@@ -766,6 +876,7 @@ def main():
     cc = importlib.import_module('specs_code49')
     bs = importlib.import_module('_basics')
     tl = importlib.import_module('_tools')
+    rn = importlib.import_module('_runnable')
     # <script> 조기 종료 방지: 임베드 데이터의 </ 를 <\/ 로 이스케이프(런타임 JS 파싱 동일)
     def jdump(o):
         return json.dumps(o, ensure_ascii=False).replace('</', '<\\/')
@@ -775,10 +886,11 @@ def main():
                .replace('__THEORY__', jdump(pr.THEORY))
                .replace('__CODE49__', jdump(cc.CODE49))
                .replace('__BASICS__', jdump(bs.BASICS))
-               .replace('__TOOLS__', jdump({'tools': tl.TOOLS, 'position': tl.POSITION})))
+               .replace('__TOOLS__', jdump({'tools': tl.TOOLS, 'position': tl.POSITION}))
+               .replace('__RUNNABLE__', jdump(rn.RUNNABLE)))
     open(os.path.join(OUT, 'secure-dev-academy.html'), 'w', encoding='utf-8').write(html)
-    print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d basics=%d tools=%d'
-          % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY), len(bs.BASICS), len(tl.TOOLS)))
+    print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d basics=%d tools=%d runnable=%d'
+          % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY), len(bs.BASICS), len(tl.TOOLS), len(rn.RUNNABLE)))
 
 
 if __name__ == '__main__':

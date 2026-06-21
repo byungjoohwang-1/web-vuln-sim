@@ -44,7 +44,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -126,6 +126,14 @@ E.PRACTICAL.forEach(p=>{
   if(r.penalty>0){falsePen++;console.log('  ✗ explanation triggers penalty',p.id,JSON.stringify(r.negHits));}
 });
 console.log('explanation false-penalty:', falsePen); ok(falsePen===0,'no false penalty on model explanation');
+
+// 온라인 IDE: 실행 가능 데모 스키마 + 언어 커버리지 + 옵션/탭
+ok(Array.isArray(E.RUNNABLE)&&E.RUNNABLE.length>=6, 'RUNNABLE has >=6 demos (got '+(E.RUNNABLE||[]).length+')');
+['Python','Java','C'].forEach(l=>{ const n=E.RUNNABLE.filter(r=>r.lang===l).length; ok(n>=1, 'RUNNABLE has '+l+' demo (got '+n+')'); });
+E.RUNNABLE.forEach((r,i)=>ok(r.lang&&r.weakness&&r.title&&r.code, 'RUNNABLE entry complete #'+i));
+ok(/optgroup/.test(E.ideOptions())&&/실행 가능 보안 데모/.test(E.ideOptions()), 'ideOptions builds grouped example list');
+ok(/data-v="ide"/.test(html)&&/💻 코드 실행/.test(html), 'IDE tab present in HTML');
+ok(/monaco-editor/.test(html)&&/pyodide/.test(html)&&/piston\/execute/.test(html), 'IDE wires Monaco + Pyodide + Piston');
 
 // 접근성(WCAG): skip-link·aria-live·tablist 역할이 정적 HTML에 존재
 ok(/class="skiplink"/.test(html)&&/본문 바로가기/.test(html), 'a11y: skip link present');
