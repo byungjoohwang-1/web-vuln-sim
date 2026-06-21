@@ -92,6 +92,9 @@ h2.st{font-size:23px;margin-bottom:6px}.sub{color:var(--muted);font-size:14px;ma
 .frow{display:flex;gap:10px;justify-content:center;margin-top:18px}
 .frow button{border:none;padding:13px 30px;border-radius:30px;font-family:'Lora',serif;font-weight:700;font-size:15px;cursor:pointer;transition:.2s}
 .f-no{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca!important}.f-ok{background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0!important}
+.f-mid{background:#fffbeb;color:#b45309;border:1.5px solid #fde68a!important}
+.frow3{display:flex;gap:8px}.frow3 button{flex:1}
+.next-tag{display:inline-block;font-size:11px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:6px;padding:1px 7px;margin-right:4px}
 .fmeta{text-align:center;color:var(--muted);font-size:13px;margin-bottom:14px;font-family:'JetBrains Mono',monospace}
 .setbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;max-width:640px;margin:0 auto;text-align:center}
 .setbox h3{font-size:19px;margin-bottom:8px}.setbox p{color:var(--muted);font-size:14px;margin-bottom:18px}
@@ -222,6 +225,11 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
 /* 접근성: 모션 최소화 선호 시 애니메이션 비활성화 + 키보드 포커스 표시 */
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.tf:focus-visible,.opt:focus-visible,.cchip:focus-visible{outline:3px solid #6366f1;outline-offset:2px;border-radius:6px}
+/* 접근성: 스크린리더 전용 + 본문 바로가기(skip link) */
+.visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skiplink{position:absolute;left:-999px;top:0;z-index:100;background:#4338ca;color:#fff;padding:10px 16px;border-radius:0 0 8px 0;font-weight:700;text-decoration:none}
+.skiplink:focus{left:0}
+.kbdhint{font-size:11.5px;color:var(--muted);margin-top:6px}
 /* 인쇄/요약(PDF): 화면에서는 숨기고 인쇄 시 요약표만 표시 */
 #printArea{display:none}
 .ptbl{width:100%;border-collapse:collapse;font-size:10.5px;font-family:'Segoe UI','Malgun Gothic',sans-serif}
@@ -238,9 +246,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 </style>
 </head>
 <body>
+<a href="#mainviews" class="skiplink">본문 바로가기</a>
+<div id="ariaLive" class="visually-hidden" role="status" aria-live="polite"></div>
 <div class="top"><div class="wrap"><a href="secure-dev-portal.html">&larr; 개발보안 학습 포털</a> &nbsp;·&nbsp; <a href="index.html">홈</a></div></div>
 <div class="hero"><div class="wrap"><h1>🎓 보안약점 진단원 학습 센터</h1><p>개념 학습 · 플래시카드 · 1교시 이론(객관식·OX·단답) · 2교시 실무(정·오탐 판별 + 서술형 채점) · 오답노트 — 진도 자동 저장</p></div></div>
-<div class="tabs"><div class="wrap">
+<div class="tabs"><div class="wrap" role="tablist" aria-label="학습 메뉴">
   <button class="tab on" data-v="dash" onclick="tab('dash')">📊 대시보드</button>
   <button class="tab" data-v="basics" onclick="tab('basics')">🧱 기초 과정</button>
   <button class="tab" data-v="learn" onclick="tab('learn')">📖 개념학습</button>
@@ -249,7 +259,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   <button class="tab" data-v="prac" onclick="tab('prac')">🧪 2교시 실무</button>
   <button class="tab" data-v="wrong" onclick="tab('wrong')">❌ 오답노트</button>
 </div></div>
-<div class="wrap">
+<div class="wrap" id="mainviews">
   <div class="view on" id="v-dash"></div>
   <div class="view" id="v-basics"></div>
   <div class="view" id="v-learn"></div>
@@ -291,25 +301,40 @@ function save(k,v){localStorage.setItem(NS+k,JSON.stringify(v));}
 let learned=load('learned',{}),flashKnown=load('flash',{}),wrongs=load('wrong',[]);
 let examBest=load('examBest',null),pracBest=load('pracBest',null);
 let wrongStats=load('wrongStats',{});  // 7대 유형별 누적 오답 통계 {cat:count}
-// ── 오답노트 SRS(Leitner 간격 반복) ──
-const SRS_IV=[0,1,3,7,16];  // box별 다음 복습까지 일수(0=즉시), box5 정답 시 졸업
+// ── 오답노트 SRS(SM-2 경량: ease factor 기반 간격 반복) ──
 const DAY=86400000;
-// 구버전/누락 항목 정규화: box·due 보강(기존 오답은 즉시 복습 대상)
-(function(){let m=false;wrongs.forEach(w=>{if(typeof w.box!=='number'){w.box=1;m=true;}if(typeof w.due!=='number'){w.due=Date.now();m=true;}});if(m)save('wrong',wrongs);})();
+// 구버전/누락 항목 정규화: box·due·ef·rep·interval 보강(기존 오답은 즉시 복습 대상)
+(function(){let m=false;wrongs.forEach(w=>{
+  if(typeof w.box!=='number'){w.box=1;m=true;}
+  if(typeof w.due!=='number'){w.due=Date.now();m=true;}
+  if(typeof w.ef!=='number'){w.ef=2.5;m=true;}        // 용이도 인수(1.3~)
+  if(typeof w.rep!=='number'){w.rep=0;m=true;}         // 연속 정답 횟수
+  if(typeof w.interval!=='number'){w.interval=0;m=true;}
+});if(m)save('wrong',wrongs);})();
 function srsDue(w){return (w.due||0)<=Date.now();}
 function dueCount(){return wrongs.filter(srsDue).length;}
-function srsUpdate(w,ok){
-  if(ok){w.box=Math.min((w.box||1)+1,5);
-    if(w.box>=5){wrongs=wrongs.filter(x=>x!==w);save('wrong',wrongs);return true;}  // 졸업(상자5 정답)
-    w.due=Date.now()+SRS_IV[w.box-1]*DAY;
-  }else{w.box=1;w.due=Date.now()+SRS_IV[0]*DAY;}
-  save('wrong',wrongs);return false;
+// quality 0~5(다시=2, 애매=3, 완벽=5). SM-2: interval=1,6,prev*ef … 충분 숙달 시 졸업.
+function srsUpdate(w,quality){
+  if(typeof w.ef!=='number')w.ef=2.5; if(typeof w.rep!=='number')w.rep=0;
+  if(quality>=3){
+    w.rep++;
+    if(w.rep===1)w.interval=1; else if(w.rep===2)w.interval=6; else w.interval=Math.round((w.interval||6)*w.ef);
+    w.ef=Math.max(1.3, w.ef + (0.1-(5-quality)*(0.08+(5-quality)*0.02)));
+    w.box=Math.min((w.box||1)+1,5);
+    if(w.rep>=4 && quality>=4){wrongs=wrongs.filter(x=>x!==w);save('wrong',wrongs);return {graduated:true,interval:w.interval};}  // 졸업(반복 숙달)
+  }else{
+    w.rep=0; w.interval=0; w.box=1; w.ef=Math.max(1.3, w.ef-0.2);  // 실패 → 즉시 재출제
+  }
+  w.due=Date.now()+w.interval*DAY;
+  save('wrong',wrongs);return {graduated:false,interval:w.interval};
 }
+// 다음 복습까지 남은 일수(표시용)
+function daysUntil(w){const d=Math.ceil(((w.due||0)-Date.now())/DAY);return d<=0?'지금':('약 '+d+'일 후');}
 // 새 오답 추가(이미 있으면 1단계로 리셋해 다시 복습 대상화) + 7대 유형 누적 통계
 function addWrong(it){
   if(it.cat&&CATS.indexOf(it.cat)>=0){wrongStats[it.cat]=(wrongStats[it.cat]||0)+1;save('wrongStats',wrongStats);}
-  const ex=wrongs.find(w=>w.q===it.q);if(ex){ex.box=1;ex.due=Date.now();save('wrong',wrongs);return;}
-  it.box=1;it.due=Date.now();it.addedAt=Date.now();wrongs.push(it);save('wrong',wrongs);
+  const ex=wrongs.find(w=>w.q===it.q);if(ex){ex.box=1;ex.due=Date.now();ex.rep=0;ex.interval=0;save('wrong',wrongs);return;}
+  it.box=1;it.due=Date.now();it.addedAt=Date.now();it.ef=2.5;it.rep=0;it.interval=0;wrongs.push(it);save('wrong',wrongs);
 }
 // 취약 유형 Top 3 (메타인지 학습 안내)
 function topWeakHtml(){
@@ -344,11 +369,13 @@ function diffHtml(a,b){return lineDiff(a,b).map(p=>{const s=p[0]==='del'?'- ':p[
 document.getElementById('kisa49').innerHTML = KISA49.map(n=>'<option value="'+esc(n)+'">').join('');
 
 function tab(v){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
+  document.querySelectorAll('.tab').forEach(t=>{const on=t.dataset.v===v;t.classList.toggle('on',on);t.setAttribute('aria-selected',on?'true':'false');});
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
   ({dash:rDash,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,wrong:rWrong}[v])();
 }
+// 스크린리더 알림(aria-live)
+function announce(msg){const el=document.getElementById('ariaLive');if(!el)return;el.textContent='';setTimeout(()=>{el.textContent=msg;},40);}
 
 // ===== 대시보드 =====
 function rDash(){
@@ -489,7 +516,7 @@ function drawExam(){
   if(q.type==='MC'){body='<div>'+q.o.map((t,i)=>'<button class="opt'+(exAns[exIdx]===i?' sel':'')+'" onclick="pickEx('+i+')"><span class="lab">'+'ABCD'[i]+'</span><span class="ot"></span></button>').join('')+'</div>';}
   else if(q.type==='OX'){body='<div class="tfrow"><div class="tf'+(exAns[exIdx]===true?' sel tp':'')+'" onclick="pickEx(true)"><span class="rd"></span>⭕ 맞다 (O)</div><div class="tf'+(exAns[exIdx]===false?' sel fp':'')+'" onclick="pickEx(false)"><span class="rd"></span>❌ 아니다 (X)</div></div>';}
   else{body='<input class="shortin" id="shortIn" placeholder="정답을 입력하세요" value="'+esc(exAns[exIdx]||'')+'" oninput="exAns['+exIdx+']=this.value">';}
-  document.getElementById('v-exam').innerHTML='<div class="qbox"><div class="bar2"><i style="width:'+pct+'%"></i></div><div class="qmeta"><span>문항 '+(exIdx+1)+' / '+exN+'</span><span class="timer" id="exTimer"></span></div><span class="typetag t-'+q.type+'">'+({MC:'객관식',OX:'OX',SHORT:'단답형'}[q.type])+'</span><span class="cat-tag">'+esc(cat)+'</span><div class="qtext"></div>'+(q.code?'<pre></pre>':'')+body+'<div class="nav"><button class="btn ghost" onclick="prevEx()" '+(exIdx===0?'disabled style=opacity:.4':'')+'>← 이전</button> <button class="btn" onclick="nextEx()">'+(exIdx===exN-1?'제출하고 채점':'다음 →')+'</button></div></div>';
+  document.getElementById('v-exam').innerHTML='<div class="qbox"><div class="bar2"><i style="width:'+pct+'%"></i></div><div class="qmeta"><span>문항 '+(exIdx+1)+' / '+exN+'</span><span class="timer" id="exTimer"></span></div><span class="typetag t-'+q.type+'">'+({MC:'객관식',OX:'OX',SHORT:'단답형'}[q.type])+'</span><span class="cat-tag">'+esc(cat)+'</span><div class="qtext"></div>'+(q.code?'<pre></pre>':'')+body+'<div class="nav"><button class="btn ghost" onclick="prevEx()" '+(exIdx===0?'disabled style=opacity:.4':'')+'>← 이전</button> <button class="btn" onclick="nextEx()">'+(exIdx===exN-1?'제출하고 채점':'다음 →')+'</button></div><div class="kbdhint">⌨ 키보드: '+(q.type==='MC'?'숫자 1~'+(q.o?q.o.length:4)+' 보기 선택':q.type==='OX'?'O / X 선택':'직접 입력')+' · Enter 다음</div></div>';
   document.querySelector('#v-exam .qtext').textContent=q.q;if(q.code)document.querySelector('#v-exam pre').textContent=q.code;
   if(q.type==='MC')document.querySelectorAll('#v-exam .opt').forEach((b,i)=>b.querySelector('.ot').textContent=q.o[i]);
   const t=document.getElementById('exTimer');const m=Math.floor(exLeft/60),s=exLeft%60;t.textContent='⏱ '+m+':'+String(s).padStart(2,'0');
@@ -519,6 +546,7 @@ function gradeExam(){
   }).join('');
   document.getElementById('v-exam').innerHTML='<div class="res"><div class="big">'+pct+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (70%+)':'❌ 불합격')+'</div><p class="sub">'+exN+'문항 중 '+sc+'문항 정답</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rExam()">다시 응시</button><button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div></div>'+
     '<h3 class="rev-title">📝 문항별 해설</h3><div class="rev-list">'+reviewHtml+'</div>';
+  announce('1교시 채점 완료. '+pct+'점, '+(pass?'합격':'불합격')+'. '+exN+'문항 중 '+sc+'문항 정답.');
   window.scrollTo(0,0);
 }
 
@@ -672,6 +700,7 @@ function prResult(){
   clearInterval(prTimer);const avg=prScores.length?Math.round(prScores.reduce((a,b)=>a+b,0)/prScores.length):0;const pass=avg>=70;
   if(pracBest==null||avg>pracBest){pracBest=avg;save('pracBest',avg);}
   document.getElementById('v-prac').innerHTML='<div class="res"><div class="big">'+avg+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (평균 70%+)':'❌ 불합격')+'</div><p class="sub">'+prScores.length+'문항 평균 점수</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rPrac()">다시 응시</button><button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div></div>';
+  announce('2교시 채점 완료. 평균 '+avg+'점, '+(pass?'합격':'불합격')+'.');
 }
 
 // ===== 오답노트 복습 (Leitner SRS 카드) =====
@@ -688,28 +717,43 @@ function rvCard(){
   const w=rvDeck[rvIdx];const box='<span class="rv-box">Leitner '+(w.box||1)+'/5</span>';
   const front='<div class="rv-tag">['+(w.tag||'')+'] '+box+'</div><div class="rvq">'+esc(w.q)+'</div>'+(w.code?'<pre class="cpre" style="margin-top:10px;text-align:left">'+esc(w.code)+'</pre>':'')+'<div class="hint" style="margin-top:12px">정답을 떠올린 뒤 카드를 눌러 확인하세요</div>';
   const back='<div class="rv-tag">['+(w.tag||'')+'] '+box+'</div><div class="rvq" style="color:#15803d">정답: '+esc(w.a)+'</div>'+(w.e?'<div class="rev" style="border-left-color:#6366f1;margin-top:10px;text-align:left"><div class="rv-exp">'+esc(w.e)+'</div></div>':'');
-  document.getElementById('v-wrong').innerHTML='<h2 class="st">🔁 오답 복습 ('+(rvIdx+1)+'/'+rvDeck.length+')</h2><p class="sub">간격 반복(Leitner): 맞히면 상자가 올라가고 5단계에서 졸업(노트에서 제외)합니다. 틀리면 1단계로 돌아가 더 자주 출제됩니다.</p>'+
+  document.getElementById('v-wrong').innerHTML='<h2 class="st">🔁 오답 복습 ('+(rvIdx+1)+'/'+rvDeck.length+')</h2><p class="sub">간격 반복(SM-2): 회상 난이도를 평가하면 용이도(ease)에 따라 다음 복습 간격이 정해집니다. 반복 숙달 시 노트에서 졸업, 틀리면 즉시 재출제됩니다.</p>'+
     '<div class="flash-stage"><div class="fcard" onclick="rvFlipCard()">'+(rvFlip?back:front)+'</div>'+
     (rvFlip
-      ?'<div class="frow"><button class="f-no" onclick="rvMark(false)">✗ 틀렸다 (1단계로)</button><button class="f-ok" onclick="rvMark(true)">✓ 맞혔다</button></div>'
+      ?'<div class="frow frow3"><button class="f-no" onclick="rvMark(2)">✗ 다시</button><button class="f-mid" onclick="rvMark(3)">~ 애매</button><button class="f-ok" onclick="rvMark(5)">✓ 완벽</button></div>'
       :'<div class="frow"><button class="btn" onclick="rvFlipCard()">정답 확인 →</button></div>')+
     '</div>';
 }
 function rvFlipCard(){rvFlip=!rvFlip;rvCard();}
-function rvMark(ok){const w=rvDeck[rvIdx];const grad=srsUpdate(w,ok);rvIdx++;rvFlip=false;rvCard();}
+function rvMark(q){const w=rvDeck[rvIdx];const r=srsUpdate(w,q);announce(r.graduated?'졸업 처리됨':'다음 복습 '+r.interval+'일 후');rvIdx++;rvFlip=false;rvCard();}
 
 // ===== 오답노트 =====
 function rWrong(){
   if(!wrongs.length){document.getElementById('v-wrong').innerHTML='<h2 class="st">❌ 오답노트</h2><div class="empty">아직 틀린 문제가 없습니다.<br>1교시·2교시를 풀면 틀린 문제가 자동으로 모입니다.</div>';return;}
   const due=dueCount();
-  const items=wrongs.map((w,i)=>'<div class="witem"><button class="del" onclick="delWrong('+i+')">삭제</button><div class="wq">['+(w.tag||'')+'] <span class="rv-box">L'+(w.box||1)+'</span>'+(srsDue(w)?'<span class="due-tag">복습 예정</span>':'')+' '+esc(w.q)+'</div><div class="wa">정답: '+esc(w.a)+'</div><div class="we">해설: '+esc(w.e)+'</div></div>').join('');
-  document.getElementById('v-wrong').innerHTML='<h2 class="st">❌ 오답노트 ('+wrongs.length+')</h2><p class="sub">간격 반복(Leitner) 복습으로 약점을 굳히세요. 오늘 복습 예정 <b>'+due+'</b>건.</p>'+
+  const items=wrongs.map((w,i)=>'<div class="witem"><button class="del" onclick="delWrong('+i+')">삭제</button><div class="wq">['+(w.tag||'')+'] <span class="rv-box">L'+(w.box||1)+'</span>'+(srsDue(w)?'<span class="due-tag">복습 예정</span>':'<span class="next-tag">다음 복습 '+daysUntil(w)+'</span>')+' '+esc(w.q)+'</div><div class="wa">정답: '+esc(w.a)+'</div><div class="we">해설: '+esc(w.e)+'</div></div>').join('');
+  document.getElementById('v-wrong').innerHTML='<h2 class="st">❌ 오답노트 ('+wrongs.length+')</h2><p class="sub">간격 반복(SM-2) 복습으로 약점을 굳히세요. 오늘 복습 예정 <b>'+due+'</b>건.</p>'+
    '<div class="quick"><button class="qbtn" onclick="rvStart(false)">🔁 오늘 복습 시작 ('+due+')</button><button class="qbtn ghost" onclick="rvStart(true)">전체 복습</button><button class="reset" onclick="clearWrong()" style="margin-left:auto">전체 비우기</button></div>'+
    '<div class="wlist" style="margin-top:14px">'+items+'</div>';
 }
 function delWrong(i){wrongs.splice(i,1);save('wrong',wrongs);rWrong();}
 function clearWrong(){if(confirm('오답노트를 전부 비울까요?')){wrongs=[];save('wrong',wrongs);rWrong();}}
 
+// ===== 접근성(WCAG) 초기화: 탭 ARIA · 패널 role · 1교시 키보드 단축키 =====
+function a11yInit(){
+  document.querySelectorAll('.tab').forEach(t=>{t.setAttribute('role','tab');t.setAttribute('aria-selected',t.classList.contains('on')?'true':'false');});
+  document.querySelectorAll('.view').forEach(x=>{x.setAttribute('role','tabpanel');x.setAttribute('tabindex','0');});
+  // 1교시 이론 키보드: 숫자(객관식 보기)/O·X(OX)/Enter(다음)
+  document.addEventListener('keydown',function(e){
+    const ev=document.getElementById('v-exam'); if(!ev||!ev.classList.contains('on'))return;
+    if(e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;
+    const q=exPool[exIdx]; if(!q)return;
+    if(q.type==='MC'&&/^[1-9]$/.test(e.key)){const i=+e.key-1;if(q.o&&i<q.o.length)pickEx(i);}
+    else if(q.type==='OX'){if(/^[oO1]$/.test(e.key))pickEx(true);else if(/^[xX2]$/.test(e.key))pickEx(false);}
+    if(e.key==='Enter'){e.preventDefault();nextEx();}
+  });
+}
+a11yInit();
 rDash();
 </script>
 </body>

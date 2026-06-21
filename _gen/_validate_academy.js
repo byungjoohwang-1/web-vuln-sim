@@ -29,7 +29,8 @@ const document = {
   getElementById(id){ return elCache[id] || (elCache[id] = mkEl()); },
   createElement(){ return mkEl(); },
   querySelectorAll(){ return []; },
-  querySelector(){ return mkEl(); }
+  querySelector(){ return mkEl(); },
+  addEventListener(){}, removeEventListener(){}
 };
 const store = {};
 const localStorage = {
@@ -126,6 +127,13 @@ E.PRACTICAL.forEach(p=>{
 });
 console.log('explanation false-penalty:', falsePen); ok(falsePen===0,'no false penalty on model explanation');
 
+// 접근성(WCAG): skip-link·aria-live·tablist 역할이 정적 HTML에 존재
+ok(/class="skiplink"/.test(html)&&/본문 바로가기/.test(html), 'a11y: skip link present');
+ok(/id="ariaLive"[^>]*aria-live="polite"/.test(html), 'a11y: aria-live region present');
+ok(/role="tablist"/.test(html), 'a11y: tablist role on tab bar');
+ok(/prefers-reduced-motion/.test(html), 'a11y: reduced-motion media query');
+ok(typeof E.announce==='function' || /function announce/.test(code), 'a11y: announce() defined');
+
 // 기초 과정(Java/C/Python): 언어별 충분한 항목 + 스키마 + 렌더
 ['Java','C','Python'].forEach(l=>{ const n=E.BASICS.filter(b=>b.lang===l).length; ok(n>=5, 'BASICS has >=5 '+l+' topics (got '+n+')'); });
 E.BASICS.forEach((b,i)=>ok(b.topic&&b.desc&&b.code&&b.sec, 'BASICS entry complete #'+i));
@@ -200,14 +208,17 @@ ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모�
   E.addWrong({q:'[테스트] Q1', a:'A', e:'설명', tag:'1교시', code:''});
   ok(E.wrongs.length===1, 'SRS: duplicate q does not duplicate entry');
   const w = E.wrongs[0];
-  E.srsUpdate(w, true);
-  ok(w.box===2, 'SRS: correct raises box to 2');
-  ok(!E.srsDue(w), 'SRS: box 2 is not due immediately (scheduled ahead)');
-  E.srsUpdate(w, false);
-  ok(w.box===1, 'SRS: wrong resets box to 1');
-  // 졸업: box5 정답 시 노트에서 제외 (wrongs는 filter로 재할당되므로 라이브 접근자 dueCount로 확인)
-  w.box = 4; const grad = E.srsUpdate(w, true);
-  ok(grad===true && E.dueCount()===0, 'SRS: box5 correct graduates (removed from notes)');
+  const r1 = E.srsUpdate(w, 5);                 // 완벽
+  ok(w.rep===1 && w.box===2, 'SRS(SM-2): perfect recall raises rep/box');
+  ok(!E.srsDue(w) && r1.interval>=1, 'SRS(SM-2): scheduled ahead after correct (interval '+r1.interval+'d)');
+  ok(r1.graduated===false, 'SRS(SM-2): not graduated at rep 1');
+  E.srsUpdate(w, 2);                            // 다시(lapse)
+  ok(w.rep===0 && w.box===1, 'SRS(SM-2): lapse resets rep/box');
+  ok(E.srsDue(w), 'SRS(SM-2): lapsed card is due again immediately');
+  ok(w.ef>=1.3, 'SRS(SM-2): ease factor floored at 1.3 (got '+w.ef.toFixed(2)+')');
+  // 졸업: 반복 숙달(rep>=4 & 완벽) — wrongs는 filter 재할당되므로 dueCount로 확인
+  w.rep = 3; w.box = 4; const grad = E.srsUpdate(w, 5);
+  ok(grad.graduated===true && E.dueCount()===0, 'SRS(SM-2): mastery graduates (removed from notes)');
 })();
 
 // 7대 유형 오답 통계(wrongByCat) + 취약 유형 Top 3
