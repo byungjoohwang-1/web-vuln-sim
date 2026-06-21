@@ -286,6 +286,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .ps-bar i{display:block;height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:6px;transition:width .4s}
 .ps-pct{font-size:11.5px;color:#475569;margin:4px 0 6px;font-weight:600}
 .ps-go{font-size:12px;padding:5px 12px}
+/* 실제 시험 구조 안내 패널 */
+.examinfo{background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0ea5e9;border-radius:10px;padding:12px 16px;margin:4px 0 14px;font-size:13px;color:#0c4a6e}
+.examinfo b{color:#075985}.examinfo ul{margin:7px 0 6px;padding-left:18px}.examinfo li{margin:3px 0;line-height:1.55}
+.examinfo .ei-note{display:block;font-size:11.5px;color:#0369a1;margin-top:4px}
 /* 리더보드 */
 .cert-form{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:6px 0 12px}
 .cert-form label{font-size:13px;font-weight:600;color:#334155;display:flex;align-items:center;gap:8px}
@@ -703,13 +707,23 @@ function restartDeck(){buildDeck();drawFlash();}
 // ===== 1교시 이론 (MC·OX·SHORT) =====
 let exPool=[],exIdx=0,exN=0,exAns=[],exTimer=null,exLeft=0;
 function examItems(){return QUIZ.map(x=>Object.assign({type:'MC'},x)).concat(THEORY);}
-function rExam(){
-  const all=examItems();
-  document.getElementById('v-exam').innerHTML='<h2 class="st">📝 1교시 이론 (필기)</h2><p class="sub">객관식·OX·단답 혼합. 풀이 중 정답은 비공개, 제출 후 채점합니다. 합격선 70%. (총 문제은행 '+all.length+'문항)</p>'+
-   '<div class="setbox"><h3>출제 설정</h3><p>문항 수를 고르면 무작위 출제됩니다. (문항당 40초 타이머)</p><div class="setrow"><button class="qbtn ghost" onclick="startExam(15)">15문항</button><button class="qbtn ghost" onclick="startExam(30)">30문항</button><button class="qbtn" onclick="startExam(999)">전체</button></div>'+(examBest!=null?'<p>최고 기록: <b>'+examBest+'%</b></p>':'<p>아직 기록이 없습니다.</p>')+'</div>';
+// 2026 이수시험 안내서 기준 실제 시험 구조(공식)
+function examInfoHtml(){
+  return '<div class="examinfo"><b>📋 2026 실제 이수시험 구조</b>'+
+   '<ul><li><b>1교시 이론</b> 60분 · <b>30문항 전면 객관식</b>(OMR, 2025년~) · 가중치 40%</li>'+
+   '<li><b>2교시 실습</b> 100분 · <b>15문항 서술형</b>(보안약점 정·오탐 분석 + 설계문서 진단보고서) · 가중치 60%</li>'+
+   '<li>합격: <b>종합 70점 이상</b> · 과락 <b>각 60점 미만</b> · 시험 중 \'SW 보안약점 기준 명칭\' 제공</li></ul>'+
+   '<span class="ei-note">※ 본 포털은 연습용이라 OX·단답도 포함합니다. 실제 1교시는 전면 객관식이니 아래 <b>실전 30문항(객관식)</b>으로 연습하세요.</span></div>';
 }
-function startExam(n){
-  let pool=shuffle(examItems()).slice(0,Math.min(n,examItems().length));
+function rExam(){
+  const all=examItems();const mc=all.filter(q=>q.type==='MC').length;
+  document.getElementById('v-exam').innerHTML='<h2 class="st">📝 1교시 이론 (필기)</h2>'+examInfoHtml()+
+   '<p class="sub">풀이 중 정답은 비공개, 제출 후 채점·해설. (문제은행 총 '+all.length+'문항 · 객관식 '+mc+')</p>'+
+   '<div class="setbox"><h3>출제 설정</h3><p>문항 수를 고르면 무작위 출제됩니다. (문항당 40초 타이머)</p><div class="setrow"><button class="qbtn" onclick="startExam(30,true)">🎯 실전 30문항(객관식)</button><button class="qbtn ghost" onclick="startExam(15)">15문항(혼합)</button><button class="qbtn ghost" onclick="startExam(999)">전체</button></div>'+(examBest!=null?'<p>최고 기록: <b>'+examBest+'%</b></p>':'<p>아직 기록이 없습니다.</p>')+'</div>';
+}
+function startExam(n,mcOnly){
+  let items=examItems();if(mcOnly)items=items.filter(q=>q.type==='MC');
+  let pool=shuffle(items).slice(0,Math.min(n,items.length));
   // 객관식 보기 순서 셔플(위치 암기 방지) — 보기 재배열 후 정답 인덱스 재매핑
   exPool=pool.map(q=>{ if(q.type==='MC'&&Array.isArray(q.o)){ const idx=shuffle(q.o.map((_,i)=>i)); return Object.assign({},q,{o:idx.map(i=>q.o[i]),a:idx.indexOf(q.a)}); } return q; });
   exN=exPool.length;exIdx=0;exAns=[];exLeft=exN*40;startExTimer();drawExam();}
@@ -761,7 +775,7 @@ function setPrDiff(d){prDiff=d;rPrac();}
 function rPrac(){
   const chips=['전체','하','중','상'].map(d=>{const cnt=d==='전체'?PRACTICAL.length:PRACTICAL.filter(p=>p.diff===d).length;return '<button class="cchip'+(d===prDiff?' on':'')+'" onclick="setPrDiff(\''+d+'\')">'+(d==='전체'?'전체':'난이도 '+d)+' '+cnt+'</button>';}).join('');
   const pool=pracPool();const tp=pool.filter(p=>p.isTruePositive).length;
-  document.getElementById('v-prac').innerHTML='<h2 class="st">🧪 2교시 실무 (코드 진단)</h2><p class="sub">코드가 <b>정탐(보안약점 존재)</b>인지 <b>오탐(안전한 코드)</b>인지 판별하고, 약점 명칭·진단 근거·개선 코드를 직접 작성합니다. 모범답안 키워드 기반 채점이며, 틀린 진단(예: 안전한 코드를 취약하다고 서술)은 감점됩니다. 합격선 70%.</p>'+
+  document.getElementById('v-prac').innerHTML='<h2 class="st">🧪 2교시 실무 (코드 진단)</h2>'+examInfoHtml()+'<p class="sub">코드가 <b>정탐(보안약점 존재)</b>인지 <b>오탐(안전한 코드)</b>인지 판별하고, 약점 명칭·진단 근거·개선 코드를 직접 작성합니다. 모범답안 키워드 기반 채점이며, 틀린 진단(예: 안전한 코드를 취약하다고 서술)은 감점됩니다. 합격선 70%.</p>'+
    '<div class="catbar">'+chips+'</div>'+
    '<div class="setbox"><h3>실무 평가</h3><p>실제 2교시처럼 서술형으로 진단합니다. (문항당 3분 권장 타이머)<br>현재 출제풀: <b>'+pool.length+'문항</b> (정탐 '+tp+' · 오탐 '+(pool.length-tp)+')</p><div class="setrow"><button class="qbtn ghost" onclick="startPrac(6)">6문항 무작위</button><button class="qbtn" onclick="startPrac(999)">전체 풀이 ('+pool.length+')</button></div>'+(pracBest!=null?'<p>최고 기록: <b>'+pracBest+'%</b></p>':'<p>아직 기록이 없습니다.</p>')+'</div>';
 }
