@@ -237,4 +237,6 @@ for _mod in ('_prac_cov1', '_prac_cov2', '_prac_cov3', '_prac_ext', '_prac_exam2
     PRACTICAL = PRACTICAL + _il.import_module(_mod).PART
 
 # 1교시 이론 확장 병합: KISA 7대 유형 균형 + 법령/진단 + 기출(2024.12) 단답
-THEORY = THEORY + _il.import_module('_theory_ext').PART + _il.import_module('_theory_exam').PART
+THEORY = (THEORY + _il.import_module('_theory_ext').PART
+          + _il.import_module('_theory_exam').PART
+          + _il.import_module('_theory_exam2').PART)
