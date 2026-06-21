@@ -6,12 +6,12 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCdCQWmd87zPgZ_d1RzN-rl3SrM1xzGgjc",
-  authDomain: "vuln-sim-test.firebaseapp.com",
-  projectId: "vuln-sim-test",
-  storageBucket: "vuln-sim-test.firebasestorage.app",
-  messagingSenderId: "250782721580",
-  appId: "1:250782721580:web:f3432ef55f74169f5b9389"
+  apiKey: "AIzaSyBaRXs5HJ1ABFcshaTpqNj-uFuq2H9ZOcw",
+  authDomain: "vuln-sim.firebaseapp.com",
+  projectId: "vuln-sim",
+  storageBucket: "vuln-sim.firebasestorage.app",
+  messagingSenderId: "493267417608",
+  appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
 };
 
 const app = initializeApp(firebaseConfig);
