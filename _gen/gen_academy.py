@@ -177,6 +177,25 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
 .rvq{font-size:15px;font-weight:700;line-height:1.55;color:var(--ink,#1e293b)}
 .empty{text-align:center;color:var(--muted);padding:50px 0;font-size:15px}
 @media(max-width:760px){.cgrid{grid-template-columns:1fr}}
+/* 기초 과정 카드 */
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.bcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 2px 8px rgba(2,6,23,.05)}
+.bcard .bh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bcard .bh h4{font-size:16px;margin:0;color:#1e293b}
+.blang{color:#fff;font-size:11px;font-weight:700;border-radius:8px;padding:3px 10px;font-family:'JetBrains Mono',monospace}
+.bcard .btx{font-size:13.5px;line-height:1.65;color:#334155;margin-bottom:10px}
+.bcard .bsec{font-size:12.5px;line-height:1.6;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px 11px;margin-top:10px}
+.bcard .bsec b{color:#c2410c}
+/* 상용 도구 비교 */
+.toolscmp{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:18px 0;box-shadow:0 2px 8px rgba(2,6,23,.05)}
+.toolscmp h3{font-size:15px;color:#1e293b;margin:0 0 10px}
+.tpos{font-size:13px;line-height:1.7;color:#334155;background:#eef2ff;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.ttbl-wrap{overflow-x:auto}
+.ttbl{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
+.ttbl th,.ttbl td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.ttbl th{background:#f1f5f9;font-weight:700;color:#334155}
+.ttbl .tv{color:var(--muted);font-size:11px}
+.ttbl tr.ours{background:#f0fdf4}.ttbl tr.ours td{border-color:#bbf7d0}
 /* 취약 유형 Top 3 (메타인지 학습 안내) */
 .topweak{background:linear-gradient(135deg,#fff7ed,#fff1f2);border:1px solid #fed7aa;border-radius:14px;padding:18px 20px;margin-bottom:18px}
 .topweak h3{font-size:15px;color:#c2410c;margin:0 0 12px}
@@ -223,6 +242,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 <div class="hero"><div class="wrap"><h1>🎓 보안약점 진단원 학습 센터</h1><p>개념 학습 · 플래시카드 · 1교시 이론(객관식·OX·단답) · 2교시 실무(정·오탐 판별 + 서술형 채점) · 오답노트 — 진도 자동 저장</p></div></div>
 <div class="tabs"><div class="wrap">
   <button class="tab on" data-v="dash" onclick="tab('dash')">📊 대시보드</button>
+  <button class="tab" data-v="basics" onclick="tab('basics')">🧱 기초 과정</button>
   <button class="tab" data-v="learn" onclick="tab('learn')">📖 개념학습</button>
   <button class="tab" data-v="flash" onclick="tab('flash')">🃏 플래시카드</button>
   <button class="tab" data-v="exam" onclick="tab('exam')">📝 1교시 이론</button>
@@ -231,6 +251,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 </div></div>
 <div class="wrap">
   <div class="view on" id="v-dash"></div>
+  <div class="view" id="v-basics"></div>
   <div class="view" id="v-learn"></div>
   <div class="view" id="v-flash"></div>
   <div class="view" id="v-exam"></div>
@@ -246,6 +267,8 @@ const QUIZ = __QUIZ__;
 const PRACTICAL = __PRACTICAL__;
 const THEORY = __THEORY__;
 const CODE49 = __CODE49__;
+const BASICS = __BASICS__;
+const TOOLS = __TOOLS__;
 const KISA49 = CONCEPTS.map(c=>c.name);
 const CATS = ['입력검증','보안기능','시간상태','에러처리','코드오류','캡슐화','API오용'];
 const CCOLOR = {'입력검증':'#6366f1','보안기능':'#0ea5e9','시간상태':'#14b8a6','에러처리':'#f59e0b','코드오류':'#ef4444','캡슐화':'#8b5cf6','API오용':'#64748b'};
@@ -324,7 +347,7 @@ function tab(v){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
-  ({dash:rDash,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,wrong:rWrong}[v])();
+  ({dash:rDash,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,wrong:rWrong}[v])();
 }
 
 // ===== 대시보드 =====
@@ -339,11 +362,33 @@ function rDash(){
    '<div class="dgrid">'+dc(ln+'/49','개념 학습')+dc(fk+'/49','플래시 숙련')+dc(examBest!=null?examBest+'%':'-','1교시 최고점')+dc(pracBest!=null?pracBest+'%':'-','2교시 최고점')+dc(tpCov+'/49','실무 출제 약점')+dc(wrongs.length,'오답노트')+dc(dueCount(),'오늘 복습')+'</div>'+
    topWeakHtml()+
    '<div class="prog-wrap"><h3>유형별 개념 학습 숙련도</h3>'+rows+'</div>'+
-   '<div class="quick"><button class="qbtn" onclick="tab(\'learn\')">📖 개념 학습</button><button class="qbtn ghost" onclick="tab(\'flash\')">🃏 플래시카드</button><button class="qbtn ghost" onclick="tab(\'exam\')">📝 1교시 이론</button><button class="qbtn ghost" onclick="tab(\'prac\')">🧪 2교시 실무</button></div>'+
+   '<div class="quick"><button class="qbtn" onclick="tab(\'basics\')">🧱 기초 과정</button><button class="qbtn ghost" onclick="tab(\'learn\')">📖 개념 학습</button><button class="qbtn ghost" onclick="tab(\'flash\')">🃏 플래시카드</button><button class="qbtn ghost" onclick="tab(\'exam\')">📝 1교시 이론</button><button class="qbtn ghost" onclick="tab(\'prac\')">🧪 2교시 실무</button></div>'+
+   toolsHtml()+
    '<button class="reset" onclick="resetAll()">↺ 학습 기록 초기화</button>';
 }
 function dc(b,s){return '<div class="dcard"><b>'+b+'</b><span>'+s+'</span></div>';}
 function resetAll(){if(confirm('모든 학습 기록을 초기화할까요?')){['learned','flash','wrong','examBest','pracBest','wrongStats'].forEach(k=>localStorage.removeItem(NS+k));learned={};flashKnown={};wrongs=[];examBest=null;pracBest=null;wrongStats={};rDash();}}
+// 상용 SAST 도구 비교 + 포털 위치(정직)
+function toolsHtml(){
+  const rows=TOOLS.tools.map(t=>'<tr'+(/LASHR/.test(t.name)?' class="ours"':'')+'><td><b>'+esc(t.name)+'</b><br><span class="tv">'+esc(t.vendor)+'</span></td><td>'+esc(t.license)+'</td><td>'+esc(t.method)+'</td><td>'+esc(t.strong)+'</td><td>'+esc(t.limit)+'</td></tr>').join('');
+  return '<div class="toolscmp"><h3>🛠️ 상용 SAST 도구 비교 — 이 포털의 위치</h3><div class="tpos">'+TOOLS.position+'</div>'+
+    '<div class="ttbl-wrap"><table class="ttbl"><thead><tr><th>도구</th><th>라이선스</th><th>분석 방식</th><th>강점</th><th>한계</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+
+// ===== 기초 과정 (Java·C·Python) =====
+const BLANGC={'Java':'#b07219','C':'#555555','Python':'#3572A5'};
+let basicLang='Java';
+function rBasics(){
+  const langs=['Java','C','Python'];
+  const chips=langs.map(l=>'<button class="cchip'+(l===basicLang?' on':'')+'" onclick="setBasicLang(\''+l+'\')">'+l+' '+BASICS.filter(b=>b.lang===l).length+'</button>').join('');
+  const list=BASICS.filter(b=>b.lang===basicLang);
+  const cards=list.map(b=>'<div class="bcard"><div class="bh"><span class="blang" style="background:'+(BLANGC[b.lang]||'#666')+'">'+esc(b.lang)+'</span><h4>'+esc(b.topic)+'</h4></div>'+
+    '<div class="btx">'+esc(b.desc)+'</div>'+
+    '<pre class="cpre">'+esc(b.code)+'</pre>'+
+    '<div class="bsec"><b>🛡️ 진단과의 연결</b> '+esc(b.sec)+'</div></div>').join('');
+  document.getElementById('v-basics').innerHTML='<h2 class="st">🧱 기초 과정 — Java · C · Python</h2><p class="sub">정·오탐을 판별하려면 먼저 언어 기본기가 필요합니다. 각 주제는 <b>개념 → 예제 코드 → 진단과의 연결</b>로 구성됩니다. (개념학습·2교시 실무의 선수 과정)</p><div class="catbar">'+chips+'</div><div class="bgrid">'+cards+'</div>';
+}
+function setBasicLang(l){basicLang=l;rBasics();}
 
 // ===== 개념학습 =====
 let learnCat='전체';
@@ -508,24 +553,62 @@ function setTP(v){prTP=v;document.getElementById('tfTP').classList.toggle('sel',
   document.getElementById('prName').disabled=!(v===true);document.getElementById('prFix').disabled=!(v===true);}
 // LASHR: 경량 구조 패턴 검증 — 핵심 약점은 키워드 나열이 아닌 '구조'가 갖춰졌는지 확인.
 // 오탈락 방지를 위해 통과 시에만 만점 보장, 미확인 시에도 키워드 점수를 부분 인정(0점 처리 안 함).
+// 데이터 구동 패턴맵: {all:[모두충족], any:[하나이상], none:[모두미존재]}. 각 모범답안은 반드시 통과(harness 강제).
+const LASHR = {
+  'SQL 삽입':{all:[/preparestatement\s*\(/i],any:[/\.set(string|int|long|object|date|timestamp|boolean|double|big\w*)\s*\(/i,/:\w+/]},
+  '크로스사이트 스크립트(XSS)':{any:[/escapehtml\w*/i,/htmlescape/i,/encodeforhtml/i,/escapexml11?/i,/htmlutils\.html/i,/markupsafe/i,/\bescape\s*\(/i,/sanitize/i]},
+  '경로 조작 및 자원 삽입':{all:[/startswith\s*\(/i],any:[/getcanonicalpath\s*\(/i,/(normalize|realpath|abspath|topath)\s*\(/i]},
+  '하드코드된 중요정보':{any:[/getenv\s*\(/i,/getproperty\s*\(/i,/system\.getenv/i,/process\.env/i,/os\.environ/i,/\.env\b/i,/vault/i,/secretmanager/i,/config\.get/i]},
+  '취약한 암호화 알고리즘 사용':{any:[/(aes|sha-?256|sha-?384|sha-?512|sha3|gcm|cbc)/i],none:[/\bdes\b/i,/3des/i,/\bmd5\b/i,/sha-?1\b/i,/\brc4\b/i,/\becb\b/i]},
+  'Null Pointer 역참조':{any:[/is\s+none\b/i,/!=\s*null/i,/==\s*null/i,/\boptional\b/i,/requirenonnull/i,/isempty\s*\(/i,/\?\./]},
+  '신뢰할 수 없는 데이터의 역직렬화':{any:[/json\.loads/i,/json\.load\b/i,/readvalue/i,/safe_load/i],none:[/pickle\.loads/i,/pickle\.load\b/i,/yaml\.load\s*\([^)]*\)/i,/objectinputstream/i,/readobject\s*\(/i]},
+  '운영체제 명령어 삽입':{any:[/subprocess\.(run|popen|call|check_output)\s*\(\s*\[/i,/new\s+processbuilder\s*\(/i]},
+  '코드 삽입':{any:[/ast\.literal_eval/i,/json\.loads/i],none:[/\beval\s*\(/i,/\bexec\s*\(/i]},
+  '적절하지 않은 난수값 사용':{any:[/securerandom/i,/secrets\./i,/systemrandom/i,/getrandomvalues/i,/randombytes/i],none:[/new\s+random\s*\(/i,/math\.random/i,/\brand\s*\(/i]},
+  '솔트 없이 일방향 해시함수 사용':{all:[/(bcrypt|pbkdf2|scrypt|argon2)/i],any:[/gensalt/i,/getsalt/i,/\bsalt\b/i,/securerandom/i,/token_bytes/i,/os\.urandom/i]},
+  '제거되지 않고 남은 디버그 코드':{none:[/system\.out\.print/i,/printstacktrace/i,/console\.log/i,/\bprintln\b/i,/\bdebug\b/i,/todo|fixme/i,/backdoor/i]},
+  '신뢰되지 않는 URL 주소로 자동접속 연결':{any:[/\.contains\s*\(/i,/allowlist|whitelist|allowed/i,/set\.of\s*\(/i,/startswith\s*\(\s*["']\//i]},
+  'HTTP 응답 분할':{any:[/\.matches\s*\(/i,/replaceall\s*\(/i,/\.replace\s*\(/i,/pattern\./i,/\\r|\\n|%0d|%0a/i]},
+  '서버사이드 요청 위조(SSRF)':{any:[/allowed/i,/allowlist|whitelist/i,/not\s+in\b/i,/\.contains\s*\(/i]},
+  'XML 외부 개체(XXE)':{all:[/setfeature\s*\(/i],any:[/disallow-doctype-decl/i,/external-general-entities/i,/external-parameter-entities/i,/feature_secure_processing/i,/xmlconstants/i]},
+  'LDAP 삽입':{any:[/\{0\}/,/new\s+object\s*\[\]/i,/escapedn/i,/escapefilter/i,/encodeforldap/i,/searchcontrols/i]},
+  '부적절한 인가':{any:[/accessdenied/i,/getattribute\s*\(\s*["']user/i,/\.equals\s*\(\s*userid/i,/hasrole|hasauthority|isauthorized/i,/\bforbidden\b/i,/getownerid/i]},
+  '경쟁조건: 검사시점과 사용시점(TOCTOU)':{any:[/o_nofollow|o_excl|o_creat/i,/synchronized/i,/\block\s*\(/i,/\.lock\s*\(\s*\)/i,/flock/i,/mutex/i,/atomic/i,/reentrantlock/i]},
+  '적절한 인증 없는 중요기능 허용':{any:[/hasrole|hasauthority/i,/getattribute\s*\(\s*["']login/i,/accessdenied|forbidden/i,/isauthenticated|isadmin/i,/principal|authentication/i]},
+  '위험한 형식 파일 업로드':{any:[/\.equals\s*\(\s*ext/i,/ext\.equals/i,/endswith\s*\(/i,/allowed\w*\.(contains|indexof)/i,/lastindexof\s*\(\s*["']\./i,/getcontenttype|content-type/i,/whitelist/i]},
+  'XML 삽입':{any:[/prepareexpression/i,/bindstring/i,/bind\w*\s*\(/i,/\$\w+/]},
+  '크로스사이트 요청 위조(CSRF)':{any:[/csrf/i,/\btoken\b/i,/samesite/i,/antiforgery/i]},
+  '정수형 오버플로우':{any:[/<\s*0\b/,/integer\.max|long\.max|\.max_value/i,/addexact|multiplyexact|subtractexact/i,/if\s*\([^)]*[<>]=?/]},
+  '보안기능 결정에 사용되는 부적절한 입력값':{any:[/request\.session/i,/session\[/i,/getattribute\s*\(\s*["']role/i,/\.session\b/i]},
+  '메모리 버퍼 오버플로우':{any:[/sizeof\s*\(/i,/strncpy|strncat|snprintf|memcpy_s|strcpy_s|strlcpy/i,/memcpy\s*\(/i],none:[/\bstrcpy\s*\(/i,/\bstrcat\s*\(/i,/\bgets\s*\(/i,/\bsprintf\s*\(/i]},
+  '포맷 스트링 삽입':{any:[/printf\s*\(\s*["']/i,/\.format\s*\(\s*["']/i,/fprintf\s*\([^,]*,\s*["']/i]},
+  '중요한 자원에 대한 잘못된 권한 설정':{any:[/chmod\s*\(/i,/0o[0-7]{3}/,/posixfilepermission/i,/setposix/i,/umask/i,/setreadable|setwritable/i],none:[/0o777/,/0o666/]},
+  '암호화되지 않은 중요정보':{any:[/messagedigest/i,/sha-?256|sha-?512/i,/\baes\b/i,/encrypt/i,/bcrypt|pbkdf2/i,/cipher/i],none:[/\bmd5\b/i,/\bdes\b/i]},
+  '충분하지 않은 키 길이 사용':{any:[/\b(2048|3072|4096)\b/,/generate\s*\(\s*[2-9]\d{3}/i,/keysize\s*\(\s*(2048|3072|4096|256)/i],none:[/generate\s*\(\s*(512|768|1024)\b/i,/keysize\s*\(\s*(512|1024)\b/i]},
+  '취약한 비밀번호 허용':{any:[/\{8,\}/,/\{(?:[89]|1\d|2\d),?\}/,/len\s*\([^)]*\)\s*[<>]=?\s*([89]|1\d)/i,/\.length\s*[<>]=?\s*([89]|1\d)/i,/re\.compile/i,/\.matches\s*\(/i]},
+  '부적절한 전자서명 확인':{any:[/\.verify\s*\(/i,/verify_signature/i,/pkcs1/i,/\bsignature\b/i]},
+  '부적절한 인증서 유효성 검증':{any:[/protocol_tls_client/i,/load_verify_locations/i,/wrap_socket/i,/check_hostname\s*=\s*true/i,/verify_mode\s*=\s*ssl\.cert_required/i],none:[/cert_none/i,/check_hostname\s*=\s*false/i]},
+  '사용자 하드디스크에 저장되는 쿠키를 통한 정보 노출':{all:[/set_cookie|setcookie|new\s+cookie/i],any:[/secure\s*=\s*true/i,/httponly\s*=\s*true/i,/sethttponly|setsecure/i,/max_age/i,/samesite/i]},
+  '무결성 검사 없는 코드 다운로드':{any:[/hashlib/i,/sha-?256/i,/hexdigest/i,/checksum/i,/\bhmac\b/i,/\.digest\b/i,/\bsignature\b/i]},
+  '반복된 인증시도 제한 기능 부재':{any:[/max_attempts|maxattempts|max_tries|maxtries/i,/\battempts?\b/i,/count\s*</i,/lockout|ratelimit|rate_limit/i]},
+  '종료되지 않는 반복문 또는 재귀함수':{any:[/if\s*\([^)]*<=?\s*[01]\b/,/if\s*\([^)]*==\s*[01]\b/,/return\s+1\b/,/\bbreak\b/,/<=\s*0\b/]},
+  '오류 메시지 정보 노출':{any:[/logger\.(error|warn|info)/i,/log\.(error|warn|info)/i,/logging\./i,/slf4j/i],none:[/printstacktrace/i,/println\s*\(\s*e\b/i,/print\s*\([^)]*traceback/i]},
+  '오류 상황 대응 부재':{all:[/catch\s*\(|except\s+/i],any:[/return\s+\w+/i,/throw\s+/i,/\braise\b/i,/setmessage/i,/log(ger)?\./i],none:[/catch\s*\([^)]*\)\s*\{\s*\}/i,/except[^:]*:\s*pass/i]},
+  '부적절한 예외 처리':{any:[/except\s+\w*(error|exception)/i,/catch\s*\(\s*\w*(exception|error)/i],none:[/except\s*:/i,/except\s+exception\b/i]},
+  '부적절한 자원 해제':{any:[/finally\s*\{/i,/try\s*\(/i,/with\s+open/i,/using\s*\(/i,/\bdefer\b/i]},
+  '초기화되지 않은 변수 사용':{any:[/\b(int|char|long|float|double|short)\s+\w+\s*=/i,/=\s*(0|1|null|""|\{\}|\{0\})/,/\w+\s*=\s*new\s/i]},
+  'Public 메소드로부터 반환된 Private 배열':{any:[/new\s+\w+\[[^\]]*\.length\]/i,/\.clone\s*\(\s*\)/i,/arrays\.copyof/i,/system\.arraycopy/i,/collections\.unmodifiable/i,/list\.copyof/i]},
+  'Private 배열에 Public 데이터 할당':{any:[/new\s+\w+\[[^\]]*\.length\]/i,/\.clone\s*\(\s*\)/i,/arrays\.copyof/i,/system\.arraycopy/i,/list\.copyof/i]},
+  'DNS lookup에 의존한 보안 결정':{any:[/getremoteaddr/i],none:[/getremotehost\s*\(/i,/gethostname\s*\(/i,/getcanonicalhostname/i,/gethostbyname/i]},
+  '취약한 API 사용':{any:[/gets_s/i,/fgets/i,/scanf_s/i,/strncpy|snprintf|strlcpy/i],none:[/\bgets\s*\(/i,/\bstrcpy\s*\(/i,/\bsprintf\s*\(/i,/\bscanf\s*\(/i]}
+};
 function verifySecurePattern(code, lang, weakness){
+  const def=LASHR[weakness]; if(!def) return {mapped:false, ok:false};  // 미매핑 약점은 키워드 채점만
   const c=stripCode(code||'');  // 주석 제거 후 검사
-  const has=re=>re.test(c);
-  const W=weakness, L=(lang||'').toLowerCase();
-  // {mapped, ok}
-  if(W==='SQL 삽입')
-    return {mapped:true, ok: has(/preparestatement\s*\(/i) && (has(/\.set(string|int|long|object|date|timestamp|boolean|double|big\w*)\s*\(/i) || has(/:\w+/)) };
-  if(W==='운영체제 명령어 삽입')
-    return {mapped:true, ok: (has(/subprocess\.(run|popen|call|check_output)\s*\(\s*\[/i) && has(/shell\s*=\s*false/i)) || has(/new\s+processbuilder\s*\(/i) };
-  if(W==='크로스사이트 스크립트(XSS)')
-    return {mapped:true, ok: has(/(escapehtml\w*|htmlescape|encodeforhtml|escapexml11?|htmlutils\.html|owasp.*encod|markupsafe|escape\s*\()/i) };
-  if(W==='경로 조작 및 자원 삽입')
-    return {mapped:true, ok: (has(/getcanonicalpath\s*\(/i) && has(/startswith\s*\(/i)) || (has(/(normalize|realpath|abspath)\s*\(/i) && has(/startswith\s*\(/i)) };
-  if(W==='취약한 암호화 알고리즘 사용')
-    return {mapped:true, ok: has(/(aes|sha-?256|sha-?384|sha-?512|sha3|gcm|cbc)/i) && !has(/(\bdes\b|3des|\bmd5\b|sha-?1\b|\brc4\b|\becb\b)/i) };
-  if(W==='솔트 없이 일방향 해시함수 사용')
-    return {mapped:true, ok: has(/(bcrypt|pbkdf2|scrypt|argon2)/i) && has(/(gensalt|getsalt|\bsalt\b|securerandom|token_bytes|os\.urandom)/i) };
-  return {mapped:false, ok:false};  // 미매핑 약점은 키워드 채점만 사용
+  const allOk=!def.all || def.all.every(r=>r.test(c));
+  const anyOk=!def.any || def.any.some(r=>r.test(c));
+  const noneOk=!def.none || def.none.every(r=>!r.test(c));
+  return {mapped:true, ok: allOk && anyOk && noneOk};
 }
 function gradeOne(p,ans){
   let parts=[],score=0;const tpOK=(ans.tp===p.isTruePositive);let struct=null;
@@ -637,6 +720,8 @@ def main():
     a = importlib.import_module('specs_academy')
     pr = importlib.import_module('specs_academy_practical')
     cc = importlib.import_module('specs_code49')
+    bs = importlib.import_module('_basics')
+    tl = importlib.import_module('_tools')
     # <script> 조기 종료 방지: 임베드 데이터의 </ 를 <\/ 로 이스케이프(런타임 JS 파싱 동일)
     def jdump(o):
         return json.dumps(o, ensure_ascii=False).replace('</', '<\\/')
@@ -644,10 +729,12 @@ def main():
                .replace('__QUIZ__', get_quiz_bank().replace('</', '<\\/'))
                .replace('__PRACTICAL__', jdump(pr.PRACTICAL))
                .replace('__THEORY__', jdump(pr.THEORY))
-               .replace('__CODE49__', jdump(cc.CODE49)))
+               .replace('__CODE49__', jdump(cc.CODE49))
+               .replace('__BASICS__', jdump(bs.BASICS))
+               .replace('__TOOLS__', jdump({'tools': tl.TOOLS, 'position': tl.POSITION})))
     open(os.path.join(OUT, 'secure-dev-academy.html'), 'w', encoding='utf-8').write(html)
-    print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d'
-          % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY)))
+    print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d basics=%d tools=%d'
+          % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY), len(bs.BASICS), len(tl.TOOLS)))
 
 
 if __name__ == '__main__':

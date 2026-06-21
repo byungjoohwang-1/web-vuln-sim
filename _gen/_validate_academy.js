@@ -43,7 +43,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -125,6 +125,18 @@ E.PRACTICAL.forEach(p=>{
   if(r.penalty>0){falsePen++;console.log('  ✗ explanation triggers penalty',p.id,JSON.stringify(r.negHits));}
 });
 console.log('explanation false-penalty:', falsePen); ok(falsePen===0,'no false penalty on model explanation');
+
+// 기초 과정(Java/C/Python): 언어별 충분한 항목 + 스키마 + 렌더
+['Java','C','Python'].forEach(l=>{ const n=E.BASICS.filter(b=>b.lang===l).length; ok(n>=5, 'BASICS has >=5 '+l+' topics (got '+n+')'); });
+E.BASICS.forEach((b,i)=>ok(b.topic&&b.desc&&b.code&&b.sec, 'BASICS entry complete #'+i));
+E.rBasics();
+ok(/기초 과정/.test(document.getElementById('v-basics').innerHTML), 'rBasics renders basics view');
+
+// 상용 도구 비교: 항목 + 포털 위치 + 우리 행 표시
+ok(Array.isArray(E.TOOLS.tools)&&E.TOOLS.tools.length>=5, 'TOOLS has >=5 tools (got '+(E.TOOLS.tools||[]).length+')');
+ok(/LASHR/.test(JSON.stringify(E.TOOLS.tools)), 'TOOLS includes this portal (LASHR) row');
+ok(/진단원|교육 도구|생산용/.test(E.TOOLS.position), 'TOOLS position note explains educational role');
+ok(/상용 SAST 도구 비교/.test(E.toolsHtml())&&/ours/.test(E.toolsHtml()), 'toolsHtml renders comparison table with our row');
 
 // 인쇄/요약(PDF): printSummary가 49행 요약표를 printArea에 구성
 E.printSummary();
@@ -219,7 +231,7 @@ ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모�
     const v=E.verifySecurePattern(p.safeCode,p.lang,p.weaknessName);
     if(v.mapped){ seen.add(p.weaknessName); ok(v.ok, 'LASHR: model safeCode passes structure for '+p.id+' ('+p.weaknessName+')'); }
   });
-  ok(seen.size>=5, 'LASHR maps at least 5 weakness types (got '+seen.size+')');
+  ok(seen.size>=40, 'LASHR maps at least 40 weakness types (got '+seen.size+')');
   // 키워드만 나열하고 구조가 없으면 개선코드는 상한(<=18)으로 캡 — SQL 삽입 예
   const sql=E.PRACTICAL.find(p=>p.isTruePositive&&p.weaknessName==='SQL 삽입');
   if(sql){
