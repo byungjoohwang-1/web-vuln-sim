@@ -56,6 +56,11 @@ h2.st{font-size:23px;margin-bottom:6px}.sub{color:var(--muted);font-size:14px;ma
 .catbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .cchip{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:7px 15px;font-family:'Lora',serif;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s}
 .cchip:hover{border-color:var(--p)} .cchip.on{background:var(--p);color:#fff;border-color:var(--p)}
+.catinfo{background:#fff;border:1px solid var(--line);border-left:5px solid var(--p);border-radius:12px;padding:16px 18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(2,6,23,.05)}
+.catinfo .ci-h{font-size:16px;font-weight:800;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.catinfo .ci-badge{color:#fff;font-size:12px;font-weight:700;border-radius:8px;padding:3px 10px}
+.catinfo .ci-row{font-size:13.5px;line-height:1.65;color:#334155;margin-bottom:5px}
+.catinfo .ci-row b{color:#0f172a;margin-right:6px}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
 .ccard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.2s}
 .ccard.done{border-color:#bbf7d0;box-shadow:0 0 0 2px #dcfce7 inset}
@@ -149,12 +154,45 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
 .res{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:34px;max-width:740px;margin:0 auto}
 .res .big{font-size:56px;font-weight:800;font-family:'JetBrains Mono',monospace;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .res .pf{font-size:22px;font-weight:800;margin:4px 0}
+.rev-title{max-width:820px;margin:26px auto 10px;font-size:18px}
+.rev-list{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.rev{background:#fff;border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:12px;padding:13px 16px}
+.rev.no{border-left-color:var(--no)}
+.rev .rv-h{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.rev .rv-cat{background:#eef2ff;color:#4338ca;border-radius:12px;padding:1px 9px;font-size:11px}
+.rev .rv-q{font-size:14.5px;font-weight:700;margin-bottom:6px;line-height:1.5}
+.rev .rv-mine{font-size:13px;color:#b91c1c;margin-bottom:3px}
+.rev .rv-ans{font-size:13px;color:#15803d;margin-bottom:5px}
+.rev .rv-exp{font-size:13px;color:#475569;line-height:1.6;background:#f8fafc;border-radius:8px;padding:8px 10px}
 .wlist{display:flex;flex-direction:column;gap:12px}
 .witem{background:#fff;border:1px solid var(--line);border-left:4px solid var(--no);border-radius:12px;padding:16px 18px}
 .witem .wq{font-weight:700;margin-bottom:6px;font-size:14.5px}.witem .wa{color:#16a34a;font-size:13.5px;margin-bottom:4px}.witem .we{color:#475569;font-size:13.5px}
 .witem .del{float:right;border:none;background:#fef2f2;color:#dc2626;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer}
+.rv-box{display:inline-block;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;background:#eef2ff;color:#4338ca;border-radius:6px;padding:1px 7px;margin-right:4px}
+.due-tag{display:inline-block;font-size:11px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:1px 7px;margin-right:4px}
+.structline{margin-top:8px;font-size:13px;font-weight:700;border-radius:8px;padding:9px 12px;line-height:1.5}
+.structline.ok{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.structline.no{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+.rv-tag{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.rvq{font-size:15px;font-weight:700;line-height:1.55;color:var(--ink,#1e293b)}
 .empty{text-align:center;color:var(--muted);padding:50px 0;font-size:15px}
 @media(max-width:760px){.cgrid{grid-template-columns:1fr}}
+/* 접근성: 모션 최소화 선호 시 애니메이션 비활성화 + 키보드 포커스 표시 */
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.tf:focus-visible,.opt:focus-visible,.cchip:focus-visible{outline:3px solid #6366f1;outline-offset:2px;border-radius:6px}
+/* 인쇄/요약(PDF): 화면에서는 숨기고 인쇄 시 요약표만 표시 */
+#printArea{display:none}
+.ptbl{width:100%;border-collapse:collapse;font-size:10.5px;font-family:'Segoe UI','Malgun Gothic',sans-serif}
+.ptbl th,.ptbl td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}
+.ptbl th{background:#eef2ff}.ptbl .pcwe{color:#666;font-size:9.5px;font-family:'JetBrains Mono',monospace}
+.ptitle{font-family:'Segoe UI','Malgun Gothic',sans-serif;font-size:18px;margin:0 0 4px}.psub{font-size:11px;color:#555;margin:0 0 10px}
+@media print{
+  body{background:#fff!important}
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{display:block;position:absolute;left:0;top:0;width:100%;padding:0 8px}
+  .ptbl tr{page-break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -176,6 +214,7 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
   <div class="view" id="v-prac"></div>
   <div class="view" id="v-wrong"></div>
 </div>
+<div id="printArea" aria-hidden="true"></div>
 <datalist id="kisa49"></datalist>
 
 <script>
@@ -187,6 +226,16 @@ const CODE49 = __CODE49__;
 const KISA49 = CONCEPTS.map(c=>c.name);
 const CATS = ['입력검증','보안기능','시간상태','에러처리','코드오류','캡슐화','API오용'];
 const CCOLOR = {'입력검증':'#6366f1','보안기능':'#0ea5e9','시간상태':'#14b8a6','에러처리':'#f59e0b','코드오류':'#ef4444','캡슐화':'#8b5cf6','API오용':'#64748b'};
+// KISA 7대 유형 개요 — 정의/대표 약점/진단 핵심 포인트
+const CATEGORY_INFO = {
+  '입력검증':{full:'입력데이터 검증 및 표현',def:'외부 입력값을 부적절하게 검증·인코딩하여 의도치 않은 명령·스크립트가 실행되는 유형.',ex:'SQL 삽입 · XSS · 경로 조작 · OS 명령어 삽입 · XXE/SSRF',diag:'모든 외부 입력 경로를 식별하고, 신뢰경계에서 화이트리스트 검증과 맥락별 출력 인코딩(파라미터 바인딩 포함)이 적용되는지 확인한다.'},
+  '보안기능':{full:'보안기능',def:'인증·인가·암호화·권한관리 등 보안기능을 부적절하게 구현한 유형.',ex:'부적절한 인가 · 취약한 암호화 알고리즘 · 하드코드된 중요정보 · 솔트 없는 해시',diag:'인증/인가가 서버 측에서 수행되는지, 암호 알고리즘·키·IV·난수원 관리가 적절한지, 비밀번호가 솔트+적응형 해시로 저장되는지 점검한다.'},
+  '시간상태':{full:'시간 및 상태',def:'동시·병렬 처리 환경에서 시간과 상태를 잘못 다뤄 발생하는 유형.',ex:'경쟁조건(TOCTOU)',diag:'공유 자원 접근에 동기화(락)가 있는지, 검사 시점과 사용 시점 사이에 상태가 바뀔 수 없는지(원자성)를 확인한다.'},
+  '에러처리':{full:'에러처리',def:'오류를 부적절하게 처리하거나 과도한 정보를 노출하는 유형.',ex:'오류 메시지 정보 노출 · 부적절한 예외 처리 · 오류 상황 대응 부재',diag:'예외를 구체적 유형별로 처리하는지, 사용자에게 노출되는 오류 정보가 최소화되는지, 빈 예외 블록이 없는지 점검한다.'},
+  '코드오류':{full:'코드오류',def:'개발자의 코딩 실수로 인한 결함 유형.',ex:'Null Pointer 역참조 · 부적절한 자원 해제 · 정수형 오버플로우 · 해제된 자원 사용',diag:'사용 전 null 검사, finally/with를 통한 자원 해제, 연산 경계값·자료형 크기, 해제 후 포인터 무효화 여부를 확인한다.'},
+  '캡슐화':{full:'캡슐화',def:'중요 데이터나 기능을 부적절하게 노출·보호하지 못하는 유형.',ex:'제거되지 않고 남은 디버그 코드 · 잘못된 접근 지정자',diag:'배포 전 디버그/주석/백도어성 코드가 제거됐는지, 민감 정보·내부 구현의 접근 범위가 최소화됐는지 점검한다.'},
+  'API오용':{full:'API 오용',def:'의도와 다르게 또는 보안상 위험한 API를 사용하는 유형.',ex:'DNS lookup에 의존한 보안 결정 · 취약한 API 사용',diag:'폐기(deprecated)·위험 API 사용 여부, 보안 결정을 위·변조 가능한 정보(DNS 등)에 의존하는지, 안전한 대체 API로 교체됐는지 확인한다.'}
+};
 // 개념→대표 시뮬레이터 매핑(있으면 링크)
 const SIMMAP={'SQL 삽입':'03_code_sql_injection.html','코드 삽입':'03_code_codeinjection.html','경로 조작 및 자원 삽입':'03_code_path_traversal.html','크로스사이트 스크립트(XSS)':'03_code_xss.html','운영체제 명령어 삽입':'03_code_os_command.html','위험한 형식 파일 업로드':'03_code_dangerous_file_upload.html','신뢰되지 않는 URL 주소로 자동접속 연결':'03_code_open_redirect.html','XML 외부 개체(XXE)':'03_code_xxe.html','XML 삽입':'03_code_xml.html','LDAP 삽입':'03_code_ldap_injection.html','크로스사이트 요청 위조(CSRF)':'03_code_csrf.html','서버사이드 요청 위조(SSRF)':'03_code_ssrf.html','HTTP 응답 분할':'03_code_http_split.html','정수형 오버플로우':'03_code_integer_overflow.html','메모리 버퍼 오버플로우':'03_code_bufferoverflow.html','적절한 인증 없는 중요기능 허용':'03_code_missing_auth.html','부적절한 인가':'03_code_inapporiate_auth.html','취약한 암호화 알고리즘 사용':'03_code_risky_crypto.html','하드코드된 중요정보':'03_code_hardedcode.html','적절하지 않은 난수값 사용':'03_code_useofinsufficient_random.html','취약한 비밀번호 허용':'03_code_weakpassword.html','솔트 없이 일방향 해시함수 사용':'03_code_nosalthash.html','경쟁조건: 검사시점과 사용시점(TOCTOU)':'03_code_race_condition.html','오류 메시지 정보 노출':'03_code_error_message.html','부적절한 예외 처리':'03_code_improper_exception.html','Null Pointer 역참조':'03_code_null_pointer.html','부적절한 자원 해제':'03_code_improper_resource_release.html','해제된 자원 사용':'03_code_use_after_free.html','초기화되지 않은 변수 사용':'03_code_uninitialized_variable.html','신뢰할 수 없는 데이터의 역직렬화':'03_code_deserialization.html','제거되지 않고 남은 디버그 코드':'03_code_debug_code.html','DNS lookup에 의존한 보안 결정':'03_code_dns_security_decision.html','취약한 API 사용':'03_code_vulnerable_api.html'};
 
@@ -195,10 +244,32 @@ function load(k,d){try{return JSON.parse(localStorage.getItem(NS+k))??d;}catch(e
 function save(k,v){localStorage.setItem(NS+k,JSON.stringify(v));}
 let learned=load('learned',{}),flashKnown=load('flash',{}),wrongs=load('wrong',[]);
 let examBest=load('examBest',null),pracBest=load('pracBest',null);
-function addWrong(it){if(!wrongs.some(w=>w.q===it.q)){wrongs.push(it);save('wrong',wrongs);}}
+// ── 오답노트 SRS(Leitner 간격 반복) ──
+const SRS_IV=[0,1,3,7,16];  // box별 다음 복습까지 일수(0=즉시), box5 정답 시 졸업
+const DAY=86400000;
+// 구버전/누락 항목 정규화: box·due 보강(기존 오답은 즉시 복습 대상)
+(function(){let m=false;wrongs.forEach(w=>{if(typeof w.box!=='number'){w.box=1;m=true;}if(typeof w.due!=='number'){w.due=Date.now();m=true;}});if(m)save('wrong',wrongs);})();
+function srsDue(w){return (w.due||0)<=Date.now();}
+function dueCount(){return wrongs.filter(srsDue).length;}
+function srsUpdate(w,ok){
+  if(ok){w.box=Math.min((w.box||1)+1,5);
+    if(w.box>=5){wrongs=wrongs.filter(x=>x!==w);save('wrong',wrongs);return true;}  // 졸업(상자5 정답)
+    w.due=Date.now()+SRS_IV[w.box-1]*DAY;
+  }else{w.box=1;w.due=Date.now()+SRS_IV[0]*DAY;}
+  save('wrong',wrongs);return false;
+}
+// 새 오답 추가(이미 있으면 1단계로 리셋해 다시 복습 대상화)
+function addWrong(it){const ex=wrongs.find(w=>w.q===it.q);if(ex){ex.box=1;ex.due=Date.now();save('wrong',wrongs);return;}it.box=1;it.due=Date.now();it.addedAt=Date.now();wrongs.push(it);save('wrong',wrongs);}
 function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
 function gnorm(s){return (s||'').toString().toLowerCase().replace(/[\s.,;:!?()\[\]{}"'`]/g,'');}
-function kwHit(t,k){return gnorm(t).includes(gnorm(k));}
+// 코드 주석 제거(검증 연극 차단): 주석 속 키워드로 만점받는 우회를 막는다.
+// URL의 '://' 와 정규식/문자열 속 '#' 는 보존(오탐 방지)하기 위해 보수적으로 제거한다.
+function stripCode(s){return (s||'').toString()
+  .replace(/\/\*[\s\S]*?\*\//g,' ')      // 블록 주석 /* */
+  .replace(/([^:])\/\/[^\n]*/g,'$1 ')    // 인라인 // 주석 (단, URL의 :// 는 보존)
+  .replace(/^[ \t]*\/\/[^\n]*/gm,' ')    // 줄 시작 // 주석
+  .replace(/^[ \t]*#[^\n]*/gm,' ');}     // 줄 시작 # 주석 (정규식/문자열 속 # 는 보존)
+function kwHit(t,k){const g=gnorm(k);return !!g&&gnorm(t).includes(g);}  // 빈 정규화 키워드(구두점만)는 항상매치 방지
 function kwScore(t,kws,max){if(!kws||!kws.length)return 0;const h=kws.filter(k=>kwHit(t,k)).length;return Math.round(h/kws.length*max);}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function diffBadge(d){const c={'하':['#dcfce7','#15803d'],'중':['#fef9c3','#a16207'],'상':['#fee2e2','#b91c1c']}[d]||['#eef2ff','#4338ca'];return '<span style="display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 9px;font-family:JetBrains Mono,monospace;background:'+c[0]+';color:'+c[1]+'">난이도 '+d+'</span>';}
@@ -224,12 +295,13 @@ function tab(v){
 // ===== 대시보드 =====
 function rDash(){
   const ln=Object.keys(learned).length,fk=Object.keys(flashKnown).length;
+  const tpCov=new Set(PRACTICAL.filter(p=>p.isTruePositive).map(p=>p.weaknessName)).size;
   let rows='';
   CATS.forEach(c=>{const tot=CONCEPTS.filter(x=>x.cat===c).length,dn=CONCEPTS.filter(x=>x.cat===c&&learned[x.name]).length,pct=Math.round(dn/tot*100);
     rows+='<div class="prow"><div class="nm">'+c+'</div><div class="bar"><i style="width:'+pct+'%;background:'+CCOLOR[c]+'"></i></div><div class="vv">'+dn+'/'+tot+'</div></div>';});
   document.getElementById('v-dash').innerHTML=
    '<h2 class="st">📊 나의 학습 현황</h2><p class="sub">진도·기록은 이 브라우저에 자동 저장됩니다.</p>'+
-   '<div class="dgrid">'+dc(ln+'/49','개념 학습')+dc(fk+'/49','플래시 숙련')+dc(examBest!=null?examBest+'%':'-','1교시 최고점')+dc(pracBest!=null?pracBest+'%':'-','2교시 최고점')+dc(wrongs.length,'오답노트')+'</div>'+
+   '<div class="dgrid">'+dc(ln+'/49','개념 학습')+dc(fk+'/49','플래시 숙련')+dc(examBest!=null?examBest+'%':'-','1교시 최고점')+dc(pracBest!=null?pracBest+'%':'-','2교시 최고점')+dc(tpCov+'/49','실무 출제 약점')+dc(wrongs.length,'오답노트')+dc(dueCount(),'오늘 복습')+'</div>'+
    '<div class="prog-wrap"><h3>유형별 개념 학습 숙련도</h3>'+rows+'</div>'+
    '<div class="quick"><button class="qbtn" onclick="tab(\'learn\')">📖 개념 학습</button><button class="qbtn ghost" onclick="tab(\'flash\')">🃏 플래시카드</button><button class="qbtn ghost" onclick="tab(\'exam\')">📝 1교시 이론</button><button class="qbtn ghost" onclick="tab(\'prac\')">🧪 2교시 실무</button></div>'+
    '<button class="reset" onclick="resetAll()">↺ 학습 기록 초기화</button>';
@@ -246,7 +318,22 @@ function rLearn(){
     const sim=SIMMAP[x.name]?'<a class="simlink" href="'+SIMMAP[x.name]+'">🔗 관련 시뮬레이터로 →</a>':'';
     return '<div class="ccard'+done+'" id="cc'+gi+'"><div class="ch" onclick="toggleCard('+gi+')"><div><h4>'+esc(x.name)+'</h4><div class="cwe">'+esc(x.cwe)+'</div></div><span class="badge" style="background:'+CCOLOR[x.cat]+'">'+x.cat+'</span></div>'+
       '<div class="detail">'+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
-  document.getElementById('v-learn').innerHTML='<h2 class="st">📖 개념 학습 — 49개 보안약점</h2><p class="sub">카드를 펼치면 정의·위협·진단법과 함께 <b>KISA 가이드의 Java·Python 안전하지 않은/안전한 코드 예제</b>를 확인할 수 있습니다. (Java=진단가이드, Python=시큐어코딩 가이드)</p><div class="catbar">'+chips+'</div><div class="cgrid">'+cards+'</div>';
+  document.getElementById('v-learn').innerHTML='<h2 class="st">📖 개념 학습 — 49개 보안약점</h2><p class="sub">카드를 펼치면 정의·위협·진단법과 함께 <b>KISA 가이드의 Java·Python 안전하지 않은/안전한 코드 예제</b>를 확인할 수 있습니다. (Java=진단가이드, Python=시큐어코딩 가이드)</p><div class="catbar">'+chips+'<button class="cchip" style="margin-left:auto" onclick="printSummary()" title="49개 약점 요약표를 PDF로 인쇄/저장">🖨️ 요약 인쇄(PDF)</button></div>'+catInfoHtml(learnCat)+'<div class="cgrid">'+cards+'</div>';
+}
+// 49개 약점 요약표 인쇄/PDF 저장 (오프라인 복습용)
+function printSummary(){
+  const rows=CONCEPTS.map(x=>'<tr><td>'+esc(x.cat)+'</td><td><b>'+esc(x.name)+'</b><br><span class="pcwe">'+esc(x.cwe)+'</span></td><td>'+esc(x.desc)+'</td><td>'+esc(x.safe)+'</td></tr>').join('');
+  document.getElementById('printArea').innerHTML='<h2 class="ptitle">KISA 49개 보안약점 요약 — 진단원 학습 센터</h2><p class="psub">유형·약점명·정의·안전한 코딩 핵심 (출처: KISA 가이드 기반 재구성)</p><table class="ptbl"><thead><tr><th>유형</th><th>약점 (CWE)</th><th>정의</th><th>안전한 코딩</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  window.print();
+}
+// 선택한 7대 유형의 개요 배너 (전체 선택 시 미표시)
+function catInfoHtml(cat){
+  const info=CATEGORY_INFO[cat]; if(!info)return '';
+  return '<div class="catinfo" style="border-left-color:'+CCOLOR[cat]+'">'+
+    '<div class="ci-h"><span class="ci-badge" style="background:'+CCOLOR[cat]+'">'+esc(cat)+'</span> '+esc(info.full)+'</div>'+
+    '<div class="ci-row"><b>정의</b> '+esc(info.def)+'</div>'+
+    '<div class="ci-row"><b>대표 약점</b> '+esc(info.ex)+'</div>'+
+    '<div class="ci-row"><b>진단 핵심</b> '+esc(info.diag)+'</div></div>';
 }
 function fld(l,t){return '<div class="fld"><div class="lb">'+l+'</div><div class="tx">'+esc(t)+'</div></div>';}
 function codePane(vuln,safe){
@@ -260,7 +347,9 @@ function codeBlock(gi,name){
     (hasPy?'<button class="lgtab" id="lgp'+gi+'" onclick="setLang(event,'+gi+',\'p\')">Python · 시큐어코딩</button>':'')+'</div>';
   let jpane='<div id="lgjp'+gi+'">'+codePane(cd.javaVuln,cd.javaSafe)+'</div>';
   let ppane=hasPy?'<div id="lgpp'+gi+'" style="display:none">'+codePane(cd.pyVuln,cd.pySafe)+'</div>':'';
-  let note=(!hasPy)?'<div class="cnote">※ '+esc(cd.note||'해당 약점은 Python 시큐어코딩 가이드에 코드 예제가 수록되어 있지 않습니다.')+'</div>':'';
+  let note='';
+  if(!hasPy)note='<div class="cnote">※ '+esc(cd.note||'해당 약점은 Python 시큐어코딩 가이드에 코드 예제가 수록되어 있지 않습니다.')+'</div>';
+  else if(cd.note)note='<div class="cnote">※ '+esc(cd.note)+'</div>';
   return '<div class="fld"><div class="lb">📑 가이드 코드 예제</div>'+tabs+jpane+ppane+note+
     '<div class="csrc">출처: 「소프트웨어 보안약점 진단가이드(2021)」(Java/C) · 「Python 시큐어코딩 가이드(2023)」 — KISA</div></div>';
 }
@@ -284,7 +373,10 @@ function rFlash(){
   drawFlash();
 }
 function setFlashCat(c){flashCat=c;flashDeck=[];flashIdx=0;flashFlip=false;rFlash();}
-function buildDeck(){let pool=CONCEPTS.filter(x=>flashCat==='전체'||x.cat===flashCat);let un=pool.filter(x=>!flashKnown[x.name]);flashDeck=shuffle(un.length?un:pool);flashIdx=0;flashFlip=false;}
+function buildDeck(){let pool=CONCEPTS.filter(x=>flashCat==='전체'||x.cat===flashCat);
+  // 미숙련 카드를 앞에 두되, 숙련 카드도 덱에 포함해 계속 복습(영구 제외 방지)
+  const un=shuffle(pool.filter(x=>!flashKnown[x.name])), kn=shuffle(pool.filter(x=>flashKnown[x.name]));
+  flashDeck=un.concat(kn);flashIdx=0;flashFlip=false;}
 function drawFlash(){
   const stage=document.getElementById('flashStage');const pool=CONCEPTS.filter(x=>flashCat==='전체'||x.cat===flashCat);const known=pool.filter(x=>flashKnown[x.name]).length;
   if(flashIdx>=flashDeck.length){stage.innerHTML='<div class="flash-stage"><div class="fcard"><div class="fr">🎉 이번 덱 완료!</div><div class="hint">숙련 '+known+'/'+pool.length+'</div></div><div class="frow"><button class="btn" onclick="restartDeck()">다시 섞어 풀기</button></div></div>';return;}
@@ -305,7 +397,11 @@ function rExam(){
   document.getElementById('v-exam').innerHTML='<h2 class="st">📝 1교시 이론 (필기)</h2><p class="sub">객관식·OX·단답 혼합. 풀이 중 정답은 비공개, 제출 후 채점합니다. 합격선 70%. (총 문제은행 '+all.length+'문항)</p>'+
    '<div class="setbox"><h3>출제 설정</h3><p>문항 수를 고르면 무작위 출제됩니다. (문항당 40초 타이머)</p><div class="setrow"><button class="qbtn ghost" onclick="startExam(15)">15문항</button><button class="qbtn ghost" onclick="startExam(30)">30문항</button><button class="qbtn" onclick="startExam(999)">전체</button></div>'+(examBest!=null?'<p>최고 기록: <b>'+examBest+'%</b></p>':'<p>아직 기록이 없습니다.</p>')+'</div>';
 }
-function startExam(n){exPool=shuffle(examItems());exPool=exPool.slice(0,Math.min(n,exPool.length));exN=exPool.length;exIdx=0;exAns=[];exLeft=exN*40;startExTimer();drawExam();}
+function startExam(n){
+  let pool=shuffle(examItems()).slice(0,Math.min(n,examItems().length));
+  // 객관식 보기 순서 셔플(위치 암기 방지) — 보기 재배열 후 정답 인덱스 재매핑
+  exPool=pool.map(q=>{ if(q.type==='MC'&&Array.isArray(q.o)){ const idx=shuffle(q.o.map((_,i)=>i)); return Object.assign({},q,{o:idx.map(i=>q.o[i]),a:idx.indexOf(q.a)}); } return q; });
+  exN=exPool.length;exIdx=0;exAns=[];exLeft=exN*40;startExTimer();drawExam();}
 function startExTimer(){clearInterval(exTimer);exTimer=setInterval(()=>{exLeft--;const t=document.getElementById('exTimer');if(t){const m=Math.floor(exLeft/60),s=exLeft%60;t.textContent='⏱ '+m+':'+String(s).padStart(2,'0');t.classList.toggle('warn',exLeft<=30);}if(exLeft<=0){clearInterval(exTimer);gradeExam();}},1000);}
 function drawExam(){
   const q=exPool[exIdx],pct=Math.round(exIdx/exN*100);const cat=q.c||q.cat||'';let body='';
@@ -322,11 +418,27 @@ function prevEx(){if(exIdx>0){exIdx--;drawExam();}}
 function nextEx(){if(exIdx<exN-1){exIdx++;drawExam();}else gradeExam();}
 function exCorrect(q,a){if(a==null||a==='')return false;if(q.type==='MC')return a===q.a;if(q.type==='OX')return a===q.a;return (q.answers||[]).some(x=>{const u=gnorm(a),g=gnorm(x);return u&&(u===g||u.includes(g)||g.includes(u));});}
 function exAnsText(q){if(q.type==='MC')return 'ABCD'[q.a]+'. '+q.o[q.a];if(q.type==='OX')return q.a?'O (맞다)':'X (아니다)';return (q.answers||[]).join(' / ');}
+function exUserText(q,a){if(a==null||a==='')return '(미응답)';if(q.type==='MC')return (q.o[a]!=null?('ABCD'[a]+'. '+q.o[a]):String(a));if(q.type==='OX')return a?'O (맞다)':'X (아니다)';return String(a);}
+function removeWrong(key){const n=wrongs.length;wrongs=wrongs.filter(w=>w.q!==key);if(wrongs.length!==n)save('wrong',wrongs);}
 function gradeExam(){
-  clearInterval(exTimer);let sc=0;
-  exPool.forEach((q,i)=>{if(exCorrect(q,exAns[i]))sc++;else addWrong({q:'['+({MC:'객관식',OX:'OX',SHORT:'단답'}[q.type])+'] '+q.q,a:exAnsText(q),e:q.e,tag:'1교시'});});
+  clearInterval(exTimer);let sc=0;const rev=[];
+  exPool.forEach((q,i)=>{
+    const ok=exCorrect(q,exAns[i]);const key='['+({MC:'객관식',OX:'OX',SHORT:'단답'}[q.type])+'] '+q.q;
+    if(ok){sc++;removeWrong(key);} else {addWrong({q:key,a:exAnsText(q),e:q.e,tag:'1교시',code:q.code||''});}
+    rev.push({q,a:exAns[i],ok});
+  });
   const pct=Math.round(sc/exN*100),pass=pct>=70;if(examBest==null||pct>examBest){examBest=pct;save('examBest',pct);}
-  document.getElementById('v-exam').innerHTML='<div class="res"><div class="big">'+pct+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (70%+)':'❌ 불합격')+'</div><p class="sub">'+exN+'문항 중 '+sc+'문항 정답</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rExam()">다시 응시</button><button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div></div>';
+  const reviewHtml=rev.map((r,i)=>{
+    const q=r.q;const tag=({MC:'객관식',OX:'OX',SHORT:'단답형'}[q.type]);
+    return '<div class="rev '+(r.ok?'ok':'no')+'"><div class="rv-h"><span class="typetag t-'+q.type+'">'+tag+'</span> '+(r.ok?'✔ 정답':'✗ 오답')+' <span class="rv-cat">'+esc(q.c||q.cat||'')+'</span></div>'+
+      '<div class="rv-q">'+(i+1)+'. '+esc(q.q)+'</div>'+
+      (r.ok?'':'<div class="rv-mine">내 답: '+esc(exUserText(q,r.a))+'</div>')+
+      '<div class="rv-ans">정답: '+esc(exAnsText(q))+'</div>'+
+      (q.e?'<div class="rv-exp">'+esc(q.e)+'</div>':'')+'</div>';
+  }).join('');
+  document.getElementById('v-exam').innerHTML='<div class="res"><div class="big">'+pct+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (70%+)':'❌ 불합격')+'</div><p class="sub">'+exN+'문항 중 '+sc+'문항 정답</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rExam()">다시 응시</button><button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div></div>'+
+    '<h3 class="rev-title">📝 문항별 해설</h3><div class="rev-list">'+reviewHtml+'</div>';
+  window.scrollTo(0,0);
 }
 
 // ===== 2교시 실무 (정·오탐 판별 + 서술형 채점) =====
@@ -351,21 +463,49 @@ function drawPrac(){
     '<div class="flbl">1) 정·오탐 판별</div><div class="tfrow"><div class="tf tp" id="tfTP" onclick="setTP(true)"><span class="rd"></span>🚨 정탐 — 보안약점 존재</div><div class="tf fp" id="tfFP" onclick="setTP(false)"><span class="rd"></span>🛡️ 오탐 — 안전한 코드</div></div>'+
     '<div class="flbl">2) 보안약점 표준 명칭 <span style="font-weight:400;color:#94a3b8">(정탐 시, KISA 49개 자동완성)</span></div><input class="pin" id="prName" list="kisa49" placeholder="예) SQL 삽입" disabled>'+
     '<div class="flbl">3) 진단 및 판별 근거 서술</div><textarea class="parea" id="prReason" placeholder="왜 정탐/오탐인지 근거를 서술하세요 (예: Statement로 외부 입력을 문자열 결합하여 SQL 삽입 가능 / 정규식 화이트리스트 검증으로 차단됨)"></textarea>'+
-    '<div class="flbl">4) 보안 대책 — 안전한 코드 작성 <span style="font-weight:400;color:#94a3b8">(정탐 시)</span></div><textarea class="codearea" id="prFix" disabled></textarea>'+
+    '<div class="flbl">4) 보안 대책 — 안전한 코드 작성 <span style="font-weight:400;color:#94a3b8">(정탐 시, 취약 부분을 직접 고쳐 작성)</span></div><textarea class="codearea" id="prFix" placeholder="여기에 취약점을 제거한 안전한 코드를 직접 작성하세요" disabled></textarea>'+
     '<div class="nav"><button class="btn" onclick="submitPrac()">제출 및 채점</button></div><div id="prReport"></div></div>';
   document.getElementById('prCode').innerHTML=codeWithLines(p.code);
-  document.getElementById('prFix').value=p.code;
   const t=document.getElementById('prTimer');const m=Math.floor(prLeft/60),s=prLeft%60;t.textContent='⏱ '+m+':'+String(s).padStart(2,'0');
 }
 function setTP(v){prTP=v;document.getElementById('tfTP').classList.toggle('sel',v===true);document.getElementById('tfFP').classList.toggle('sel',v===false);
   document.getElementById('prName').disabled=!(v===true);document.getElementById('prFix').disabled=!(v===true);}
+// LASHR: 경량 구조 패턴 검증 — 핵심 약점은 키워드 나열이 아닌 '구조'가 갖춰졌는지 확인.
+// 오탈락 방지를 위해 통과 시에만 만점 보장, 미확인 시에도 키워드 점수를 부분 인정(0점 처리 안 함).
+function verifySecurePattern(code, lang, weakness){
+  const c=stripCode(code||'');  // 주석 제거 후 검사
+  const has=re=>re.test(c);
+  const W=weakness, L=(lang||'').toLowerCase();
+  // {mapped, ok}
+  if(W==='SQL 삽입')
+    return {mapped:true, ok: has(/preparestatement\s*\(/i) && (has(/\.set(string|int|long|object|date|timestamp|boolean|double|big\w*)\s*\(/i) || has(/:\w+/)) };
+  if(W==='운영체제 명령어 삽입')
+    return {mapped:true, ok: (has(/subprocess\.(run|popen|call|check_output)\s*\(\s*\[/i) && has(/shell\s*=\s*false/i)) || has(/new\s+processbuilder\s*\(/i) };
+  if(W==='크로스사이트 스크립트(XSS)')
+    return {mapped:true, ok: has(/(escapehtml\w*|htmlescape|encodeforhtml|escapexml11?|htmlutils\.html|owasp.*encod|markupsafe|escape\s*\()/i) };
+  if(W==='경로 조작 및 자원 삽입')
+    return {mapped:true, ok: (has(/getcanonicalpath\s*\(/i) && has(/startswith\s*\(/i)) || (has(/(normalize|realpath|abspath)\s*\(/i) && has(/startswith\s*\(/i)) };
+  if(W==='취약한 암호화 알고리즘 사용')
+    return {mapped:true, ok: has(/(aes|sha-?256|sha-?384|sha-?512|sha3|gcm|cbc)/i) && !has(/(\bdes\b|3des|\bmd5\b|sha-?1\b|\brc4\b|\becb\b)/i) };
+  if(W==='솔트 없이 일방향 해시함수 사용')
+    return {mapped:true, ok: has(/(bcrypt|pbkdf2|scrypt|argon2)/i) && has(/(gensalt|getsalt|\bsalt\b|securerandom|token_bytes|os\.urandom)/i) };
+  return {mapped:false, ok:false};  // 미매핑 약점은 키워드 채점만 사용
+}
 function gradeOne(p,ans){
-  let parts=[],score=0;const tpOK=(ans.tp===p.isTruePositive);
+  let parts=[],score=0;const tpOK=(ans.tp===p.isTruePositive);let struct=null;
   if(p.isTruePositive){
     parts.push(['정·오탐 판별',tpOK?30:0,30]);score+=tpOK?30:0;
     let nm=0;if(ans.tp){const u=gnorm(ans.name),g=gnorm(p.weaknessName);if(u&&u===g)nm=20;else if(u&&(g.includes(u)||u.includes(g))&&u.length>=2)nm=10;}parts.push(['보안약점 명칭',nm,20]);score+=nm;
     const rk=kwScore(ans.reason,p.reasonKeywords,25);parts.push(['진단 근거',rk,25]);score+=rk;
-    const ck=ans.tp?kwScore(ans.fix,p.safeCodeKeywords,25):0;parts.push(['개선 코드',ck,25]);score+=ck;
+    let ck=ans.tp?kwScore(stripCode(ans.fix),p.safeCodeKeywords,25):0;
+    if(ans.tp){
+      struct=verifySecurePattern(ans.fix,p.lang,p.weaknessName);
+      if(struct.mapped){
+        if(struct.ok)ck=25;                 // 핵심 구조 검증 통과 → 만점 보장
+        else ck=Math.min(ck,18);            // 키워드만 있고 구조 미확인 → 부분 인정(상한 18)
+      }
+    }
+    parts.push(['개선 코드',ck,25]);score+=ck;
   }else{
     parts.push(['정·오탐 판별',tpOK?50:0,50]);score+=tpOK?50:0;
     const rk=kwScore(ans.reason,p.reasonKeywords,50);parts.push(['판별 근거',rk,50]);score+=rk;
@@ -374,14 +514,16 @@ function gradeOne(p,ans){
   const negHits=(p.negKw||[]).filter(k=>kwHit(ans.reason,k)||(ans.tp&&p.isTruePositive&&kwHit(ans.name,k)));
   const penalty=Math.min(negHits.length*8, p.isTruePositive?24:30);
   if(penalty){score-=penalty;parts.push(['오류 서술 감점',-penalty,0,true]);}
-  return {score:Math.max(0,Math.round(score)),parts,tpOK,negHits,penalty};
+  return {score:Math.max(0,Math.round(score)),parts,tpOK,negHits,penalty,struct};
 }
 function submitPrac(){
   if(prTP===null){alert('먼저 정·오탐을 판별하세요.');return;}
   const p=prPool[prIdx];
   const ans={tp:prTP,name:document.getElementById('prName').value,reason:document.getElementById('prReason').value,fix:document.getElementById('prFix').value};
   const r=gradeOne(p,ans);prScores.push(r.score);
-  if(r.score<60)addWrong({q:'[2교시 실무] '+p.title+' ('+p.lang+')',a:(p.isTruePositive?('정탐 · '+p.weaknessName+(p.cwe?' ('+p.cwe+')':'')):'오탐(안전한 코드)'),e:p.explanation,tag:'2교시'});
+  const wkey='[2교시 실무] '+p.title+' ('+p.lang+')';
+  if(r.score<60)addWrong({q:wkey,a:(p.isTruePositive?('정탐 · '+p.weaknessName+(p.cwe?' ('+p.cwe+')':'')):'오탐(안전한 코드)'),e:p.explanation,tag:'2교시',code:p.code||''});
+  else if(r.score>=70)removeWrong(wkey);
   // 잠금
   ['tfTP','tfFP'].forEach(id=>document.getElementById(id).setAttribute('onclick',''));
   document.getElementById('prName').disabled=true;document.getElementById('prReason').disabled=true;document.getElementById('prFix').disabled=true;
@@ -391,6 +533,7 @@ function submitPrac(){
     ?'<div class="prow2"><div class="l penline">'+pt[0]+'</div><div class="bar"></div><div class="g penline">'+pt[1]+'점</div></div>'
     :'<div class="prow2"><div class="l">'+pt[0]+'</div><div class="bar"><i style="width:'+Math.round(pt[1]/pt[2]*100)+'%"></i></div><div class="g">'+pt[1]+'/'+pt[2]+'</div></div>').join('');
   let negBlock=(r.negHits&&r.negHits.length)?'<div style="margin-top:6px;font-size:13px;color:#b91c1c">⚠ 부적절·틀린 진단 서술 감지 (−'+r.penalty+'점): '+r.negHits.map(k=>'<span class="neg-kw">'+esc(k)+'</span>').join('')+'</div>':'';
+  let structBlock=(r.struct&&r.struct.mapped)?'<div class="structline '+(r.struct.ok?'ok':'no')+'">🔬 구조 검증: '+(r.struct.ok?'✅ 핵심 보안 구조 확인됨 (개선 코드 만점)':'⚠ 핵심 구조 미확인 — 키워드 기반 부분 인정. 모범답안의 구조와 비교해 보세요.')+'</div>':'';
   let model='<div class="model"><h4>📋 모범답안</h4>'+
     '<div style="font-size:14px;margin-bottom:8px"><b>정답 판별:</b> '+(p.isTruePositive?'🚨 정탐 (보안약점 존재)':'🛡️ 오탐 (안전한 코드)')+(p.isTruePositive?' &nbsp; <b>명칭:</b> '+esc(p.weaknessName)+(p.cwe?' ('+esc(p.cwe)+')':''):'')+'</div>'+
     '<div style="font-size:13.5px;margin-bottom:8px"><b>근거 핵심 키워드:</b><br>'+kwhtml+'</div>'+
@@ -401,7 +544,7 @@ function submitPrac(){
   }
   model+='</div>';
   const pass=r.score>=70;
-  document.getElementById('prReport').innerHTML='<div class="report"><div class="scoreline"><div class="num '+(pass?'pass':'fail')+'">'+r.score+'점</div><div>'+(r.tpOK?'<span class="pass">✔ 정·오탐 정확</span>':'<span class="fail">✗ 정·오탐 오답</span>')+'</div></div>'+bars+negBlock+model+
+  document.getElementById('prReport').innerHTML='<div class="report"><div class="scoreline"><div class="num '+(pass?'pass':'fail')+'">'+r.score+'점</div><div>'+(r.tpOK?'<span class="pass">✔ 정·오탐 정확</span>':'<span class="fail">✗ 정·오탐 오답</span>')+'</div></div>'+bars+structBlock+negBlock+model+
     '<div class="nav" style="display:block"><button class="btn" onclick="'+(prIdx===prN-1?'prResult()':'nextPrac()')+'">'+(prIdx===prN-1?'결과 보기':'다음 문항 →')+'</button></div></div>';
   document.getElementById('prReport').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -412,11 +555,38 @@ function prResult(){
   document.getElementById('v-prac').innerHTML='<div class="res"><div class="big">'+avg+'%</div><div class="pf '+(pass?'pass':'fail')+'">'+(pass?'✅ 합격 (평균 70%+)':'❌ 불합격')+'</div><p class="sub">'+prScores.length+'문항 평균 점수</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rPrac()">다시 응시</button><button class="btn ghost" onclick="tab(\'wrong\')">오답노트 ('+wrongs.length+')</button></div></div>';
 }
 
+// ===== 오답노트 복습 (Leitner SRS 카드) =====
+let rvDeck=[],rvIdx=0,rvFlip=false;
+function rvStart(all){
+  rvDeck=shuffle(wrongs.filter(w=>all?true:srsDue(w)));
+  if(!rvDeck.length){alert(all?'복습할 오답이 없습니다.':'지금 복습 예정인 항목이 없습니다. (간격 반복 일정에 따라 나중에 다시 출제됩니다)');return;}
+  rvIdx=0;rvFlip=false;rvCard();
+}
+function rvCard(){
+  if(rvIdx>=rvDeck.length){
+    document.getElementById('v-wrong').innerHTML='<h2 class="st">🔁 복습 완료</h2><div class="res"><div class="big">👏</div><p class="sub">이번 복습 세션을 마쳤습니다. 남은 오답 '+wrongs.length+'건 · 다음 복습 예정 '+dueCount()+'건</p><div class="quick" style="justify-content:center"><button class="btn" onclick="rWrong()">오답노트로</button></div></div>';return;
+  }
+  const w=rvDeck[rvIdx];const box='<span class="rv-box">Leitner '+(w.box||1)+'/5</span>';
+  const front='<div class="rv-tag">['+(w.tag||'')+'] '+box+'</div><div class="rvq">'+esc(w.q)+'</div>'+(w.code?'<pre class="cpre" style="margin-top:10px;text-align:left">'+esc(w.code)+'</pre>':'')+'<div class="hint" style="margin-top:12px">정답을 떠올린 뒤 카드를 눌러 확인하세요</div>';
+  const back='<div class="rv-tag">['+(w.tag||'')+'] '+box+'</div><div class="rvq" style="color:#15803d">정답: '+esc(w.a)+'</div>'+(w.e?'<div class="rev" style="border-left-color:#6366f1;margin-top:10px;text-align:left"><div class="rv-exp">'+esc(w.e)+'</div></div>':'');
+  document.getElementById('v-wrong').innerHTML='<h2 class="st">🔁 오답 복습 ('+(rvIdx+1)+'/'+rvDeck.length+')</h2><p class="sub">간격 반복(Leitner): 맞히면 상자가 올라가고 5단계에서 졸업(노트에서 제외)합니다. 틀리면 1단계로 돌아가 더 자주 출제됩니다.</p>'+
+    '<div class="flash-stage"><div class="fcard" onclick="rvFlipCard()">'+(rvFlip?back:front)+'</div>'+
+    (rvFlip
+      ?'<div class="frow"><button class="f-no" onclick="rvMark(false)">✗ 틀렸다 (1단계로)</button><button class="f-ok" onclick="rvMark(true)">✓ 맞혔다</button></div>'
+      :'<div class="frow"><button class="btn" onclick="rvFlipCard()">정답 확인 →</button></div>')+
+    '</div>';
+}
+function rvFlipCard(){rvFlip=!rvFlip;rvCard();}
+function rvMark(ok){const w=rvDeck[rvIdx];const grad=srsUpdate(w,ok);rvIdx++;rvFlip=false;rvCard();}
+
 // ===== 오답노트 =====
 function rWrong(){
   if(!wrongs.length){document.getElementById('v-wrong').innerHTML='<h2 class="st">❌ 오답노트</h2><div class="empty">아직 틀린 문제가 없습니다.<br>1교시·2교시를 풀면 틀린 문제가 자동으로 모입니다.</div>';return;}
-  const items=wrongs.map((w,i)=>'<div class="witem"><button class="del" onclick="delWrong('+i+')">삭제</button><div class="wq">['+(w.tag||'')+'] '+esc(w.q)+'</div><div class="wa">정답: '+esc(w.a)+'</div><div class="we">해설: '+esc(w.e)+'</div></div>').join('');
-  document.getElementById('v-wrong').innerHTML='<h2 class="st">❌ 오답노트 ('+wrongs.length+')</h2><p class="sub">틀린 문제를 모아 복습하세요.</p><div style="margin-bottom:14px"><button class="reset" onclick="clearWrong()">전체 비우기</button></div><div class="wlist">'+items+'</div>';
+  const due=dueCount();
+  const items=wrongs.map((w,i)=>'<div class="witem"><button class="del" onclick="delWrong('+i+')">삭제</button><div class="wq">['+(w.tag||'')+'] <span class="rv-box">L'+(w.box||1)+'</span>'+(srsDue(w)?'<span class="due-tag">복습 예정</span>':'')+' '+esc(w.q)+'</div><div class="wa">정답: '+esc(w.a)+'</div><div class="we">해설: '+esc(w.e)+'</div></div>').join('');
+  document.getElementById('v-wrong').innerHTML='<h2 class="st">❌ 오답노트 ('+wrongs.length+')</h2><p class="sub">간격 반복(Leitner) 복습으로 약점을 굳히세요. 오늘 복습 예정 <b>'+due+'</b>건.</p>'+
+   '<div class="quick"><button class="qbtn" onclick="rvStart(false)">🔁 오늘 복습 시작 ('+due+')</button><button class="qbtn ghost" onclick="rvStart(true)">전체 복습</button><button class="reset" onclick="clearWrong()" style="margin-left:auto">전체 비우기</button></div>'+
+   '<div class="wlist" style="margin-top:14px">'+items+'</div>';
 }
 function delWrong(i){wrongs.splice(i,1);save('wrong',wrongs);rWrong();}
 function clearWrong(){if(confirm('오답노트를 전부 비울까요?')){wrongs=[];save('wrong',wrongs);rWrong();}}

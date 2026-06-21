@@ -89,7 +89,7 @@ def route(request):
     ret = eval(message)
     return render(request, '/success.html', {'data':ret})
   return render(request, '/error.html')''',
-    'note':'',
+    'note':'KISA Python 시큐어코딩 가이드는 isalnum() 사전검증을 코드 삽입 위험의 "완화책"으로 제시합니다(eval 완전 제거가 아님). 실무에서는 eval 사용 자체를 피하고 ast.literal_eval 등 안전한 대안을 권장합니다.',
   },
   '경로 조작 및 자원 삽입': {
     'javaLang':'Java',

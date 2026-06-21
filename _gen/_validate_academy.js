@@ -2,9 +2,11 @@
 // 데이터 정합성 / gradeOne 채점(감점 포함) / lineDiff / exCorrect 단위검증.
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'secure-dev-academy.html'), 'utf8');
-const m = html.match(/<script>([\s\S]*)<\/script>\s*<\/body>/);
-if (!m) { console.error('script block not found'); process.exit(1); }
-let code = m[1];
+// 주입된 <script type="module" src="auth-widget.js"> 등에 휘둘리지 않도록
+// CONCEPTS를 담은 인라인 스크립트 블록만 선택한다.
+const blocks = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(x => x[1]);
+let code = blocks.find(b => b.includes('const CONCEPTS'));
+if (!code) { console.error('academy script block not found'); process.exit(1); }
 
 // ---- DOM shim ----
 function htmlEscape(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -35,15 +37,15 @@ const localStorage = {
   setItem(k,v){ store[k] = String(v); },
   removeItem(k){ delete store[k]; }
 };
-const window = { scrollTo(){}, };
+const window = { scrollTo(){}, print(){}, };
 const alert = () => {};
 const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,gradeOne,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,diffBadge,pracPool,codeBlock,codePane});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary});';
 
-const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number };
+const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 let runErr = null;
@@ -59,8 +61,8 @@ ok(!runErr, 'no runtime error on load');
 
 // 데이터
 ok(E.CONCEPTS.length===49, 'CONCEPTS=49 (got '+E.CONCEPTS.length+')');
-ok(E.PRACTICAL.length===30, 'PRACTICAL=30 (got '+E.PRACTICAL.length+')');
-ok(E.THEORY.length===26, 'THEORY=26 (got '+E.THEORY.length+')');
+ok(E.PRACTICAL.length===59, 'PRACTICAL=59 (got '+E.PRACTICAL.length+')');
+ok(E.THEORY.length>=26, 'THEORY>=26 (got '+E.THEORY.length+')');
 console.log('CONCEPTS',E.CONCEPTS.length,'QUIZ',E.QUIZ.length,'PRACTICAL',E.PRACTICAL.length,'THEORY',E.THEORY.length);
 
 // PRACTICAL 스키마 무결성
@@ -69,11 +71,13 @@ const names = new Set(E.CONCEPTS.map(c=>c.name));
 E.PRACTICAL.forEach(p=>{
   if(!['하','중','상'].includes(p.diff)){dErr++;console.log('  ✗ bad diff',p.id);}
   if(!Array.isArray(p.negKw)||!p.negKw.length){dErr++;console.log('  ✗ no negKw',p.id);}
+  // 구두점만으로 이뤄진(정규화 시 빈 문자열) 키워드 금지 — '?' 처럼 항상매치되는 가짜 키워드 차단
+  [].concat(p.safeCodeKeywords||[],p.reasonKeywords||[],p.negKw||[]).forEach(k=>{ if(E.gnorm(k)===''){dErr++;console.log('  ✗ keyword normalizes to empty (punctuation-only):',p.id,JSON.stringify(k));} });
   if(p.isTruePositive){
     if(!names.has(p.weaknessName)){dErr++;console.log('  ✗ weaknessName not in CONCEPTS:',p.id,p.weaknessName);}
     if(!p.safeCode){dErr++;console.log('  ✗ TP missing safeCode',p.id);}
-    // safeCode 키워드 포함 확인
-    (p.safeCodeKeywords||[]).forEach(k=>{ if(!E.kwHit(p.safeCode,k)){dErr++;console.log('  ✗ safeCode missing kw',p.id,k);} });
+    // safeCode 키워드 포함 확인 — 주석 제거 후에도 남아야 함(주석 전용 키워드 금지)
+    (p.safeCodeKeywords||[]).forEach(k=>{ if(!E.kwHit(E.stripCode(p.safeCode),k)){dErr++;console.log('  ✗ safeCode kw only-in-comment or missing',p.id,k);} });
   } else {
     if(p.weaknessName||p.cwe||p.safeCode){dErr++;console.log('  ✗ FP should have empty name/cwe/safe',p.id);}
   }
@@ -122,6 +126,17 @@ E.PRACTICAL.forEach(p=>{
 });
 console.log('explanation false-penalty:', falsePen); ok(falsePen===0,'no false penalty on model explanation');
 
+// 인쇄/요약(PDF): printSummary가 49행 요약표를 printArea에 구성
+E.printSummary();
+const pa = document.getElementById('printArea').innerHTML;
+ok(/ptbl/.test(pa), 'printSummary builds summary table');
+ok((pa.match(/<tr>/g)||[]).length>=49, 'printSummary has >=49 rows (got '+((pa.match(/<tr>/g)||[]).length)+')');
+
+// 7대 유형 개요(CATEGORY_INFO): 모든 카테고리에 정의/대표/진단 존재 + 배너 렌더
+E.CATS.forEach(c=>{ const i=E.CATEGORY_INFO[c]; ok(i&&i.def&&i.ex&&i.diag, 'CATEGORY_INFO complete for '+c); });
+ok(/진단 핵심/.test(E.catInfoHtml('입력검증')), 'catInfoHtml renders banner for a category');
+ok(E.catInfoHtml('전체')==='', 'catInfoHtml empty for 전체');
+
 // lineDiff
 const d = E.lineDiff('a\nb\nc', 'a\nX\nc');
 ok(d.some(x=>x[0]==='del') && d.some(x=>x[0]==='add') && d.some(x=>x[0]==='ctx'), 'lineDiff yields del/add/ctx');
@@ -162,6 +177,57 @@ const hbNoPy=E.codeBlock(1, '메모리 버퍼 오버플로우');
 ok(/수록되어 있지 않|미수록/.test(hbNoPy) && !/Python · 시큐어코딩/.test(hbNoPy), 'codeBlock(memory) shows note, no python tab');
 // javaLang 라벨 반영 (C 항목)
 ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모리 버퍼 오버플로우')), 'C javaLang label rendered');
+
+// 오답노트 SRS(Leitner) 단위검증
+(function(){
+  E.wrongs.length = 0;                                  // 초기화
+  E.addWrong({q:'[테스트] Q1', a:'A', e:'설명', tag:'1교시', code:''});
+  ok(E.wrongs.length===1, 'SRS: addWrong adds new item');
+  ok(E.wrongs[0].box===1, 'SRS: new item starts at box 1');
+  ok(E.dueCount()===1, 'SRS: new item is immediately due');
+  E.addWrong({q:'[테스트] Q1', a:'A', e:'설명', tag:'1교시', code:''});
+  ok(E.wrongs.length===1, 'SRS: duplicate q does not duplicate entry');
+  const w = E.wrongs[0];
+  E.srsUpdate(w, true);
+  ok(w.box===2, 'SRS: correct raises box to 2');
+  ok(!E.srsDue(w), 'SRS: box 2 is not due immediately (scheduled ahead)');
+  E.srsUpdate(w, false);
+  ok(w.box===1, 'SRS: wrong resets box to 1');
+  // 졸업: box5 정답 시 노트에서 제외 (wrongs는 filter로 재할당되므로 라이브 접근자 dueCount로 확인)
+  w.box = 4; const grad = E.srsUpdate(w, true);
+  ok(grad===true && E.dueCount()===0, 'SRS: box5 correct graduates (removed from notes)');
+})();
+
+// LASHR 구조 검증: 매핑된 약점의 '모범답안'은 반드시 구조 통과해야 함(오탈락 0). 위반 시 만점 불가로 위 grading에서 이미 검출되나, 명시 검증:
+(function(){
+  const seen=new Set();
+  E.PRACTICAL.filter(p=>p.isTruePositive).forEach(p=>{
+    const v=E.verifySecurePattern(p.safeCode,p.lang,p.weaknessName);
+    if(v.mapped){ seen.add(p.weaknessName); ok(v.ok, 'LASHR: model safeCode passes structure for '+p.id+' ('+p.weaknessName+')'); }
+  });
+  ok(seen.size>=5, 'LASHR maps at least 5 weakness types (got '+seen.size+')');
+  // 키워드만 나열하고 구조가 없으면 개선코드는 상한(<=18)으로 캡 — SQL 삽입 예
+  const sql=E.PRACTICAL.find(p=>p.isTruePositive&&p.weaknessName==='SQL 삽입');
+  if(sql){
+    const soup=E.gradeOne(sql,{tp:true,name:sql.weaknessName,reason:sql.reasonKeywords.join(' '),fix:(sql.safeCodeKeywords||[]).join(' ; ')});
+    const cp=soup.parts.find(x=>x[0]==='개선 코드');
+    ok(cp && cp[1]<=18, 'LASHR: keyword-soup-without-structure capped at <=18 (got '+(cp?cp[1]:'?')+')');
+  }
+})();
+
+// 검증 연극 차단: 개선코드를 "주석으로만" 키워드를 써서 제출하면 코드 점수 0 이어야 함
+(function(){
+  const tp = E.PRACTICAL.find(p=>p.isTruePositive && (p.safeCodeKeywords||[]).length);
+  if(!tp){ console.log('  (skip) no TP item with safeCodeKeywords'); return; }
+  // 모든 키워드를 한 줄 주석(//)과 블록주석으로만 담은 가짜 답안
+  const kws = tp.safeCodeKeywords.join(' ');
+  const commentOnly = '// ' + kws + '\n/* ' + kws + ' */\n# ' + kws;
+  const r = E.gradeOne(tp, {tp:true, name:tp.weaknessName, reason:tp.reasonKeywords.join(' '), fix: commentOnly});
+  // 개선 코드 파트(만점 25) 점수가 0 이어야 한다
+  const codePart = r.parts.find(pt=>pt[0]==='개선 코드');
+  ok(codePart && codePart[1]===0, 'verification-theater: comment-only fix scores 0 on code ('+(codePart?codePart[1]:'?')+')');
+  ok(r.score < 100, 'verification-theater: comment-only fix cannot reach 100 ('+r.score+')');
+})();
 
 console.log(fail===0 ? '\n✅ ACADEMY v3 VALIDATION PASS' : '\n❌ FAIL count='+fail);
 process.exit(fail===0?0:1);

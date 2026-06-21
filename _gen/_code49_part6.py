@@ -71,27 +71,34 @@ def fetch_url(url, useragent, referer=None, retries=1, dimension=False):
         s.setMessage(e.getMessage());
         return (makeLogin(s));
     }''',
-    'pyVuln': '''def encryption(key_id, plain_text):
+    'pyVuln': '''from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+import base64
+static_keys = [{'key': b'1111111111111111', 'iv': b'2222222222222222'}]  # 등록된 키 목록
+def encryption(key_id, plain_text):
     static_key = {'key':b'0000000000000000', 'iv':b'0000000000000000'}
     try:
         static_key = static_keys[key_id]
     except IndexError:
-        # key 선택 중 오류 발생 시 기본으로 설정된 암호화 키인
-        # '0000000000000000' 으로 암호화가 수행된다.
+        # [취약] 오류를 pass로 무시 → 기본 약한 키 '0000...'로 암호화 수행(오류 상황 대응 부재)
         pass
     cipher_aes = AES.new(static_key['key'], AES.MODE_CBC, static_key['iv'])
-    encrypted_data = base64.b64encode(cipher_aes.encrypt(pad(plain_text.encode(), 32)))
+    encrypted_data = base64.b64encode(cipher_aes.encrypt(pad(plain_text.encode(), 16)))
     return encrypted_data.decode('ASCII')''',
-    'pySafe': '''def encryption(key_id, plain_text):
+    'pySafe': '''from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+import base64, secrets
+static_keys = [{'key': b'1111111111111111', 'iv': b'2222222222222222'}]
+def encryption(key_id, plain_text):
     static_key = {'key':b'0000000000000000', 'iv':b'0000000000000000'}
     try:
         static_key = static_keys[key_id]
     except IndexError:
-        # key 선택 중 오류 발생 시 랜덤으로 암호화 키를 생성하도록 설정
+        # [안전] 오류 상황에 대응: 약한 기본 키 대신 안전한 난수 키를 생성해 등록
         static_key = {'key': secrets.token_bytes(16), 'iv': secrets.token_bytes(16)}
         static_keys.append(static_key)
     cipher_aes = AES.new(static_key['key'], AES.MODE_CBC, static_key['iv'])
-    encrypted_data = base64.b64encode(cipher_aes.encrypt(pad(plain_text.encode(), 32)))
+    encrypted_data = base64.b64encode(cipher_aes.encrypt(pad(plain_text.encode(), 16)))
     return encrypted_data.decode('ASCII')''',
     'note': '',
   },

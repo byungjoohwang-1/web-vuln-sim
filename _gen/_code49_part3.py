@@ -28,7 +28,7 @@ try {
     'pyVuln': '''from django.shortcuts import render
 def init_password(request):
     # 쿠키에서 권한 정보를 가져온다
-    role = request.COOKIE['role']
+    role = request.COOKIES['role']
     request_id = request.POST.get('user_id', '')
     request_mail = request.POST.get('user_email', '')
     # 쿠키에서 가져온 권한이 관리자인지 비교

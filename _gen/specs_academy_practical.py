@@ -18,7 +18,7 @@ PRACTICAL = [
     pstmt.setString(1, id);
     pstmt.executeQuery();
 }''',
-     'safeCodeKeywords':['PreparedStatement','setString','?'],
+     'safeCodeKeywords':['PreparedStatement','setString','prepareStatement'],
      'explanation':'외부 입력 id를 검증 없이 문자열 결합하여 동적 쿼리를 생성하므로 SQL 삽입에 취약합니다. PreparedStatement로 파라미터를 바인딩해야 합니다.'},
 
     {'id':'CD-02','lang':'Java','cat':'입력검증','diff':'중','title':'회원 ID 검색 로직 필터링 검토',
@@ -230,6 +230,11 @@ THEORY = [
     {'type':'MC','cat':'개념','q':'CWE(Common Weakness Enumeration)에 대한 설명으로 옳은 것은?','o':['알려진 공개 취약점(제품 인스턴스) 식별 번호','소프트웨어 보안약점 유형 분류 목록','암호화 알고리즘 표준','네트워크 포트 번호 체계'],'a':1,'e':'CWE는 보안약점 유형 분류 체계이며, 개별 공개 취약점 식별은 CVE입니다.'},
 ]
 
-# 확장 실무 문제(CD-13~CD-30, 난이도·부정키워드 포함) 병합
+# 확장 실무 문제 병합: CD-13~CD-30(난이도·부정키워드) + PC-01~PC-29(49 약점 정탐 커버리지)
 import importlib as _il
 PRACTICAL = PRACTICAL + _il.import_module('_practical_new').PRACTICAL_NEW
+for _mod in ('_prac_cov1', '_prac_cov2', '_prac_cov3'):
+    PRACTICAL = PRACTICAL + _il.import_module(_mod).PART
+
+# 1교시 이론 확장 병합: KISA 7대 유형 균형 + 법령/진단
+THEORY = THEORY + _il.import_module('_theory_ext').PART

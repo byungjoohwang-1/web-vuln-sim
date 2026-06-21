@@ -31,32 +31,24 @@ PART = {
     return super.resolveClass(cls);
   }
 }''',
-    'pyVuln': '''import pickle
+    'pyVuln': '''import pickle, base64
 from django.shortcuts import render
 def load_user_object(request):
-  # 사용자로부터 입력받은 알 수 없는 데이터를 역직렬화
-  pickled_userinfo = pickle.dump(request.POST.get('userinfo', ''))
-  # 역직렬화(unpickle)
-  user_obj = pickle.loads(pickled_userinfo)
-  return render(request, '/load_user_obj.html', {'obj':user_obj})''',
-    'pySafe': '''import hmac
-import hashlib
-import pickle
+  # [취약] 외부(파라미터/쿠키)에서 받은 직렬화 바이트를 그대로 역직렬화
+  raw = base64.b64decode(request.POST.get('userinfo', ''))
+  # 공격자가 만든 pickle 스트림이 그대로 unpickle 되어 임의 코드 실행 가능
+  user_obj = pickle.loads(raw)
+  return render(request, '/load_user_obj.html', {'obj': user_obj})''',
+    'pySafe': '''import json
 from django.shortcuts import render
 def load_user_object(request):
-  # 데이터 변조를 확인하기 위한 해시값
-  hashed_pickle = request.POST.get("hashed_pickle", "")
-  # 사용자로부터 입력받은 데이터를 직렬화(pickle)
-  pickled_userinfo = pickle.dumps(request.POST.get("userinfo", ""))
-  # HMAC 검증을 위한 비밀키 생성
-  m = hmac.new(key="secret_key".encode("utf-8"), digestmod=hashlib.sha512)
-  m.update(pickled_userinfo)
-  # 전달받은 해시값과 직렬화 데이터의 해시값을 비교하여 검증
-  if hmac.compare_digest(str(m.digest()), hashed_pickle):
-    user_obj = pickle.loads(pickled_userinfo)
-    return render(request, "/load_user_obj.html", {"obj": user_obj})
-  else:
-    return render(request, "/error.html", {"error": "신뢰할 수 없는 데이터입니다."})''',
+  # [안전] 신뢰할 수 없는 데이터는 pickle 대신 안전한 형식(JSON)으로 처리한다.
+  # JSON은 객체/코드를 실행하지 않고 기본 자료형만 복원하므로 역직렬화 공격이 불가능하다.
+  try:
+    user_obj = json.loads(request.POST.get('userinfo', '{}'))
+  except json.JSONDecodeError:
+    return render(request, '/error.html', {'error': '잘못된 입력 형식입니다.'})
+  return render(request, '/load_user_obj.html', {'obj': user_obj})''',
     'note': '',
   },
   '잘못된 세션에 의한 데이터 정보 노출': {
