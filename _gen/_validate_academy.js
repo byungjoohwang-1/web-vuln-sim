@@ -44,7 +44,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml,BASICS,TOOLS,rBasics,toolsHtml,RUNNABLE,ideOptions,cleanCode,astReady});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -126,6 +126,11 @@ E.PRACTICAL.forEach(p=>{
   if(r.penalty>0){falsePen++;console.log('  ✗ explanation triggers penalty',p.id,JSON.stringify(r.negHits));}
 });
 console.log('explanation false-penalty:', falsePen); ok(falsePen===0,'no false penalty on model explanation');
+
+// AST 정밀채점(tree-sitter): node에는 WASM 없음 → cleanCode가 정규식 폴백으로 주석 제거, astReady=false
+ok(E.astReady('Java')===false, 'AST: astReady false without tree-sitter (node fallback)');
+ok(E.cleanCode('int x=1; // secret\\nfoo();','Java').indexOf('secret')===-1, 'AST: cleanCode strips comments via regex fallback');
+ok(/web-tree-sitter/.test(html)&&/tree-sitter-wasms/.test(html), 'AST: tree-sitter wiring present in HTML');
 
 // 온라인 IDE: 실행 가능 데모 스키마 + 언어 커버리지 + 옵션/탭
 ok(Array.isArray(E.RUNNABLE)&&E.RUNNABLE.length>=6, 'RUNNABLE has >=6 demos (got '+(E.RUNNABLE||[]).length+')');

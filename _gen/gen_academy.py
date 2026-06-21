@@ -174,6 +174,8 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
 .rv-box{display:inline-block;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;background:#eef2ff;color:#4338ca;border-radius:6px;padding:1px 7px;margin-right:4px}
 .due-tag{display:inline-block;font-size:11px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:1px 7px;margin-right:4px}
 .structline{margin-top:8px;font-size:13px;font-weight:700;border-radius:8px;padding:9px 12px;line-height:1.5}
+.ast-on{font-size:11px;font-weight:700;background:#dcfce7;color:#15803d;border-radius:6px;padding:1px 7px}
+.ast-off{font-size:11px;font-weight:700;background:#f1f5f9;color:#64748b;border-radius:6px;padding:1px 7px}
 .structline.ok{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
 .structline.no{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
 .rv-tag{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:8px}
@@ -365,6 +367,40 @@ function stripCode(s){return (s||'').toString()
   .replace(/([^:])\/\/[^\n]*/g,'$1 ')    // 인라인 // 주석 (단, URL의 :// 는 보존)
   .replace(/^[ \t]*\/\/[^\n]*/gm,' ')    // 줄 시작 // 주석
   .replace(/^[ \t]*#[^\n]*/gm,' ');}     // 줄 시작 # 주석 (정규식/문자열 속 # 는 보존)
+// ── tree-sitter AST 정밀 전처리 (무료·클라이언트, 실패 시 정규식 stripCode로 자동 폴백) ──
+const TSLANG={'Java':'java','C':'c','Python':'python'};
+let tsCore=null, tsParser={}, tsLoadP={};
+function loadTreeSitter(lang){
+  const L=TSLANG[lang]; if(!L) return Promise.resolve(false);
+  if(tsParser[L]) return Promise.resolve(true);
+  if(tsLoadP[L]) return tsLoadP[L];
+  tsLoadP[L]=(async()=>{
+    const CDN='https://cdn.jsdelivr.net/npm/web-tree-sitter@0.22.6';
+    if(!tsCore){
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src=CDN+'/tree-sitter.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      const TS=window.TreeSitter||window.Parser;
+      await TS.init({locateFile:()=>CDN+'/tree-sitter.wasm'});
+      tsCore=TS;
+    }
+    const grammar=await tsCore.Language.load('https://cdn.jsdelivr.net/npm/tree-sitter-wasms@0.1.11/out/tree-sitter-'+L+'.wasm');
+    const p=new tsCore(); p.setLanguage(grammar); tsParser[L]=p; return true;
+  })().catch(()=>false);
+  return tsLoadP[L];
+}
+function astReady(lang){return !!tsParser[TSLANG[lang]];}
+// AST로 주석을 정확히 제거(문자열 속 //·# 오탐 없음). 미로딩/실패 시 정규식 폴백.
+function cleanCode(code, lang){
+  const L=TSLANG[lang];
+  try{
+    if(L && tsParser[L]){
+      const tree=tsParser[L].parse(code||''); let src=code||''; const cuts=[];
+      (function walk(n){const t=n.type;if(t==='comment'||t==='line_comment'||t==='block_comment'){cuts.push([n.startIndex,n.endIndex]);}for(let i=0;i<n.childCount;i++)walk(n.child(i));})(tree.rootNode);
+      cuts.sort((a,b)=>b[0]-a[0]).forEach(c=>{src=src.slice(0,c[0])+' '.repeat(c[1]-c[0])+src.slice(c[1]);});
+      return src;
+    }
+  }catch(e){}
+  return stripCode(code);
+}
 function kwHit(t,k){const g=gnorm(k);return !!g&&gnorm(t).includes(g);}  // 빈 정규화 키워드(구두점만)는 항상매치 방지
 function kwScore(t,kws,max){if(!kws||!kws.length)return 0;const h=kws.filter(k=>kwHit(t,k)).length;return Math.round(h/kws.length*max);}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -574,7 +610,9 @@ function rPrac(){
    '<div class="catbar">'+chips+'</div>'+
    '<div class="setbox"><h3>실무 평가</h3><p>실제 2교시처럼 서술형으로 진단합니다. (문항당 3분 권장 타이머)<br>현재 출제풀: <b>'+pool.length+'문항</b> (정탐 '+tp+' · 오탐 '+(pool.length-tp)+')</p><div class="setrow"><button class="qbtn ghost" onclick="startPrac(6)">6문항 무작위</button><button class="qbtn" onclick="startPrac(999)">전체 풀이 ('+pool.length+')</button></div>'+(pracBest!=null?'<p>최고 기록: <b>'+pracBest+'%</b></p>':'<p>아직 기록이 없습니다.</p>')+'</div>';
 }
-function startPrac(n){const pool=pracPool();if(!pool.length){alert('해당 난이도 문항이 없습니다.');return;}prPool=shuffle(pool);prPool=prPool.slice(0,Math.min(n,prPool.length));prN=prPool.length;prIdx=0;prScores=[];prLeft=prN*180;startPrTimer();drawPrac();}
+function startPrac(n){const pool=pracPool();if(!pool.length){alert('해당 난이도 문항이 없습니다.');return;}prPool=shuffle(pool);prPool=prPool.slice(0,Math.min(n,prPool.length));prN=prPool.length;prIdx=0;prScores=[];prLeft=prN*180;
+  [...new Set(prPool.map(p=>p.lang))].forEach(l=>{try{loadTreeSitter(l);}catch(e){}});  // AST 파서 사전 로딩(비동기, 폴백 안전)
+  startPrTimer();drawPrac();}
 function startPrTimer(){clearInterval(prTimer);prTimer=setInterval(()=>{prLeft--;const t=document.getElementById('prTimer');if(t){const m=Math.floor(prLeft/60),s=prLeft%60;t.textContent='⏱ '+m+':'+String(s).padStart(2,'0');t.classList.toggle('warn',prLeft<=60);}if(prLeft<=0){clearInterval(prTimer);prResult();}},1000);}
 function codeWithLines(code){return code.split('\n').map((l,i)=>'<span class="ln">'+String(i+1).padStart(2,' ')+': </span>'+esc(l)).join('\n');}
 function drawPrac(){
@@ -645,7 +683,7 @@ const LASHR = {
 };
 function verifySecurePattern(code, lang, weakness){
   const def=LASHR[weakness]; if(!def) return {mapped:false, ok:false};  // 미매핑 약점은 키워드 채점만
-  const c=stripCode(code||'');  // 주석 제거 후 검사
+  const c=cleanCode(code, lang);  // AST(또는 정규식 폴백)로 주석 제거 후 검사
   const allOk=!def.all || def.all.every(r=>r.test(c));
   const anyOk=!def.any || def.any.some(r=>r.test(c));
   const noneOk=!def.none || def.none.every(r=>!r.test(c));
@@ -657,7 +695,7 @@ function gradeOne(p,ans){
     parts.push(['정·오탐 판별',tpOK?30:0,30]);score+=tpOK?30:0;
     let nm=0;if(ans.tp){const u=gnorm(ans.name),g=gnorm(p.weaknessName);if(u&&u===g)nm=20;else if(u&&(g.includes(u)||u.includes(g))&&u.length>=2)nm=10;}parts.push(['보안약점 명칭',nm,20]);score+=nm;
     const rk=kwScore(ans.reason,p.reasonKeywords,25);parts.push(['진단 근거',rk,25]);score+=rk;
-    let ck=ans.tp?kwScore(stripCode(ans.fix),p.safeCodeKeywords,25):0;
+    let ck=ans.tp?kwScore(cleanCode(ans.fix,p.lang),p.safeCodeKeywords,25):0;
     if(ans.tp){
       struct=verifySecurePattern(ans.fix,p.lang,p.weaknessName);
       if(struct.mapped){
@@ -676,9 +714,10 @@ function gradeOne(p,ans){
   if(penalty){score-=penalty;parts.push(['오류 서술 감점',-penalty,0,true]);}
   return {score:Math.max(0,Math.round(score)),parts,tpOK,negHits,penalty,struct};
 }
-function submitPrac(){
+async function submitPrac(){
   if(prTP===null){alert('먼저 정·오탐을 판별하세요.');return;}
   const p=prPool[prIdx];
+  if(prTP===true){try{await loadTreeSitter(p.lang);}catch(e){}}  // 채점 전 AST 파서 준비(폴백 안전)
   const ans={tp:prTP,name:document.getElementById('prName').value,reason:document.getElementById('prReason').value,fix:document.getElementById('prFix').value};
   const r=gradeOne(p,ans);prScores.push(r.score);
   const wkey='[2교시 실무] '+p.title+' ('+p.lang+')';
@@ -693,7 +732,8 @@ function submitPrac(){
     ?'<div class="prow2"><div class="l penline">'+pt[0]+'</div><div class="bar"></div><div class="g penline">'+pt[1]+'점</div></div>'
     :'<div class="prow2"><div class="l">'+pt[0]+'</div><div class="bar"><i style="width:'+Math.round(pt[1]/pt[2]*100)+'%"></i></div><div class="g">'+pt[1]+'/'+pt[2]+'</div></div>').join('');
   let negBlock=(r.negHits&&r.negHits.length)?'<div style="margin-top:6px;font-size:13px;color:#b91c1c">⚠ 부적절·틀린 진단 서술 감지 (−'+r.penalty+'점): '+r.negHits.map(k=>'<span class="neg-kw">'+esc(k)+'</span>').join('')+'</div>':'';
-  let structBlock=(r.struct&&r.struct.mapped)?'<div class="structline '+(r.struct.ok?'ok':'no')+'">🔬 구조 검증: '+(r.struct.ok?'✅ 핵심 보안 구조 확인됨 (개선 코드 만점)':'⚠ 핵심 구조 미확인 — 키워드 기반 부분 인정. 모범답안의 구조와 비교해 보세요.')+'</div>':'';
+  const astTag=astReady(p.lang)?' <span class="ast-on">🌳 AST 정밀</span>':' <span class="ast-off">LASHR(정규식)</span>';
+  let structBlock=(r.struct&&r.struct.mapped)?'<div class="structline '+(r.struct.ok?'ok':'no')+'">🔬 구조 검증'+astTag+': '+(r.struct.ok?'✅ 핵심 보안 구조 확인됨 (개선 코드 만점)':'⚠ 핵심 구조 미확인 — 키워드 기반 부분 인정. 모범답안의 구조와 비교해 보세요.')+'</div>':'';
   let model='<div class="model"><h4>📋 모범답안</h4>'+
     '<div style="font-size:14px;margin-bottom:8px"><b>정답 판별:</b> '+(p.isTruePositive?'🚨 정탐 (보안약점 존재)':'🛡️ 오탐 (안전한 코드)')+(p.isTruePositive?' &nbsp; <b>명칭:</b> '+esc(p.weaknessName)+(p.cwe?' ('+esc(p.cwe)+')':''):'')+'</div>'+
     '<div style="font-size:13.5px;margin-bottom:8px"><b>근거 핵심 키워드:</b><br>'+kwhtml+'</div>'+
