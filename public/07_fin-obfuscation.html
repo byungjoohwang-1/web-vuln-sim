@@ -57,7 +57,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </head>
 <body>
 <div class="container">
-  <div class="top-nav"><a href="vuln-hub.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🧬</span> 전자금융 보안 모의해킹 &middot; 소스코드 난독화 적용</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -149,7 +149,7 @@ public class PayClient {
     String apiKey = KeyStoreProvider.get("api_key"); // AndroidKeyStore
     String aesKey = fetchKeyFromServer();            // 서버 발급
 }`;
-const CHECKS = [[`minifyEnabled true`, `R8`, `ProGuard`, `DexGuard`, `난독화`], [`KeyStoreProvider`, `fetchKeyFromServer`, `AndroidKeyStore`], [`!AKIA-LIVE`, `!0123456789abcdef`]];
+const CHECKS = [[`KeyStoreProvider`, `fetchKeyFromServer`, `AndroidKeyStore`], [`!AKIA-LIVE`, `!0123456789abcdef`]];
 let isAttackOn = false;
 
 function switchTab(name){
@@ -201,15 +201,17 @@ function showCompliance(){
   document.getElementById('violationAlert').style.display='block';
 }
 function verifyCode(){
-  const norm=s=>s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  // 주석 제거(주석 속 토큰으로 통과하는 우회 차단) + 공백/연산자 정규화
+  const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,' ').replace(/#[^\n]*/g,' ');
+  const norm=s=>strip(s).replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
   const code=norm(document.getElementById('codeEditor').value);
   const r=document.getElementById('codeResult');
   const ok=CHECKS.every(grp=>{
     const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
     return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
   });
-  if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">난독화 적용 + 키 외부화로 디컴파일해도 핵심 로직·키를 얻을 수 없습니다.</span></div>'; }
-  else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">난독화(minifyEnabled true 등)를 켜고, 하드코딩 키를 KeyStore/서버 주입으로 바꿔야 합니다.</span></div>'; }
+  if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">키를 KeyStore/서버로 외부화하고 하드코딩 키를 제거했습니다. (배포 시 빌드에서 R8/ProGuard 난독화도 함께 적용하세요)</span></div>'; }
+  else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">하드코딩된 키를 제거하고 KeyStore/서버 주입으로 바꾸세요. (난독화 minifyEnabled true 는 build.gradle에서 별도 적용)</span></div>'; }
 }
 function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>

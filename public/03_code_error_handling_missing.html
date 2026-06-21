@@ -76,7 +76,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="top-nav"><a href="vuln-hub.html">&larr; 메인으로</a></div>
+        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
         <div class="header">
             <h1>🕳️ 오류상황 대응 부재 - 실습 시뮬레이터</h1>
             <p>CWE-391: Unchecked Error Condition</p>
@@ -278,8 +278,9 @@ except ValueError:
             }
         }
         function passesChecks(code, checks) {
-            // 공백 정규화 + 비교 연산자 주변 공백 제거(사용자 포맷 차이 허용)
-            const norm = s => s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+            // 주석 제거(주석 속 토큰으로 통과하는 우회 차단) + 공백/연산자 정규화
+            const strip = s => s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,' ').replace(/#[^\n]*/g,' ');
+            const norm = s => strip(s).replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
             const c = norm(code);
             // 각 그룹: 양성 토큰(하나라도 포함) AND 음성 토큰('NOT:'접두, 모두 미포함)
             return checks.every(grp => {

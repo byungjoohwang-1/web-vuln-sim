@@ -79,7 +79,7 @@
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
                 <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">Referer 검증 (KISA 가이드)</div>
+                <div class="mode-desc">CSRF 토큰 검증 (Referer 보조)</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
@@ -95,7 +95,7 @@
                 <ul class="checklist" id="progressChecklistJava">
                     <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
                     <li class="checklist-item"><span class="checklist-icon">⬜</span> CSRF 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> Referer 검증 구현</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> CSRF 토큰 검증 구현</li>
                 </ul>
             </div>
 
@@ -109,7 +109,7 @@
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">UserController.java</span>
-                            <span class="toolbar-hint">💡 getHeader("Referer")를 사용하여 요청 출처를 확인하세요.</span>
+                            <span class="toolbar-hint">💡 세션의 CSRF 토큰과 요청 토큰을 equals()로 비교하세요. (보조: Referer 검증)</span>
                             <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
@@ -146,11 +146,24 @@
                     <div class="hint-panel" id="hintPanelJava">
                         <div class="info-title">💡 수정 가이드 (KISA 가이드)</div>
                         <div class="hint-step">
-                            <strong>1. Referer 검증</strong>
-                            <p>요청 헤더의 Referer 값이 허용된 도메인으로 시작하는지 확인합니다.</p>
+                            <strong>1. CSRF 토큰 검증 (근본 대책)</strong>
+                            <p>폼 출력 시 세션에 예측 불가능한 토큰을 저장하고, 요청 처리 시 세션 토큰과 요청 토큰이 일치하는지 확인합니다.</p>
+                            <div class="hint-code">
+String sessionToken = (String) request.getSession().getAttribute("csrfToken");
+String formToken = request.getParameter("csrfToken");
+if (sessionToken != null && sessionToken.equals(formToken)) {
+    // 정상 실행
+} else {
+    // 차단 (403)
+}
+                            </div>
+                        </div>
+                        <div class="hint-step">
+                            <strong>2. Referer/Origin 검증 (보조 · 심층 방어)</strong>
+                            <p>요청 헤더의 Referer 값이 허용된 도메인으로 시작하는지 확인합니다. 단, Referer는 비어 있을 수 있어 단독 방어로는 부족합니다.</p>
                             <div class="hint-code">
 String referer = request.getHeader("Referer");
-if (referer != null && referer.startsWith("http://my-secure-site.com")) {
+if (referer != null && referer.startsWith("https://my-secure-site.com")) {
     // 정상 실행
 } else {
     // 차단
@@ -330,15 +343,23 @@ csrf = CSRFProtect(app)
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
-            // KISA 가이드 기준: Referer 헤더 확인
-            if (code.includes('getHeader("Referer")') && code.includes('startsWith') && code.includes('!= null')) {
+            // 1순위(근본 대책): 동기화 토큰 패턴 — 세션 저장 토큰과 요청 토큰 비교
+            const tokenBased = /csrf|token/i.test(code) && code.includes('getAttribute') && code.includes('equals');
+            // 보조 수단: Referer/Origin 검증
+            const refererBased = (code.includes('getHeader("Referer")') || code.includes('getHeader("Origin")')) && code.includes('startsWith');
+            if (tokenBased) {
                 updateChecklist('progressChecklistJava', 2, true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>Referer 헤더를 검증하여 CSRF 공격을 방어했습니다.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>세션에 저장된 CSRF 토큰과 요청의 토큰을 비교하는 동기화 토큰(Synchronizer Token) 패턴을 적용했습니다. CSRF의 근본적 방어책입니다.</p></div>`;
                 document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>KISA 가이드에 따른 Referer 검증 로직이 적용되었습니다.</p></div></div>`;
+                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>예측 불가능한 CSRF 토큰을 폼/세션에 발급하고 요청 시 일치 여부를 검증하여 위조 요청을 차단합니다.</p></div></div>`;
+            } else if (refererBased) {
+                updateChecklist('progressChecklistJava', 2, true);
+                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공 (보조 방어)</strong><p>Referer/Origin 검증을 적용했습니다. 다만 Referer는 비어 있거나 우회될 수 있어 <strong>보조 수단</strong>입니다. 가능하면 CSRF 토큰(동기화 토큰) 방식을 함께 적용하세요.</p></div>`;
+                document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태 (보조)</div><div class="info-content"><p style="color: #28a745"><strong>Referer 검증 적용</strong></p><p>근본 대책은 CSRF 토큰 검증이며, Referer 검증은 심층 방어(defense-in-depth)로 병행하는 것이 좋습니다.</p></div></div>`;
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>request.getHeader("Referer")를 사용하여 허용된 도메인인지 확인하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>근본 대책: 세션에 저장한 CSRF 토큰을 요청 파라미터의 토큰과 <code>equals()</code>로 비교하세요. (보조: getHeader("Referer") 출처 검증)</p></div>`;
             }
         }
         function resetCoding(mode) {

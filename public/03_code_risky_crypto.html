@@ -572,9 +572,9 @@ def encrypt_secret(data):
                             <div class="hint-code">key = get_random_bytes(16)</div>
                         </div>
                         <div class="hint-step">
-                            <strong>3. 암호화 객체 생성</strong>
-                            <p>AES.new()를 사용하여 객체를 생성합니다.</p>
-                            <div class="hint-code">cipher = AES.new(key, AES.MODE_ECB)</div>
+                            <strong>3. 암호화 객체 생성 (안전한 모드)</strong>
+                            <p>AES.new()로 객체를 생성하되, ECB가 아닌 CBC/GCM 등 안전한 운용 모드를 사용합니다.</p>
+                            <div class="hint-code">cipher = AES.new(key, AES.MODE_CBC)</div>
                         </div>
                     </div>
                 </div>
@@ -700,10 +700,17 @@ def encrypt_secret(data):
                 messages.push("❌ 여전히 DES 알고리즘이 남아있습니다.");
             }
 
-            // 2. AES 적용 확인
-            if (code.includes('"AES"') || code.includes('"AES/')) {
+            // 2. AES 적용 + 안전한 운용 모드(ECB 금지) 확인
+            const aesApplied = code.includes('"AES"') || code.includes('"AES/');
+            const secureMode = code.includes('AES/CBC') || code.includes('AES/GCM');
+            const ecbCipher = code.includes('AES/ECB');
+            if (aesApplied && secureMode && !ecbCipher) {
                 updateChecklist('progressChecklistJava', 2, true);
-                messages.push("✅ 강력한 AES 알고리즘이 적용되었습니다.");
+                messages.push("✅ 강력한 AES 알고리즘과 안전한 운용 모드(CBC/GCM)가 적용되었습니다.");
+            } else if (aesApplied && (ecbCipher || !secureMode)) {
+                passed = false;
+                updateChecklist('progressChecklistJava', 2, false);
+                messages.push("⚠️ 알고리즘은 AES로 바꿨지만 ECB 모드(또는 모드 미지정 → 기본 ECB)는 동일 평문이 동일 암호문이 되어 패턴이 노출됩니다. Cipher.getInstance(\"AES/CBC/...\") 또는 \"AES/GCM/...\"를 사용하세요.");
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 2, false);
@@ -859,10 +866,16 @@ public class SimpleEncryptor {
                 messages.push("❌ Crypto.Cipher import AES 구문을 추가하세요.");
             }
 
-            // 3. AES.new 확인
-            if (code.includes('AES.new')) {
+            // 3. AES.new + 안전한 운용 모드(ECB 금지) 확인
+            const usesAesNew = code.includes('AES.new');
+            const pySecureMode = code.includes('MODE_CBC') || code.includes('MODE_GCM') || code.includes('MODE_CTR');
+            if (usesAesNew && pySecureMode && !code.includes('MODE_ECB')) {
                 updateChecklist('progressChecklistPython', 3, true);
-                messages.push("✅ AES 객체 생성이 확인되었습니다.");
+                messages.push("✅ AES 객체를 안전한 운용 모드(CBC/GCM/CTR)로 생성했습니다.");
+            } else if (usesAesNew) {
+                passed = false;
+                updateChecklist('progressChecklistPython', 3, false);
+                messages.push("⚠️ AES.new()를 썼지만 ECB 모드는 취약합니다. AES.MODE_CBC / AES.MODE_GCM 등을 사용하세요.");
             } else {
                 passed = false;
                 updateChecklist('progressChecklistPython', 3, false);

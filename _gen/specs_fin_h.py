@@ -26,13 +26,14 @@ SPECS = [
         'defense_intro': '빌드 시 <strong>난독화(R8/ProGuard/DexGuard)</strong>를 적용하고, <strong>키·시크릿은 코드에서 분리</strong>하여 안전저장소(KeyStore)나 서버에서 주입해야 합니다. 아래 코드를 보완하세요.',
         'vuln_code': '// [취약] 난독화 미적용 + 키 하드코딩\npublic class PayClient {\n    // build.gradle: minifyEnabled false  (난독화 꺼짐)\n    static final String API_KEY = "AKIA-LIVE-9F3K-22XQ"; // 디컴파일 시 노출\n    static final String AES_KEY = "0123456789abcdef";     // 평문 키\n}',
         'secure_hint': '// [안전] 난독화 적용 + 시크릿 외부화\npublic class PayClient {\n    // build.gradle: minifyEnabled true  (R8/ProGuard 난독화)\n    // 키는 코드가 아닌 안전저장소/서버에서 주입\n    String apiKey = KeyStoreProvider.get("api_key"); // AndroidKeyStore\n    String aesKey = fetchKeyFromServer();            // 서버 발급\n}',
+        # 난독화(minifyEnabled/R8 등)는 build.gradle 빌드설정이라 코드 에디터에선 주석으로만 표현되어
+        # 자동 검증 대상에서 제외(힌트·해설로 학습). 코드에서 검증 가능한 '키 외부화 + 하드코딩 키 제거'를 채점한다.
         'checks': [
-            ['minifyEnabled true', 'R8', 'ProGuard', 'DexGuard', '난독화'],
             ['KeyStoreProvider', 'fetchKeyFromServer', 'AndroidKeyStore'],
             ['!AKIA-LIVE', '!0123456789abcdef'],
         ],
-        'success_msg': '난독화 적용 + 키 외부화로 디컴파일해도 핵심 로직·키를 얻을 수 없습니다.',
-        'fail_msg': '난독화(minifyEnabled true 등)를 켜고, 하드코딩 키를 KeyStore/서버 주입으로 바꿔야 합니다.',
+        'success_msg': '키를 KeyStore/서버로 외부화하고 하드코딩 키를 제거했습니다. (배포 시 빌드에서 R8/ProGuard 난독화도 함께 적용하세요)',
+        'fail_msg': '하드코딩된 키를 제거하고 KeyStore/서버 주입으로 바꾸세요. (난독화 minifyEnabled true 는 build.gradle에서 별도 적용)',
         'kisa_ref': '<h4>1. 점검 항목</h4>단말 보안 &gt; <b>소스코드 난독화 적용</b><h4>2. 위험 분석</h4><ul><li>디컴파일(jadx/apktool)로 평문에 가까운 소스 복원</li><li>하드코딩된 키·로직 노출 → 위·변조, 키 탈취</li></ul><h4>3. 조치 방법</h4><ul><li>R8/ProGuard/DexGuard 등 <b>난독화 적용</b></li><li>키·시크릿 <b>코드 분리</b>(KeyStore/서버 발급)</li></ul>',
         'easy': '난독화는 설계도를 <b>외계어로 바꿔 놓는 것</b>입니다. 안 하면 누구나 앱을 뜯어 도면을 그대로 읽고 <b>숨겨둔 열쇠(키)</b>까지 주워 갑니다. 열쇠는 도면이 아니라 <b>따로 금고</b>에 둬야 합니다.',
     },

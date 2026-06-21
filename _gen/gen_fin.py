@@ -198,7 +198,9 @@ function showCompliance(){{
   document.getElementById('violationAlert').style.display='block';
 }}
 function verifyCode(){{
-  const norm=s=>s.replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  // 주석 제거(주석 속 토큰으로 통과하는 우회 차단) + 공백/연산자 정규화
+  const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,' ').replace(/#[^\n]*/g,' ');
+  const norm=s=>strip(s).replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
   const code=norm(document.getElementById('codeEditor').value);
   const r=document.getElementById('codeResult');
   const ok=CHECKS.every(grp=>{{

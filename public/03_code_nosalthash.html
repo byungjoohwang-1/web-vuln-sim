@@ -284,21 +284,21 @@ def hash_password(password):
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
-            let passed = true;
-            if (code.includes('md.update(salt)')) {
+            const hasSalt = code.includes('md.update(salt)');
+            const adaptive = /bcrypt|pbkdf2|scrypt|argon2/i.test(code);
+            let passed = hasSalt || adaptive;
+            if (passed) {
                 updateChecklist('progressChecklistJava', 1, true);
                 updateChecklist('progressChecklistJava', 2, true);
-            } else {
-                passed = false;
-                updateChecklist('progressChecklistJava', 1, false);
-            }
-
-            if(passed) {
-                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 솔트가 적용되어 안전합니다.</div>';
+                const msg = adaptive
+                    ? '🎉 성공! 적응형 해시(bcrypt·PBKDF2 등, 솔트+키 스트레칭)를 적용하여 안전합니다.'
+                    : '🎉 성공! 솔트가 적용되어 동일 비밀번호도 다른 해시가 되어 레인보우 테이블 공격을 막습니다. (더 강력하게는 bcrypt·PBKDF2 같은 적응형 해시 권장)';
+                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-success">' + msg + '</div>';
                 document.getElementById('codeStatusJava').className = 'status-badge status-secure';
                 document.getElementById('codeStatusJava').textContent = '안전한 코드';
             } else {
-                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">❌ md.update(salt)를 호출하여 솔트를 추가하세요.</div>';
+                updateChecklist('progressChecklistJava', 1, false);
+                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">❌ 사용자별 솔트를 추가(md.update(salt))하거나, bcrypt·PBKDF2 같은 적응형 해시를 사용하세요.</div>';
             }
         }
         function resetCoding(mode) {
@@ -358,12 +358,12 @@ def hash_password(password):
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
-            let passed = true;
-            if (!code.includes('sha256(password.encode())') && code.includes('pbkdf2_hmac')) {
+            const plain = code.includes('sha256(password.encode())');
+            const adaptive = /pbkdf2_hmac|bcrypt|scrypt|argon2/i.test(code);
+            let passed = !plain && adaptive;
+            if (passed) {
                 updateChecklist('progressChecklistPython', 1, true);
                 updateChecklist('progressChecklistPython', 2, true);
-            } else {
-                passed = false;
             }
 
             if(passed) {
@@ -371,7 +371,7 @@ def hash_password(password):
                 document.getElementById('codeStatusPython').className = 'status-badge status-secure';
                 document.getElementById('codeStatusPython').textContent = '안전한 코드';
             } else {
-                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">❌ hashlib.pbkdf2_hmac 함수를 사용하여 솔트와 함께 해싱하세요.</div>';
+                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">❌ 단순 sha256 대신 hashlib.pbkdf2_hmac(또는 bcrypt·scrypt·argon2)으로 솔트와 함께 해싱하세요.</div>';
             }
         }
     </script>
