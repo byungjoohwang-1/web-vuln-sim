@@ -177,6 +177,29 @@ pre{background:#0b1020;color:#e2e8f0;padding:14px 16px;border-radius:10px;overfl
 .rvq{font-size:15px;font-weight:700;line-height:1.55;color:var(--ink,#1e293b)}
 .empty{text-align:center;color:var(--muted);padding:50px 0;font-size:15px}
 @media(max-width:760px){.cgrid{grid-template-columns:1fr}}
+/* 취약 유형 Top 3 (메타인지 학습 안내) */
+.topweak{background:linear-gradient(135deg,#fff7ed,#fff1f2);border:1px solid #fed7aa;border-radius:14px;padding:18px 20px;margin-bottom:18px}
+.topweak h3{font-size:15px;color:#c2410c;margin:0 0 12px}
+.tw-item{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.tw-rank{width:22px;height:22px;flex-shrink:0;border-radius:50%;background:#c2410c;color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.tw-cat{color:#fff;font-size:12px;font-weight:700;border-radius:8px;padding:3px 10px;flex-shrink:0;min-width:78px;text-align:center}
+.tw-bar{flex:1;height:8px;background:#fde4cf;border-radius:5px;overflow:hidden}.tw-bar i{display:block;height:100%}
+.tw-cnt{font-size:12.5px;font-weight:700;color:#9a3412;flex-shrink:0;min-width:58px;text-align:right}
+.tw-tip{font-size:12px;color:#9a3412;margin:8px 0 0}
+/* 모바일 통합 브레이크포인트(≤768px): 세로 스택 + 44px 터치 타겟 */
+@media(max-width:768px){
+  .dgrid{grid-template-columns:1fr!important;gap:12px}
+  .codepair{grid-template-columns:1fr!important}
+  .two{grid-template-columns:1fr!important}
+  .tfrow{flex-direction:column;gap:8px}
+  .tf{min-width:0;width:100%;padding:16px!important;font-size:14px;min-height:44px}
+  .tab{padding:12px 10px!important;font-size:13px;min-height:44px}
+  .opt{min-height:44px}
+  .qbtn,.btn,.cchip{min-height:44px}
+  pre.cpre,pre.diffpre,#prCode{font-size:11px;overflow-x:auto;white-space:pre}
+  .parea,.codearea,.pin,.shortin{font-size:14px}
+  .tw-cat{min-width:64px}
+}
 /* 접근성: 모션 최소화 선호 시 애니메이션 비활성화 + 키보드 포커스 표시 */
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.tf:focus-visible,.opt:focus-visible,.cchip:focus-visible{outline:3px solid #6366f1;outline-offset:2px;border-radius:6px}
@@ -244,6 +267,7 @@ function load(k,d){try{return JSON.parse(localStorage.getItem(NS+k))??d;}catch(e
 function save(k,v){localStorage.setItem(NS+k,JSON.stringify(v));}
 let learned=load('learned',{}),flashKnown=load('flash',{}),wrongs=load('wrong',[]);
 let examBest=load('examBest',null),pracBest=load('pracBest',null);
+let wrongStats=load('wrongStats',{});  // 7대 유형별 누적 오답 통계 {cat:count}
 // ── 오답노트 SRS(Leitner 간격 반복) ──
 const SRS_IV=[0,1,3,7,16];  // box별 다음 복습까지 일수(0=즉시), box5 정답 시 졸업
 const DAY=86400000;
@@ -258,8 +282,19 @@ function srsUpdate(w,ok){
   }else{w.box=1;w.due=Date.now()+SRS_IV[0]*DAY;}
   save('wrong',wrongs);return false;
 }
-// 새 오답 추가(이미 있으면 1단계로 리셋해 다시 복습 대상화)
-function addWrong(it){const ex=wrongs.find(w=>w.q===it.q);if(ex){ex.box=1;ex.due=Date.now();save('wrong',wrongs);return;}it.box=1;it.due=Date.now();it.addedAt=Date.now();wrongs.push(it);save('wrong',wrongs);}
+// 새 오답 추가(이미 있으면 1단계로 리셋해 다시 복습 대상화) + 7대 유형 누적 통계
+function addWrong(it){
+  if(it.cat&&CATS.indexOf(it.cat)>=0){wrongStats[it.cat]=(wrongStats[it.cat]||0)+1;save('wrongStats',wrongStats);}
+  const ex=wrongs.find(w=>w.q===it.q);if(ex){ex.box=1;ex.due=Date.now();save('wrong',wrongs);return;}
+  it.box=1;it.due=Date.now();it.addedAt=Date.now();wrongs.push(it);save('wrong',wrongs);
+}
+// 취약 유형 Top 3 (메타인지 학습 안내)
+function topWeakHtml(){
+  const ent=Object.keys(wrongStats).map(k=>[k,wrongStats[k]]).filter(e=>e[1]>0&&CATS.indexOf(e[0])>=0).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(!ent.length)return '';
+  const items=ent.map((e,i)=>'<div class="tw-item"><span class="tw-rank">'+(i+1)+'</span><span class="tw-cat" style="background:'+CCOLOR[e[0]]+'">'+esc(e[0])+'</span><div class="tw-bar"><i style="width:'+Math.round(e[1]/ent[0][1]*100)+'%;background:'+CCOLOR[e[0]]+'"></i></div><span class="tw-cnt">오답 '+e[1]+'회</span></div>').join('');
+  return '<div class="topweak"><h3>⚠ 취약 유형 Top 3 — 집중 복습 권장</h3>'+items+'<p class="tw-tip">해당 유형의 개념카드(유형 개요 배너)와 오답 복습(SRS)을 우선 진행하세요.</p></div>';
+}
 function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
 function gnorm(s){return (s||'').toString().toLowerCase().replace(/[\s.,;:!?()\[\]{}"'`]/g,'');}
 // 코드 주석 제거(검증 연극 차단): 주석 속 키워드로 만점받는 우회를 막는다.
@@ -302,12 +337,13 @@ function rDash(){
   document.getElementById('v-dash').innerHTML=
    '<h2 class="st">📊 나의 학습 현황</h2><p class="sub">진도·기록은 이 브라우저에 자동 저장됩니다.</p>'+
    '<div class="dgrid">'+dc(ln+'/49','개념 학습')+dc(fk+'/49','플래시 숙련')+dc(examBest!=null?examBest+'%':'-','1교시 최고점')+dc(pracBest!=null?pracBest+'%':'-','2교시 최고점')+dc(tpCov+'/49','실무 출제 약점')+dc(wrongs.length,'오답노트')+dc(dueCount(),'오늘 복습')+'</div>'+
+   topWeakHtml()+
    '<div class="prog-wrap"><h3>유형별 개념 학습 숙련도</h3>'+rows+'</div>'+
    '<div class="quick"><button class="qbtn" onclick="tab(\'learn\')">📖 개념 학습</button><button class="qbtn ghost" onclick="tab(\'flash\')">🃏 플래시카드</button><button class="qbtn ghost" onclick="tab(\'exam\')">📝 1교시 이론</button><button class="qbtn ghost" onclick="tab(\'prac\')">🧪 2교시 실무</button></div>'+
    '<button class="reset" onclick="resetAll()">↺ 학습 기록 초기화</button>';
 }
 function dc(b,s){return '<div class="dcard"><b>'+b+'</b><span>'+s+'</span></div>';}
-function resetAll(){if(confirm('모든 학습 기록을 초기화할까요?')){['learned','flash','wrong','examBest','pracBest'].forEach(k=>localStorage.removeItem(NS+k));learned={};flashKnown={};wrongs=[];examBest=null;pracBest=null;rDash();}}
+function resetAll(){if(confirm('모든 학습 기록을 초기화할까요?')){['learned','flash','wrong','examBest','pracBest','wrongStats'].forEach(k=>localStorage.removeItem(NS+k));learned={};flashKnown={};wrongs=[];examBest=null;pracBest=null;wrongStats={};rDash();}}
 
 // ===== 개념학습 =====
 let learnCat='전체';
@@ -424,7 +460,7 @@ function gradeExam(){
   clearInterval(exTimer);let sc=0;const rev=[];
   exPool.forEach((q,i)=>{
     const ok=exCorrect(q,exAns[i]);const key='['+({MC:'객관식',OX:'OX',SHORT:'단답'}[q.type])+'] '+q.q;
-    if(ok){sc++;removeWrong(key);} else {addWrong({q:key,a:exAnsText(q),e:q.e,tag:'1교시',code:q.code||''});}
+    if(ok){sc++;removeWrong(key);} else {addWrong({q:key,a:exAnsText(q),e:q.e,tag:'1교시',code:q.code||'',cat:q.c||q.cat||''});}
     rev.push({q,a:exAns[i],ok});
   });
   const pct=Math.round(sc/exN*100),pass=pct>=70;if(examBest==null||pct>examBest){examBest=pct;save('examBest',pct);}
@@ -522,7 +558,7 @@ function submitPrac(){
   const ans={tp:prTP,name:document.getElementById('prName').value,reason:document.getElementById('prReason').value,fix:document.getElementById('prFix').value};
   const r=gradeOne(p,ans);prScores.push(r.score);
   const wkey='[2교시 실무] '+p.title+' ('+p.lang+')';
-  if(r.score<60)addWrong({q:wkey,a:(p.isTruePositive?('정탐 · '+p.weaknessName+(p.cwe?' ('+p.cwe+')':'')):'오탐(안전한 코드)'),e:p.explanation,tag:'2교시',code:p.code||''});
+  if(r.score<60)addWrong({q:wkey,a:(p.isTruePositive?('정탐 · '+p.weaknessName+(p.cwe?' ('+p.cwe+')':'')):'오탐(안전한 코드)'),e:p.explanation,tag:'2교시',code:p.code||'',cat:p.cat||''});
   else if(r.score>=70)removeWrong(wkey);
   // 잠금
   ['tfTP','tfFP'].forEach(id=>document.getElementById(id).setAttribute('onclick',''));

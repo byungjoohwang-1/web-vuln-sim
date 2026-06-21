@@ -43,7 +43,7 @@ const confirm = () => true;
 const setInterval = () => 0, clearInterval = () => {}, setTimeout = (f)=>{ if(typeof f==='function') {} return 0; };
 
 // 캡처: const 바인딩은 context global 에 붙지 않으므로 명시적으로 끌어온다
-code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary});';
+code += '\n;Object.assign(this,{CONCEPTS,QUIZ,PRACTICAL,THEORY,CODE49,KISA49,CATS,CATEGORY_INFO,catInfoHtml,gradeOne,verifySecurePattern,exCorrect,exAnsText,lineDiff,diffHtml,gnorm,kwScore,kwHit,stripCode,diffBadge,pracPool,codeBlock,codePane,addWrong,srsUpdate,srsDue,dueCount,wrongs,printSummary,wrongStats,topWeakHtml});';
 
 const sandbox = { document, localStorage, window, alert, confirm, setInterval, clearInterval, setTimeout, console, Math, JSON, Array, Object, String, Number, Date };
 sandbox.globalThis = sandbox;
@@ -196,6 +196,20 @@ ok(/C · 진단가이드|C\/Java · 진단가이드/.test(E.codeBlock(2,'메모�
   // 졸업: box5 정답 시 노트에서 제외 (wrongs는 filter로 재할당되므로 라이브 접근자 dueCount로 확인)
   w.box = 4; const grad = E.srsUpdate(w, true);
   ok(grad===true && E.dueCount()===0, 'SRS: box5 correct graduates (removed from notes)');
+})();
+
+// 7대 유형 오답 통계(wrongByCat) + 취약 유형 Top 3
+(function(){
+  Object.keys(E.wrongStats).forEach(k=>delete E.wrongStats[k]);
+  E.addWrong({q:'[t] a',a:'',e:'',tag:'2교시',cat:'입력검증'});
+  E.addWrong({q:'[t] b',a:'',e:'',tag:'2교시',cat:'입력검증'});
+  E.addWrong({q:'[t] c',a:'',e:'',tag:'2교시',cat:'보안기능'});
+  E.addWrong({q:'[t] d',a:'',e:'',tag:'1교시',cat:'법령'});  // 7대 유형 아님 → 미집계
+  ok(E.wrongStats['입력검증']===2, 'wrongByCat counts 입력검증=2 (got '+E.wrongStats['입력검증']+')');
+  ok(E.wrongStats['보안기능']===1, 'wrongByCat counts 보안기능=1');
+  ok(!('법령' in E.wrongStats), 'wrongByCat ignores non-7-type cat (법령)');
+  const tw=E.topWeakHtml();
+  ok(/취약 유형 Top 3/.test(tw)&&/입력검증/.test(tw), 'topWeakHtml renders Top 3 (weakest first)');
 })();
 
 // LASHR 구조 검증: 매핑된 약점의 '모범답안'은 반드시 구조 통과해야 함(오탈락 0). 위반 시 만점 불가로 위 grading에서 이미 검출되나, 명시 검증:
