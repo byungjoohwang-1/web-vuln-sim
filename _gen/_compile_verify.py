@@ -20,7 +20,7 @@ def lang_of(mod):
 
 
 def compile_one(code, lang):
-    raw = '-std=c11\n-lm' if lang == 'c' else '-std=c++17'
+    raw = '-std=gnu11\n-lm\n-pthread' if lang == 'c' else '-std=gnu++17\n-pthread'
     body = json.dumps({'code': code, 'compiler': COMP[lang],
                        'options': 'warning',
                        'compiler-option-raw': raw,
