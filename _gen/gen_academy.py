@@ -1030,9 +1030,9 @@ function submitDesign(){
   document.getElementById('dsReport').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-// ===== 💻 온라인 IDE (Monaco + Pyodide/Piston 실제 실행) =====
+// ===== 💻 온라인 IDE (Monaco + Pyodide/Wandbox 실제 실행) =====
 const IDELANGMAP={'Java':'java','C':'c','Python':'python'};
-let ideEditor=null, ideMonacoP=null, ideCur=null, pyodide=null, pyLoadP=null, pistonRuntimes=null;
+let ideEditor=null, ideMonacoP=null, ideCur=null, pyodide=null, pyLoadP=null;
 function loadMonaco(){
   if(window.monaco) return Promise.resolve();
   if(ideMonacoP) return ideMonacoP;
@@ -1070,7 +1070,7 @@ function ideLoad(){
 function rIDE(){
   if(ideEditor){try{ideEditor.dispose();}catch(e){}ideEditor=null;}
   document.getElementById('v-ide').innerHTML=
-    '<h2 class="st">💻 코드 실행 — 온라인 IDE</h2><p class="sub">VS Code 엔진(<b>Monaco</b>)에서 직접 편집·실행합니다. <b>Python</b>은 브라우저 내 실제 실행(Pyodide), <b>Java·C</b>는 무료 외부 실행 API(Piston)로 컴파일·실행합니다. ⚠️ Java/C 실행 시 코드가 외부 서비스로 전송됩니다(교육용 예제 기준).</p>'+
+    '<h2 class="st">💻 코드 실행 — 온라인 IDE</h2><p class="sub">VS Code 엔진(<b>Monaco</b>)에서 직접 편집·실행합니다. <b>Python</b>은 브라우저 내 실제 실행(Pyodide), <b>Java·C</b>는 무료 외부 실행 API(Wandbox, 원격 gcc/openjdk)로 컴파일·실행합니다. ⚠️ Java/C 실행 시 코드가 외부 서비스로 전송됩니다(교육용 예제 기준).</p>'+
     '<div class="ide-bar"><select id="ideExample" class="ide-sel" onchange="ideLoad()" aria-label="예제 선택">'+ideOptions()+'</select><span class="ide-lang" id="ideLang"></span><button class="qbtn" id="ideRunBtn" onclick="runIDE()">▶ 실행</button><button class="qbtn ghost" onclick="ideLoad()">↺ 예제 복원</button></div>'+
     '<div class="ide-note" id="ideNote"></div>'+
     '<div id="ideEditor" class="ide-editor">에디터를 불러오는 중…</div>'+
@@ -1102,26 +1102,26 @@ async function runPython(code){
   let out='';try{out=py.runPython('_buf.getvalue()');}catch(e){}
   return (out||'')+err;
 }
-async function pistonRun(lang,code){
-  if(!pistonRuntimes){const r=await fetch('https://emkc.org/api/v2/piston/runtimes');pistonRuntimes=await r.json();}
-  const want=(lang==='Java')?['java']:(lang==='C')?['c']:[lang.toLowerCase()];
-  const rt=pistonRuntimes.find(x=>want.includes(x.language)||((x.aliases||[]).some(a=>want.includes(a))));
-  if(!rt)throw new Error('실행 런타임을 찾지 못했습니다: '+lang);
-  const fname=(lang==='Java')?'Main.java':(lang==='C')?'main.c':'main.txt';
-  const r=await fetch('https://emkc.org/api/v2/piston/execute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language:rt.language,version:rt.version,files:[{name:fname,content:code}]})});
+async function wandboxRun(lang,code){
+  // Wandbox 원격 컴파일·실행 (Piston은 2026-02 화이트리스트 전환으로 사용 불가)
+  const comp=(lang==='Java')?'openjdk-jdk-22+36':(lang==='C')?'gcc-13.2.0-c':'gcc-13.2.0';
+  let src=code;
+  // Wandbox는 Java 소스를 prog.java로 저장하므로 public 최상위 클래스는 컴파일 실패 → public 제거
+  if(lang==='Java'){src=src.replace(/public\s+class\s+/, 'class ');}
+  const r=await fetch('https://wandbox.org/api/compile.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:src,compiler:comp,options:(lang==='Java')?'':'warning',stdin:''})});
   const j=await r.json();let out='';
-  if(j.message)return '[API 오류] '+j.message;
-  if(j.compile&&(j.compile.stderr||j.compile.code))out+='[컴파일]\n'+(j.compile.stderr||'')+'\n';
-  if(j.run)out+=(j.run.stdout||'')+(j.run.stderr||'');
-  return out||JSON.stringify(j);
+  if(j.compiler_error)out+='[컴파일]\n'+j.compiler_error+'\n';
+  if(j.program_output)out+=j.program_output;
+  if(j.program_error)out+='\n[stderr]\n'+j.program_error;
+  return out||('(출력 없음 · status '+(j.status||'?')+')');
 }
 async function runIDE(){
   if(!ideEditor){alert('에디터를 불러오는 중입니다. 잠시 후 다시 시도하세요.');return;}
   const code=ideEditor.getValue();const lang=(ideCur&&ideCur.lang)||'Python';
   const btn=document.getElementById('ideRunBtn');btn.disabled=true;
-  ideStat(lang==='Python'?'Pyodide 실행 중…(최초 1회 로딩 다소 소요)':'Piston 컴파일·실행 중…');ideOut('실행 중…');
+  ideStat(lang==='Python'?'Pyodide 실행 중…(최초 1회 로딩 다소 소요)':'Wandbox 컴파일·실행 중…');ideOut('실행 중…');
   try{
-    const out=(lang==='Python')?await runPython(code):await pistonRun(lang,code);
+    const out=(lang==='Python')?await runPython(code):await wandboxRun(lang,code);
     ideOut(out||'(출력 없음)');ideStat('완료 ✓');announce('코드 실행 완료');
   }catch(e){ideOut('실행 오류: '+(e.message||e)+'\n(네트워크/외부 API 상태를 확인하세요)');ideStat('오류');}
   finally{btn.disabled=false;}

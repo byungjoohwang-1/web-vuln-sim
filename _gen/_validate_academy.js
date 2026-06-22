@@ -138,7 +138,7 @@ ok(Array.isArray(E.RUNNABLE)&&E.RUNNABLE.length>=6, 'RUNNABLE has >=6 demos (got
 E.RUNNABLE.forEach((r,i)=>ok(r.lang&&r.weakness&&r.title&&r.code, 'RUNNABLE entry complete #'+i));
 ok(/optgroup/.test(E.ideOptions())&&/실행 가능 보안 데모/.test(E.ideOptions()), 'ideOptions builds grouped example list');
 ok(/data-v="ide"/.test(html)&&/💻 코드 실행/.test(html), 'IDE tab present in HTML');
-ok(/monaco-editor/.test(html)&&/pyodide/.test(html)&&/piston\/execute/.test(html), 'IDE wires Monaco + Pyodide + Piston');
+ok(/monaco-editor/.test(html)&&/pyodide/.test(html)&&/wandbox\.org\/api\/compile/.test(html), 'IDE wires Monaco + Pyodide + Wandbox');
 
 // 접근성(WCAG): skip-link·aria-live·tablist 역할이 정적 HTML에 존재
 ok(/class="skiplink"/.test(html)&&/본문 바로가기/.test(html), 'a11y: skip link present');
