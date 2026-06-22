@@ -20,17 +20,28 @@ def lang_of(mod):
 
 
 def compile_one(code, lang):
+    raw = '-std=c11\n-lm' if lang == 'c' else '-std=c++17'
     body = json.dumps({'code': code, 'compiler': COMP[lang],
-                       'options': 'warning' if lang == 'c' else 'warning',
-                       'compiler-option-raw': '-std=c11' if lang == 'c' else '-std=c++17',
+                       'options': 'warning',
+                       'compiler-option-raw': raw,
                        'stdin': ''}).encode('utf-8')
-    req = urllib.request.Request('https://wandbox.org/api/compile.json', data=body,
-                                 headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        j = json.loads(r.read().decode('utf-8'))
-    # status "0" == compile+run ok. compiler_error present == compile failed.
-    err = (j.get('compiler_error') or '').strip()
-    return (err == ''), err.splitlines()[0] if err else ''
+    last = ''
+    for attempt in range(4):
+        try:
+            req = urllib.request.Request('https://wandbox.org/api/compile.json', data=body,
+                                         headers={'Content-Type': 'application/json',
+                                                  'User-Agent': 'Mozilla/5.0 (compile-verify)'})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                j = json.loads(r.read().decode('utf-8'))
+            err = (j.get('compiler_error') or '')
+            # 컴파일 실패는 'error:' 포함. 'warning:'만 있으면 컴파일 성공.
+            err_lines = [l for l in err.splitlines() if 'error:' in l]
+            ok = len(err_lines) == 0
+            return ok, (err_lines[0] if err_lines else '')
+        except Exception as e:
+            last = str(e)
+            time.sleep(1.5 * (attempt + 1))
+    return False, 'REQUEST_FAILED: ' + last
 
 
 def main():

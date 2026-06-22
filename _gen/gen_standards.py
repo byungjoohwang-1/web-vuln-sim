@@ -353,7 +353,7 @@ def build():
       '"#include <iostream>\\n#include <vector>\\n#include <string>\\n#include <memory>\\nusing namespace std;\\n";'
       'ed.setValue(inc+"\\n"+c+"\\n\\nint main(void){\\n    // TODO\\n    return 0;\\n}\\n");}'
       'function runCode(){if(!ed){return;}var code=ed.getValue();var comp=curLang==="c"?"gcc-13.2.0-c":"gcc-13.2.0";'
-      'var opt=curLang==="c"?"-std=c11":"-std=c++17";'
+      'var opt=curLang==="c"?"-std=c11\\n-lm":"-std=c++17";'
       'var out=document.getElementById("ideOut");out.textContent="⏳ Wandbox...";'
       'fetch("https://wandbox.org/api/compile.json",{method:"POST",headers:{"Content-Type":"application/json"},'
       'body:JSON.stringify({code:code,compiler:comp,options:"warning","compiler-option-raw":opt,stdin:""})})'
