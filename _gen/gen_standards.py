@@ -80,11 +80,27 @@ body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:linear-gradien
 pre{background:var(--bg);color:#e2e8f0;padding:15px 16px;border-radius:0 0 9px 9px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.65;white-space:pre}
 .why{margin-top:11px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:8px;padding:11px 14px;font-size:13.5px;line-height:1.7;color:#78350f}
 .foot{text-align:center;color:#cbd5e1;font-size:12px;margin-top:18px;line-height:1.7}
-@media(max-width:768px){.hero h1{font-size:21px}.tabs button{font-size:12.5px;padding:9px 12px}.ov,.card{padding:15px 14px}pre{font-size:11.5px}}
+.sw button.prac{background:transparent;color:#a5b4fc;font-weight:700}.sw button.prac:hover{color:#fff}
+/* ===== 연습 IDE 패널 ===== */
+.ide{position:fixed;left:0;right:0;bottom:0;height:72vh;background:#0b1220;border-top:2px solid #6366f1;box-shadow:0 -10px 40px rgba(0,0,0,.5);display:none;flex-direction:column;z-index:9999}
+.ide.on{display:flex}
+.ide-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111a2e;border-bottom:1px solid #1e293b}
+.ide-bar .ide-title{color:#c7d2fe;font-weight:700;font-size:13.5px;margin-right:auto}
+.ide-bar select,.ide-bar button{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;background:#1e293b;color:#cbd5e1}
+.ide-bar button.run{background:#22c55e;color:#06210f}.ide-bar button.run:hover{background:#16a34a}
+.ide-bar button.x{background:#334155}
+.ide-body{flex:1;display:flex;min-height:0}
+.ide-ed{flex:1;min-width:0}
+.ide-out{width:38%;max-width:460px;display:flex;flex-direction:column;border-left:1px solid #1e293b;background:#0b1220}
+.ide-outhdr{padding:7px 12px;font-size:11.5px;font-weight:700;color:#94a3b8;background:#111a2e;border-bottom:1px solid #1e293b}
+.ide-out pre{flex:1;margin:0;border-radius:0;background:#0b1220;color:#e2e8f0;font-size:12px;white-space:pre-wrap;overflow:auto;padding:12px}
+.ide-note{font-size:11px;color:#94a3b8;padding:6px 12px;background:#111a2e;border-top:1px solid #1e293b}
+@media(max-width:768px){.hero h1{font-size:21px}.tabs button{font-size:12.5px;padding:9px 12px}.ov,.card{padding:15px 14px}pre{font-size:11.5px}
+.ide{height:84vh}.ide-body{flex-direction:column}.ide-out{width:100%;max-width:none;border-left:none;border-top:1px solid #1e293b;height:34%}}
 """
 
 
-def render_card(sk, i, r):
+def render_card(sk, i, r, lang):
     cid = sk + str(i)
     blob = esc((r['id'] + ' ' + r['title'] + ' ' + r.get('cat', '')))
     return (
@@ -92,7 +108,8 @@ def render_card(sk, i, r):
       '<div class="rid"><span class="id">' + esc(r['id']) + '</span><span class="cat">' + esc(r['cat']) + '</span></div>'
       '<h3>' + esc(r['title']) + '</h3>'
       '<div class="sw"><button class="on bad" onclick="sw(\'' + cid + '\',0)">❌ 위반(non-compliant)</button>'
-      '<button class="good" onclick="sw(\'' + cid + '\',1)">✅ 준수(compliant)</button></div>'
+      '<button class="good" onclick="sw(\'' + cid + '\',1)">✅ 준수(compliant)</button>'
+      '<button class="prac" onclick="practice(\'' + cid + '\',\'' + lang + '\')">🧪 IDE에서 연습</button></div>'
       '<div class="pane show" id="' + cid + 'b"><div class="chdr bad">❌ 위반 예시</div><pre>' + esc(r['bad']) + '</pre></div>'
       '<div class="pane" id="' + cid + 'g"><div class="chdr good">✅ 준수 예시</div><pre>' + esc(r['good']) + '</pre></div>'
       '<div class="why">⚠️ ' + esc(r['why']) + '</div>'
@@ -102,7 +119,7 @@ def render_card(sk, i, r):
 def render_panel(s, active):
     rules = s['rules']
     chips = ''.join('<span class="chip">' + esc(c) + '</span>' for c in s['classes'])
-    cards = ''.join(render_card(s['key'], i, r) for i, r in enumerate(rules))
+    cards = ''.join(render_card(s['key'], i, r, s['lang']) for i, r in enumerate(rules))
     return (
       '<div class="panel' + (' on' if active else '') + '" id="p_' + s['key'] + '">'
       '<div class="ov"><h2>' + esc(s['name']) + '</h2><div class="full">' + esc(s['full']) + '</div>'
@@ -114,9 +131,13 @@ def render_panel(s, active):
       + cards + '</div>')
 
 
+LANG = {'misrac': 'c', 'certc': 'c', 'misracpp': 'cpp', 'certcpp': 'cpp', 'autosar': 'cpp'}
+
+
 def build():
     for s in STANDARDS:
         s['rules'] = _rules(s['mod'])
+        s['lang'] = LANG[s['key']]
     tabs = ''.join('<button class="' + ('on' if i == 0 else '') + '" onclick="tab(\'' + s['key'] + '\')">' + esc(s['name']) + ' (' + str(len(s['rules'])) + ')</button>'
                    for i, s in enumerate(STANDARDS))
     panels = ''.join(render_panel(s, i == 0) for i, s in enumerate(STANDARDS))
@@ -133,7 +154,21 @@ def build():
       '(규칙 ID·제목·분류는 각 표준 인용, 설명·예제는 교육용 자체 작성 — 규범 원문 비복제)</p></div>'
       '<div class="wrap"><div class="tabs">' + tabs + '</div>' + panels +
       '<div class="foot">MISRA C:2012 · MISRA C++:2023 · CERT C · CERT C++ · AUTOSAR C++14 &nbsp;|&nbsp; 대표 규칙 ' + str(total) + '종 · 사내 교육용<br>'
-      '본 페이지의 코드 예제와 해설은 각 표준의 원칙을 바탕으로 직접 작성한 것입니다.</div></div>'
+      '규칙 ID·제목·분류는 각 표준(및 CERT 공식 사이트) 대조 인용, 코드 예제와 해설은 직접 작성. '
+      '🧪 연습 IDE는 Wandbox(원격 gcc 컴파일) 기반 — C/C++ 코드를 편집해 바로 실행해볼 수 있습니다.</div></div>'
+      # ===== 연습 IDE 패널 =====
+      '<div class="ide" id="ide">'
+      '<div class="ide-bar"><span class="ide-title">🧪 연습 IDE</span>'
+      '<select id="ideLang" onchange="setLang(this.value)"><option value="c">C</option><option value="cpp">C++</option></select>'
+      '<button onclick="wrapMain()">main 스캐폴드</button>'
+      '<button onclick="resetIde()">예제 다시 불러오기</button>'
+      '<button class="run" onclick="runCode()">▶ 실행</button>'
+      '<button class="x" onclick="closeIde()">✕ 닫기</button></div>'
+      '<div class="ide-body"><div class="ide-ed" id="ideEd"></div>'
+      '<div class="ide-out"><div class="ide-outhdr">실행 결과 (원격 컴파일·실행)</div><pre id="ideOut">▶ 실행을 눌러 컴파일·실행하세요.</pre></div></div>'
+      '<div class="ide-note">⚠️ 예시는 규칙 설명용 스니펫이라 헤더·main·호출부 보완이 필요할 수 있습니다. \'main 스캐폴드\' 버튼으로 기본 골격을 감싼 뒤 편집해 실행하세요.</div>'
+      '</div>'
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>'
       '<script>'
       'function tab(k){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.getAttribute("onclick").indexOf("\'"+k+"\'")>=0));'
       'document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p_"+k));window.scrollTo(0,0);}'
@@ -142,6 +177,34 @@ def build():
       'var bt=event.currentTarget.parentNode.children;bt[0].classList.toggle("on",!good);bt[1].classList.toggle("on",!!good);}'
       'function flt(k,q){q=q.toLowerCase();document.querySelectorAll("#p_"+k+" .card").forEach(c=>{'
       'c.style.display=(c.getAttribute("data-s")||"").toLowerCase().indexOf(q)>=0?"":"none";});}'
+      # ===== IDE 로직 =====
+      'var ed=null,curLang="c",seed="";'
+      'function ensureMonaco(cb){if(window.monaco&&ed){cb();return;}'
+      'require.config({paths:{vs:"https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs"}});'
+      'require(["vs/editor/editor.main"],function(){if(!ed){ed=monaco.editor.create(document.getElementById("ideEd"),'
+      '{value:"",language:"cpp",theme:"vs-dark",fontSize:13,minimap:{enabled:false},automaticLayout:true,scrollBeyondLastLine:false});}cb();});}'
+      'function practice(cid,lang){var pre=document.querySelector("#"+cid+"g pre")||document.querySelector("#"+cid+"b pre");'
+      'seed=pre?pre.textContent:"";curLang=lang;document.getElementById("ideLang").value=lang;'
+      'document.getElementById("ide").classList.add("on");document.getElementById("ideOut").textContent="▶ 실행을 눌러 컴파일·실행하세요.";'
+      'ensureMonaco(function(){monaco.editor.setModelLanguage(ed.getModel(),lang==="c"?"c":"cpp");ed.setValue(seed);ed.layout();});}'
+      'function setLang(v){curLang=v;if(ed)monaco.editor.setModelLanguage(ed.getModel(),v==="c"?"c":"cpp");}'
+      'function resetIde(){if(ed)ed.setValue(seed);}'
+      'function closeIde(){document.getElementById("ide").classList.remove("on");}'
+      'function wrapMain(){if(!ed)return;var c=ed.getValue();if(c.indexOf("int main")>=0)return;'
+      'var inc=curLang==="c"?"#include <stdio.h>\\n#include <stdlib.h>\\n#include <string.h>\\n":'
+      '"#include <iostream>\\n#include <vector>\\n#include <string>\\n#include <memory>\\nusing namespace std;\\n";'
+      'ed.setValue(inc+"\\n"+c+"\\n\\nint main(void){\\n    // TODO: 위 코드를 호출해보세요\\n    return 0;\\n}\\n");}'
+      'function runCode(){if(!ed){return;}var code=ed.getValue();'
+      'var comp=curLang==="c"?"gcc-13.2.0-c":"gcc-13.2.0";'
+      'var out=document.getElementById("ideOut");out.textContent="⏳ 원격 컴파일·실행 중... (Wandbox)";'
+      'fetch("https://wandbox.org/api/compile.json",{method:"POST",headers:{"Content-Type":"application/json"},'
+      'body:JSON.stringify({code:code,compiler:comp,options:"warning",stdin:""})})'
+      '.then(r=>r.json()).then(function(j){var t="";'
+      'if(j.compiler_error)t+="[컴파일 오류]\\n"+j.compiler_error+"\\n";'
+      'if(j.program_output)t+=j.program_output;'
+      'if(j.program_error)t+="\\n[stderr]\\n"+j.program_error;'
+      'out.textContent=t.trim()||"(출력 없음 · status "+(j.status||"?")+")";})'
+      '.catch(function(e){out.textContent="🚫 실행 오류: "+e+"\\n(네트워크/CORS 문제일 수 있습니다)";});}'
       '</script></body></html>')
     open(os.path.join(OUT, 'coding-standards.html'), 'w', encoding='utf-8').write(html_doc)
     print('wrote coding-standards.html | standards=%d rules=%d' % (len(STANDARDS), total))
