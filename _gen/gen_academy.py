@@ -70,6 +70,16 @@ h2.st{font-size:23px;margin-bottom:6px}.sub{color:var(--muted);font-size:14px;ma
 .ccard .detail{display:none;padding:0 18px 16px;border-top:1px solid var(--line)}.ccard.open .detail{display:block}
 .ccard.open{grid-column:1/-1}
 .ccard .fld{margin-top:12px}.ccard .fld .lb{font-size:12px;font-weight:700;color:var(--p);margin-bottom:3px}.ccard .fld .tx{font-size:14px;color:#334155;line-height:1.65}
+.dtnote{font-size:12px;color:var(--muted);line-height:1.55;margin:2px 0 8px}
+.dtree{display:flex;flex-direction:column;align-items:stretch;gap:0}
+.dtstep{display:flex;align-items:flex-start;gap:9px;border:1px solid var(--line);border-left-width:4px;border-radius:9px;padding:8px 11px;background:#f8fafc}
+.dtstep.safe{border-left-color:#16a34a;background:#f0fdf4}.dtstep.risk{border-left-color:#dc2626;background:#fef2f2}.dtstep.cond{border-left-color:#f59e0b;background:#fffbeb}
+.dtstep .dtn{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--p);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.dtstep .dtq{flex:1;font-size:13.5px;color:#1e293b;font-weight:600;line-height:1.5}
+.dtstep .dtv{flex:0 0 42%;font-size:12.5px;color:#475569;line-height:1.5}
+.dtstep.safe .dtv{color:#15803d}.dtstep.risk .dtv{color:#b91c1c;font-weight:600}
+.dtarrow{align-self:center;color:var(--muted);font-size:10px;line-height:1;margin:2px 0}
+@media(max-width:640px){.dtstep{flex-wrap:wrap}.dtstep .dtv{flex-basis:100%;margin-left:29px}}
 .ccard .done-btn{margin-top:14px;width:100%;border:1.5px solid var(--ok);background:#fff;color:#16a34a;padding:9px;border-radius:10px;font-family:'Lora',serif;font-weight:700;cursor:pointer;font-size:13.5px}
 .ccard.done .done-btn{background:var(--ok);color:#fff}
 .ccard .simlink{display:inline-block;margin-top:10px;font-size:12.5px;color:var(--p);font-weight:700}
@@ -644,7 +654,7 @@ function rLearn(){
   const cards=list.map(x=>{const gi=CONCEPTS.indexOf(x),done=learned[x.name]?' done':'';
     const sim=SIMMAP[x.name]?'<a class="simlink" href="'+SIMMAP[x.name]+'">🔗 관련 시뮬레이터로 →</a>':'';
     return '<div class="ccard'+done+'" id="cc'+gi+'"><div class="ch" onclick="toggleCard('+gi+')"><div><h4>'+esc(x.name)+'</h4><div class="cwe">'+esc(x.cwe)+'</div></div><span class="badge" style="background:'+CCOLOR[x.cat]+'">'+x.cat+'</span></div>'+
-      '<div class="detail">'+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
+      '<div class="detail">'+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+treeHtml(x.tree)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
   document.getElementById('v-learn').innerHTML='<h2 class="st">📖 개념 학습 — 49개 보안약점</h2><p class="sub">카드를 펼치면 정의·위협·진단법과 함께 <b>KISA 가이드의 Java·Python 안전하지 않은/안전한 코드 예제</b>를 확인할 수 있습니다. (Java=진단가이드, Python=시큐어코딩 가이드)</p><div class="catbar">'+chips+'<button class="cchip" style="margin-left:auto" onclick="printSummary()" title="49개 약점 요약표를 PDF로 인쇄/저장">🖨️ 요약 인쇄(PDF)</button></div>'+catInfoHtml(learnCat)+'<div class="cgrid">'+cards+'</div>';
 }
 // 49개 약점 요약표 인쇄/PDF 저장 (오프라인 복습용)
@@ -663,6 +673,20 @@ function catInfoHtml(cat){
     '<div class="ci-row"><b>진단 핵심</b> '+esc(info.diag)+'</div></div>';
 }
 function fld(l,t){return '<div class="fld"><div class="lb">'+l+'</div><div class="tx">'+esc(t)+'</div></div>';}
+// 진단 의사결정 흐름: 위에서 아래로 게이트를 점검(먼저 '안전'으로 빠지면 약점 미성립)
+function treeHtml(tree){
+  if(!tree||!tree.length)return '';
+  const steps=tree.map(function(s,i){
+    const q=esc(s[0]),v=esc(s[1]);
+    let cls='cond';
+    if(v.indexOf('안전')===0)cls='safe';else if(v.indexOf('위험')===0)cls='risk';
+    return '<div class="dtstep '+cls+'"><span class="dtn">'+(i+1)+'</span><div class="dtq">'+q+
+      '</div><div class="dtv">'+v+'</div></div>';
+  }).join('<div class="dtarrow">▼</div>');
+  return '<div class="fld"><div class="lb">🔍 진단 의사결정 흐름</div>'+
+    '<div class="dtnote">코드를 보고 위에서 아래로 점검합니다. 먼저 <b>안전</b> 분기로 빠지면 해당 약점은 성립하지 않고, '+
+    '마지막 <b>위험</b> 게이트까지 도달하면 정탐입니다.</div><div class="dtree">'+steps+'</div></div>';
+}
 function codePane(vuln,safe){
   return '<div class="codepair"><div class="cp"><div class="cph bad">🚫 안전하지 않은 코드</div><pre class="cpre">'+esc(vuln||'(예제 없음)')+'</pre></div>'+
          '<div class="cp"><div class="cph good">✅ 안전한 코드</div><pre class="cpre">'+esc(safe||'(예제 없음)')+'</pre></div></div>';
@@ -1192,6 +1216,10 @@ def main():
     tl = importlib.import_module('_tools')
     rn = importlib.import_module('_runnable')
     dz = importlib.import_module('_design')
+    tr = importlib.import_module('specs_trees')
+    # 진단 의사결정 흐름(TREES)을 약점명으로 join 하여 각 개념카드에 주입
+    for c in a.CONCEPTS:
+        c['tree'] = tr.TREES.get(c['name'])
     # <script> 조기 종료 방지: 임베드 데이터의 </ 를 <\/ 로 이스케이프(런타임 JS 파싱 동일)
     def jdump(o):
         return json.dumps(o, ensure_ascii=False).replace('</', '<\\/')
