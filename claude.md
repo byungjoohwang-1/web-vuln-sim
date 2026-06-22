@@ -55,10 +55,11 @@ XP·레벨 곡선·일일목표(50XP)·연속학습 스트릭·12주 히트맵·
 ---
 
 ### C/C++ 코딩 표준 레퍼런스 (`coding-standards.html`)
-* `_gen/gen_standards.py` 가 단일 HTML로 생성. 규칙 데이터는 표준별 모듈 `std_misrac`·`std_misracpp`·`std_certc`·`std_certcpp`·`std_autosar`의 `RULES`(스키마 `{id,cat,title,bad,good,why}`)에서 import.
-* 5대 표준 **총 175룰**(MISRA C:2012 34 · MISRA C++:2023 41 · CERT C 31 · CERT C++ 34 · AUTOSAR C++14 35). 탭·표준내 검색·위반↔준수 코드 토글 UI.
+* `_gen/gen_standards.py` 가 단일 HTML로 생성. 규칙 데이터는 표준별 모듈 `std_misrac`·`std_misracpp`·`std_certc`·`std_certcpp`·`std_autosar`의 `RULES`(스키마 `{id,cat,title,bad,good,why}`)에서 import. 각 표준 모듈은 **파트 분리**(`std_<key>_p1~p3.py`)를 병합한다(예: `std_misrac.py = p1+p2+p3`).
+* 5대 표준 **총 506룰**(MISRA C:2012 127 · MISRA C++:2023 94 · CERT C 97 · CERT C++ 67 · AUTOSAR C++14 121). 탭·표준내 검색·위반↔준수 코드 토글 UI.
 * **KISA 매칭 없음**(사용자 요청). 규칙 ID·제목·분류 체계만 인용, **코드 예제·해설은 전부 자체 작성**(규범 원문 비복제). 페이지 내 viewport+@media 자체 포함(파이프라인 불필요, 독립 생성).
 * 재생성: `cd _gen && PYTHONIOENCODING=utf-8 python gen_standards.py`.
+* 주의: 코드 필드는 raw 삼중따옴표 `r"""..."""`로 작성(끝에 `"`/백슬래시 금지). `why`/`title`는 일반 문자열이라 백슬래시 이스케이프(`\x` 등) 주의.
 
 ## 4. 콘텐츠 파이프라인 (`_gen/`)
 
