@@ -13,9 +13,10 @@ COMP = {'c': 'gcc-13.2.0-c', 'cpp': 'gcc-13.2.0'}
 
 
 def lang_of(mod):
-    for k, v in LANG.items():
+    # 더 구체적인 키(misracpp)가 접두사(misrac)보다 먼저 매칭되도록 길이 내림차순
+    for k in sorted(LANG, key=len, reverse=True):
         if mod.startswith('std_' + k):
-            return v
+            return LANG[k]
     return 'cpp'
 
 
