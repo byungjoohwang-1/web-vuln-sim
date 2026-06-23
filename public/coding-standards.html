@@ -2296,551 +2296,630 @@ int main(){
     if (ix &lt; iy) {         // 인덱스로 비교하거나, 같은 배열 내 포인터만 비교
         std::cout &lt;&lt; "x before y\n";
     }
-}</pre></div><div class="why">⚠️ <span class="ko">서로 다른 객체·배열을 가리키는 포인터의 대소 비교 결과는 표준이 보장하지 않아 미정의이며, 메모리 배치 가정에 의존한 코드는 플랫폼마다 다르게 동작한다. 같은 배열 내 포인터끼리 비교하거나 인덱스로 비교한다.</span><span class="en">Relational comparison of pointers to different objects or arrays is undefined, so code relying on memory-layout assumptions behaves differently across platforms. Compare pointers within the same array, or compare indices instead.</span></div></div><h2 class="sech" id="sec-misracpp-M9"><span class="sc">M9</span><span class="ko">섹션 9</span><span class="en">Section 9</span></h2><div class="card" data-s="Rule 9.2.1 명시적 형변환을 단독 표현식 문장으로 쓰지 않는다 명시적 형변환을 단독 표현식 문장으로 쓰지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 9.2.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">명시적 형변환을 단독 표현식 문장으로 쓰지 않는다</span><span class="en">명시적 형변환을 단독 표현식 문장으로 쓰지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp25',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp25',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp25','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp25b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>void poll(int raw) {
-    // 변환 결과를 버리는 의미 없는 표현식 문장
-    static_cast&lt;double&gt;(raw);   // 비준수: 효과 없음
-    (void)0;
-    // 의도가 모호: 부작용도, 사용처도 없는 캐스트
+}</pre></div><div class="why">⚠️ <span class="ko">서로 다른 객체·배열을 가리키는 포인터의 대소 비교 결과는 표준이 보장하지 않아 미정의이며, 메모리 배치 가정에 의존한 코드는 플랫폼마다 다르게 동작한다. 같은 배열 내 포인터끼리 비교하거나 인덱스로 비교한다.</span><span class="en">Relational comparison of pointers to different objects or arrays is undefined, so code relying on memory-layout assumptions behaves differently across platforms. Compare pointers within the same array, or compare indices instead.</span></div></div><h2 class="sech" id="sec-misracpp-M9"><span class="sc">M9</span><span class="ko">섹션 9</span><span class="en">Section 9</span></h2><div class="card" data-s="Rule 9.2.1 명시적 형변환을 단독 표현식 문장으로 쓰지 않는다 An explicit type conversion shall not be used as a standalone expression statement Required · Decidable"><div class="rid"><span class="id">Rule 9.2.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">명시적 형변환을 단독 표현식 문장으로 쓰지 않는다</span><span class="en">An explicit type conversion shall not be used as a standalone expression statement</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp25',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp25',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp25','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp25b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static void poll(int raw){
+    static_cast&lt;double&gt;(raw);   // 변환 결과를 버리는 의미 없는 표현식 문장 — 효과 없음
+    std::cout &lt;&lt; "polled\n";
 }
-</pre></div><div class="pane" id="misracpp25g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>double poll(int raw) {
-    // 변환 결과를 실제로 사용하거나 반환한다
-    double scaled = static_cast&lt;double&gt;(raw) * 0.01;
-    return scaled;   // 준수: 변환 결과가 사용됨
+int main(){ poll(42); }</pre></div><div class="pane" id="misracpp25g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static double poll(int raw){
+    double scaled = static_cast&lt;double&gt;(raw) * 0.01;   // 변환 결과를 실제로 사용
+    return scaled;
 }
-</pre></div><div class="why">⚠️ <span class="ko">결과를 사용하지 않는 캐스트 단독 문장은 의도 불명·오타 가능성을 숨긴다. 변환 결과를 변수에 담거나 반환해 실제로 사용하라.</span><span class="en">결과를 사용하지 않는 캐스트 단독 문장은 의도 불명·오타 가능성을 숨긴다. 변환 결과를 변수에 담거나 반환해 실제로 사용하라.</span></div></div><div class="card" data-s="Rule 9.3.1 반복문·선택문의 본문은 복합문(중괄호 블록)이어야 한다 반복문·선택문의 본문은 복합문(중괄호 블록)이어야 한다 Required · Decidable"><div class="rid"><span class="id">Rule 9.3.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">반복문·선택문의 본문은 복합문(중괄호 블록)이어야 한다</span><span class="en">반복문·선택문의 본문은 복합문(중괄호 블록)이어야 한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp26',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp26',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp26','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp26b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int sum(const int* a, int n) {
+int main(){ std::cout &lt;&lt; poll(42) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">결과를 사용하지 않는 캐스트 단독 문장은 아무 효과가 없으면서, 대입을 빠뜨렸거나 다른 부작용을 의도했을 가능성을 숨긴다. 변환 결과를 변수에 담거나 반환해 실제로 사용하도록 작성한다.</span><span class="en">A standalone cast statement whose result is unused has no effect while hiding a likely missed assignment or intended side effect. Store the conversion result in a variable or return it so it is actually used.</span></div></div><div class="card" data-s="Rule 9.3.1 반복문·선택문의 본문은 복합문(중괄호 블록)이어야 한다 The body of an iteration or selection statement shall be a compound statement Required · Decidable"><div class="rid"><span class="id">Rule 9.3.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">반복문·선택문의 본문은 복합문(중괄호 블록)이어야 한다</span><span class="en">The body of an iteration or selection statement shall be a compound statement</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp26',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp26',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp26','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp26b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int sum(const int* a, int n){
     int s = 0;
     for (int i = 0; i &lt; n; ++i)
-        s += a[i];          // 비준수: 중괄호 없는 본문
-    if (s &lt; 0)
-        s = 0;              // 추후 줄 추가 시 범위 오류 위험
+        s += a[i];        // 중괄호 없는 본문 — 줄 추가 시 범위가 어긋나기 쉬움
     return s;
 }
-</pre></div><div class="pane" id="misracpp26g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int sum(const int* a, int n) {
+int main(){ int a[3] = {1,2,3}; std::cout &lt;&lt; sum(a, 3) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp26g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int sum(const int* a, int n){
     int s = 0;
     for (int i = 0; i &lt; n; ++i) {
-        s += a[i];          // 준수: 복합문
-    }
-    if (s &lt; 0) {
-        s = 0;
+        s += a[i];        // 복합문 블록으로 본문 범위를 고정
     }
     return s;
 }
-</pre></div><div class="why">⚠️ <span class="ko">중괄호 없는 본문은 줄을 추가할 때 범위가 의도와 어긋나기 쉽다(dangling). 항상 복합문 블록으로 감싸라.</span><span class="en">중괄호 없는 본문은 줄을 추가할 때 범위가 의도와 어긋나기 쉽다(dangling). 항상 복합문 블록으로 감싸라.</span></div></div><div class="card" data-s="Rule 9.4.1 if … else if 연쇄는 마지막 else로 종결한다 if … else if 연쇄는 마지막 else로 종결한다 Required · Decidable"><div class="rid"><span class="id">Rule 9.4.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">if … else if 연쇄는 마지막 else로 종결한다</span><span class="en">if … else if 연쇄는 마지막 else로 종결한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp27',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp27',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp27','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp27b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int classify(int x) {
+int main(){ int a[3] = {1,2,3}; std::cout &lt;&lt; sum(a, 3) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">중괄호 없는 단일 문 본문은 나중에 문장을 추가할 때 들여쓰기만 맞춘 채 본문 밖에 놓이는 결함(dangling)을 부른다. 반복문·선택문 본문을 항상 복합문 블록으로 감싸 범위를 코드로 고정한다.</span><span class="en">A braceless single-statement body invites the dangling defect where a later-added statement is indented but falls outside the body. Always wrap iteration and selection bodies in a compound-statement block to fix the scope in code.</span></div></div><div class="card" data-s="Rule 9.4.1 if … else if 연쇄는 마지막 else로 종결한다 All if ... else if chains shall be terminated with an else statement Required · Decidable"><div class="rid"><span class="id">Rule 9.4.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">if … else if 연쇄는 마지막 else로 종결한다</span><span class="en">All if ... else if chains shall be terminated with an else statement</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp27',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp27',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp27','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp27b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int classify(int x){
     int r = -1;
-    if (x &gt; 0)        r = 1;
-    else if (x &lt; 0)   r = 2;   // 비준수: 0인 경우 처리 누락
-    return r;                  // x==0이면 -1, 의도 불명확
-}
-</pre></div><div class="pane" id="misracpp27g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int classify(int x) {
-    int r;
-    if (x &gt; 0)        r = 1;
-    else if (x &lt; 0)   r = 2;
-    else              r = 0;   // 준수: 모든 경우를 명시
+    if (x &gt; 0)       r = 1;
+    else if (x &lt; 0)  r = 2;   // x==0 경로 미처리 — -1 이 의도인지 불명확
     return r;
 }
-</pre></div><div class="why">⚠️ <span class="ko">마지막 else가 없으면 처리되지 않는 입력이 조용히 통과한다. else를 두어 누락 경로를 명시적으로 처리하라.</span><span class="en">마지막 else가 없으면 처리되지 않는 입력이 조용히 통과한다. else를 두어 누락 경로를 명시적으로 처리하라.</span></div></div><div class="card" data-s="Rule 9.4.2 switch 문은 적절한 구조(default·break·case 라벨)를 갖춘다 switch 문은 적절한 구조(default·break·case 라벨)를 갖춘다 Required · Decidable"><div class="rid"><span class="id">Rule 9.4.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">switch 문은 적절한 구조(default·break·case 라벨)를 갖춘다</span><span class="en">switch 문은 적절한 구조(default·break·case 라벨)를 갖춘다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp28',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp28',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp28','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp28b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int speed(int gear) {
+int main(){ std::cout &lt;&lt; classify(0) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp27g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int classify(int x){
+    int r;
+    if (x &gt; 0)       r = 1;
+    else if (x &lt; 0)  r = 2;
+    else             r = 0;   // 모든 경우를 명시적으로 처리
+    return r;
+}
+int main(){ std::cout &lt;&lt; classify(0) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">마지막 else 가 없는 if-else if 연쇄는 어느 분기에도 맞지 않는 입력을 아무 처리 없이 통과시켜, 오류 상황이 조용히 무시되고 디버깅을 어렵게 한다. 마지막 else 로 나머지 모든 경우를 명시적으로 처리한다.</span><span class="en">An if-else if chain without a final else lets inputs matching no branch pass with no handling, silently ignoring error cases and hampering debugging. Terminate with a final else that explicitly handles all remaining cases.</span></div></div><div class="card" data-s="Rule 9.4.2 switch 문은 적절한 구조(default·break·case 라벨)를 갖춘다 A switch statement shall be a well-formed switch statement Required · Decidable"><div class="rid"><span class="id">Rule 9.4.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">switch 문은 적절한 구조(default·break·case 라벨)를 갖춘다</span><span class="en">A switch statement shall be a well-formed switch statement</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp28',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp28',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp28','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp28b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int speed(int gear){
     int v = 0;
     switch (gear) {
-    case 1: v = 10;   // 비준수: break 누락 → fall-through
-    case 2: v = 20;
-            break;
+    case 1: v = 10;   // break 누락 → case 2 로 흘러내림
+    case 2: v = 20; break;
     }                 // default 없음
     return v;
 }
-</pre></div><div class="pane" id="misracpp28g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int speed(int gear) {
+int main(){ std::cout &lt;&lt; speed(1) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp28g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int speed(int gear){
     int v = 0;
     switch (gear) {
     case 1:  v = 10; break;
     case 2:  v = 20; break;
-    default: v = 0;  break;   // 준수: 모든 case break + default
+    default: v = 0;  break;   // 각 case break + default 제공
     }
     return v;
 }
-</pre></div><div class="why">⚠️ <span class="ko">break 누락·default 부재는 의도치 않은 fall-through와 미처리 입력을 부른다. 각 case를 break로 닫고 default를 제공하라.</span><span class="en">break 누락·default 부재는 의도치 않은 fall-through와 미처리 입력을 부른다. 각 case를 break로 닫고 default를 제공하라.</span></div></div><div class="card" data-s="Rule 9.5.1 전통적 for 문은 단순하게 작성한다 전통적 for 문은 단순하게 작성한다 Advisory · Decidable"><div class="rid"><span class="id">Rule 9.5.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">전통적 for 문은 단순하게 작성한다</span><span class="en">전통적 for 문은 단순하게 작성한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp29',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp29',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp29','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp29b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>double avg(const double* a, int n) {
+int main(){ std::cout &lt;&lt; speed(1) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">break 누락은 의도치 않은 fall-through 로 한 case 가 다음 case 까지 실행시키고, default 부재는 정의되지 않은 값을 조용히 무시해 오류를 숨긴다. 각 case 를 break 로 닫고 default 절을 두어 모든 입력을 처리한다.</span><span class="en">A missing break causes unintended fall-through where one case runs into the next, and a missing default silently ignores undefined values, hiding errors. Close each case with break and provide a default to handle all inputs.</span></div></div><div class="card" data-s="Rule 9.5.1 전통적 for 문은 단순하게 작성한다 A traditional for-loop should be simple Advisory · Decidable"><div class="rid"><span class="id">Rule 9.5.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">전통적 for 문은 단순하게 작성한다</span><span class="en">A traditional for-loop should be simple</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp29',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp29',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp29','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp29b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static double avg(const double* a, int n){
     double s = 0.0;
-    // 비준수: 루프 카운터를 본문에서 추가 변경
-    for (int i = 0, j = 0; i &lt; n; ++i, j += 2) {
+    for (int i = 0, j = 0; i &lt; n; ++i, j += 2) {   // 다중 카운터
         s += a[i];
-        if (a[i] &lt; 0.0) i += 1;   // 카운터 본문 수정 → 추론 곤란
+        if (a[i] &lt; 0.0) i += 1;   // 본문에서 카운터 수정 — 반복 횟수 추론 곤란
     }
     return n ? s / n : 0.0;
 }
-</pre></div><div class="pane" id="misracpp29g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>double avg(const double* a, int n) {
+int main(){ double a[3] = {1,2,3}; std::cout &lt;&lt; avg(a, 3) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp29g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static double avg(const double* a, int n){
     double s = 0.0;
-    for (int i = 0; i &lt; n; ++i) {   // 준수: 단일 카운터, 본문서 미수정
+    for (int i = 0; i &lt; n; ++i) {   // 단일 카운터, 본문에서 미수정
         s += a[i];
     }
     return n ? s / n : 0.0;
 }
-</pre></div><div class="why">⚠️ <span class="ko">다중 카운터·본문 내 카운터 변경은 반복 횟수 추론을 어렵게 한다. 카운터는 하나로, 증감은 for 헤더에서만 하라.</span><span class="en">다중 카운터·본문 내 카운터 변경은 반복 횟수 추론을 어렵게 한다. 카운터는 하나로, 증감은 for 헤더에서만 하라.</span></div></div><div class="card" data-s="Rule 9.5.2 범위 기반 for의 초기화식은 함수 호출을 최대 1회만 포함한다 범위 기반 for의 초기화식은 함수 호출을 최대 1회만 포함한다 Required · Decidable"><div class="rid"><span class="id">Rule 9.5.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">범위 기반 for의 초기화식은 함수 호출을 최대 1회만 포함한다</span><span class="en">범위 기반 for의 초기화식은 함수 호출을 최대 1회만 포함한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp30',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp30',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp30','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp30b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;vector&gt;
-int total() {
-    int s = 0;
-    // 비준수: 초기화식에 함수 호출이 둘 → 평가 순서·수명 모호
-    for (int v : merge(load_a(), load_b())) { (void)v; s += 1; }
-    return s;
+int main(){ double a[3] = {1,2,3}; std::cout &lt;&lt; avg(a, 3) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">다중 카운터나 본문 내 카운터 변경은 루프가 몇 번 도는지, 언제 끝나는지 정적으로 추론하기 어렵게 만들어 오프바이원·무한루프 결함을 숨긴다. 카운터는 하나로, 증감은 for 헤더에서만 수행한다.</span><span class="en">Multiple counters or modifying the counter in the body make it hard to statically reason about how many times the loop runs and when it ends, hiding off-by-one and infinite-loop defects. Use a single counter and change it only in the for header.</span></div></div><div class="card" data-s="Rule 9.5.2 범위 기반 for의 범위식은 함수 호출을 최대 1회만 포함한다 A range-based for loop’s range-initializer should contain at most one function call Required · Decidable"><div class="rid"><span class="id">Rule 9.5.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">범위 기반 for의 범위식은 함수 호출을 최대 1회만 포함한다</span><span class="en">A range-based for loop’s range-initializer should contain at most one function call</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp30',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp30',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp30','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp30b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;vector&gt;
+#include &lt;iostream&gt;
+static std::vector&lt;int&gt; load_a(){ return {1, 2}; }
+static std::vector&lt;int&gt; load_b(){ return {3, 4}; }
+static std::vector&lt;int&gt; merge(std::vector&lt;int&gt; x, std::vector&lt;int&gt; y){
+    x.insert(x.end(), y.begin(), y.end()); return x;
 }
-std::vector&lt;int&gt; load_a(); std::vector&lt;int&gt; load_b();
-std::vector&lt;int&gt; merge(std::vector&lt;int&gt;, std::vector&lt;int&gt;);
-</pre></div><div class="pane" id="misracpp30g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;vector&gt;
-int total() {
-    auto data = merge(load_a(), load_b());  // 범위 객체를 먼저 확정
+int main(){
     int s = 0;
-    for (int v : data) { (void)v; s += 1; } // 준수: 호출 1회 이하
-    return s;
+    for (int v : merge(load_a(), load_b())) { s += v; }   // 호출이 여럿 — 임시객체 수명·순서 모호
+    std::cout &lt;&lt; s &lt;&lt; '\n';
+}</pre></div><div class="pane" id="misracpp30g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;vector&gt;
+#include &lt;iostream&gt;
+static std::vector&lt;int&gt; load_a(){ return {1, 2}; }
+static std::vector&lt;int&gt; load_b(){ return {3, 4}; }
+static std::vector&lt;int&gt; merge(std::vector&lt;int&gt; x, std::vector&lt;int&gt; y){
+    x.insert(x.end(), y.begin(), y.end()); return x;
 }
-std::vector&lt;int&gt; load_a(); std::vector&lt;int&gt; load_b();
-std::vector&lt;int&gt; merge(std::vector&lt;int&gt;, std::vector&lt;int&gt;);
-</pre></div><div class="why">⚠️ <span class="ko">범위식에 임시객체를 만드는 호출이 여럿이면 수명·평가 순서가 모호해 댕글링 위험이 생긴다. 범위 객체를 먼저 만들고 순회하라.</span><span class="en">범위식에 임시객체를 만드는 호출이 여럿이면 수명·평가 순서가 모호해 댕글링 위험이 생긴다. 범위 객체를 먼저 만들고 순회하라.</span></div></div><div class="card" data-s="Rule 9.6.1 goto 문은 사용하지 않는다 goto 문은 사용하지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 9.6.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">goto 문은 사용하지 않는다</span><span class="en">goto 문은 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp31',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp31',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp31','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp31b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int find(const int* a, int n, int key) {
+int main(){
+    auto data = merge(load_a(), load_b());   // 범위 객체를 먼저 확정
+    int s = 0;
+    for (int v : data) { s += v; }           // 범위식은 단순한 lvalue
+    std::cout &lt;&lt; s &lt;&lt; '\n';
+}</pre></div><div class="why">⚠️ <span class="ko">범위 기반 for 의 범위식에 임시객체를 만드는 함수 호출이 여럿이면, 임시객체의 수명과 평가 순서가 모호해져 순회 도중 댕글링 참조 위험이 생긴다. 범위 객체를 먼저 변수로 확정한 뒤 그 lvalue 를 순회한다.</span><span class="en">When a range-based for’s range-initializer contains several calls that create temporaries, their lifetimes and evaluation order become unclear, risking a dangling reference during iteration. Bind the range object to a variable first and iterate over that lvalue.</span></div></div><div class="card" data-s="Rule 9.6.1 goto 문은 사용하지 않는다 The goto statement should not be used Advisory · Decidable"><div class="rid"><span class="id">Rule 9.6.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">goto 문은 사용하지 않는다</span><span class="en">The goto statement should not be used</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp31',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp31',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp31','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp31b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int find(const int* a, int n, int key){
     int idx = -1;
     for (int i = 0; i &lt; n; ++i) {
-        if (a[i] == key) { idx = i; goto done; }  // 비준수
+        if (a[i] == key) { idx = i; goto done; }   // 비구조적 제어 흐름
     }
 done:
     return idx;
 }
-</pre></div><div class="pane" id="misracpp31g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int find(const int* a, int n, int key) {
+int main(){ int a[3] = {1,2,3}; std::cout &lt;&lt; find(a, 3, 2) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp31g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int find(const int* a, int n, int key){
     int idx = -1;
     for (int i = 0; i &lt; n; ++i) {
-        if (a[i] == key) { idx = i; break; }  // 준수: 구조적 제어
+        if (a[i] == key) { idx = i; break; }   // 구조적 제어로 대체
     }
     return idx;
 }
-</pre></div><div class="why">⚠️ <span class="ko">goto는 제어 흐름을 비구조적으로 만들어 가독성·검증을 저해한다. break/return 등 구조적 제어로 대체하라.</span><span class="en">goto는 제어 흐름을 비구조적으로 만들어 가독성·검증을 저해한다. break/return 등 구조적 제어로 대체하라.</span></div></div><div class="card" data-s="Rule 9.6.2 goto는 같은 또는 둘러싼 블록의 라벨만 참조한다 goto는 같은 또는 둘러싼 블록의 라벨만 참조한다 Required · Decidable"><div class="rid"><span class="id">Rule 9.6.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">goto는 같은 또는 둘러싼 블록의 라벨만 참조한다</span><span class="en">goto는 같은 또는 둘러싼 블록의 라벨만 참조한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp32',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp32',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp32','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp32b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>void run(bool c) {
+int main(){ int a[3] = {1,2,3}; std::cout &lt;&lt; find(a, 3, 2) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">goto 는 제어 흐름을 비구조적으로 만들어 어디로 점프하는지 추적·검증을 어렵게 하고 초기화·정리 순서를 무너뜨릴 수 있다. break/continue/return 같은 구조적 제어나 함수 분리로 같은 의도를 표현한다.</span><span class="en">goto makes control flow non-structured, making jumps hard to trace and verify and able to break initialization/cleanup order. Express the same intent with structured control (break/continue/return) or by factoring into functions.</span></div></div><div class="card" data-s="Rule 9.6.2 goto는 같은 또는 둘러싼 블록의 라벨만 참조한다 A goto statement shall reference a label in a surrounding block Required · Decidable"><div class="rid"><span class="id">Rule 9.6.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">goto는 같은 또는 둘러싼 블록의 라벨만 참조한다</span><span class="en">A goto statement shall reference a label in a surrounding block</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp32',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp32',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp32','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp32b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static void do_work(){ std::cout &lt;&lt; "work\n"; }
+static void run(bool c){
     if (c) {
-        goto inner;   // 비준수: 더 안쪽 블록 라벨로 점프
+        goto inner;   // 더 안쪽 블록의 라벨로 점프 — 초기화를 건너뛸 수 있음
     }
     {
 inner:
         do_work();
     }
 }
-void do_work();
-</pre></div><div class="pane" id="misracpp32g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>void run(bool c) {
-    if (c) {
-        do_work();    // 준수: goto 없이 직접 호출
-        return;
-    }
-    do_work();
+int main(){ run(true); }</pre></div><div class="pane" id="misracpp32g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static void do_work(){ std::cout &lt;&lt; "work\n"; }
+static void run(bool /*c*/){
+    do_work();   // goto 없이 직접 호출 — 구조가 단순
 }
-void do_work();
-</pre></div><div class="why">⚠️ <span class="ko">바깥에서 안쪽 블록 라벨로 점프하면 초기화를 건너뛰는 등 정의되지 않은 흐름을 만든다. 점프를 없애거나 같은/둘러싼 블록만 참조하라.</span><span class="en">바깥에서 안쪽 블록 라벨로 점프하면 초기화를 건너뛰는 등 정의되지 않은 흐름을 만든다. 점프를 없애거나 같은/둘러싼 블록만 참조하라.</span></div></div><div class="card" data-s="Rule 9.6.3 goto는 본문에서 나중에 선언된 라벨로만 전방 점프한다 goto는 본문에서 나중에 선언된 라벨로만 전방 점프한다 Required · Decidable"><div class="rid"><span class="id">Rule 9.6.3</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">goto는 본문에서 나중에 선언된 라벨로만 전방 점프한다</span><span class="en">goto는 본문에서 나중에 선언된 라벨로만 전방 점프한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp33',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp33',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp33','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp33b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>void retry() {
+int main(){ run(true); }</pre></div><div class="why">⚠️ <span class="ko">바깥에서 더 안쪽 블록의 라벨로 점프하면 그 블록 안 객체의 초기화를 건너뛰어 미초기화 객체 사용 등 정의되지 않은 흐름을 만든다. 점프를 제거하거나, 불가피하면 같은/둘러싼 블록의 라벨만 참조한다.</span><span class="en">Jumping from outside into a more deeply nested block bypasses initialization of objects in that block, creating undefined flow such as use of uninitialized objects. Remove the jump, or if unavoidable, only reference labels in the same or an enclosing block.</span></div></div><div class="card" data-s="Rule 9.6.3 goto는 본문에서 나중에 선언된 라벨로만 전방 점프한다 A goto statement shall jump forward to a label declared later in the same function Required · Decidable"><div class="rid"><span class="id">Rule 9.6.3</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">goto는 본문에서 나중에 선언된 라벨로만 전방 점프한다</span><span class="en">A goto statement shall jump forward to a label declared later in the same function</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp33',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp33',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp33','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp33b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static bool attempt(){ static int c = 0; return ++c &gt;= 3; }
+static void retry(){
     int tries = 0;
-again:                    // 비준수: 뒤에서 앞으로 후방 점프(루프 형성)
-    if (++tries &lt; 3) {
-        if (!attempt()) goto again;
+again:                       // 후방 점프 대상 — 암묵적 루프를 형성
+    if (++tries &lt; 5) {
+        if (!attempt()) goto again;   // 뒤에서 앞으로 점프 → 종료 보장 흐려짐
     }
 }
-bool attempt();
-</pre></div><div class="pane" id="misracpp33g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>void retry() {
-    for (int tries = 0; tries &lt; 3; ++tries) {  // 준수: 명시적 루프
+int main(){ retry(); std::cout &lt;&lt; "done\n"; }</pre></div><div class="pane" id="misracpp33g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static bool attempt(){ static int c = 0; return ++c &gt;= 3; }
+static void retry(){
+    for (int tries = 0; tries &lt; 5; ++tries) {   // 명시적 루프 — 종료 조건이 분명
         if (attempt()) return;
     }
 }
-bool attempt();
-</pre></div><div class="why">⚠️ <span class="ko">후방 goto는 암묵적 루프를 만들어 종료 보장을 흐린다. 반복이 필요하면 명시적 반복문을 사용하라.</span><span class="en">후방 goto는 암묵적 루프를 만들어 종료 보장을 흐린다. 반복이 필요하면 명시적 반복문을 사용하라.</span></div></div><div class="card" data-s="Rule 9.6.4 [[noreturn]] 함수는 절대 반환하지 않는다 [[noreturn]] 함수는 절대 반환하지 않는다 Mandatory · Undecidable"><div class="rid"><span class="id">Rule 9.6.4</span><span class="cat">Mandatory · Undecidable</span></div><h3><span class="ko">[[noreturn]] 함수는 절대 반환하지 않는다</span><span class="en">[[noreturn]] 함수는 절대 반환하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp34',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp34',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp34','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp34b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>[[noreturn]] void fail(int code) {
+int main(){ retry(); std::cout &lt;&lt; "done\n"; }</pre></div><div class="why">⚠️ <span class="ko">후방 goto 는 명시적 반복문 없이 암묵적 루프를 만들어 반복 횟수와 종료 조건을 코드만으로 파악하기 어렵게 한다. 반복이 필요하면 for/while 같은 명시적 반복문을 사용하고, goto 는 전방 점프로만 제한한다.</span><span class="en">A backward goto forms an implicit loop without an explicit loop construct, making iteration count and termination hard to read from the code. Use explicit loops (for/while) when iteration is needed and restrict goto to forward jumps.</span></div></div><div class="card" data-s="Rule 9.6.4 [[noreturn]] 함수는 절대 반환하지 않는다 A function declared [[noreturn]] shall not return Mandatory · Undecidable"><div class="rid"><span class="id">Rule 9.6.4</span><span class="cat">Mandatory · Undecidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">[[noreturn]] 함수는 절대 반환하지 않는다</span><span class="en">A function declared [[noreturn]] shall not return</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp34',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp34',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp34','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp34b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;cstdlib&gt;
+[[noreturn]] static void fail(int code){
     if (code == 0) {
-        return;        // 비준수: noreturn인데 정상 반환 경로 존재
+        return;        // noreturn 인데 정상 반환 경로 존재 — 미정의 동작
     }
     std::abort();
 }
-#include &lt;cstdlib&gt;
-</pre></div><div class="pane" id="misracpp34g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;cstdlib&gt;
-[[noreturn]] void fail(int /*code*/) {
-    std::abort();      // 준수: 모든 경로가 비반환(abort)으로 종료
+int main(){ (void)&amp;fail; return 0; }</pre></div><div class="pane" id="misracpp34g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;cstdlib&gt;
+[[noreturn]] static void fail(int /*code*/){
+    std::abort();      // 모든 경로가 비반환(abort)으로 종료
 }
-</pre></div><div class="why">⚠️ <span class="ko">[[noreturn]] 함수가 실제로 반환하면 동작이 정의되지 않는다. 모든 경로가 abort/throw/exit 등으로 종료되도록 보장하라.</span><span class="en">[[noreturn]] 함수가 실제로 반환하면 동작이 정의되지 않는다. 모든 경로가 abort/throw/exit 등으로 종료되도록 보장하라.</span></div></div><div class="card" data-s="Rule 9.6.5 비-void 반환형 함수는 모든 경로에서 값을 반환한다 비-void 반환형 함수는 모든 경로에서 값을 반환한다 Mandatory · Undecidable"><div class="rid"><span class="id">Rule 9.6.5</span><span class="cat">Mandatory · Undecidable</span></div><h3><span class="ko">비-void 반환형 함수는 모든 경로에서 값을 반환한다</span><span class="en">비-void 반환형 함수는 모든 경로에서 값을 반환한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp35',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp35',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp35','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp35b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int sign(int x) {
+int main(){ (void)&amp;fail; return 0; }</pre></div><div class="why">⚠️ <span class="ko">[[noreturn]] 로 선언한 함수가 실제로 반환하면, 호출자는 절대 돌아오지 않는다는 가정 하에 생성된 코드로 인해 미정의 동작에 빠진다. 모든 실행 경로가 abort·throw·exit·무한 루프 등으로 반드시 종료되도록 보장한다.</span><span class="en">If a function declared [[noreturn]] actually returns, the caller — built on the assumption it never comes back — enters undefined behaviour. Ensure every execution path terminates via abort, throw, exit, or an infinite loop.</span></div></div><div class="card" data-s="Rule 9.6.5 비-void 반환형 함수는 모든 경로에서 값을 반환한다 A function with non-void return type shall return a value on all paths Mandatory · Undecidable"><div class="rid"><span class="id">Rule 9.6.5</span><span class="cat">Mandatory · Undecidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">비-void 반환형 함수는 모든 경로에서 값을 반환한다</span><span class="en">A function with non-void return type shall return a value on all paths</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp35',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp35',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp35','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp35b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int sign(int x){
     if (x &gt; 0) return 1;
     if (x &lt; 0) return -1;
-    // 비준수: x==0 경로에서 반환 없음 → 미정의 동작
-}
-</pre></div><div class="pane" id="misracpp35g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int sign(int x) {
+}   // x==0 경로에서 반환 없음 — 호출자가 쓰레기 값을 읽음
+int main(){ std::cout &lt;&lt; sign(0) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp35g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int sign(int x){
     if (x &gt; 0) return 1;
     if (x &lt; 0) return -1;
-    return 0;          // 준수: 모든 경로가 값을 반환
+    return 0;   // 모든 경로가 값을 반환
 }
-</pre></div><div class="why">⚠️ <span class="ko">값을 반환하지 않고 함수 끝에 도달하면 호출자는 쓰레기 값을 읽어 미정의 동작이 된다. 모든 분기에서 반환하라.</span><span class="en">값을 반환하지 않고 함수 끝에 도달하면 호출자는 쓰레기 값을 읽어 미정의 동작이 된다. 모든 분기에서 반환하라.</span></div></div><h2 class="sech" id="sec-misracpp-M10"><span class="sc">M10</span><span class="ko">섹션 10</span><span class="en">Section 10</span></h2><div class="card" data-s="Rule 10.0.1 한 선언에서 둘 이상의 변수/멤버를 선언하지 않는다 한 선언에서 둘 이상의 변수/멤버를 선언하지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 10.0.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">한 선언에서 둘 이상의 변수/멤버를 선언하지 않는다</span><span class="en">한 선언에서 둘 이상의 변수/멤버를 선언하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp36',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp36',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp36','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp36b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>void f() {
-    int* p, q;   // 비준수: p는 포인터, q는 int — 혼동 유발
-    int  a = 0, b;  // b는 미초기화
-    (void)p; (void)q; (void)a; (void)b;
-}
-</pre></div><div class="pane" id="misracpp36g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>void f() {
-    int* p = nullptr;   // 준수: 선언당 하나
+int main(){ std::cout &lt;&lt; sign(0) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">값을 반환하지 않고 함수 끝에 도달하면 호출자는 스택·레지스터에 남은 불확정 값을 결과로 읽어 미정의 동작이 된다. 모든 분기에서 명시적으로 값을 반환하도록 보장한다.</span><span class="en">Falling off the end without returning a value makes the caller read an indeterminate leftover from the stack/registers — undefined behaviour. Ensure a value is explicitly returned on every branch.</span></div></div><h2 class="sech" id="sec-misracpp-M10"><span class="sc">M10</span><span class="ko">섹션 10</span><span class="en">Section 10</span></h2><div class="card" data-s="Rule 10.0.1 한 선언에서 둘 이상의 변수/멤버를 선언하지 않는다 Only one variable or member shall be declared in a declaration Advisory · Decidable"><div class="rid"><span class="id">Rule 10.0.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">한 선언에서 둘 이상의 변수/멤버를 선언하지 않는다</span><span class="en">Only one variable or member shall be declared in a declaration</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp36',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp36',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp36','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp36b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+int main(){
+    int* p, q;      // p 는 포인터, q 는 int — 결합이 직관과 다름
+    int  a = 0, b;  // b 는 미초기화
+    p = nullptr;
+    q = 0; b = 0;
+    std::cout &lt;&lt; q &lt;&lt; a &lt;&lt; b &lt;&lt; '\n';
+    (void)p;
+}</pre></div><div class="pane" id="misracpp36g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+int main(){
+    int* p = nullptr;   // 선언당 하나, 각자 초기화
     int  q = 0;
     int  a = 0;
     int  b = 0;
-    (void)p; (void)q; (void)a; (void)b;
-}
-</pre></div><div class="why">⚠️ <span class="ko">한 줄 다중 선언은 포인터 결합 오해와 초기화 누락을 부른다. 한 선언에 하나의 변수만 두고 각자 초기화하라.</span><span class="en">한 줄 다중 선언은 포인터 결합 오해와 초기화 누락을 부른다. 한 선언에 하나의 변수만 두고 각자 초기화하라.</span></div></div><div class="card" data-s="Rule 10.1.1 포인터·lvalue 참조 매개변수의 대상 타입은 적절히 const 한정한다 포인터·lvalue 참조 매개변수의 대상 타입은 적절히 const 한정한다 Advisory · Decidable"><div class="rid"><span class="id">Rule 10.1.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">포인터·lvalue 참조 매개변수의 대상 타입은 적절히 const 한정한다</span><span class="en">포인터·lvalue 참조 매개변수의 대상 타입은 적절히 const 한정한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp37',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp37',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp37','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp37b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int length(char* s) {     // 비준수: 수정 안 하는데 비-const
+    std::cout &lt;&lt; q &lt;&lt; a &lt;&lt; b &lt;&lt; '\n';
+    (void)p;
+}</pre></div><div class="why">⚠️ <span class="ko">한 줄에 여러 객체를 선언하면 int* p, q; 에서 q 가 포인터가 아닌 점처럼 포인터 결합을 오해하기 쉽고, 일부 변수의 초기화를 빠뜨리기도 쉽다. 선언당 하나의 변수만 두고 각각 초기화한다.</span><span class="en">Declaring multiple objects in one statement invites misreading pointer binding (in int* p, q; only p is a pointer) and makes it easy to miss initializing some of them. Declare one variable per declaration and initialize each.</span></div></div><div class="card" data-s="Rule 10.1.1 포인터·참조 매개변수의 대상 타입은 적절히 const 한정한다 The target type of a pointer or lvalue reference parameter should be const-qualified where appropriate Advisory · Decidable"><div class="rid"><span class="id">Rule 10.1.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">포인터·참조 매개변수의 대상 타입은 적절히 const 한정한다</span><span class="en">The target type of a pointer or lvalue reference parameter should be const-qualified where appropriate</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp37',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp37',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp37','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp37b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int length(char* s){      // 수정하지 않는데 비-const → const 인자 못 받음
     int n = 0;
     while (s[n] != '\0') ++n;
     return n;
 }
-</pre></div><div class="pane" id="misracpp37g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int length(const char* s) {   // 준수: 읽기 전용을 const로 표현
+int main(){ char buf[] = "hello"; std::cout &lt;&lt; length(buf) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp37g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int length(const char* s){   // 읽기 전용 의도를 const 로 표현
     int n = 0;
     while (s[n] != '\0') ++n;
     return n;
 }
-</pre></div><div class="why">⚠️ <span class="ko">수정하지 않는 대상에 const를 빠뜨리면 의도가 흐려지고 const 인자를 못 받는다. 읽기 전용 대상은 const로 한정하라.</span><span class="en">수정하지 않는 대상에 const를 빠뜨리면 의도가 흐려지고 const 인자를 못 받는다. 읽기 전용 대상은 const로 한정하라.</span></div></div><div class="card" data-s="Rule 10.1.2 volatile 한정자는 적절한 경우에만 사용한다 volatile 한정자는 적절한 경우에만 사용한다 Required · Decidable"><div class="rid"><span class="id">Rule 10.1.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">volatile 한정자는 적절한 경우에만 사용한다</span><span class="en">volatile 한정자는 적절한 경우에만 사용한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp38',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp38',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp38','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp38b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>void compute() {
-    volatile int tmp = 0;   // 비준수: 단순 지역 누적기에 불필요한 volatile
+int main(){ const char* s = "hello"; std::cout &lt;&lt; length(s) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">대상을 수정하지 않는데 const 를 빠뜨리면 함수의 의도(읽기 전용)가 드러나지 않고, const 객체나 리터럴을 인자로 받지 못해 호출 측 유연성이 떨어진다. 읽기 전용 대상은 const 로 한정해 의도와 인터페이스를 명확히 한다.</span><span class="en">Omitting const where the target is not modified hides the read-only intent and prevents accepting const objects or literals as arguments, reducing caller flexibility. Const-qualify read-only targets to make intent and interface explicit.</span></div></div><div class="card" data-s="Rule 10.1.2 volatile 한정자는 적절한 경우에만 사용한다 The volatile qualifier shall be used only where necessary Required · Decidable"><div class="rid"><span class="id">Rule 10.1.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">volatile 한정자는 적절한 경우에만 사용한다</span><span class="en">The volatile qualifier shall be used only where necessary</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp38',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp38',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp38','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp38b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+int main(){
+    volatile int tmp = 0;   // 단순 지역 누적기에 불필요한 volatile — 최적화 차단
     for (int i = 0; i &lt; 100; ++i) {
-        tmp += i;           // 최적화 차단·성능 저하만 유발
+        tmp += i;
     }
-    (void)tmp;
-}
-</pre></div><div class="pane" id="misracpp38g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>// 메모리 맵 하드웨어 레지스터 등 진짜 필요한 곳에만 사용
-extern volatile unsigned int STATUS_REG;
-void compute() {
-    int sum = 0;            // 준수: 일반 연산은 비-volatile
-    for (int i = 0; i &lt; 100; ++i) sum += i;
-    while ((STATUS_REG &amp; 0x1u) == 0u) { }  // 외부 변경 폴링엔 적절
-}
-</pre></div><div class="why">⚠️ <span class="ko">불필요한 volatile은 최적화를 막고 오용을 유발한다. 외부 요인으로 값이 바뀌는 객체(하드웨어 레지스터 등)에만 적용하라.</span><span class="en">불필요한 volatile은 최적화를 막고 오용을 유발한다. 외부 요인으로 값이 바뀌는 객체(하드웨어 레지스터 등)에만 적용하라.</span></div></div><div class="card" data-s="Rule 10.2.1 열거형은 기반 정수 타입을 명시해 정의한다 열거형은 기반 정수 타입을 명시해 정의한다 Required · Decidable"><div class="rid"><span class="id">Rule 10.2.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">열거형은 기반 정수 타입을 명시해 정의한다</span><span class="en">열거형은 기반 정수 타입을 명시해 정의한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp39',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp39',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp39','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp39b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>enum class Mode {       // 비준수: 기반 타입 미지정
+    std::cout &lt;&lt; tmp &lt;&lt; '\n';
+}</pre></div><div class="pane" id="misracpp38g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+int main(){
+    int sum = 0;            // 일반 연산은 비-volatile
+    for (int i = 0; i &lt; 100; ++i) {
+        sum += i;
+    }
+    std::cout &lt;&lt; sum &lt;&lt; '\n';
+    // volatile 은 메모리맵 하드웨어 레지스터처럼 외부 요인으로 값이 바뀌는 객체에만 사용
+}</pre></div><div class="why">⚠️ <span class="ko">외부 요인으로 값이 바뀌지 않는 일반 객체에 volatile 을 붙이면 컴파일러의 최적화(레지스터 보관·중복 제거)를 막아 성능만 떨어뜨리고, volatile 의 의미를 오해하게 만든다. volatile 은 하드웨어 레지스터·시그널 핸들러 공유 변수처럼 진짜 필요한 곳에만 적용한다.</span><span class="en">Applying volatile to an ordinary object whose value is not changed by external factors blocks compiler optimizations (register caching, redundancy removal), costing performance and obscuring volatile’s meaning. Use volatile only where truly needed, such as hardware registers or signal-handler-shared variables.</span></div></div><div class="card" data-s="Rule 10.2.1 열거형은 기반 정수 타입을 명시해 정의한다 An enumeration shall be defined with an explicit underlying type Required · Decidable"><div class="rid"><span class="id">Rule 10.2.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">열거형은 기반 정수 타입을 명시해 정의한다</span><span class="en">An enumeration shall be defined with an explicit underlying type</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp39',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp39',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp39','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp39b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+enum class Mode {        // 기반 타입 미지정 — 크기·범위가 구현 의존적
     Idle, Run, Stop
 };
-int g(Mode m) { return static_cast&lt;int&gt;(m); }
-</pre></div><div class="pane" id="misracpp39g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>enum class Mode : unsigned char {   // 준수: 기반 타입 명시
+int main(){ Mode m = Mode::Run; std::cout &lt;&lt; static_cast&lt;int&gt;(m) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp39g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+#include &lt;cstdint&gt;
+enum class Mode : std::uint8_t {   // 기반 타입 명시 — 크기·표현 범위 고정
     Idle, Run, Stop
 };
-int g(Mode m) { return static_cast&lt;int&gt;(m); }
-</pre></div><div class="why">⚠️ <span class="ko">기반 타입을 명시하지 않으면 크기·표현 범위가 구현 의존적이라 이식성이 깨진다. 명시적 underlying type을 지정하라.</span><span class="en">기반 타입을 명시하지 않으면 크기·표현 범위가 구현 의존적이라 이식성이 깨진다. 명시적 underlying type을 지정하라.</span></div></div><div class="card" data-s="Rule 10.2.2 범위 없는(unscoped) 열거형은 선언하지 않는다 범위 없는(unscoped) 열거형은 선언하지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 10.2.2</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">범위 없는(unscoped) 열거형은 선언하지 않는다</span><span class="en">범위 없는(unscoped) 열거형은 선언하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp40',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp40',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp40','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp40b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>enum Color { Red, Green, Blue };   // 비준수: 전역 이름공간 오염
-void use() {
-    int x = Green;   // 암묵 int 변환, 이름 충돌 위험
-    (void)x;
-}
-</pre></div><div class="pane" id="misracpp40g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>enum class Color { Red, Green, Blue };  // 준수: 범위 지정
-void use() {
-    Color c = Color::Green;   // 명시적 한정, 암묵 변환 없음
-    (void)c;
-}
-</pre></div><div class="why">⚠️ <span class="ko">unscoped enum은 이름공간을 오염시키고 int로 암묵 변환되어 오류를 숨긴다. enum class를 사용하라.</span><span class="en">unscoped enum은 이름공간을 오염시키고 int로 암묵 변환되어 오류를 숨긴다. enum class를 사용하라.</span></div></div><div class="card" data-s="Rule 10.2.3 고정 기반 타입 없는 unscoped 열거형의 수치값을 사용하지 않는다 고정 기반 타입 없는 unscoped 열거형의 수치값을 사용하지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 10.2.3</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">고정 기반 타입 없는 unscoped 열거형의 수치값을 사용하지 않는다</span><span class="en">고정 기반 타입 없는 unscoped 열거형의 수치값을 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp41',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp41',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp41','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp41b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>enum Flags { A, B, C };
-int raw() {
+int main(){ Mode m = Mode::Run; std::cout &lt;&lt; static_cast&lt;int&gt;(m) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">기반 타입을 명시하지 않은 열거형은 크기와 표현 범위가 구현에 따라 달라져, 직렬화·하드웨어 인터페이스·이식 시 레이아웃이 어긋난다. 명시적 underlying type(예: std::uint8_t)을 지정해 표현을 고정한다.</span><span class="en">An enumeration without an explicit underlying type has implementation-defined size and range, so its layout diverges across serialization, hardware interfaces, and ports. Specify an explicit underlying type (e.g., std::uint8_t) to fix the representation.</span></div></div><div class="card" data-s="Rule 10.2.2 범위 없는(unscoped) 열거형은 선언하지 않는다 Unscoped enumerations should not be declared Advisory · Decidable"><div class="rid"><span class="id">Rule 10.2.2</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">범위 없는(unscoped) 열거형은 선언하지 않는다</span><span class="en">Unscoped enumerations should not be declared</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp40',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp40',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp40','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp40b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+enum Color { Red, Green, Blue };   // 전역 이름공간 오염 + int 로 암묵 변환
+int main(){
+    int x = Green;   // 열거자가 정수로 새어 나감 — 이름 충돌·오용 위험
+    std::cout &lt;&lt; x &lt;&lt; '\n';
+}</pre></div><div class="pane" id="misracpp40g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+enum class Color { Red, Green, Blue };   // 범위 지정 — 이름공간 보호
+int main(){
+    Color c = Color::Green;   // 명시적 한정, 암묵 정수 변환 없음
+    std::cout &lt;&lt; static_cast&lt;int&gt;(c) &lt;&lt; '\n';
+}</pre></div><div class="why">⚠️ <span class="ko">unscoped enum 은 열거자 이름을 둘러싼 이름공간에 그대로 노출해 충돌을 일으키고, 정수로 암묵 변환되어 잘못된 비교·산술을 조용히 허용한다. enum class(scoped enum)를 사용해 이름을 한정하고 암묵 변환을 차단한다.</span><span class="en">An unscoped enum leaks enumerator names into the enclosing namespace causing clashes, and implicitly converts to int, silently allowing wrong comparisons and arithmetic. Use enum class (scoped enum) to qualify names and block implicit conversion.</span></div></div><div class="card" data-s="Rule 10.2.3 고정 기반 타입 없는 unscoped 열거형의 수치값을 사용하지 않는다 The numeric value of an unscoped enumeration without a fixed underlying type shall not be used Required · Decidable"><div class="rid"><span class="id">Rule 10.2.3</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">고정 기반 타입 없는 unscoped 열거형의 수치값을 사용하지 않는다</span><span class="en">The numeric value of an unscoped enumeration without a fixed underlying type shall not be used</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp41',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp41',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp41','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp41b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+enum Flags { A, B, C };   // 고정 기반 타입 없음
+int main(){
     Flags f = B;
-    return f + 1;     // 비준수: 열거값을 산술 수치로 사용
-}
-</pre></div><div class="pane" id="misracpp41g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>enum class Flags : int { A, B, C };
-int raw() {
+    int r = f + 1;        // 열거값을 산술 수치로 사용 — 표현 범위 불명확
+    std::cout &lt;&lt; r &lt;&lt; '\n';
+}</pre></div><div class="pane" id="misracpp41g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+enum class Flags : int { A, B, C };   // 고정 기반 타입 명시
+int main(){
     Flags f = Flags::B;
-    return static_cast&lt;int&gt;(f) + 1;  // 준수: 명시적 변환 후 산술
-}
-</pre></div><div class="why">⚠️ <span class="ko">기반 타입이 고정되지 않은 열거값을 수치로 쓰면 표현 범위가 불명확해 미정의 결과가 날 수 있다. 고정 타입 enum + 명시 변환을 쓰라.</span><span class="en">기반 타입이 고정되지 않은 열거값을 수치로 쓰면 표현 범위가 불명확해 미정의 결과가 날 수 있다. 고정 타입 enum + 명시 변환을 쓰라.</span></div></div><div class="card" data-s="Rule 10.3.1 헤더 파일에는 익명 네임스페이스를 두지 않는다 헤더 파일에는 익명 네임스페이스를 두지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 10.3.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">헤더 파일에는 익명 네임스페이스를 두지 않는다</span><span class="en">헤더 파일에는 익명 네임스페이스를 두지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp42',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp42',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp42','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp42b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>// util.hpp  (비준수)
+    int r = static_cast&lt;int&gt;(f) + 1;  // 명시적 변환 후 산술
+    std::cout &lt;&lt; r &lt;&lt; '\n';
+}</pre></div><div class="why">⚠️ <span class="ko">기반 타입이 고정되지 않은 unscoped 열거형은 표현 범위가 구현 정의라, 그 값을 직접 산술에 쓰면 범위·승격 규칙이 불명확해 이식 시 다른 결과가 날 수 있다. 고정 기반 타입을 가진 enum class 로 선언하고 수치가 필요할 때만 명시적으로 변환한다.</span><span class="en">An unscoped enumeration without a fixed underlying type has an implementation-defined range, so using its value directly in arithmetic leaves range and promotion rules unclear, risking different results across ports. Declare an enum class with a fixed underlying type and convert explicitly only when a numeric value is needed.</span></div></div><div class="card" data-s="Rule 10.3.1 헤더 파일에는 익명 네임스페이스를 두지 않는다 There should be no unnamed namespaces in header files Advisory · Decidable"><div class="rid"><span class="id">Rule 10.3.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">헤더 파일에는 익명 네임스페이스를 두지 않는다</span><span class="en">There should be no unnamed namespaces in header files</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp42',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp42',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp42','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp42b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>// util.hpp  (비준수)
 namespace {
-    int counter = 0;   // 포함하는 모든 TU마다 별도 사본 → ODR 혼란
-    inline void tick() { ++counter; }
-}
-</pre></div><div class="pane" id="misracpp42g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>// util.hpp  (준수)
+    int counter = 0;            // 이 헤더를 포함하는 모든 번역단위마다 별도 사본 생성
+    inline void tick() { ++counter; }   // TU 마다 다른 counter 를 증가 → ODR 혼란
+}</pre></div><div class="pane" id="misracpp42g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>// util.hpp  (준수) — 헤더에는 선언만
 namespace util {
-    void tick();       // 선언만 헤더에, 정의는 .cpp로
+    void tick();
 }
-// util.cpp
-namespace util { static int counter = 0; void tick() { ++counter; } }
-</pre></div><div class="why">⚠️ <span class="ko">헤더의 익명 네임스페이스는 포함 단위마다 별도 실체를 만들어 의도치 않은 중복·혼란을 부른다. 헤더엔 선언만 두라.</span><span class="en">헤더의 익명 네임스페이스는 포함 단위마다 별도 실체를 만들어 의도치 않은 중복·혼란을 부른다. 헤더엔 선언만 두라.</span></div></div><div class="card" data-s="Rule 10.4.1 asm 선언(인라인 어셈블리)을 사용하지 않는다 asm 선언(인라인 어셈블리)을 사용하지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 10.4.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">asm 선언(인라인 어셈블리)을 사용하지 않는다</span><span class="en">asm 선언(인라인 어셈블리)을 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp43',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp43',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp43','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp43b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int read_tsc() {
-    int lo;
-    asm volatile("rdtsc" : "=a"(lo));  // 비준수: 이식성·검증성 저하
+
+// util.cpp — 정의는 한 곳에, 내부 연결은 파일 정적으로
+namespace util {
+    static int counter = 0;
+    void tick() { ++counter; }
+}</pre></div><div class="why">⚠️ <span class="ko">헤더의 익명 네임스페이스는 그 헤더를 포함하는 번역단위마다 내부 연결의 별도 실체(별도 counter)를 만들어, 모두가 같은 상태를 공유한다는 착각과 ODR 혼란을 일으킨다. 헤더에는 선언만 두고 정의·내부 상태는 소스 파일에 둔다.</span><span class="en">An unnamed namespace in a header creates a separate internal-linkage instance (a separate counter) in every translation unit that includes it, causing the illusion of shared state and ODR confusion. Keep only declarations in headers and put definitions and internal state in source files.</span></div></div><div class="card" data-s="Rule 10.4.1 asm 선언(인라인 어셈블리)을 사용하지 않는다 The asm declaration shall not be used Required · Decidable"><div class="rid"><span class="id">Rule 10.4.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">asm 선언(인라인 어셈블리)을 사용하지 않는다</span><span class="en">The asm declaration shall not be used</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp43',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp43',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp43','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp43b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int read_low(){
+    int lo = 0;
+    asm volatile("rdtsc" : "=a"(lo));   // 인라인 어셈블리 — 이식성·정적분석 저하
     return lo;
 }
-</pre></div><div class="pane" id="misracpp43g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;chrono&gt;
-long read_tsc() {
-    // 준수: 표준 라이브러리로 이식성 있는 타이밍 확보
-    auto now = std::chrono::steady_clock::now().time_since_epoch();
+int main(){ std::cout &lt;&lt; (read_low() != 0) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp43g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;chrono&gt;
+#include &lt;iostream&gt;
+static long read_low(){
+    auto now = std::chrono::steady_clock::now().time_since_epoch();   // 이식성 있는 표준 API
     return static_cast&lt;long&gt;(
         std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(now).count());
 }
-</pre></div><div class="why">⚠️ <span class="ko">인라인 어셈블리는 이식성과 정적 분석을 깨뜨린다. 표준 라이브러리나 잘 캡슐화된 컴파일러 내장함수로 대체하라.</span><span class="en">인라인 어셈블리는 이식성과 정적 분석을 깨뜨린다. 표준 라이브러리나 잘 캡슐화된 컴파일러 내장함수로 대체하라.</span></div></div><h2 class="sech" id="sec-misracpp-M11"><span class="sc">M11</span><span class="ko">섹션 11</span><span class="en">Section 11</span></h2><div class="card" data-s="Rule 11.3.1 배열 타입 변수를 선언하지 않는다(C 스타일 배열 회피) 배열 타입 변수를 선언하지 않는다(C 스타일 배열 회피) Advisory · Decidable"><div class="rid"><span class="id">Rule 11.3.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">배열 타입 변수를 선언하지 않는다(C 스타일 배열 회피)</span><span class="en">배열 타입 변수를 선언하지 않는다(C 스타일 배열 회피)</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp44',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp44',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp44','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp44b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>double mean(int n) {
-    double buf[64];          // 비준수: C 스타일 배열, 경계 검사 없음
+int main(){ std::cout &lt;&lt; (read_low() != 0) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">인라인 어셈블리는 특정 CPU·컴파일러에 묶여 이식성을 깨뜨리고, 정적 분석 도구가 의미를 파악하지 못해 검증 사각지대를 만든다. 표준 라이브러리(예: &lt;chrono&gt;)나 잘 캡슐화된 컴파일러 내장함수로 대체한다.</span><span class="en">Inline assembly ties code to a specific CPU and compiler, breaking portability, and static-analysis tools cannot interpret it, creating a verification blind spot. Replace it with the standard library (e.g., &lt;chrono&gt;) or well-encapsulated compiler intrinsics.</span></div></div><h2 class="sech" id="sec-misracpp-M11"><span class="sc">M11</span><span class="ko">섹션 11</span><span class="en">Section 11</span></h2><div class="card" data-s="Rule 11.3.1 C 스타일 배열 타입 변수를 선언하지 않는다 A C-style array shall not be declared Advisory · Decidable"><div class="rid"><span class="id">Rule 11.3.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">C 스타일 배열 타입 변수를 선언하지 않는다</span><span class="en">A C-style array shall not be declared</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp44',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp44',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp44','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp44b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static double mean(int n){
+    double buf[64];          // C 스타일 배열 — 경계 정보 없음
     double s = 0.0;
-    for (int i = 0; i &lt; n; ++i) { buf[i] = i; s += buf[i]; }  // n&gt;64면 오버런
-    return s / n;
+    for (int i = 0; i &lt; n; ++i) { buf[i] = i; s += buf[i]; }   // n&gt;64 면 오버런
+    return n ? s / n : 0.0;
 }
-</pre></div><div class="pane" id="misracpp44g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;array&gt;
+int main(){ std::cout &lt;&lt; mean(8) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp44g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;array&gt;
 #include &lt;numeric&gt;
-double mean() {
-    std::array&lt;double, 64&gt; buf{};   // 준수: 크기·경계 인지 컨테이너
+#include &lt;iostream&gt;
+static double mean(){
+    std::array&lt;double, 64&gt; buf{};   // 크기·경계를 아는 컨테이너
     for (std::size_t i = 0; i &lt; buf.size(); ++i) buf[i] = static_cast&lt;double&gt;(i);
     double s = std::accumulate(buf.begin(), buf.end(), 0.0);
-    return s / buf.size();
+    return s / static_cast&lt;double&gt;(buf.size());
 }
-</pre></div><div class="why">⚠️ <span class="ko">C 스타일 배열은 경계 정보가 없어 오버런·붕괴(decay)를 일으킨다. std::array/std::vector로 경계를 안전하게 관리하라.</span><span class="en">C 스타일 배열은 경계 정보가 없어 오버런·붕괴(decay)를 일으킨다. std::array/std::vector로 경계를 안전하게 관리하라.</span></div></div><div class="card" data-s="Rule 11.3.2 객체 선언의 포인터 간접 단계는 2단계를 넘지 않는다 객체 선언의 포인터 간접 단계는 2단계를 넘지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 11.3.2</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">객체 선언의 포인터 간접 단계는 2단계를 넘지 않는다</span><span class="en">객체 선언의 포인터 간접 단계는 2단계를 넘지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp45',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp45',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp45','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp45b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>void build(int*** grid) {   // 비준수: 3중 포인터 — 가독성·안전성 저하
-    (void)grid;
+int main(){ std::cout &lt;&lt; mean() &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">C 스타일 배열은 자신의 크기 정보를 갖지 않고 포인터로 쉽게 붕괴(decay)되어 경계 검사 없이 오버런을 일으킨다. std::array(고정 크기)·std::vector(가변 크기)는 size()와 경계 검사 인터페이스를 제공해 안전하게 다룰 수 있다.</span><span class="en">A C-style array carries no size information and decays to a pointer, enabling overruns with no bounds checking. std::array (fixed size) and std::vector (dynamic) provide size() and bounds-aware interfaces for safe handling.</span></div></div><div class="card" data-s="Rule 11.3.2 객체 선언의 포인터 간접 단계는 2단계를 넘지 않는다 The declaration of an object should contain no more than two levels of pointer indirection Advisory · Decidable"><div class="rid"><span class="id">Rule 11.3.2</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">객체 선언의 포인터 간접 단계는 2단계를 넘지 않는다</span><span class="en">The declaration of an object should contain no more than two levels of pointer indirection</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp45',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp45',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp45','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp45b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int build(int*** grid){   // 3중 포인터 — 소유권·수명 추론 곤란
+    return grid != nullptr;
 }
-</pre></div><div class="pane" id="misracpp45g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;vector&gt;
-void build(std::vector&lt;std::vector&lt;int&gt;&gt;&amp; grid) {  // 준수: 컨테이너로 표현
-    (void)grid;
+int main(){ std::cout &lt;&lt; build(nullptr) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp45g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;vector&gt;
+#include &lt;iostream&gt;
+static int build(const std::vector&lt;std::vector&lt;int&gt;&gt;&amp; grid){   // 컨테이너로 표현
+    return static_cast&lt;int&gt;(grid.size());
 }
-</pre></div><div class="why">⚠️ <span class="ko">2단계를 넘는 포인터 간접은 소유권·수명 추론을 어렵게 한다. 중첩 컨테이너나 전용 타입으로 표현하라.</span><span class="en">2단계를 넘는 포인터 간접은 소유권·수명 추론을 어렵게 한다. 중첩 컨테이너나 전용 타입으로 표현하라.</span></div></div><div class="card" data-s="Rule 11.6.1 모든 변수는 초기화한다 모든 변수는 초기화한다 Advisory · Decidable"><div class="rid"><span class="id">Rule 11.6.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">모든 변수는 초기화한다</span><span class="en">모든 변수는 초기화한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp46',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp46',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp46','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp46b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int scale(int k) {
-    int factor;          // 비준수: 미초기화
+int main(){ std::vector&lt;std::vector&lt;int&gt;&gt; g; std::cout &lt;&lt; build(g) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">2단계를 넘는 포인터 간접(int***)은 각 단계가 무엇을, 누가 소유하며, 언제 해제되는지 추론하기 매우 어려워 누수·댕글링을 부른다. 중첩 컨테이너(std::vector&lt;std::vector&lt;...&gt;&gt;)나 전용 타입으로 표현해 간접 단계를 낮춘다.</span><span class="en">More than two levels of pointer indirection (int***) make it very hard to reason about what each level points to, who owns it, and when it is freed, inviting leaks and dangling. Express it with nested containers (std::vector&lt;std::vector&lt;...&gt;&gt;) or a dedicated type to reduce indirection.</span></div></div><div class="card" data-s="Rule 11.6.1 모든 변수는 초기화한다 All variables should be initialized Advisory · Decidable"><div class="rid"><span class="id">Rule 11.6.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">모든 변수는 초기화한다</span><span class="en">All variables should be initialized</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp46',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp46',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp46','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp46b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int scale(int k){
+    int factor;          // 미초기화
     if (k &gt; 0) factor = 2;
-    return k * factor;   // k&lt;=0이면 미초기화 값 사용
+    return k * factor;   // k&lt;=0 이면 미초기화 값 사용 — 비결정적
 }
-</pre></div><div class="pane" id="misracpp46g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int scale(int k) {
-    int factor = 1;      // 준수: 선언 시 초기화
+int main(){ std::cout &lt;&lt; scale(-1) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp46g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int scale(int k){
+    int factor = 1;      // 선언 시점에 초기화
     if (k &gt; 0) factor = 2;
     return k * factor;
 }
-</pre></div><div class="why">⚠️ <span class="ko">미초기화 변수는 비결정적 값을 읽어 재현 불가 버그를 만든다. 선언 시점에 항상 초기값을 주라.</span><span class="en">미초기화 변수는 비결정적 값을 읽어 재현 불가 버그를 만든다. 선언 시점에 항상 초기값을 주라.</span></div></div><div class="card" data-s="Rule 11.6.2 객체의 값은 설정되기 전에 읽지 않는다 객체의 값은 설정되기 전에 읽지 않는다 Mandatory · Undecidable"><div class="rid"><span class="id">Rule 11.6.2</span><span class="cat">Mandatory · Undecidable</span></div><h3><span class="ko">객체의 값은 설정되기 전에 읽지 않는다</span><span class="en">객체의 값은 설정되기 전에 읽지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp47',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp47',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp47','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp47b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>int compute(bool on) {
+int main(){ std::cout &lt;&lt; scale(-1) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">미초기화 변수는 일부 경로에서 스택에 남은 비결정적 값을 읽어, 실행마다 결과가 달라지는 재현 불가 버그를 만든다. 모든 변수를 선언 시점에 의미 있는 초기값으로 초기화한다.</span><span class="en">An uninitialized variable read on some path uses non-deterministic leftover stack values, producing irreproducible bugs that vary by run. Initialize every variable with a meaningful value at the point of declaration.</span></div></div><div class="card" data-s="Rule 11.6.2 객체의 값은 설정되기 전에 읽지 않는다 The value of an object shall not be read before it has been set Mandatory · Undecidable"><div class="rid"><span class="id">Rule 11.6.2</span><span class="cat">Mandatory · Undecidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">객체의 값은 설정되기 전에 읽지 않는다</span><span class="en">The value of an object shall not be read before it has been set</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp47',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp47',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp47','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp47b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+static int compute(bool on){
     int v;                 // 미설정
     if (on) v = 10;
-    return v + 1;          // 비준수: on==false면 미설정 값을 읽음
+    return v + 1;          // on==false 면 미설정 값을 읽음 — 미정의 동작
 }
-</pre></div><div class="pane" id="misracpp47g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>int compute(bool on) {
-    int v = 0;             // 준수: 읽기 전 반드시 설정
+int main(){ std::cout &lt;&lt; compute(false) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp47g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+static int compute(bool on){
+    int v = 0;             // 읽기 전 반드시 설정
     if (on) v = 10;
     return v + 1;
 }
-</pre></div><div class="why">⚠️ <span class="ko">설정 전에 읽으면 정의되지 않은 값으로 동작이 깨진다. 모든 읽기 경로에서 사전 대입을 보장하라(필수 규칙).</span><span class="en">설정 전에 읽으면 정의되지 않은 값으로 동작이 깨진다. 모든 읽기 경로에서 사전 대입을 보장하라(필수 규칙).</span></div></div><div class="card" data-s="Rule 11.6.3 열거자 목록에서 암묵적으로 결정되는 값은 서로 중복되지 않는다 열거자 목록에서 암묵적으로 결정되는 값은 서로 중복되지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 11.6.3</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">열거자 목록에서 암묵적으로 결정되는 값은 서로 중복되지 않는다</span><span class="en">열거자 목록에서 암묵적으로 결정되는 값은 서로 중복되지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp48',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp48',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp48','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp48b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>enum class E : int {
+int main(){ std::cout &lt;&lt; compute(false) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">설정되기 전의 객체를 읽으면 불확정 값을 사용하게 되어 동작이 미정의가 되고, 컴파일러 최적화에 따라 예측 불가한 결과가 나온다(필수 규칙). 모든 읽기 경로에서 사전 대입을 보장한다.</span><span class="en">Reading an object before it is set uses an indeterminate value — undefined behaviour with results unpredictable under optimization (a mandatory rule). Guarantee a prior assignment on every read path.</span></div></div><div class="card" data-s="Rule 11.6.3 열거자 목록에서 암묵적으로 결정되는 값은 서로 중복되지 않는다 Within an enumerator list, the value of an implicitly-specified enumeration constant shall be unique Required · Decidable"><div class="rid"><span class="id">Rule 11.6.3</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">열거자 목록에서 암묵적으로 결정되는 값은 서로 중복되지 않는다</span><span class="en">Within an enumerator list, the value of an implicitly-specified enumeration constant shall be unique</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp48',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp48',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp48','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp48b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+enum class E : int {
     A = 1,
-    B,        // 자동 2
-    C = 2     // 비준수: B와 값 충돌(둘 다 2)
+    B,        // 자동으로 2
+    C = 2     // B 와 값 충돌(둘 다 2)
 };
-</pre></div><div class="pane" id="misracpp48g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>enum class E : int {
+int main(){ std::cout &lt;&lt; (static_cast&lt;int&gt;(E::B) == static_cast&lt;int&gt;(E::C)) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp48g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+enum class E : int {
     A = 1,
-    B = 2,    // 준수: 명시적·고유 값
+    B = 2,    // 명시적·고유 값
     C = 3
 };
-</pre></div><div class="why">⚠️ <span class="ko">암묵 값이 명시 값과 겹치면 서로 다른 열거자가 같은 정수가 되어 분기·매핑 오류를 낳는다. 값이 고유하도록 명시하라.</span><span class="en">암묵 값이 명시 값과 겹치면 서로 다른 열거자가 같은 정수가 되어 분기·매핑 오류를 낳는다. 값이 고유하도록 명시하라.</span></div></div><h2 class="sech" id="sec-misracpp-M12"><span class="sc">M12</span><span class="ko">섹션 12</span><span class="en">Section 12</span></h2><div class="card" data-s="Rule 12.2.1 비트필드는 선언하지 않는다 비트필드는 선언하지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 12.2.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">비트필드는 선언하지 않는다</span><span class="en">비트필드는 선언하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp49',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp49',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp49','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp49b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Reg {
-    unsigned enable : 1;   // 비준수: 비트필드, 레이아웃 구현 의존
+int main(){ std::cout &lt;&lt; (static_cast&lt;int&gt;(E::B) == static_cast&lt;int&gt;(E::C)) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">명시 값과 암묵(앞 값+1) 값이 섞여 두 열거자가 같은 정수가 되면, switch 분기나 값-기반 테이블 매핑에서 둘을 구분하지 못해 논리 오류가 숨는다. 각 열거자의 값이 고유하도록 명시한다.</span><span class="en">When explicit and implicit (previous+1) values mix so two enumerators share the same integer, switch branches or value-based table mappings cannot distinguish them, hiding logic errors. Specify values so each enumerator is unique.</span></div></div><h2 class="sech" id="sec-misracpp-M12"><span class="sc">M12</span><span class="ko">섹션 12</span><span class="en">Section 12</span></h2><div class="card" data-s="Rule 12.2.1 비트필드는 선언하지 않는다 Bit-fields should not be declared Advisory · Decidable"><div class="rid"><span class="id">Rule 12.2.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">비트필드는 선언하지 않는다</span><span class="en">Bit-fields should not be declared</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp49',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp49',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp49','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp49b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Reg {
+    unsigned enable : 1;   // 비트필드 — 배치·패딩·부호가 구현 의존적
     unsigned mode   : 3;
     unsigned        : 4;
 };
-</pre></div><div class="pane" id="misracpp49g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;cstdint&gt;
-struct Reg {
-    std::uint8_t value;    // 준수: 명시적 정수 + 마스크 상수
-};
+int main(){ Reg r{1u, 2u}; std::cout &lt;&lt; r.mode &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp49g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;cstdint&gt;
+#include &lt;iostream&gt;
+struct Reg { std::uint8_t value; };   // 명시적 정수 + 마스크 상수로 표현
 constexpr std::uint8_t ENABLE = 0x01u;
 constexpr std::uint8_t MODE   = 0x0Eu;   // bits 1..3
-</pre></div><div class="why">⚠️ <span class="ko">비트필드는 배치·부호·패딩이 구현 의존적이라 이식성과 검증성이 떨어진다. 명시적 정수와 마스크 연산으로 표현하라.</span><span class="en">비트필드는 배치·부호·패딩이 구현 의존적이라 이식성과 검증성이 떨어진다. 명시적 정수와 마스크 연산으로 표현하라.</span></div></div><div class="card" data-s="Rule 12.2.2 비트필드를 쓴다면 적절한 타입(명시적 부호/크기)을 사용한다 비트필드를 쓴다면 적절한 타입(명시적 부호/크기)을 사용한다 Required · Decidable"><div class="rid"><span class="id">Rule 12.2.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">비트필드를 쓴다면 적절한 타입(명시적 부호/크기)을 사용한다</span><span class="en">비트필드를 쓴다면 적절한 타입(명시적 부호/크기)을 사용한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp50',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp50',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp50','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp50b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Flags {
-    int  a : 1;   // 비준수: 부호 있는 int 비트필드 — 1비트 부호 표현 모호
-    int  b : 2;
-};
-</pre></div><div class="pane" id="misracpp50g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;cstdint&gt;
+int main(){
+    Reg r{0};
+    r.value |= ENABLE;
+    r.value = static_cast&lt;std::uint8_t&gt;((r.value &amp; ~MODE) | (2u &lt;&lt; 1));
+    std::cout &lt;&lt; ((r.value &amp; MODE) &gt;&gt; 1) &lt;&lt; '\n';
+}</pre></div><div class="why">⚠️ <span class="ko">비트필드는 메모리 내 배치 순서, 부호 처리, 패딩이 모두 구현 의존적이라 같은 코드가 컴파일러·엔디안마다 다른 비트를 가리켜 하드웨어 레지스터 매핑·직렬화에서 깨진다. 명시적 부호 없는 정수와 마스크 연산으로 비트 위치를 코드에 고정한다.</span><span class="en">Bit-fields have implementation-defined layout order, sign handling, and padding, so the same code addresses different bits across compilers and endianness, breaking hardware-register mapping and serialization. Use explicit unsigned integers with mask operations to fix bit positions in code.</span></div></div><div class="card" data-s="Rule 12.2.2 비트필드를 쓴다면 적절한 타입(명시적 부호/크기)을 사용한다 If a bit-field is used, it shall have an appropriate type Required · Decidable"><div class="rid"><span class="id">Rule 12.2.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">비트필드를 쓴다면 적절한 타입(명시적 부호/크기)을 사용한다</span><span class="en">If a bit-field is used, it shall have an appropriate type</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp50',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp50',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp50','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp50b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
 struct Flags {
-    std::uint8_t a : 1;   // 준수: 부호 없는 고정폭 타입
+    int a : 1;   // 부호 있는 int 비트필드 — 1비트 부호 표현이 모호
+    int b : 2;
+};
+int main(){ Flags f{0, 1}; std::cout &lt;&lt; f.b &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp50g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;cstdint&gt;
+#include &lt;iostream&gt;
+struct Flags {
+    std::uint8_t a : 1;   // 부호 없는 고정폭 타입
     std::uint8_t b : 2;
 };
-</pre></div><div class="why">⚠️ <span class="ko">부호 있는/구현정의 타입의 비트필드는 표현 범위와 부호 동작이 모호하다. 부호 없는 고정폭 타입을 비트필드 기반으로 쓰라.</span><span class="en">부호 있는/구현정의 타입의 비트필드는 표현 범위와 부호 동작이 모호하다. 부호 없는 고정폭 타입을 비트필드 기반으로 쓰라.</span></div></div><div class="card" data-s="Rule 12.2.3 부호 있는 정수형 명명 비트필드의 길이를 1비트로 두지 않는다 부호 있는 정수형 명명 비트필드의 길이를 1비트로 두지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 12.2.3</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">부호 있는 정수형 명명 비트필드의 길이를 1비트로 두지 않는다</span><span class="en">부호 있는 정수형 명명 비트필드의 길이를 1비트로 두지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp51',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp51',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp51','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp51b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct S {
-    signed int flag : 1;   // 비준수: 부호 1비트 → 값이 0 또는 -1
+int main(){ Flags f{0u, 1u}; std::cout &lt;&lt; static_cast&lt;int&gt;(f.b) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">부호 있는 정수나 구현정의 타입의 비트필드는 표현 범위와 부호 동작이 모호해, 같은 비트 폭이라도 값 해석이 컴파일러마다 달라진다. 비트필드가 불가피하면 std::uint8_t 같은 부호 없는 고정폭 타입을 기반으로 사용한다.</span><span class="en">A bit-field of signed or implementation-defined type has ambiguous range and sign behaviour, so the same bit width is interpreted differently across compilers. When a bit-field is unavoidable, base it on an unsigned fixed-width type such as std::uint8_t.</span></div></div><div class="card" data-s="Rule 12.2.3 부호 있는 정수형 명명 비트필드의 길이를 1비트로 두지 않는다 A named bit-field with signed integer type shall not have a length of one bit Required · Decidable"><div class="rid"><span class="id">Rule 12.2.3</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">부호 있는 정수형 명명 비트필드의 길이를 1비트로 두지 않는다</span><span class="en">A named bit-field with signed integer type shall not have a length of one bit</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp51',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp51',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp51','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp51b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct S {
+    signed int flag : 1;   // 부호 1비트 → 값이 0 또는 -1, 1 을 넣어도 -1
 };
-void f(S&amp; s) { s.flag = 1; /* 실제로는 -1로 저장될 수 있음 */ }
-</pre></div><div class="pane" id="misracpp51g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct S {
-    unsigned int flag : 1;   // 준수: 부호 없는 1비트 → 0 또는 1
+int main(){ S s{}; s.flag = 1; std::cout &lt;&lt; s.flag &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp51g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct S {
+    unsigned int flag : 1;   // 부호 없는 1비트 → 0 또는 1
 };
-void f(S&amp; s) { s.flag = 1u; }
-</pre></div><div class="why">⚠️ <span class="ko">부호 있는 1비트 비트필드는 부호 비트만 남아 1을 넣어도 -1이 되는 직관 위배가 생긴다. 1비트 플래그는 unsigned로 선언하라.</span><span class="en">부호 있는 1비트 비트필드는 부호 비트만 남아 1을 넣어도 -1이 되는 직관 위배가 생긴다. 1비트 플래그는 unsigned로 선언하라.</span></div></div><div class="card" data-s="Rule 12.3.1 union 키워드를 사용하지 않는다 union 키워드를 사용하지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 12.3.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">union 키워드를 사용하지 않는다</span><span class="en">union 키워드를 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp52',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp52',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp52','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp52b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>union Packet {        // 비준수: 활성 멤버 추적 불가, 타입 안전 깨짐
+int main(){ S s{}; s.flag = 1u; std::cout &lt;&lt; s.flag &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">부호 있는 1비트 비트필드는 값을 담을 비트가 부호 비트뿐이라 표현 가능한 값이 0 과 -1 로 제한되어, flag=1 을 넣어도 -1 로 저장되는 직관 위배가 생긴다. 1비트 플래그는 항상 부호 없는 타입으로 선언한다.</span><span class="en">A signed one-bit bit-field has only the sign bit to hold a value, limiting representable values to 0 and -1, so assigning flag=1 stores -1 — counterintuitive. Always declare one-bit flags with an unsigned type.</span></div></div><div class="card" data-s="Rule 12.3.1 union 키워드를 사용하지 않는다 The union keyword shall not be used Required · Decidable"><div class="rid"><span class="id">Rule 12.3.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">union 키워드를 사용하지 않는다</span><span class="en">The union keyword shall not be used</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp52',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp52',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp52','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp52b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+union Packet {        // 활성 멤버를 추적하지 못함 — 타입 안전 깨짐
     int   asInt;
     float asFloat;
 };
-float read(Packet p) { return p.asFloat; }  // asInt로 썼다면 미정의
-</pre></div><div class="pane" id="misracpp52g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;variant&gt;
-using Packet = std::variant&lt;int, float&gt;;   // 준수: 타입 안전 합집합
-float read(const Packet&amp; p) {
+int main(){
+    Packet p; p.asInt = 1065353216;
+    std::cout &lt;&lt; p.asFloat &lt;&lt; '\n';   // asInt 로 썼는데 asFloat 읽기 — 사실상 타입 퍼닝
+}</pre></div><div class="pane" id="misracpp52g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;variant&gt;
+#include &lt;iostream&gt;
+using Packet = std::variant&lt;int, float&gt;;   // 타입 안전 합집합
+static float read(const Packet&amp; p){
     return std::holds_alternative&lt;float&gt;(p) ? std::get&lt;float&gt;(p) : 0.0f;
 }
-</pre></div><div class="why">⚠️ <span class="ko">union은 어떤 멤버가 유효한지 추적하지 못해 타입 혼동·미정의 읽기를 부른다. std::variant 등 타입 안전 대안을 사용하라.</span><span class="en">union은 어떤 멤버가 유효한지 추적하지 못해 타입 혼동·미정의 읽기를 부른다. std::variant 등 타입 안전 대안을 사용하라.</span></div></div><h2 class="sech" id="sec-misracpp-M13"><span class="sc">M13</span><span class="ko">섹션 13</span><span class="en">Section 13</span></h2><div class="card" data-s="Rule 13.1.1 가상 상속(virtual base)을 사용하지 않는다 가상 상속(virtual base)을 사용하지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 13.1.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">가상 상속(virtual base)을 사용하지 않는다</span><span class="en">가상 상속(virtual base)을 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp53',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp53',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp53','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp53b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Base { int v{0}; };
-struct A : virtual Base {};   // 비준수: 가상 상속 — 복잡한 레이아웃
+int main(){ Packet p = 1.0f; std::cout &lt;&lt; read(p) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">union 은 어느 멤버가 현재 유효한지 자체적으로 추적하지 못해, 쓴 멤버와 다른 멤버를 읽는 타입 혼동·미정의 읽기를 쉽게 허용한다. std::variant 는 활성 타입을 추적하고 잘못된 접근을 검출해 타입 안전한 합집합을 제공한다.</span><span class="en">A union does not track which member is currently active, easily allowing type confusion and undefined reads where a member other than the one written is read. std::variant tracks the active type and detects wrong access, providing a type-safe union.</span></div></div><h2 class="sech" id="sec-misracpp-M13"><span class="sc">M13</span><span class="ko">섹션 13</span><span class="en">Section 13</span></h2><div class="card" data-s="Rule 13.1.1 가상 상속(virtual base)을 사용하지 않는다 Virtual base classes should not be used Advisory · Decidable"><div class="rid"><span class="id">Rule 13.1.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">가상 상속(virtual base)을 사용하지 않는다</span><span class="en">Virtual base classes should not be used</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp53',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp53',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp53','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp53b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { int v{0}; };
+struct A : virtual Base {};   // 가상 상속 — 객체 레이아웃·초기화 순서가 복잡
 struct B : virtual Base {};
 struct D : A, B {};
-</pre></div><div class="pane" id="misracpp53g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Base { int v{0}; };
-// 준수: 가상 상속 대신 합성(composition)으로 공유
-struct A { Base* base; };
-struct B { Base* base; };
-struct D { Base shared; A a{&amp;shared}; B b{&amp;shared}; };
-</pre></div><div class="why">⚠️ <span class="ko">가상 상속은 객체 레이아웃·초기화 순서를 복잡하게 만들어 오류와 검증 부담을 키운다. 합성 등으로 공유 구조를 단순화하라.</span><span class="en">가상 상속은 객체 레이아웃·초기화 순서를 복잡하게 만들어 오류와 검증 부담을 키운다. 합성 등으로 공유 구조를 단순화하라.</span></div></div><div class="card" data-s="Rule 13.1.2 접근 가능한 기반 클래스를 가상·비가상으로 동시에 두지 않는다 접근 가능한 기반 클래스를 가상·비가상으로 동시에 두지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 13.1.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">접근 가능한 기반 클래스를 가상·비가상으로 동시에 두지 않는다</span><span class="en">접근 가능한 기반 클래스를 가상·비가상으로 동시에 두지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp54',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp54',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp54','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp54b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Base {};
+int main(){ D d; d.v = 5; std::cout &lt;&lt; d.v &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp53g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { int v{0}; };
+struct D {                    // 가상 상속 대신 합성(composition)으로 공유
+    Base shared;
+};
+int main(){ D d; d.shared.v = 5; std::cout &lt;&lt; d.shared.v &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">가상 상속은 공유 기반 서브객체를 위해 추가 포인터·복잡한 초기화 순서를 도입해 객체 레이아웃을 어렵게 만들고 검증 부담과 미묘한 초기화 버그를 키운다. 공유 구조가 필요하면 합성(멤버로 포함)으로 단순화한다.</span><span class="en">Virtual inheritance introduces extra pointers and a complex initialization order for the shared base subobject, complicating object layout and increasing verification burden and subtle init bugs. When a shared structure is needed, simplify with composition (holding it as a member).</span></div></div><div class="card" data-s="Rule 13.1.2 접근 가능한 기반 클래스를 가상·비가상으로 동시에 두지 않는다 An accessible base class shall not be both virtual and non-virtual in the same hierarchy Required · Decidable"><div class="rid"><span class="id">Rule 13.1.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">접근 가능한 기반 클래스를 가상·비가상으로 동시에 두지 않는다</span><span class="en">An accessible base class shall not be both virtual and non-virtual in the same hierarchy</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp54',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp54',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp54','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp54b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { int v{0}; };
 struct A : virtual Base {};
 struct B : Base {};            // 비가상
-struct D : A, B {};            // 비준수: Base가 가상+비가상 혼재
-</pre></div><div class="pane" id="misracpp54g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Base {};
+struct D : A, B {};            // Base 가 가상+비가상 혼재 → 서브객체 중복·모호
+int main(){ D d; d.B::v = 1; std::cout &lt;&lt; d.B::v &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp54g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { int v{0}; };
 struct A : virtual Base {};
-struct B : virtual Base {};    // 준수: 일관되게 가상으로
+struct B : virtual Base {};    // 일관되게 가상으로 — 단일 공유 서브객체
 struct D : A, B {};
-</pre></div><div class="why">⚠️ <span class="ko">동일 기반이 가상·비가상으로 섞이면 서로 다른 서브객체가 생겨 모호성과 데이터 불일치가 발생한다. 상속 방식을 일관되게 하라.</span><span class="en">동일 기반이 가상·비가상으로 섞이면 서로 다른 서브객체가 생겨 모호성과 데이터 불일치가 발생한다. 상속 방식을 일관되게 하라.</span></div></div><div class="card" data-s="Rule 13.3.1 멤버 함수는 virtual/override/final 지정자를 적절히(셋 중 하나만) 사용한다 멤버 함수는 virtual/override/final 지정자를 적절히(셋 중 하나만) 사용한다 Required · Decidable"><div class="rid"><span class="id">Rule 13.3.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">멤버 함수는 virtual/override/final 지정자를 적절히(셋 중 하나만) 사용한다</span><span class="en">멤버 함수는 virtual/override/final 지정자를 적절히(셋 중 하나만) 사용한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp55',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp55',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp55','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp55b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Base { virtual void f(); };
+int main(){ D d; d.v = 1; std::cout &lt;&lt; d.v &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">같은 기반 클래스가 한 계층에서 가상과 비가상으로 섞여 상속되면 가상 경로의 공유 서브객체와 비가상 경로의 별도 서브객체가 동시에 생겨, 멤버 접근이 모호해지고 데이터가 둘로 갈려 불일치가 발생한다. 상속 방식을 일관되게(모두 가상 또는 모두 비가상) 통일한다.</span><span class="en">When the same base is inherited both virtually and non-virtually in one hierarchy, a shared subobject from the virtual path coexists with a separate subobject from the non-virtual path, making member access ambiguous and splitting data into two inconsistent copies. Make the inheritance consistent (all virtual or all non-virtual).</span></div></div><div class="card" data-s="Rule 13.3.1 멤버 함수는 virtual/override/final 지정자를 적절히(셋 중 하나만) 사용한다 A function that overrides shall be declared with override or final but not virtual Required · Decidable"><div class="rid"><span class="id">Rule 13.3.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">멤버 함수는 virtual/override/final 지정자를 적절히(셋 중 하나만) 사용한다</span><span class="en">A function that overrides shall be declared with override or final but not virtual</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp55',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp55',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp55','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp55b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { virtual void f(){ std::cout &lt;&lt; "B\n"; } virtual ~Base() = default; };
 struct Derived : Base {
-    virtual void f() override;   // 비준수: virtual과 override 중복 지정
+    virtual void f() override { std::cout &lt;&lt; "D\n"; }   // virtual 과 override 중복 지정
 };
-</pre></div><div class="pane" id="misracpp55g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Base { virtual void f(); };
+int main(){ Derived d; d.f(); }</pre></div><div class="pane" id="misracpp55g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { virtual void f(){ std::cout &lt;&lt; "B\n"; } virtual ~Base() = default; };
 struct Derived : Base {
-    void f() override;           // 준수: override 하나만 명시
+    void f() override { std::cout &lt;&lt; "D\n"; }   // override 하나만 명시
 };
-</pre></div><div class="why">⚠️ <span class="ko">재정의에 virtual과 override를 함께 쓰는 등 중복 지정은 의도를 흐린다. 재정의는 override, 봉인은 final 식으로 하나만 명시하라.</span><span class="en">재정의에 virtual과 override를 함께 쓰는 등 중복 지정은 의도를 흐린다. 재정의는 override, 봉인은 final 식으로 하나만 명시하라.</span></div></div><div class="card" data-s="Rule 13.3.2 재정의 가상 함수는 다른 기본 인자를 지정하지 않는다 재정의 가상 함수는 다른 기본 인자를 지정하지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 13.3.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">재정의 가상 함수는 다른 기본 인자를 지정하지 않는다</span><span class="en">재정의 가상 함수는 다른 기본 인자를 지정하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp56',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp56',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp56','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp56b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Base { virtual int f(int x = 1); };
+int main(){ Derived d; d.f(); }</pre></div><div class="why">⚠️ <span class="ko">재정의 함수에 virtual 과 override 를 함께 쓰면 의미가 중복되어 의도(새 가상 함수인지, 재정의인지)가 흐려지고 일관성이 떨어진다. 재정의는 override, 더 이상 재정의 금지는 final 로 하나만 명시해 의도를 분명히 한다.</span><span class="en">Specifying both virtual and override on an overriding function is redundant and blurs intent (a new virtual function vs. an override) and consistency. Mark overrides with override, and seal further overriding with final — exactly one, to state intent clearly.</span></div></div><div class="card" data-s="Rule 13.3.2 재정의 가상 함수는 다른 기본 인자를 지정하지 않는다 Parameters in an overriding virtual function shall not specify different default arguments Required · Decidable"><div class="rid"><span class="id">Rule 13.3.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">재정의 가상 함수는 다른 기본 인자를 지정하지 않는다</span><span class="en">Parameters in an overriding virtual function shall not specify different default arguments</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp56',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp56',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp56','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp56b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { virtual int f(int x = 1){ return x; } virtual ~Base() = default; };
 struct Derived : Base {
-    int f(int x = 2) override;   // 비준수: 기본 인자가 기반과 다름
+    int f(int x = 2) override { return x; }   // 기본 인자가 기반과 다름
 };
-// 호출 시 정적 타입에 따라 기본값이 달라져 혼란
-</pre></div><div class="pane" id="misracpp56g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Base { virtual int f(int x = 1); };
+int main(){
+    Derived d; Base&amp; b = d;
+    std::cout &lt;&lt; b.f() &lt;&lt; ' ' &lt;&lt; d.f() &lt;&lt; '\n';   // 1 2 — 정적 타입에 따라 기본값이 갈림
+}</pre></div><div class="pane" id="misracpp56g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { virtual int f(int x = 1){ return x; } virtual ~Base() = default; };
 struct Derived : Base {
-    int f(int x = 1) override;   // 준수: 동일 기본 인자(가능하면 미지정)
+    int f(int x = 1) override { return x; }   // 동일 기본 인자
 };
-</pre></div><div class="why">⚠️ <span class="ko">기본 인자는 정적 타입 기준으로 결정되므로 재정의에서 값이 다르면 호출 결과가 예측 불가해진다. 기본 인자를 일치시켜라.</span><span class="en">기본 인자는 정적 타입 기준으로 결정되므로 재정의에서 값이 다르면 호출 결과가 예측 불가해진다. 기본 인자를 일치시켜라.</span></div></div><div class="card" data-s="Rule 13.3.3 함수의 모든 선언·재정의에서 매개변수 이름은 무명이거나 동일해야 한다 함수의 모든 선언·재정의에서 매개변수 이름은 무명이거나 동일해야 한다 Required · Decidable"><div class="rid"><span class="id">Rule 13.3.3</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">함수의 모든 선언·재정의에서 매개변수 이름은 무명이거나 동일해야 한다</span><span class="en">함수의 모든 선언·재정의에서 매개변수 이름은 무명이거나 동일해야 한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp57',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp57',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp57','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp57b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Base { virtual void set(int width, int height); };
+int main(){
+    Derived d; Base&amp; b = d;
+    std::cout &lt;&lt; b.f() &lt;&lt; ' ' &lt;&lt; d.f() &lt;&lt; '\n';   // 1 1 — 일관
+}</pre></div><div class="why">⚠️ <span class="ko">기본 인자는 호출 식의 정적 타입을 기준으로 결정되는데, 실제 호출되는 함수는 동적 타입의 재정의본이므로, 기반과 파생의 기본값이 다르면 같은 호출이 정적 타입에 따라 다른 인자로 실행되어 예측 불가해진다. 재정의에서는 기본 인자를 기반과 일치시킨다(가능하면 기본 인자 미사용).</span><span class="en">Default arguments are chosen by the static type of the call expression, while the function actually invoked is the dynamic-type override; if base and derived defaults differ, the same call runs with different arguments depending on the static type — unpredictable. Match the override’s default arguments to the base (preferably avoid default arguments).</span></div></div><div class="card" data-s="Rule 13.3.3 함수의 모든 선언·재정의에서 매개변수 이름은 무명이거나 동일해야 한다 Parameters shall be unnamed or have the same name in all declarations and overrides Required · Decidable"><div class="rid"><span class="id">Rule 13.3.3</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">함수의 모든 선언·재정의에서 매개변수 이름은 무명이거나 동일해야 한다</span><span class="en">Parameters shall be unnamed or have the same name in all declarations and overrides</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp57',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp57',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp57','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp57b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { virtual void set(int width, int height){ (void)width; (void)height; } virtual ~Base() = default; };
 struct Derived : Base {
-    void set(int height, int width) override;  // 비준수: 이름 뒤바뀜
+    void set(int height, int width) override {   // 이름이 뒤바뀜 — 인자 의미 오해 유발
+        (void)height; (void)width;
+    }
 };
-</pre></div><div class="pane" id="misracpp57g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Base { virtual void set(int width, int height); };
+int main(){ Derived d; d.set(10, 20); std::cout &lt;&lt; "ok\n"; }</pre></div><div class="pane" id="misracpp57g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { virtual void set(int width, int height){ (void)width; (void)height; } virtual ~Base() = default; };
 struct Derived : Base {
-    void set(int width, int height) override;  // 준수: 동일 이름·순서
+    void set(int width, int height) override {   // 동일 이름·순서
+        (void)width; (void)height;
+    }
 };
-</pre></div><div class="why">⚠️ <span class="ko">선언마다 매개변수 이름이 다르거나 뒤바뀌면 인자 의미를 오해해 잘못된 순서로 호출하기 쉽다. 이름을 일치(또는 모두 무명)시켜라.</span><span class="en">선언마다 매개변수 이름이 다르거나 뒤바뀌면 인자 의미를 오해해 잘못된 순서로 호출하기 쉽다. 이름을 일치(또는 모두 무명)시켜라.</span></div></div><div class="card" data-s="Rule 13.3.4 잠재적 가상 멤버 함수 포인터는 널 상수와의 동등 비교에만 쓴다 잠재적 가상 멤버 함수 포인터는 널 상수와의 동등 비교에만 쓴다 Required · Decidable"><div class="rid"><span class="id">Rule 13.3.4</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">잠재적 가상 멤버 함수 포인터는 널 상수와의 동등 비교에만 쓴다</span><span class="en">잠재적 가상 멤버 함수 포인터는 널 상수와의 동등 비교에만 쓴다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp58',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp58',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp58','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp58b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct W { virtual void on(); virtual void off(); };
-bool same(void (W::*a)(), void (W::*b)()) {
-    return a == b;   // 비준수: 가상 멤버함수 포인터끼리 비교 — 결과 불명확
+int main(){ Derived d; d.set(10, 20); std::cout &lt;&lt; "ok\n"; }</pre></div><div class="why">⚠️ <span class="ko">선언마다 매개변수 이름이 다르거나(특히 width/height 처럼 뒤바뀌면) 호출자가 인자의 의미를 오해해 순서를 바꿔 전달하는 결함을 부른다. 한 함수의 모든 선언·재정의에서 매개변수 이름을 동일하게(또는 전부 무명으로) 맞춘다.</span><span class="en">Different parameter names across declarations — especially swapped ones like width/height — lead callers to misunderstand argument meaning and pass them in the wrong order. Keep parameter names identical (or all unnamed) across every declaration and override of a function.</span></div></div><div class="card" data-s="Rule 13.3.4 멤버 함수 포인터는 널 상수와의 동등 비교에만 쓴다 A pointer to member function shall only be compared for equality with a null pointer constant Required · Decidable"><div class="rid"><span class="id">Rule 13.3.4</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">멤버 함수 포인터는 널 상수와의 동등 비교에만 쓴다</span><span class="en">A pointer to member function shall only be compared for equality with a null pointer constant</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp58',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp58',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp58','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp58b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct W { virtual void on(){} virtual void off(){} virtual ~W() = default; };
+static bool same(void (W::*a)(), void (W::*b)()){
+    return a == b;   // 가상 멤버함수 포인터끼리 비교 — 결과가 구현마다 불명확
 }
-</pre></div><div class="pane" id="misracpp58g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct W { virtual void on(); virtual void off(); };
-bool isSet(void (W::*p)()) {
-    return p != nullptr;   // 준수: 널 여부만 검사
+int main(){ std::cout &lt;&lt; same(&amp;W::on, &amp;W::off) &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp58g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct W { virtual void on(){} virtual void off(){} virtual ~W() = default; };
+static bool isSet(void (W::*p)()){
+    return p != nullptr;   // 널 여부만 검사
 }
-</pre></div><div class="why">⚠️ <span class="ko">가상 멤버 함수 포인터 간 비교는 구현마다 결과가 달라 신뢰할 수 없다. 널 여부 판정에만 사용하라.</span><span class="en">가상 멤버 함수 포인터 간 비교는 구현마다 결과가 달라 신뢰할 수 없다. 널 여부 판정에만 사용하라.</span></div></div><h2 class="sech" id="sec-misracpp-M14"><span class="sc">M14</span><span class="ko">섹션 14</span><span class="en">Section 14</span></h2><div class="card" data-s="Rule 14.1.1 비정적 데이터 멤버는 모두 private이거나 모두 public이어야 한다 비정적 데이터 멤버는 모두 private이거나 모두 public이어야 한다 Advisory · Decidable"><div class="rid"><span class="id">Rule 14.1.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">비정적 데이터 멤버는 모두 private이거나 모두 public이어야 한다</span><span class="en">비정적 데이터 멤버는 모두 private이거나 모두 public이어야 한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp59',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp59',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp59','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp59b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Account {
+int main(){ std::cout &lt;&lt; isSet(&amp;W::on) &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">가상 멤버 함수에 대한 포인터끼리의 동등 비교는 표준이 결과를 명확히 규정하지 않아 구현마다 다르게 동작할 수 있어 신뢰할 수 없다. 멤버 함수 포인터는 nullptr 과의 동등 비교(설정 여부 판정)에만 사용한다.</span><span class="en">Equality comparison between pointers to virtual member functions is not clearly specified by the standard and may behave differently across implementations, so it is unreliable. Use pointers to member functions only for equality comparison with nullptr (to test whether one is set).</span></div></div><h2 class="sech" id="sec-misracpp-M14"><span class="sc">M14</span><span class="ko">섹션 14</span><span class="en">Section 14</span></h2><div class="card" data-s="Rule 14.1.1 비정적 데이터 멤버는 모두 private이거나 모두 public이어야 한다 Non-static data members should be either all private or all public Advisory · Decidable"><div class="rid"><span class="id">Rule 14.1.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">비정적 데이터 멤버는 모두 private이거나 모두 public이어야 한다</span><span class="en">Non-static data members should be either all private or all public</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp59',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp59',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp59','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp59b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Account {
     long balance;        // public
 private:
-    long limit;          // 비준수: public/private 혼재
+    long limit;          // private — 접근 수준 혼재
 public:
-    void deposit(long a) { balance += a; }
+    void deposit(long a){ balance += a; }
+    Account() : balance(0), limit(0) {}
 };
-</pre></div><div class="pane" id="misracpp59g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>class Account {
+int main(){ Account a; a.deposit(100); std::cout &lt;&lt; a.balance &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp59g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+class Account {
 public:
-    void deposit(long a) { balance_ += a; }
+    void deposit(long a){ balance_ += a; }
     long balance() const { return balance_; }
 private:
-    long balance_{0};    // 준수: 비정적 멤버 모두 private
+    long balance_{0};    // 비정적 멤버 모두 private
     long limit_{0};
 };
-</pre></div><div class="why">⚠️ <span class="ko">접근 수준이 섞이면 불변식 유지 책임이 흩어져 캡슐화가 깨진다. 데이터 멤버는 전부 private(또는 단순 집합체면 전부 public)으로 통일하라.</span><span class="en">접근 수준이 섞이면 불변식 유지 책임이 흩어져 캡슐화가 깨진다. 데이터 멤버는 전부 private(또는 단순 집합체면 전부 public)으로 통일하라.</span></div></div><h2 class="sech" id="sec-misracpp-M15"><span class="sc">M15</span><span class="ko">섹션 15</span><span class="en">Section 15</span></h2><div class="card" data-s="Rule 15.0.1 특수 멤버 함수를 적절히(일관되게) 제공한다(Rule of Five) 특수 멤버 함수를 적절히(일관되게) 제공한다(Rule of Five) Required · Decidable"><div class="rid"><span class="id">Rule 15.0.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">특수 멤버 함수를 적절히(일관되게) 제공한다(Rule of Five)</span><span class="en">특수 멤버 함수를 적절히(일관되게) 제공한다(Rule of Five)</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp60',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp60',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp60','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp60b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Buf {
+int main(){ Account a; a.deposit(100); std::cout &lt;&lt; a.balance() &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">데이터 멤버의 접근 수준이 섞이면 일부는 외부에서 직접 수정 가능하고 일부는 메서드를 통해서만 바뀌어, 불변식(invariant) 유지 책임이 흩어지고 캡슐화가 깨진다. 비정적 데이터 멤버는 전부 private(또는 단순 집합체면 전부 public)으로 통일한다.</span><span class="en">Mixed access levels on data members let some be modified directly from outside while others change only through methods, scattering responsibility for invariants and breaking encapsulation. Make non-static data members all private (or all public for a plain aggregate).</span></div></div><h2 class="sech" id="sec-misracpp-M15"><span class="sc">M15</span><span class="ko">섹션 15</span><span class="en">Section 15</span></h2><div class="card" data-s="Rule 15.0.1 특수 멤버 함수를 일관되게 제공한다(Rule of Five) Special member functions shall be provided consistently (Rule of Five) Required · Decidable"><div class="rid"><span class="id">Rule 15.0.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">특수 멤버 함수를 일관되게 제공한다(Rule of Five)</span><span class="en">Special member functions shall be provided consistently (Rule of Five)</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp60',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp60',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp60','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp60b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;cstring&gt;
+#include &lt;iostream&gt;
+struct Buf {
     char* p;
-    Buf(int n) : p(new char[n]) {}
-    ~Buf() { delete[] p; }   // 비준수: 소멸자만 정의, 복사/이동 미정의
-};                            // 기본 복사가 얕은 복사 → 이중 해제 위험
-</pre></div><div class="pane" id="misracpp60g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;memory&gt;
+    explicit Buf(int n) : p(new char[n]) {}
+    ~Buf(){ delete[] p; }   // 소멸자만 정의 — 복사/이동 미정의 → 얕은 복사·이중 해제
+};
+int main(){ Buf b(8); std::strcpy(b.p, "ok"); std::cout &lt;&lt; b.p &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp60g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;memory&gt;
+#include &lt;cstring&gt;
+#include &lt;iostream&gt;
 struct Buf {
     std::unique_ptr&lt;char[]&gt; p;
     explicit Buf(int n) : p(std::make_unique&lt;char[]&gt;(n)) {}
-    Buf(const Buf&amp;) = delete;            // 준수: 복사 금지 명시
+    Buf(const Buf&amp;) = delete;            // 복사 금지 명시
     Buf&amp; operator=(const Buf&amp;) = delete;
-    Buf(Buf&amp;&amp;) = default;               // 이동 허용 명시
+    Buf(Buf&amp;&amp;) = default;                // 이동 허용 명시
     Buf&amp; operator=(Buf&amp;&amp;) = default;
 };
-</pre></div><div class="why">⚠️ <span class="ko">소멸자/복사/이동 중 하나만 정의하면 나머지 기본 구현이 자원을 잘못 다뤄 이중 해제 등을 일으킨다. 특수 멤버 집합을 일관되게 제공/삭제하라.</span><span class="en">소멸자/복사/이동 중 하나만 정의하면 나머지 기본 구현이 자원을 잘못 다뤄 이중 해제 등을 일으킨다. 특수 멤버 집합을 일관되게 제공/삭제하라.</span></div></div><div class="card" data-s="Rule 15.0.2 사용자 제공 복사/이동 멤버 함수는 적절한 시그니처를 가진다 사용자 제공 복사/이동 멤버 함수는 적절한 시그니처를 가진다 Advisory · Decidable"><div class="rid"><span class="id">Rule 15.0.2</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">사용자 제공 복사/이동 멤버 함수는 적절한 시그니처를 가진다</span><span class="en">사용자 제공 복사/이동 멤버 함수는 적절한 시그니처를 가진다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp61',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp61',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp61','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp61b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct S {
+int main(){ Buf b(8); std::strcpy(b.p.get(), "ok"); std::cout &lt;&lt; b.p.get() &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">소멸자·복사·이동 중 하나만 정의하면 나머지는 컴파일러 기본 구현이 쓰이는데, 자원을 소유한 클래스에서는 기본 복사가 얕은 복사가 되어 이중 해제·댕글링을 일으킨다. 특수 멤버 집합(Rule of Five)을 일관되게 정의하거나 명시적으로 삭제(=delete)하고, 가능하면 스마트 포인터로 소유권을 위임한다.</span><span class="en">Defining only one of destructor/copy/move leaves the rest to compiler defaults, and for a resource-owning class the default copy is a shallow copy causing double free or dangling. Provide the special-member set (Rule of Five) consistently or explicitly =delete them, and prefer delegating ownership to smart pointers.</span></div></div><div class="card" data-s="Rule 15.0.2 사용자 제공 복사/이동 멤버 함수는 적절한 시그니처를 가진다 User-provided copy and move member functions should have the correct signature Advisory · Decidable"><div class="rid"><span class="id">Rule 15.0.2</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">사용자 제공 복사/이동 멤버 함수는 적절한 시그니처를 가진다</span><span class="en">User-provided copy and move member functions should have the correct signature</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp61',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp61',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp61','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp61b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct S {
     int v{0};
-    S(S&amp; o) { v = o.v; }            // 비준수: const 아님 → const 객체 복사 불가
-    S operator=(const S&amp; o);        // 비준수: 값 반환(참조여야 함)
+    S() = default;
+    S(S&amp; o){ v = o.v; }                 // const 아님 → const 객체를 복사할 수 없음
+    S operator=(const S&amp; o){ v = o.v; return *this; }   // 값 반환(참조여야 함)
 };
-</pre></div><div class="pane" id="misracpp61g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct S {
+int main(){ S a; a.v = 7; S b(a); std::cout &lt;&lt; b.v &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp61g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct S {
     int v{0};
-    S(const S&amp; o) : v(o.v) {}       // 준수: const 참조 매개변수
-    S&amp; operator=(const S&amp; o) {      // 준수: 참조 반환
-        v = o.v; return *this;
-    }
+    S() = default;
+    S(const S&amp; o) : v(o.v) {}           // const 참조 매개변수
+    S&amp; operator=(const S&amp; o){ v = o.v; return *this; }   // 참조 반환
 };
-</pre></div><div class="why">⚠️ <span class="ko">관례를 벗어난 복사/이동 시그니처는 표준 알고리즘·컨테이너와 어긋나 미묘한 오류를 만든다. const&amp; 매개변수와 *this 참조 반환 관례를 따르라.</span><span class="en">관례를 벗어난 복사/이동 시그니처는 표준 알고리즘·컨테이너와 어긋나 미묘한 오류를 만든다. const&amp; 매개변수와 *this 참조 반환 관례를 따르라.</span></div></div><div class="card" data-s="Rule 15.1.1 생성자/소멸자 본문에서 객체의 동적 타입을 사용하지 않는다 생성자/소멸자 본문에서 객체의 동적 타입을 사용하지 않는다 Required · Undecidable"><div class="rid"><span class="id">Rule 15.1.1</span><span class="cat">Required · Undecidable</span></div><h3><span class="ko">생성자/소멸자 본문에서 객체의 동적 타입을 사용하지 않는다</span><span class="en">생성자/소멸자 본문에서 객체의 동적 타입을 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp62',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp62',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp62','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp62b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Base {
-    Base() { init(); }              // 비준수: 생성 중 가상 디스패치
-    virtual void init();
+int main(){ S a; a.v = 7; const S&amp; ca = a; S b(ca); std::cout &lt;&lt; b.v &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">복사 생성자의 매개변수가 const&amp; 가 아니면 const 객체·임시객체를 복사할 수 없고, 대입 연산자가 참조 대신 값을 반환하면 a = b = c 같은 연쇄 대입이나 표준 알고리즘과 어긋난다. 관례에 따라 const&amp; 매개변수와 *this 참조 반환 시그니처를 사용한다.</span><span class="en">A copy constructor whose parameter is not const&amp; cannot copy const or temporary objects, and an assignment operator that returns by value rather than reference breaks chained assignment (a = b = c) and standard algorithms. Follow the convention of a const&amp; parameter and returning a reference to *this.</span></div></div><div class="card" data-s="Rule 15.1.1 생성자/소멸자 본문에서 가상 디스패치에 의존하지 않는다 A virtual function shall not be called from a constructor or destructor in a way that relies on dynamic type Required · Undecidable"><div class="rid"><span class="id">Rule 15.1.1</span><span class="cat">Required · Undecidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">생성자/소멸자 본문에서 가상 디스패치에 의존하지 않는다</span><span class="en">A virtual function shall not be called from a constructor or destructor in a way that relies on dynamic type</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp62',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp62',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp62','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp62b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base {
+    Base(){ init(); }              // 생성 중 가상 호출 — 파생 재정의로 가지 않음
+    virtual void init(){ std::cout &lt;&lt; "Base::init\n"; }
+    virtual ~Base() = default;
 };
 struct Derived : Base {
-    void init() override;           // Base() 안에서는 호출되지 않음(Base판 호출)
+    void init() override { std::cout &lt;&lt; "Derived::init\n"; }
 };
-</pre></div><div class="pane" id="misracpp62g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Base {
+int main(){ Derived d; (void)d; }   // 출력: Base::init (의도와 다름)</pre></div><div class="pane" id="misracpp62g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base {
     Base() = default;
-    virtual void init();
+    virtual void init(){ std::cout &lt;&lt; "Base::init\n"; }
+    virtual ~Base() = default;
 };
 struct Derived : Base {
-    void init() override;
+    void init() override { std::cout &lt;&lt; "Derived::init\n"; }
 };
-void setup(Derived&amp; d) { d.init(); }  // 준수: 생성 완료 후 가상 호출
-</pre></div><div class="why">⚠️ <span class="ko">생성/소멸 중에는 동적 타입이 현재 클래스이므로 가상 호출이 파생 재정의로 가지 않아 의도와 다르게 동작한다. 생성 완료 후 호출하라.</span><span class="en">생성/소멸 중에는 동적 타입이 현재 클래스이므로 가상 호출이 파생 재정의로 가지 않아 의도와 다르게 동작한다. 생성 완료 후 호출하라.</span></div></div><div class="card" data-s="Rule 15.1.2 모든 생성자는 기반 클래스 생성자를 명시적으로 호출한다 모든 생성자는 기반 클래스 생성자를 명시적으로 호출한다 Advisory · Decidable"><div class="rid"><span class="id">Rule 15.1.2</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">모든 생성자는 기반 클래스 생성자를 명시적으로 호출한다</span><span class="en">모든 생성자는 기반 클래스 생성자를 명시적으로 호출한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp63',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp63',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp63','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp63b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Base { int x; explicit Base(int v) : x(v) {} };
-struct Derived : Base {
-    int y;
-    explicit Derived(int v) : /* 비준수: Base(...) 미호출 */ y(v) {}
-};
-</pre></div><div class="pane" id="misracpp63g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Base { int x; explicit Base(int v) : x(v) {} };
+int main(){ Derived d; d.init(); }   // 생성 완료 후 호출 → Derived::init</pre></div><div class="why">⚠️ <span class="ko">생성자·소멸자가 실행되는 동안 객체의 동적 타입은 현재 생성/소멸 중인 클래스이므로, 그 안에서 가상 함수를 부르면 파생 클래스의 재정의가 아니라 현재 클래스 버전이 호출되어 의도와 다르게 동작한다. 가상 디스패치가 필요한 초기화는 객체 생성이 완료된 뒤에 호출한다.</span><span class="en">During a constructor or destructor the object’s dynamic type is the class currently being constructed/destroyed, so calling a virtual function invokes that class’s version, not the derived override — behaving unexpectedly. Perform initialization that needs virtual dispatch after the object is fully constructed.</span></div></div><div class="card" data-s="Rule 15.1.2 모든 생성자는 기반 클래스 생성자를 명시적으로 호출한다 All constructors should explicitly call a base class constructor Advisory · Decidable"><div class="rid"><span class="id">Rule 15.1.2</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">모든 생성자는 기반 클래스 생성자를 명시적으로 호출한다</span><span class="en">All constructors should explicitly call a base class constructor</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp63',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp63',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp63','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp63b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { int x; explicit Base(int v) : x(v) {} };
 struct Derived : Base {
     int y;
-    explicit Derived(int v) : Base(v), y(v) {}  // 준수: 기반 생성자 명시 호출
+    explicit Derived(int v) : Base(v), y(v) {}   // (기반 생성자 호출이 누락되면 컴파일 불가)
 };
-</pre></div><div class="why">⚠️ <span class="ko">기반 생성자를 명시하지 않으면 기본 생성에 의존해 초기화 의도가 흐려진다(기본 생성자가 없으면 컴파일 오류). 항상 명시적으로 위임하라.</span><span class="en">기반 생성자를 명시하지 않으면 기본 생성에 의존해 초기화 의도가 흐려진다(기본 생성자가 없으면 컴파일 오류). 항상 명시적으로 위임하라.</span></div></div><div class="card" data-s="Rule 15.1.3 단일 인자로 호출 가능한 변환 연산자/생성자는 explicit로 선언한다 단일 인자로 호출 가능한 변환 연산자/생성자는 explicit로 선언한다 Required · Decidable"><div class="rid"><span class="id">Rule 15.1.3</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">단일 인자로 호출 가능한 변환 연산자/생성자는 explicit로 선언한다</span><span class="en">단일 인자로 호출 가능한 변환 연산자/생성자는 explicit로 선언한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp64',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp64',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp64','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp64b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Meters {
+int main(){ Derived d(5); std::cout &lt;&lt; d.x &lt;&lt; ' ' &lt;&lt; d.y &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp63g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Base { int x; explicit Base(int v) : x(v) {} };
+struct Derived : Base {
+    int y;
+    explicit Derived(int v) : Base(v), y(v) {}   // 기반 생성자를 명시적으로 위임
+};
+int main(){ Derived d(5); std::cout &lt;&lt; d.x &lt;&lt; ' ' &lt;&lt; d.y &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">파생 생성자가 기반 생성자를 명시적으로 호출하지 않으면 기본 생성에 의존하게 되어 초기화 의도가 흐려지고, 기반에 기본 생성자가 없으면 아예 컴파일되지 않는다. 모든 생성자에서 적절한 기반 생성자를 초기화 목록에 명시해 초기화 경로를 분명히 한다.</span><span class="en">If a derived constructor does not explicitly call a base constructor it relies on default construction, obscuring initialization intent, and fails to compile when the base has no default constructor. Name the appropriate base constructor in every constructor’s initializer list to make the initialization path explicit.</span></div></div><div class="card" data-s="Rule 15.1.3 단일 인자 변환 생성자/연산자는 explicit로 선언한다 Conversion operators and constructors callable with a single argument shall be explicit Required · Decidable"><div class="rid"><span class="id">Rule 15.1.3</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">단일 인자 변환 생성자/연산자는 explicit로 선언한다</span><span class="en">Conversion operators and constructors callable with a single argument shall be explicit</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp64',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp64',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp64','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp64b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Meters {
     double v;
-    Meters(double d) : v(d) {}     // 비준수: 암묵 변환 허용
+    Meters(double d) : v(d) {}     // 암묵 변환 허용
 };
-void travel(Meters m);
-void go() { travel(3.0); }         // double → Meters 암묵 변환
-</pre></div><div class="pane" id="misracpp64g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Meters {
+static void travel(Meters m){ std::cout &lt;&lt; m.v &lt;&lt; '\n'; }
+int main(){ travel(3.0); }         // double → Meters 암묵 변환이 조용히 일어남</pre></div><div class="pane" id="misracpp64g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Meters {
     double v;
-    explicit Meters(double d) : v(d) {}  // 준수: 암묵 변환 차단
+    explicit Meters(double d) : v(d) {}   // 암묵 변환 차단
 };
-void travel(Meters m);
-void go() { travel(Meters{3.0}); }       // 명시적 생성 필요
-</pre></div><div class="why">⚠️ <span class="ko">단일 인자 생성자/변환 연산자가 암묵 변환을 허용하면 의도치 않은 형변환이 조용히 일어난다. explicit로 선언하라.</span><span class="en">단일 인자 생성자/변환 연산자가 암묵 변환을 허용하면 의도치 않은 형변환이 조용히 일어난다. explicit로 선언하라.</span></div></div><div class="card" data-s="Rule 15.1.4 클래스의 모든 직접 비정적 데이터 멤버는 객체 접근 전에 초기화한다 클래스의 모든 직접 비정적 데이터 멤버는 객체 접근 전에 초기화한다 Advisory · Undecidable"><div class="rid"><span class="id">Rule 15.1.4</span><span class="cat">Advisory · Undecidable</span></div><h3><span class="ko">클래스의 모든 직접 비정적 데이터 멤버는 객체 접근 전에 초기화한다</span><span class="en">클래스의 모든 직접 비정적 데이터 멤버는 객체 접근 전에 초기화한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp65',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp65',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp65','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp65b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct P {
+static void travel(Meters m){ std::cout &lt;&lt; m.v &lt;&lt; '\n'; }
+int main(){ travel(Meters{3.0}); }        // 명시적 생성 필요</pre></div><div class="why">⚠️ <span class="ko">단일 인자로 호출 가능한 생성자나 변환 연산자가 암묵 변환을 허용하면, 의도하지 않은 형변환이 조용히 일어나 잘못된 단위·타입이 함수에 전달되는 결함을 만든다. explicit 로 선언해 변환을 의도적으로 명시할 때만 일어나게 한다.</span><span class="en">A constructor or conversion operator callable with a single argument that permits implicit conversion lets unintended conversions happen silently, passing the wrong unit or type into functions. Declare it explicit so conversion happens only when deliberately spelled out.</span></div></div><div class="card" data-s="Rule 15.1.4 클래스의 모든 직접 비정적 데이터 멤버를 초기화한다 All direct non-static data members of a class shall be initialized Advisory · Undecidable"><div class="rid"><span class="id">Rule 15.1.4</span><span class="cat">Advisory · Undecidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">클래스의 모든 직접 비정적 데이터 멤버를 초기화한다</span><span class="en">All direct non-static data members of a class shall be initialized</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp65',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp65',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp65','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp65b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct P {
     int x;
     int y;
-    P() : x(0) { }    // 비준수: y 초기화 누락
-    int sum() const { return x + y; }   // y는 미초기화 값
+    P() : x(0) { }    // y 초기화 누락
+    int sum() const { return x + y; }   // y 는 미초기화 값
 };
-</pre></div><div class="pane" id="misracpp65g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct P {
+int main(){ P p; std::cout &lt;&lt; p.sum() &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp65g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct P {
     int x{0};
-    int y{0};         // 준수: 모든 멤버 초기화(기본 멤버 초기화)
+    int y{0};         // 기본 멤버 초기화로 모든 멤버 초기화
     P() = default;
     int sum() const { return x + y; }
 };
-</pre></div><div class="why">⚠️ <span class="ko">일부 멤버가 초기화되지 않으면 객체가 비결정적 상태로 사용된다. 모든 직접 데이터 멤버를 생성 시 초기화하라.</span><span class="en">일부 멤버가 초기화되지 않으면 객체가 비결정적 상태로 사용된다. 모든 직접 데이터 멤버를 생성 시 초기화하라.</span></div></div><div class="card" data-s="Rule 15.1.5 initializer-list 생성자는 그것이 유일한 생성자일 때만 정의한다 initializer-list 생성자는 그것이 유일한 생성자일 때만 정의한다 Required · Decidable"><div class="rid"><span class="id">Rule 15.1.5</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">initializer-list 생성자는 그것이 유일한 생성자일 때만 정의한다</span><span class="en">initializer-list 생성자는 그것이 유일한 생성자일 때만 정의한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp66',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp66',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp66','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp66b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;initializer_list&gt;
+int main(){ P p; std::cout &lt;&lt; p.sum() &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">생성자에서 일부 데이터 멤버를 초기화하지 않으면 객체가 부분적으로 비결정적 상태가 되어, 그 멤버를 읽는 순간 재현 불가한 버그가 발생한다. 기본 멤버 초기자(int x{0};)나 초기화 목록으로 모든 직접 비정적 멤버를 빠짐없이 초기화한다.</span><span class="en">Leaving some data members uninitialized in a constructor puts the object in a partially non-deterministic state, producing irreproducible bugs the moment such a member is read. Initialize every direct non-static member via default member initializers (int x{0};) or the initializer list.</span></div></div><div class="card" data-s="Rule 15.1.5 initializer-list 생성자는 그것이 유일한 생성자일 때만 정의한다 An initializer-list constructor should be the only constructor when provided Required · Decidable"><div class="rid"><span class="id">Rule 15.1.5</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">initializer-list 생성자는 그것이 유일한 생성자일 때만 정의한다</span><span class="en">An initializer-list constructor should be the only constructor when provided</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp66',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp66',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp66','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp66b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;initializer_list&gt;
+#include &lt;iostream&gt;
 struct Vec {
     int n{0};
     Vec(std::initializer_list&lt;int&gt; xs) : n(static_cast&lt;int&gt;(xs.size())) {}
-    explicit Vec(int count) : n(count) {}  // 비준수: 다른 생성자와 공존
+    explicit Vec(int count) : n(count) {}   // 다른 생성자와 공존 → 중괄호 초기화가 모호
 };
-void g() { Vec a{5}; /* count=5? 아니면 원소 5? 모호 */ }
-</pre></div><div class="pane" id="misracpp66g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Vec {
+int main(){ Vec a{5}; std::cout &lt;&lt; a.n &lt;&lt; '\n'; }   // count=5? 원소 1개? — 후자 선택됨</pre></div><div class="pane" id="misracpp66g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Vec {
     int n{0};
-    explicit Vec(int count) : n(count) {}  // 준수: 의도 명확한 단일 생성자
+    explicit Vec(int count) : n(count) {}   // 의도가 명확한 단일 생성자
 };
-void g() { Vec a{5}; }
-</pre></div><div class="why">⚠️ <span class="ko">initializer-list 생성자가 다른 생성자와 공존하면 중괄호 초기화 시 어느 쪽이 선택될지 헷갈려 오용된다. 둘 중 하나만 두라.</span><span class="en">initializer-list 생성자가 다른 생성자와 공존하면 중괄호 초기화 시 어느 쪽이 선택될지 헷갈려 오용된다. 둘 중 하나만 두라.</span></div></div><h2 class="sech" id="sec-misracpp-Dir"><span class="sc">Dir</span><span class="ko">지침(Directive)</span><span class="en">Directives</span></h2><div class="card" data-s="Dir 15.8.1 사용자 제공 복사/이동 대입 연산자는 자기 대입을 안전하게 처리한다 사용자 제공 복사/이동 대입 연산자는 자기 대입을 안전하게 처리한다 Required · Undecidable"><div class="rid"><span class="id">Dir 15.8.1</span><span class="cat">Required · Undecidable</span></div><h3><span class="ko">사용자 제공 복사/이동 대입 연산자는 자기 대입을 안전하게 처리한다</span><span class="en">사용자 제공 복사/이동 대입 연산자는 자기 대입을 안전하게 처리한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp67',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp67',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp67','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp67b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Buf {
+int main(){ Vec a{5}; std::cout &lt;&lt; a.n &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">initializer-list 생성자가 다른 생성자와 공존하면, 중괄호 초기화 Vec{5} 가 "원소 5 하나" 인지 "count=5" 인지 오버로드 해석이 initializer-list 쪽을 강하게 선호해 의도와 다른 생성자가 선택된다. 둘 중 의도에 맞는 하나만 두어 모호함을 없앤다.</span><span class="en">When an initializer-list constructor coexists with other constructors, brace initialization like Vec{5} is strongly biased toward the initializer-list overload, so it may pick a different constructor than intended ("one element 5" vs "count=5"). Keep only the one that matches intent to remove the ambiguity.</span></div></div><h2 class="sech" id="sec-misracpp-Dir"><span class="sc">Dir</span><span class="ko">지침(Directive)</span><span class="en">Directives</span></h2><div class="card" data-s="Dir 15.8.1 복사/이동 대입 연산자는 자기 대입을 안전하게 처리한다 User-provided copy/move assignment operators shall handle self-assignment safely Required · Undecidable"><div class="rid"><span class="id">Dir 15.8.1</span><span class="cat">Required · Undecidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">복사/이동 대입 연산자는 자기 대입을 안전하게 처리한다</span><span class="en">User-provided copy/move assignment operators shall handle self-assignment safely</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp67',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp67',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp67','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp67b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Buf {
     char* p; int n;
-    Buf&amp; operator=(const Buf&amp; o) {     // 비준수: 자기 대입 미처리
-        delete[] p;                     // o==*this면 자기 데이터를 먼저 해제
+    Buf(const char* s, int len) : p(new char[len]), n(len) { for(int i=0;i&lt;len;++i) p[i]=s[i]; }
+    Buf&amp; operator=(const Buf&amp; o){
+        delete[] p;                 // o==*this 면 자기 데이터를 먼저 해제
         p = new char[o.n];
-        for (int i = 0; i &lt; o.n; ++i) p[i] = o.p[i];  // 해제된 메모리 읽기
+        for (int i = 0; i &lt; o.n; ++i) p[i] = o.p[i];   // 해제된 메모리를 읽음
         n = o.n; return *this;
     }
+    ~Buf(){ delete[] p; }
 };
-</pre></div><div class="pane" id="misracpp67g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Buf {
+int main(){ Buf b("hi", 2); b = b; std::cout &lt;&lt; b.n &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp67g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Buf {
     char* p; int n;
-    Buf&amp; operator=(const Buf&amp; o) {
-        if (this == &amp;o) return *this;   // 준수: 자기 대입 가드
+    Buf(const char* s, int len) : p(new char[len]), n(len) { for(int i=0;i&lt;len;++i) p[i]=s[i]; }
+    Buf&amp; operator=(const Buf&amp; o){
+        if (this == &amp;o) return *this;          // 자기 대입 가드
         char* np = new char[o.n];
         for (int i = 0; i &lt; o.n; ++i) np[i] = o.p[i];
         delete[] p; p = np; n = o.n;
         return *this;
     }
+    ~Buf(){ delete[] p; }
 };
-</pre></div><div class="why">⚠️ <span class="ko">자기 대입을 고려하지 않으면 자기 자원을 먼저 해제한 뒤 읽어 미정의 동작이 난다. 자기 대입 가드 또는 copy-and-swap을 적용하라.</span><span class="en">자기 대입을 고려하지 않으면 자기 자원을 먼저 해제한 뒤 읽어 미정의 동작이 난다. 자기 대입 가드 또는 copy-and-swap을 적용하라.</span></div></div><h2 class="sech" id="sec-misracpp-M16"><span class="sc">M16</span><span class="ko">섹션 16</span><span class="en">Section 16</span></h2><div class="card" data-s="Rule 16.5.1 논리 AND(&amp;&amp;)·OR(||) 연산자를 오버로드하지 않는다 논리 AND(&amp;&amp;)·OR(||) 연산자를 오버로드하지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 16.5.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">논리 AND(&amp;&amp;)·OR(||) 연산자를 오버로드하지 않는다</span><span class="en">논리 AND(&amp;&amp;)·OR(||) 연산자를 오버로드하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp68',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp68',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp68','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp68b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Cond {
+int main(){ Buf b("hi", 2); b = b; std::cout &lt;&lt; b.n &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">자기 대입(b = b)을 고려하지 않은 대입 연산자는 대상의 자원을 먼저 해제한 뒤 같은(이미 해제된) 자원을 읽어 복사하므로 미정의 동작과 데이터 손상이 발생한다. this==&amp;o 가드를 두거나 copy-and-swap 관용구를 적용해 자기 대입을 안전하게 처리한다.</span><span class="en">An assignment operator that ignores self-assignment (b = b) frees the destination’s resource first and then reads the same (now-freed) resource to copy it, causing undefined behaviour and data corruption. Add a this==&amp;o guard or apply the copy-and-swap idiom to handle self-assignment safely.</span></div></div><h2 class="sech" id="sec-misracpp-M16"><span class="sc">M16</span><span class="ko">섹션 16</span><span class="en">Section 16</span></h2><div class="card" data-s="Rule 16.5.1 논리 AND(&amp;&amp;)·OR(||) 연산자를 오버로드하지 않는다 The logical &amp;&amp; and || operators shall not be overloaded Required · Decidable"><div class="rid"><span class="id">Rule 16.5.1</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">논리 AND(&amp;&amp;)·OR(||) 연산자를 오버로드하지 않는다</span><span class="en">The logical &amp;&amp; and || operators shall not be overloaded</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp68',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp68',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp68','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp68b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Cond {
     bool v;
-    // 비준수: 오버로드 시 단락 평가가 사라짐
-    bool operator&amp;&amp;(const Cond&amp; o) const { return v &amp;&amp; o.v; }
+    bool operator&amp;&amp;(const Cond&amp; o) const { return v &amp;&amp; o.v; }   // 오버로드 시 단락 평가 사라짐
 };
-bool test(Cond a, Cond b) { return a &amp;&amp; b; }  // 두 피연산자 모두 평가됨
-</pre></div><div class="pane" id="misracpp68g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Cond {
+int main(){ Cond a{false}, b{true}; std::cout &lt;&lt; (a &amp;&amp; b) &lt;&lt; '\n'; }   // 두 피연산자 모두 평가</pre></div><div class="pane" id="misracpp68g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Cond {
     bool v;
-    explicit operator bool() const { return v; }  // 준수: bool 변환 제공
+    explicit operator bool() const { return v; }   // bool 변환만 제공
 };
-bool test(Cond a, Cond b) { return a &amp;&amp; b; }  // 내장 &amp;&amp;의 단락 평가 유지
-</pre></div><div class="why">⚠️ <span class="ko">&amp;&amp;/||를 오버로드하면 내장 연산의 단락 평가(short-circuit)가 사라져 호출자 기대가 깨진다. explicit operator bool 등으로 대체하라.</span><span class="en">&amp;&amp;/||를 오버로드하면 내장 연산의 단락 평가(short-circuit)가 사라져 호출자 기대가 깨진다. explicit operator bool 등으로 대체하라.</span></div></div><div class="card" data-s="Rule 16.5.2 주소 연산자(단항 &amp;)를 오버로드하지 않는다 주소 연산자(단항 &amp;)를 오버로드하지 않는다 Required · Decidable"><div class="rid"><span class="id">Rule 16.5.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">주소 연산자(단항 &amp;)를 오버로드하지 않는다</span><span class="en">주소 연산자(단항 &amp;)를 오버로드하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp69',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp69',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp69','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp69b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Handle {
+int main(){ Cond a{false}, b{true}; std::cout &lt;&lt; (a &amp;&amp; b) &lt;&lt; '\n'; }   // 내장 &amp;&amp; 의 단락 평가 유지</pre></div><div class="why">⚠️ <span class="ko">&amp;&amp;/|| 를 오버로드하면 일반 함수 호출이 되어 내장 연산자의 단락 평가(short-circuit)가 사라지고 두 피연산자가 항상 평가되므로, 좌변으로 우변을 보호하던 코드(예: p != nullptr &amp;&amp; p-&gt;ok())가 깨진다. 대신 explicit operator bool 등을 제공해 내장 &amp;&amp;/|| 의 단락 평가를 유지한다.</span><span class="en">Overloading &amp;&amp; or || turns them into ordinary function calls, losing the built-in short-circuit so both operands are always evaluated, breaking code that guards the right operand with the left (e.g., p != nullptr &amp;&amp; p-&gt;ok()). Provide explicit operator bool instead, preserving the built-in short-circuit of &amp;&amp; and ||.</span></div></div><div class="card" data-s="Rule 16.5.2 주소 연산자(단항 &amp;)를 오버로드하지 않는다 The unary &amp; operator shall not be overloaded Required · Decidable"><div class="rid"><span class="id">Rule 16.5.2</span><span class="cat">Required · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">주소 연산자(단항 &amp;)를 오버로드하지 않는다</span><span class="en">The unary &amp; operator shall not be overloaded</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp69',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp69',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp69','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp69b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Handle {
     int id;
-    // 비준수: 단항 &amp; 오버로드 → 실제 주소를 얻을 수 없어 일반 코드가 깨짐
-    int operator&amp;() const { return id; }
+    int operator&amp;() const { return id; }   // 단항 &amp; 오버로드 → 실제 주소를 얻을 수 없음
 };
-void use(Handle h) { auto x = &amp;h; (void)x; }  // 주소가 아니라 id 반환
-</pre></div><div class="pane" id="misracpp69g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Handle {
+int main(){ Handle h{7}; auto x = &amp;h; std::cout &lt;&lt; x &lt;&lt; '\n'; }   // 주소가 아니라 id 반환</pre></div><div class="pane" id="misracpp69g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Handle {
     int id;
-    int key() const { return id; }   // 준수: 의도를 별도 이름 함수로
+    int key() const { return id; }   // 의도를 별도 이름 함수로 표현
 };
-void use(Handle h) { Handle* p = &amp;h; (void)p; }  // &amp; 는 정상적으로 주소 반환
-</pre></div><div class="why">⚠️ <span class="ko">단항 &amp; 오버로드는 객체의 실제 주소 획득을 막아 표준 라이브러리·일반 코드의 가정을 깨뜨린다. 별도 명명 함수로 의도를 표현하라.</span><span class="en">단항 &amp; 오버로드는 객체의 실제 주소 획득을 막아 표준 라이브러리·일반 코드의 가정을 깨뜨린다. 별도 명명 함수로 의도를 표현하라.</span></div></div><div class="card" data-s="Rule 16.6.1 대칭 연산자는 비멤버 함수로만 구현한다 대칭 연산자는 비멤버 함수로만 구현한다 Advisory · Decidable"><div class="rid"><span class="id">Rule 16.6.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">대칭 연산자는 비멤버 함수로만 구현한다</span><span class="en">대칭 연산자는 비멤버 함수로만 구현한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp70',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp70',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp70','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp70b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>struct Money {
+int main(){ Handle h{7}; Handle* p = &amp;h; std::cout &lt;&lt; (p-&gt;id) &lt;&lt; '\n'; }   // &amp; 는 정상적으로 주소</pre></div><div class="why">⚠️ <span class="ko">단항 &amp; 를 오버로드하면 그 타입의 실제 주소를 얻을 수 없게 되어, 객체 주소를 가정하는 표준 라이브러리(std::addressof 없이 쓰는 코드)와 일반 코드가 조용히 깨진다. 주소가 아닌 의미(키·식별자 반환 등)는 별도 명명 함수로 표현하고 &amp; 는 본래 의미를 유지한다.</span><span class="en">Overloading unary &amp; makes it impossible to obtain the type’s real address, silently breaking standard-library and generic code that assumes the object’s address. Express non-address meanings (returning a key or identifier) with a separately named function and keep &amp; for its original meaning.</span></div></div><div class="card" data-s="Rule 16.6.1 대칭 이항 연산자는 비멤버 함수로 구현한다 Symmetric binary operators should be implemented as non-member functions Advisory · Decidable"><div class="rid"><span class="id">Rule 16.6.1</span><span class="cat">Advisory · Decidable</span><span class="ok">✓ compilable</span></div><h3><span class="ko">대칭 이항 연산자는 비멤버 함수로 구현한다</span><span class="en">Symmetric binary operators should be implemented as non-member functions</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp70',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp70',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp70','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp70b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Money {
     long cents;
-    // 비준수: 대칭 연산자를 멤버로 → 좌측 피연산자 변환 비대칭
-    Money operator+(const Money&amp; o) const { return {cents + o.cents}; }
+    Money operator+(const Money&amp; o) const { return {cents + o.cents}; }   // 멤버 → 비대칭 변환
 };
-// 100 + m 형태(좌측이 정수)에서는 멤버 operator+가 적용되지 않음
-</pre></div><div class="pane" id="misracpp70g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>struct Money {
-    long cents;
-};
-// 준수: 비멤버로 두어 양쪽 피연산자에 동일한 암묵 변환 적용
-inline Money operator+(const Money&amp; a, const Money&amp; b) {
+int main(){ Money a{100}, b{50}; std::cout &lt;&lt; (a + b).cents &lt;&lt; '\n'; }</pre></div><div class="pane" id="misracpp70g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>#include &lt;iostream&gt;
+struct Money { long cents; };
+inline Money operator+(const Money&amp; a, const Money&amp; b){   // 비멤버 → 양쪽에 동일 변환
     return Money{a.cents + b.cents};
 }
-</pre></div><div class="why">⚠️ <span class="ko">대칭 이항 연산자를 멤버로 두면 좌측 피연산자에만 변환이 비대칭 적용되어 a+b와 b+a가 달라질 수 있다. 비멤버 함수로 구현하라.</span><span class="en">대칭 이항 연산자를 멤버로 두면 좌측 피연산자에만 변환이 비대칭 적용되어 a+b와 b+a가 달라질 수 있다. 비멤버 함수로 구현하라.</span></div></div><h2 class="sech" id="sec-misracpp-M17"><span class="sc">M17</span><span class="ko">섹션 17</span><span class="en">Section 17</span></h2><div class="card" data-s="Rule 17.8.1 함수 템플릿의 명시적 특수화를 사용하지 않는다 함수 템플릿의 명시적 특수화를 사용하지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 17.8.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">함수 템플릿의 명시적 특수화를 사용하지 않는다</span><span class="en">함수 템플릿의 명시적 특수화를 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp71',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp71',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp71','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp71b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>template &lt;typename T&gt; void f(T);
+int main(){ Money a{100}, b{50}; std::cout &lt;&lt; (a + b).cents &lt;&lt; '\n'; }</pre></div><div class="why">⚠️ <span class="ko">+ 나 == 같은 대칭 이항 연산자를 멤버 함수로 두면 좌측 피연산자에는 암묵 변환이 적용되지 않아, 100 + m 처럼 좌측이 변환 대상인 경우 a + b 와 b + a 의 동작이 달라지는 비대칭이 생긴다. 대칭 연산자는 비멤버 함수로 구현해 양쪽 피연산자에 동일한 변환 규칙이 적용되게 한다.</span><span class="en">Implementing a symmetric binary operator like + or == as a member means no implicit conversion applies to the left operand, so when the left side needs conversion (e.g., 100 + m) a + b and b + a behave differently — an asymmetry. Implement symmetric operators as non-member functions so the same conversion rules apply to both operands.</span></div></div><h2 class="sech" id="sec-misracpp-M17"><span class="sc">M17</span><span class="ko">섹션 17</span><span class="en">Section 17</span></h2><div class="card" data-s="Rule 17.8.1 함수 템플릿의 명시적 특수화를 사용하지 않는다 함수 템플릿의 명시적 특수화를 사용하지 않는다 Advisory · Decidable"><div class="rid"><span class="id">Rule 17.8.1</span><span class="cat">Advisory · Decidable</span></div><h3><span class="ko">함수 템플릿의 명시적 특수화를 사용하지 않는다</span><span class="en">함수 템플릿의 명시적 특수화를 사용하지 않는다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp71',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp71',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp71','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp71b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>template &lt;typename T&gt; void f(T);
 template &lt;&gt; void f&lt;int&gt;(int);   // 함수 템플릿 특수화 — 오버로드 함정</pre></div><div class="pane" id="misracpp71g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>template &lt;typename T&gt; void f(T);
 void f(int);          // 일반 오버로드</pre></div><div class="why">⚠️ <span class="ko">함수 템플릿 명시적 특수화는 오버로드 해석과의 상호작용이 직관에 반해 잘못된 함수가 선택될 수 있다. 일반 오버로드를 사용한다.</span><span class="en">함수 템플릿 명시적 특수화는 오버로드 해석과의 상호작용이 직관에 반해 잘못된 함수가 선택될 수 있다. 일반 오버로드를 사용한다.</span></div></div><h2 class="sech" id="sec-misracpp-M18"><span class="sc">M18</span><span class="ko">섹션 18</span><span class="en">Section 18</span></h2><div class="card" data-s="Rule 18.1.1 예외는 값으로 throw 한다(포인터로 throw 금지) 예외는 값으로 throw 한다(포인터로 throw 금지) Required · Decidable"><div class="rid"><span class="id">Rule 18.1.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">예외는 값으로 throw 한다(포인터로 throw 금지)</span><span class="en">예외는 값으로 throw 한다(포인터로 throw 금지)</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp72',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp72',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp72','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp72b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>throw new MyError("x");   // 포인터 — 소유권·누수 모호</pre></div><div class="pane" id="misracpp72g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>throw MyError("x");</pre></div><div class="why">⚠️ <span class="ko">포인터를 던지면 누가 해제할지 모호해 누수·이중 해제가 난다. 예외는 값으로 던지고 const 참조로 잡는다.</span><span class="en">포인터를 던지면 누가 해제할지 모호해 누수·이중 해제가 난다. 예외는 값으로 던지고 const 참조로 잡는다.</span></div></div><div class="card" data-s="Rule 18.3.2 예외는 const 참조(const lvalue reference)로 catch 한다 예외는 const 참조(const lvalue reference)로 catch 한다 Required · Decidable"><div class="rid"><span class="id">Rule 18.3.2</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">예외는 const 참조(const lvalue reference)로 catch 한다</span><span class="en">예외는 const 참조(const lvalue reference)로 catch 한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp73',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp73',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp73','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp73b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>try { f(); } catch (std::exception e) { ... }   // 값 catch — 슬라이싱</pre></div><div class="pane" id="misracpp73g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>try { f(); } catch (const std::exception&amp; e) { ... }</pre></div><div class="why">⚠️ <span class="ko">예외를 값으로 잡으면 파생 예외가 슬라이싱되어 정보를 잃는다. const 참조로 잡아 다형성을 보존한다.</span><span class="en">예외를 값으로 잡으면 파생 예외가 슬라이싱되어 정보를 잃는다. const 참조로 잡아 다형성을 보존한다.</span></div></div><div class="card" data-s="Rule 18.4.1 예외를 던지지 않는 함수는 noexcept 로 표시하고 명세를 준수한다 예외를 던지지 않는 함수는 noexcept 로 표시하고 명세를 준수한다 Required · Decidable"><div class="rid"><span class="id">Rule 18.4.1</span><span class="cat">Required · Decidable</span></div><h3><span class="ko">예외를 던지지 않는 함수는 noexcept 로 표시하고 명세를 준수한다</span><span class="en">예외를 던지지 않는 함수는 noexcept 로 표시하고 명세를 준수한다</span></h3><div class="sw"><button class="on bad" onclick="sw('misracpp74',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button><button class="good" onclick="sw('misracpp74',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button><button class="prac" onclick="practice('misracpp74','cpp')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div><div class="pane show" id="misracpp74b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>void f() noexcept { mayThrow(); }   // 예외 시 terminate</pre></div><div class="pane" id="misracpp74g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>void f() noexcept {
     try { mayThrow(); } catch (...) { /* 내부 처리 */ }
