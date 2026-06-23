@@ -199,7 +199,7 @@ B2B SaaS 제품의 조기 안착을 위한 세부 요금 구조와 기업용 특
 ### 1) C/C++ 코딩 표준 레퍼런스 (`public/coding-standards.html`)
 * `_gen/gen_standards.py` 가 단일 HTML로 생성. 규칙 데이터는 표준별 모듈(`std_misrac`·`std_misracpp`·`std_certc`·`std_certcpp`·`std_autosar`)의 파트 파일(`std_<key>_pN.py`) 병합. **5대 표준 총 562룰**(MISRA C:2012 127 · MISRA C++:2023 94 · CERT C 137 · CERT C++ 83 · AUTOSAR C++14 121).
 * UI: 좌측 고정 사이드바 트리 네비게이션 + 표준내 검색 + 위반↔준수 코드 토글 + **전역 KO/EN 토글** + 각 카드 "🧪 IDE에서 연습"(Monaco → Wandbox 원격 컴파일·실행, C=`gcc-13.2.0-c`, C++=`gcc-13.2.0`).
-* **규칙 강화 작업(MISRA C/C++·CERT C/C++ 4대 표준 완료, AUTOSAR만 잔여)** — 각 룰을 *풍부한 컴파일 가능 예제(int main 포함) + 근거·영향·대응 3요소 심화 해설 + 한/영 이중언어(`title_en`/`why_en`)* 로 재작성. Wandbox(`-std=gnu11 -lm -pthread` / `-std=gnu++17 -pthread`)로 전수 **컴파일+실행** 검증(`_gen/_compile_verify.py`). CERT C++ 동시성 룰의 데드락/무한대기(spurious-wait·재귀잠금) 경로는 런타임 미도달 가드로 검증 안전성 확보. 다중 번역단위·전처리 토큰결합 등 단일 파일로 성립 불가한 소수 룰만 `compiles` 미표시 초점 스니펫 유지.
+* **규칙 강화 작업(5대 표준 562룰 전수 완료)** — 각 룰을 *풍부한 컴파일 가능 예제(int main 포함) + 근거·영향·대응 3요소 심화 해설 + 한/영 이중언어(`title_en`/`why_en`)* 로 재작성. Wandbox(`-std=gnu11 -lm -pthread` / `-std=gnu++17 -pthread`)로 전수 **컴파일+실행** 검증(`_gen/_compile_verify.py`). 동시성/시그널/종료/longjmp 등 데드락·무한대기·강제종료 위험 경로는 런타임 미도달 가드로 검증 안전성 확보. 단일 TU 불가·ill-formed·언어연결·C++17 제거 API(auto_ptr) 등 본질적으로 단독 컴파일 불가한 소수 룰만 `compiles` 미표시 초점 스니펫 유지. 다중 번역단위·전처리 토큰결합 등 단일 파일로 성립 불가한 소수 룰만 `compiles` 미표시 초점 스니펫 유지.
 
 | 표준 | 룰 수 | 강화 상태 |
 | :-- | :-- | :-- |
@@ -207,7 +207,7 @@ B2B SaaS 제품의 조기 안착을 위한 세부 요금 구조와 기업용 특
 | MISRA C++:2023 | 94 | ✅ 완료 (p1 25·p2 46·p3 23) |
 | CERT C | 137 | ✅ 완료 (p1 39·p2 27·p3 31·p4 40) |
 | CERT C++ | 83 | ✅ 완료 (p1 25·p2 19·p3 23·p4 16) |
-| AUTOSAR C++14 | 121 | ⏳ 잔여(우선순위 외) |
+| AUTOSAR C++14 | 121 | ✅ 완료 (p1 44·p2 39·p3 38) |
 
 * **CERT C/C++ ID 정확성**: `cmu-sei.github.io` 공식 목록 대조 완료(오류 0). 재생성: `cd _gen && PYTHONIOENCODING=utf-8 python gen_standards.py`.
 * 주의: 코드 필드는 raw 삼중따옴표 `r"""..."""`(끝에 `"`/백슬래시 금지), `why`/`title`/`*_en` 은 일반 문자열이라 백슬래시 이스케이프 주의. `_compile_verify.lang_of` 는 길이 내림차순 매칭(`misrac`가 `misracpp` 접두사로 오인되지 않도록).
