@@ -3,13 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습</title>
+<title data-i18n="title">보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Lora',serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 55%,#312e81 100%);min-height:100vh;color:#fff;display:flex;flex-direction:column}
 .wrap{max-width:1080px;margin:0 auto;padding:0 22px;width:100%}
-.hero{text-align:center;padding:64px 0 30px}
+.langbar{display:flex;justify-content:flex-end;padding:16px 0 0}
+.langtoggle{display:inline-flex;border:1px solid rgba(255,255,255,.3);border-radius:30px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:13px}
+.langtoggle button{background:transparent;color:#fff;border:0;padding:7px 16px;cursor:pointer;opacity:.65;transition:.2s;font-family:inherit}
+.langtoggle button.on{background:#fff;color:#1e1b4b;opacity:1;font-weight:700}
+.hero{text-align:center;padding:30px 0 30px}
 .hero .badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:7px 18px;border-radius:30px;font-size:13px;font-family:'JetBrains Mono',monospace;margin-bottom:20px;letter-spacing:.5px}
 .hero h1{font-size:44px;line-height:1.2;margin-bottom:14px;letter-spacing:-1px}
 .hero h1 .g{background:linear-gradient(90deg,#a5b4fc,#f0abfc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -32,15 +36,22 @@ body{font-family:'Lora',serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b
 .door.v1 .enter{color:#7f1d1d}.door.v2 .enter{color:#581c87}
 .foot{text-align:center;padding:26px 0 34px;font-size:12.5px;opacity:.6;line-height:1.8}
 .foot a{color:#c4b5fd}
-@media(max-width:780px){.doors{grid-template-columns:1fr}.hero h1{font-size:32px}.hero{padding:44px 0 20px}}
+@media(max-width:780px){.doors{grid-template-columns:1fr}.hero h1{font-size:32px}.hero{padding:20px 0 20px}}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="langbar">
+    <div class="langtoggle" role="group" aria-label="Language">
+      <button id="btn-ko" onclick="setLang('ko')">한국어</button>
+      <button id="btn-en" onclick="setLang('en')">English</button>
+    </div>
+  </div>
+
   <div class="hero">
     <div class="badge">🔐 SECURITY LEARNING HUB</div>
-    <h1>무엇을 <span class="g">학습</span>할까요?</h1>
-    <p>웹·인프라 취약점을 체험으로 배우거나, 보안약점 진단원 시험을 체계적으로 준비하세요. 두 가지 학습 트랙 중 하나를 선택하면 됩니다.</p>
+    <h1 data-i18n-html="heroTitle">무엇을 <span class="g">학습</span>할까요?</h1>
+    <p data-i18n="heroDesc">웹·인프라 취약점을 체험으로 배우거나, 보안약점 진단원 시험을 체계적으로 준비하세요. 두 가지 학습 트랙 중 하나를 선택하면 됩니다.</p>
   </div>
 
   <div class="doors">
@@ -49,14 +60,14 @@ body{font-family:'Lora',serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b
       <div class="glow"></div>
       <div class="ic">🛡️</div>
       <div class="kicker">TRACK 01 · HANDS-ON</div>
-      <h2>취약점 학습</h2>
-      <div class="desc">공격 시뮬레이터로 취약점이 <b>실제로 어떻게 악용되는지</b> 직접 체험하고, 안전한 코드로 고쳐 보며 원리를 익힙니다.</div>
+      <h2 data-i18n="t1h">취약점 학습</h2>
+      <div class="desc" data-i18n-html="t1d">공격 시뮬레이터로 취약점이 <b>실제로 어떻게 악용되는지</b> 직접 체험하고, 안전한 코드로 고쳐 보며 원리를 익힙니다.</div>
       <ul>
-        <li>319개+ 인터랙티브 공격·방어 실습</li>
-        <li>시큐어코딩 · 주요정보통신 · 금융 3대 가이드</li>
-        <li>취약/안전 코드 비교 · 동적 공격 데모</li>
+        <li data-i18n="t1l1">319개+ 인터랙티브 공격·방어 실습</li>
+        <li data-i18n="t1l2">시큐어코딩 · 주요정보통신 · 금융 3대 가이드</li>
+        <li data-i18n="t1l3">취약/안전 코드 비교 · 동적 공격 데모</li>
       </ul>
-      <span class="enter">시뮬레이터 입장 →</span>
+      <span class="enter" data-i18n="t1e">시뮬레이터 입장 →</span>
     </a>
 
     <!-- 트랙 2: 진단원 학습 -->
@@ -64,14 +75,14 @@ body{font-family:'Lora',serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b
       <div class="glow"></div>
       <div class="ic">🎓</div>
       <div class="kicker">TRACK 02 · EXAM PREP</div>
-      <h2>보안약점 진단원 학습</h2>
-      <div class="desc">개발보안 가이드를 바탕으로 <b>시험을 체계적으로 준비</b>합니다. 개념부터 모의고사·코드진단까지 한곳에서.</div>
+      <h2 data-i18n="t2h">보안약점 진단원 학습</h2>
+      <div class="desc" data-i18n-html="t2d">개발보안 가이드를 바탕으로 <b>시험을 체계적으로 준비</b>합니다. 개념부터 모의고사·코드진단까지 한곳에서.</div>
       <ul>
-        <li>49개 보안약점 개념 학습 · 플래시카드</li>
-        <li>모의고사(타이머·합격선) · 코드진단 실습</li>
-        <li>오답노트 · 진도 대시보드 (자동 저장)</li>
+        <li data-i18n="t2l1">49개 보안약점 개념 학습 · 플래시카드</li>
+        <li data-i18n="t2l2">모의고사(타이머·합격선) · 코드진단 실습</li>
+        <li data-i18n="t2l3">오답노트 · 진도 대시보드 (자동 저장)</li>
       </ul>
-      <span class="enter">학습 시작 →</span>
+      <span class="enter" data-i18n="t2e">학습 시작 →</span>
     </a>
 
     <!-- 트랙 3: C/C++ 코딩 표준 -->
@@ -79,21 +90,95 @@ body{font-family:'Lora',serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b
       <div class="glow"></div>
       <div class="ic">🛠️</div>
       <div class="kicker">TRACK 03 · STANDARDS</div>
-      <h2>C/C++ 코딩 표준</h2>
-      <div class="desc">임베디드·안전필수·보안 C/C++ <b>5대 코딩 표준</b>의 분류 체계와 규칙을 위반/준수 예제로 비교합니다.</div>
+      <h2 data-i18n="t3h">C/C++ 코딩 표준</h2>
+      <div class="desc" data-i18n-html="t3d">임베디드·안전필수·보안 C/C++ <b>5대 코딩 표준</b>의 분류 체계와 규칙을 위반/준수 예제로 비교합니다.</div>
       <ul>
-        <li>MISRA C:2012 · MISRA C++:2023</li>
-        <li>CERT C · CERT C++ · AUTOSAR C++14</li>
-        <li>규칙 500여종 · 위반↔준수 코드 비교</li>
+        <li data-i18n="t3l1">MISRA C:2012 · MISRA C++:2023</li>
+        <li data-i18n="t3l2">CERT C · CERT C++ · AUTOSAR C++14</li>
+        <li data-i18n="t3l3">규칙 500여종 · 위반↔준수 코드 비교</li>
       </ul>
-      <span class="enter">레퍼런스 열기 →</span>
+      <span class="enter" data-i18n="t3e">레퍼런스 열기 →</span>
     </a>
   </div>
 
   <div class="foot">
-    행정안전부·한국인터넷진흥원(KISA)·금융보안원 공개 가이드라인을 개념적으로 재구성한 교육용 콘텐츠입니다. 저작권은 해당 기관에 있습니다.<br>
-    <a href="vuln-hub.html">취약점 학습</a> · <a href="secure-dev-portal.html">개발보안 학습 포털</a> · <a href="secure-dev-academy.html">진단원 학습 센터</a> · <a href="coding-standards.html">C/C++ 코딩 표준</a>
+    <span data-i18n="footNote">행정안전부·한국인터넷진흥원(KISA)·금융보안원 공개 가이드라인을 개념적으로 재구성한 교육용 콘텐츠입니다. 저작권은 해당 기관에 있습니다.</span><br>
+    <a href="vuln-hub.html" data-i18n="footL1">취약점 학습</a> · <a href="secure-dev-portal.html" data-i18n="footL2">개발보안 학습 포털</a> · <a href="secure-dev-academy.html" data-i18n="footL3">진단원 학습 센터</a> · <a href="coding-standards.html" data-i18n="footL4">C/C++ 코딩 표준</a>
   </div>
 </div>
+
+<script>
+const I18N = {
+  ko: {
+    title: '보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습',
+    heroTitle: '무엇을 <span class="g">학습</span>할까요?',
+    heroDesc: '웹·인프라 취약점을 체험으로 배우거나, 보안약점 진단원 시험을 체계적으로 준비하세요. 두 가지 학습 트랙 중 하나를 선택하면 됩니다.',
+    t1h: '취약점 학습',
+    t1d: '공격 시뮬레이터로 취약점이 <b>실제로 어떻게 악용되는지</b> 직접 체험하고, 안전한 코드로 고쳐 보며 원리를 익힙니다.',
+    t1l1: '319개+ 인터랙티브 공격·방어 실습',
+    t1l2: '시큐어코딩 · 주요정보통신 · 금융 3대 가이드',
+    t1l3: '취약/안전 코드 비교 · 동적 공격 데모',
+    t1e: '시뮬레이터 입장 →',
+    t2h: '보안약점 진단원 학습',
+    t2d: '개발보안 가이드를 바탕으로 <b>시험을 체계적으로 준비</b>합니다. 개념부터 모의고사·코드진단까지 한곳에서.',
+    t2l1: '49개 보안약점 개념 학습 · 플래시카드',
+    t2l2: '모의고사(타이머·합격선) · 코드진단 실습',
+    t2l3: '오답노트 · 진도 대시보드 (자동 저장)',
+    t2e: '학습 시작 →',
+    t3h: 'C/C++ 코딩 표준',
+    t3d: '임베디드·안전필수·보안 C/C++ <b>5대 코딩 표준</b>의 분류 체계와 규칙을 위반/준수 예제로 비교합니다.',
+    t3l1: 'MISRA C:2012 · MISRA C++:2023',
+    t3l2: 'CERT C · CERT C++ · AUTOSAR C++14',
+    t3l3: '규칙 500여종 · 위반↔준수 코드 비교',
+    t3e: '레퍼런스 열기 →',
+    footNote: '행정안전부·한국인터넷진흥원(KISA)·금융보안원 공개 가이드라인을 개념적으로 재구성한 교육용 콘텐츠입니다. 저작권은 해당 기관에 있습니다.',
+    footL1: '취약점 학습', footL2: '개발보안 학습 포털', footL3: '진단원 학습 센터', footL4: 'C/C++ 코딩 표준'
+  },
+  en: {
+    title: 'Security Learning Hub | Vulnerability Lab · KISA Diagnostician Prep',
+    heroTitle: 'What would you like to <span class="g">learn</span>?',
+    heroDesc: 'Learn web and infrastructure vulnerabilities hands-on, or systematically prepare for the KISA Software Security Weakness Diagnostician exam. Pick one of the learning tracks below.',
+    t1h: 'Vulnerability Lab',
+    t1d: 'Use the attack simulator to experience <b>how vulnerabilities are actually exploited</b>, then fix them with secure code to internalize the principles.',
+    t1l1: '319+ interactive attack & defense labs',
+    t1l2: 'Three guides: Secure Coding · Critical Infrastructure · Finance',
+    t1l3: 'Vulnerable vs. secure code comparison · live attack demos',
+    t1e: 'Enter the simulator →',
+    t2h: 'Diagnostician Exam Prep',
+    t2d: 'Systematically <b>prepare for the exam</b> based on the secure development guide — from concepts to mock exams and code diagnosis, all in one place.',
+    t2l1: '49 security-weakness concepts · flashcards',
+    t2l2: 'Mock exams (timer · pass line) · code-diagnosis practice',
+    t2l3: 'Wrong-answer notes · progress dashboard (auto-saved)',
+    t2e: 'Start learning →',
+    t3h: 'C/C++ Coding Standards',
+    t3d: 'Compare the classification schemes and rules of the <b>five major C/C++ coding standards</b> for embedded, safety-critical, and security work, with violating/compliant examples.',
+    t3l1: 'MISRA C:2012 · MISRA C++:2023',
+    t3l2: 'CERT C · CERT C++ · AUTOSAR C++14',
+    t3l3: '500+ rules · violation ↔ compliance code comparison',
+    t3e: 'Open the reference →',
+    footNote: 'Educational content conceptually reconstructed from public guidelines of the Ministry of the Interior and Safety, KISA, and the Financial Security Institute. Copyright belongs to the respective institutions.',
+    footL1: 'Vulnerability Lab', footL2: 'Secure Dev Portal', footL3: 'Diagnostician Center', footL4: 'C/C++ Coding Standards'
+  }
+};
+function applyLang(lang){
+  const d = I18N[lang] || I18N.ko;
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.getAttribute('data-i18n'); if(d[k]!=null) el.textContent = d[k];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+    const k = el.getAttribute('data-i18n-html'); if(d[k]!=null) el.innerHTML = d[k];
+  });
+  if(d.title) document.title = d.title;
+  document.getElementById('btn-ko').classList.toggle('on', lang==='ko');
+  document.getElementById('btn-en').classList.toggle('on', lang==='en');
+}
+function setLang(lang){ try{ localStorage.setItem('siteLang', lang); }catch(e){} applyLang(lang); }
+(function(){
+  let lang='ko';
+  try{ lang = localStorage.getItem('siteLang') || 'ko'; }catch(e){}
+  applyLang(lang);
+})();
+</script>
 </body>
 </html>
