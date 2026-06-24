@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="무료 보안약점 진단원 문제팩 목록 - 유형별 문제 및 실전 모의고사 제공.">
+<title>보안약점 진단원 실전 훈련장 | 문제팩 목록</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #6366f1;
+  --p-hover: #4f46e5;
+  --p2: #8b5cf6;
+  --bg: #0b0f19;
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --ok: #10b981;
+  --no: #ef4444;
+  --warn: #f59e0b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg) 60%);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Global Navigation */
+header {
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 25, 0.8);
+}
+header .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+.logo {
+  font-family: 'Lora', serif;
+  font-weight: 800;
+  font-size: 21px;
+  background: linear-gradient(135deg, #a5b4fc, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+.nav-btn {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.nav-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+.nav-btn.active {
+  color: #fff;
+  background: var(--p);
+}
+
+/* Page Header */
+.page-header {
+  padding: 40px 0 20px;
+}
+.page-header h1 { font-size: 32px; font-weight: 800; }
+.page-header p { color: var(--text-muted); font-size: 15px; margin-top: 4px; }
+
+.exam-standard {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.standard-cell {
+  background: rgba(15, 23, 42, 0.74);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+.standard-cell span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.standard-cell strong {
+  display: block;
+  color: #fff;
+  font-size: 15px;
+}
+.standard-cell em {
+  display: block;
+  color: #a5b4fc;
+  font-style: normal;
+  font-size: 12px;
+  margin-top: 4px;
+}
+@media (max-width: 820px) {
+  .exam-standard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .exam-standard { grid-template-columns: 1fr; }
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.filter-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.filter-btn:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
+.filter-btn.active {
+  background: var(--p);
+  color: #fff;
+  border-color: var(--p);
+}
+
+/* Packs Grid */
+.packs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+.pack-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s, border-color 0.2s;
+}
+.pack-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+.pack-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.pack-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.pack-card p { font-size: 13.5px; color: var(--text-muted); margin-bottom: 20px; flex: 1; }
+
+.pack-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.pack-meta strong { color: var(--text-main); }
+
+.prog-lbl { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
+.prog-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+.prog-fill { height: 100%; background: var(--p); width: 0%; transition: width 0.4s; }
+
+.pack-btn {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.pack-btn:hover { background: var(--p-hover); }
+.pack-btn.exam {
+  background: linear-gradient(135deg, var(--p2), #c084fc);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">🛡️ SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn">대시보드</a>
+      <a href="mission-board.html" class="nav-btn">미션 보드</a>
+      <a href="secure-dev-academy.html" class="nav-btn" style="color: #c084fc;">📖 종합 아카데미</a>
+      <a href="question-packs.html" class="nav-btn active">문제팩 학습</a>
+      <a href="content-map.html" class="nav-btn">콘텐츠 맵</a>
+      <a href="wrong-note.html" class="nav-btn">오답노트</a>
+      <a href="classroom.html" class="nav-btn">클래스 입장</a>
+      <a href="question-admin.html" class="nav-btn">문제 관리</a>
+      <a href="instructor-dashboard.html" class="nav-btn" style="border: 1px dashed var(--p);">👨‍🏫 강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="page-header">
+    <h1>📚 훈련용 문제팩 목록</h1>
+    <p>분류별로 묶인 학습 문제팩 또는 실전 모의고사를 통과해 나가며 합격 역량을 쌓으세요.</p>
+  </section>
+
+  <section class="exam-standard" aria-label="2026년 보안약점 진단원 이수시험 기준">
+    <div class="standard-cell">
+      <span>이론시험</span>
+      <strong>객관형 30문항 · 60분</strong>
+      <em>4~5개 지문 중 선택</em>
+    </div>
+    <div class="standard-cell">
+      <span>실습시험</span>
+      <strong>서술형 15문항 · 100분</strong>
+      <em>정·오탐 분석 및 보고서 작성</em>
+    </div>
+    <div class="standard-cell">
+      <span>배점 반영</span>
+      <strong>이론 40% + 실습 60%</strong>
+      <em>종합점수 소수점 첫째 자리</em>
+    </div>
+    <div class="standard-cell">
+      <span>합격 기준</span>
+      <strong>종합 70점 이상</strong>
+      <em>각 시험 60점 미만 과락</em>
+    </div>
+  </section>
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    <button class="filter-btn active" onclick="filterPacks('all')">전체 문제팩</button>
+    <button class="filter-btn" onclick="filterPacks('prac')">코드 진단팩</button>
+    <button class="filter-btn" onclick="filterPacks('mock')">실전 모의고사</button>
+  </div>
+
+  <!-- Packs Grid -->
+  <div class="packs-grid" id="packsGrid">
+    <!-- Loaded dynamically -->
+  </div>
+</div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-state.js"></script>
+<script type="module" src="auth-widget.js"></script>
+<script>
+// Static metadata for our recommended packages
+const PACKS = [
+  {
+    id: 'pack_intro',
+    title: '🐣 입문 샘플 문제팩',
+    desc: '코드 진단 실습에 대한 기본기를 다지는 5가지 간단한 취약/안전 코드 판별 문제입니다.',
+    category: 'prac',
+    level: '하',
+    type: 'PRAC',
+    filterKeys: ['입력검증', '보안기능'],
+    ids: ['CD-01', 'CD-02', 'CD-03', 'CD-04', 'CD-05']
+  },
+  {
+    id: 'pack_input_val',
+    title: '🧬 입력 데이터 검증 집중 문제팩',
+    desc: 'SQL 삽입, XSS, OS 명령어 주입 등 입력 데이터 검증 단계의 필수 문제를 심층 학습합니다.',
+    category: 'prac',
+    level: '중',
+    type: 'PRAC',
+    filterKeys: ['입력검증'],
+    ids: ['CD-01', 'CD-02', 'CD-03', 'CD-04', 'CD-05', 'CD-06', 'CD-07', 'CD-08', 'CD-09', 'CD-10', 'CD-11', 'CD-12', 'CD-13', 'CD-14', 'CD-15']
+  },
+  {
+    id: 'pack_security_func',
+    title: '🔑 보안 기능 오류 문제팩',
+    desc: '하드코딩된 패스워드, 암호화 미적용, 부적절한 인증 시도 등 보안 기능 구현 오류를 다룹니다.',
+    category: 'prac',
+    level: '중',
+    type: 'PRAC',
+    filterKeys: ['보안기능'],
+    ids: ['CD-18', 'CD-19', 'CD-20', 'CD-21', 'CD-22', 'CD-23', 'CD-24', 'CD-25', 'CD-26', 'CD-27']
+  },
+  {
+    id: 'pack_time_state',
+    title: '⏰ 시간 및 상태/에러처리 문제팩',
+    desc: '경쟁 조건, 적절한 처리 없는 예외 검출, 세부 에러 정보 유출에 해당하는 핵심 진단 문제팩입니다.',
+    category: 'prac',
+    level: '상',
+    type: 'PRAC',
+    filterKeys: ['시간및상태', '에러처리'],
+    ids: ['CD-30', 'CD-31', 'CD-32', 'CD-33', 'CD-34', 'CD-35', 'CD-36', 'CD-37']
+  },
+  {
+    id: 'pack_code_error',
+    title: '🧩 코드 오류 및 캡슐화 문제팩',
+    desc: '널 포인터 역참조, 자원 해제 누락, 프라이빗 배열 반환 등 프로그래밍 결함으로 인한 취약점을 배웁니다.',
+    category: 'prac',
+    level: '중',
+    type: 'PRAC',
+    filterKeys: ['코드오류', '캡슐화'],
+    ids: ['CD-40', 'CD-41', 'CD-42', 'CD-43', 'CD-44', 'CD-45', 'CD-46', 'CD-47', 'CD-48', 'CD-49']
+  },
+  {
+    id: 'pack_full_mock_1',
+    title: '⏱️ 보안약점 진단원 실전 모의고사 1회',
+    desc: '2026년 안내서 기준을 반영한 이론 30문항 + 실습 서술형 15문항 통합 모의고사입니다. (총 160분)',
+    category: 'mock',
+    level: '상',
+    type: 'MOCK',
+    filterKeys: ['모의고사'],
+    ids: [] // Handled dynamically: gets random/structured quiz & practical subset
+  },
+  {
+    id: 'pack_full_mock_2',
+    title: '⏱️ 보안약점 진단원 실전 모의고사 2회',
+    desc: '시험 전 최종 합격 여부를 예측하기 위한 고난도 종합 평가 문제팩입니다. (이론 30문항 + 실습 15문항)',
+    category: 'mock',
+    level: '상',
+    type: 'MOCK',
+    filterKeys: ['모의고사'],
+    ids: []
+  }
+];
+
+function getCustomPracticalQuestions() {
+  try {
+    const rows = JSON.parse(localStorage.getItem('sda_custom_questions') || '[]');
+    return Array.isArray(rows) ? rows.filter(q => q && q.id && q.code) : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function getVisiblePacks() {
+  const custom = getCustomPracticalQuestions();
+  const packs = [...PACKS];
+  if (custom.length) {
+    packs.unshift({
+      id: 'pack_custom',
+      title: '🧑‍🏫 강사용 커스텀 문제팩',
+      desc: '문제 관리 화면에서 직접 등록한 코드진단 서술형 문제를 모아 훈련합니다.',
+      category: 'prac',
+      level: '강사 지정',
+      type: 'PRAC',
+      filterKeys: ['커스텀'],
+      ids: custom.map(q => q.id)
+    });
+  }
+  return packs;
+}
+
+function filterPacks(category) {
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(category));
+  });
+  renderPacks(category);
+}
+
+function renderPacks(filterCat = 'all') {
+  const p = AcademyState.getProgress();
+  const grid = document.getElementById('packsGrid');
+  grid.innerHTML = '';
+
+  const filtered = getVisiblePacks().filter(pack => filterCat === 'all' || pack.category === filterCat);
+
+  filtered.forEach(pack => {
+    const totalCount = pack.type === 'MOCK' ? 45 : pack.ids.length; // 2026 guide: theory 30 + practical 15
+    let completed = 0;
+
+    if (pack.type === 'MOCK') {
+      // Find highest stored score
+      const storedScore = localStorage.getItem(`sda_mock_score_${pack.id}`);
+      completed = storedScore ? 1 : 0; // Completed if tried at least once
+    } else {
+      // Count completed IDs
+      pack.ids.forEach(qId => {
+        if (p.completedPractical[qId]) completed++;
+      });
+    }
+
+    const percent = totalCount > 0 ? Math.round((completed / totalCount) * 100) : 0;
+    
+    const card = document.createElement('div');
+    card.className = 'pack-card';
+    card.innerHTML = `
+      <span class="pack-tag">${pack.category === 'mock' ? 'MOCK EXAM' : 'CODE DIAGNOSIS'}</span>
+      <h3>${pack.title}</h3>
+      <p>${pack.desc}</p>
+      
+      <div class="pack-meta">
+        <div>난이도: <strong>${pack.level}</strong></div>
+        <div>총 문항수: <strong>${totalCount}개</strong></div>
+      </div>
+
+      <div class="prog-lbl">
+        <span>학습 진도율</span>
+        <span>${pack.type === 'MOCK' ? (completed > 0 ? '이수 완료' : '미응시') : `${completed}/${totalCount} (${percent}%)`}</span>
+      </div>
+      <div class="prog-bar">
+        <div class="prog-fill" style="width: ${pack.type === 'MOCK' ? (completed > 0 ? 100 : 0) : percent}%;"></div>
+      </div>
+
+      <button class="pack-btn ${pack.category === 'mock' ? 'exam' : ''}" 
+              onclick="startPack('${pack.id}', '${pack.type}')">
+        ${pack.category === 'mock' ? '🚨 모의고사 응시' : '🚀 훈련 시작'}
+      </button>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function startPack(packId, packType) {
+  if (packType === 'MOCK') {
+    location.href = `exam-runner.html?mode=mock&pack=${packId}`;
+  } else {
+    location.href = `exam-runner.html?mode=prac&pack=${packId}`;
+  }
+}
+
+window.onload = function() {
+  renderPacks();
+};
+</script>
+</body>
+</html>

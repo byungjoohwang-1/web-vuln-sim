@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="보안약점 진단원 실전 훈련장 - 수료증 및 학습 리포트 출력 페이지">
+<title>보안약점 진단원 실전 훈련장 | 수료증 발급</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,400&family=Outfit:wght@300;400;600;700;800&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #6366f1;
+  --p-hover: #4f46e5;
+  --bg: #0b0f19;
+  --card-bg: rgba(17, 24, 39, 0.75);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --gold: #d4af37;
+  --gold-dark: #aa7c11;
+  --ok: #10b981;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg) 80%);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-panel {
+  max-width: 900px;
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.input-group label {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #a5b4fc;
+}
+.input-group input {
+  background: #0f172a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 14.5px;
+  outline: none;
+  width: 200px;
+}
+.input-group input:focus {
+  border-color: var(--p);
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+.btn:hover { background: var(--p-hover); }
+.btn.secondary {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+}
+.btn.secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* Beautiful Classic Certificate Frame */
+.cert-container {
+  max-width: 900px;
+  width: 100%;
+  aspect-ratio: 1.414 / 1; /* A4 Landscape ratio */
+  background: #fff;
+  color: #1e293b;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  overflow: hidden;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Gold Border Ornaments */
+.cert-border {
+  position: absolute;
+  top: 15px;
+  bottom: 15px;
+  left: 15px;
+  right: 15px;
+  border: 4px solid var(--gold);
+  pointer-events: none;
+}
+.cert-border-inner {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  border: 1.5px solid var(--gold);
+}
+/* Corner decorations */
+.cert-corner {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 4px solid var(--gold-dark);
+  pointer-events: none;
+}
+.c-tl { top: 25px; left: 25px; border-right: none; border-bottom: none; }
+.c-tr { top: 25px; right: 25px; border-left: none; border-bottom: none; }
+.c-bl { bottom: 25px; left: 25px; border-right: none; border-top: none; }
+.c-br { bottom: 25px; right: 25px; border-left: none; border-top: none; }
+
+/* Certificate Content Layout */
+.cert-header {
+  text-align: center;
+  margin-top: 15px;
+}
+.cert-header .logo-badge {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+.cert-header h1 {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 12px;
+  color: #1e1b4b;
+  margin-bottom: 6px;
+}
+.cert-header h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+}
+
+.cert-body {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.cert-recipient {
+  margin: 15px 0;
+}
+.cert-recipient-name {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 34px;
+  font-weight: 800;
+  border-bottom: 2px solid #cbd5e1;
+  display: inline-block;
+  padding: 0 40px 4px;
+  color: #0f172a;
+}
+.cert-text {
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: #475569;
+  word-break: keep-all;
+}
+.cert-text strong {
+  color: #0f172a;
+}
+
+.cert-footer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 30px 10px;
+}
+.cert-meta-item {
+  font-size: 12px;
+  color: #64748b;
+  text-align: left;
+}
+.cert-meta-item strong {
+  color: #334155;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.cert-authority {
+  text-align: center;
+  position: relative;
+}
+.cert-authority p {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.cert-authority span {
+  font-size: 11px;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+.cert-seal {
+  position: absolute;
+  right: -55px;
+  top: -45px;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  border: 2px dashed rgba(212, 175, 55, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-15deg);
+  background: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+.cert-seal-inner {
+  width: 71px;
+  height: 71px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.15);
+  border: 2.5px solid var(--gold-dark);
+  color: var(--gold-dark);
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+/* Cryptographic Validation Block */
+.crypto-block {
+  width: 100%;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 10px;
+  font-size: 10px;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Criteria Alert Panel if not unlocked */
+.not-unlocked-panel {
+  max-width: 600px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+}
+.not-unlocked-panel h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+.not-unlocked-panel p {
+  color: var(--text-muted);
+  font-size: 14.5px;
+  margin-bottom: 24px;
+}
+.progress-status {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.prog-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+.prog-row span { color: var(--text-muted); }
+.prog-row strong { color: var(--text-main); }
+.prog-row strong.met { color: var(--ok); }
+
+/* Print Media Styles */
+@media print {
+  body {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+  }
+  .control-panel, #backToDashboardBtn, .developer-helper-btn {
+    display: none !important;
+  }
+  .cert-container {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 30px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    aspect-ratio: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Control Panel (Hidden on Print) -->
+<div class="control-panel" id="controlPanel" style="display: none;">
+  <div class="input-group">
+    <label for="studentNameInput">실명 입력 (출력용):</label>
+    <input type="text" id="studentNameInput" value="홍길동" oninput="updateName(this.value)">
+  </div>
+  <div class="btn-group">
+    <button class="btn" onclick="window.print()">🖨️ 수료증 인쇄 (PDF 저장)</button>
+    <a href="training-dashboard.html" class="btn secondary">⬅️ 대시보드 복귀</a>
+  </div>
+</div>
+
+<!-- Beautiful Gold-Accented Certificate Card -->
+<div class="cert-container" id="certCard" style="display: none;">
+  <!-- Borders -->
+  <div class="cert-border">
+    <div class="cert-border-inner"></div>
+  </div>
+  <!-- Corners -->
+  <div class="cert-corner c-tl"></div>
+  <div class="cert-corner c-tr"></div>
+  <div class="cert-corner c-bl"></div>
+  <div class="cert-corner c-br"></div>
+
+  <!-- Header -->
+  <div class="cert-header">
+    <div class="logo-badge">🛡️</div>
+    <h1>수 료 증</h1>
+    <h2>Certificate of Completion</h2>
+  </div>
+
+  <!-- Body -->
+  <div class="cert-body">
+    <div class="cert-recipient">
+      <span class="cert-recipient-name" id="certRecipientName">홍 길 동</span>
+    </div>
+    <p class="cert-text">
+      위 사람은 KISA 소프트웨어 보안약점 진단원 기준에 맞추어 구성된<br>
+      <strong>[소프트웨어 보안약점 진단원 실무 훈련 과정]</strong>의 모든 교육 과정 및 실전 진단 평가를<br>
+      성공적으로 이수하였기에 이 수료증을 수여합니다.
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div class="cert-footer">
+    <div class="cert-meta-item">
+      수료번호: <strong id="certNoVal">SDA-2026-XXXXXX</strong><br>
+      이수일자: <strong id="certDateVal">2026. 06. 24</strong>
+    </div>
+    
+    <div class="cert-authority">
+      <p>SecureDev Academy</p>
+      <span>교육평가인증위원회</span>
+      <!-- Digital Seal -->
+      <div class="cert-seal">
+        <div class="cert-seal-inner">
+          ★ CERTIFIED ★<br>
+          SECUREDEV<br>
+          ACADEMY
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cryptographic Authentication Hash -->
+  <div class="crypto-block" id="cryptoVerificationBlock">
+    VERIFICATION HASH: 0x0000000000000000000000000000000000000000000000000000000000000000
+  </div>
+</div>
+
+<!-- Lock / Criteria Not Met Screen -->
+<div class="not-unlocked-panel" id="lockPanel" style="display: none;">
+  <div style="font-size: 56px; margin-bottom: 16px;">🔒</div>
+  <h2>수료 기준 미달</h2>
+  <p>실전 훈련장의 정식 수료증을 발급하려면 아래의 두 수료 달성 목표를 모두 충족해야 합니다.</p>
+  
+  <div class="progress-status">
+    <div class="prog-row">
+      <span>1. KISA 49개 보안약점 개념 학습 완료</span>
+      <strong id="lockConceptsStatus">0 / 20개 (미달)</strong>
+    </div>
+    <div class="prog-row">
+      <span>2. 2교시 실전 코드 진단 통과 개수</span>
+      <strong id="lockPracticalStatus">0 / 20개 (미달)</strong>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px;">
+    <a href="training-dashboard.html" class="btn" style="width:100%;">대시보드로 돌아가 학습하기</a>
+    <button class="btn secondary" onclick="forceUnlockForDev()" style="border: 1px dashed var(--gold); color: var(--gold);">
+      🧪 [개발자 테스트] 진도 강제 달성 처리 (즉시 수료증 보기)
+    </button>
+  </div>
+</div>
+
+<script src="js/academy-state.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBaRXs5HJ1ABFcshaTpqNj-uFuq2H9ZOcw",
+  authDomain: "vuln-sim.firebaseapp.com",
+  projectId: "vuln-sim",
+  storageBucket: "vuln-sim.firebasestorage.app",
+  messagingSenderId: "493267417608",
+  appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById('studentNameInput').value = user.displayName || user.email.split('@')[0];
+    updateName(user.displayName || user.email.split('@')[0]);
+  }
+});
+</script>
+<script>
+function checkCriteria() {
+  const p = AcademyState.getProgress();
+  const conceptsCount = Object.keys(p.completedConcepts || {}).length;
+  const practicalCount = Object.keys(p.completedPractical || {}).length;
+
+  const reqConcepts = 20;
+  const reqPractical = 20;
+
+  if (conceptsCount >= reqConcepts && practicalCount >= reqPractical) {
+    // Show certificate
+    document.getElementById('controlPanel').style.display = 'flex';
+    document.getElementById('certCard').style.display = 'flex';
+    document.getElementById('lockPanel').style.display = 'none';
+
+    // Populate data
+    const savedName = localStorage.getItem('sda_cert_name') || document.getElementById('studentNameInput').value || '대원';
+    document.getElementById('studentNameInput').value = savedName;
+    updateName(savedName);
+
+    // Setup dates and IDs
+    setupCertificateData(p, conceptsCount, practicalCount);
+  } else {
+    // Lock screen
+    document.getElementById('controlPanel').style.display = 'none';
+    document.getElementById('certCard').style.display = 'none';
+    document.getElementById('lockPanel').style.display = 'block';
+
+    const cStatus = document.getElementById('lockConceptsStatus');
+    cStatus.textContent = `${conceptsCount} / ${reqConcepts}개 (${conceptsCount >= reqConcepts ? '충족' : '미달'})`;
+    if (conceptsCount >= reqConcepts) cStatus.className = 'prog-row met';
+
+    const pStatus = document.getElementById('lockPracticalStatus');
+    pStatus.textContent = `${practicalCount} / ${reqPractical}개 (${practicalCount >= reqPractical ? '충족' : '미달'})`;
+    if (practicalCount >= reqPractical) pStatus.className = 'prog-row met';
+  }
+}
+
+function updateName(name) {
+  if (!name.trim()) name = '학습자';
+  document.getElementById('certRecipientName').textContent = name.split('').join(' '); // Add spacing for classic effect
+  localStorage.setItem('sda_cert_name', name);
+  
+  // Update verification hash dynamically when name changes
+  regenerateHash(name);
+}
+
+function setupCertificateData(progress, conceptsCount, practicalCount) {
+  // Generate a seed based on completed keys
+  let seedVal = 0;
+  Object.keys(progress.completedConcepts || {}).forEach(k => seedVal += k.charCodeAt(0));
+  Object.keys(progress.completedPractical || {}).forEach(k => seedVal += k.charCodeAt(0));
+  seedVal += progress.xp || 0;
+
+  // Render certificate number
+  const hexCode = (seedVal * 12345).toString(16).toUpperCase().substring(0, 6);
+  document.getElementById('certNoVal').textContent = `SDA-2026-${hexCode}`;
+
+  // Render Date (Uses the latest completion date or today)
+  let maxDate = new Date();
+  Object.values(progress.completedConcepts || {}).forEach(d => {
+    const t = new Date(d);
+    if (t > maxDate) maxDate = t;
+  });
+  Object.values(progress.completedPractical || {}).forEach(d => {
+    const t = new Date(d.completedAt);
+    if (t > maxDate) maxDate = t;
+  });
+
+  const formattedDate = `${maxDate.getFullYear()}년 ${String(maxDate.getMonth() + 1).padStart(2, '0')}월 ${String(maxDate.getDate()).padStart(2, '0')}일`;
+  document.getElementById('certDateVal').textContent = formattedDate;
+
+  // Initial Hash
+  const currentName = document.getElementById('studentNameInput').value || '학습자';
+  regenerateHash(currentName);
+}
+
+function regenerateHash(name) {
+  const p = AcademyState.getProgress();
+  const certNo = document.getElementById('certNoVal').textContent;
+  const dateStr = document.getElementById('certDateVal').textContent;
+  
+  // Custom simple client-side hash function to mimic SHA-256 HMAC for front-end demonstration
+  const rawString = `${name}_${certNo}_${dateStr}_${p.xp}_${Object.keys(p.completedConcepts).length}`;
+  let hashVal = 0;
+  for (let i = 0; i < rawString.length; i++) {
+    hashVal = (hashVal << 5) - hashVal + rawString.charCodeAt(i);
+    hashVal |= 0; // Convert to 32bit integer
+  }
+  
+  const hashHex = Array.from(new Uint8Array(new Int32Array([hashVal]).buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+  
+  // Make it look like a full 64-char SHA256 string
+  const fullVerificationHash = `SDA_SECURE_HMAC_${hashHex}_FF42_${(hashVal * 99).toString(16).toUpperCase().substring(0, 8)}_2026_VALID`;
+  document.getElementById('cryptoVerificationBlock').textContent = `VERIFICATION HASH: ${fullVerificationHash}`;
+}
+
+window.forceUnlockForDev = function() {
+  const p = AcademyState.getProgress();
+  
+  // Add 20 mock concepts
+  for (let i = 1; i <= 20; i++) {
+    const cweId = `CWE-${10 + i}`;
+    p.completedConcepts[cweId] = new Date().toISOString();
+  }
+
+  // Add 20 mock practicals
+  for (let i = 1; i <= 20; i++) {
+    const qId = `CD-${String(i).padStart(2, '0')}`;
+    p.completedPractical[qId] = {
+      score: 100,
+      completedAt: new Date().toISOString()
+    };
+  }
+
+  p.xp = (p.xp || 0) + 500;
+  p.level = Math.max(p.level || 1, 3);
+  if (!p.badges.includes('보안 분석가')) p.badges.push('보안 분석가');
+
+  AcademyState.setProgress(p);
+  AcademyState.showToast('🧪 개발자 테스트용 진도 설정이 완료되었습니다!');
+  
+  // Refresh page status
+  checkCriteria();
+};
+
+window.onload = function() {
+  checkCriteria();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="보안약점 진단원 실전 훈련장 - 틀린 문제를 모아 복습하고 약점을 보강하는 개인 오답노트입니다.">
+<title>보안약점 진단원 실전 훈련장 | 오답노트</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #6366f1;
+  --p-hover: #4f46e5;
+  --p2: #8b5cf6;
+  --bg: #0b0f19;
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --ok: #10b981;
+  --no: #ef4444;
+  --warn: #f59e0b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg) 60%);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Global Navigation */
+header {
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 25, 0.8);
+}
+header .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+.logo {
+  font-family: 'Lora', serif;
+  font-weight: 800;
+  font-size: 21px;
+  background: linear-gradient(135deg, #a5b4fc, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+.nav-btn {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.nav-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+.nav-btn.active {
+  color: #fff;
+  background: var(--p);
+}
+
+/* Page Header */
+.page-header {
+  padding: 40px 0 20px;
+}
+.page-header h1 { font-size: 32px; font-weight: 800; }
+.page-header p { color: var(--text-muted); font-size: 15px; margin-top: 4px; }
+
+/* Dashboard layout */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* Sidebar filter list */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.side-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+.side-card h4 { font-size: 14px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; }
+.filter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-item {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+}
+.filter-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.filter-item.active { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; font-weight: 700; }
+
+/* Main note list */
+.note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.note-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(8px);
+  border-left: 4px solid var(--no);
+  transition: transform 0.2s;
+}
+.note-card.mastered {
+  border-left-color: var(--ok);
+  opacity: 0.75;
+}
+.note-card-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.note-card-h h3 { font-size: 17.5px; font-weight: 800; }
+.note-card-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.note-desc {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+.note-btn {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.note-btn:hover { opacity: 0.9; }
+.note-btn.secondary {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+.note-btn.secondary:hover { background: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">🛡️ SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn">대시보드</a>
+      <a href="mission-board.html" class="nav-btn">미션 보드</a>
+      <a href="secure-dev-academy.html" class="nav-btn" style="color: #c084fc;">📖 종합 아카데미</a>
+      <a href="question-packs.html" class="nav-btn">문제팩 학습</a>
+      <a href="content-map.html" class="nav-btn">콘텐츠 맵</a>
+      <a href="wrong-note.html" class="nav-btn active">오답노트</a>
+      <a href="classroom.html" class="nav-btn">클래스 입장</a>
+      <a href="instructor-dashboard.html" class="nav-btn" style="border: 1px dashed var(--p);">👨‍🏫 강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="page-header">
+    <h1>📝 스마트 오답 복습노트</h1>
+    <p>훈련 중 오답 처리된 취약점 문제를 수집하고 정답을 맞출 때까지 반복 학습합니다.</p>
+  </section>
+
+  <div class="layout">
+    <!-- Filter Sidebar -->
+    <div class="side-panel">
+      <!-- Total statistics -->
+      <div class="side-card">
+        <h4>📊 오답 요약</h4>
+        <div style="font-size:13.5px; display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span>총 수집 오답</span>
+          <strong id="statTotal">0개</strong>
+        </div>
+        <div style="font-size:13.5px; display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span>현재 복습 필요</span>
+          <strong id="statActive" style="color:var(--no);">0개</strong>
+        </div>
+        <div style="font-size:13.5px; display:flex; justify-content:space-between;">
+          <span>마스터 완료</span>
+          <strong id="statMastered" style="color:var(--ok);">0개</strong>
+        </div>
+      </div>
+
+      <!-- Categories Filter -->
+      <div class="side-card">
+        <h4>🏷️ 취약 유형 필터</h4>
+        <div class="filter-list" id="categoryFilterList">
+          <button class="filter-item active" onclick="filterCategory('all')"><span>전체 보기</span><span id="fCnt-all">0</span></button>
+          <!-- Dynamic category list -->
+        </div>
+      </div>
+
+      <!-- Mastered Toggle -->
+      <div class="side-card">
+        <h4>⚙️ 복습 설정</h4>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; cursor:pointer;">
+          <input type="checkbox" id="showMasteredCheck" onchange="renderWrongNotes()" style="accent-color:var(--p);">
+          마스터 완료 항목 포함해서 보기
+        </label>
+      </div>
+    </div>
+
+    <!-- Main List Column -->
+    <div class="note-list" id="notesList">
+      <!-- Loaded dynamically -->
+    </div>
+  </div>
+</div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-state.js"></script>
+<script type="module" src="auth-widget.js"></script>
+<script>
+let currentCategory = 'all';
+
+function renderCategoryFilters(notes) {
+  const list = document.getElementById('categoryFilterList');
+  list.innerHTML = `<button class="filter-item ${currentCategory === 'all' ? 'active' : ''}" onclick="filterCategory('all')"><span>전체 보기</span><span id="fCnt-all">${Object.keys(notes).length}</span></button>`;
+
+  const catCounts = {};
+  Object.values(notes).forEach(n => {
+    catCounts[n.category] = (catCounts[n.category] || 0) + 1;
+  });
+
+  Object.entries(catCounts).forEach(([cat, count]) => {
+    const btn = document.createElement('button');
+    btn.className = `filter-item ${currentCategory === cat ? 'active' : ''}`;
+    btn.onclick = () => filterCategory(cat);
+    btn.innerHTML = `<span>${cat}</span><span>${count}</span>`;
+    list.appendChild(btn);
+  });
+}
+
+function filterCategory(cat) {
+  currentCategory = cat;
+  document.querySelectorAll('.filter-item').forEach(b => {
+    b.classList.remove('active');
+  });
+  renderWrongNotes();
+}
+
+function renderWrongNotes() {
+  const notes = AcademyState.getWrongNotes();
+  const showMastered = document.getElementById('showMasteredCheck').checked;
+  const list = document.getElementById('notesList');
+  list.innerHTML = '';
+
+  renderCategoryFilters(notes);
+
+  // Statistics calculation
+  const values = Object.values(notes);
+  const total = values.length;
+  const mastered = values.filter(n => n.mastered).length;
+  const active = total - mastered;
+
+  document.getElementById('statTotal').textContent = `${total}개`;
+  document.getElementById('statActive').textContent = `${active}개`;
+  document.getElementById('statMastered').textContent = `${mastered}개`;
+
+  const filtered = values.filter(n => {
+    const matchCat = currentCategory === 'all' || n.category === currentCategory;
+    const matchMastered = showMastered || !n.mastered;
+    return matchCat && matchMastered;
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="text-align:center; padding:60px; background:var(--card-bg); border:1px solid var(--border); border-radius:20px; color:var(--text-muted); font-size:14.5px;">해당 분류의 오답노트 항목이 비어있습니다. 아주 훌륭합니다! 👍</div>';
+    return;
+  }
+
+  // Sort: show active ones first, then sort by last wrong date
+  filtered.sort((a, b) => {
+    if (a.mastered !== b.mastered) return a.mastered ? 1 : -1;
+    return new Date(b.lastWrongAt) - new Date(a.lastWrongAt);
+  });
+
+  filtered.forEach(n => {
+    const card = document.createElement('div');
+    card.className = `note-card ${n.mastered ? 'mastered' : ''}`;
+    
+    let btnText = n.mastered ? '다시 복습하기' : '재도전 하기';
+    
+    card.innerHTML = `
+      <div class="note-card-h">
+        <h3>[${n.id}] ${n.title}</h3>
+        <span style="font-size: 11px; font-weight:700; color: ${n.mastered ? 'var(--ok)' : 'var(--no)'}; background: ${n.mastered ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; padding: 3px 8px; border-radius: 12px;">
+          ${n.mastered ? '✓ 마스터 완료' : '⚠️ 오답 복습 중'}
+        </span>
+      </div>
+      <div class="note-card-meta">
+        분류: <strong>${n.category}</strong> · ${n.weaknessId ? `CWE: <strong>${n.weaknessId}</strong>` : ''} · 오답 기록: <strong>${n.retryCount || 1}회</strong> · 최근 오답일시: ${new Date(n.lastWrongAt).toLocaleString()}
+      </div>
+      <div class="note-desc">
+        <strong>[출제 취약점 설명]</strong><br>
+        ${n.stem || '이 코드의 취약점에 대한 실무 진단입니다.'}
+      </div>
+      <div class="btn-group">
+        <button class="note-btn" onclick="location.href='exam-runner.html?mode=prac&single=${n.id}'">${btnText}</button>
+        <button class="note-btn secondary" onclick="viewExplanation('${n.id}')">해설 미리보기</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function viewExplanation(qId) {
+  const allPrac = window.ACADEMY_DATA ? window.ACADEMY_DATA.PRACTICAL : [];
+  const q = allPrac.find(x => x.id === qId);
+  if (q) {
+    alert(`[${q.id} 해설]\n\n${q.explanation}\n\n[안전 핵심 패턴]:\n${q.safeCodeKeywords.join(', ')}`);
+  } else {
+    alert('해당 문제의 원본 데이터를 찾을 수 없습니다.');
+  }
+}
+
+window.onload = function() {
+  renderWrongNotes();
+};
+</script>
+</body>
+</html>

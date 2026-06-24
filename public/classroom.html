@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="클래스 입장 및 실시간 동기화 - 강사가 제공한 코드를 입력하여 훈련 수업에 참여합니다.">
+<title>보안약점 진단원 실전 훈련장 | 클래스 입장</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #6366f1;
+  --p-hover: #4f46e5;
+  --p2: #8b5cf6;
+  --bg: #0b0f19;
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --ok: #10b981;
+  --no: #ef4444;
+  --warn: #f59e0b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg) 60%);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.wrap { max-width: 600px; margin: 0 auto; padding: 0 20px; }
+
+/* Global Navigation */
+header {
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 25, 0.8);
+}
+header .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+.logo {
+  font-family: 'Lora', serif;
+  font-weight: 800;
+  font-size: 21px;
+  background: linear-gradient(135deg, #a5b4fc, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+.nav-btn {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.nav-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+.nav-btn.active {
+  color: #fff;
+  background: var(--p);
+}
+
+.panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 34px;
+  margin-top: 40px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+h2 { font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+p { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 24px; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+label { font-size: 13.5px; font-weight: 700; color: #a5b4fc; }
+input[type="text"] {
+  background: #0f172a;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 2px;
+}
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--p);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.btn {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+.btn:hover { background: var(--p-hover); }
+.btn.leave {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  margin-top: 10px;
+}
+.btn.leave:hover { background: var(--no); color: #fff; }
+
+.status-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+  display: none;
+}
+</style>
+<!-- RESP-NET -->
+<style>
+@media (max-width: 768px){
+  html{-webkit-text-size-adjust:100%}
+  img,svg,video,canvas,iframe{max-width:100%;height:auto}
+  pre,code{max-width:100%;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">🛡️ SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn">대시보드</a>
+      <a href="mission-board.html" class="nav-btn">미션 보드</a>
+      <a href="secure-dev-academy.html" class="nav-btn" style="color: #c084fc;">📖 종합 아카데미</a>
+      <a href="question-packs.html" class="nav-btn">문제팩 학습</a>
+      <a href="content-map.html" class="nav-btn">콘텐츠 맵</a>
+      <a href="wrong-note.html" class="nav-btn">오답노트</a>
+      <a href="classroom.html" class="nav-btn active">클래스 입장</a>
+      <a href="instructor-dashboard.html" class="nav-btn" style="border: 1px dashed var(--p);">👨‍🏫 강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>🏫 강의실 입장 (클래스 동기화)</h2>
+    <p>강사가 제공한 6자리 참여 코드를 입력하여 보안 약점 훈련 수업에 참여합니다.</p>
+
+    <!-- Joined Class info -->
+    <div class="status-box" id="activeClassBox">
+      <h4 style="font-weight:800; color:#a5b4fc; text-align:center; font-size:16px;" id="activeClassName">수업중인 클래스명</h4>
+      <div style="font-size:13px; text-align:center; color:var(--text-muted); margin-top:4px;">
+        상태: <span style="color:var(--ok); font-weight:700;">실시간 동기화 활성화됨 ✓</span>
+      </div>
+      <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:12px; font-size:13px;">
+        • 현재 학생 진도(XP 및 리포트 데이터)가 강사 화면에 실시간 업로드됩니다.<br>
+        • 오프라인 강의실 및 온라인 평가에서 피드백을 실시간으로 확인받을 수 있습니다.
+      </div>
+    </div>
+
+    <!-- Join Form -->
+    <div id="joinForm">
+      <div class="form-group">
+        <label for="classCodeInput">참여 코드 (예: CL-101)</label>
+        <input type="text" id="classCodeInput" placeholder="CL-000" maxlength="8">
+      </div>
+      <button class="btn" onclick="joinClass()">클래스 참여하기</button>
+    </div>
+
+    <button class="btn leave" id="leaveBtn" style="display: none;" onclick="leaveClass()">클래스 퇴장하기</button>
+  </div>
+</div>
+
+<script src="js/academy-state.js"></script>
+<script type="module" src="auth-widget.js"></script>
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBaRXs5HJ1ABFcshaTpqNj-uFuq2H9ZOcw",
+  authDomain: "vuln-sim.firebaseapp.com",
+  projectId: "vuln-sim",
+  storageBucket: "vuln-sim.firebasestorage.app",
+  messagingSenderId: "493267417608",
+  appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
+};
+
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+
+onAuthStateChanged(auth, u => {
+  currentUser = u;
+  renderClassState();
+});
+
+function renderClassState() {
+  const currentClass = AcademyState.getActiveClass();
+  const box = document.getElementById('activeClassBox');
+  const form = document.getElementById('joinForm');
+  const leave = document.getElementById('leaveBtn');
+
+  if (currentClass) {
+    box.style.display = 'block';
+    form.style.display = 'none';
+    leave.style.display = 'block';
+    document.getElementById('activeClassName').textContent = `${currentClass.className} (${currentClass.classCode})`;
+    
+    // Automatically upload stats to class roster if logged in
+    syncProgressWithClass(currentClass.classCode);
+  } else {
+    box.style.display = 'none';
+    form.style.display = 'block';
+    leave.style.display = 'none';
+  }
+}
+
+async function syncProgressWithClass(classCode) {
+  if (!currentUser) return;
+  const p = AcademyState.getProgress();
+  const notes = AcademyState.getWrongNotes();
+  const conceptsCount = Object.keys(p.completedConcepts || {}).length;
+  const practicalCount = Object.keys(p.completedPractical || {}).length;
+  const wrongCount = Object.values(notes).filter(n => !n.mastered).length;
+
+  try {
+    const q = query(collection(db, 'classes'), where('joinCode', '==', classCode));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const classDoc = snap.docs[0];
+      const memberRef = doc(db, 'classes', classDoc.id, 'members', currentUser.uid);
+      await setDoc(memberRef, {
+        displayName: currentUser.displayName || currentUser.email || '익명 학생',
+        xp: p.xp || 0,
+        level: p.level || 1,
+        conceptsCount: conceptsCount,
+        practicalCount: practicalCount,
+        wrongCount: wrongCount,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }
+  } catch (e) {
+    console.error('Error syncing progress with class:', e);
+  }
+}
+
+window.joinClass = async function() {
+  const code = document.getElementById('classCodeInput').value.trim().toUpperCase();
+  if (!code) {
+    alert('참여 코드를 입력하세요.');
+    return;
+  }
+
+  try {
+    const q = query(collection(db, 'classes'), where('joinCode', '==', code));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      alert('유효하지 않은 클래스 참여 코드입니다. 다시 확인해 주십시오.');
+      return;
+    }
+
+    const classData = snap.docs[0].data();
+    AcademyState.setActiveClass({
+      classCode: code,
+      className: classData.title || '보안 훈련 클래스',
+      joinedAt: new Date().toISOString()
+    });
+
+    AcademyState.showToast(`🏫 클래스에 참가하였습니다: ${classData.title}`);
+    renderClassState();
+  } catch (e) {
+    console.error('Error joining class:', e);
+    alert('오류가 발생했습니다. 로그인이 되었는지 먼저 확인하세요.');
+  }
+};
+
+window.leaveClass = function() {
+  if (confirm('클래스에서 퇴장하시겠습니까? 강사 관리 화면에서 본인 정보가 더 이상 집계되지 않습니다.')) {
+    AcademyState.setActiveClass(null);
+    renderClassState();
+    AcademyState.showToast('클래스에서 퇴장하였습니다.');
+  }
+};
+</script>
+</body>
+</html>

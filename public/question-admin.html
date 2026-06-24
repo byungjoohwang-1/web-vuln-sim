@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="보안약점 진단원 실전 훈련장 - 강사용 코드진단 서술형 문제 등록 및 관리 도구.">
+<title>보안약점 진단원 실전 훈련장 | 문제 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p:#6366f1;
+  --p-hover:#4f46e5;
+  --bg:#0b0f19;
+  --card:rgba(17,24,39,.76);
+  --line:rgba(255,255,255,.09);
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --ok:#10b981;
+  --no:#ef4444;
+  --warn:#f59e0b;
+  --code:#0d1117;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  min-height:100vh;
+  font-family:'Outfit', sans-serif;
+  background:radial-gradient(circle at top, #172554 0%, var(--bg) 58%);
+  color:var(--text);
+  line-height:1.6;
+  padding-bottom:60px;
+}
+.wrap { max-width:1280px; margin:0 auto; padding:0 20px; }
+header {
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px);
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(11,15,25,.84);
+}
+header .wrap { display:flex; justify-content:space-between; align-items:center; min-height:70px; gap:16px; }
+.logo { font-family:'Lora', serif; font-weight:800; font-size:21px; color:#a5b4fc; }
+.nav-links { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.nav-btn {
+  color:var(--muted);
+  text-decoration:none;
+  font-size:14px;
+  font-weight:700;
+  padding:8px 14px;
+  border-radius:20px;
+}
+.nav-btn:hover { color:#fff; background:rgba(255,255,255,.06); }
+.nav-btn.active { color:#fff; background:var(--p); }
+.page-header { padding:40px 0 22px; display:flex; justify-content:space-between; gap:20px; align-items:flex-end; }
+.page-header h1 { font-size:32px; font-weight:900; }
+.page-header p { color:var(--muted); font-size:15px; margin-top:4px; }
+.layout { display:grid; grid-template-columns: 1.1fr .9fr; gap:20px; }
+.panel {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px;
+  backdrop-filter:blur(10px);
+}
+.panel-h { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+.panel-h h2, .panel-h h3 { font-size:18px; font-weight:900; }
+.form-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+.field { display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+label { color:#a5b4fc; font-size:12.5px; font-weight:900; }
+input, select, textarea {
+  width:100%;
+  background:#0f172a;
+  border:1px solid var(--line);
+  border-radius:12px;
+  color:#fff;
+  padding:11px 12px;
+  font:inherit;
+}
+textarea.code {
+  font-family:'JetBrains Mono', monospace;
+  font-size:13px;
+  min-height:170px;
+}
+textarea.small { min-height:78px; }
+.hint { color:var(--muted); font-size:12px; margin-top:-3px; }
+.btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+.btn {
+  background:var(--p);
+  color:#fff;
+  border:0;
+  border-radius:12px;
+  padding:10px 15px;
+  font-weight:900;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+}
+.btn:hover { background:var(--p-hover); }
+.btn.secondary { background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--text); }
+.btn.danger { background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.32); color:#fca5a5; }
+.question-list { display:flex; flex-direction:column; gap:10px; max-height:710px; overflow:auto; padding-right:3px; }
+.question-card {
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  background:rgba(255,255,255,.035);
+}
+.question-card h4 { font-size:15.5px; font-weight:900; }
+.meta { color:var(--muted); font-size:12px; margin-top:2px; }
+.mini-actions { display:flex; gap:8px; margin-top:12px; }
+.mini-actions button, .mini-actions a {
+  flex:1;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.05);
+  color:#fff;
+  border-radius:10px;
+  padding:8px;
+  text-decoration:none;
+  font-size:12.5px;
+  font-weight:900;
+  cursor:pointer;
+  text-align:center;
+}
+.preview {
+  background:var(--code);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:12.5px;
+  white-space:pre-wrap;
+  overflow:auto;
+  max-height:260px;
+}
+.stat-strip { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:16px; }
+.stat {
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+}
+.stat span { color:var(--muted); display:block; font-size:11.5px; font-weight:900; }
+.stat strong { font-family:'JetBrains Mono', monospace; font-size:20px; }
+.empty { color:var(--muted); border:1px dashed var(--line); padding:16px; border-radius:14px; font-size:13px; }
+@media (max-width:960px) {
+  .layout { grid-template-columns:1fr; }
+}
+@media (max-width:700px) {
+  header .wrap { align-items:flex-start; flex-direction:column; padding-top:14px; padding-bottom:14px; }
+  .page-header { display:block; }
+  .form-grid, .stat-strip { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo">SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn">대시보드</a>
+      <a href="question-packs.html" class="nav-btn">문제팩</a>
+      <a href="content-map.html" class="nav-btn">콘텐츠 맵</a>
+      <a href="question-admin.html" class="nav-btn active">문제 관리</a>
+      <a href="instructor-dashboard.html" class="nav-btn">강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="page-header">
+    <div>
+      <h1>강사용 문제 등록·관리</h1>
+      <p>수업 중 직접 만든 보안약점 코드진단 서술형 문제를 로컬 문제은행에 추가합니다.</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="exportQuestions()">JSON 내보내기</button>
+      <button class="btn secondary" onclick="document.getElementById('importFile').click()">JSON 가져오기</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importQuestions(event)">
+    </div>
+  </section>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-h">
+        <h2 id="formTitle">새 코드진단 문제 작성</h2>
+        <button class="btn secondary" onclick="resetForm()">새 문제</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="qTitle">문제 제목</label>
+          <input id="qTitle" placeholder="예: 사용자 프로필 조회 로직 검토">
+        </div>
+        <div class="field">
+          <label for="qId">문제 ID</label>
+          <input id="qId" placeholder="자동 생성" readonly>
+        </div>
+        <div class="field">
+          <label for="qCat">약점 대분류</label>
+          <select id="qCat">
+            <option>입력검증</option>
+            <option>보안기능</option>
+            <option>시간및상태</option>
+            <option>에러처리</option>
+            <option>코드오류</option>
+            <option>캡슐화</option>
+            <option>API오용</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qDiff">난이도</label>
+          <select id="qDiff">
+            <option>하</option>
+            <option>중</option>
+            <option>상</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qLang">언어</label>
+          <select id="qLang">
+            <option>Java</option>
+            <option>JavaScript</option>
+            <option>Python</option>
+            <option>PHP</option>
+            <option>C#</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qPositive">정·오탐</label>
+          <select id="qPositive">
+            <option value="true">취약함 · 정탐</option>
+            <option value="false">안전함 · 오탐</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qWeakness">보안약점명</label>
+          <input id="qWeakness" placeholder="예: SQL 삽입">
+        </div>
+        <div class="field">
+          <label for="qCwe">CWE</label>
+          <input id="qCwe" placeholder="예: CWE-89">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="qCode">취약/안전 코드</label>
+        <textarea id="qCode" class="code" placeholder="문제에 제시할 코드를 붙여넣으세요."></textarea>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="qReason">취약 원인 키워드</label>
+          <textarea id="qReason" class="small" placeholder="Statement, 문자열 결합, 외부 입력"></textarea>
+          <div class="hint">쉼표로 구분합니다. 서술형 원인 채점에 사용됩니다.</div>
+        </div>
+        <div class="field">
+          <label for="qSafeKeywords">안전 코드 키워드</label>
+          <textarea id="qSafeKeywords" class="small" placeholder="PreparedStatement, setString, prepareStatement"></textarea>
+          <div class="hint">쉼표로 구분합니다. 개선 코드 채점에 사용됩니다.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="qSafeCode">모범 안전 코드</label>
+        <textarea id="qSafeCode" class="code" placeholder="정답 해설에 표시할 안전 코드 예시를 작성하세요."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="qExplanation">해설</label>
+        <textarea id="qExplanation" class="small" placeholder="왜 정탐/오탐인지, 어떤 대책이 필요한지 설명하세요."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="saveQuestion()">문제 저장</button>
+        <button class="btn secondary" onclick="previewQuestion()">JSON 미리보기</button>
+        <a class="btn secondary" href="question-packs.html">문제팩 확인</a>
+      </div>
+    </section>
+
+    <aside>
+      <section class="panel" style="margin-bottom:20px;">
+        <div class="panel-h"><h3>커스텀 문제은행</h3></div>
+        <div class="stat-strip">
+          <div class="stat"><span>등록 문제</span><strong id="statTotal">0</strong></div>
+          <div class="stat"><span>정탐</span><strong id="statTp">0</strong></div>
+          <div class="stat"><span>오탐</span><strong id="statFp">0</strong></div>
+        </div>
+        <div class="question-list" id="questionList"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h"><h3>문제 JSON 미리보기</h3></div>
+        <div class="preview" id="previewBox">저장 전 미리보기를 누르면 문제 데이터가 표시됩니다.</div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<script src="js/academy-state.js"></script>
+<script type="module" src="auth-widget.js"></script>
+<script>
+const STORE_KEY = 'sda_custom_questions';
+let editingId = '';
+
+function readQuestions() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+    return Array.isArray(rows) ? rows : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function writeQuestions(rows) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(rows));
+}
+
+function csv(text) {
+  return String(text || '').split(',').map(x => x.trim()).filter(Boolean);
+}
+
+function nextId() {
+  const rows = readQuestions();
+  let n = rows.length + 1;
+  while (rows.some(q => q.id === `CQ-${String(n).padStart(3, '0')}`)) n++;
+  return `CQ-${String(n).padStart(3, '0')}`;
+}
+
+function collectQuestion() {
+  const id = document.getElementById('qId').value || nextId();
+  const isTruePositive = document.getElementById('qPositive').value === 'true';
+  return {
+    id,
+    lang: document.getElementById('qLang').value,
+    cat: document.getElementById('qCat').value,
+    diff: document.getElementById('qDiff').value,
+    title: document.getElementById('qTitle').value.trim(),
+    code: document.getElementById('qCode').value.trim(),
+    isTruePositive,
+    weaknessName: document.getElementById('qWeakness').value.trim(),
+    cwe: document.getElementById('qCwe').value.trim(),
+    reasonKeywords: csv(document.getElementById('qReason').value),
+    negKw: isTruePositive ? ['오탐', '안전한 코드', '취약하지 않'] : ['정탐', '취약함'],
+    safeCode: document.getElementById('qSafeCode').value.trim(),
+    safeCodeKeywords: csv(document.getElementById('qSafeKeywords').value),
+    explanation: document.getElementById('qExplanation').value.trim(),
+    custom: true,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function validate(q) {
+  if (!q.title) return '문제 제목을 입력하세요.';
+  if (!q.code) return '문제 코드를 입력하세요.';
+  if (!q.weaknessName) return '보안약점명을 입력하세요.';
+  if (!q.explanation) return '해설을 입력하세요.';
+  if (q.isTruePositive && q.reasonKeywords.length === 0) return '정탐 문제는 취약 원인 키워드가 필요합니다.';
+  return '';
+}
+
+function fillForm(q) {
+  editingId = q.id;
+  document.getElementById('formTitle').textContent = `문제 수정 · ${q.id}`;
+  document.getElementById('qId').value = q.id;
+  document.getElementById('qTitle').value = q.title || '';
+  document.getElementById('qCat').value = q.cat || '입력검증';
+  document.getElementById('qDiff').value = q.diff || '중';
+  document.getElementById('qLang').value = q.lang || 'Java';
+  document.getElementById('qPositive').value = q.isTruePositive === false ? 'false' : 'true';
+  document.getElementById('qWeakness').value = q.weaknessName || '';
+  document.getElementById('qCwe').value = q.cwe || '';
+  document.getElementById('qCode').value = q.code || '';
+  document.getElementById('qReason').value = (q.reasonKeywords || []).join(', ');
+  document.getElementById('qSafeKeywords').value = (q.safeCodeKeywords || []).join(', ');
+  document.getElementById('qSafeCode').value = q.safeCode || '';
+  document.getElementById('qExplanation').value = q.explanation || '';
+  previewQuestion();
+}
+
+function resetForm() {
+  editingId = '';
+  document.getElementById('formTitle').textContent = '새 코드진단 문제 작성';
+  ['qTitle','qWeakness','qCwe','qCode','qReason','qSafeKeywords','qSafeCode','qExplanation'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('qId').value = nextId();
+  document.getElementById('qCat').value = '입력검증';
+  document.getElementById('qDiff').value = '중';
+  document.getElementById('qLang').value = 'Java';
+  document.getElementById('qPositive').value = 'true';
+  document.getElementById('previewBox').textContent = '저장 전 미리보기를 누르면 문제 데이터가 표시됩니다.';
+}
+
+function saveQuestion() {
+  const q = collectQuestion();
+  const msg = validate(q);
+  if (msg) {
+    alert(msg);
+    return;
+  }
+  const rows = readQuestions();
+  const idx = rows.findIndex(x => x.id === q.id);
+  if (idx >= 0) rows[idx] = q;
+  else rows.push(q);
+  writeQuestions(rows);
+  AcademyState.showToast(`문제를 저장했습니다: ${q.id}`);
+  renderList();
+  fillForm(q);
+}
+
+function deleteQuestion(id) {
+  if (!confirm(`${id} 문제를 삭제할까요?`)) return;
+  writeQuestions(readQuestions().filter(q => q.id !== id));
+  AcademyState.showToast(`문제를 삭제했습니다: ${id}`);
+  resetForm();
+  renderList();
+}
+
+function previewQuestion() {
+  const q = collectQuestion();
+  document.getElementById('previewBox').textContent = JSON.stringify(q, null, 2);
+}
+
+function exportQuestions() {
+  const blob = new Blob([JSON.stringify(readQuestions(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sda-custom-questions-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importQuestions(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const rows = JSON.parse(reader.result);
+      if (!Array.isArray(rows)) throw new Error('array required');
+      const existing = readQuestions();
+      const merged = [...existing];
+      rows.forEach(q => {
+        if (!q || !q.id) return;
+        const idx = merged.findIndex(x => x.id === q.id);
+        if (idx >= 0) merged[idx] = q;
+        else merged.push(q);
+      });
+      writeQuestions(merged);
+      AcademyState.showToast(`${rows.length}개 문제를 가져왔습니다.`);
+      renderList();
+    } catch(e) {
+      alert('가져오기 실패: 올바른 JSON 문제 배열인지 확인하세요.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function renderList() {
+  const rows = readQuestions();
+  document.getElementById('statTotal').textContent = rows.length;
+  document.getElementById('statTp').textContent = rows.filter(q => q.isTruePositive !== false).length;
+  document.getElementById('statFp').textContent = rows.filter(q => q.isTruePositive === false).length;
+  const list = document.getElementById('questionList');
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty">아직 등록된 커스텀 문제가 없습니다. 왼쪽 양식으로 첫 문제를 만들어 보세요.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  rows.slice().reverse().forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.innerHTML = `
+      <h4>[${q.id}] ${q.title}</h4>
+      <div class="meta">${q.cat} · ${q.diff} · ${q.lang} · ${q.isTruePositive === false ? '오탐' : '정탐'} · ${q.weaknessName}</div>
+      <div class="mini-actions">
+        <button onclick="editQuestion('${q.id}')">수정</button>
+        <a href="exam-runner.html?mode=prac&single=${q.id}">풀기</a>
+        <button onclick="deleteQuestion('${q.id}')">삭제</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function editQuestion(id) {
+  const q = readQuestions().find(x => x.id === id);
+  if (q) fillForm(q);
+}
+
+window.onload = function() {
+  resetForm();
+  renderList();
+};
+</script>
+</body>
+</html>

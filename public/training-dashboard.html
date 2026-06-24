@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="보안약점 진단원 실전 훈련장 - 전체 진도율, 모의고사 성적 추이, 오답 복습 및 수료 리포트 제공.">
+<title>보안약점 진단원 실전 훈련장 | 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #6366f1;
+  --p-hover: #4f46e5;
+  --p2: #8b5cf6;
+  --bg: #0b0f19;
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --ok: #10b981;
+  --no: #ef4444;
+  --warn: #f59e0b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', 'Lora', sans-serif;
+  background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg) 60%);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Global Navigation */
+header {
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 25, 0.8);
+}
+header .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+.logo {
+  font-family: 'Lora', serif;
+  font-weight: 800;
+  font-size: 21px;
+  background: linear-gradient(135deg, #a5b4fc, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+.nav-btn {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.nav-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+.nav-btn.active {
+  color: #fff;
+  background: var(--p);
+}
+
+/* Dashboard Hero */
+.hero {
+  padding: 40px 0 20px;
+}
+.welcome-card {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 24px;
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  backdrop-filter: blur(8px);
+}
+.welcome-text h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+.welcome-text p { color: var(--text-muted); font-size: 15px; }
+.level-badge {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 12px 24px;
+  text-align: center;
+}
+.level-badge .num {
+  font-size: 28px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  color: #a5b4fc;
+}
+.level-badge .xp { font-size: 12px; color: var(--text-muted); }
+
+/* Quick Status Cards */
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); }
+.stat-card .val {
+  font-size: 36px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  background: linear-gradient(135deg, #a5b4fc, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-card .lbl { font-size: 13.5px; color: var(--text-muted); margin-top: 4px; }
+
+/* Main Layout */
+.main-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-top: 30px;
+}
+@media (max-width: 900px) {
+  .main-layout { grid-template-columns: 1fr; }
+}
+
+/* Card Sections */
+.panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(8px);
+  margin-bottom: 24px;
+}
+.panel-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+.panel-h h3 { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+
+/* Daily Mission */
+.mission-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.mission-desc h4 { font-size: 15px; font-weight: 700; }
+.mission-desc p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.mission-btn {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 15px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.mission-btn:hover { background: var(--p-hover); }
+
+/* Progress Tracks */
+.prog-row {
+  margin-bottom: 16px;
+}
+.prog-lbl { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.prog-lbl span { font-weight: 700; }
+.prog-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--p), var(--p2));
+  border-radius: 5px;
+  width: 0;
+  transition: width 0.8s ease-in-out;
+}
+
+/* Badges */
+.badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.badge-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.badge-item.active {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+/* Wrong list */
+.wrong-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wrong-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wrong-item-info h5 { font-size: 14px; font-weight: 700; }
+.wrong-item-info span { font-size: 11.5px; color: var(--text-muted); }
+.wrong-retry-btn {
+  background: transparent;
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.wrong-retry-btn:hover { background: var(--warn); color: #000; }
+
+/* Weak categories list */
+.weak-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.weak-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+}
+.weak-row .tag {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+}
+
+/* Certificate Panel */
+.cert-box {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+}
+.cert-btn {
+  background: var(--ok);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: opacity 0.2s;
+}
+.cert-btn:hover { opacity: 0.9; }
+
+/* Active Class */
+.class-status-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">🛡️ SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn active">대시보드</a>
+      <a href="mission-board.html" class="nav-btn">미션 보드</a>
+      <a href="secure-dev-academy.html" class="nav-btn" style="color: #c084fc;">📖 종합 아카데미</a>
+      <a href="question-packs.html" class="nav-btn">문제팩 학습</a>
+      <a href="content-map.html" class="nav-btn">콘텐츠 맵</a>
+      <a href="wrong-note.html" class="nav-btn">오답노트</a>
+      <a href="question-admin.html" class="nav-btn">문제 관리</a>
+      <a href="classroom.html" class="nav-btn">클래스 입장</a>
+      <a href="instructor-dashboard.html" class="nav-btn" style="border: 1px dashed var(--p);">👨‍🏫 강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Hero / Welcome Section -->
+  <section class="hero">
+    <div class="welcome-card">
+      <div class="welcome-text">
+        <h1 id="userGreeting">대원님, 훈련을 시작하세요!</h1>
+        <p>보안약점 진단원 시험 합격 및 완벽한 보안 실무 능력을 갖추기 위한 실전 훈련장입니다.</p>
+      </div>
+      <div class="level-badge">
+        <div class="xp">USER LEVEL</div>
+        <div class="num" id="levelVal">1</div>
+        <div class="xp" id="xpVal">0 XP</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Status Grid -->
+  <div class="grid-stats">
+    <div class="stat-card">
+      <div class="val" id="cntConcepts">0 / 49</div>
+      <div class="lbl">개념 학습 완료</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="cntPractical">0 / 90</div>
+      <div class="lbl">코드 진단 통과</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="highestMock">N/A</div>
+      <div class="lbl">모의고사 최고점수</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="cntWrong">0</div>
+      <div class="lbl">현재 등록 오답</div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main-layout">
+    <!-- Left Column: Operations & Missions -->
+    <div class="main-col">
+      <!-- Daily Missions -->
+      <div class="panel">
+        <div class="panel-h">
+          <h3>🎯 오늘의 추천 미션</h3>
+          <a href="mission-board.html" class="mission-btn" style="text-decoration:none;">전체 미션 보기</a>
+        </div>
+        <div id="missionContainer">
+          <!-- Dynamically populated daily missions -->
+        </div>
+      </div>
+
+      <!-- Training Progress details -->
+      <div class="panel">
+        <div class="panel-h">
+          <h3>📊 핵심 교육과정 진도 현황</h3>
+        </div>
+        <div class="prog-row">
+          <div class="prog-lbl">
+            <span>KISA 49개 보안약점 개념 학습</span>
+            <span id="txtProgConcepts">0%</span>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill" id="barProgConcepts"></div>
+          </div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-lbl">
+            <span>2교시 실전 코드 진단 (90문항)</span>
+            <span id="txtProgPractical">0%</span>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill" id="barProgPractical"></div>
+          </div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-lbl">
+            <span>수료 조건 달성률 (목표: 진단 20개 + 개념 20개 통과)</span>
+            <span id="txtProgComplete">0%</span>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill" id="barProgComplete" style="background: linear-gradient(90deg, #10b981, #34d399);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mock Exam History -->
+      <div class="panel">
+        <div class="panel-h">
+          <h3>⏱️ 2026형 모의고사 응시 이력</h3>
+        </div>
+        <div id="attemptContainer">
+          <!-- Dynamically populated attempt history -->
+        </div>
+      </div>
+
+      <!-- Gamification Badges -->
+      <div class="panel">
+        <div class="panel-h">
+          <h3>🏆 획득한 명예 배지</h3>
+        </div>
+        <div class="badge-grid" id="badgeContainer">
+          <!-- Dynamically populated badges -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Wrong answers, Weak fields & Class -->
+    <div class="side-col">
+      <!-- Active Class Sync Info -->
+      <div class="panel">
+        <div class="panel-h">
+          <h3>🏫 수강 중인 클래스</h3>
+        </div>
+        <div class="class-status-box" id="classBox">
+          <p style="font-size: 13.5px; color: var(--text-muted);">현재 참여 중인 클래스가 없습니다. 강사에게 받은 참여 코드를 입력하세요.</p>
+          <a href="classroom.html" class="mission-btn" style="display:inline-block; margin-top:12px; text-align:center; width:100%;">클래스 입장하기</a>
+        </div>
+      </div>
+
+      <!-- Recent Wrong Answers -->
+      <div class="panel">
+        <div class="panel-h">
+          <h3>📝 복습 필요 (오답노트)</h3>
+        </div>
+        <div class="wrong-list" id="wrongContainer">
+          <!-- Wrong note links -->
+        </div>
+      </div>
+
+      <!-- Weak Categories -->
+      <div class="panel">
+        <div class="panel-h">
+          <h3>⚠️ 가장 취약한 분야 (오답 기준)</h3>
+        </div>
+        <div class="weak-list" id="weakContainer">
+          <!-- Top weak areas -->
+        </div>
+      </div>
+
+      <!-- Certificate Download -->
+      <div class="panel" id="certPanel" style="display: none;">
+        <div class="panel-h">
+          <h3>🎓 훈련 수료증</h3>
+        </div>
+        <div class="cert-box">
+          <p style="font-size: 14.5px; font-weight:700;">축하합니다! 수료 기준을 충족했습니다.</p>
+          <p style="font-size: 12.5px; color:var(--text-muted); margin-top:4px;">공식 수료 번호가 포함된 PDF 리포트와 수료증을 출력할 수 있습니다.</p>
+          <button class="cert-btn" onclick="location.href='certificate.html'">수료 리포트 출력</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-state.js"></script>
+<script type="module" src="auth-widget.js"></script>
+<script>
+// Load states and render dynamic items
+function renderDashboard() {
+  const p = AcademyState.getProgress();
+  const notes = AcademyState.getWrongNotes();
+  const activeClass = AcademyState.getActiveClass();
+
+  // 1. Level & Greeting
+  document.getElementById('levelVal').textContent = p.level || 1;
+  document.getElementById('xpVal').textContent = `${p.xp || 0} XP`;
+  
+  // Try to load name from leaderboard bridge
+  setTimeout(() => {
+    if (window.sdaBoard && window.sdaBoard.getUser()) {
+      const user = window.sdaBoard.getUser();
+      document.getElementById('userGreeting').textContent = `${user.name} 대원님, 훈련을 시작하세요!`;
+    }
+  }, 1000);
+
+  // 2. Metrics
+  const conceptsCount = Object.keys(p.completedConcepts || {}).length;
+  const practicalCount = Object.keys(p.completedPractical || {}).length;
+  const wrongCount = Object.values(notes).filter(n => !n.mastered).length;
+
+  document.getElementById('cntConcepts').textContent = `${conceptsCount} / 49`;
+  document.getElementById('cntPractical').textContent = `${practicalCount} / 90`;
+  document.getElementById('cntWrong').textContent = wrongCount;
+
+  // Mock highest score calculation (from attempts history)
+  let highest = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('sda_mock_score_')) {
+      const val = parseInt(localStorage.getItem(k)) || 0;
+      if (val > highest) highest = val;
+    }
+  }
+  document.getElementById('highestMock').textContent = highest > 0 ? `${highest}점` : 'N/A';
+
+  // 3. Progress bars
+  const pConceptsPercent = Math.min(Math.round((conceptsCount / 49) * 100), 100);
+  const pPracticalPercent = Math.min(Math.round((practicalCount / 90) * 100), 100);
+  
+  document.getElementById('txtProgConcepts').textContent = `${pConceptsPercent}%`;
+  document.getElementById('barProgConcepts').style.width = `${pConceptsPercent}%`;
+  
+  document.getElementById('txtProgPractical').textContent = `${pPracticalPercent}%`;
+  document.getElementById('barProgPractical').style.width = `${pPracticalPercent}%`;
+
+  // Course Completion rate (Goal: 20 concepts completed + 20 practicals completed)
+  const completeGoalConcepts = 20;
+  const completeGoalPractical = 20;
+  const currentConceptsWeight = Math.min(conceptsCount, completeGoalConcepts);
+  const currentPracticalWeight = Math.min(practicalCount, completeGoalPractical);
+  const completePercent = Math.round(((currentConceptsWeight + currentPracticalWeight) / (completeGoalConcepts + completeGoalPractical)) * 100);
+  
+  document.getElementById('txtProgComplete').textContent = `${completePercent}%`;
+  document.getElementById('barProgComplete').style.width = `${completePercent}%`;
+
+  // 3-1. Recent mock attempt history
+  const attemptContainer = document.getElementById('attemptContainer');
+  let attempts = [];
+  try { attempts = JSON.parse(localStorage.getItem('sda_attempts') || '[]'); } catch(e) {}
+  attemptContainer.innerHTML = '';
+  if (!attempts.length) {
+    attemptContainer.innerHTML = `
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.6;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:14px;">
+        아직 모의고사 응시 기록이 없습니다. 문제팩 학습에서 2026형 실전 모의고사를 시작해 보세요.
+        <a href="question-packs.html" class="mission-btn" style="display:inline-block;margin-top:10px;">모의고사 선택</a>
+      </div>`;
+  } else {
+    attempts.slice(0, 3).forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'mission-box';
+      div.innerHTML = `
+        <div class="mission-desc">
+          <h4>${a.pass ? '✅ 합격권' : '🟡 보완 필요'} · 종합 ${a.finalScore}점</h4>
+          <p>이론 ${a.theoryScore}점 · 실습 ${a.practicalScore}점 · ${new Date(a.submittedAt).toLocaleString()}</p>
+        </div>
+        <button class="mission-btn" onclick="location.href='question-packs.html'">재응시</button>
+      `;
+      attemptContainer.appendChild(div);
+    });
+  }
+
+  // Show Certificate link if target reached
+  if (conceptsCount >= 20 && practicalCount >= 20) {
+    document.getElementById('certPanel').style.display = 'block';
+  } else {
+    document.getElementById('certPanel').style.display = 'none';
+  }
+
+  // 4. Badges rendering
+  const badgesList = p.badges || [];
+  const badgeContainer = document.getElementById('badgeContainer');
+  badgeContainer.innerHTML = '';
+  
+  const allPossibleBadges = [
+    { name: '입문자', desc: '100 XP 달성', icon: '🐣' },
+    { name: '보안 분석가', desc: '500 XP 달성', icon: '🔍' },
+    { name: '코드 진단 마스터', desc: '1500 XP 달성', icon: '🏆' }
+  ];
+
+  allPossibleBadges.forEach(b => {
+    const hasIt = badgesList.includes(b.name);
+    const div = document.createElement('div');
+    div.className = `badge-item ${hasIt ? 'active' : ''}`;
+    div.innerHTML = `<span>${b.icon}</span> <div><strong>${b.name}</strong><br><span style="font-size:10px; opacity:0.7;">${b.desc}</span></div>`;
+    badgeContainer.appendChild(div);
+  });
+
+  // 5. Active Class rendering
+  if (activeClass) {
+    document.getElementById('classBox').innerHTML = `
+      <div style="border-left: 3px solid var(--p); padding-left: 10px;">
+        <h4 style="font-weight: 700; color: #a5b4fc;">${activeClass.className}</h4>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top:2px;">참여 코드: <b>${activeClass.classCode}</b></p>
+        <p style="font-size: 12.5px; margin-top: 6px;">진행 미션: <span style="color:var(--warn); font-weight:700;">${activeClass.assignedPackName || '없음'}</span></p>
+      </div>
+      <a href="classroom.html" class="mission-btn" style="display:inline-block; margin-top:12px; text-align:center; width:100%; background: #1f2937; border: 1px solid var(--border);">클래스룸 바로가기</a>
+    `;
+  }
+
+  // 6. Recent Wrong notes
+  const wrongContainer = document.getElementById('wrongContainer');
+  wrongContainer.innerHTML = '';
+  const pendingNotes = Object.values(notes).filter(n => !n.mastered).slice(0, 3);
+  if (pendingNotes.length === 0) {
+    wrongContainer.innerHTML = '<p style="font-size:13px; color:var(--text-muted); text-align:center; padding:10px;">오답노트가 비어있습니다. 아주 훌륭합니다! 💯</p>';
+  } else {
+    pendingNotes.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'wrong-item';
+      div.innerHTML = `
+        <div class="wrong-item-info">
+          <h5>${n.id}: ${n.title}</h5>
+          <span>${n.category} · 오답 횟수: ${n.retryCount || 1}</span>
+        </div>
+        <button class="wrong-retry-btn" onclick="location.href='exam-runner.html?mode=prac&single=${n.id}'">재도전</button>
+      `;
+      wrongContainer.appendChild(div);
+    });
+  }
+
+  // 7. Weakest fields calculation
+  const weakContainer = document.getElementById('weakContainer');
+  weakContainer.innerHTML = '';
+  const categoryWrongs = {};
+  Object.values(notes).filter(n => !n.mastered).forEach(n => {
+    categoryWrongs[n.category] = (categoryWrongs[n.category] || 0) + 1;
+  });
+
+  const sortedWeak = Object.entries(categoryWrongs).sort((a,b) => b[1] - a[1]).slice(0, 3);
+  if (sortedWeak.length === 0) {
+    weakContainer.innerHTML = '<p style="font-size:13px; color:var(--text-muted); text-align:center; padding:10px;">취약점이 수집되지 않았습니다.</p>';
+  } else {
+    sortedWeak.forEach(w => {
+      const div = document.createElement('div');
+      div.className = 'weak-row';
+      div.innerHTML = `
+        <span>${w[0]}</span>
+        <span class="tag">${w[1]}회 오답</span>
+      `;
+      weakContainer.appendChild(div);
+    });
+  }
+
+  // 8. Daily Missions / Recommendations (3 recommended exercises)
+  const missionContainer = document.getElementById('missionContainer');
+  missionContainer.innerHTML = '';
+  
+  // Grab a few practical questions not completed yet
+  const practicalList = window.ACADEMY_DATA ? window.ACADEMY_DATA.PRACTICAL : [];
+  const incompletePrac = practicalList.filter(item => !p.completedPractical[item.id]).slice(0, 3);
+  
+  if (incompletePrac.length === 0) {
+    missionContainer.innerHTML = '<p style="font-size:13px; color:var(--text-muted); text-align:center; padding:10px;">모든 코드 진단 훈련을 완료했습니다! 대단합니다! 👑</p>';
+  } else {
+    incompletePrac.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'mission-box';
+      div.innerHTML = `
+        <div class="mission-desc">
+          <h4>[${item.id}] ${item.title}</h4>
+          <p>${item.cat} · 난이도: ${item.diff} · ${item.lang}</p>
+        </div>
+        <button class="mission-btn" onclick="location.href='exam-runner.html?mode=prac&single=${item.id}'">진단 시작</button>
+      `;
+      missionContainer.appendChild(div);
+    });
+  }
+}
+
+window.onload = function() {
+  renderDashboard();
+};
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

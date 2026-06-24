@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="보안약점 진단원 실전 훈련장 - 약점별 개념, 문제, 실습, 시뮬레이터 연결 상태를 확인하는 콘텐츠 맵.">
+<title>보안약점 진단원 실전 훈련장 | 콘텐츠 맵</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p:#6366f1;
+  --bg:#0b0f19;
+  --card:rgba(17,24,39,.76);
+  --line:rgba(255,255,255,.09);
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --ok:#10b981;
+  --warn:#f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  min-height:100vh;
+  font-family:'Outfit', sans-serif;
+  background:radial-gradient(circle at top, #1e1b4b 0%, var(--bg) 58%);
+  color:var(--text);
+  line-height:1.6;
+  padding-bottom:60px;
+}
+.wrap { max-width:1280px; margin:0 auto; padding:0 20px; }
+header {
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px);
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(11,15,25,.84);
+}
+header .wrap { display:flex; justify-content:space-between; align-items:center; min-height:70px; gap:16px; }
+.logo {
+  font-family:'Lora', serif;
+  font-weight:800;
+  font-size:21px;
+  color:#a5b4fc;
+}
+.nav-links { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.nav-btn {
+  color:var(--muted);
+  text-decoration:none;
+  font-size:14px;
+  font-weight:700;
+  padding:8px 14px;
+  border-radius:20px;
+}
+.nav-btn:hover { color:#fff; background:rgba(255,255,255,.06); }
+.nav-btn.active { color:#fff; background:var(--p); }
+.page-header { padding:40px 0 22px; display:flex; justify-content:space-between; align-items:flex-end; gap:20px; }
+.page-header h1 { font-size:32px; font-weight:900; }
+.page-header p { color:var(--muted); font-size:15px; margin-top:4px; }
+.summary {
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:14px;
+  margin-bottom:20px;
+}
+.stat {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+}
+.stat span { display:block; color:var(--muted); font-size:12px; font-weight:800; }
+.stat strong { display:block; font-family:'JetBrains Mono', monospace; font-size:26px; margin-top:4px; }
+.toolbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:20px;
+}
+.filters { display:flex; gap:8px; flex-wrap:wrap; }
+.filter {
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  border-radius:999px;
+  padding:7px 12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.filter.active { background:var(--p); color:#fff; border-color:var(--p); }
+.search {
+  min-width:260px;
+  background:#0f172a;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 12px;
+  color:#fff;
+  font:inherit;
+}
+.map-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+  gap:16px;
+}
+.card {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.card h3 { font-size:18px; font-weight:900; }
+.meta { color:var(--muted); font-size:12.5px; }
+.desc {
+  color:#cbd5e1;
+  font-size:13.5px;
+  min-height:44px;
+}
+.coverage {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:8px;
+}
+.cov {
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 8px;
+  text-align:center;
+}
+.cov strong { display:block; font-family:'JetBrains Mono', monospace; font-size:18px; }
+.cov span { display:block; color:var(--muted); font-size:11px; font-weight:800; }
+.actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; }
+.btn {
+  flex:1;
+  min-width:104px;
+  background:var(--p);
+  color:#fff;
+  border:0;
+  border-radius:12px;
+  padding:9px 10px;
+  text-align:center;
+  text-decoration:none;
+  font-weight:900;
+  font-size:13px;
+}
+.btn.secondary { background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--text); }
+.btn.disabled { opacity:.42; pointer-events:none; }
+.pill {
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:3px 8px;
+  font-size:11px;
+  font-weight:900;
+  background:rgba(16,185,129,.12);
+  color:#6ee7b7;
+  margin-left:6px;
+}
+@media (max-width:880px) {
+  .summary { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .page-header { display:block; }
+  .toolbar { display:block; }
+  .search { width:100%; min-width:0; margin-top:12px; }
+}
+@media (max-width:540px) {
+  header .wrap { align-items:flex-start; flex-direction:column; padding-top:14px; padding-bottom:14px; }
+  .summary { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo">SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn">대시보드</a>
+      <a href="mission-board.html" class="nav-btn">미션 보드</a>
+      <a href="question-packs.html" class="nav-btn">문제팩</a>
+      <a href="content-map.html" class="nav-btn active">콘텐츠 맵</a>
+      <a href="question-admin.html" class="nav-btn">문제 관리</a>
+      <a href="instructor-dashboard.html" class="nav-btn">강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="page-header">
+    <div>
+      <h1>약점-문제-실습 콘텐츠 맵</h1>
+      <p>49개 보안약점별 개념, 객관형 문제, 코드진단 실습, 시뮬레이터 연결 상태를 한눈에 확인합니다.</p>
+    </div>
+  </section>
+
+  <section class="summary">
+    <div class="stat"><span>개념 카드</span><strong id="sumConcepts">0</strong></div>
+    <div class="stat"><span>코드진단 실습</span><strong id="sumPractical">0</strong></div>
+    <div class="stat"><span>객관형/이론 문제</span><strong id="sumTheory">0</strong></div>
+    <div class="stat"><span>시뮬레이터 연결</span><strong id="sumSims">0</strong></div>
+  </section>
+
+  <section class="toolbar">
+    <div class="filters" id="filters"></div>
+    <input class="search" id="searchInput" placeholder="약점명, CWE, 설명 검색" oninput="renderMap()">
+  </section>
+
+  <section class="map-grid" id="mapGrid"></section>
+</main>
+
+<script src="js/academy-data.js"></script>
+<script type="module" src="auth-widget.js"></script>
+<script>
+let activeCategory = 'all';
+
+const SIM_LINKS = {
+  'SQL 삽입': 'sim-sql.html',
+  '크로스사이트 스크립트': 'sim-xss.html',
+  '경로 조작': 'sim-path.html',
+  '운영체제 명령어 삽입': 'sim-cmd.html',
+  'LDAP 삽입': 'sim-ldap.html',
+  'XML 외부 개체': 'sim-xxe.html',
+  '파일 업로드': 'sim-upload.html',
+  'CSRF': 'sim-csrf.html',
+  'HTTP 응답분할': 'sim-split.html',
+  '하드코드된 비밀번호': 'sim-hardedcode.html',
+  '부적절한 인가': 'sim-idor.html',
+  '취약한 암호화 알고리즘': 'sim-unencrypted_data.html',
+  '중요정보 평문저장': 'sim-unencrypted_data.html',
+  '오류 메시지': 'sim-error-msg.html',
+  '널 포인터 역참조': 'sim-code.html',
+  '정수 오버플로우': 'sim-int-overflow.html',
+  '경쟁조건': 'sim-racecondition.html',
+  '캡슐화': 'sim-encap.html'
+};
+
+function getData() {
+  return window.ACADEMY_DATA || { CONCEPTS: [], PRACTICAL: [], QUIZ: [], THEORY: [] };
+}
+
+function getCustomPracticalQuestions() {
+  try {
+    const rows = JSON.parse(localStorage.getItem('sda_custom_questions') || '[]');
+    return Array.isArray(rows) ? rows.filter(q => q && q.id && q.code) : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function getSimForConcept(concept) {
+  const hit = Object.entries(SIM_LINKS).find(([key]) => concept.name.includes(key) || key.includes(concept.name));
+  return hit ? hit[1] : '';
+}
+
+function buildRows() {
+  const data = getData();
+  const practicalBank = (data.PRACTICAL || []).concat(getCustomPracticalQuestions());
+  return (data.CONCEPTS || []).map(concept => {
+    const practical = practicalBank.filter(q => q.weaknessName === concept.name || q.cwe === concept.cwe);
+    const quiz = (data.QUIZ || []).filter(q => q.c === concept.cat || (q.q || '').includes(concept.name));
+    const theory = (data.THEORY || []).filter(q => q.cat === concept.cat || (q.q || '').includes(concept.name));
+    const sim = getSimForConcept(concept);
+    return { concept, practical, quiz, theory, sim };
+  });
+}
+
+function setCategory(cat) {
+  activeCategory = cat;
+  renderFilters();
+  renderMap();
+}
+
+function renderFilters() {
+  const cats = ['all', ...new Set((getData().CONCEPTS || []).map(c => c.cat))];
+  document.getElementById('filters').innerHTML = cats.map(cat => `
+    <button class="filter ${activeCategory === cat ? 'active' : ''}" onclick="setCategory('${cat}')">
+      ${cat === 'all' ? '전체' : cat}
+    </button>
+  `).join('');
+}
+
+function renderSummary(rows) {
+  const data = getData();
+  const custom = getCustomPracticalQuestions();
+  document.getElementById('sumConcepts').textContent = data.CONCEPTS.length;
+  document.getElementById('sumPractical').textContent = data.PRACTICAL.length + custom.length;
+  document.getElementById('sumTheory').textContent = (data.QUIZ.length + data.THEORY.length);
+  document.getElementById('sumSims').textContent = rows.filter(r => r.sim).length;
+}
+
+function renderMap() {
+  const term = document.getElementById('searchInput').value.trim().toLowerCase();
+  let rows = buildRows();
+  renderSummary(rows);
+  if (activeCategory !== 'all') rows = rows.filter(r => r.concept.cat === activeCategory);
+  if (term) {
+    rows = rows.filter(r => {
+      const c = r.concept;
+      return [c.name, c.cwe, c.cat, c.desc, c.safe, c.diag].join(' ').toLowerCase().includes(term);
+    });
+  }
+
+  const grid = document.getElementById('mapGrid');
+  if (!rows.length) {
+    grid.innerHTML = '<div class="card"><p class="meta">검색 조건에 맞는 약점이 없습니다.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = rows.map(row => {
+    const c = row.concept;
+    const firstPrac = row.practical[0];
+    return `
+      <article class="card">
+        <div>
+          <h3>${c.name}${row.sim ? '<span class="pill">SIM</span>' : ''}</h3>
+          <div class="meta">${c.cat} · ${c.cwe}</div>
+        </div>
+        <p class="desc">${c.desc}</p>
+        <div class="coverage">
+          <div class="cov"><strong>1</strong><span>개념</span></div>
+          <div class="cov"><strong>${row.practical.length}</strong><span>실습</span></div>
+          <div class="cov"><strong>${row.quiz.length}</strong><span>퀴즈</span></div>
+          <div class="cov"><strong>${row.theory.length}</strong><span>이론</span></div>
+        </div>
+        <div class="actions">
+          <a class="btn secondary" href="secure-dev-academy.html">개념 학습</a>
+          <a class="btn ${firstPrac ? '' : 'disabled'}" href="${firstPrac ? `exam-runner.html?mode=prac&single=${firstPrac.id}` : '#'}">대표 실습</a>
+          <a class="btn secondary ${row.sim ? '' : 'disabled'}" href="${row.sim || '#'}">시뮬레이터</a>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+window.onload = function() {
+  renderFilters();
+  renderMap();
+};
+</script>
+</body>
+</html>

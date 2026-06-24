@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="강사용 관리 콘솔 - 실시간 클래스 개설, 훈련 상태 관제 및 수료 보고서 생성 도구.">
+<title>보안약점 진단원 실전 훈련장 | 강사용 관리 콘솔</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #6366f1;
+  --p-hover: #4f46e5;
+  --p2: #8b5cf6;
+  --bg: #0b0f19;
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --ok: #10b981;
+  --no: #ef4444;
+  --warn: #f59e0b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg) 60%);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Global Navigation */
+header {
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 25, 0.8);
+}
+header .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+.logo {
+  font-family: 'Lora', serif;
+  font-weight: 800;
+  font-size: 21px;
+  background: linear-gradient(135deg, #a5b4fc, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+.nav-btn {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.nav-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+.nav-btn.active {
+  color: #fff;
+  background: var(--p);
+}
+
+.page-header {
+  padding: 40px 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-header h1 { font-size: 32px; font-weight: 800; }
+.page-header p { color: var(--text-muted); font-size: 15px; margin-top: 4px; }
+
+.btn {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn:hover { background: var(--p-hover); }
+.btn.secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-main); }
+.btn.secondary:hover { background: rgba(255,255,255,0.1); }
+.btn.danger { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
+.btn.danger:hover { background: var(--no); color: #fff; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(8px);
+}
+.panel-h {
+  font-size: 16px;
+  font-weight: 800;
+  color: #a5b4fc;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
+/* Class item lists */
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.class-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.class-item:hover { border-color: var(--p); background: rgba(255, 255, 255, 0.05); }
+.class-item.active { border-color: var(--p); background: rgba(99, 102, 241, 0.15); }
+.class-item h4 { font-weight: 700; font-size: 15px; }
+.class-item span { font-size: 12px; color: var(--text-muted); }
+
+/* Control Console grid */
+.console-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.code-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px dashed var(--warn);
+  color: var(--warn);
+  padding: 4px 14px;
+  border-radius: 10px;
+}
+
+/* Members Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+}
+th {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  padding: 10px;
+}
+td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+tr:hover td { background: rgba(255, 255, 255, 0.02); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">🛡️ SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn">대시보드</a>
+      <a href="mission-board.html" class="nav-btn">미션 보드</a>
+      <a href="secure-dev-academy.html" class="nav-btn" style="color: #c084fc;">📖 종합 아카데미</a>
+      <a href="question-packs.html" class="nav-btn">문제팩 학습</a>
+      <a href="content-map.html" class="nav-btn">콘텐츠 맵</a>
+      <a href="question-admin.html" class="nav-btn">문제 관리</a>
+      <a href="wrong-note.html" class="nav-btn">오답노트</a>
+      <a href="classroom.html" class="nav-btn">클래스 입장</a>
+      <a href="instructor-dashboard.html" class="nav-btn active">👨‍🏫 강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="page-header">
+    <div>
+      <h1>👨‍🏫 강사용 훈련 통제 콘솔</h1>
+      <p>실시간으로 수강생들의 진도 현황을 모니터링하고 훈련 과제를 배포하거나 수료 보고서를 추출합니다.</p>
+    </div>
+    <button class="btn" onclick="openCreateModal()">🆕 새 클래스 개설</button>
+  </section>
+
+  <!-- Main layout -->
+  <div class="layout">
+    <!-- Left Col: Classes list -->
+    <div class="side-panel">
+      <div class="panel">
+        <div class="panel-h">개설된 클래스 목록</div>
+        <div class="class-list" id="classList">
+          <!-- Dynamic class item list -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Col: Control panel / Roster -->
+    <div class="main-panel">
+      <div class="panel" id="consolePanel" style="display: none;">
+        <div class="console-h">
+          <div>
+            <h2 id="currentClassTitle" style="font-size:24px; font-weight:800;">보안약점 진단원 대비반 A</h2>
+            <p id="currentClassMeta" style="font-size:13px; color:var(--text-muted);">생성일시: N/A</p>
+          </div>
+          <div class="code-badge" id="currentClassCode">CL-000</div>
+        </div>
+
+        <!-- Instructor Commands -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:24px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <div style="font-size:14px; font-weight:700;">🎯 훈련 미션 배포:</div>
+          <select id="missionSelect" style="width: auto; background:#0f172a; color:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:10px;">
+            <option value="입문 샘플 문제팩">입문 샘플 문제팩</option>
+            <option value="입력 데이터 검증 집중 문제팩">입력 데이터 검증 집중 문제팩</option>
+            <option value="보안 기능 오류 문제팩">보안 기능 오류 문제팩</option>
+            <option value="시간 및 상태/에러처리 문제팩">시간 및 상태/에러처리 문제팩</option>
+            <option value="코드 오류 및 캡슐화 문제팩">코드 오류 및 캡슐화 문제팩</option>
+          </select>
+          <button class="btn" onclick="assignMission()">배포 실행</button>
+          <button class="btn secondary" onclick="openLiveBoard()">라이브 수업 화면</button>
+          <button class="btn danger" onclick="endSession()">실시간 훈련 종료 및 리포트 생성</button>
+        </div>
+
+        <!-- Roster table -->
+        <div class="panel-h">실시간 수강생 명단 및 진도 (수정 실시간 반영)</div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>수강생명</th>
+                <th>현재 레벨</th>
+                <th>누적 XP</th>
+                <th>개념 완료</th>
+                <th>코드진단 완료</th>
+                <th>오답수</th>
+                <th>마지막 갱신</th>
+              </tr>
+            </thead>
+            <tbody id="memberRoster">
+              <!-- Members snapshots list -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="noClassMsg" style="text-align:center; padding:80px; color:var(--text-muted);">
+        ← 왼쪽에서 관리할 클래스를 선택하거나 우측 상단의 [새 클래스 개설] 버튼을 눌러주세요.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="auth-widget.js"></script>
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, addDoc, collection, query, where, getDocs, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBaRXs5HJ1ABFcshaTpqNj-uFuq2H9ZOcw",
+  authDomain: "vuln-sim.firebaseapp.com",
+  projectId: "vuln-sim",
+  storageBucket: "vuln-sim.firebasestorage.app",
+  messagingSenderId: "493267417608",
+  appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
+};
+
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+let currentClassDocId = null;
+let rosterUnsubscribe = null;
+
+onAuthStateChanged(auth, u => {
+  currentUser = u;
+  if (u) {
+    loadInstructorClasses();
+  } else {
+    alert('이 콘솔을 사용하려면 우측 상단의 위젯을 통해 로그인이 필요합니다.');
+  }
+});
+
+async function loadInstructorClasses() {
+  if (!currentUser) return;
+  const q = query(collection(db, 'classes'), where('instructorUid', '==', currentUser.uid));
+  const snap = await getDocs(q);
+  const list = document.getElementById('classList');
+  list.innerHTML = '';
+  
+  if (snap.empty) {
+    list.innerHTML = '<p style="font-size:12.5px; color:var(--text-muted); text-align:center; padding:10px;">등록된 클래스가 없습니다.</p>';
+    return;
+  }
+
+  snap.forEach(d => {
+    const data = d.data();
+    const item = document.createElement('div');
+    item.className = 'class-item';
+    item.onclick = () => selectClass(d.id, data);
+    item.innerHTML = `
+      <h4>${data.title}</h4>
+      <span>코드: <strong>${data.joinCode}</strong></span>
+    `;
+    list.appendChild(item);
+  });
+}
+
+window.openCreateModal = async function() {
+  if (!currentUser) {
+    alert('로그인을 먼저 해주십시오.');
+    return;
+  }
+  const title = prompt('새 훈련 클래스의 명칭을 입력해 주십시오:');
+  if (!title) return;
+
+  // Generate 6 letter random join code
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let joinCode = '';
+  for (let i = 0; i < 6; i++) {
+    joinCode += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  try {
+    await addDoc(collection(db, 'classes'), {
+      title: title,
+      joinCode: joinCode,
+      instructorUid: currentUser.uid,
+      createdAt: new Date().toISOString(),
+      assignedPackName: '입문 샘플 문제팩'
+    });
+    alert(`클래스가 개설되었습니다!\n학생 참여 코드: ${joinCode}`);
+    loadInstructorClasses();
+  } catch (e) {
+    console.error('Error creating class:', e);
+  }
+};
+
+function selectClass(docId, classData) {
+  currentClassDocId = docId;
+  document.getElementById('noClassMsg').style.display = 'none';
+  document.getElementById('consolePanel').style.display = 'block';
+
+  document.getElementById('currentClassTitle').textContent = classData.title;
+  document.getElementById('currentClassMeta').textContent = `개설일시: ${new Date(classData.createdAt).toLocaleString()}`;
+  document.getElementById('currentClassCode').textContent = classData.joinCode;
+
+  if (rosterUnsubscribe) rosterUnsubscribe();
+  
+  // Real-time roster listener
+  rosterUnsubscribe = onSnapshot(collection(db, 'classes', docId, 'members'), snap => {
+    const tbody = document.getElementById('memberRoster');
+    tbody.innerHTML = '';
+
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">현재 참여 중인 학생이 없습니다.</td></tr>';
+      return;
+    }
+
+    snap.forEach(m => {
+      const v = m.data();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${v.displayName}</strong></td>
+        <td><span style="font-family:\'JetBrains Mono\'">Lv.${v.level || 1}</span></td>
+        <td><span style="font-family:\'JetBrains Mono\'">${v.xp || 0} XP</span></td>
+        <td>${v.conceptsCount || 0} / 49</td>
+        <td>${v.practicalCount || 0} / 90</td>
+        <td><span style="color: ${v.wrongCount > 0 ? 'var(--no)' : 'var(--ok)'}; font-weight:700;">${v.wrongCount || 0}개</span></td>
+        <td style="font-size:11.5px; color:var(--text-muted);">${v.updatedAt ? new Date(v.updatedAt).toLocaleTimeString() : 'N/A'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+window.assignMission = async function() {
+  if (!currentClassDocId) return;
+  const mission = document.getElementById('missionSelect').value;
+  try {
+    await updateDoc(doc(db, 'classes', currentClassDocId), {
+      assignedPackName: mission
+    });
+    alert(`클래스 훈련 미션이 배포되었습니다: ${mission}`);
+  } catch (e) {
+    console.error('Error assigning mission:', e);
+  }
+};
+
+window.endSession = function() {
+  if (!currentClassDocId) return;
+  if (confirm('클래스 실시간 훈련을 종료하고 포스트 수강 성적 보고서를 생성하시겠습니까?')) {
+    location.href = `class-report.html?classId=${currentClassDocId}`;
+  }
+};
+
+window.openLiveBoard = function() {
+  if (!currentClassDocId) {
+    alert('라이브 화면으로 열 클래스를 먼저 선택해 주세요.');
+    return;
+  }
+  window.open(`live-class.html?classId=${currentClassDocId}`, '_blank');
+};
+</script>
+</body>
+</html>

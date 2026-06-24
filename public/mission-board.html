@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="보안약점 진단원 실전 훈련장 - 개인 진도와 오답을 기준으로 오늘의 학습 미션을 추천합니다.">
+<title>보안약점 진단원 실전 훈련장 | 미션 보드</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #6366f1;
+  --p-hover: #4f46e5;
+  --bg: #0b0f19;
+  --card-bg: rgba(17, 24, 39, 0.72);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --ok: #10b981;
+  --no: #ef4444;
+  --warn: #f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: radial-gradient(circle at top, #172554 0%, var(--bg) 56%);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding-bottom: 60px;
+  line-height: 1.6;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+header {
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 25, 0.84);
+}
+header .wrap { display:flex; justify-content:space-between; align-items:center; height:70px; }
+.logo {
+  font-family: 'Lora', serif;
+  font-weight: 800;
+  font-size: 21px;
+  background: linear-gradient(135deg, #a5b4fc, #67e8f9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-links { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.nav-btn {
+  color: var(--text-muted);
+  text-decoration:none;
+  font-size:14px;
+  font-weight:700;
+  padding:8px 14px;
+  border-radius:20px;
+}
+.nav-btn:hover { color:#fff; background:rgba(255,255,255,.06); }
+.nav-btn.active { color:#fff; background:var(--p); }
+.page-header { padding: 40px 0 22px; display:flex; justify-content:space-between; gap:20px; align-items:flex-end; }
+.page-header h1 { font-size:32px; font-weight:800; }
+.page-header p { color:var(--text-muted); font-size:15px; margin-top:4px; }
+.header-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.btn {
+  border:0;
+  border-radius:14px;
+  padding:10px 16px;
+  font-weight:800;
+  cursor:pointer;
+  color:#fff;
+  background:var(--p);
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.btn:hover { background:var(--p-hover); }
+.btn.secondary { background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--text-main); }
+.grid { display:grid; grid-template-columns: 1.45fr .9fr; gap:20px; }
+.panel {
+  background: var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px;
+  backdrop-filter: blur(10px);
+}
+.panel-h { display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:16px; }
+.panel-h h2, .panel-h h3 { font-size:18px; font-weight:800; }
+.mission-list { display:flex; flex-direction:column; gap:12px; }
+.mission-card {
+  display:grid;
+  grid-template-columns: 42px 1fr auto;
+  gap:14px;
+  align-items:center;
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+}
+.mission-card.done { border-color:rgba(16,185,129,.36); background:rgba(16,185,129,.07); }
+.mission-card.locked { opacity:.64; }
+.mission-icon {
+  width:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  background:rgba(99,102,241,.14);
+  color:#c4b5fd;
+  font-weight:900;
+  font-family:'JetBrains Mono', monospace;
+}
+.mission-title { font-size:16px; font-weight:800; }
+.mission-meta { color:var(--text-muted); font-size:12.5px; margin-top:2px; }
+.status {
+  font-size:11.5px;
+  font-weight:900;
+  padding:4px 9px;
+  border-radius:999px;
+  background:rgba(245,158,11,.12);
+  color:#fbbf24;
+  white-space:nowrap;
+}
+.status.done { background:rgba(16,185,129,.12); color:#34d399; }
+.status.ready { background:rgba(99,102,241,.14); color:#c4b5fd; }
+.stat-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; margin-bottom:18px; }
+.stat {
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+}
+.stat span { color:var(--text-muted); display:block; font-size:12px; font-weight:700; }
+.stat strong { font-family:'JetBrains Mono', monospace; font-size:22px; }
+.bar { height:8px; border-radius:999px; background:rgba(255,255,255,.07); overflow:hidden; margin-top:8px; }
+.bar div { height:100%; width:0%; background:linear-gradient(90deg, #6366f1, #22d3ee); transition:width .3s; }
+.chip-row { display:flex; gap:8px; flex-wrap:wrap; }
+.chip {
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+  color:var(--text-muted);
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:800;
+}
+.chip.hot { color:#fecaca; border-color:rgba(239,68,68,.32); background:rgba(239,68,68,.09); }
+.route-list { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.route-item {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid var(--border);
+  padding-bottom:10px;
+}
+.route-item:last-child { border-bottom:0; padding-bottom:0; }
+.route-item b { font-size:13.5px; }
+.route-item span { color:var(--text-muted); font-size:12px; }
+.empty { color:var(--text-muted); font-size:13px; padding:14px; border:1px dashed var(--border); border-radius:14px; }
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .page-header { display:block; }
+  .header-actions { justify-content:flex-start; margin-top:14px; }
+}
+@media (max-width: 620px) {
+  header .wrap { height:auto; padding-top:14px; padding-bottom:14px; align-items:flex-start; flex-direction:column; }
+  .nav-links { justify-content:flex-start; }
+  .mission-card { grid-template-columns: 38px 1fr; }
+  .mission-card .btn { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo">SecureDev Academy</div>
+    <div class="nav-links">
+      <a href="training-dashboard.html" class="nav-btn">대시보드</a>
+      <a href="mission-board.html" class="nav-btn active">미션 보드</a>
+      <a href="secure-dev-academy.html" class="nav-btn" style="color:#c084fc;">종합 아카데미</a>
+      <a href="question-packs.html" class="nav-btn">문제팩 학습</a>
+      <a href="content-map.html" class="nav-btn">콘텐츠 맵</a>
+      <a href="wrong-note.html" class="nav-btn">오답노트</a>
+      <a href="classroom.html" class="nav-btn">클래스 입장</a>
+      <a href="instructor-dashboard.html" class="nav-btn" style="border:1px dashed var(--p);">강사용 메뉴</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="page-header">
+    <div>
+      <h1>오늘의 훈련 미션 보드</h1>
+      <p>개념, 코드진단, 모의고사, 오답 복구를 하나의 학습 루트로 묶어 보여줍니다.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn secondary" onclick="resetDailyMission()">오늘 미션 재생성</button>
+      <a href="question-packs.html" class="btn">문제팩으로 이동</a>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-h">
+        <h2>개인 맞춤 미션</h2>
+        <span class="status ready" id="missionCount">0개 대기</span>
+      </div>
+      <div class="mission-list" id="missionList"></div>
+    </section>
+
+    <aside>
+      <section class="panel" style="margin-bottom:20px;">
+        <div class="panel-h"><h3>훈련 현황</h3></div>
+        <div class="stat-grid">
+          <div class="stat"><span>개념 완료</span><strong id="statConcepts">0/49</strong></div>
+          <div class="stat"><span>코드진단 완료</span><strong id="statPrac">0/90</strong></div>
+          <div class="stat"><span>복습 필요</span><strong id="statWrong">0</strong></div>
+          <div class="stat"><span>모의고사 최고</span><strong id="statMock">N/A</strong></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);font-weight:800;">
+            <span>수료 조건 진행률</span><span id="completionText">0%</span>
+          </div>
+          <div class="bar"><div id="completionBar"></div></div>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-bottom:20px;">
+        <div class="panel-h"><h3>약한 분야</h3></div>
+        <div class="chip-row" id="weakChips"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h"><h3>권장 루트</h3></div>
+        <div class="route-list" id="routeList"></div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-state.js"></script>
+<script type="module" src="auth-widget.js"></script>
+<script>
+const MISSION_KEY = 'sda_daily_missions';
+
+function getAttempts() {
+  try { return JSON.parse(localStorage.getItem('sda_attempts') || '[]'); } catch(e) { return []; }
+}
+
+function getHighestMock() {
+  return getAttempts().reduce((max, a) => Math.max(max, Number(a.finalScore) || 0), 0);
+}
+
+function categoryWrongCounts(notes) {
+  const counts = {};
+  Object.values(notes).filter(n => !n.mastered).forEach(n => {
+    const cat = n.category || '기타';
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+  return counts;
+}
+
+function findConceptByCategory(cat, progress) {
+  const concepts = (window.ACADEMY_DATA && window.ACADEMY_DATA.CONCEPTS) || [];
+  return concepts.find(c => c.cat === cat && !progress.completedConcepts[c.cwe])
+    || concepts.find(c => !progress.completedConcepts[c.cwe])
+    || concepts[0];
+}
+
+function findPracticalByCategory(cat, progress) {
+  const practical = (window.ACADEMY_DATA && window.ACADEMY_DATA.PRACTICAL) || [];
+  return practical.find(q => q.cat === cat && !progress.completedPractical[q.id])
+    || practical.find(q => !progress.completedPractical[q.id])
+    || practical[0];
+}
+
+function buildDailyMissions(force) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!force) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(MISSION_KEY) || 'null');
+      if (saved && saved.date === today && Array.isArray(saved.items)) return saved.items;
+    } catch(e) {}
+  }
+
+  const p = AcademyState.getProgress();
+  const notes = AcademyState.getWrongNotes();
+  const weak = Object.entries(categoryWrongCounts(notes)).sort((a, b) => b[1] - a[1]);
+  const primaryCat = weak[0] ? weak[0][0] : '입력검증';
+  const secondaryCat = weak[1] ? weak[1][0] : '보안기능';
+  const concept = findConceptByCategory(primaryCat, p);
+  const prac1 = findPracticalByCategory(primaryCat, p);
+  const prac2 = findPracticalByCategory(secondaryCat, p);
+  const wrong = Object.values(notes).find(n => !n.mastered);
+
+  const missions = [
+    {
+      id: `concept-${concept ? concept.cwe : 'none'}`,
+      type: 'concept',
+      icon: '01',
+      title: concept ? `${concept.name} 개념 1회독` : '보안약점 개념 복습',
+      meta: concept ? `${concept.cat} · ${concept.cwe} · 진단 기준과 안전대책 확인` : '전체 개념을 다시 확인',
+      target: concept ? concept.cwe : '',
+      href: 'secure-dev-academy.html'
+    },
+    {
+      id: `prac-${prac1 ? prac1.id : 'none'}`,
+      type: 'practice',
+      icon: '02',
+      title: prac1 ? `[${prac1.id}] ${prac1.title}` : '코드진단 훈련',
+      meta: prac1 ? `${prac1.cat} · ${prac1.diff} · 취약 라인과 원인 서술` : '실습 문제풀이',
+      target: prac1 ? prac1.id : '',
+      href: prac1 ? `exam-runner.html?mode=prac&single=${prac1.id}` : 'question-packs.html'
+    },
+    {
+      id: wrong ? `wrong-${wrong.id}` : 'wrong-none',
+      type: 'wrong',
+      icon: '03',
+      title: wrong ? `[${wrong.id}] 오답 복구` : '오답노트 상태 점검',
+      meta: wrong ? `${wrong.category} · 다시 맞히면 마스터 처리` : '현재 복습 대기 오답이 없습니다',
+      target: wrong ? wrong.id : '',
+      href: wrong ? `exam-runner.html?mode=prac&single=${wrong.id}` : 'wrong-note.html'
+    },
+    {
+      id: `prac-${prac2 ? prac2.id : 'extra'}`,
+      type: 'practice',
+      icon: '04',
+      title: prac2 ? `[${prac2.id}] 보완 실습` : '추가 코드진단',
+      meta: prac2 ? `${prac2.cat} · ${prac2.diff} · 두 번째 취약 분야 보강` : '문제팩에서 실습 선택',
+      target: prac2 ? prac2.id : '',
+      href: prac2 ? `exam-runner.html?mode=prac&single=${prac2.id}` : 'question-packs.html'
+    },
+    {
+      id: 'mock-pack-full-1',
+      type: 'mock',
+      icon: '05',
+      title: '2026형 실전 모의고사 1회',
+      meta: '이론 객관형 30문항 + 실습 서술형 15문항 · 160분',
+      target: 'pack_full_mock_1',
+      href: 'exam-runner.html?mode=mock&pack=pack_full_mock_1'
+    }
+  ];
+
+  localStorage.setItem(MISSION_KEY, JSON.stringify({ date: today, items: missions }));
+  return missions;
+}
+
+function missionStatus(mission, progress, notes) {
+  if (mission.type === 'concept') return progress.completedConcepts[mission.target] ? 'done' : 'ready';
+  if (mission.type === 'practice') return progress.completedPractical[mission.target] ? 'done' : 'ready';
+  if (mission.type === 'wrong') {
+    if (!mission.target) return 'done';
+    return notes[mission.target] && notes[mission.target].mastered ? 'done' : 'ready';
+  }
+  if (mission.type === 'mock') return getHighestMock() >= 70 ? 'done' : 'ready';
+  return 'ready';
+}
+
+function renderMissionBoard() {
+  const p = AcademyState.getProgress();
+  const notes = AcademyState.getWrongNotes();
+  const missions = buildDailyMissions(false);
+  const conceptsCount = Object.keys(p.completedConcepts || {}).length;
+  const practicalCount = Object.keys(p.completedPractical || {}).length;
+  const activeWrongCount = Object.values(notes).filter(n => !n.mastered).length;
+  const highestMock = getHighestMock();
+  const completion = Math.round(((Math.min(conceptsCount, 20) + Math.min(practicalCount, 20)) / 40) * 100);
+
+  document.getElementById('statConcepts').textContent = `${conceptsCount}/49`;
+  document.getElementById('statPrac').textContent = `${practicalCount}/90`;
+  document.getElementById('statWrong').textContent = activeWrongCount;
+  document.getElementById('statMock').textContent = highestMock ? `${highestMock}점` : 'N/A';
+  document.getElementById('completionText').textContent = `${completion}%`;
+  document.getElementById('completionBar').style.width = `${completion}%`;
+
+  const list = document.getElementById('missionList');
+  list.innerHTML = '';
+  let readyCount = 0;
+  missions.forEach(m => {
+    const status = missionStatus(m, p, notes);
+    if (status !== 'done') readyCount++;
+    const card = document.createElement('div');
+    card.className = `mission-card ${status === 'done' ? 'done' : ''}`;
+    card.innerHTML = `
+      <div class="mission-icon">${m.icon}</div>
+      <div>
+        <div class="mission-title">${m.title}</div>
+        <div class="mission-meta">${m.meta}</div>
+      </div>
+      <a class="btn ${status === 'done' ? 'secondary' : ''}" href="${m.href}">${status === 'done' ? '다시 보기' : '시작'}</a>
+    `;
+    list.appendChild(card);
+  });
+  document.getElementById('missionCount').textContent = `${readyCount}개 대기`;
+
+  const weakChips = document.getElementById('weakChips');
+  const weak = Object.entries(categoryWrongCounts(notes)).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  weakChips.innerHTML = weak.length
+    ? weak.map(([cat, count]) => `<span class="chip hot">${cat} ${count}회</span>`).join('')
+    : '<div class="empty">아직 약한 분야가 수집되지 않았습니다. 코드진단을 시작하면 자동으로 분석됩니다.</div>';
+
+  const route = [
+    ['개념 20개 완료', `${Math.min(conceptsCount, 20)}/20`],
+    ['코드진단 20개 통과', `${Math.min(practicalCount, 20)}/20`],
+    ['오답 복구', activeWrongCount ? `${activeWrongCount}개 남음` : '정리됨'],
+    ['모의고사 합격권', highestMock >= 70 ? `${highestMock}점` : '70점 이상 목표']
+  ];
+  document.getElementById('routeList').innerHTML = route.map(([name, value]) => `
+    <div class="route-item"><b>${name}</b><span>${value}</span></div>
+  `).join('');
+}
+
+function resetDailyMission() {
+  buildDailyMissions(true);
+  renderMissionBoard();
+  AcademyState.showToast('오늘의 미션을 다시 구성했습니다.');
+}
+
+window.onload = renderMissionBoard;
+</script>
+</body>
+</html>

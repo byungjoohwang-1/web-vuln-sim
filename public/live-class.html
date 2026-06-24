@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="보안약점 진단원 실전 훈련장 - 강의장 프로젝터용 실시간 클래스 현황판.">
+<title>보안약점 진단원 실전 훈련장 | 라이브 수업 화면</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050816;
+  --panel: rgba(15, 23, 42, .78);
+  --line: rgba(255,255,255,.1);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --p: #6366f1;
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --no: #ef4444;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+  background:
+    linear-gradient(180deg, rgba(99,102,241,.12), rgba(5,8,22,0) 40%),
+    radial-gradient(circle at 80% 0%, rgba(20,184,166,.18), transparent 34%),
+    var(--bg);
+  color: var(--text);
+  padding: 28px;
+}
+.stage { max-width: 1500px; margin: 0 auto; }
+.top {
+  display:grid;
+  grid-template-columns: 1fr auto;
+  gap:22px;
+  align-items:start;
+  margin-bottom:22px;
+}
+.title-kicker { color:#a5b4fc; font-size:14px; font-weight:900; letter-spacing:.04em; }
+h1 { font-family:'Lora', serif; font-size:42px; line-height:1.12; margin-top:4px; }
+.meta { color:var(--muted); font-size:15px; margin-top:8px; }
+.clock {
+  background: var(--panel);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:18px 22px;
+  min-width:210px;
+  text-align:right;
+}
+.clock strong { display:block; font-family:'JetBrains Mono', monospace; font-size:32px; }
+.clock span { color:var(--muted); font-size:13px; font-weight:800; }
+.grid { display:grid; grid-template-columns: 1.1fr .9fr; gap:22px; }
+.panel {
+  background: var(--panel);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:24px;
+  backdrop-filter: blur(12px);
+}
+.stats {
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:14px;
+  margin-bottom:22px;
+}
+.stat {
+  background:rgba(255,255,255,.045);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+}
+.stat span { display:block; color:var(--muted); font-size:13px; font-weight:800; margin-bottom:6px; }
+.stat strong { display:block; font-family:'JetBrains Mono', monospace; font-size:32px; }
+.stat.ok strong { color:#34d399; }
+.stat.warn strong { color:#fbbf24; }
+.stat.no strong { color:#f87171; }
+.panel-h { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:16px; }
+.panel-h h2 { font-size:22px; font-weight:900; }
+.badge {
+  font-family:'JetBrains Mono', monospace;
+  font-size:18px;
+  color:#fbbf24;
+  background:rgba(245,158,11,.1);
+  border:1px dashed rgba(245,158,11,.42);
+  border-radius:12px;
+  padding:4px 12px;
+  white-space:nowrap;
+}
+.progress-list { display:flex; flex-direction:column; gap:12px; }
+.student {
+  display:grid;
+  grid-template-columns: minmax(160px, .8fr) 1fr auto;
+  gap:16px;
+  align-items:center;
+  padding:14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--line);
+}
+.student-name strong { display:block; font-size:16px; }
+.student-name span { color:var(--muted); font-size:12.5px; }
+.bar {
+  height:10px;
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+  overflow:hidden;
+}
+.bar div { height:100%; width:0%; background:linear-gradient(90deg, #6366f1, #22d3ee); transition:width .35s; }
+.score { font-family:'JetBrains Mono', monospace; font-size:18px; font-weight:900; }
+.weak-list, .alert-list { display:flex; flex-direction:column; gap:12px; }
+.weak-row, .alert-row {
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--line);
+}
+.weak-row b, .alert-row b { font-size:15px; }
+.weak-row span, .alert-row span { color:var(--muted); font-size:13px; }
+.empty {
+  border:1px dashed var(--line);
+  color:var(--muted);
+  padding:18px;
+  border-radius:16px;
+  font-size:14px;
+}
+.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:22px; }
+.btn {
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  border-radius:999px;
+  padding:10px 16px;
+  text-decoration:none;
+  font-weight:900;
+  cursor:pointer;
+}
+.btn.primary { background:var(--p); border-color:var(--p); }
+@media (max-width: 1100px) {
+  .grid { grid-template-columns:1fr; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  body { padding:16px; }
+  .top { grid-template-columns:1fr; }
+  .clock { text-align:left; }
+  h1 { font-size:30px; }
+  .student { grid-template-columns:1fr; }
+  .stats { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<main class="stage">
+  <section class="top">
+    <div>
+      <div class="title-kicker">LIVE CLASS BOARD</div>
+      <h1 id="classTitle">보안약점 진단원 라이브 훈련</h1>
+      <p class="meta" id="classMeta">클래스 정보를 불러오는 중입니다.</p>
+    </div>
+    <div class="clock">
+      <strong id="clockText">--:--</strong>
+      <span id="refreshText">실시간 동기화 대기</span>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><span>접속 수강생</span><strong id="statMembers">0</strong></div>
+    <div class="stat ok"><span>평균 코드진단</span><strong id="statPracAvg">0%</strong></div>
+    <div class="stat warn"><span>평균 XP</span><strong id="statXpAvg">0</strong></div>
+    <div class="stat no"><span>복습 필요 오답</span><strong id="statWrongTotal">0</strong></div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-h">
+        <h2>수강생 진행 현황</h2>
+        <span class="badge" id="joinCode">------</span>
+      </div>
+      <div class="progress-list" id="studentList"></div>
+    </section>
+
+    <aside>
+      <section class="panel" style="margin-bottom:22px;">
+        <div class="panel-h"><h2>집중 관리 포인트</h2></div>
+        <div class="weak-list" id="weakList"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h"><h2>강사용 알림</h2></div>
+        <div class="alert-list" id="alertList"></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="actions">
+    <a class="btn primary" id="reportLink" href="class-report.html">종료 리포트</a>
+    <a class="btn" href="instructor-dashboard.html">강사용 콘솔</a>
+    <button class="btn" onclick="window.print()">현재 화면 인쇄</button>
+  </div>
+</main>
+
+<script type="module" src="auth-widget.js"></script>
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBaRXs5HJ1ABFcshaTpqNj-uFuq2H9ZOcw",
+  authDomain: "vuln-sim.firebaseapp.com",
+  projectId: "vuln-sim",
+  storageBucket: "vuln-sim.firebasestorage.app",
+  messagingSenderId: "493267417608",
+  appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
+};
+
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const params = new URLSearchParams(location.search);
+const classId = params.get('classId');
+let classData = null;
+
+function tickClock() {
+  document.getElementById('clockText').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+function renderMembers(members) {
+  const count = members.length;
+  const totalXp = members.reduce((a, m) => a + (Number(m.xp) || 0), 0);
+  const totalPrac = members.reduce((a, m) => a + (Number(m.practicalCount) || 0), 0);
+  const totalWrong = members.reduce((a, m) => a + (Number(m.wrongCount) || 0), 0);
+  const avgXp = count ? Math.round(totalXp / count) : 0;
+  const avgPracPct = count ? Math.min(Math.round(((totalPrac / count) / 90) * 100), 100) : 0;
+
+  document.getElementById('statMembers').textContent = count;
+  document.getElementById('statPracAvg').textContent = `${avgPracPct}%`;
+  document.getElementById('statXpAvg').textContent = avgXp;
+  document.getElementById('statWrongTotal').textContent = totalWrong;
+  document.getElementById('refreshText').textContent = `최근 갱신 ${new Date().toLocaleTimeString()}`;
+
+  const list = document.getElementById('studentList');
+  list.innerHTML = '';
+  if (!members.length) {
+    list.innerHTML = '<div class="empty">아직 입장한 수강생이 없습니다. 참여 코드를 화면에 안내해 주세요.</div>';
+  } else {
+    members
+      .sort((a, b) => (b.practicalCount || 0) - (a.practicalCount || 0))
+      .forEach(m => {
+        const pct = Math.min(Math.round(((m.practicalCount || 0) / 90) * 100), 100);
+        const el = document.createElement('div');
+        el.className = 'student';
+        el.innerHTML = `
+          <div class="student-name">
+            <strong>${m.displayName || '익명 학생'}</strong>
+            <span>Lv.${m.level || 1} · ${m.xp || 0} XP · 오답 ${m.wrongCount || 0}개</span>
+          </div>
+          <div class="bar"><div style="width:${pct}%;"></div></div>
+          <div class="score">${pct}%</div>
+        `;
+        list.appendChild(el);
+      });
+  }
+
+  const weakList = document.getElementById('weakList');
+  const weakRows = [
+    ['입력 데이터 검증', Math.round(totalWrong * .45), 'SQL 삽입, XSS, 경로 조작 중심 복습'],
+    ['보안 기능', Math.round(totalWrong * .3), '인증/권한, 암호키 관리 확인'],
+    ['에러 처리', Math.round(totalWrong * .15), '오류 메시지 노출과 로그 처리 확인']
+  ].filter(row => row[1] > 0);
+  weakList.innerHTML = weakRows.length
+    ? weakRows.map(([name, count, note]) => `<div class="weak-row"><div><b>${name}</b><br><span>${note}</span></div><b>${count}회</b></div>`).join('')
+    : '<div class="empty">아직 오답 데이터가 충분하지 않습니다.</div>';
+
+  const needsHelp = members.filter(m => (m.wrongCount || 0) >= 5 || (m.practicalCount || 0) < 3).slice(0, 4);
+  document.getElementById('alertList').innerHTML = needsHelp.length
+    ? needsHelp.map(m => `<div class="alert-row"><div><b>${m.displayName || '익명 학생'}</b><br><span>진도 ${m.practicalCount || 0}/90 · 오답 ${m.wrongCount || 0}개</span></div><span>개별 확인</span></div>`).join('')
+    : '<div class="empty">현재 개별 확인이 필요한 수강생이 뚜렷하게 보이지 않습니다.</div>';
+}
+
+async function loadClass() {
+  if (!classId) {
+    document.getElementById('classMeta').textContent = 'classId가 없습니다. 강사용 콘솔에서 라이브 화면을 열어 주세요.';
+    return;
+  }
+  document.getElementById('reportLink').href = `class-report.html?classId=${classId}`;
+  const snap = await getDoc(doc(db, 'classes', classId));
+  if (!snap.exists()) {
+    document.getElementById('classMeta').textContent = '클래스 정보를 찾을 수 없습니다.';
+    return;
+  }
+  classData = snap.data();
+  document.getElementById('classTitle').textContent = classData.title || '보안약점 진단원 라이브 훈련';
+  document.getElementById('classMeta').textContent = `배포 미션: ${classData.assignedPackName || '미지정'} · 생성 ${new Date(classData.createdAt).toLocaleString()}`;
+  document.getElementById('joinCode').textContent = classData.joinCode || '------';
+
+  onSnapshot(collection(db, 'classes', classId, 'members'), snap => {
+    const members = [];
+    snap.forEach(d => members.push(d.data()));
+    renderMembers(members);
+  });
+}
+
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    document.getElementById('classMeta').textContent = '로그인 후 라이브 수업 화면을 사용할 수 있습니다.';
+    return;
+  }
+  loadClass().catch(err => {
+    console.error(err);
+    document.getElementById('classMeta').textContent = '라이브 데이터를 불러오지 못했습니다.';
+  });
+});
+</script>
+</body>
+</html>
