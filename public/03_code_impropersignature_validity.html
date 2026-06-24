@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부적절한 인증서 유효성 검증 - 실습 시뮬레이터</title>
+    <title data-en="Improper Certificate Validity Verification - Practice Simulator">부적절한 인증서 유효성 검증 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* SignatureVerificationSimulator와 동일한 스타일 구조 (색상 테마: Orange) */
@@ -61,6 +61,9 @@
         .info-section { margin-bottom: 20px; }
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #e17055; }
         .info-content { color: #555; line-height: 1.6; }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 <!-- RESP-NET -->
 <style>
@@ -74,44 +77,45 @@
 </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)" data-en="← Main">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>📜 부적절한 인증서 유효성 검증</h1>
+            <h1 data-en="📜 Improper Certificate Validity Verification">📜 부적절한 인증서 유효성 검증</h1>
             <p>CWE-295: Improper Certificate Validation</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">HostnameVerifier 검증 로직</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="HostnameVerifier validation logic">HostnameVerifier 검증 로직</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">SSL Context 검증 설정</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="SSL Context verification settings">SSL Context 검증 설정</div>
             </button>
         </div>
 
         <!-- Java Mode -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 무조건 True 반환 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 안전한 검증 로직 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove unconditional true return">무조건 True 반환 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply safe validation logic">안전한 검증 로직 적용</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">TrustManager.java</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">import javax.net.ssl.HostnameVerifier;
@@ -145,30 +149,30 @@ public class TrustAll {
 }</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 기본 검증 사용</strong>
-                            <p>취약한 HostnameVerifier를 직접 구현하는 코드를 삭제하고 기본 설정을 사용하거나, false를 반환해야 합니다.</p>
+                            <strong data-en="1. Use the default validation">1. 기본 검증 사용</strong>
+                            <p data-en="Delete the code that implements a vulnerable HostnameVerifier directly and either use the default settings or return false.">취약한 HostnameVerifier를 직접 구현하는 코드를 삭제하고 기본 설정을 사용하거나, false를 반환해야 합니다.</p>
                             <div class="hint-code">return false; // 또는 코드 자체를 제거</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과</span>
+                        <span class="panel-title" data-en="📊 Analysis Result">📊 분석 결과</span>
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>SSL/TLS 연결 시 `verify()` 메서드가 무조건 `true`를 반환하면 공격자가 위조한 인증서도 통과됩니다. 이를 수정하여 호스트 검증을 수행하도록 하세요.</p>
+                                <p data-en="If the `verify()` method unconditionally returns `true` during an SSL/TLS connection, even a certificate forged by an attacker will pass. Fix it so that host verification is performed.">SSL/TLS 연결 시 `verify()` 메서드가 무조건 `true`를 반환하면 공격자가 위조한 인증서도 통과됩니다. 이를 수정하여 호스트 검증을 수행하도록 하세요.</p>
                             </div>
                         </div>
                     </div>
@@ -179,23 +183,23 @@ public class TrustAll {
         <!-- Python Mode -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 검증 비활성화 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 필수 검증 설정</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove disabled verification">검증 비활성화 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Configure required verification">필수 검증 설정</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">ssl_connect.py</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">import ssl
@@ -225,33 +229,33 @@ def connect_server():
     return response.read()</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 호스트네임 확인 활성화</strong>
+                            <strong data-en="1. Enable hostname checking">1. 호스트네임 확인 활성화</strong>
                             <div class="hint-code">context.check_hostname = True</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. 인증서 필수 검증 설정</strong>
+                            <strong data-en="2. Require certificate verification">2. 인증서 필수 검증 설정</strong>
                             <div class="hint-code">context.verify_mode = ssl.CERT_REQUIRED</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과</span>
+                        <span class="panel-title" data-en="📊 Analysis Result">📊 분석 결과</span>
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>Python의 `ssl` 모듈 사용 시 `CERT_NONE` 설정을 제거하고, `CERT_REQUIRED` 및 호스트네임 확인을 활성화하여 연결을 보호하세요.</p>
+                                <p data-en="When using Python's `ssl` module, remove the `CERT_NONE` setting and enable `CERT_REQUIRED` and hostname checking to protect the connection.">Python의 `ssl` 모듈 사용 시 `CERT_NONE` 설정을 제거하고, `CERT_REQUIRED` 및 호스트네임 확인을 활성화하여 연결을 보호하세요.</p>
                             </div>
                         </div>
                     </div>
@@ -266,6 +270,22 @@ def connect_server():
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // 공통 로직
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -295,17 +315,20 @@ def connect_server():
             isEditingJava = !isEditingJava;
             if(isEditingJava) {
                 display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayJava').textContent;
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayJava').textContent = editor.value;
-                Prism.highlightElement(document.getElementById('codeDisplayJava')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                Prism.highlightElement(document.getElementById('codeDisplayJava')); btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
-            document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">🚨 return true로 인해 모든 인증서를 신뢰합니다.</div>';
+            document.getElementById('feedbackJava').innerHTML = L(
+                '<div class="feedback-item feedback-error">🚨 return true로 인해 모든 인증서를 신뢰합니다.</div>',
+                '<div class="feedback-item feedback-error">🚨 Because of return true, all certificates are trusted.</div>');
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusJava'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
@@ -324,11 +347,15 @@ def connect_server():
             }
 
             if(passed) {
-                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 무조건적인 신뢰 로직이 제거되었습니다.</div>';
-                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
+                document.getElementById('feedbackJava').innerHTML = L(
+                    '<div class="feedback-item feedback-success">🎉 성공! 무조건적인 신뢰 로직이 제거되었습니다.</div>',
+                    '<div class="feedback-item feedback-success">🎉 Success! The unconditional trust logic has been removed.</div>');
+                const st=document.getElementById('codeStatusJava'); st.className = 'status-badge status-secure';
+                st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code');
             } else {
-                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">❌ return true를 제거하거나 안전한 로직으로 변경하세요.</div>';
+                document.getElementById('feedbackJava').innerHTML = L(
+                    '<div class="feedback-item feedback-error">❌ return true를 제거하거나 안전한 로직으로 변경하세요.</div>',
+                    '<div class="feedback-item feedback-error">❌ Remove return true or change it to safe logic.</div>');
             }
         }
         function resetCoding(mode) {
@@ -380,17 +407,20 @@ def connect_server():
             isEditingPython = !isEditingPython;
             if(isEditingPython) {
                 display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayPython').textContent;
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayPython').textContent = editor.value;
-                Prism.highlightElement(document.getElementById('codeDisplayPython')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                Prism.highlightElement(document.getElementById('codeDisplayPython')); btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
-            document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">🚨 CERT_NONE 설정으로 인해 보안이 취약합니다.</div>';
+            document.getElementById('feedbackPython').innerHTML = L(
+                '<div class="feedback-item feedback-error">🚨 CERT_NONE 설정으로 인해 보안이 취약합니다.</div>',
+                '<div class="feedback-item feedback-error">🚨 The CERT_NONE setting makes the connection insecure.</div>');
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusPython'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
@@ -407,25 +437,32 @@ def connect_server():
             }
 
             if(passed) {
-                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 인증서 및 호스트 검증이 활성화되었습니다.</div>';
-                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+                document.getElementById('feedbackPython').innerHTML = L(
+                    '<div class="feedback-item feedback-success">🎉 성공! 인증서 및 호스트 검증이 활성화되었습니다.</div>',
+                    '<div class="feedback-item feedback-success">🎉 Success! Certificate and host verification are now enabled.</div>');
+                const st=document.getElementById('codeStatusPython'); st.className = 'status-badge status-secure';
+                st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code');
             } else {
-                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">❌ check_hostname=True 및 CERT_REQUIRED를 설정해야 합니다.</div>';
+                document.getElementById('feedbackPython').innerHTML = L(
+                    '<div class="feedback-item feedback-error">❌ check_hostname=True 및 CERT_REQUIRED를 설정해야 합니다.</div>',
+                    '<div class="feedback-item feedback-error">❌ You must set check_hostname=True and CERT_REQUIRED.</div>');
             }
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">인증서 만료·유효기간 검증을 생략해 폐기·만료된 인증서가 그대로 신뢰된 사례가 있습니다.</div>
+      <div style="margin-bottom:12px;" data-en="There have been cases where certificate expiry/validity verification was skipped, so revoked or expired certificates were trusted as-is.">인증서 만료·유효기간 검증을 생략해 폐기·만료된 인증서가 그대로 신뢰된 사례가 있습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-298 · CWE-324</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

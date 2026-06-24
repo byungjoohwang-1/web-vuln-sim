@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부적절한 인가 - 실습 시뮬레이터</title>
+    <title data-en="Improper Authorization - Practice Simulator">부적절한 인가 - 실습 시뮬레이터</title>
     <!-- Prism.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
@@ -531,14 +531,18 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)" data-en="← Main">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🛡️ 부적절한 인가 (Improper Authorization)</h1>
-            <p>
+            <h1 data-en="🛡️ Improper Authorization">🛡️ 부적절한 인가 (Improper Authorization)</h1>
+            <p data-en="Learn about a security vulnerability that allows important functions to be performed without proper authorization checks. If deletion, modification, and other actions are allowed without verifying the user's privileges, an unauthorized user can manipulate the system.">
                 적절한 권한 검증 없이 중요한 기능을 수행할 수 있는 보안 취약점을 학습합니다.
                 사용자의 권한을 확인하지 않고 삭제, 수정 등의 작업을 허용하면 권한 없는 사용자가 시스템을 조작할 수 있습니다.
             </p>
@@ -548,40 +552,40 @@
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 코드 수정</div>
-                <div class="mode-desc">게시물 삭제 권한 검증</div>
+                <div class="mode-title" data-en="Java Code Editing">Java 코드 수정</div>
+                <div class="mode-desc" data-en="Post deletion authorization check">게시물 삭제 권한 검증</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 코드 수정</div>
-                <div class="mode-desc">컨텐츠 삭제 권한 검증</div>
+                <div class="mode-title" data-en="Python Code Editing">Python 코드 수정</div>
+                <div class="mode-desc" data-en="Content deletion authorization check">컨텐츠 삭제 권한 검증</div>
             </button>
         </div>
 
         <!-- Java 코드 수정 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>취약점 진단 완료</span>
+                        <span data-en="Vulnerability diagnosis complete">취약점 진단 완료</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>세션에서 User 객체 가져오기</span>
+                        <span data-en="Get the User object from the session">세션에서 User 객체 가져오기</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>권한 검증 함수 호출</span>
+                        <span data-en="Call the authorization check function">권한 검증 함수 호출</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>권한 없을 시 처리</span>
+                        <span data-en="Handle the unauthorized case">권한 없을 시 처리</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>검증 통과</span>
+                        <span data-en="Validation passed">검증 통과</span>
                     </li>
                 </ul>
             </div>
@@ -589,15 +593,15 @@
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">☕ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="☕ Java Code Editor">☕ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">BoardController.java</span>
-                            <span class="toolbar-hint">💡 사용자 권한 검증 추가</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Add user authorization check">💡 사용자 권한 검증 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">private BoardDao boardDao;
@@ -618,16 +622,16 @@ if (action != null && action.equals("delete")) {
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">
                             🔍 진단하기
                         </button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">
                             ✅ 검증하기
                         </button>
-                        <button class="btn btn-hint" onclick="toggleHintJava()">
+                        <button class="btn btn-hint" onclick="toggleHintJava()" data-en="💡 Show Hint">
                             💡 힌트 보기
                         </button>
-                        <button class="btn btn-reset" onclick="resetCodingJava()">
+                        <button class="btn btn-reset" onclick="resetCodingJava()" data-en="🔄 Reset">
                             🔄 초기화
                         </button>
                     </div>
@@ -635,15 +639,15 @@ if (action != null && action.equals("delete")) {
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="hint-title">💡 수정 가이드</div>
-                        
+                        <div class="hint-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
+
                         <div class="hint-step">
-                            <strong>Step 1: 세션에서 User 객체 가져오기</strong>
+                            <strong data-en="Step 1: Get the User object from the session">Step 1: 세션에서 User 객체 가져오기</strong>
                             <div class="hint-code">User user = (User)session.getAttribute("user");</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 2: 권한 검증 조건 추가</strong>
+                            <strong data-en="Step 2: Add the authorization check condition">Step 2: 권한 검증 조건 추가</strong>
                             <div class="hint-code">if (action != null && action.equals("delete") && 
     checkAccessControlList(user, action)) {
     // 권한이 있을 때만 실행
@@ -651,7 +655,7 @@ if (action != null && action.equals("delete")) {
                         </div>
 
                         <div class="hint-step">
-                            <strong>완성 예시:</strong>
+                            <strong data-en="Completed example:">완성 예시:</strong>
                             <div class="hint-code">private BoardDao boardDao;
 String action = request.getParameter("action");
 String contentId = request.getParameter("contentId");
@@ -668,28 +672,28 @@ if (action != null && action.equals("delete") &&
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 실시간 피드백</span>
+                        <span class="panel-title" data-en="📊 Real-time Feedback">📊 실시간 피드백</span>
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>게시물 삭제 시 사용자의 권한을 검증하세요.</p>
+                                <p data-en="Verify the user's authorization when deleting a post.">게시물 삭제 시 사용자의 권한을 검증하세요.</p>
                                 <ul style="margin-top: 10px;">
                                     <li>User user = (User)session.getAttribute("user")</li>
-                                    <li>checkAccessControlList(user, action) 호출</li>
-                                    <li>권한이 있을 때만 delete 수행</li>
+                                    <li data-en="Call checkAccessControlList(user, action)">checkAccessControlList(user, action) 호출</li>
+                                    <li data-en="Perform delete only when authorized">권한이 있을 때만 delete 수행</li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="info-section">
-                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-title" data-en="⚠️ Vulnerability">⚠️ 취약점</div>
                             <div class="info-content">
-                                <p style="color: #dc3545; font-weight: bold;">
+                                <p style="color: #dc3545; font-weight: bold;" data-en="The current code has no authorization check!">
                                     현재 코드는 권한 검증이 없습니다!
                                 </p>
-                                <p style="margin-top: 10px;">
+                                <p style="margin-top: 10px;" data-en="Because deletion is performed without checking the user's delete permission, even an unauthorized user can delete the post.">
                                     사용자의 delete 권한 확인 없이 삭제를 수행하므로,
                                     권한 없는 사용자도 게시물을 삭제할 수 있습니다.
                                 </p>
@@ -701,36 +705,36 @@ if (action != null && action.equals("delete") &&
 
             <div class="info-panel">
                 <div class="info-section">
-                    <div class="info-title">📖 부적절한 인가 취약점이란?</div>
+                    <div class="info-title" data-en="📖 What is the improper authorization vulnerability?">📖 부적절한 인가 취약점이란?</div>
                     <div class="info-content">
-                        <p>사용자의 권한을 적절히 검증하지 않아 권한 없는 작업을 수행할 수 있는 보안 취약점입니다.</p>
+                        <p data-en="It is a security vulnerability in which unauthorized actions can be performed because the user's privileges are not properly verified.">사용자의 권한을 적절히 검증하지 않아 권한 없는 작업을 수행할 수 있는 보안 취약점입니다.</p>
                         <ul>
-                            <li><strong>권한 검증 누락:</strong> ACL(Access Control List) 확인 없이 작업 수행</li>
-                            <li><strong>수평적 권한 상승:</strong> 같은 권한 레벨의 다른 사용자 데이터 접근</li>
-                            <li><strong>수직적 권한 상승:</strong> 일반 사용자가 관리자 기능 실행</li>
+                            <li data-en="<strong>Missing authorization check:</strong> performing an action without checking the ACL (Access Control List)"><strong>권한 검증 누락:</strong> ACL(Access Control List) 확인 없이 작업 수행</li>
+                            <li data-en="<strong>Horizontal privilege escalation:</strong> accessing another user's data at the same privilege level"><strong>수평적 권한 상승:</strong> 같은 권한 레벨의 다른 사용자 데이터 접근</li>
+                            <li data-en="<strong>Vertical privilege escalation:</strong> a regular user executing administrator functions"><strong>수직적 권한 상승:</strong> 일반 사용자가 관리자 기능 실행</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="info-section">
-                    <div class="info-title">🎯 공격 시나리오</div>
+                    <div class="info-title" data-en="🎯 Attack Scenarios">🎯 공격 시나리오</div>
                     <div class="info-content">
                         <ul>
-                            <li><strong>게시물 삭제:</strong> 읽기 권한만 있는 사용자가 타인의 게시물 삭제</li>
-                            <li><strong>데이터 수정:</strong> 권한 없는 사용자가 중요 설정 변경</li>
-                            <li><strong>기능 접근:</strong> 일반 사용자가 관리자 페이지 접근</li>
+                            <li data-en="<strong>Post deletion:</strong> a user with only read permission deletes someone else's post"><strong>게시물 삭제:</strong> 읽기 권한만 있는 사용자가 타인의 게시물 삭제</li>
+                            <li data-en="<strong>Data modification:</strong> an unauthorized user changes important settings"><strong>데이터 수정:</strong> 권한 없는 사용자가 중요 설정 변경</li>
+                            <li data-en="<strong>Function access:</strong> a regular user accesses the administrator page"><strong>기능 접근:</strong> 일반 사용자가 관리자 페이지 접근</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="info-section">
-                    <div class="info-title">🛡️ 방어 대책</div>
+                    <div class="info-title" data-en="🛡️ Countermeasures">🛡️ 방어 대책</div>
                     <div class="info-content">
                         <ul>
-                            <li>모든 중요 작업 전 권한 검증 (ACL, RBAC)</li>
-                            <li>세션의 사용자 정보로 권한 확인</li>
-                            <li>최소 권한 원칙 적용</li>
-                            <li>권한 검증 실패 시 적절한 에러 처리</li>
+                            <li data-en="Authorization check before every important action (ACL, RBAC)">모든 중요 작업 전 권한 검증 (ACL, RBAC)</li>
+                            <li data-en="Check privileges using the user info in the session">세션의 사용자 정보로 권한 확인</li>
+                            <li data-en="Apply the principle of least privilege">최소 권한 원칙 적용</li>
+                            <li data-en="Proper error handling when the authorization check fails">권한 검증 실패 시 적절한 에러 처리</li>
                         </ul>
                     </div>
                 </div>
@@ -740,27 +744,27 @@ if (action != null && action.equals("delete") &&
         <!-- Python 코드 수정 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>취약점 진단 완료</span>
+                        <span data-en="Vulnerability diagnosis complete">취약점 진단 완료</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>login_required 데코레이터 추가</span>
+                        <span data-en="Add the login_required decorator">login_required 데코레이터 추가</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>permission_required 데코레이터 추가</span>
+                        <span data-en="Add the permission_required decorator">permission_required 데코레이터 추가</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>raise_exception=True 설정</span>
+                        <span data-en="Set raise_exception=True">raise_exception=True 설정</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>검증 통과</span>
+                        <span data-en="Validation passed">검증 통과</span>
                     </li>
                 </ul>
             </div>
@@ -768,15 +772,15 @@ if (action != null && action.equals("delete") &&
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">views.py (Django)</span>
-                            <span class="toolbar-hint">💡 권한 검증 데코레이터 추가</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Add authorization check decorators">💡 권한 검증 데코레이터 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">from django.shortcuts import import render
@@ -807,16 +811,16 @@ def delete_content(request):
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">
                             🔍 진단하기
                         </button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">
                             ✅ 검증하기
                         </button>
-                        <button class="btn btn-hint" onclick="toggleHintPython()">
+                        <button class="btn btn-hint" onclick="toggleHintPython()" data-en="💡 Show Hint">
                             💡 힌트 보기
                         </button>
-                        <button class="btn btn-reset" onclick="resetCodingPython()">
+                        <button class="btn btn-reset" onclick="resetCodingPython()" data-en="🔄 Reset">
                             🔄 초기화
                         </button>
                     </div>
@@ -824,28 +828,28 @@ def delete_content(request):
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="hint-title">💡 수정 가이드</div>
-                        
+                        <div class="hint-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
+
                         <div class="hint-step">
-                            <strong>Step 1: 필요한 데코레이터 import</strong>
+                            <strong data-en="Step 1: Import the required decorators">Step 1: 필요한 데코레이터 import</strong>
                             <div class="hint-code">from django.contrib.auth.decorators import login_required, permission_required</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 2: @login_required 추가</strong>
+                            <strong data-en="Step 2: Add @login_required">Step 2: @login_required 추가</strong>
                             <div class="hint-code">@login_required
 def delete_content(request):</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 3: @permission_required 추가</strong>
+                            <strong data-en="Step 3: Add @permission_required">Step 3: @permission_required 추가</strong>
                             <div class="hint-code">@login_required
 @permission_required('content.delete', raise_exception=True)
 def delete_content(request):</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>완성 예시:</strong>
+                            <strong data-en="Completed example:">완성 예시:</strong>
                             <div class="hint-code">from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import import render
 from .model import Content
@@ -868,28 +872,28 @@ def delete_content(request):
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 실시간 피드백</span>
+                        <span class="panel-title" data-en="📊 Real-time Feedback">📊 실시간 피드백</span>
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>컨텐츠 삭제 시 사용자의 권한을 검증하세요.</p>
+                                <p data-en="Verify the user's authorization when deleting content.">컨텐츠 삭제 시 사용자의 권한을 검증하세요.</p>
                                 <ul style="margin-top: 10px;">
-                                    <li>@login_required 데코레이터 추가</li>
-                                    <li>@permission_required('content.delete') 추가</li>
-                                    <li>raise_exception=True 파라미터 설정</li>
+                                    <li data-en="Add the @login_required decorator">@login_required 데코레이터 추가</li>
+                                    <li data-en="Add @permission_required('content.delete')">@permission_required('content.delete') 추가</li>
+                                    <li data-en="Set the raise_exception=True parameter">raise_exception=True 파라미터 설정</li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="info-section">
-                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-title" data-en="⚠️ Vulnerability">⚠️ 취약점</div>
                             <div class="info-content">
-                                <p style="color: #dc3545; font-weight: bold;">
+                                <p style="color: #dc3545; font-weight: bold;" data-en="The current code has no authorization check!">
                                     현재 코드는 권한 검증이 없습니다!
                                 </p>
-                                <p style="margin-top: 10px;">
+                                <p style="margin-top: 10px;" data-en="With neither login verification nor delete-permission verification,<br>anyone can delete content.">
                                     로그인 검증도, 삭제 권한 검증도 없어<br>
                                     누구나 컨텐츠를 삭제할 수 있습니다.
                                 </p>
@@ -901,24 +905,24 @@ def delete_content(request):
 
             <div class="info-panel">
                 <div class="info-section">
-                    <div class="info-title">📖 Django 권한 시스템</div>
+                    <div class="info-title" data-en="📖 Django Permission System">📖 Django 권한 시스템</div>
                     <div class="info-content">
-                        <p>Django는 권한 검증을 위한 데코레이터를 제공합니다.</p>
+                        <p data-en="Django provides decorators for authorization checks.">Django는 권한 검증을 위한 데코레이터를 제공합니다.</p>
                         <ul>
-                            <li><strong>@login_required:</strong> 로그인한 사용자만 접근</li>
-                            <li><strong>@permission_required:</strong> 특정 권한을 가진 사용자만 접근</li>
-                            <li><strong>raise_exception=True:</strong> 권한 없을 시 403 에러 발생</li>
+                            <li data-en="<strong>@login_required:</strong> only logged-in users can access"><strong>@login_required:</strong> 로그인한 사용자만 접근</li>
+                            <li data-en="<strong>@permission_required:</strong> only users with a specific permission can access"><strong>@permission_required:</strong> 특정 권한을 가진 사용자만 접근</li>
+                            <li data-en="<strong>raise_exception=True:</strong> raises a 403 error when unauthorized"><strong>raise_exception=True:</strong> 권한 없을 시 403 에러 발생</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="info-section">
-                    <div class="info-title">🎯 권한 체계</div>
+                    <div class="info-title" data-en="🎯 Permission Scheme">🎯 권한 체계</div>
                     <div class="info-content">
                         <ul>
-                            <li><strong>앱명.동작:</strong> 'content.delete', 'content.add', 'content.change'</li>
+                            <li data-en="<strong>app.action:</strong> 'content.delete', 'content.add', 'content.change'"><strong>앱명.동작:</strong> 'content.delete', 'content.add', 'content.change'</li>
                             <li><strong>User permissions:</strong> user.has_perm('content.delete')</li>
-                            <li><strong>Group permissions:</strong> 그룹 단위 권한 관리</li>
+                            <li data-en="<strong>Group permissions:</strong> group-level permission management"><strong>Group permissions:</strong> 그룹 단위 권한 관리</li>
                         </ul>
                     </div>
                 </div>
@@ -932,6 +936,22 @@ def delete_content(request):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         let currentMode = 'java';
         let progressStepsJava = [false, false, false, false, false];
         let progressStepsPython = [false, false, false, false, false];
@@ -962,7 +982,7 @@ def delete_content(request):
                 displayContainer.style.display = 'none';
                 textarea.style.display = 'block';
                 textarea.value = codeDisplay.textContent;
-                editBtn.textContent = '💾 저장';
+                editBtn.textContent = L('💾 저장','💾 Save');
                 editBtn.classList.add('editing');
                 textarea.focus();
             } else {
@@ -972,7 +992,8 @@ def delete_content(request):
                 Prism.highlightElement(codeDisplay);
                 displayContainer.style.display = 'block';
                 textarea.style.display = 'none';
-                editBtn.textContent = '✏️ 편집';
+                editBtn.textContent = L('✏️ 편집','✏️ Edit');
+                editBtn.dataset.ko = '✏️ 편집'; editBtn.setAttribute('data-en','✏️ Edit');
                 editBtn.classList.remove('editing');
             }
         }
@@ -1005,8 +1026,8 @@ def delete_content(request):
             const feedback = document.getElementById('feedbackJava');
             
             updateProgressJava(0, true);
-            
-            feedback.innerHTML = `
+
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <div class="feedback-header">
                         <span>🚨</span>
@@ -1031,11 +1052,37 @@ def delete_content(request):
                         3. 권한이 있을 때만 delete 수행
                     </div>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <div class="feedback-header">
+                        <span>🚨</span>
+                        <span>Improper authorization vulnerability found</span>
+                    </div>
+                    <div class="feedback-message">
+                        <strong>Problems:</strong><br>
+                        • delete is performed without a user authorization check<br>
+                        • The User object is not fetched from the session<br>
+                        • checkAccessControlList() is not called<br>
+                        • Even an unauthorized user can delete the post
+                    </div>
+                </div>
+                <div class="feedback-item feedback-warning">
+                    <div class="feedback-header">
+                        <span>💡</span>
+                        <span>How to fix</span>
+                    </div>
+                    <div class="feedback-message">
+                        1. User user = (User)session.getAttribute("user")<br>
+                        2. Add the checkAccessControlList(user, action) condition<br>
+                        3. Perform delete only when authorized
+                    </div>
+                </div>
+            `);
+
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중';
-            document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJava=document.getElementById('codeStatusJava');
+            stJava.textContent = L('수정 중','Editing'); stJava.dataset.ko='수정 중'; stJava.setAttribute('data-en','Editing');
+            stJava.className = 'status-badge status-editing';
         }
 
         function validateCodeJava() {
@@ -1049,28 +1096,28 @@ def delete_content(request):
             
             // 검증 1: User 객체 가져오기
             if (code.includes('User user') && code.includes('session.getAttribute')) {
-                success.push('✅ 세션에서 User 객체 가져오기 확인');
+                success.push(L('✅ 세션에서 User 객체 가져오기 확인','✅ User object retrieved from session confirmed'));
                 updateProgressJava(1, true);
             } else {
-                errors.push('❌ User user = (User)session.getAttribute("user"); 가 필요합니다');
+                errors.push(L('❌ User user = (User)session.getAttribute("user"); 가 필요합니다','❌ User user = (User)session.getAttribute("user"); is required'));
             }
-            
+
             // 검증 2: checkAccessControlList 호출
             if (code.includes('checkAccessControlList')) {
-                success.push('✅ 권한 검증 함수 호출 확인');
+                success.push(L('✅ 권한 검증 함수 호출 확인','✅ Authorization check function call confirmed'));
                 updateProgressJava(2, true);
             } else {
-                errors.push('❌ checkAccessControlList(user, action) 호출이 필요합니다');
+                errors.push(L('❌ checkAccessControlList(user, action) 호출이 필요합니다','❌ A checkAccessControlList(user, action) call is required'));
             }
-            
+
             // 검증 3: 조건문에 권한 검증 포함
-            if (code.includes('checkAccessControlList') && 
+            if (code.includes('checkAccessControlList') &&
                 (code.includes('if (') || code.includes('if(')) &&
                 code.includes('&&')) {
-                success.push('✅ 권한 검증 조건 추가 확인');
+                success.push(L('✅ 권한 검증 조건 추가 확인','✅ Authorization check condition added confirmed'));
                 updateProgressJava(3, true);
             } else {
-                warnings.push('⚠️ if 조건에 checkAccessControlList를 포함해야 합니다');
+                warnings.push(L('⚠️ if 조건에 checkAccessControlList를 포함해야 합니다','⚠️ You must include checkAccessControlList in the if condition'));
             }
             
             // 결과 판정
@@ -1081,25 +1128,26 @@ def delete_content(request):
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>🎉</span>
-                            <span>검증 통과! 안전한 코드입니다!</span>
+                            <span>${L('검증 통과! 안전한 코드입니다!','Validation passed! This is secure code!')}</span>
                         </div>
                         <div class="feedback-message">
-                            <strong>적용된 보안 조치:</strong><br>
+                            <strong>${L('적용된 보안 조치:','Applied security measures:')}</strong><br>
                             ${success.join('<br>')}
-                            ${warnings.length > 0 ? '<br><br><strong>개선 제안:</strong><br>' + warnings.join('<br>') : ''}
+                            ${warnings.length > 0 ? '<br><br><strong>' + L('개선 제안:','Improvement suggestions:') + '</strong><br>' + warnings.join('<br>') : ''}
                         </div>
                     </div>
                 `;
-                
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
-                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                
+
+                const stJavaOk=document.getElementById('codeStatusJava');
+                stJavaOk.textContent = L('안전한 코드','Secure code'); stJavaOk.dataset.ko='안전한 코드'; stJavaOk.setAttribute('data-en','Secure code');
+                stJavaOk.className = 'status-badge status-secure';
+
                 rightPanel.innerHTML = `
                     <div class="info-section">
-                        <div class="info-title">✅ 수정 완료</div>
+                        <div class="info-title">${L('✅ 수정 완료','✅ Fix complete')}</div>
                         <div class="info-content">
                             <p style="color: #28a745; font-weight: bold;">
-                                부적절한 인가 취약점이 해결되었습니다!
+                                ${L('부적절한 인가 취약점이 해결되었습니다!','The improper authorization vulnerability has been resolved!')}
                             </p>
                             ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
                         </div>
@@ -1111,31 +1159,31 @@ def delete_content(request):
                     <div class="feedback-item feedback-error">
                         <div class="feedback-header">
                             <span>❌</span>
-                            <span>수정이 필요합니다</span>
+                            <span>${L('수정이 필요합니다','A fix is required')}</span>
                         </div>
                         <div class="feedback-message">
                             ${errors.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${warnings.length > 0 ? `
                     <div class="feedback-item feedback-warning">
                         <div class="feedback-header">
                             <span>⚠️</span>
-                            <span>개선 권장</span>
+                            <span>${L('개선 권장','Improvement recommended')}</span>
                         </div>
                         <div class="feedback-message">
                             ${warnings.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${success.length > 0 ? `
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>✅</span>
-                            <span>잘하고 있습니다!</span>
+                            <span>${L('잘하고 있습니다!','You are doing well!')}</span>
                         </div>
                         <div class="feedback-message">
                             ${success.join('<br>')}
@@ -1168,37 +1216,37 @@ if (action != null && action.equals("delete")) {
             
             document.getElementById('feedbackJava').innerHTML = '';
             document.getElementById('validateBtnJava').disabled = true;
-            document.getElementById('codeStatusJava').textContent = '취약한 코드';
-            document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
+            const stJavaReset=document.getElementById('codeStatusJava');
+            stJavaReset.textContent = L('취약한 코드','Vulnerable code'); stJavaReset.dataset.ko='취약한 코드'; stJavaReset.setAttribute('data-en','Vulnerable code');
+            stJavaReset.className = 'status-badge status-vulnerable';
             document.getElementById('hintPanelJava').classList.remove('active');
-            
+
             progressStepsJava = [false, false, false, false, false];
             for (let i = 0; i < 5; i++) {
                 updateProgressJava(i, false);
             }
-            
+
             document.getElementById('rightPanelJava').innerHTML = `
                 <div class="info-section">
-                    <div class="info-title">🎯 목표</div>
+                    <div class="info-title">${L('🎯 목표','🎯 Goal')}</div>
                     <div class="info-content">
-                        <p>게시물 삭제 시 사용자의 권한을 검증하세요.</p>
+                        <p>${L('게시물 삭제 시 사용자의 권한을 검증하세요.','Verify the user\'s authorization when deleting a post.')}</p>
                         <ul style="margin-top: 10px;">
                             <li>User user = (User)session.getAttribute("user")</li>
-                            <li>checkAccessControlList(user, action) 호출</li>
-                            <li>권한이 있을 때만 delete 수행</li>
+                            <li>${L('checkAccessControlList(user, action) 호출','Call checkAccessControlList(user, action)')}</li>
+                            <li>${L('권한이 있을 때만 delete 수행','Perform delete only when authorized')}</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="info-section">
-                    <div class="info-title">⚠️ 취약점</div>
+                    <div class="info-title">${L('⚠️ 취약점','⚠️ Vulnerability')}</div>
                     <div class="info-content">
                         <p style="color: #dc3545; font-weight: bold;">
-                            현재 코드는 권한 검증이 없습니다!
+                            ${L('현재 코드는 권한 검증이 없습니다!','The current code has no authorization check!')}
                         </p>
                         <p style="margin-top: 10px;">
-                            사용자의 delete 권한 확인 없이 삭제를 수행하므로,
-                            권한 없는 사용자도 게시물을 삭제할 수 있습니다.
+                            ${L('사용자의 delete 권한 확인 없이 삭제를 수행하므로, 권한 없는 사용자도 게시물을 삭제할 수 있습니다.','Because deletion is performed without checking the user\'s delete permission, even an unauthorized user can delete the post.')}
                         </p>
                     </div>
                 </div>
@@ -1221,7 +1269,7 @@ if (action != null && action.equals("delete")) {
                 displayContainer.style.display = 'none';
                 textarea.style.display = 'block';
                 textarea.value = codeDisplay.textContent;
-                editBtn.textContent = '💾 저장';
+                editBtn.textContent = L('💾 저장','💾 Save');
                 editBtn.classList.add('editing');
                 textarea.focus();
             } else {
@@ -1231,7 +1279,8 @@ if (action != null && action.equals("delete")) {
                 Prism.highlightElement(codeDisplay);
                 displayContainer.style.display = 'block';
                 textarea.style.display = 'none';
-                editBtn.textContent = '✏️ 편집';
+                editBtn.textContent = L('✏️ 편집','✏️ Edit');
+                editBtn.dataset.ko = '✏️ 편집'; editBtn.setAttribute('data-en','✏️ Edit');
                 editBtn.classList.remove('editing');
             }
         }
@@ -1265,7 +1314,7 @@ if (action != null && action.equals("delete")) {
             
             updateProgressPython(0, true);
             
-            feedback.innerHTML = `
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <div class="feedback-header">
                         <span>🚨</span>
@@ -1290,11 +1339,37 @@ if (action != null && action.equals("delete")) {
                         3. 필요한 import 문 추가
                     </div>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <div class="feedback-header">
+                        <span>🚨</span>
+                        <span>Improper authorization vulnerability found</span>
+                    </div>
+                    <div class="feedback-message">
+                        <strong>Problems:</strong><br>
+                        • No @login_required decorator<br>
+                        • No @permission_required decorator<br>
+                        • delete is performed without an authorization check<br>
+                        • Anyone can delete content
+                    </div>
+                </div>
+                <div class="feedback-item feedback-warning">
+                    <div class="feedback-header">
+                        <span>💡</span>
+                        <span>How to fix</span>
+                    </div>
+                    <div class="feedback-message">
+                        1. Add the @login_required decorator<br>
+                        2. Add @permission_required('content.delete', raise_exception=True)<br>
+                        3. Add the required import statement
+                    </div>
+                </div>
+            `);
+
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중';
-            document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stPy=document.getElementById('codeStatusPython');
+            stPy.textContent = L('수정 중','Editing'); stPy.dataset.ko='수정 중'; stPy.setAttribute('data-en','Editing');
+            stPy.className = 'status-badge status-editing';
         }
 
         function validateCodePython() {
@@ -1308,41 +1383,41 @@ if (action != null && action.equals("delete")) {
             
             // 검증 1: @login_required
             if (code.includes('@login_required')) {
-                success.push('✅ @login_required 데코레이터 추가 확인');
+                success.push(L('✅ @login_required 데코레이터 추가 확인','✅ @login_required decorator added confirmed'));
                 updateProgressPython(1, true);
             } else {
-                errors.push('❌ @login_required 데코레이터가 필요합니다');
+                errors.push(L('❌ @login_required 데코레이터가 필요합니다','❌ The @login_required decorator is required'));
             }
-            
+
             // 검증 2: @permission_required
             if (code.includes('@permission_required')) {
-                success.push('✅ @permission_required 데코레이터 추가 확인');
+                success.push(L('✅ @permission_required 데코레이터 추가 확인','✅ @permission_required decorator added confirmed'));
                 updateProgressPython(2, true);
             } else {
-                errors.push('❌ @permission_required 데코레이터가 필요합니다');
+                errors.push(L('❌ @permission_required 데코레이터가 필요합니다','❌ The @permission_required decorator is required'));
             }
-            
+
             // 검증 3: permission_required 파라미터
             if (code.includes("'content.delete'") || code.includes('"content.delete"')) {
-                success.push('✅ content.delete 권한 지정 확인');
+                success.push(L('✅ content.delete 권한 지정 확인','✅ content.delete permission specification confirmed'));
             } else {
-                warnings.push('⚠️ @permission_required("content.delete") 형식이 필요합니다');
+                warnings.push(L('⚠️ @permission_required("content.delete") 형식이 필요합니다','⚠️ The @permission_required("content.delete") form is required'));
             }
-            
+
             // 검증 4: raise_exception
             if (code.includes('raise_exception=True')) {
-                success.push('✅ raise_exception=True 설정 확인');
+                success.push(L('✅ raise_exception=True 설정 확인','✅ raise_exception=True setting confirmed'));
                 updateProgressPython(3, true);
             } else {
-                warnings.push('⚠️ raise_exception=True 파라미터 권장');
+                warnings.push(L('⚠️ raise_exception=True 파라미터 권장','⚠️ The raise_exception=True parameter is recommended'));
             }
-            
+
             // 검증 5: import
-            if (code.includes('from django.contrib.auth.decorators import') && 
+            if (code.includes('from django.contrib.auth.decorators import') &&
                 code.includes('permission_required')) {
-                success.push('✅ 필요한 import 확인');
+                success.push(L('✅ 필요한 import 확인','✅ Required import confirmed'));
             } else {
-                warnings.push('⚠️ from django.contrib.auth.decorators import 필요');
+                warnings.push(L('⚠️ from django.contrib.auth.decorators import 필요','⚠️ from django.contrib.auth.decorators import is required'));
             }
             
             // 결과 판정
@@ -1353,25 +1428,26 @@ if (action != null && action.equals("delete")) {
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>🎉</span>
-                            <span>검증 통과! 안전한 코드입니다!</span>
+                            <span>${L('검증 통과! 안전한 코드입니다!','Validation passed! This is secure code!')}</span>
                         </div>
                         <div class="feedback-message">
-                            <strong>적용된 보안 조치:</strong><br>
+                            <strong>${L('적용된 보안 조치:','Applied security measures:')}</strong><br>
                             ${success.join('<br>')}
-                            ${warnings.length > 0 ? '<br><br><strong>개선 제안:</strong><br>' + warnings.join('<br>') : ''}
+                            ${warnings.length > 0 ? '<br><br><strong>' + L('개선 제안:','Improvement suggestions:') + '</strong><br>' + warnings.join('<br>') : ''}
                         </div>
                     </div>
                 `;
-                
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
-                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                
+
+                const stPyOk=document.getElementById('codeStatusPython');
+                stPyOk.textContent = L('안전한 코드','Secure code'); stPyOk.dataset.ko='안전한 코드'; stPyOk.setAttribute('data-en','Secure code');
+                stPyOk.className = 'status-badge status-secure';
+
                 rightPanel.innerHTML = `
                     <div class="info-section">
-                        <div class="info-title">✅ 수정 완료</div>
+                        <div class="info-title">${L('✅ 수정 완료','✅ Fix complete')}</div>
                         <div class="info-content">
                             <p style="color: #28a745; font-weight: bold;">
-                                부적절한 인가 취약점이 해결되었습니다!
+                                ${L('부적절한 인가 취약점이 해결되었습니다!','The improper authorization vulnerability has been resolved!')}
                             </p>
                             ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
                         </div>
@@ -1383,31 +1459,31 @@ if (action != null && action.equals("delete")) {
                     <div class="feedback-item feedback-error">
                         <div class="feedback-header">
                             <span>❌</span>
-                            <span>수정이 필요합니다</span>
+                            <span>${L('수정이 필요합니다','A fix is required')}</span>
                         </div>
                         <div class="feedback-message">
                             ${errors.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${warnings.length > 0 ? `
                     <div class="feedback-item feedback-warning">
                         <div class="feedback-header">
                             <span>⚠️</span>
-                            <span>개선 권장</span>
+                            <span>${L('개선 권장','Improvement recommended')}</span>
                         </div>
                         <div class="feedback-message">
                             ${warnings.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${success.length > 0 ? `
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>✅</span>
-                            <span>잘하고 있습니다!</span>
+                            <span>${L('잘하고 있습니다!','You are doing well!')}</span>
                         </div>
                         <div class="feedback-message">
                             ${success.join('<br>')}
@@ -1445,37 +1521,37 @@ def delete_content(request):
             
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
+            const stPyReset=document.getElementById('codeStatusPython');
+            stPyReset.textContent = L('취약한 코드','Vulnerable code'); stPyReset.dataset.ko='취약한 코드'; stPyReset.setAttribute('data-en','Vulnerable code');
+            stPyReset.className = 'status-badge status-vulnerable';
             document.getElementById('hintPanelPython').classList.remove('active');
-            
+
             progressStepsPython = [false, false, false, false, false];
             for (let i = 0; i < 5; i++) {
                 updateProgressPython(i, false);
             }
-            
+
             document.getElementById('rightPanelPython').innerHTML = `
                 <div class="info-section">
-                    <div class="info-title">🎯 목표</div>
+                    <div class="info-title">${L('🎯 목표','🎯 Goal')}</div>
                     <div class="info-content">
-                        <p>컨텐츠 삭제 시 사용자의 권한을 검증하세요.</p>
+                        <p>${L('컨텐츠 삭제 시 사용자의 권한을 검증하세요.','Verify the user\'s authorization when deleting content.')}</p>
                         <ul style="margin-top: 10px;">
-                            <li>@login_required 데코레이터 추가</li>
-                            <li>@permission_required('content.delete') 추가</li>
-                            <li>raise_exception=True 파라미터 설정</li>
+                            <li>${L('@login_required 데코레이터 추가','Add the @login_required decorator')}</li>
+                            <li>${L("@permission_required('content.delete') 추가","Add @permission_required('content.delete')")}</li>
+                            <li>${L('raise_exception=True 파라미터 설정','Set the raise_exception=True parameter')}</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="info-section">
-                    <div class="info-title">⚠️ 취약점</div>
+                    <div class="info-title">${L('⚠️ 취약점','⚠️ Vulnerability')}</div>
                     <div class="info-content">
                         <p style="color: #dc3545; font-weight: bold;">
-                            현재 코드는 권한 검증이 없습니다!
+                            ${L('현재 코드는 권한 검증이 없습니다!','The current code has no authorization check!')}
                         </p>
                         <p style="margin-top: 10px;">
-                            로그인 검증도, 삭제 권한 검증도 없어<br>
-                            누구나 컨텐츠를 삭제할 수 있습니다.
+                            ${L('로그인 검증도, 삭제 권한 검증도 없어<br>누구나 컨텐츠를 삭제할 수 있습니다.','With neither login verification nor delete-permission verification,<br>anyone can delete content.')}
                         </p>
                     </div>
                 </div>
@@ -1486,18 +1562,21 @@ def delete_content(request):
         document.addEventListener('DOMContentLoaded', function() {
             Prism.highlightAll();
         });
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>부적절한 인가</b>로 일반 사용자가 관리자 기능·타인 데이터에 접근하는 권한상승 사고가 반복됩니다.</div>
+      <div style="margin-bottom:12px;" data-en="Through <b>improper authorization</b>, privilege-escalation incidents in which regular users access administrator functions or other users' data recur repeatedly."><b>부적절한 인가</b>로 일반 사용자가 관리자 기능·타인 데이터에 접근하는 권한상승 사고가 반복됩니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-285</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A01 Broken Access Control</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오류상황 대응 부재 - 실습 시뮬레이터</title>
+    <title data-en="Improper/Insufficient Error Handling - Practice Simulator">오류상황 대응 부재 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,52 +72,56 @@
         .easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
         .easybox b { color:#c0392b; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
+    <div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
-        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+        <div class="top-nav"><a href="index.html" data-en="&larr; Main">&larr; 메인으로</a></div>
         <div class="header">
-            <h1>🕳️ 오류상황 대응 부재 - 실습 시뮬레이터</h1>
+            <h1 data-en="🕳️ Improper/Insufficient Error Handling - Practice Simulator">🕳️ 오류상황 대응 부재 - 실습 시뮬레이터</h1>
             <p>CWE-391: Unchecked Error Condition</p>
-            <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · 에러처리</span>
+            <span class="kisa-tag" data-en="KISA Software Security Weakness Diagnosis Guide (2021) · Error Handling">KISA 소프트웨어 보안약점 진단가이드(2021) · 에러처리</span>
         </div>
 
-        <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>오류를 잡고도 아무 처리를 안 하면(<b>빈 catch</b>), 고장 난 줄 모른 채 잘못된 값으로 계속 진행됩니다. 잡았으면 대응해야 합니다.</div>
+        <div class="easybox" data-en="<span class=&quot;tag&quot;>💡 In simple terms</span><br>If you catch an error but do nothing about it (an <b>empty catch</b>), the program keeps running with a wrong value while unaware that something failed. If you catch it, you must respond to it."><span class="tag">💡 쉽게 말하면</span><br>오류를 잡고도 아무 처리를 안 하면(<b>빈 catch</b>), 고장 난 줄 모른 채 잘못된 값으로 계속 진행됩니다. 잡았으면 대응해야 합니다.</div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">&#9749;</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">빈 catch 제거</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Remove empty catch">빈 catch 제거</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">&#128013;</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">except pass 제거</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Remove except pass">except pass 제거</div>
             </button>
         </div>
 
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 빈 catch 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 대응 로직 추가</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify empty catch">빈 catch 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Add handling logic">대응 로직 추가</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#9749; Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="&#9749; Java Code Editor">&#9749; Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">Transfer.java</span>
-                            <span class="toolbar-hint">&#128161; 예외를 무시하지 말고 로깅/재시도/예외전파로 대응하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Do not ignore the exception; respond with logging/retry/exception propagation.">&#128161; 예외를 무시하지 말고 로깅/재시도/예외전파로 대응하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">try {
@@ -135,17 +139,17 @@
 }</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 명시적 대응</strong>
-                            <p>로깅 후 사용자 안내 또는 예외 전파.</p>
+                            <strong data-en="1. Explicit handling">1. 명시적 대응</strong>
+                            <p data-en="Log it, then notify the user or propagate the exception.">로깅 후 사용자 안내 또는 예외 전파.</p>
                             <div class="hint-code">} catch (NumberFormatException e) {
     logger.warn("잘못된 금액 입력: {}", input, e);
     throw new InvalidInputException("금액 형식이 올바르지 않습니다.");
@@ -154,17 +158,17 @@
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>발생한 오류를 무시하지 않고 적절히 처리·전파해야 합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="You must not ignore an error that occurs; handle and propagate it appropriately.">발생한 오류를 무시하지 않고 적절히 처리·전파해야 합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Unchecked Error</p>
-                                <p>빈 catch로 인해 실패가 은폐되어 데이터 무결성이 깨집니다.</p>
+                                <p data-en="An empty catch hides the failure, breaking data integrity.">빈 catch로 인해 실패가 은폐되어 데이터 무결성이 깨집니다.</p>
                             </div>
                         </div>
                     </div>
@@ -173,24 +177,24 @@
         </div>
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 예외 무시 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 대응 로직 추가</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify ignored exception">예외 무시 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Add handling logic">대응 로직 추가</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#128013; Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="&#128013; Python Code Editor">&#128013; Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">transfer.py</span>
-                            <span class="toolbar-hint">&#128161; except: pass 대신 logging/raise로 대응하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Instead of except: pass, respond with logging/raise.">&#128161; except: pass 대신 logging/raise로 대응하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">try:
@@ -206,17 +210,17 @@ except ValueError:
     pass   # [취약] 예외를 무시(대응 부재)</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 명시적 대응</strong>
-                            <p>로깅 후 예외 전파 또는 복구.</p>
+                            <strong data-en="1. Explicit handling">1. 명시적 대응</strong>
+                            <p data-en="Log it, then propagate the exception or recover.">로깅 후 예외 전파 또는 복구.</p>
                             <div class="hint-code">except ValueError:
     logging.warning("잘못된 금액 입력: %s", user_input)
     raise InvalidInput("금액 형식 오류")</div>
@@ -224,17 +228,17 @@ except ValueError:
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>오류 상황을 무시하지 않고 처리·전파합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Do not ignore the error condition; handle and propagate it.">오류 상황을 무시하지 않고 처리·전파합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Unchecked Error</p>
-                                <p>예외 무시로 실패가 은폐됩니다.</p>
+                                <p data-en="Ignoring the exception hides the failure.">예외 무시로 실패가 은폐됩니다.</p>
                             </div>
                         </div>
                     </div>
@@ -247,6 +251,22 @@ except ValueError:
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         const VULN_JAVA = `try {
     int amount = Integer.parseInt(input);
     transfer(amount);
@@ -298,25 +318,33 @@ except ValueError:
             const d=document.getElementById('codeDisplayContainerJava'), e=document.getElementById('codeEditorJava'),
                   b=document.getElementById('editBtnJava'), p=document.getElementById('codeDisplayJava');
             isEditingJava=!isEditingJava;
-            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); b.classList.remove('editing'); }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava',0,true); updateChecklist('progressChecklistJava',1,true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>오류를 삼켜버려 실패가 드러나지 않고 잘못된 상태로 진행됩니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>오류를 삼켜버려 실패가 드러나지 않고 잘못된 상태로 진행됩니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The error is swallowed, so the failure stays hidden and the program proceeds in a wrong state.</p></div>`);
             document.getElementById('validateBtnJava').disabled=false;
-            const s=document.getElementById('codeStatusJava'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusJava'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodeJava() {
             const code=document.getElementById('codeEditorJava').value;
             if(passesChecks(code, CHECK_JAVA)){
                 updateChecklist('progressChecklistJava',2,true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>예외 상황에 대해 로깅/전파 등 대응 로직을 추가했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusJava'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>오류 상황이 적절히 처리/전파됩니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>예외 상황에 대해 로깅/전파 등 대응 로직을 추가했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You added handling logic such as logging/propagation for the exception.</p></div>`);
+                const s=document.getElementById('codeStatusJava'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>오류 상황이 적절히 처리/전파됩니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The error condition is now handled/propagated appropriately.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava',2,false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>catch 블록에서 logger 기록 또는 throw/return 등 대응을 추가하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>catch 블록에서 logger 기록 또는 throw/return 등 대응을 추가하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>In the catch block, add a response such as logger output or throw/return.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -326,7 +354,7 @@ except ValueError:
                 if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML='';
                 document.getElementById('validateBtnJava').disabled=true;
-                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
                 for(let i=0;i<3;i++) updateChecklist('progressChecklistJava',i,false);
             } else { resetCodingPython(); }
         }
@@ -337,25 +365,33 @@ except ValueError:
             const d=document.getElementById('codeDisplayContainerPython'), e=document.getElementById('codeEditorPython'),
                   b=document.getElementById('editBtnPython'), p=document.getElementById('codeDisplayPython');
             isEditingPython=!isEditingPython;
-            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); b.classList.remove('editing'); }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython',0,true); updateChecklist('progressChecklistPython',1,true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>예외를 pass로 삼켜 오류가 보고되지 않습니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>예외를 pass로 삼켜 오류가 보고되지 않습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The exception is swallowed by pass, so the error is never reported.</p></div>`);
             document.getElementById('validateBtnPython').disabled=false;
-            const s=document.getElementById('codeStatusPython'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusPython'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodePython() {
             const code=document.getElementById('codeEditorPython').value;
             if(passesChecks(code, CHECK_PY)){
                 updateChecklist('progressChecklistPython',2,true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>logging/raise로 오류에 대응하도록 수정했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusPython'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>오류가 적절히 처리/전파됩니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>logging/raise로 오류에 대응하도록 수정했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You fixed it to respond to the error with logging/raise.</p></div>`);
+                const s=document.getElementById('codeStatusPython'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>오류가 적절히 처리/전파됩니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The error is now handled/propagated appropriately.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython',2,false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>except 블록에 logging 기록 또는 raise를 추가하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>except 블록에 logging 기록 또는 raise를 추가하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>In the except block, add logging output or a raise.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -364,21 +400,24 @@ except ValueError:
             if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML='';
             document.getElementById('validateBtnPython').disabled=true;
-            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
             for(let i=0;i<3;i++) updateChecklist('progressChecklistPython',i,false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">예외를 처리하지 않아 서비스가 비정상 종료되거나 내부 상태가 노출되는 장애가 반복됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="Repeatedly, failing to handle exceptions caused outages where the service crashed abnormally or internal state was exposed.">예외를 처리하지 않아 서비스가 비정상 종료되거나 내부 상태가 노출되는 장애가 반복됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-391</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

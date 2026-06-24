@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>취약한 암호화 알고리즘 - 실습 시뮬레이터</title>
+    <title data-en="Use of a Broken or Risky Cryptographic Algorithm - Practice Simulator">취약한 암호화 알고리즘 - 실습 시뮬레이터</title>
     <!-- Prism.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
@@ -347,53 +347,57 @@
         @media (max-width: 1200px) {
             .main-content { grid-template-columns: 1fr; }
         }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🔓 취약한 암호화 알고리즘 - 실습 시뮬레이터</h1>
+            <h1 data-en="🔓 Use of a Broken or Risky Cryptographic Algorithm - Practice Simulator">🔓 취약한 암호화 알고리즘 - 실습 시뮬레이터</h1>
             <p>CWE-327: Use of a Broken or Risky Cryptographic Algorithm</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">DES -> AES 교체</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Replace DES -> AES">DES -> AES 교체</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">DES -> AES 교체</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Replace DES -> AES">DES -> AES 교체</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> DES 알고리즘 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> AES 알고리즘 적용</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> KeyGenerator 수정</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove DES algorithm">DES 알고리즘 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply AES algorithm">AES 알고리즘 적용</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Fix KeyGenerator">KeyGenerator 수정</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">SimpleEncryptor.java</span>
-                            <span class="toolbar-hint">💡 DES 대신 강력한 알고리즘(AES)을 사용하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use a strong algorithm (AES) instead of DES">💡 DES 대신 강력한 알고리즘(AES)을 사용하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">import javax.crypto.Cipher;
@@ -438,29 +442,29 @@ public class SimpleEncryptor {
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 키 생성기 변경</strong>
-                            <p>DES 대신 AES 키 생성기를 사용하세요.</p>
+                            <strong data-en="1. Change the key generator">1. 키 생성기 변경</strong>
+                            <p data-en="Use an AES key generator instead of DES.">DES 대신 AES 키 생성기를 사용하세요.</p>
                             <div class="hint-code">KeyGenerator keyGen = KeyGenerator.getInstance("AES");</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. 키 길이 증가</strong>
-                            <p>56비트 대신 128비트 또는 256비트로 초기화합니다.</p>
+                            <strong data-en="2. Increase the key length">2. 키 길이 증가</strong>
+                            <p data-en="Initialize with 128 or 256 bits instead of 56 bits.">56비트 대신 128비트 또는 256비트로 초기화합니다.</p>
                             <div class="hint-code">keyGen.init(256);</div>
                         </div>
                         <div class="hint-step">
-                            <strong>3. Cipher 인스턴스 변경</strong>
-                            <p>알고리즘을 AES로 변경합니다. (가급적 GCM이나 CBC 모드 권장)</p>
+                            <strong data-en="3. Change the Cipher instance">3. Cipher 인스턴스 변경</strong>
+                            <p data-en="Change the algorithm to AES. (Prefer GCM or CBC mode)">알고리즘을 AES로 변경합니다. (가급적 GCM이나 CBC 모드 권장)</p>
                             <div class="hint-code">Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");</div>
                         </div>
                     </div>
@@ -468,20 +472,20 @@ public class SimpleEncryptor {
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과 및 설명</span>
+                        <span class="panel-title" data-en="📊 Analysis Result & Explanation">📊 분석 결과 및 설명</span>
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>현재 코드는 오래된 암호화 알고리즘인 <strong>DES (Data Encryption Standard)</strong>를 사용하고 있습니다. 이를 현대적인 표준인 <strong>AES (Advanced Encryption Standard)</strong>로 교체하여 보안성을 높이세요.</p>
+                                <p data-en="The current code uses the outdated encryption algorithm <strong>DES (Data Encryption Standard)</strong>. Replace it with the modern standard <strong>AES (Advanced Encryption Standard)</strong> to improve security.">현재 코드는 오래된 암호화 알고리즘인 <strong>DES (Data Encryption Standard)</strong>를 사용하고 있습니다. 이를 현대적인 표준인 <strong>AES (Advanced Encryption Standard)</strong>로 교체하여 보안성을 높이세요.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Broken Crypto Algorithm (DES)</p>
-                                <p>DES는 56비트 키를 사용하여 현대 컴퓨터 연산 능력으로는 매우 짧은 시간 안에 키를 찾아낼 수 있습니다. NIST에서는 2005년부터 DES 사용을 금지했습니다.</p>
+                                <p data-en="DES uses a 56-bit key, so with modern computing power the key can be found in a very short time. NIST has prohibited the use of DES since 2005.">DES는 56비트 키를 사용하여 현대 컴퓨터 연산 능력으로는 매우 짧은 시간 안에 키를 찾아낼 수 있습니다. NIST에서는 2005년부터 DES 사용을 금지했습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -492,27 +496,27 @@ public class SimpleEncryptor {
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> DES import 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> AES import 추가</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> AES 객체 생성</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove DES import">DES import 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Add AES import">AES import 추가</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Create AES object">AES 객체 생성</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">encrypt_data.py</span>
-                            <span class="toolbar-hint">💡 DES.new()를 AES.new()로 변경하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Change DES.new() to AES.new()">💡 DES.new()를 AES.new()로 변경하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython"># [취약점] DES 모듈 사용
@@ -551,29 +555,29 @@ def encrypt_secret(data):
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 모듈 Import 변경</strong>
-                            <p>DES 대신 AES 모듈을 가져옵니다.</p>
+                            <strong data-en="1. Change the module import">1. 모듈 Import 변경</strong>
+                            <p data-en="Import the AES module instead of DES.">DES 대신 AES 모듈을 가져옵니다.</p>
                             <div class="hint-code">from Crypto.Cipher import AES</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. 키 길이 변경</strong>
-                            <p>AES는 최소 16바이트(128비트) 키가 필요합니다.</p>
+                            <strong data-en="2. Change the key length">2. 키 길이 변경</strong>
+                            <p data-en="AES requires a key of at least 16 bytes (128 bits).">AES는 최소 16바이트(128비트) 키가 필요합니다.</p>
                             <div class="hint-code">key = get_random_bytes(16)</div>
                         </div>
                         <div class="hint-step">
-                            <strong>3. 암호화 객체 생성 (안전한 모드)</strong>
-                            <p>AES.new()로 객체를 생성하되, ECB가 아닌 CBC/GCM 등 안전한 운용 모드를 사용합니다.</p>
+                            <strong data-en="3. Create the encryption object (secure mode)">3. 암호화 객체 생성 (안전한 모드)</strong>
+                            <p data-en="Create the object with AES.new(), using a secure operation mode such as CBC/GCM rather than ECB.">AES.new()로 객체를 생성하되, ECB가 아닌 CBC/GCM 등 안전한 운용 모드를 사용합니다.</p>
                             <div class="hint-code">cipher = AES.new(key, AES.MODE_CBC)</div>
                         </div>
                     </div>
@@ -581,20 +585,20 @@ def encrypt_secret(data):
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과 및 설명</span>
+                        <span class="panel-title" data-en="📊 Analysis Result & Explanation">📊 분석 결과 및 설명</span>
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>Python의 <code>PyCryptodome</code> 라이브러리를 사용할 때, <strong>DES</strong>와 같은 취약한 알고리즘은 사용하지 말아야 합니다. 이를 <strong>AES</strong>로 교체하고 키 길이도 그에 맞게(16바이트 이상) 수정하세요.</p>
+                                <p data-en="When using Python's <code>PyCryptodome</code> library, you must not use weak algorithms such as <strong>DES</strong>. Replace it with <strong>AES</strong> and adjust the key length accordingly (16 bytes or more).">Python의 <code>PyCryptodome</code> 라이브러리를 사용할 때, <strong>DES</strong>와 같은 취약한 알고리즘은 사용하지 말아야 합니다. 이를 <strong>AES</strong>로 교체하고 키 길이도 그에 맞게(16바이트 이상) 수정하세요.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Risky Algorithm Usage</p>
-                                <p>코드 상단에 <code>from Crypto.Cipher import DES</code>가 존재하며, <code>DES.new()</code>를 호출하여 암호화 객체를 만들고 있습니다. 이는 보안 감가 대상 1순위입니다.</p>
+                                <p data-en="At the top of the code there is <code>from Crypto.Cipher import DES</code>, and <code>DES.new()</code> is called to create the encryption object. This is the top-priority target for security deduction.">코드 상단에 <code>from Crypto.Cipher import DES</code>가 존재하며, <code>DES.new()</code>를 호출하여 암호화 객체를 만들고 있습니다. 이는 보안 감가 대상 1순위입니다.</p>
                             </div>
                         </div>
                     </div>
@@ -609,6 +613,22 @@ def encrypt_secret(data):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // === 공통 로직 ===
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -654,31 +674,35 @@ def encrypt_secret(data):
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             const feedback = document.getElementById('feedbackJava');
-            
-            feedback.innerHTML = `
-                <div class="feedback-item feedback-error">
+
+            feedback.innerHTML = L(
+                `<div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p><code>Cipher.getInstance("DES")</code> 사용이 탐지되었습니다. DES는 1999년에 이미 해독된 취약한 알고리즘입니다.</p>
-                </div>
-            `;
-            
+                </div>`,
+                `<div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>Use of <code>Cipher.getInstance("DES")</code> was detected. DES is a weak algorithm that was already broken in 1999.</p>
+                </div>`);
+
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중';
+            const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing');
             document.getElementById('codeStatusJava').className = 'status-badge status-editing';
         }
 
@@ -693,11 +717,11 @@ def encrypt_secret(data):
             // 1. DES 제거 확인
             if (!code.includes('"DES"') && !code.includes('"DES/')) {
                 updateChecklist('progressChecklistJava', 1, true);
-                messages.push("✅ 취약한 DES 알고리즘이 제거되었습니다.");
+                messages.push(L("✅ 취약한 DES 알고리즘이 제거되었습니다.","✅ The weak DES algorithm has been removed."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 1, false);
-                messages.push("❌ 여전히 DES 알고리즘이 남아있습니다.");
+                messages.push(L("❌ 여전히 DES 알고리즘이 남아있습니다.","❌ The DES algorithm is still present."));
             }
 
             // 2. AES 적용 + 안전한 운용 모드(ECB 금지) 확인
@@ -706,56 +730,71 @@ def encrypt_secret(data):
             const ecbCipher = code.includes('AES/ECB');
             if (aesApplied && secureMode && !ecbCipher) {
                 updateChecklist('progressChecklistJava', 2, true);
-                messages.push("✅ 강력한 AES 알고리즘과 안전한 운용 모드(CBC/GCM)가 적용되었습니다.");
+                messages.push(L("✅ 강력한 AES 알고리즘과 안전한 운용 모드(CBC/GCM)가 적용되었습니다.","✅ The strong AES algorithm and a secure operation mode (CBC/GCM) have been applied."));
             } else if (aesApplied && (ecbCipher || !secureMode)) {
                 passed = false;
                 updateChecklist('progressChecklistJava', 2, false);
-                messages.push("⚠️ 알고리즘은 AES로 바꿨지만 ECB 모드(또는 모드 미지정 → 기본 ECB)는 동일 평문이 동일 암호문이 되어 패턴이 노출됩니다. Cipher.getInstance(\"AES/CBC/...\") 또는 \"AES/GCM/...\"를 사용하세요.");
+                messages.push(L("⚠️ 알고리즘은 AES로 바꿨지만 ECB 모드(또는 모드 미지정 → 기본 ECB)는 동일 평문이 동일 암호문이 되어 패턴이 노출됩니다. Cipher.getInstance(\"AES/CBC/...\") 또는 \"AES/GCM/...\"를 사용하세요.","⚠️ You changed the algorithm to AES, but ECB mode (or an unspecified mode → default ECB) maps identical plaintext to identical ciphertext, exposing patterns. Use Cipher.getInstance(\"AES/CBC/...\") or \"AES/GCM/...\"."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 2, false);
-                messages.push("❌ AES 알고리즘으로 변경해야 합니다.");
+                messages.push(L("❌ AES 알고리즘으로 변경해야 합니다.","❌ You must change to the AES algorithm."));
             }
 
             // 3. 키 생성기 확인
             if (code.includes('getInstance("AES")')) {
                 updateChecklist('progressChecklistJava', 3, true);
-                messages.push("✅ KeyGenerator도 AES로 변경되었습니다.");
+                messages.push(L("✅ KeyGenerator도 AES로 변경되었습니다.","✅ KeyGenerator has also been changed to AES."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 3, false);
-                messages.push("❌ KeyGenerator.getInstance() 인자도 AES로 변경하세요.");
+                messages.push(L("❌ KeyGenerator.getInstance() 인자도 AES로 변경하세요.","❌ Change the KeyGenerator.getInstance() argument to AES as well."));
             }
 
             if (passed) {
-                feedback.innerHTML = `
-                    <div class="feedback-item feedback-success">
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>훌륭합니다! 이제 데이터는 강력한 AES 알고리즘으로 보호됩니다.</p>
                         <br>
                         ${messages.join('<br>')}
-                    </div>
-                `;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
+                    </div>`,
+                    `<div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Great! Your data is now protected by the strong AES algorithm.</p>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>`);
+                const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('안전한 코드','Secure code'); stJ.dataset.ko='안전한 코드'; stJ.setAttribute('data-en','Secure code');
                 document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                
-                rightPanel.innerHTML = `
-                    <div class="info-section">
+
+                rightPanel.innerHTML = L(
+                    `<div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
                             <p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p>
                             <p>AES(Advanced Encryption Standard)는 현재 전 세계적으로 사용되는 표준 암호화 방식입니다. 128비트 이상의 키 길이를 사용하여 무차별 대입 공격으로부터 안전합니다.</p>
                         </div>
-                    </div>
-                `;
+                    </div>`,
+                    `<div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>AES (Advanced Encryption Standard) is the encryption standard used worldwide today. With a key length of 128 bits or more, it is safe from brute-force attacks.</p>
+                        </div>
+                    </div>`);
             } else {
-                feedback.innerHTML = `
-                    <div class="feedback-item feedback-warning">
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>
                         ${messages.join('<br>')}
-                    </div>
-                `;
+                    </div>`,
+                    `<div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>`);
             }
         }
 
@@ -786,8 +825,8 @@ public class SimpleEncryptor {
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
                 document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
-                
+                const stJr=document.getElementById('codeStatusJava'); stJr.textContent=L('취약한 코드','Vulnerable code'); stJr.dataset.ko='취약한 코드'; stJr.setAttribute('data-en','Vulnerable code');
+
                 for(let i=0; i<4; i++) updateChecklist('progressChecklistJava', i, false);
             } else {
                 resetCodingPython();
@@ -810,31 +849,35 @@ public class SimpleEncryptor {
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             const feedback = document.getElementById('feedbackPython');
-            
-            feedback.innerHTML = `
-                <div class="feedback-item feedback-error">
+
+            feedback.innerHTML = L(
+                `<div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p><code>from Crypto.Cipher import DES</code> 구문이 발견되었습니다. DES는 더 이상 사용해서는 안 됩니다.</p>
-                </div>
-            `;
-            
+                </div>`,
+                `<div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>The statement <code>from Crypto.Cipher import DES</code> was found. DES must no longer be used.</p>
+                </div>`);
+
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent=L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing');
             document.getElementById('codeStatusPython').className = 'status-badge status-editing';
         }
 
@@ -849,21 +892,21 @@ public class SimpleEncryptor {
             // 1. DES import 제거 확인
             if (!code.includes('import DES')) {
                 updateChecklist('progressChecklistPython', 1, true);
-                messages.push("✅ DES 모듈 import가 제거되었습니다.");
+                messages.push(L("✅ DES 모듈 import가 제거되었습니다.","✅ The DES module import has been removed."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistPython', 1, false);
-                messages.push("❌ Crypto.Cipher import DES 구문을 삭제하세요.");
+                messages.push(L("❌ Crypto.Cipher import DES 구문을 삭제하세요.","❌ Delete the Crypto.Cipher import DES statement."));
             }
 
             // 2. AES import 확인
             if (code.includes('import AES')) {
                 updateChecklist('progressChecklistPython', 2, true);
-                messages.push("✅ AES 모듈이 import 되었습니다.");
+                messages.push(L("✅ AES 모듈이 import 되었습니다.","✅ The AES module has been imported."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistPython', 2, false);
-                messages.push("❌ Crypto.Cipher import AES 구문을 추가하세요.");
+                messages.push(L("❌ Crypto.Cipher import AES 구문을 추가하세요.","❌ Add the Crypto.Cipher import AES statement."));
             }
 
             // 3. AES.new + 안전한 운용 모드(ECB 금지) 확인
@@ -871,46 +914,61 @@ public class SimpleEncryptor {
             const pySecureMode = code.includes('MODE_CBC') || code.includes('MODE_GCM') || code.includes('MODE_CTR');
             if (usesAesNew && pySecureMode && !code.includes('MODE_ECB')) {
                 updateChecklist('progressChecklistPython', 3, true);
-                messages.push("✅ AES 객체를 안전한 운용 모드(CBC/GCM/CTR)로 생성했습니다.");
+                messages.push(L("✅ AES 객체를 안전한 운용 모드(CBC/GCM/CTR)로 생성했습니다.","✅ The AES object was created with a secure operation mode (CBC/GCM/CTR)."));
             } else if (usesAesNew) {
                 passed = false;
                 updateChecklist('progressChecklistPython', 3, false);
-                messages.push("⚠️ AES.new()를 썼지만 ECB 모드는 취약합니다. AES.MODE_CBC / AES.MODE_GCM 등을 사용하세요.");
+                messages.push(L("⚠️ AES.new()를 썼지만 ECB 모드는 취약합니다. AES.MODE_CBC / AES.MODE_GCM 등을 사용하세요.","⚠️ You used AES.new(), but ECB mode is weak. Use AES.MODE_CBC / AES.MODE_GCM, etc."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistPython', 3, false);
-                messages.push("❌ AES.new()를 사용하여 암호화 객체를 생성하세요.");
+                messages.push(L("❌ AES.new()를 사용하여 암호화 객체를 생성하세요.","❌ Use AES.new() to create the encryption object."));
             }
 
             if (passed) {
-                feedback.innerHTML = `
-                    <div class="feedback-item feedback-success">
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>완벽합니다! Python 코드에서 취약한 DES 알고리즘을 성공적으로 제거했습니다.</p>
                         <br>
                         ${messages.join('<br>')}
-                    </div>
-                `;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+                    </div>`,
+                    `<div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Perfect! You successfully removed the weak DES algorithm from the Python code.</p>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>`);
+                const stP=document.getElementById('codeStatusPython'); stP.textContent=L('안전한 코드','Secure code'); stP.dataset.ko='안전한 코드'; stP.setAttribute('data-en','Secure code');
                 document.getElementById('codeStatusPython').className = 'status-badge status-secure';
 
-                rightPanel.innerHTML = `
-                    <div class="info-section">
+                rightPanel.innerHTML = L(
+                    `<div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
                             <p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p>
                             <p>AES 알고리즘을 적용하고 키 길이를 16바이트(128비트) 이상으로 설정하여 보안 강도를 높였습니다.</p>
                         </div>
-                    </div>
-                `;
+                    </div>`,
+                    `<div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>You applied the AES algorithm and set the key length to 16 bytes (128 bits) or more, strengthening security.</p>
+                        </div>
+                    </div>`);
             } else {
-                feedback.innerHTML = `
-                    <div class="feedback-item feedback-warning">
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>
                         ${messages.join('<br>')}
-                    </div>
-                `;
+                    </div>`,
+                    `<div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>`);
             }
         }
 
@@ -938,22 +996,25 @@ def encrypt_secret(data):
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
             document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stPr=document.getElementById('codeStatusPython'); stPr.textContent=L('취약한 코드','Vulnerable code'); stPr.dataset.ko='취약한 코드'; stPr.setAttribute('data-en','Vulnerable code');
 
             for(let i=0; i<4; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">2008년 <b>MD5 충돌</b>을 이용해 위조 CA 인증서가 생성되는 등 취약 알고리즘의 위험이 입증됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="In 2008, a forged CA certificate was created by exploiting an <b>MD5 collision</b>, proving the danger of weak algorithms.">2008년 <b>MD5 충돌</b>을 이용해 위조 CA 인증서가 생성되는 등 취약 알고리즘의 위험이 입증됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-327</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A02 Cryptographic Failures</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

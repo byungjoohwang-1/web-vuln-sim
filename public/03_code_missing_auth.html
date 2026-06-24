@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>적절한 인증 없는 중요기능 허용 - 실습 시뮬레이터</title>
+    <title data-en="Allowing Critical Functions Without Proper Authentication - Practice Simulator">적절한 인증 없는 중요기능 허용 - 실습 시뮬레이터</title>
     <!-- Prism.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
@@ -695,53 +695,57 @@
                 grid-template-columns: 1fr;
             }
         }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🔐 적절한 인증 없는 중요기능 허용 - 실습 시뮬레이터</h1>
-            <p>보안기능 취약점 실습 & 금융권 회원정보 수정 공격 체험</p>
+            <h1 data-en="🔐 Allowing Critical Functions Without Proper Authentication - Practice Simulator">🔐 적절한 인증 없는 중요기능 허용 - 실습 시뮬레이터</h1>
+            <p data-en="Security-feature vulnerability practice & hands-on member-info modification attack in a banking scenario">보안기능 취약점 실습 & 금융권 회원정보 수정 공격 체험</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 코드 수정</div>
-                <div class="mode-desc">회원정보 수정 검증</div>
+                <div class="mode-title" data-en="Java Code Fix">Java 코드 수정</div>
+                <div class="mode-desc" data-en="Member-info modification validation">회원정보 수정 검증</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 코드 수정</div>
-                <div class="mode-desc">비밀번호 변경 검증</div>
+                <div class="mode-title" data-en="Python Code Fix">Python 코드 수정</div>
+                <div class="mode-desc" data-en="Password change validation">비밀번호 변경 검증</div>
             </button>
         </div>
 
         <!-- Java 코드 수정 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklist">
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>취약점 진단 완료</span>
+                        <span data-en="Vulnerability diagnosis complete">취약점 진단 완료</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>요청 사용자 ID 가져오기</span>
+                        <span data-en="Get the requesting user's ID">요청 사용자 ID 가져오기</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>userId 일치 검증</span>
+                        <span data-en="userId match validation">userId 일치 검증</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>불일치 시 에러 처리</span>
+                        <span data-en="Error handling on mismatch">불일치 시 에러 처리</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>검증 통과</span>
+                        <span data-en="Validation passed">검증 통과</span>
                     </li>
                 </ul>
             </div>
@@ -749,15 +753,15 @@
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatus">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Code Editor">✏️ 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatus" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">MemberController.java</span>
-                            <span class="toolbar-hint">💡 사용자 일치 검증 추가</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Add user-match validation">💡 사용자 일치 검증 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplay">@RequestMapping(value = "/modify.do", method = RequestMethod.POST)
@@ -822,16 +826,16 @@ public ModelAndView memberModifyProcess(
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCode()">
+                        <button class="btn btn-analyze" onclick="analyzeCode()" data-en="🔍 Diagnose">
                             🔍 진단하기
                         </button>
-                        <button class="btn btn-validate" onclick="validateCode()" id="validateBtn" disabled>
+                        <button class="btn btn-validate" onclick="validateCode()" id="validateBtn" disabled data-en="✅ Validate">
                             ✅ 검증하기
                         </button>
-                        <button class="btn btn-hint" onclick="toggleHint()">
+                        <button class="btn btn-hint" onclick="toggleHint()" data-en="💡 Show Hint">
                             💡 힌트 보기
                         </button>
-                        <button class="btn btn-reset" onclick="resetCoding()">
+                        <button class="btn btn-reset" onclick="resetCoding()" data-en="🔄 Reset">
                             🔄 초기화
                         </button>
                     </div>
@@ -839,15 +843,15 @@ public ModelAndView memberModifyProcess(
                     <div class="feedback" id="feedback"></div>
 
                     <div class="hint-panel" id="hintPanel">
-                        <div class="hint-title">💡 수정 가이드</div>
-                        
+                        <div class="hint-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
+
                         <div class="hint-step">
-                            <strong>Step 1: 요청 사용자 ID 가져오기</strong>
+                            <strong data-en="Step 1: Get the requesting user's ID">Step 1: 요청 사용자 ID 가져오기</strong>
                             <div class="hint-code">String requestUser = memberModel.getUserId();</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 2: 사용자 불일치 검증 (null 체크 포함)</strong>
+                            <strong data-en="Step 2: Validate user mismatch (including null checks)">Step 2: 사용자 불일치 검증 (null 체크 포함)</strong>
                             <div class="hint-code">if (userId != null && requestUser != null && 
     !userId.equals(requestUser)) {
     // 불일치 시 처리
@@ -855,7 +859,7 @@ public ModelAndView memberModifyProcess(
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 3: 불일치 시 에러 반환 (3가지 필수)</strong>
+                            <strong data-en="Step 3: Return an error on mismatch (3 required items)">Step 3: 불일치 시 에러 반환 (3가지 필수)</strong>
                             <div class="hint-code">mav.addObject("errCode", 1);
 mav.addObject("member", memberModel);
 mav.setViewName("/board/member_modify");
@@ -863,7 +867,7 @@ return mav;</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>완성 예시:</strong>
+                            <strong data-en="Completed example:">완성 예시:</strong>
                             <div class="hint-code">//2. 회원정보를 실제 수정하는 사용자와 로그인 사용자와 동일한지 확인한다.
 String requestUser = memberModel.getUserId();
 if (userId != null && requestUser != null && 
@@ -888,27 +892,27 @@ if (service.modifyMember(memberModel)) { ... }</div>
                     </div>
                     <div id="rightPanel">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>회원정보 수정 시 로그인한 사용자와 요청 사용자가 동일한지 검증하세요.</p>
+                                <p data-en="When modifying member info, validate that the logged-in user matches the requesting user.">회원정보 수정 시 로그인한 사용자와 요청 사용자가 동일한지 검증하세요.</p>
                                 <ul style="margin-top: 10px;">
                                     <li>String requestUser = memberModel.getUserId()</li>
-                                    <li>userId와 requestUser null 체크</li>
-                                    <li>!userId.equals(requestUser) 검증</li>
+                                    <li data-en="null check on userId and requestUser">userId와 requestUser null 체크</li>
+                                    <li data-en="!userId.equals(requestUser) validation">!userId.equals(requestUser) 검증</li>
                                     <li>mav.addObject("errCode", 1)</li>
-                                    <li>mav.addObject("member", memberModel) 추가</li>
-                                    <li>불일치 시 return mav 처리</li>
+                                    <li data-en="Add mav.addObject(&quot;member&quot;, memberModel)">mav.addObject("member", memberModel) 추가</li>
+                                    <li data-en="Return mav on mismatch">불일치 시 return mav 처리</li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="info-section">
-                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-title" data-en="⚠️ Vulnerability">⚠️ 취약점</div>
                             <div class="info-content">
-                                <p style="color: #dc3545; font-weight: bold;">
+                                <p style="color: #dc3545; font-weight: bold;" data-en="The current code has no user validation!">
                                     현재 코드는 사용자 검증이 없습니다!
                                 </p>
-                                <p style="margin-top: 10px;">
+                                <p style="margin-top: 10px;" data-en="If an attacker passes another user's ID as a parameter, they can modify someone else's member information.">
                                     공격자가 다른 사용자의 ID를 파라미터로 전달하면
                                     타인의 회원정보를 수정할 수 있습니다.
                                 </p>
@@ -920,13 +924,13 @@ if (service.modifyMember(memberModel)) { ... }</div>
 
             <div class="info-panel">
                 <div class="info-section">
-                    <div class="info-title">📖 적절한 인증 없는 중요기능 허용이란?</div>
+                    <div class="info-title" data-en="📖 What is allowing critical functions without proper authentication?">📖 적절한 인증 없는 중요기능 허용이란?</div>
                     <div class="info-content">
-                        <p>적절한 인증과정 없이 중요정보(계좌이체 정보, 개인정보 등)를 열람하거나 변경할 때 발생하는 보안 취약점입니다.</p>
+                        <p data-en="A security vulnerability that occurs when critical information (fund-transfer details, personal data, etc.) is viewed or changed without a proper authentication process.">적절한 인증과정 없이 중요정보(계좌이체 정보, 개인정보 등)를 열람하거나 변경할 때 발생하는 보안 취약점입니다.</p>
                         <ul>
-                            <li><strong>IDOR 연계:</strong> 다른 사용자의 ID로 권한 없는 접근</li>
-                            <li><strong>권한 상승:</strong> 일반 사용자가 관리자 기능 수행</li>
-                            <li><strong>개인정보 유출:</strong> 타인의 민감 정보 조회/수정</li>
+                            <li data-en="<strong>IDOR link-up:</strong> Unauthorized access using another user's ID (Insecure Direct Object Reference)"><strong>IDOR 연계:</strong> 다른 사용자의 ID로 권한 없는 접근</li>
+                            <li data-en="<strong>Privilege escalation:</strong> A regular user performing administrator functions"><strong>권한 상승:</strong> 일반 사용자가 관리자 기능 수행</li>
+                            <li data-en="<strong>Personal-data leak:</strong> Viewing/modifying another person's sensitive information"><strong>개인정보 유출:</strong> 타인의 민감 정보 조회/수정</li>
                         </ul>
                     </div>
                 </div>
@@ -936,27 +940,27 @@ if (service.modifyMember(memberModel)) { ... }</div>
         <!-- Python 코드 수정 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>취약점 진단 완료</span>
+                        <span data-en="Vulnerability diagnosis complete">취약점 진단 완료</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>@login_required 데코레이터 추가</span>
+                        <span data-en="Add the @login_required decorator">@login_required 데코레이터 추가</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>현재 비밀번호 입력받기</span>
+                        <span data-en="Receive the current password">현재 비밀번호 입력받기</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>현재 비밀번호 해시 비교</span>
+                        <span data-en="Compare the current password hash">현재 비밀번호 해시 비교</span>
                     </li>
                     <li class="checklist-item">
                         <span class="checklist-icon">⬜</span>
-                        <span>검증 통과</span>
+                        <span data-en="Validation passed">검증 통과</span>
                     </li>
                 </ul>
             </div>
@@ -964,15 +968,15 @@ if (service.modifyMember(memberModel)) { ... }</div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">views.py (Django)</span>
-                            <span class="toolbar-hint">💡 인증 및 현재 비밀번호 검증 추가</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Add authentication and current-password validation">💡 인증 및 현재 비밀번호 검증 추가</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">from django.shortcuts import render
@@ -1009,16 +1013,16 @@ def change_password(request):
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">
                             🔍 진단하기
                         </button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">
                             ✅ 검증하기
                         </button>
-                        <button class="btn btn-hint" onclick="toggleHintPython()">
+                        <button class="btn btn-hint" onclick="toggleHintPython()" data-en="💡 Show Hint">
                             💡 힌트 보기
                         </button>
-                        <button class="btn btn-reset" onclick="resetCodingPython()">
+                        <button class="btn btn-reset" onclick="resetCodingPython()" data-en="🔄 Reset">
                             🔄 초기화
                         </button>
                     </div>
@@ -1026,27 +1030,27 @@ def change_password(request):
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="hint-title">💡 수정 가이드</div>
-                        
+                        <div class="hint-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
+
                         <div class="hint-step">
-                            <strong>Step 1: login_required 데코레이터 import</strong>
+                            <strong data-en="Step 1: Import the login_required decorator">Step 1: login_required 데코레이터 import</strong>
                             <div class="hint-code">from django.contrib.auth.decorators import login_required</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 2: @login_required 데코레이터 추가</strong>
+                            <strong data-en="Step 2: Add the @login_required decorator">Step 2: @login_required 데코레이터 추가</strong>
                             <div class="hint-code">@login_required
 def change_password(request):</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 3: 현재 비밀번호 입력받기</strong>
+                            <strong data-en="Step 3: Receive the current password">Step 3: 현재 비밀번호 입력받기</strong>
                             <div class="hint-code">new_pwd = request.POST.get('new_password',"")
 crnt_pwd = request.POST.get('current_password',"")</div>
                         </div>
 
                         <div class="hint-step">
-                            <strong>Step 4: 현재 비밀번호 해시 비교</strong>
+                            <strong data-en="Step 4: Compare the current password hash">Step 4: 현재 비밀번호 해시 비교</strong>
                             <div class="hint-code">crnt_h = hashlib.sha256(crnt_pwd.encode())
 h_pwd = crnt_h.hexdigest()
 
@@ -1056,7 +1060,7 @@ if h_pwd != get_password_from_db(user):
                         </div>
 
                         <div class="hint-step">
-                            <strong>완성 예시:</strong>
+                            <strong data-en="Completed example:">완성 예시:</strong>
                             <div class="hint-code">from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from re import escape
@@ -1091,26 +1095,26 @@ def change_password(request):
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>비밀번호 변경 시 로그인 검증과 현재 비밀번호를 확인하세요.</p>
+                                <p data-en="When changing the password, verify login and check the current password.">비밀번호 변경 시 로그인 검증과 현재 비밀번호를 확인하세요.</p>
                                 <ul style="margin-top: 10px;">
-                                    <li>@login_required 데코레이터 추가</li>
-                                    <li>current_password 파라미터 받기</li>
-                                    <li>현재 비밀번호 해시값 생성</li>
-                                    <li>DB 저장값과 비교 검증</li>
-                                    <li>불일치 시 에러 반환</li>
+                                    <li data-en="Add the @login_required decorator">@login_required 데코레이터 추가</li>
+                                    <li data-en="Receive the current_password parameter">current_password 파라미터 받기</li>
+                                    <li data-en="Generate the current password hash">현재 비밀번호 해시값 생성</li>
+                                    <li data-en="Compare against the value stored in the DB">DB 저장값과 비교 검증</li>
+                                    <li data-en="Return an error on mismatch">불일치 시 에러 반환</li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="info-section">
-                            <div class="info-title">⚠️ 취약점</div>
+                            <div class="info-title" data-en="⚠️ Vulnerability">⚠️ 취약점</div>
                             <div class="info-content">
-                                <p style="color: #dc3545; font-weight: bold;">
+                                <p style="color: #dc3545; font-weight: bold;" data-en="The current code has 2 vulnerabilities!">
                                     현재 코드는 2가지 취약점이 있습니다!
                                 </p>
-                                <p style="margin-top: 10px;">
+                                <p style="margin-top: 10px;" data-en="1. No login verification (@login_required missing)<br>2. Password can be changed without confirming the current password">
                                     1. 로그인 검증 없음 (@login_required 누락)<br>
                                     2. 현재 비밀번호 확인 없이 변경 가능
                                 </p>
@@ -1122,13 +1126,13 @@ def change_password(request):
 
             <div class="info-panel">
                 <div class="info-section">
-                    <div class="info-title">📖 Python/Django 인증 우회 취약점</div>
+                    <div class="info-title" data-en="📖 Python/Django authentication bypass vulnerability">📖 Python/Django 인증 우회 취약점</div>
                     <div class="info-content">
-                        <p>Django에서 비밀번호 변경 등 중요 기능 수행 시 적절한 인증 없이 처리하면 발생하는 보안 취약점입니다.</p>
+                        <p data-en="A security vulnerability that occurs in Django when critical functions such as password change are performed without proper authentication.">Django에서 비밀번호 변경 등 중요 기능 수행 시 적절한 인증 없이 처리하면 발생하는 보안 취약점입니다.</p>
                         <ul>
-                            <li><strong>@login_required 누락:</strong> 비로그인 사용자도 접근 가능</li>
-                            <li><strong>현재 비밀번호 미검증:</strong> 세션만 탈취하면 비밀번호 변경</li>
-                            <li><strong>재인증 없음:</strong> 중요 작업에 추가 인증 없음</li>
+                            <li data-en="<strong>@login_required missing:</strong> Even unauthenticated users can access it"><strong>@login_required 누락:</strong> 비로그인 사용자도 접근 가능</li>
+                            <li data-en="<strong>Current password not verified:</strong> Stealing only the session is enough to change the password"><strong>현재 비밀번호 미검증:</strong> 세션만 탈취하면 비밀번호 변경</li>
+                            <li data-en="<strong>No re-authentication:</strong> No additional authentication for critical operations"><strong>재인증 없음:</strong> 중요 작업에 추가 인증 없음</li>
                         </ul>
                     </div>
                 </div>
@@ -1142,6 +1146,22 @@ def change_password(request):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         let currentMode = 'java';
         let progressSteps = [false, false, false, false, false];
         let isEditingJava = false;
@@ -1180,7 +1200,7 @@ def change_password(request):
                 displayContainer.style.display = 'none';
                 textarea.style.display = 'block';
                 textarea.value = codeDisplay.textContent;
-                editBtn.textContent = '💾 저장';
+                editBtn.textContent = L('💾 저장','💾 Save'); editBtn.dataset.ko = '💾 저장'; editBtn.setAttribute('data-en','💾 Save');
                 editBtn.classList.add('editing');
                 textarea.focus();
             } else {
@@ -1190,7 +1210,7 @@ def change_password(request):
                 Prism.highlightElement(codeDisplay);
                 displayContainer.style.display = 'block';
                 textarea.style.display = 'none';
-                editBtn.textContent = '✏️ 편집';
+                editBtn.textContent = L('✏️ 편집','✏️ Edit'); editBtn.dataset.ko = '✏️ 편집'; editBtn.setAttribute('data-en','✏️ Edit');
                 editBtn.classList.remove('editing');
             }
         }
@@ -1220,7 +1240,7 @@ def change_password(request):
             
             updateProgress(0, true);
             
-            feedback.innerHTML = `
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <div class="feedback-header">
                         <span>🚨</span>
@@ -1244,10 +1264,34 @@ def change_password(request):
                         userId와 requestUser가 일치하는지 검증하세요.
                     </div>
                 </div>
-            `;
-            
+            `, `
+                <div class="feedback-item feedback-error">
+                    <div class="feedback-header">
+                        <span>🚨</span>
+                        <span>Authentication bypass vulnerability found</span>
+                    </div>
+                    <div class="feedback-message">
+                        <strong>Issue:</strong><br>
+                        • No validation that the logged-in user (session) matches the modify-request user (memberModel)<br>
+                        • An attacker can pass another user's ID as a parameter<br>
+                        • Someone else's member information can be modified at will<br>
+                        • Insecure Direct Object Reference (IDOR) vulnerability
+                    </div>
+                </div>
+                <div class="feedback-item feedback-warning">
+                    <div class="feedback-header">
+                        <span>💡</span>
+                        <span>How to fix</span>
+                    </div>
+                    <div class="feedback-message">
+                        After getting the requesting user with requestUser = memberModel.getUserId(),<br>
+                        validate that userId and requestUser match.
+                    </div>
+                </div>
+            `);
+
             document.getElementById('validateBtn').disabled = false;
-            document.getElementById('codeStatus').textContent = '수정 중';
+            const stJ=document.getElementById('codeStatus'); stJ.textContent=L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing');
             document.getElementById('codeStatus').className = 'status-badge status-editing';
         }
 
@@ -1262,41 +1306,41 @@ def change_password(request):
             
             // 검증 1: requestUser 변수 선언
             if (code.includes('requestUser') && code.includes('memberModel.getUserId()')) {
-                success.push('✅ 요청 사용자 ID 가져오기 확인');
+                success.push(L('✅ 요청 사용자 ID 가져오기 확인','✅ Requesting user ID retrieval confirmed'));
                 updateProgress(1, true);
             } else {
-                errors.push('❌ String requestUser = memberModel.getUserId(); 가 필요합니다');
+                errors.push(L('❌ String requestUser = memberModel.getUserId(); 가 필요합니다','❌ String requestUser = memberModel.getUserId(); is required'));
             }
-            
+
             // 검증 2: userId와 requestUser 비교
-            if ((code.includes('userId.equals(requestUser)') || code.includes('requestUser.equals(userId)')) 
+            if ((code.includes('userId.equals(requestUser)') || code.includes('requestUser.equals(userId)'))
                 && code.includes('!')) {
-                success.push('✅ 사용자 ID 일치 검증 확인');
+                success.push(L('✅ 사용자 ID 일치 검증 확인','✅ User ID match validation confirmed'));
                 updateProgress(2, true);
             } else {
-                errors.push('❌ !userId.equals(requestUser) 검증이 필요합니다');
+                errors.push(L('❌ !userId.equals(requestUser) 검증이 필요합니다','❌ The !userId.equals(requestUser) check is required'));
             }
-            
+
             // 검증 3: null 체크
             if (code.includes('!= null') && (code.match(/!= null/g) || []).length >= 2) {
-                success.push('✅ null 체크 확인');
+                success.push(L('✅ null 체크 확인','✅ null check confirmed'));
             } else {
-                warnings.push('⚠️ userId와 requestUser에 대한 null 체크가 필요합니다');
+                warnings.push(L('⚠️ userId와 requestUser에 대한 null 체크가 필요합니다','⚠️ null checks for userId and requestUser are required'));
             }
-            
+
             // 검증 4: errCode = 1 설정
             if (code.includes('errCode') && code.includes('1')) {
-                success.push('✅ errCode = 1 설정 확인');
+                success.push(L('✅ errCode = 1 설정 확인','✅ errCode = 1 setting confirmed'));
                 updateProgress(3, true);
             } else {
-                errors.push('❌ 사용자 불일치 시 mav.addObject("errCode", 1)이 필요합니다');
+                errors.push(L('❌ 사용자 불일치 시 mav.addObject("errCode", 1)이 필요합니다','❌ On user mismatch, mav.addObject("errCode", 1) is required'));
             }
-            
+
             // 검증 5: member 객체 추가 (중요!)
             if (code.includes('addObject') && code.includes('member') && code.includes('memberModel')) {
-                success.push('✅ member 객체 추가 확인');
+                success.push(L('✅ member 객체 추가 확인','✅ member object addition confirmed'));
             } else {
-                errors.push('❌ mav.addObject("member", memberModel)이 필요합니다');
+                errors.push(L('❌ mav.addObject("member", memberModel)이 필요합니다','❌ mav.addObject("member", memberModel) is required'));
             }
             
             // 검증 6: return 문
@@ -1314,16 +1358,16 @@ def change_password(request):
             }
             
             if (hasReturnInCheck) {
-                success.push('✅ 불일치 시 return 처리 확인');
+                success.push(L('✅ 불일치 시 return 처리 확인','✅ Return-on-mismatch handling confirmed'));
             } else {
-                warnings.push('⚠️ 사용자 불일치 시 return mav로 빠져나가야 합니다');
+                warnings.push(L('⚠️ 사용자 불일치 시 return mav로 빠져나가야 합니다','⚠️ On user mismatch you must exit with return mav'));
             }
             
             // 결과 판정
             if (errors.length === 0 && success.length >= 4) {
                 updateProgress(4, true);
                 
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>🎉</span>
@@ -1335,16 +1379,32 @@ def change_password(request):
                             ${warnings.length > 0 ? '<br><br><strong>개선 제안:</strong><br>' + warnings.join('<br>') : ''}
                             <br><br>
                             <strong style="color: #28a745;">
-                                이제 "금융권 모의해킹" 탭에서 공격이 차단되는지 확인해보세요!
+                                요청 사용자와 로그인 사용자가 일치하는지 검증해 IDOR 공격을 차단했습니다!
                             </strong>
                         </div>
                     </div>
-                `;
-                
-                document.getElementById('codeStatus').textContent = '안전한 코드';
+                `, `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>🎉</span>
+                            <span>Validation passed! This is secure code!</span>
+                        </div>
+                        <div class="feedback-message">
+                            <strong>Applied security measures:</strong><br>
+                            ${success.join('<br>')}
+                            ${warnings.length > 0 ? '<br><br><strong>Improvement suggestions:</strong><br>' + warnings.join('<br>') : ''}
+                            <br><br>
+                            <strong style="color: #28a745;">
+                                By validating that the requesting user matches the logged-in user, you blocked the IDOR attack!
+                            </strong>
+                        </div>
+                    </div>
+                `);
+
+                const stJ2=document.getElementById('codeStatus'); stJ2.textContent=L('안전한 코드','Secure code'); stJ2.dataset.ko='안전한 코드'; stJ2.setAttribute('data-en','Secure code');
                 document.getElementById('codeStatus').className = 'status-badge status-secure';
-                
-                rightPanel.innerHTML = `
+
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 수정 완료</div>
                         <div class="info-content">
@@ -1354,45 +1414,62 @@ def change_password(request):
                             ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
                         </div>
                     </div>
-                    
+
                     <div class="info-section">
-                        <div class="info-title">🎯 다음 단계</div>
+                        <div class="info-title">🎯 핵심 정리</div>
                         <div class="info-content">
-                            <p><strong>"금융권 모의해킹"</strong> 탭으로 이동하여 공격 차단을 확인하세요!</p>
+                            <p>중요기능 수행 전 <strong>요청 주체와 인증 주체의 일치 여부</strong>를 반드시 검증하세요!</p>
                         </div>
                     </div>
-                `;
+                `, `
+                    <div class="info-section">
+                        <div class="info-title">✅ Fix complete</div>
+                        <div class="info-content">
+                            <p style="color: #28a745; font-weight: bold;">
+                                The authentication bypass vulnerability has been resolved!
+                            </p>
+                            ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="info-title">🎯 Key takeaway</div>
+                        <div class="info-content">
+                            <p>Before performing a critical function, always validate that the <strong>requesting principal matches the authenticated principal</strong>!</p>
+                        </div>
+                    </div>
+                `);
             } else {
                 feedback.innerHTML = `
                     ${errors.length > 0 ? `
                     <div class="feedback-item feedback-error">
                         <div class="feedback-header">
                             <span>❌</span>
-                            <span>수정이 필요합니다</span>
+                            <span>${L('수정이 필요합니다','Fixes are required')}</span>
                         </div>
                         <div class="feedback-message">
                             ${errors.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${warnings.length > 0 ? `
                     <div class="feedback-item feedback-warning">
                         <div class="feedback-header">
                             <span>⚠️</span>
-                            <span>개선 권장</span>
+                            <span>${L('개선 권장','Improvement recommended')}</span>
                         </div>
                         <div class="feedback-message">
                             ${warnings.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${success.length > 0 ? `
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>✅</span>
-                            <span>잘하고 있습니다!</span>
+                            <span>${L('잘하고 있습니다!','You are doing well!')}</span>
                         </div>
                         <div class="feedback-message">
                             ${success.join('<br>')}
@@ -1447,16 +1524,16 @@ public ModelAndView memberModifyProcess(
             
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('validateBtn').disabled = true;
-            document.getElementById('codeStatus').textContent = '취약한 코드';
+            const stJ3=document.getElementById('codeStatus'); stJ3.textContent=L('취약한 코드','Vulnerable code'); stJ3.dataset.ko='취약한 코드'; stJ3.setAttribute('data-en','Vulnerable code');
             document.getElementById('codeStatus').className = 'status-badge status-vulnerable';
             document.getElementById('hintPanel').classList.remove('active');
-            
+
             progressSteps = [false, false, false, false, false];
             for (let i = 0; i < 5; i++) {
                 updateProgress(i, false);
             }
-            
-            document.getElementById('rightPanel').innerHTML = `
+
+            document.getElementById('rightPanel').innerHTML = L(`
                 <div class="info-section">
                     <div class="info-title">🎯 목표</div>
                     <div class="info-content">
@@ -1484,7 +1561,35 @@ public ModelAndView memberModifyProcess(
                         </p>
                     </div>
                 </div>
-            `;
+            `, `
+                <div class="info-section">
+                    <div class="info-title">🎯 Goal</div>
+                    <div class="info-content">
+                        <p>When modifying member info, validate that the logged-in user matches the requesting user.</p>
+                        <ul style="margin-top: 10px;">
+                            <li>String requestUser = memberModel.getUserId()</li>
+                            <li>null check on userId and requestUser</li>
+                            <li>!userId.equals(requestUser) validation</li>
+                            <li>mav.addObject("errCode", 1)</li>
+                            <li>Add mav.addObject("member", memberModel)</li>
+                            <li>Return mav on mismatch</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">⚠️ Vulnerability</div>
+                    <div class="info-content">
+                        <p style="color: #dc3545; font-weight: bold;">
+                            The current code has no user validation!
+                        </p>
+                        <p style="margin-top: 10px;">
+                            If an attacker passes another user's ID as a parameter,
+                            they can modify someone else's member information.
+                        </p>
+                    </div>
+                </div>
+            `);
         }
 
         // ===== Python 모드 함수들 =====
@@ -1505,7 +1610,7 @@ public ModelAndView memberModifyProcess(
                 displayContainer.style.display = 'none';
                 textarea.style.display = 'block';
                 textarea.value = codeDisplay.textContent;
-                editBtn.textContent = '💾 저장';
+                editBtn.textContent = L('💾 저장','💾 Save'); editBtn.dataset.ko = '💾 저장'; editBtn.setAttribute('data-en','💾 Save');
                 editBtn.classList.add('editing');
                 textarea.focus();
             } else {
@@ -1515,7 +1620,7 @@ public ModelAndView memberModifyProcess(
                 Prism.highlightElement(codeDisplay);
                 displayContainer.style.display = 'block';
                 textarea.style.display = 'none';
-                editBtn.textContent = '✏️ 편집';
+                editBtn.textContent = L('✏️ 편집','✏️ Edit'); editBtn.dataset.ko = '✏️ 편집'; editBtn.setAttribute('data-en','✏️ Edit');
                 editBtn.classList.remove('editing');
             }
         }
@@ -1549,7 +1654,7 @@ public ModelAndView memberModifyProcess(
             
             updateProgressPython(0, true);
             
-            feedback.innerHTML = `
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <div class="feedback-header">
                         <span>🚨</span>
@@ -1574,10 +1679,35 @@ public ModelAndView memberModifyProcess(
                         3. 현재 비밀번호와 DB 저장값 비교
                     </div>
                 </div>
-            `;
-            
+            `, `
+                <div class="feedback-item feedback-error">
+                    <div class="feedback-header">
+                        <span>🚨</span>
+                        <span>Allowing critical functions without authentication - vulnerability found</span>
+                    </div>
+                    <div class="feedback-message">
+                        <strong>Issue:</strong><br>
+                        • No @login_required decorator (unauthenticated users can access it)<br>
+                        • The password is changed to a new value without verifying the current password<br>
+                        • If the session is stolen, the password can be changed without authorization<br>
+                        • No re-authentication step
+                    </div>
+                </div>
+                <div class="feedback-item feedback-warning">
+                    <div class="feedback-header">
+                        <span>💡</span>
+                        <span>How to fix</span>
+                    </div>
+                    <div class="feedback-message">
+                        1. Add the @login_required decorator<br>
+                        2. Receive the current_password parameter<br>
+                        3. Compare the current password against the value stored in the DB
+                    </div>
+                </div>
+            `);
+
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent=L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing');
             document.getElementById('codeStatusPython').className = 'status-badge status-editing';
         }
 
@@ -1592,54 +1722,54 @@ public ModelAndView memberModifyProcess(
             
             // 검증 1: @login_required 데코레이터
             if (code.includes('@login_required')) {
-                success.push('✅ @login_required 데코레이터 추가 확인');
+                success.push(L('✅ @login_required 데코레이터 추가 확인','✅ @login_required decorator addition confirmed'));
                 updateProgressPython(1, true);
             } else {
-                errors.push('❌ @login_required 데코레이터가 필요합니다');
+                errors.push(L('❌ @login_required 데코레이터가 필요합니다','❌ The @login_required decorator is required'));
             }
-            
+
             // 검증 2: login_required import
             if (code.includes('from django.contrib.auth.decorators import login_required')) {
-                success.push('✅ login_required import 확인');
+                success.push(L('✅ login_required import 확인','✅ login_required import confirmed'));
             } else {
-                warnings.push('⚠️ from django.contrib.auth.decorators import login_required 가 필요합니다');
+                warnings.push(L('⚠️ from django.contrib.auth.decorators import login_required 가 필요합니다','⚠️ from django.contrib.auth.decorators import login_required is required'));
             }
-            
+
             // 검증 3: current_password 파라미터
             if (code.includes('current_password') || code.includes('crnt_pwd')) {
-                success.push('✅ 현재 비밀번호 파라미터 확인');
+                success.push(L('✅ 현재 비밀번호 파라미터 확인','✅ Current password parameter confirmed'));
                 updateProgressPython(2, true);
             } else {
-                errors.push('❌ request.POST.get("current_password") 로 현재 비밀번호를 받아야 합니다');
+                errors.push(L('❌ request.POST.get("current_password") 로 현재 비밀번호를 받아야 합니다','❌ You must receive the current password via request.POST.get("current_password")'));
             }
-            
+
             // 검증 4: 현재 비밀번호 해시 생성
             if ((code.includes('crnt_h') || code.includes('current_h')) && code.includes('hashlib.sha256')) {
-                success.push('✅ 현재 비밀번호 해시 생성 확인');
+                success.push(L('✅ 현재 비밀번호 해시 생성 확인','✅ Current password hash generation confirmed'));
                 updateProgressPython(3, true);
             } else {
-                errors.push('❌ hashlib.sha256(crnt_pwd.encode()) 로 해시를 생성해야 합니다');
+                errors.push(L('❌ hashlib.sha256(crnt_pwd.encode()) 로 해시를 생성해야 합니다','❌ You must generate the hash with hashlib.sha256(crnt_pwd.encode())'));
             }
-            
+
             // 검증 5: hexdigest()
             if (code.includes('hexdigest()')) {
-                success.push('✅ hexdigest() 사용 확인');
+                success.push(L('✅ hexdigest() 사용 확인','✅ hexdigest() usage confirmed'));
             } else {
-                warnings.push('⚠️ .hexdigest()로 해시 문자열을 얻어야 합니다');
+                warnings.push(L('⚠️ .hexdigest()로 해시 문자열을 얻어야 합니다','⚠️ You should obtain the hash string with .hexdigest()'));
             }
-            
+
             // 검증 6: 비밀번호 비교
             if (code.includes('get_password_from_db') || code.includes('!=') || code.includes('==')) {
-                success.push('✅ 비밀번호 비교 로직 확인');
+                success.push(L('✅ 비밀번호 비교 로직 확인','✅ Password comparison logic confirmed'));
             } else {
-                warnings.push('⚠️ DB 저장된 비밀번호와 비교하는 로직이 필요합니다');
+                warnings.push(L('⚠️ DB 저장된 비밀번호와 비교하는 로직이 필요합니다','⚠️ Logic to compare against the password stored in the DB is required'));
             }
             
             // 결과 판정
             if (errors.length === 0 && success.length >= 4) {
                 updateProgressPython(4, true);
                 
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>🎉</span>
@@ -1651,12 +1781,24 @@ public ModelAndView memberModifyProcess(
                             ${warnings.length > 0 ? '<br><br><strong>개선 제안:</strong><br>' + warnings.join('<br>') : ''}
                         </div>
                     </div>
-                `;
-                
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+                `, `
+                    <div class="feedback-item feedback-success">
+                        <div class="feedback-header">
+                            <span>🎉</span>
+                            <span>Validation passed! This is secure code!</span>
+                        </div>
+                        <div class="feedback-message">
+                            <strong>Applied security measures:</strong><br>
+                            ${success.join('<br>')}
+                            ${warnings.length > 0 ? '<br><br><strong>Improvement suggestions:</strong><br>' + warnings.join('<br>') : ''}
+                        </div>
+                    </div>
+                `);
+
+                const stP2=document.getElementById('codeStatusPython'); stP2.textContent=L('안전한 코드','Secure code'); stP2.dataset.ko='안전한 코드'; stP2.setAttribute('data-en','Secure code');
                 document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                
-                rightPanel.innerHTML = `
+
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 수정 완료</div>
                         <div class="info-content">
@@ -1666,38 +1808,48 @@ public ModelAndView memberModifyProcess(
                             ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
                         </div>
                     </div>
-                `;
+                `, `
+                    <div class="info-section">
+                        <div class="info-title">✅ Fix complete</div>
+                        <div class="info-content">
+                            <p style="color: #28a745; font-weight: bold;">
+                                The vulnerability of allowing critical functions without authentication has been resolved!
+                            </p>
+                            ${success.map(s => `<p style="margin-top: 5px;">${s}</p>`).join('')}
+                        </div>
+                    </div>
+                `);
             } else {
                 feedback.innerHTML = `
                     ${errors.length > 0 ? `
                     <div class="feedback-item feedback-error">
                         <div class="feedback-header">
                             <span>❌</span>
-                            <span>수정이 필요합니다</span>
+                            <span>${L('수정이 필요합니다','Fixes are required')}</span>
                         </div>
                         <div class="feedback-message">
                             ${errors.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${warnings.length > 0 ? `
                     <div class="feedback-item feedback-warning">
                         <div class="feedback-header">
                             <span>⚠️</span>
-                            <span>개선 권장</span>
+                            <span>${L('개선 권장','Improvement recommended')}</span>
                         </div>
                         <div class="feedback-message">
                             ${warnings.join('<br>')}
                         </div>
                     </div>
                     ` : ''}
-                    
+
                     ${success.length > 0 ? `
                     <div class="feedback-item feedback-success">
                         <div class="feedback-header">
                             <span>✅</span>
-                            <span>잘하고 있습니다!</span>
+                            <span>${L('잘하고 있습니다!','You are doing well!')}</span>
                         </div>
                         <div class="feedback-message">
                             ${success.join('<br>')}
@@ -1738,16 +1890,16 @@ def change_password(request):
             
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stP3=document.getElementById('codeStatusPython'); stP3.textContent=L('취약한 코드','Vulnerable code'); stP3.dataset.ko='취약한 코드'; stP3.setAttribute('data-en','Vulnerable code');
             document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
             document.getElementById('hintPanelPython').classList.remove('active');
-            
+
             progressStepsPython = [false, false, false, false, false];
             for (let i = 0; i < 5; i++) {
                 updateProgressPython(i, false);
             }
-            
-            document.getElementById('rightPanelPython').innerHTML = `
+
+            document.getElementById('rightPanelPython').innerHTML = L(`
                 <div class="info-section">
                     <div class="info-title">🎯 목표</div>
                     <div class="info-content">
@@ -1774,26 +1926,54 @@ def change_password(request):
                         </p>
                     </div>
                 </div>
-            `;
+            `, `
+                <div class="info-section">
+                    <div class="info-title">🎯 Goal</div>
+                    <div class="info-content">
+                        <p>When changing the password, verify login and check the current password.</p>
+                        <ul style="margin-top: 10px;">
+                            <li>Add the @login_required decorator</li>
+                            <li>Receive the current_password parameter</li>
+                            <li>Generate the current password hash</li>
+                            <li>Compare against the value stored in the DB</li>
+                            <li>Return an error on mismatch</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">⚠️ Vulnerability</div>
+                    <div class="info-content">
+                        <p style="color: #dc3545; font-weight: bold;">
+                            The current code has 2 vulnerabilities!
+                        </p>
+                        <p style="margin-top: 10px;">
+                            1. No login verification (@login_required missing)<br>
+                            2. Password can be changed without confirming the current password
+                        </p>
+                    </div>
+                </div>
+            `);
         }
 
         // 금융권 모의해킹 함수들 (삭제됨 - Python 모드로 대체)
         // 페이지 로드 시 Prism 초기화
         document.addEventListener('DOMContentLoaded', function() {
             Prism.highlightAll();
+            applyLang(localStorage.getItem('wvs_lang') || 'ko');
         });
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>인증 누락</b>으로 인터넷에 노출된 관리 콘솔·API가 무인증 접근돼 대량 데이터가 유출된 사고가 다수입니다.</div>
+      <div style="margin-bottom:12px;" data-en="Due to <b>missing authentication</b>, there have been many incidents where internet-exposed admin consoles and APIs were accessed without authentication, leaking large volumes of data."><b>인증 누락</b>으로 인터넷에 노출된 관리 콘솔·API가 무인증 접근돼 대량 데이터가 유출된 사고가 다수입니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-306</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A07 Identification & Auth Failures</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

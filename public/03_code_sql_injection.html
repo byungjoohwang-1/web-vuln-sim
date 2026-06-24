@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL 삽입 (SQL Injection) - 실습 시뮬레이터</title>
+    <title data-en="SQL Injection - Practice Simulator">SQL 삽입 (SQL Injection) - 실습 시뮬레이터</title>
     <!-- Prism.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
@@ -347,53 +347,57 @@
         @media (max-width: 1200px) {
             .main-content { grid-template-columns: 1fr; }
         }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)" data-en="← Main">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>💉 SQL 삽입 (SQL Injection) - 실습 시뮬레이터</h1>
+            <h1 data-en="💉 SQL Injection - Practice Simulator">💉 SQL 삽입 (SQL Injection) - 실습 시뮬레이터</h1>
             <p>CWE-89: Improper Neutralization of Special Elements used in an SQL Command</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">PreparedStatement 사용</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Use PreparedStatement">PreparedStatement 사용</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">Parameterized Query 사용</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Use Parameterized Query">Parameterized Query 사용</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> Statement 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> PreparedStatement 적용</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 바인딩 변수(?) 사용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove Statement">Statement 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply PreparedStatement">PreparedStatement 적용</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Use binding variable (?)">바인딩 변수(?) 사용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">UserDao.java</span>
-                            <span class="toolbar-hint">💡 PreparedStatement를 사용하여 쿼리를 안전하게 만드세요</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use PreparedStatement to make the query safe">💡 PreparedStatement를 사용하여 쿼리를 안전하게 만드세요</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">import java.sql.*;
@@ -448,29 +452,29 @@ public class UserDao {
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 쿼리 문자열 수정</strong>
-                            <p>입력값을 연결하는 대신 물음표(?)를 사용하세요.</p>
+                            <strong data-en="1. Modify the query string">1. 쿼리 문자열 수정</strong>
+                            <p data-en="Use a question mark (?) instead of concatenating the input value.">입력값을 연결하는 대신 물음표(?)를 사용하세요.</p>
                             <div class="hint-code">String query = "SELECT * FROM users WHERE id = ?";</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. PreparedStatement 객체 사용</strong>
-                            <p>createStatement() 대신 prepareStatement(query)를 사용합니다.</p>
+                            <strong data-en="2. Use a PreparedStatement object">2. PreparedStatement 객체 사용</strong>
+                            <p data-en="Use prepareStatement(query) instead of createStatement().">createStatement() 대신 prepareStatement(query)를 사용합니다.</p>
                             <div class="hint-code">PreparedStatement pstmt = conn.prepareStatement(query);</div>
                         </div>
                         <div class="hint-step">
-                            <strong>3. 값 바인딩</strong>
-                            <p>물음표 위치에 실제 값을 할당합니다.</p>
+                            <strong data-en="3. Bind the value">3. 값 바인딩</strong>
+                            <p data-en="Assign the actual value at the question mark position.">물음표 위치에 실제 값을 할당합니다.</p>
                             <div class="hint-code">pstmt.setString(1, userId);</div>
                         </div>
                     </div>
@@ -478,20 +482,20 @@ public class UserDao {
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과 및 설명</span>
+                        <span class="panel-title" data-en="📊 Analysis Result & Explanation">📊 분석 결과 및 설명</span>
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>현재 코드는 문자열 결합을 통해 SQL 쿼리를 동적으로 생성하고 있습니다. 이는 <strong>SQL Injection</strong> 공격에 매우 취약합니다. <code>PreparedStatement</code>와 <code>?</code> 바인딩 변수를 사용하여 쿼리의 구조와 데이터를 분리하세요.</p>
+                                <p data-en="The current code dynamically builds the SQL query via string concatenation. This is highly vulnerable to <strong>SQL Injection</strong>. Use <code>PreparedStatement</code> and a <code>?</code> binding variable to separate the query structure from the data.">현재 코드는 문자열 결합을 통해 SQL 쿼리를 동적으로 생성하고 있습니다. 이는 <strong>SQL Injection</strong> 공격에 매우 취약합니다. <code>PreparedStatement</code>와 <code>?</code> 바인딩 변수를 사용하여 쿼리의 구조와 데이터를 분리하세요.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Dynamic SQL Generation</p>
-                                <p>입력값 <code>userId</code>가 검증 없이 쿼리에 포함됩니다. 만약 입력값이 <code>admin' --</code>라면, 비밀번호 검증 없이 관리자 계정으로 로그인이 가능해집니다.</p>
+                                <p data-en="The input value <code>userId</code> is included in the query without validation. If the input is <code>admin' --</code>, an attacker can log in as the administrator account without password verification.">입력값 <code>userId</code>가 검증 없이 쿼리에 포함됩니다. 만약 입력값이 <code>admin' --</code>라면, 비밀번호 검증 없이 관리자 계정으로 로그인이 가능해집니다.</p>
                             </div>
                         </div>
                     </div>
@@ -502,27 +506,27 @@ public class UserDao {
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 문자열 포맷팅 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 쿼리 파라미터 분리</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 튜플 형태로 전달</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove string formatting">문자열 포맷팅 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Separate query parameters">쿼리 파라미터 분리</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Pass as a tuple">튜플 형태로 전달</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">db_access.py</span>
-                            <span class="toolbar-hint">💡 %s 포맷 스트링과 파라미터 바인딩을 사용하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use %s format strings and parameter binding">💡 %s 포맷 스트링과 파라미터 바인딩을 사용하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">import sqlite3
@@ -563,24 +567,24 @@ def get_user_info(user_id):
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 쿼리 문자열 분리</strong>
-                            <p>값을 직접 넣지 말고, 데이터베이스 드라이버가 제공하는 플레이스홀더(? 또는 %s)를 사용합니다. (SQLite는 ? 사용)</p>
+                            <strong data-en="1. Separate the query string">1. 쿼리 문자열 분리</strong>
+                            <p data-en="Do not insert the value directly; use the placeholder provided by the database driver (? or %s). (SQLite uses ?)">값을 직접 넣지 말고, 데이터베이스 드라이버가 제공하는 플레이스홀더(? 또는 %s)를 사용합니다. (SQLite는 ? 사용)</p>
                             <div class="hint-code">query = "SELECT * FROM users WHERE id = ?"</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. execute 메서드 수정</strong>
-                            <p>두 번째 인자로 데이터를 튜플 형태로 전달합니다.</p>
+                            <strong data-en="2. Modify the execute method">2. execute 메서드 수정</strong>
+                            <p data-en="Pass the data as a tuple in the second argument.">두 번째 인자로 데이터를 튜플 형태로 전달합니다.</p>
                             <div class="hint-code">cursor.execute(query, (user_id,))</div>
                         </div>
                     </div>
@@ -588,20 +592,20 @@ def get_user_info(user_id):
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과 및 설명</span>
+                        <span class="panel-title" data-en="📊 Analysis Result & Explanation">📊 분석 결과 및 설명</span>
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>파이썬의 DB API는 <strong>Parameterized Query</strong>를 지원합니다. 문자열 포맷팅(f-string, %) 대신, 쿼리와 데이터를 분리하여 <code>execute()</code> 메서드에 전달하도록 수정하세요.</p>
+                                <p data-en="Python's DB API supports <strong>Parameterized Queries</strong>. Instead of string formatting (f-string, %), separate the query and the data and pass them to the <code>execute()</code> method.">파이썬의 DB API는 <strong>Parameterized Query</strong>를 지원합니다. 문자열 포맷팅(f-string, %) 대신, 쿼리와 데이터를 분리하여 <code>execute()</code> 메서드에 전달하도록 수정하세요.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Improper Query Construction</p>
-                                <p><code>f-string</code>이나 <code>+</code> 연산자로 쿼리를 만들면, 데이터베이스 엔진은 어디까지가 코드이고 어디까지가 데이터인지 구별할 수 없게 되어 공격이 가능해집니다.</p>
+                                <p data-en="If you build the query with an <code>f-string</code> or the <code>+</code> operator, the database engine cannot tell where code ends and data begins, making an attack possible."><code>f-string</code>이나 <code>+</code> 연산자로 쿼리를 만들면, 데이터베이스 엔진은 어디까지가 코드이고 어디까지가 데이터인지 구별할 수 없게 되어 공격이 가능해집니다.</p>
                             </div>
                         </div>
                     </div>
@@ -616,6 +620,22 @@ def get_user_info(user_id):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // === 공통 로직 ===
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -661,32 +681,37 @@ def get_user_info(user_id):
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             const feedback = document.getElementById('feedbackJava');
-            
-            feedback.innerHTML = `
+
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p>현재 코드는 <code>Statement</code>를 사용하고 있으며 문자열 연결(concatenation)로 쿼리를 생성합니다. 이는 전형적인 SQL Injection 패턴입니다.</p>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>The current code uses <code>Statement</code> and builds the query via string concatenation. This is a classic SQL Injection pattern.</p>
+                </div>
+            `);
+
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중';
-            document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusJava'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
 
         function validateCodeJava() {
@@ -701,44 +726,50 @@ def get_user_info(user_id):
             if (code.includes('PreparedStatement') && !code.includes('Statement stmt =')) {
                 updateChecklist('progressChecklistJava', 1, true);
                 updateChecklist('progressChecklistJava', 2, true);
-                messages.push("✅ PreparedStatement 객체가 올바르게 선언되었습니다.");
+                messages.push(L("✅ PreparedStatement 객체가 올바르게 선언되었습니다.","✅ The PreparedStatement object is correctly declared."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 1, false);
-                messages.push("❌ Statement 대신 PreparedStatement를 사용해야 합니다.");
+                messages.push(L("❌ Statement 대신 PreparedStatement를 사용해야 합니다.","❌ You must use PreparedStatement instead of Statement."));
             }
 
             // 2. 바인딩 변수(?) 사용 확인
             if (code.includes('id = ?') || code.includes('id=?')) {
                 updateChecklist('progressChecklistJava', 3, true);
-                messages.push("✅ 쿼리에 바인딩 변수(?)가 사용되었습니다.");
+                messages.push(L("✅ 쿼리에 바인딩 변수(?)가 사용되었습니다.","✅ A binding variable (?) is used in the query."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 3, false);
-                messages.push("❌ 쿼리 조건절에 'id = ?'와 같이 물음표를 사용해야 합니다.");
+                messages.push(L("❌ 쿼리 조건절에 'id = ?'와 같이 물음표를 사용해야 합니다.","❌ You must use a question mark such as 'id = ?' in the query condition."));
             }
 
             // 3. setString 사용 확인
             if (code.includes('.setString(1, userId)')) {
-                messages.push("✅ 입력값이 안전하게 바인딩되었습니다.");
+                messages.push(L("✅ 입력값이 안전하게 바인딩되었습니다.","✅ The input value is bound safely."));
             } else {
                 passed = false;
-                messages.push("❌ .setString() 메서드로 값을 설정해야 합니다.");
+                messages.push(L("❌ .setString() 메서드로 값을 설정해야 합니다.","❌ You must set the value with the .setString() method."));
             }
 
             if (passed) {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>훌륭합니다! PreparedStatement를 사용하여 SQL Injection 공격을 완벽하게 차단했습니다.</p>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
-                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                
-                rightPanel.innerHTML = `
+                `,`
+                    <div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Excellent! By using PreparedStatement, you have completely blocked SQL Injection attacks.</p>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
+                const st=document.getElementById('codeStatusJava'); st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code'); st.className = 'status-badge status-secure';
+
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
@@ -746,15 +777,29 @@ def get_user_info(user_id):
                             <p>PreparedStatement는 쿼리를 미리 컴파일하여 구조를 고정한 뒤, 데이터를 나중에 주입합니다. 따라서 입력값에 특수문자가 포함되어 있어도 쿼리 구조가 바뀌지 않아 안전합니다.</p>
                         </div>
                     </div>
-                `;
+                `,`
+                    <div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>PreparedStatement compiles the query in advance to fix its structure, then injects the data afterward. So even if the input contains special characters, the query structure does not change, making it safe.</p>
+                        </div>
+                    </div>
+                `);
             } else {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
+                `,`
+                    <div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
             }
         }
 
@@ -789,9 +834,9 @@ public class UserDao {
                 Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
-                
+                const st=document.getElementById('codeStatusJava'); st.className = 'status-badge status-vulnerable';
+                st.textContent=L('취약한 코드','Vulnerable code'); st.dataset.ko='취약한 코드'; st.setAttribute('data-en','Vulnerable code');
+
                 for(let i=0; i<4; i++) updateChecklist('progressChecklistJava', i, false);
             } else {
                 resetCodingPython();
@@ -814,32 +859,37 @@ public class UserDao {
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             const feedback = document.getElementById('feedbackPython');
-            
-            feedback.innerHTML = `
+
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p>f-string이나 % 포맷팅을 사용하여 쿼리를 만들면 안 됩니다. 이는 데이터를 쿼리의 일부로 해석하게 만듭니다.</p>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>You must not build queries using f-strings or % formatting. This causes data to be interpreted as part of the query.</p>
+                </div>
+            `);
+
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중';
-            document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusPython'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
 
         function validateCodePython() {
@@ -853,46 +903,52 @@ public class UserDao {
             // 1. 문자열 포맷팅 제거 확인
             if (!code.includes('f"') && !code.includes('% user_id') && !code.includes(".format(")) {
                 updateChecklist('progressChecklistPython', 1, true);
-                messages.push("✅ 문자열 포맷팅/연결이 제거되었습니다.");
+                messages.push(L("✅ 문자열 포맷팅/연결이 제거되었습니다.","✅ String formatting/concatenation has been removed."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistPython', 1, false);
-                messages.push("❌ f-string, format(), % 연산자 등을 사용하지 마세요.");
+                messages.push(L("❌ f-string, format(), % 연산자 등을 사용하지 마세요.","❌ Do not use f-strings, format(), the % operator, etc."));
             }
 
             // 2. 쿼리 파라미터 분리 (?)
             if (code.includes('WHERE id = ?') || code.includes('WHERE id = %s')) {
                 updateChecklist('progressChecklistPython', 2, true);
-                messages.push("✅ 쿼리 파라미터(?, %s)가 사용되었습니다.");
+                messages.push(L("✅ 쿼리 파라미터(?, %s)가 사용되었습니다.","✅ A query parameter (?, %s) is used."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistPython', 2, false);
-                messages.push("❌ WHERE id = ? (SQLite) 또는 %s (MySQL/PG) 형태여야 합니다.");
+                messages.push(L("❌ WHERE id = ? (SQLite) 또는 %s (MySQL/PG) 형태여야 합니다.","❌ It must be in the form WHERE id = ? (SQLite) or %s (MySQL/PG)."));
             }
 
             // 3. 튜플 전달
             if (code.includes('execute(query, (user_id,))') || code.includes('execute(query, [user_id])')) {
                 updateChecklist('progressChecklistPython', 3, true);
-                messages.push("✅ 데이터가 튜플/리스트 형태로 전달되었습니다.");
+                messages.push(L("✅ 데이터가 튜플/리스트 형태로 전달되었습니다.","✅ The data is passed as a tuple/list."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistPython', 3, false);
-                messages.push("❌ execute 메서드의 두 번째 인자로 (user_id,) 형태의 튜플을 전달해야 합니다.");
+                messages.push(L("❌ execute 메서드의 두 번째 인자로 (user_id,) 형태의 튜플을 전달해야 합니다.","❌ You must pass a tuple such as (user_id,) as the second argument of the execute method."));
             }
 
             if (passed) {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>완벽합니다! DB API의 Parameterized Query 기능을 사용하여 안전하게 처리했습니다.</p>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
-                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
+                `,`
+                    <div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Perfect! You used the DB API's Parameterized Query feature to handle it safely.</p>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
+                const st=document.getElementById('codeStatusPython'); st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code'); st.className = 'status-badge status-secure';
 
-                rightPanel.innerHTML = `
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
@@ -900,15 +956,29 @@ public class UserDao {
                             <p>DB 드라이버가 입력값을 자동으로 이스케이프 처리하거나 쿼리와 데이터를 분리하여 전송하므로 안전합니다.</p>
                         </div>
                     </div>
-                `;
+                `,`
+                    <div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>It is safe because the DB driver automatically escapes the input or transmits the query and data separately.</p>
+                        </div>
+                    </div>
+                `);
             } else {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
+                `,`
+                    <div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
             }
         }
 
@@ -936,23 +1006,26 @@ def get_user_info(user_id):
             Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const st=document.getElementById('codeStatusPython'); st.className = 'status-badge status-vulnerable';
+            st.textContent=L('취약한 코드','Vulnerable code'); st.dataset.ko='취약한 코드'; st.setAttribute('data-en','Vulnerable code');
 
             for(let i=0; i<4; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">2008년 <b>Heartland</b> SQL 인젝션으로 약 1억 건의 카드 정보가, 2015년 <b>TalkTalk</b>에서도 SQLi로 대량 고객정보가 유출됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="In 2008, the <b>Heartland</b> SQL injection leaked about 100 million card records, and in 2015 <b>TalkTalk</b> also leaked large amounts of customer data via SQLi.">2008년 <b>Heartland</b> SQL 인젝션으로 약 1억 건의 카드 정보가, 2015년 <b>TalkTalk</b>에서도 SQLi로 대량 고객정보가 유출됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-89</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A03 Injection</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>신뢰되지 않는 URL 주소로 자동접속 연결 - 실습 시뮬레이터</title>
+    <title data-en="URL Redirection to Untrusted Site (Open Redirect) - Practice Simulator">신뢰되지 않는 URL 주소로 자동접속 연결 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -65,52 +65,56 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🌐 신뢰되지 않는 URL 주소로 자동접속 연결 - 실습 시뮬레이터</h1>
+            <h1 data-en="🌐 URL Redirection to Untrusted Site (Open Redirect) - Practice Simulator">🌐 신뢰되지 않는 URL 주소로 자동접속 연결 - 실습 시뮬레이터</h1>
             <p>CWE-601: URL Redirection to Untrusted Site ('Open Redirect')</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">KISA 가이드: 허용 목록 검증</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="KISA guide: allow-list validation">KISA 가이드: 허용 목록 검증</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">안전한 리다이렉트</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Safe redirect">안전한 리다이렉트</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 허용 목록(Whitelist) 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify vulnerability">취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply allow-list (Whitelist)">허용 목록(Whitelist) 적용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">RedirectController.java</span>
-                            <span class="toolbar-hint">💡 허용된 URL 목록과 비교하여 안전한 경우에만 이동하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Compare against the list of allowed URLs and redirect only when safe.">💡 허용된 URL 목록과 비교하여 안전한 경우에만 이동하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public void doRedirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -131,19 +135,19 @@
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드 (KISA 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (KISA Guide)">💡 수정 가이드 (KISA 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 허용 목록(Whitelist) 검증</strong>
-                            <p>이동 가능한 URL 목록을 미리 정의하고, 입력값이 목록에 포함되는지 확인합니다.</p>
+                            <strong data-en="1. Allow-list (Whitelist) validation">1. 허용 목록(Whitelist) 검증</strong>
+                            <p data-en="Define the list of redirectable URLs in advance, and check whether the input is included in the list.">이동 가능한 URL 목록을 미리 정의하고, 입력값이 목록에 포함되는지 확인합니다.</p>
                             <div class="hint-code">
 String[] allowedUrls = {"/home", "/login", "/board"};
 boolean isAllowed = false;
@@ -169,16 +173,16 @@ if(isAllowed) {
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>사용자가 입력한 URL로 리다이렉트할 때, 피싱 사이트나 악성 사이트로 이동하지 않도록 허용된 주소인지 검증해야 합니다.</p>
+                                <p data-en="When redirecting to a user-supplied URL, you must verify it is an allowed address so the user is not sent to a phishing or malicious site.">사용자가 입력한 URL로 리다이렉트할 때, 피싱 사이트나 악성 사이트로 이동하지 않도록 허용된 주소인지 검증해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Open Redirect</p>
-                                <p>검증되지 않은 리다이렉트는 사용자를 신뢰할 수 없는 사이트로 유도하여 자격 증명을 탈취하는 데 악용될 수 있습니다.</p>
+                                <p data-en="An unvalidated redirect can be abused to lure the user to an untrusted site and steal their credentials.">검증되지 않은 리다이렉트는 사용자를 신뢰할 수 없는 사이트로 유도하여 자격 증명을 탈취하는 데 악용될 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -189,26 +193,26 @@ if(isAllowed) {
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> Whitelist 검증 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify vulnerability">취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply Whitelist validation">Whitelist 검증 적용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">views.py (Django)</span>
-                            <span class="toolbar-hint">💡 허용된 도메인 리스트를 확인하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Check against the list of allowed domains.">💡 허용된 도메인 리스트를 확인하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">from django.shortcuts import redirect
@@ -229,19 +233,19 @@ def user_redirect(request):
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드 (Python 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (Python Guide)">💡 수정 가이드 (Python 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 화이트리스트 검증</strong>
-                            <p>이동할 수 있는 URL을 리스트로 관리합니다.</p>
+                            <strong data-en="1. Whitelist validation">1. 화이트리스트 검증</strong>
+                            <p data-en="Manage the URLs that are allowed to be redirected to as a list.">이동할 수 있는 URL을 리스트로 관리합니다.</p>
                             <div class="hint-code">
 ALLOWED_URLS = ['/home', '/dashboard', '/login']
 if url in ALLOWED_URLS:
@@ -259,16 +263,16 @@ else:
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>외부 입력값에 의존하여 페이지를 이동할 경우, 허용된 경로인지 서버 측에서 반드시 확인해야 합니다.</p>
+                                <p data-en="When navigating based on external input, the server must always verify that the path is an allowed one.">외부 입력값에 의존하여 페이지를 이동할 경우, 허용된 경로인지 서버 측에서 반드시 확인해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Unvalidated Redirect</p>
-                                <p>검증 로직 부재로 인해 임의의 사이트로 리다이렉트가 가능합니다.</p>
+                                <p data-en="Because there is no validation logic, redirection to an arbitrary site is possible.">검증 로직 부재로 인해 임의의 사이트로 리다이렉트가 가능합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -282,6 +286,22 @@ else:
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // 공통 로직
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -311,32 +331,41 @@ else:
             if (isEditingJava) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             updateChecklist('progressChecklistJava', 1, true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 검증 없이 sendRedirect에 사용하고 있습니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 검증 없이 sendRedirect에 사용하고 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The input is used in sendRedirect without validation.</p></div>`);
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJa=document.getElementById('codeStatusJava'); stJa.textContent=L('수정 중','Editing'); stJa.dataset.ko='수정 중'; stJa.setAttribute('data-en','Editing'); stJa.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
             // 배열 정의 및 equals 확인
             if ((code.includes('String[]') || code.includes('List<String>')) && code.includes('.equals(url)')) {
                 updateChecklist('progressChecklistJava', 2, true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>허용 목록(Whitelist)을 통해 안전한 URL로만 이동하도록 조치했습니다.</p></div>`;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>URL 리다이렉트 통제 로직이 적용되었습니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>허용 목록(Whitelist)을 통해 안전한 URL로만 이동하도록 조치했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You ensured that redirects only go to safe URLs by using an allow-list (Whitelist).</p></div>`);
+                const stJa=document.getElementById('codeStatusJava'); stJa.textContent=L('안전한 코드','Secure code'); stJa.dataset.ko='안전한 코드'; stJa.setAttribute('data-en','Secure code'); stJa.className = 'status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>URL 리다이렉트 통제 로직이 적용되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>URL redirect control logic has been applied.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>허용된 URL 배열을 선언하고 입력값과 비교하는 로직을 추가하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>허용된 URL 배열을 선언하고 입력값과 비교하는 로직을 추가하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Declare an array of allowed URLs and add logic to compare the input against it.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -353,8 +382,8 @@ else:
                 if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
+                const stJa=document.getElementById('codeStatusJava'); stJa.className = 'status-badge status-vulnerable';
+                stJa.textContent=L('취약한 코드','Vulnerable code'); stJa.dataset.ko='취약한 코드'; stJa.setAttribute('data-en','Vulnerable code');
                 for(let i=0; i<3; i++) updateChecklist('progressChecklistJava', i, false);
             } else { resetCodingPython(); }
         }
@@ -370,31 +399,40 @@ else:
             if (isEditingPython) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             updateChecklist('progressChecklistPython', 1, true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력 URL에 대한 검증이 없습니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력 URL에 대한 검증이 없습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>There is no validation for the input URL.</p></div>`);
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stPy=document.getElementById('codeStatusPython'); stPy.textContent=L('수정 중','Editing'); stPy.dataset.ko='수정 중'; stPy.setAttribute('data-en','Editing'); stPy.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
             if (code.includes('in') && (code.includes('[') || code.includes('ALLOWED'))) {
                 updateChecklist('progressChecklistPython', 2, true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>리스트를 이용한 허용 도메인 검증이 확인되었습니다.</p></div>`;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드'; document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>안전한 리다이렉트가 구현되었습니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>리스트를 이용한 허용 도메인 검증이 확인되었습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>Allowed-domain validation using a list was confirmed.</p></div>`);
+                const stPy=document.getElementById('codeStatusPython'); stPy.textContent=L('안전한 코드','Secure code'); stPy.dataset.ko='안전한 코드'; stPy.setAttribute('data-en','Secure code'); stPy.className = 'status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>안전한 리다이렉트가 구현되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>A safe redirect has been implemented.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>허용된 URL 리스트를 만들고 <code>if url in list:</code> 형태로 검증하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>허용된 URL 리스트를 만들고 <code>if url in list:</code> 형태로 검증하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Create a list of allowed URLs and validate in the form <code>if url in list:</code>.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -410,22 +448,25 @@ def user_redirect(request):
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stPy=document.getElementById('codeStatusPython'); stPy.className = 'status-badge status-vulnerable';
+            stPy.textContent=L('취약한 코드','Vulnerable code'); stPy.dataset.ko='취약한 코드'; stPy.setAttribute('data-en','Vulnerable code');
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>오픈 리다이렉트</b>가 피싱에 악용돼 정상 도메인 링크가 공격자 사이트로 사용자를 유도했습니다.</div>
+      <div style="margin-bottom:12px;" data-en="An <b>open redirect</b> was abused in phishing, using a legitimate-domain link to lure users to an attacker's site."><b>오픈 리다이렉트</b>가 피싱에 악용돼 정상 도메인 링크가 공격자 사이트로 사용자를 유도했습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-601</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A01 Broken Access Control</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

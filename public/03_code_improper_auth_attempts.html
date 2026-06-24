@@ -3,7 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>반복된 인증시도 제한 기능 부재 - 실습 시뮬레이터</title>
+    <title data-en="Improper Restriction of Excessive Authentication Attempts - Practice Simulator">반복된 인증시도 제한 기능 부재 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* SignatureSimulator와 동일한 스타일 (Red-Orange Theme) */
@@ -48,6 +48,9 @@
         .hint-step { background: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid #ffc107; }
         .hint-code { background: #1e1e1e; color: #d4d4d4; padding: 8px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 13px; margin-top: 5px; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 <!-- RESP-NET -->
 <style>
@@ -61,21 +64,22 @@
 </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🚫 반복된 인증시도 제한 기능 부재</h1>
+            <h1 data-en="🚫 Improper Restriction of Excessive Authentication Attempts">🚫 반복된 인증시도 제한 기능 부재</h1>
             <p>CWE-307: Improper Restriction of Excessive Authentication Attempts</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">실패 횟수 카운트</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Failure count">실패 횟수 카운트</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">계정 잠금 로직</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Account lockout logic">계정 잠금 로직</div>
             </button>
         </div>
 
@@ -83,19 +87,19 @@
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
                 <ul class="checklist" id="checkJava">
-                    <li class="checklist-item">⬜ 진단 시작</li>
-                    <li class="checklist-item">⬜ 실패 횟수 증가</li>
-                    <li class="checklist-item">⬜ 임계치 초과 차단</li>
+                    <li class="checklist-item" data-en="⬜ Start diagnosis">⬜ 진단 시작</li>
+                    <li class="checklist-item" data-en="⬜ Increment failure count">⬜ 실패 횟수 증가</li>
+                    <li class="checklist-item" data-en="⬜ Block when threshold exceeded">⬜ 임계치 초과 차단</li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="statusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="statusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
-                        <button class="edit-toggle-btn" onclick="toggleEdit('Java')">✏️ 편집</button>
+                        <button class="edit-toggle-btn" onclick="toggleEdit('Java')" data-en="✏️ Edit">✏️ 편집</button>
                         <div id="displayJava" class="code-display"><pre><code class="language-java">public boolean login(String user, String password) {
     if (checkCredentials(user, password)) {
         return true;
@@ -116,28 +120,28 @@
 }</textarea>
                     </div>
                     <div>
-                        <button class="btn btn-analyze" onclick="analyze('Java')">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validate('Java')" id="btnValJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
+                        <button class="btn btn-analyze" onclick="analyze('Java')" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validate('Java')" id="btnValJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
                     </div>
                     <div id="feedbackJava" class="feedback"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 Java 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Java Fix Guide">💡 Java 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 실패 횟수 증가</strong>
-                            <p>로그인 실패 시 해당 계정의 실패 횟수를 증가시켜야 합니다.</p>
+                            <strong data-en="1. Increment failure count">1. 실패 횟수 증가</strong>
+                            <p data-en="On login failure, you must increment the failure count for that account.">로그인 실패 시 해당 계정의 실패 횟수를 증가시켜야 합니다.</p>
                             <div class="hint-code">increaseFailCount(user);</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. 임계치 초과 확인</strong>
-                            <p>실패 횟수가 일정 기준(예: 5회)을 넘었는지 확인합니다.</p>
+                            <strong data-en="2. Check threshold exceedance">2. 임계치 초과 확인</strong>
+                            <p data-en="Check whether the failure count has exceeded a set threshold (e.g., 5 times).">실패 횟수가 일정 기준(예: 5회)을 넘었는지 확인합니다.</p>
                             <div class="hint-code">if (getFailCount(user) > 5) { return false; }</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">💡 가이드</span></div>
-                    <p>로그인 실패 시 실패 횟수를 DB나 메모리에 저장하고, 일정 횟수(예: 5회)를 초과하면 계정을 잠그거나 지연 시간을 두어야 합니다.</p>
+                    <div class="panel-header"><span class="panel-title" data-en="💡 Guide">💡 가이드</span></div>
+                    <p data-en="On login failure, store the failure count in the DB or memory, and when it exceeds a set number of attempts (e.g., 5 times) you must lock the account or apply a delay.">로그인 실패 시 실패 횟수를 DB나 메모리에 저장하고, 일정 횟수(예: 5회)를 초과하면 계정을 잠그거나 지연 시간을 두어야 합니다.</p>
                 </div>
             </div>
         </div>
@@ -146,19 +150,19 @@
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
                 <ul class="checklist" id="checkPython">
-                    <li class="checklist-item">⬜ 진단 시작</li>
-                    <li class="checklist-item">⬜ 실패 횟수 체크</li>
-                    <li class="checklist-item">⬜ 계정 잠금 처리</li>
+                    <li class="checklist-item" data-en="⬜ Start diagnosis">⬜ 진단 시작</li>
+                    <li class="checklist-item" data-en="⬜ Check failure count">⬜ 실패 횟수 체크</li>
+                    <li class="checklist-item" data-en="⬜ Handle account lockout">⬜ 계정 잠금 처리</li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="statusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="statusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
-                        <button class="edit-toggle-btn" onclick="toggleEdit('Python')">✏️ 편집</button>
+                        <button class="edit-toggle-btn" onclick="toggleEdit('Python')" data-en="✏️ Edit">✏️ 편집</button>
                         <div id="displayPython" class="code-display"><pre><code class="language-python">def login(user, password):
     if check_password(user, password):
         return "Success"
@@ -173,28 +177,28 @@
         return "Fail"</textarea>
                     </div>
                     <div>
-                        <button class="btn btn-analyze" onclick="analyze('Python')">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validate('Python')" id="btnValPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
+                        <button class="btn btn-analyze" onclick="analyze('Python')" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validate('Python')" id="btnValPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
                     </div>
                     <div id="feedbackPython" class="feedback"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 Python 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Python Fix Guide">💡 Python 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 실패 횟수 카운트</strong>
-                            <p>로그인 실패 시 카운트를 증가시킵니다.</p>
+                            <strong data-en="1. Count failures">1. 실패 횟수 카운트</strong>
+                            <p data-en="On login failure, increment the count.">로그인 실패 시 카운트를 증가시킵니다.</p>
                             <div class="hint-code">fail_count += 1</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. 잠금 조건 추가</strong>
-                            <p>실패 횟수가 기준치를 초과하면 로그인을 차단합니다.</p>
+                            <strong data-en="2. Add a lockout condition">2. 잠금 조건 추가</strong>
+                            <p data-en="When the failure count exceeds the threshold, block login.">실패 횟수가 기준치를 초과하면 로그인을 차단합니다.</p>
                             <div class="hint-code">if fail_count > 5: return "Locked"</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">💡 가이드</span></div>
-                    <p>로그인 실패 시 `fail_count`를 증가시키고, `if fail_count > 5:`와 같은 조건문으로 로그인을 차단하는 로직을 추가하세요.</p>
+                    <div class="panel-header"><span class="panel-title" data-en="💡 Guide">💡 가이드</span></div>
+                    <p data-en="On login failure, increment `fail_count` and add logic that blocks login with a conditional such as `if fail_count > 5:`.">로그인 실패 시 `fail_count`를 증가시키고, `if fail_count > 5:`와 같은 조건문으로 로그인을 차단하는 로직을 추가하세요.</p>
                 </div>
             </div>
         </div>
@@ -204,6 +208,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(el => el.classList.remove('active'));
             event.target.closest('.mode-tab').classList.add('active');
@@ -239,21 +259,29 @@
 
         function updateCheck(lang, idx, done) {
             const list = document.getElementById('check' + lang).children;
-            if (done) {
-                list[idx].classList.add('completed');
-                list[idx].textContent = list[idx].textContent.replace('⬜', '✅');
-            } else {
-                list[idx].classList.remove('completed');
-                list[idx].textContent = list[idx].textContent.replace('✅', '⬜');
-            }
+            const item = list[idx];
+            if (!item) return;
+            const cur = localStorage.getItem('wvs_lang') || 'ko';
+            // ensure both-language texts are captured before toggling
+            if (item.dataset.ko === undefined) item.dataset.ko = item.innerHTML;
+            const from = done ? '⬜' : '✅';
+            const to = done ? '✅' : '⬜';
+            item.dataset.ko = item.dataset.ko.replace(from, to);
+            const en = item.getAttribute('data-en');
+            if (en !== null) item.setAttribute('data-en', en.replace(from, to));
+            if (done) item.classList.add('completed'); else item.classList.remove('completed');
+            item.innerHTML = (cur === 'en' && en !== null) ? item.getAttribute('data-en') : item.dataset.ko;
         }
 
         function analyze(lang) {
             updateCheck(lang, 0, true);
-            document.getElementById('feedback' + lang).innerHTML = `<div class="feedback-item feedback-error">🚨 무차별 대입 공격에 취약합니다.</div>`;
+            document.getElementById('feedback' + lang).innerHTML = L(
+                `<div class="feedback-item feedback-error">🚨 무차별 대입 공격에 취약합니다.</div>`,
+                `<div class="feedback-item feedback-error">🚨 Vulnerable to brute-force attacks.</div>`);
             document.getElementById('btnVal' + lang).disabled = false;
-            document.getElementById('status' + lang).className = 'status-badge status-editing';
-            document.getElementById('status' + lang).textContent = '수정 중';
+            const st = document.getElementById('status' + lang);
+            st.className = 'status-badge status-editing';
+            st.textContent = L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing');
         }
 
         function validate(lang) {
@@ -267,25 +295,35 @@
 
             const fb = document.getElementById('feedback' + lang);
             if (hasIncrement && hasLimit) {
-                fb.innerHTML = `<div class="feedback-item feedback-success">🎉 성공! 계정 잠금 정책이 적용되었습니다.</div>`;
-                document.getElementById('status' + lang).className = 'status-badge status-secure';
-                document.getElementById('status' + lang).textContent = '안전한 코드';
+                fb.innerHTML = L(
+                    `<div class="feedback-item feedback-success">🎉 성공! 계정 잠금 정책이 적용되었습니다.</div>`,
+                    `<div class="feedback-item feedback-success">🎉 Success! An account lockout policy has been applied.</div>`);
+                const st = document.getElementById('status' + lang);
+                st.className = 'status-badge status-secure';
+                st.textContent = L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code');
             } else {
-                fb.innerHTML = `<div class="feedback-item feedback-error">❌ 실패 횟수를 카운트하고 일정 횟수 초과 시 차단하는 로직이 필요합니다.</div>`;
+                fb.innerHTML = L(
+                    `<div class="feedback-item feedback-error">❌ 실패 횟수를 카운트하고 일정 횟수 초과 시 차단하는 로직이 필요합니다.</div>`,
+                    `<div class="feedback-item feedback-error">❌ You need logic that counts failures and blocks when a set number of attempts is exceeded.</div>`);
             }
         }
+
+        // 초기 언어 적용 (REF-CARD 등 본문 이후 요소까지 포함되도록 DOM 로드 후 실행)
+        document.addEventListener('DOMContentLoaded', function(){
+            applyLang(localStorage.getItem('wvs_lang') || 'ko');
+        });
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>로그인 시도 제한 부재</b>는 크리덴셜 스터핑·무차별 대입의 핵심 원인으로, 다수 서비스의 대량 계정 탈취로 이어졌습니다.</div>
+      <div style="margin-bottom:12px;" data-en="The <b>absence of login attempt limits</b> is a core cause of credential stuffing and brute-force attacks, and has led to mass account takeovers across many services."><b>로그인 시도 제한 부재</b>는 크리덴셜 스터핑·무차별 대입의 핵심 원인으로, 다수 서비스의 대량 계정 탈취로 이어졌습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-307</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A07 Identification & Auth Failures</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

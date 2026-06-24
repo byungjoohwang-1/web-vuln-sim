@@ -3,7 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>충분하지 않은 키 길이 사용 - 실습 시뮬레이터</title>
+    <title data-en="Insufficient Key Length - Practice Simulator">충분하지 않은 키 길이 사용 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* SignatureSimulator와 동일한 스타일 (Blue Theme) */
@@ -42,6 +42,9 @@
         .feedback-error { background: #fff5f5; border-left: 4px solid #dc3545; }
         .feedback-success { background: #d4edda; border-left: 4px solid #28a745; }
         .edit-toggle-btn { background: #007acc; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; float: right; }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 <!-- RESP-NET -->
 <style>
@@ -55,21 +58,22 @@
 </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🔑 충분하지 않은 키 길이 사용</h1>
+            <h1 data-en="🔑 Use of Insufficient Key Length">🔑 충분하지 않은 키 길이 사용</h1>
             <p>CWE-326: Inadequate Encryption Strength</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">RSA 2048+ 설정</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="RSA 2048+ setting">RSA 2048+ 설정</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">RSA 2048+ 설정</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="RSA 2048+ setting">RSA 2048+ 설정</div>
             </button>
         </div>
 
@@ -77,19 +81,19 @@
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
                 <ul class="checklist" id="checkJava">
-                    <li class="checklist-item">⬜ 진단 시작</li>
-                    <li class="checklist-item">⬜ 1024비트 제거</li>
-                    <li class="checklist-item">⬜ 2048비트 이상 설정</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove 1024-bit">1024비트 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Set 2048-bit or more">2048비트 이상 설정</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="statusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="statusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
-                        <button class="edit-toggle-btn" onclick="toggleEdit('Java')">✏️ 편집</button>
+                        <button class="edit-toggle-btn" onclick="toggleEdit('Java')" data-en="✏️ Edit">✏️ 편집</button>
                         <div id="displayJava" class="code-display"><pre><code class="language-java">import java.security.KeyPairGenerator;
 
 public class KeyGen {
@@ -116,14 +120,14 @@ public class KeyGen {
 }</textarea>
                     </div>
                     <div>
-                        <button class="btn btn-analyze" onclick="analyze('Java')">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validate('Java')" id="btnValJava" disabled>✅ 검증하기</button>
+                        <button class="btn btn-analyze" onclick="analyze('Java')" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validate('Java')" id="btnValJava" disabled data-en="✅ Validate">✅ 검증하기</button>
                     </div>
                     <div id="feedbackJava" class="feedback"></div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">💡 가이드</span></div>
-                    <p>RSA 키 생성 시 1024비트는 안전하지 않습니다. 최소 <strong>2048비트</strong> 이상, 권장 4096비트로 길이를 늘리세요.</p>
+                    <div class="panel-header"><span class="panel-title" data-en="💡 Guide">💡 가이드</span></div>
+                    <p data-en="When generating RSA keys, 1024-bit is not safe. Increase the length to at least <strong>2048-bit</strong>, with 4096-bit recommended.">RSA 키 생성 시 1024비트는 안전하지 않습니다. 최소 <strong>2048비트</strong> 이상, 권장 4096비트로 길이를 늘리세요.</p>
                 </div>
             </div>
         </div>
@@ -132,19 +136,19 @@ public class KeyGen {
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
                 <ul class="checklist" id="checkPython">
-                    <li class="checklist-item">⬜ 진단 시작</li>
-                    <li class="checklist-item">⬜ 1024비트 제거</li>
-                    <li class="checklist-item">⬜ 2048비트 이상 설정</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove 1024-bit">1024비트 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Set 2048-bit or more">2048비트 이상 설정</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="statusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="statusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
-                        <button class="edit-toggle-btn" onclick="toggleEdit('Python')">✏️ 편집</button>
+                        <button class="edit-toggle-btn" onclick="toggleEdit('Python')" data-en="✏️ Edit">✏️ 편집</button>
                         <div id="displayPython" class="code-display"><pre><code class="language-python">from Crypto.PublicKey import RSA
 
 def generate_key():
@@ -159,14 +163,14 @@ def generate_key():
     return key</textarea>
                     </div>
                     <div>
-                        <button class="btn btn-analyze" onclick="analyze('Python')">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validate('Python')" id="btnValPython" disabled>✅ 검증하기</button>
+                        <button class="btn btn-analyze" onclick="analyze('Python')" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validate('Python')" id="btnValPython" disabled data-en="✅ Validate">✅ 검증하기</button>
                     </div>
                     <div id="feedbackPython" class="feedback"></div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">💡 가이드</span></div>
-                    <p><code>RSA.generate()</code> 함수의 인자값을 2048 이상으로 변경하여 보안 강도를 높이세요.</p>
+                    <div class="panel-header"><span class="panel-title" data-en="💡 Guide">💡 가이드</span></div>
+                    <p data-en="Change the argument of the <code>RSA.generate()</code> function to 2048 or more to increase the security strength."><code>RSA.generate()</code> 함수의 인자값을 2048 이상으로 변경하여 보안 강도를 높이세요.</p>
                 </div>
             </div>
         </div>
@@ -176,6 +180,22 @@ def generate_key():
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(el => el.classList.remove('active'));
             event.target.closest('.mode-tab').classList.add('active');
@@ -200,21 +220,25 @@ def generate_key():
 
         function updateCheck(lang, idx, done) {
             const list = document.getElementById('check' + lang).children;
+            const icon = list[idx] ? list[idx].querySelector('.checklist-icon') : null;
             if (done) {
                 list[idx].classList.add('completed');
-                list[idx].textContent = list[idx].textContent.replace('⬜', '✅');
+                if (icon) icon.textContent = '✅';
             } else {
                 list[idx].classList.remove('completed');
-                list[idx].textContent = list[idx].textContent.replace('✅', '⬜');
+                if (icon) icon.textContent = '⬜';
             }
         }
 
         function analyze(lang) {
             updateCheck(lang, 0, true);
-            document.getElementById('feedback' + lang).innerHTML = `<div class="feedback-item feedback-error">🚨 키 길이가 1024비트로 매우 짧습니다. 무차별 대입 공격에 취약합니다.</div>`;
+            document.getElementById('feedback' + lang).innerHTML = L(
+                `<div class="feedback-item feedback-error">🚨 키 길이가 1024비트로 매우 짧습니다. 무차별 대입 공격에 취약합니다.</div>`,
+                `<div class="feedback-item feedback-error">🚨 The key length is only 1024-bit, which is very short and vulnerable to brute-force attacks.</div>`);
             document.getElementById('btnVal' + lang).disabled = false;
-            document.getElementById('status' + lang).className = 'status-badge status-editing';
-            document.getElementById('status' + lang).textContent = '수정 중';
+            const st = document.getElementById('status' + lang);
+            st.className = 'status-badge status-editing';
+            st.textContent = L('수정 중','Editing'); st.dataset.ko = '수정 중'; st.setAttribute('data-en','Editing');
         }
 
         function validate(lang) {
@@ -228,25 +252,33 @@ def generate_key():
 
             const fb = document.getElementById('feedback' + lang);
             if (secureKey && !weakKey) {
-                fb.innerHTML = `<div class="feedback-item feedback-success">🎉 성공! 안전한 키 길이(2048비트 이상)가 적용되었습니다.</div>`;
-                document.getElementById('status' + lang).className = 'status-badge status-secure';
-                document.getElementById('status' + lang).textContent = '안전한 코드';
+                fb.innerHTML = L(
+                    `<div class="feedback-item feedback-success">🎉 성공! 안전한 키 길이(2048비트 이상)가 적용되었습니다.</div>`,
+                    `<div class="feedback-item feedback-success">🎉 Success! A secure key length (2048-bit or more) has been applied.</div>`);
+                const st = document.getElementById('status' + lang);
+                st.className = 'status-badge status-secure';
+                st.textContent = L('안전한 코드','Secure code'); st.dataset.ko = '안전한 코드'; st.setAttribute('data-en','Secure code');
             } else {
-                fb.innerHTML = `<div class="feedback-item feedback-error">❌ 키 길이를 2048비트 이상으로 설정하세요.</div>`;
+                fb.innerHTML = L(
+                    `<div class="feedback-item feedback-error">❌ 키 길이를 2048비트 이상으로 설정하세요.</div>`,
+                    `<div class="feedback-item feedback-error">❌ Set the key length to 2048-bit or more.</div>`);
             }
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">짧은 키(512비트 RSA, 56비트 DES 등)는 현대 연산으로 해독 가능해 암호화가 사실상 무력화됩니다.</div>
+      <div style="margin-bottom:12px;" data-en="Short keys (such as 512-bit RSA or 56-bit DES) can be broken by modern computation, effectively neutralizing the encryption.">짧은 키(512비트 RSA, 56비트 DES 등)는 현대 연산으로 해독 가능해 암호화가 사실상 무력화됩니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-326</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A02 Cryptographic Failures</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

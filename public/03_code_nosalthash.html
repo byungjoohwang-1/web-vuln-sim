@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>솔트 없이 일방향 해쉬 함수 사용 - 실습 시뮬레이터</title>
+    <title data-en="Use of a One-Way Hash Without a Salt - Practice Simulator">솔트 없이 일방향 해쉬 함수 사용 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* SignatureVerificationSimulator와 동일한 스타일 구조 (색상 테마: Teal) */
@@ -61,6 +61,9 @@
         .info-section { margin-bottom: 20px; }
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #00b894; }
         .info-content { color: #555; line-height: 1.6; }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 <!-- RESP-NET -->
 <style>
@@ -74,44 +77,45 @@
 </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🧂 솔트 없이 일방향 해쉬 함수 사용 - 실습 시뮬레이터</h1>
+            <h1 data-en="🧂 Use of a One-Way Hash Without a Salt - Practice Simulator">🧂 솔트 없이 일방향 해쉬 함수 사용 - 실습 시뮬레이터</h1>
             <p>CWE-759: Use of a One-Way Hash without a Salt</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">Salt 추가</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Add a salt">Salt 추가</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">PBKDF2 등 사용</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Use PBKDF2, etc.">PBKDF2 등 사용</div>
             </button>
         </div>
 
         <!-- Java Mode -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> Salt 추가</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 해쉬 업데이트</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Add a salt">Salt 추가</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Update the hash">해쉬 업데이트</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">Hasher.java</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">import java.security.MessageDigest;
@@ -145,30 +149,30 @@ public class Hasher {
 }</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. Salt 업데이트</strong>
-                            <p>패스워드 해시 전, 랜덤하게 생성된 salt 값을 먼저 업데이트해야 합니다.</p>
+                            <strong data-en="1. Update with the salt">1. Salt 업데이트</strong>
+                            <p data-en="Before hashing the password, you must first feed in (update with) a randomly generated salt value.">패스워드 해시 전, 랜덤하게 생성된 salt 값을 먼저 업데이트해야 합니다.</p>
                             <div class="hint-code">md.update(salt);</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과</span>
+                        <span class="panel-title" data-en="📊 Analysis Result">📊 분석 결과</span>
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>솔트(Salt)는 동일한 비밀번호라도 다른 해시값을 생성하게 하여 레인보우 테이블 공격을 방어합니다. 해시 생성 시 솔트를 포함하도록 코드를 수정하세요.</p>
+                                <p data-en="A salt makes even identical passwords produce different hash values, defending against rainbow table attacks. Modify the code to include a salt when generating the hash.">솔트(Salt)는 동일한 비밀번호라도 다른 해시값을 생성하게 하여 레인보우 테이블 공격을 방어합니다. 해시 생성 시 솔트를 포함하도록 코드를 수정하세요.</p>
                             </div>
                         </div>
                     </div>
@@ -179,23 +183,23 @@ public class Hasher {
         <!-- Python Mode -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 단순 해시 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> PBKDF2 등 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove the plain hash">단순 해시 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply PBKDF2, etc.">PBKDF2 등 적용</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">password_hash.py</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">import hashlib
@@ -213,30 +217,30 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 키 스트레칭 함수 사용</strong>
-                            <p>hashlib.pbkdf2_hmac 등을 사용하여 솔트와 함께 반복 해싱을 수행해야 합니다.</p>
+                            <strong data-en="1. Use a key-stretching function">1. 키 스트레칭 함수 사용</strong>
+                            <p data-en="You should use a function such as hashlib.pbkdf2_hmac to perform iterated hashing together with a salt.">hashlib.pbkdf2_hmac 등을 사용하여 솔트와 함께 반복 해싱을 수행해야 합니다.</p>
                             <div class="hint-code">hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과</span>
+                        <span class="panel-title" data-en="📊 Analysis Result">📊 분석 결과</span>
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>단순 해시 함수 대신, 솔트와 반복 횟수(Iteration)를 적용할 수 있는 `pbkdf2_hmac` 등의 안전한 함수로 교체하세요.</p>
+                                <p data-en="Instead of a plain hash function, replace it with a secure function such as `pbkdf2_hmac` that supports a salt and an iteration count.">단순 해시 함수 대신, 솔트와 반복 횟수(Iteration)를 적용할 수 있는 `pbkdf2_hmac` 등의 안전한 함수로 교체하세요.</p>
                             </div>
                         </div>
                     </div>
@@ -251,6 +255,22 @@ def hash_password(password):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // 공통 로직
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -280,17 +300,17 @@ def hash_password(password):
             isEditingJava = !isEditingJava;
             if(isEditingJava) {
                 display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayJava').textContent;
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayJava').textContent = editor.value;
-                Prism.highlightElement(document.getElementById('codeDisplayJava')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                Prism.highlightElement(document.getElementById('codeDisplayJava')); btn.textContent = L('✏️ 편집','✏️ Edit'); btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit'); btn.classList.remove('editing');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
-            document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">🚨 솔트(salt)가 해시 과정에서 누락되었습니다.</div>';
+            document.getElementById('feedbackJava').innerHTML = L('<div class="feedback-item feedback-error">🚨 솔트(salt)가 해시 과정에서 누락되었습니다.</div>','<div class="feedback-item feedback-error">🚨 The salt is missing from the hashing process.</div>');
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing'); stJ.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
@@ -301,14 +321,14 @@ def hash_password(password):
                 updateChecklist('progressChecklistJava', 1, true);
                 updateChecklist('progressChecklistJava', 2, true);
                 const msg = adaptive
-                    ? '🎉 성공! 적응형 해시(bcrypt·PBKDF2 등, 솔트+키 스트레칭)를 적용하여 안전합니다.'
-                    : '🎉 성공! 솔트가 적용되어 동일 비밀번호도 다른 해시가 되어 레인보우 테이블 공격을 막습니다. (더 강력하게는 bcrypt·PBKDF2 같은 적응형 해시 권장)';
+                    ? L('🎉 성공! 적응형 해시(bcrypt·PBKDF2 등, 솔트+키 스트레칭)를 적용하여 안전합니다.','🎉 Success! You applied an adaptive hash (bcrypt, PBKDF2, etc. with salt + key stretching), which is secure.')
+                    : L('🎉 성공! 솔트가 적용되어 동일 비밀번호도 다른 해시가 되어 레인보우 테이블 공격을 막습니다. (더 강력하게는 bcrypt·PBKDF2 같은 적응형 해시 권장)','🎉 Success! With a salt applied, identical passwords produce different hashes, blocking rainbow table attacks. (For stronger protection, an adaptive hash such as bcrypt or PBKDF2 is recommended.)');
                 document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-success">' + msg + '</div>';
-                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
+                const stJ=document.getElementById('codeStatusJava'); stJ.className = 'status-badge status-secure';
+                stJ.textContent=L('안전한 코드','Secure code'); stJ.dataset.ko='안전한 코드'; stJ.setAttribute('data-en','Secure code');
             } else {
                 updateChecklist('progressChecklistJava', 1, false);
-                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">❌ 사용자별 솔트를 추가(md.update(salt))하거나, bcrypt·PBKDF2 같은 적응형 해시를 사용하세요.</div>';
+                document.getElementById('feedbackJava').innerHTML = L('<div class="feedback-item feedback-error">❌ 사용자별 솔트를 추가(md.update(salt))하거나, bcrypt·PBKDF2 같은 적응형 해시를 사용하세요.</div>','<div class="feedback-item feedback-error">❌ Add a per-user salt (md.update(salt)), or use an adaptive hash such as bcrypt or PBKDF2.</div>');
             }
         }
         function resetCoding(mode) {
@@ -354,17 +374,17 @@ def hash_password(password):
             isEditingPython = !isEditingPython;
             if(isEditingPython) {
                 display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayPython').textContent;
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayPython').textContent = editor.value;
-                Prism.highlightElement(document.getElementById('codeDisplayPython')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                Prism.highlightElement(document.getElementById('codeDisplayPython')); btn.textContent = L('✏️ 편집','✏️ Edit'); btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit'); btn.classList.remove('editing');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
-            document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">🚨 단순 해시는 안전하지 않습니다. PBKDF2 등을 사용하세요.</div>';
+            document.getElementById('feedbackPython').innerHTML = L('<div class="feedback-item feedback-error">🚨 단순 해시는 안전하지 않습니다. PBKDF2 등을 사용하세요.</div>','<div class="feedback-item feedback-error">🚨 A plain hash is not secure. Use PBKDF2 or similar.</div>');
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent=L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing'); stP.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
@@ -377,25 +397,28 @@ def hash_password(password):
             }
 
             if(passed) {
-                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 안전한 해시 함수가 적용되었습니다.</div>';
-                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+                document.getElementById('feedbackPython').innerHTML = L('<div class="feedback-item feedback-success">🎉 성공! 안전한 해시 함수가 적용되었습니다.</div>','<div class="feedback-item feedback-success">🎉 Success! A secure hash function has been applied.</div>');
+                const stP=document.getElementById('codeStatusPython'); stP.className = 'status-badge status-secure';
+                stP.textContent=L('안전한 코드','Secure code'); stP.dataset.ko='안전한 코드'; stP.setAttribute('data-en','Secure code');
             } else {
-                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">❌ 단순 sha256 대신 hashlib.pbkdf2_hmac(또는 bcrypt·scrypt·argon2)으로 솔트와 함께 해싱하세요.</div>';
+                document.getElementById('feedbackPython').innerHTML = L('<div class="feedback-item feedback-error">❌ 단순 sha256 대신 hashlib.pbkdf2_hmac(또는 bcrypt·scrypt·argon2)으로 솔트와 함께 해싱하세요.</div>','<div class="feedback-item feedback-error">❌ Instead of plain sha256, hash with a salt using hashlib.pbkdf2_hmac (or bcrypt, scrypt, argon2).</div>');
             }
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">2012년 <b>LinkedIn</b>의 솔트 없는 SHA-1 해시 650만 건이 유출돼 상당수가 빠르게 평문 복원됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="In 2012, 6.5 million unsalted SHA-1 hashes from <b>LinkedIn</b> were leaked, and a large portion were quickly cracked back to plaintext.">2012년 <b>LinkedIn</b>의 솔트 없는 SHA-1 해시 650만 건이 유출돼 상당수가 빠르게 평문 복원됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-759 · CWE-916</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A02 Cryptographic Failures</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

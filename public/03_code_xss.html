@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>크로스 사이트 스크립트 (XSS) - 실습 시뮬레이터</title>
+    <title data-en="Cross-Site Scripting (XSS) - Practice Simulator">크로스 사이트 스크립트 (XSS) - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* 기본 스타일 유지 */
@@ -121,52 +121,56 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🌐 크로스 사이트 스크립트 (XSS) - 실습 시뮬레이터</h1>
+            <h1 data-en="🌐 Cross-Site Scripting (XSS) - Practice Simulator">🌐 크로스 사이트 스크립트 (XSS) - 실습 시뮬레이터</h1>
             <p>CWE-79: Improper Neutralization of Input During Web Page Generation ('XSS')</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">KISA 개발보안 가이드 기준</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Based on the KISA Secure Development Guide">KISA 개발보안 가이드 기준</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">Python 시큐어코딩 가이드 기준</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Based on the Python Secure Coding Guide">Python 시큐어코딩 가이드 기준</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> XSS 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> HTML 엔티티 치환(replaceAll)</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify XSS vulnerability">XSS 취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="HTML entity encoding (replaceAll)">HTML 엔티티 치환(replaceAll)</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">BoardController.java</span>
-                            <span class="toolbar-hint">💡 특수문자(<, >, &, ", ')를 HTML 엔티티로 변환하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Convert special characters (<, >, &, &quot;, ') into HTML entities.">💡 특수문자(<, >, &, ", ')를 HTML 엔티티로 변환하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public String showBoard(String content) {
@@ -194,10 +198,10 @@
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드 (KISA 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (KISA Guide)">💡 수정 가이드 (KISA 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. replaceAll()을 이용한 치환</strong>
-                            <p>스크립트 태그 및 속성값에 사용되는 5대 특수문자를 안전한 HTML 엔티티로 변환합니다.</p>
+                            <strong data-en="1. Encoding with replaceAll()">1. replaceAll()을 이용한 치환</strong>
+                            <p data-en="Convert the five special characters used in script tags and attribute values into safe HTML entities.">스크립트 태그 및 속성값에 사용되는 5대 특수문자를 안전한 HTML 엔티티로 변환합니다.</p>
                             <div class="hint-code">
 content = content.replaceAll("&", "&amp;");
 content = content.replaceAll("<", "&lt;");
@@ -216,16 +220,16 @@ return content;
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>게시판 본문 등 사용자 입력값을 출력할 때, 악성 스크립트가 포함되어 있어도 실행되지 않고 텍스트로만 표시되도록 해야 합니다.</p>
+                                <p data-en="When outputting user input such as board content, any included malicious script must not be executed and should be displayed as plain text only.">게시판 본문 등 사용자 입력값을 출력할 때, 악성 스크립트가 포함되어 있어도 실행되지 않고 텍스트로만 표시되도록 해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Stored XSS</p>
-                                <p>입력값을 그대로 반환(Reflected)하거나 저장 후 출력(Stored)할 때 스크립트 실행이 가능합니다.</p>
+                                <p data-en="Scripts can execute when input is returned as-is (Reflected) or stored and then output (Stored).">입력값을 그대로 반환(Reflected)하거나 저장 후 출력(Stored)할 때 스크립트 실행이 가능합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -236,26 +240,26 @@ return content;
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> escape() 함수 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify vulnerability">취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply the escape() function">escape() 함수 적용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">app.py (Flask)</span>
-                            <span class="toolbar-hint">💡 escape() 함수나 템플릿 엔진의 자동 이스케이프를 사용하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use the escape() function or the template engine's auto-escaping">💡 escape() 함수나 템플릿 엔진의 자동 이스케이프를 사용하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">from flask import Flask, request
@@ -291,10 +295,10 @@ def hello():
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드 (Python 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (Python Guide)">💡 수정 가이드 (Python 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. escape() 함수 사용</strong>
-                            <p>Markupsafe 라이브러리의 escape 함수를 사용하여 특수문자를 변환합니다. (Flask에서는 `render_template` 사용 시 자동 적용됨)</p>
+                            <strong data-en="1. Use the escape() function">1. escape() 함수 사용</strong>
+                            <p data-en="Use the escape function from the Markupsafe library to convert special characters. (In Flask, it is applied automatically when using `render_template`.)">Markupsafe 라이브러리의 escape 함수를 사용하여 특수문자를 변환합니다. (Flask에서는 `render_template` 사용 시 자동 적용됨)</p>
                             <div class="hint-code">
 from markupsafe import escape
 return '<h1>Hello, %s</h1>' % escape(name)
@@ -309,16 +313,16 @@ return '<h1>Hello, %s</h1>' % escape(name)
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>HTML 컨텍스트에서 신뢰할 수 없는 데이터가 렌더링될 때, 이를 안전한 텍스트로 처리해야 합니다.</p>
+                                <p data-en="When untrusted data is rendered in an HTML context, it must be handled as safe text.">HTML 컨텍스트에서 신뢰할 수 없는 데이터가 렌더링될 때, 이를 안전한 텍스트로 처리해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Reflected XSS</p>
-                                <p><code>%s</code> 포맷팅을 통해 HTML 문자열을 직접 생성하고 있어 취약합니다.</p>
+                                <p data-en="It is vulnerable because the HTML string is built directly using <code>%s</code> formatting."><code>%s</code> 포맷팅을 통해 HTML 문자열을 직접 생성하고 있어 취약합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -332,6 +336,22 @@ return '<h1>Hello, %s</h1>' % escape(name)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // === 공통 로직 (탭 전환 등) ===
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -363,20 +383,23 @@ return '<h1>Hello, %s</h1>' % escape(name)
             if (isEditingJava) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             updateChecklist('progressChecklistJava', 1, true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 그대로 반환하고 있어 XSS 공격에 취약합니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 그대로 반환하고 있어 XSS 공격에 취약합니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The input is returned as-is, making it vulnerable to XSS attacks.</p></div>`);
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusJava'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
@@ -386,12 +409,18 @@ return '<h1>Hello, %s</h1>' % escape(name)
             
             if (hasBasic) {
                 updateChecklist('progressChecklistJava', 2, true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>특수문자를 HTML 엔티티로 변환하여 스크립트 실행을 방지했습니다.</p></div>`;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값 치환을 통해 XSS 위협을 제거했습니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>특수문자를 HTML 엔티티로 변환하여 스크립트 실행을 방지했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You converted the special characters into HTML entities, preventing script execution.</p></div>`);
+                const st=document.getElementById('codeStatusJava'); st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code'); st.className = 'status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값 치환을 통해 XSS 위협을 제거했습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>The XSS threat has been removed by encoding the input.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>replaceAll()을 사용하여 <, > 등을 HTML 엔티티로 변환하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>replaceAll()을 사용하여 <, > 등을 HTML 엔티티로 변환하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use replaceAll() to convert <, >, etc. into HTML entities.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -407,8 +436,8 @@ return '<h1>Hello, %s</h1>' % escape(name)
                 if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
+                const st=document.getElementById('codeStatusJava'); st.className = 'status-badge status-vulnerable';
+                st.textContent=L('취약한 코드','Vulnerable code'); st.dataset.ko='취약한 코드'; st.setAttribute('data-en','Vulnerable code');
                 for(let i=0; i<3; i++) updateChecklist('progressChecklistJava', i, false);
             } else { resetCodingPython(); }
         }
@@ -424,31 +453,40 @@ return '<h1>Hello, %s</h1>' % escape(name)
             if (isEditingPython) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             updateChecklist('progressChecklistPython', 1, true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>HTML 자동 이스케이프가 적용되지 않는 방식으로 문자열을 포맷팅하고 있습니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>HTML 자동 이스케이프가 적용되지 않는 방식으로 문자열을 포맷팅하고 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The string is formatted in a way that does not apply HTML auto-escaping.</p></div>`);
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusPython'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
             if (code.includes('escape(name)')) {
                 updateChecklist('progressChecklistPython', 2, true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>escape() 함수를 사용하여 XSS 취약점을 해결했습니다.</p></div>`;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드'; document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값이 안전하게 이스케이프 처리되었습니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>escape() 함수를 사용하여 XSS 취약점을 해결했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You resolved the XSS vulnerability by using the escape() function.</p></div>`);
+                const st=document.getElementById('codeStatusPython'); st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code'); st.className = 'status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값이 안전하게 이스케이프 처리되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>The input has been safely escaped.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>escape() 함수를 적용하여 출력값을 감싸주세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>escape() 함수를 적용하여 출력값을 감싸주세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Wrap the output with the escape() function.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -460,29 +498,32 @@ app = Flask(__name__)
 def hello():
     name = request.args.get('name', '')
     # [취약한 코드] 사용자 입력을 그대로 HTML에 포함하여 반환
-    # name에 <script>alert(1)</script> 입력 시 실행됨
+    # name에 <script>alert(1)<\/script> 입력 시 실행됨
     return '<h1>Hello, %s</h1>' % name`;
             document.getElementById('codeEditorPython').value = initial;
             document.getElementById('codeDisplayPython').textContent = initial;
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const st=document.getElementById('codeStatusPython'); st.className = 'status-badge status-vulnerable';
+            st.textContent=L('취약한 코드','Vulnerable code'); st.dataset.ko='취약한 코드'; st.setAttribute('data-en','Vulnerable code');
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">2005년 <b>Samy 웜</b>이 XSS로 24시간 만에 MySpace 친구 100만 명을 감염시켰고, 2018년 <b>British Airways</b>는 Magecart 스크립트로 38만 건의 카드정보가 탈취됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="In 2005 the <b>Samy worm</b> used XSS to infect 1 million MySpace friends within 24 hours, and in 2018 <b>British Airways</b> had 380,000 card records stolen via a Magecart script.">2005년 <b>Samy 웜</b>이 XSS로 24시간 만에 MySpace 친구 100만 명을 감염시켰고, 2018년 <b>British Airways</b>는 Magecart 스크립트로 38만 건의 카드정보가 탈취됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-79</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A03 Injection</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

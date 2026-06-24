@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XML 삽입 (XML Injection) - 실습 시뮬레이터</title>
+    <title data-en="XML Injection - Practice Simulator">XML 삽입 (XML Injection) - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* 동일한 CSS 스타일 사용 */
@@ -66,52 +66,56 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>💉 XML 삽입 (XML Injection) - 실습 시뮬레이터</h1>
+            <h1 data-en="💉 XML Injection - Practice Simulator">💉 XML 삽입 (XML Injection) - 실습 시뮬레이터</h1>
             <p>CWE-91: XML Injection (aka Blind XPath Injection)</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">KISA 가이드: 특수문자 치환</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="KISA guide: special-character escaping">KISA 가이드: 특수문자 치환</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">sax.saxutils 사용</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Use sax.saxutils">sax.saxutils 사용</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> XML 구조 조작 위험 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 5대 특수문자 이스케이프</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify XML structure manipulation risk">XML 구조 조작 위험 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Escape the 5 special characters">5대 특수문자 이스케이프</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">XmlService.java</span>
-                            <span class="toolbar-hint">💡 입력값의 특수문자를 replace하여 XML 구조 훼손을 방지하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Replace the special characters in the input to prevent corruption of the XML structure.">💡 입력값의 특수문자를 replace하여 XML 구조 훼손을 방지하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public String makeXml(String userInput) {
@@ -130,19 +134,19 @@
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드 (KISA 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (per KISA guide)">💡 수정 가이드 (KISA 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 특수문자 이스케이프</strong>
-                            <p>XML에서 의미를 가지는 문자(&, <, >, ", ')를 안전한 형태로 변환합니다.</p>
+                            <strong data-en="1. Escape special characters">1. 특수문자 이스케이프</strong>
+                            <p data-en="Convert XML-significant characters (&, <, >, &quot;, ') into safe forms.">XML에서 의미를 가지는 문자(&, <, >, ", ')를 안전한 형태로 변환합니다.</p>
                             <div class="hint-code">
 userInput = userInput.replaceAll("&", "&amp;")
                      .replaceAll("<", "&lt;")
@@ -161,16 +165,16 @@ String xml = "&lt;user&gt;&lt;name&gt;" + userInput + "&lt;/name&gt;&lt;/user&gt
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>XML 데이터를 동적으로 생성할 때, 사용자 입력값에 포함된 메타문자에 의해 XML 구조가 변형되지 않도록 해야 합니다.</p>
+                                <p data-en="When generating XML data dynamically, you must ensure the XML structure is not altered by metacharacters contained in user input.">XML 데이터를 동적으로 생성할 때, 사용자 입력값에 포함된 메타문자에 의해 XML 구조가 변형되지 않도록 해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">XML Injection</p>
-                                <p>입력값을 그대로 연결하면 공격자가 새로운 태그를 주입하거나 기존 구조를 닫아버리는 등의 조작이 가능합니다.</p>
+                                <p data-en="Concatenating the input as-is lets an attacker inject new tags or close the existing structure, enabling manipulation.">입력값을 그대로 연결하면 공격자가 새로운 태그를 주입하거나 기존 구조를 닫아버리는 등의 조작이 가능합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -181,26 +185,26 @@ String xml = "&lt;user&gt;&lt;name&gt;" + userInput + "&lt;/name&gt;&lt;/user&gt
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> escape 함수 사용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify the vulnerability">취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Use the escape function">escape 함수 사용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">xml_gen.py</span>
-                            <span class="toolbar-hint">💡 saxutils.escape()를 사용하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use saxutils.escape()">💡 saxutils.escape()를 사용하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">def create_xml(user_input):
@@ -215,19 +219,19 @@ String xml = "&lt;user&gt;&lt;name&gt;" + userInput + "&lt;/name&gt;&lt;/user&gt
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드 (Python 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (per Python guide)">💡 수정 가이드 (Python 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. saxutils.escape 사용</strong>
-                            <p>xml.sax.saxutils 모듈의 escape 함수를 사용하여 특수문자를 처리합니다.</p>
+                            <strong data-en="1. Use saxutils.escape">1. saxutils.escape 사용</strong>
+                            <p data-en="Handle special characters using the escape function of the xml.sax.saxutils module.">xml.sax.saxutils 모듈의 escape 함수를 사용하여 특수문자를 처리합니다.</p>
                             <div class="hint-code">
 from xml.sax.saxutils import escape
 return "&lt;user&gt;&lt;name&gt;%s&lt;/name&gt;&lt;/user&gt;" % escape(user_input)
@@ -242,16 +246,16 @@ return "&lt;user&gt;&lt;name&gt;%s&lt;/name&gt;&lt;/user&gt;" % escape(user_inpu
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>Python에서 XML을 다룰 때도 문자열 연결보다는 XML 처리 라이브러리나 이스케이프 함수를 사용해야 합니다.</p>
+                                <p data-en="Even in Python, when handling XML you should use an XML processing library or an escape function rather than string concatenation.">Python에서 XML을 다룰 때도 문자열 연결보다는 XML 처리 라이브러리나 이스케이프 함수를 사용해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">XML Injection</p>
-                                <p>단순 문자열 치환은 XML의 정합성을 해치고 구조를 변조할 수 있는 위험이 있습니다.</p>
+                                <p data-en="Plain string substitution risks breaking XML well-formedness and allowing structural tampering.">단순 문자열 치환은 XML의 정합성을 해치고 구조를 변조할 수 있는 위험이 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -265,6 +269,22 @@ return "&lt;user&gt;&lt;name&gt;%s&lt;/name&gt;&lt;/user&gt;" % escape(user_inpu
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // 공통 로직
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -294,32 +314,41 @@ return "&lt;user&gt;&lt;name&gt;%s&lt;/name&gt;&lt;/user&gt;" % escape(user_inpu
             if (isEditingJava) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             updateChecklist('progressChecklistJava', 1, true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 이스케이프 없이 XML 문자열에 포함시키고 있습니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 이스케이프 없이 XML 문자열에 포함시키고 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The input is being included in the XML string without escaping.</p></div>`);
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing'); stJ.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
             // replaceAll 로직 확인
             if (code.includes('replaceAll') && code.includes('&lt;') && code.includes('&amp;')) {
                 updateChecklist('progressChecklistJava', 2, true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>XML 메타문자를 안전하게 변환했습니다.</p></div>`;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값 무해화가 적용되었습니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>XML 메타문자를 안전하게 변환했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You safely converted the XML metacharacters.</p></div>`);
+                const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('안전한 코드','Secure code'); stJ.dataset.ko='안전한 코드'; stJ.setAttribute('data-en','Secure code'); stJ.className = 'status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값 무해화가 적용되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>Input sanitization has been applied.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>replaceAll()을 사용하여 5대 특수문자를 변환하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>replaceAll()을 사용하여 5대 특수문자를 변환하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use replaceAll() to convert the 5 special characters.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -335,8 +364,8 @@ return "&lt;user&gt;&lt;name&gt;%s&lt;/name&gt;&lt;/user&gt;" % escape(user_inpu
                 if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
+                const stJ=document.getElementById('codeStatusJava'); stJ.className = 'status-badge status-vulnerable';
+                stJ.textContent=L('취약한 코드','Vulnerable code'); stJ.dataset.ko='취약한 코드'; stJ.setAttribute('data-en','Vulnerable code');
                 for(let i=0; i<3; i++) updateChecklist('progressChecklistJava', i, false);
             } else { resetCodingPython(); }
         }
@@ -352,31 +381,40 @@ return "&lt;user&gt;&lt;name&gt;%s&lt;/name&gt;&lt;/user&gt;" % escape(user_inpu
             if (isEditingPython) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             updateChecklist('progressChecklistPython', 1, true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>단순 문자열 포맷팅으로 XML을 생성하고 있습니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>단순 문자열 포맷팅으로 XML을 생성하고 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>XML is being generated with plain string formatting.</p></div>`);
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent=L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing'); stP.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
             if (code.includes('escape(') && code.includes('saxutils')) {
                 updateChecklist('progressChecklistPython', 2, true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>saxutils.escape()를 사용하여 안전하게 XML을 생성합니다.</p></div>`;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드'; document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>XML 인젝션 방어가 적용되었습니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>saxutils.escape()를 사용하여 안전하게 XML을 생성합니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>XML is generated safely using saxutils.escape().</p></div>`);
+                const stP=document.getElementById('codeStatusPython'); stP.textContent=L('안전한 코드','Secure code'); stP.dataset.ko='안전한 코드'; stP.setAttribute('data-en','Secure code'); stP.className = 'status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>XML 인젝션 방어가 적용되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>XML injection protection has been applied.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p><code>xml.sax.saxutils</code>의 <code>escape</code> 함수를 사용하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p><code>xml.sax.saxutils</code>의 <code>escape</code> 함수를 사용하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use the <code>escape</code> function of <code>xml.sax.saxutils</code>.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -389,22 +427,25 @@ return "&lt;user&gt;&lt;name&gt;%s&lt;/name&gt;&lt;/user&gt;" % escape(user_inpu
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stP=document.getElementById('codeStatusPython'); stP.className = 'status-badge status-vulnerable';
+            stP.textContent=L('취약한 코드','Vulnerable code'); stP.dataset.ko='취약한 코드'; stP.setAttribute('data-en','Vulnerable code');
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>XML 인젝션</b>으로 질의·문서 구조가 변조돼 데이터 노출·우회가 발생했습니다.</div>
+      <div style="margin-bottom:12px;" data-en="<b>XML injection</b> tampered with query/document structure, causing data exposure and bypass."><b>XML 인젝션</b>으로 질의·문서 구조가 변조돼 데이터 노출·우회가 발생했습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-91</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A03 Injection</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

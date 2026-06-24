@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>중요한 자원에 대한 잘못된 권한 설정 - 실습 시뮬레이터</title>
+    <title data-en="Incorrect Permission Assignment for Critical Resource - Practice Simulator">중요한 자원에 대한 잘못된 권한 설정 - 실습 시뮬레이터</title>
     <!-- Prism.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
@@ -332,53 +332,57 @@
         @media (max-width: 1200px) {
             .main-content { grid-template-columns: 1fr; }
         }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>🔐 중요한 자원에 대한 잘못된 권한 설정 - 실습 시뮬레이터</h1>
+            <h1 data-en="🔐 Incorrect Permission Assignment for Critical Resource - Practice Simulator">🔐 중요한 자원에 대한 잘못된 권한 설정 - 실습 시뮬레이터</h1>
             <p>CWE-732: Incorrect Permission Assignment for Critical Resource</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 권한 설정</div>
-                <div class="mode-desc">File 클래스 권한 제어</div>
+                <div class="mode-title" data-en="Java Permission Settings">Java 권한 설정</div>
+                <div class="mode-desc" data-en="File class permission control">File 클래스 권한 제어</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 권한 설정</div>
-                <div class="mode-desc">os.chmod 권한 제어</div>
+                <div class="mode-title" data-en="Python Permission Settings">Python 권한 설정</div>
+                <div class="mode-desc" data-en="os.chmod permission control">os.chmod 권한 제어</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 실행 권한 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 소유자 전용 읽기 설정</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 소유자 전용 쓰기 설정</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove execute permission">실행 권한 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Set owner-only read">소유자 전용 읽기 설정</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Set owner-only write">소유자 전용 쓰기 설정</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">ConfigFileMaker.java</span>
-                            <span class="toolbar-hint">💡 소유자(Owner)만 접근 가능하도록 수정하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Modify it so that only the owner can access it">💡 소유자(Owner)만 접근 가능하도록 수정하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">import java.io.File;
@@ -435,29 +439,29 @@ public class ConfigFileMaker {
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 실행 권한 제거</strong>
-                            <p>설정 파일은 실행될 필요가 없습니다.</p>
+                            <strong data-en="1. Remove execute permission">1. 실행 권한 제거</strong>
+                            <p data-en="Configuration files do not need to be executable.">설정 파일은 실행될 필요가 없습니다.</p>
                             <div class="hint-code">file.setExecutable(false);</div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. 읽기 권한 강화 (소유자만)</strong>
-                            <p>두 번째 인자를 true로 설정하여 소유자만 읽도록 제한합니다.</p>
+                            <strong data-en="2. Harden read permission (owner only)">2. 읽기 권한 강화 (소유자만)</strong>
+                            <p data-en="Set the second argument to true so that only the owner can read.">두 번째 인자를 true로 설정하여 소유자만 읽도록 제한합니다.</p>
                             <div class="hint-code">file.setReadable(true, true);</div>
                         </div>
                         <div class="hint-step">
-                            <strong>3. 쓰기 권한 강화 (소유자만)</strong>
-                            <p>다른 사용자가 파일을 변조하지 못하도록 합니다.</p>
+                            <strong data-en="3. Harden write permission (owner only)">3. 쓰기 권한 강화 (소유자만)</strong>
+                            <p data-en="Prevent other users from tampering with the file.">다른 사용자가 파일을 변조하지 못하도록 합니다.</p>
                             <div class="hint-code">file.setWritable(true, true);</div>
                         </div>
                     </div>
@@ -469,16 +473,16 @@ public class ConfigFileMaker {
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>설정 파일(db.properties)은 데이터베이스 접속 정보 등 민감한 정보를 담고 있습니다. 이 파일이 <strong>소유자(Owner)</strong> 외에는 읽거나 쓸 수 없도록 권한을 수정하세요.</p>
+                                <p data-en="The configuration file (db.properties) contains sensitive information such as database connection details. Modify the permissions so that this file cannot be read or written by anyone other than the <strong>owner</strong>.">설정 파일(db.properties)은 데이터베이스 접속 정보 등 민감한 정보를 담고 있습니다. 이 파일이 <strong>소유자(Owner)</strong> 외에는 읽거나 쓸 수 없도록 권한을 수정하세요.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">World Writable / Readable</p>
-                                <p>현재 코드는 <code>setReadable(true, false)</code>를 사용하고 있습니다. 두 번째 인자가 <code>false</code>이면 <strong>모든 사용자(Anyone)</strong>에게 권한이 부여됩니다. 이는 공격자가 설정 파일을 읽어 비밀번호를 탈취하거나, 악성 설정을 주입할 수 있게 합니다.</p>
+                                <p data-en="The current code uses <code>setReadable(true, false)</code>. When the second argument is <code>false</code>, the permission is granted to <strong>everyone (Anyone)</strong>. This allows an attacker to read the configuration file to steal passwords, or to inject malicious configuration.">현재 코드는 <code>setReadable(true, false)</code>를 사용하고 있습니다. 두 번째 인자가 <code>false</code>이면 <strong>모든 사용자(Anyone)</strong>에게 권한이 부여됩니다. 이는 공격자가 설정 파일을 읽어 비밀번호를 탈취하거나, 악성 설정을 주입할 수 있게 합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -489,26 +493,26 @@ public class ConfigFileMaker {
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 777 권한 제거</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 소유자 전용 권한(600) 설정</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Remove 777 permission">777 권한 제거</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Set owner-only permission (600)">소유자 전용 권한(600) 설정</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">set_permissions.py</span>
-                            <span class="toolbar-hint">💡 0o600 또는 stat 모듈을 사용하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use 0o600 or the stat module">💡 0o600 또는 stat 모듈을 사용하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">import os
@@ -547,24 +551,24 @@ def init_secret_file():
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>방법 1: 8진수 사용 (간단)</strong>
-                            <p>소유자 읽기(4) + 쓰기(2) = 6, 나머지는 0</p>
+                            <strong data-en="Method 1: Use octal (simple)">방법 1: 8진수 사용 (간단)</strong>
+                            <p data-en="Owner read(4) + write(2) = 6, the rest are 0">소유자 읽기(4) + 쓰기(2) = 6, 나머지는 0</p>
                             <div class="hint-code">os.chmod(secret_file, 0o600)</div>
                         </div>
                         <div class="hint-step">
-                            <strong>방법 2: stat 모듈 사용 (권장)</strong>
-                            <p>가독성이 높은 상수를 사용합니다.</p>
+                            <strong data-en="Method 2: Use the stat module (recommended)">방법 2: stat 모듈 사용 (권장)</strong>
+                            <p data-en="Use highly readable constants.">가독성이 높은 상수를 사용합니다.</p>
                             <div class="hint-code">os.chmod(secret_file, stat.S_IRUSR | stat.S_IWUSR)</div>
                         </div>
                     </div>
@@ -576,16 +580,16 @@ def init_secret_file():
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>비밀 토큰이 담긴 파일입니다. <strong>0o777</strong>(모든 권한 허용)은 매우 위험하므로, <strong>소유자만 읽고 쓸 수 있는 권한</strong>으로 변경하세요.</p>
+                                <p data-en="This is a file containing a secret token. <strong>0o777</strong> (allow all permissions) is very dangerous, so change it to a permission where <strong>only the owner can read and write</strong>.">비밀 토큰이 담긴 파일입니다. <strong>0o777</strong>(모든 권한 허용)은 매우 위험하므로, <strong>소유자만 읽고 쓸 수 있는 권한</strong>으로 변경하세요.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Excessive Permissions (0o777)</p>
-                                <p><code>0o777</code> 권한은 시스템의 모든 사용자가 해당 파일을 읽고, 수정하고, 실행할 수 있음을 의미합니다. 중요 자원(설정 파일, 키 파일 등)은 반드시 최소한의 권한(Least Privilege)만 부여해야 합니다.</p>
+                                <p data-en="The <code>0o777</code> permission means every user on the system can read, modify, and execute the file. Critical resources (configuration files, key files, etc.) must be granted only the least privilege necessary."><code>0o777</code> 권한은 시스템의 모든 사용자가 해당 파일을 읽고, 수정하고, 실행할 수 있음을 의미합니다. 중요 자원(설정 파일, 키 파일 등)은 반드시 최소한의 권한(Least Privilege)만 부여해야 합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -600,6 +604,22 @@ def init_secret_file():
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // === 공통 로직 ===
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -645,14 +665,15 @@ def init_secret_file():
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
                 btn.classList.remove('editing');
             }
         }
@@ -661,17 +682,24 @@ def init_secret_file():
             updateChecklist('progressChecklistJava', 0, true);
             const feedback = document.getElementById('feedbackJava');
             
-            feedback.innerHTML = `
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p>현재 파일 권한이 너무 개방적입니다 (World Readable/Writable/Executable).</p>
                     <p><code>setReadable(true, false)</code>의 두 번째 false는 '모든 사용자'를 의미합니다.</p>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>The current file permissions are too open (World Readable/Writable/Executable).</p>
+                    <p>The second <code>false</code> in <code>setReadable(true, false)</code> means 'everyone'.</p>
+                </div>
+            `);
+
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중';
-            document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJava = document.getElementById('codeStatusJava');
+            stJava.textContent = L('수정 중','Editing'); stJava.dataset.ko='수정 중'; stJava.setAttribute('data-en','Editing');
+            stJava.className = 'status-badge status-editing';
         }
 
         function validateCodeJava() {
@@ -685,48 +713,56 @@ def init_secret_file():
             // 1. 실행 권한 체크 (false여야 안전)
             if (code.includes('setExecutable(false)')) {
                 updateChecklist('progressChecklistJava', 1, true);
-                messages.push("✅ 실행 권한이 제거되었습니다.");
+                messages.push(L("✅ 실행 권한이 제거되었습니다.","✅ Execute permission has been removed."));
             } else if (!code.includes('setExecutable')) {
-                 messages.push("⚠️ setExecutable 호출이 제거되었습니다. 명시적으로 false로 설정하는 것이 좋습니다.");
+                 messages.push(L("⚠️ setExecutable 호출이 제거되었습니다. 명시적으로 false로 설정하는 것이 좋습니다.","⚠️ The setExecutable call was removed. It is better to set it explicitly to false."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 1, false);
-                messages.push("❌ setExecutable이 여전히 true거나, ownerOnly 설정이 잘못되었습니다.");
+                messages.push(L("❌ setExecutable이 여전히 true거나, ownerOnly 설정이 잘못되었습니다.","❌ setExecutable is still true, or the ownerOnly setting is incorrect."));
             }
 
             // 2. 읽기 권한 체크 (true, true)
             if (code.includes('setReadable(true, true)')) {
                 updateChecklist('progressChecklistJava', 2, true);
-                messages.push("✅ 읽기 권한이 소유자 전용으로 설정되었습니다.");
+                messages.push(L("✅ 읽기 권한이 소유자 전용으로 설정되었습니다.","✅ Read permission has been set to owner-only."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 2, false);
-                messages.push("❌ setReadable(true, true)로 설정해야 합니다.");
+                messages.push(L("❌ setReadable(true, true)로 설정해야 합니다.","❌ You must set setReadable(true, true)."));
             }
 
             // 3. 쓰기 권한 체크 (true, true)
             if (code.includes('setWritable(true, true)')) {
                 updateChecklist('progressChecklistJava', 3, true);
-                messages.push("✅ 쓰기 권한이 소유자 전용으로 설정되었습니다.");
+                messages.push(L("✅ 쓰기 권한이 소유자 전용으로 설정되었습니다.","✅ Write permission has been set to owner-only."));
             } else {
                 passed = false;
                 updateChecklist('progressChecklistJava', 3, false);
-                messages.push("❌ setWritable(true, true)로 설정해야 합니다.");
+                messages.push(L("❌ setWritable(true, true)로 설정해야 합니다.","❌ You must set setWritable(true, true)."));
             }
 
             if (passed) {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>축하합니다! 이제 설정 파일은 소유자만 접근할 수 있습니다.</p>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
-                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                
-                rightPanel.innerHTML = `
+                `,`
+                    <div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Congratulations! Now the configuration file can only be accessed by the owner.</p>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
+                const stJava = document.getElementById('codeStatusJava');
+                stJava.textContent = L('안전한 코드','Secure code'); stJava.dataset.ko='안전한 코드'; stJava.setAttribute('data-en','Secure code');
+                stJava.className = 'status-badge status-secure';
+
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
@@ -734,15 +770,29 @@ def init_secret_file():
                             <p>자바의 <code>File</code> 클래스 권한 설정 시 두 번째 인자(ownerOnly)를 <code>true</code>로 설정하여 접근 제어를 강화했습니다.</p>
                         </div>
                     </div>
-                `;
+                `,`
+                    <div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>When setting Java <code>File</code> class permissions, the second argument (ownerOnly) was set to <code>true</code> to strengthen access control.</p>
+                        </div>
+                    </div>
+                `);
             } else {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
+                `,`
+                    <div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
             }
         }
 
@@ -778,9 +828,10 @@ public class ConfigFileMaker {
                 Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
-                
+                const stJava = document.getElementById('codeStatusJava');
+                stJava.className = 'status-badge status-vulnerable';
+                stJava.textContent = L('취약한 코드','Vulnerable code'); stJava.dataset.ko='취약한 코드'; stJava.setAttribute('data-en','Vulnerable code');
+
                 // Reset Checklists
                 for(let i=0; i<4; i++) updateChecklist('progressChecklistJava', i, false);
             } else {
@@ -804,14 +855,15 @@ public class ConfigFileMaker {
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
                 btn.classList.remove('editing');
             }
         }
@@ -820,16 +872,22 @@ public class ConfigFileMaker {
             updateChecklist('progressChecklistPython', 0, true);
             const feedback = document.getElementById('feedbackPython');
             
-            feedback.innerHTML = `
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p><code>0o777</code> 권한은 누구나 파일을 조작할 수 있게 합니다.</p>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>The <code>0o777</code> permission lets anyone manipulate the file.</p>
+                </div>
+            `);
+
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중';
-            document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stPy = document.getElementById('codeStatusPython');
+            stPy.textContent = L('수정 중','Editing'); stPy.dataset.ko='수정 중'; stPy.setAttribute('data-en','Editing');
+            stPy.className = 'status-badge status-editing';
         }
 
         function validateCodePython() {
@@ -843,10 +901,10 @@ public class ConfigFileMaker {
             // 1. 777 확인
             if (code.includes('0o777') || code.includes('777')) {
                 passed = false;
-                messages.push("❌ 0o777 권한이 여전히 남아있습니다.");
+                messages.push(L("❌ 0o777 권한이 여전히 남아있습니다.","❌ The 0o777 permission still remains."));
                 updateChecklist('progressChecklistPython', 1, false);
             } else {
-                messages.push("✅ 위험한 777 권한이 제거되었습니다.");
+                messages.push(L("✅ 위험한 777 권한이 제거되었습니다.","✅ The dangerous 777 permission has been removed."));
                 updateChecklist('progressChecklistPython', 1, true);
             }
 
@@ -855,27 +913,35 @@ public class ConfigFileMaker {
             const hasStat = (code.includes('stat.S_IRUSR') && code.includes('stat.S_IWUSR'));
 
             if (has600 || hasStat) {
-                messages.push("✅ 소유자 전용 권한(600)이 설정되었습니다.");
+                messages.push(L("✅ 소유자 전용 권한(600)이 설정되었습니다.","✅ Owner-only permission (600) has been set."));
                 updateChecklist('progressChecklistPython', 2, true);
             } else {
                 passed = false;
-                messages.push("❌ 0o600 또는 stat.S_IRUSR | stat.S_IWUSR 설정이 필요합니다.");
+                messages.push(L("❌ 0o600 또는 stat.S_IRUSR | stat.S_IWUSR 설정이 필요합니다.","❌ You need to set 0o600 or stat.S_IRUSR | stat.S_IWUSR."));
                 updateChecklist('progressChecklistPython', 2, false);
             }
 
             if (passed) {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>완벽합니다! 이제 비밀 토큰 파일은 안전하게 보호됩니다.</p>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
-                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
+                `,`
+                    <div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Perfect! Now the secret token file is securely protected.</p>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
+                const stPy = document.getElementById('codeStatusPython');
+                stPy.textContent = L('안전한 코드','Secure code'); stPy.dataset.ko='안전한 코드'; stPy.setAttribute('data-en','Secure code');
+                stPy.className = 'status-badge status-secure';
 
-                rightPanel.innerHTML = `
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
@@ -883,15 +949,29 @@ public class ConfigFileMaker {
                             <p><code>os.chmod(path, 0o600)</code>을 사용하여 파일의 소유자만 읽고 쓸 수 있도록 제한했습니다. 이는 기밀성 무결성을 보장하는 가장 기본적인 조치입니다.</p>
                         </div>
                     </div>
-                `;
+                `,`
+                    <div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>Using <code>os.chmod(path, 0o600)</code>, the file is restricted so that only its owner can read and write it. This is the most basic measure for ensuring confidentiality and integrity.</p>
+                        </div>
+                    </div>
+                `);
             } else {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>
                         ${messages.join('<br>')}
                     </div>
-                `;
+                `,`
+                    <div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>
+                        ${messages.join('<br>')}
+                    </div>
+                `);
             }
         }
 
@@ -918,23 +998,27 @@ def init_secret_file():
             Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stPy = document.getElementById('codeStatusPython');
+            stPy.className = 'status-badge status-vulnerable';
+            stPy.textContent = L('취약한 코드','Vulnerable code'); stPy.dataset.ko='취약한 코드'; stPy.setAttribute('data-en','Vulnerable code');
 
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>잘못된 인가 결정</b>으로 권한 검증이 우회돼 타인 자원에 접근한 사고가 반복됩니다.</div>
+      <div style="margin-bottom:12px;" data-en="Incidents recur where <b>incorrect authorization decisions</b> allow permission checks to be bypassed, granting access to other users' resources."><b>잘못된 인가 결정</b>으로 권한 검증이 우회돼 타인 자원에 접근한 사고가 반복됩니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-863</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A01 Broken Access Control</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

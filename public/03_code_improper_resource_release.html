@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부적절한 자원 해제 - 실습 시뮬레이터</title>
+    <title data-en="Improper Resource Release - Practice Simulator">부적절한 자원 해제 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,52 +72,56 @@
         .easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
         .easybox b { color:#c0392b; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+        <div class="top-nav"><a href="index.html" data-en="&larr; Main">&larr; 메인으로</a></div>
+        <div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
         <div class="header">
-            <h1>💧 부적절한 자원 해제 - 실습 시뮬레이터</h1>
+            <h1 data-en="💧 Improper Resource Release - Practice Simulator">💧 부적절한 자원 해제 - 실습 시뮬레이터</h1>
             <p>CWE-404: Improper Resource Shutdown or Release</p>
-            <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · 코드오류</span>
+            <span class="kisa-tag" data-en="KISA Software Security Weakness Diagnosis Guide (2021) · Code Error">KISA 소프트웨어 보안약점 진단가이드(2021) · 코드오류</span>
         </div>
 
-        <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>수도꼭지(파일·연결)를 <b>안 잠그면</b> 물이 새듯 자원이 고갈됩니다. try-with-resources로 자동으로 잠급니다.</div>
+        <div class="easybox"><span class="tag" data-en="💡 In simple terms">💡 쉽게 말하면</span><br><span data-en="If you <b>don't close</b> the faucet (files/connections), resources drain away like leaking water. try-with-resources closes them automatically.">수도꼭지(파일·연결)를 <b>안 잠그면</b> 물이 새듯 자원이 고갈됩니다. try-with-resources로 자동으로 잠급니다.</span></div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">&#9749;</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
                 <div class="mode-desc">try-with-resources</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">&#128013;</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">with 컨텍스트</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="with context">with 컨텍스트</div>
             </button>
         </div>
 
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 자원 누수 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 자동 해제 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify resource leak">자원 누수 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Apply automatic release">자동 해제 적용</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#9749; Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="&#9749; Java Code Editor">&#9749; Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">FileReader.java</span>
-                            <span class="toolbar-hint">&#128161; try-with-resources 또는 finally로 자원을 반드시 해제하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Always release resources with try-with-resources or finally.">&#128161; try-with-resources 또는 finally로 자원을 반드시 해제하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">// [취약] 예외 발생 시 close가 호출되지 않아 자원 누수
@@ -133,17 +137,17 @@ process(data);
 in.close();</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 자동 해제</strong>
-                            <p>try-with-resources 사용.</p>
+                            <strong data-en="1. Automatic release">1. 자동 해제</strong>
+                            <p data-en="Use try-with-resources.">try-with-resources 사용.</p>
                             <div class="hint-code">try (FileInputStream in = new FileInputStream(path)) {
     byte[] data = in.readAllBytes();
     process(data);
@@ -152,17 +156,17 @@ in.close();</textarea>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>예외 발생 여부와 무관하게 자원을 반드시 해제해야 합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Resources must always be released regardless of whether an exception occurs.">예외 발생 여부와 무관하게 자원을 반드시 해제해야 합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Resource Leak</p>
-                                <p>해제 누락으로 핸들/메모리 누수가 누적됩니다.</p>
+                                <p data-en="Missing release accumulates handle/memory leaks.">해제 누락으로 핸들/메모리 누수가 누적됩니다.</p>
                             </div>
                         </div>
                     </div>
@@ -171,24 +175,24 @@ in.close();</textarea>
         </div>
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 자원 누수 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> with 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify resource leak">자원 누수 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Apply with">with 적용</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#128013; Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="&#128013; Python Code Editor">&#128013; Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">file_reader.py</span>
-                            <span class="toolbar-hint">&#128161; with 문으로 파일을 자동 해제하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Use a with statement to release the file automatically.">&#128161; with 문으로 파일을 자동 해제하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython"># [취약] 예외 시 close 누락 → 파일 핸들 누수
@@ -204,17 +208,17 @@ process(data)
 f.close()</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. with 문</strong>
-                            <p>컨텍스트 매니저로 자동 해제.</p>
+                            <strong data-en="1. with statement">1. with 문</strong>
+                            <p data-en="Automatic release via the context manager.">컨텍스트 매니저로 자동 해제.</p>
                             <div class="hint-code">with open(path, "rb") as f:
     data = f.read()
     process(data)
@@ -223,17 +227,17 @@ f.close()</textarea>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>파일/소켓 등 자원을 컨텍스트 매니저로 안전하게 해제합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Resources such as files/sockets are safely released via a context manager.">파일/소켓 등 자원을 컨텍스트 매니저로 안전하게 해제합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Resource Leak</p>
-                                <p>해제 누락으로 핸들이 누수됩니다.</p>
+                                <p data-en="Missing release leaks handles.">해제 누락으로 핸들이 누수됩니다.</p>
                             </div>
                         </div>
                     </div>
@@ -246,6 +250,22 @@ f.close()</textarea>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         const VULN_JAVA = `// [취약] 예외 발생 시 close가 호출되지 않아 자원 누수
 FileInputStream in = new FileInputStream(path);
 byte[] data = in.readAllBytes();
@@ -296,25 +316,33 @@ f.close()`;
             const d=document.getElementById('codeDisplayContainerJava'), e=document.getElementById('codeEditorJava'),
                   b=document.getElementById('editBtnJava'), p=document.getElementById('codeDisplayJava');
             isEditingJava=!isEditingJava;
-            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.classList.remove('editing'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava',0,true); updateChecklist('progressChecklistJava',1,true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>process() 중 예외가 나면 close()에 도달하지 못해 파일 핸들이 누수됩니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>process() 중 예외가 나면 close()에 도달하지 못해 파일 핸들이 누수됩니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>If an exception occurs during process(), close() is never reached and the file handle leaks.</p></div>`);
             document.getElementById('validateBtnJava').disabled=false;
-            const s=document.getElementById('codeStatusJava'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusJava'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodeJava() {
             const code=document.getElementById('codeEditorJava').value;
             if(passesChecks(code, CHECK_JAVA)){
                 updateChecklist('progressChecklistJava',2,true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>try-with-resources로 예외와 무관하게 자원이 해제됩니다.</p></div>`;
-                const s=document.getElementById('codeStatusJava'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>자원이 항상 해제됩니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>try-with-resources로 예외와 무관하게 자원이 해제됩니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>With try-with-resources, the resource is released regardless of exceptions.</p></div>`);
+                const s=document.getElementById('codeStatusJava'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>자원이 항상 해제됩니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The resource is always released.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava',2,false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>try-with-resources 또는 finally 블록에서 close를 보장하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>try-with-resources 또는 finally 블록에서 close를 보장하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Guarantee close() in a try-with-resources or finally block.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -324,7 +352,7 @@ f.close()`;
                 if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML='';
                 document.getElementById('validateBtnJava').disabled=true;
-                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
                 for(let i=0;i<3;i++) updateChecklist('progressChecklistJava',i,false);
             } else { resetCodingPython(); }
         }
@@ -335,25 +363,33 @@ f.close()`;
             const d=document.getElementById('codeDisplayContainerPython'), e=document.getElementById('codeEditorPython'),
                   b=document.getElementById('editBtnPython'), p=document.getElementById('codeDisplayPython');
             isEditingPython=!isEditingPython;
-            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.classList.remove('editing'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython',0,true); updateChecklist('progressChecklistPython',1,true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>process() 예외 시 close()에 도달하지 못해 핸들이 누수됩니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>process() 예외 시 close()에 도달하지 못해 핸들이 누수됩니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>On a process() exception, close() is never reached and the handle leaks.</p></div>`);
             document.getElementById('validateBtnPython').disabled=false;
-            const s=document.getElementById('codeStatusPython'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusPython'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodePython() {
             const code=document.getElementById('codeEditorPython').value;
             if(passesChecks(code, CHECK_PY)){
                 updateChecklist('progressChecklistPython',2,true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>with 문으로 예외와 무관하게 파일이 닫힙니다.</p></div>`;
-                const s=document.getElementById('codeStatusPython'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>파일 자원이 항상 해제됩니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>with 문으로 예외와 무관하게 파일이 닫힙니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>With the with statement, the file is closed regardless of exceptions.</p></div>`);
+                const s=document.getElementById('codeStatusPython'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>파일 자원이 항상 해제됩니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The file resource is always released.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython',2,false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>with open(...) 컨텍스트 매니저를 사용하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>with open(...) 컨텍스트 매니저를 사용하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use the with open(...) context manager.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -362,21 +398,24 @@ f.close()`;
             if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML='';
             document.getElementById('validateBtnPython').disabled=true;
-            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
             for(let i=0;i<3;i++) updateChecklist('progressChecklistPython',i,false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">자원(메모리·핸들·커넥션) 미해제가 누적돼 서비스가 고갈·다운되는 가용성 사고가 발생했습니다.</div>
+      <div style="margin-bottom:12px;" data-en="Accumulated failure to release resources (memory/handles/connections) caused availability incidents where services were exhausted and went down.">자원(메모리·핸들·커넥션) 미해제가 누적돼 서비스가 고갈·다운되는 가용성 사고가 발생했습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-772</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

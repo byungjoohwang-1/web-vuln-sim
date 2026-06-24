@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>포맷 스트링 삽입 - 실습 시뮬레이터</title>
+    <title data-en="Format String Injection - Practice Simulator">포맷 스트링 삽입 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* 동일 CSS */
@@ -66,52 +66,56 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>📝 포맷 스트링 삽입 - 실습 시뮬레이터</h1>
+            <h1 data-en="📝 Format String Injection - Practice Simulator">📝 포맷 스트링 삽입 - 실습 시뮬레이터</h1>
             <p>CWE-134: Use of Externally-Controlled Format String</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">포맷 인자 분리</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Separate format and arguments">포맷 인자 분리</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">f-string/format() 주의</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Beware of f-string/format()">f-string/format() 주의</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 포맷 스트링 위험 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 안전한 printf 사용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify format string risk">포맷 스트링 위험 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Use printf safely">안전한 printf 사용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">LogService.java</span>
-                            <span class="toolbar-hint">💡 printf의 첫 번째 인자로는 고정 문자열을, 값은 두 번째 인자부터 전달하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Pass a fixed string as printf's first argument, and pass values from the second argument onward.">💡 printf의 첫 번째 인자로는 고정 문자열을, 값은 두 번째 인자부터 전달하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public void printLog(String userInput) {
@@ -128,19 +132,19 @@
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 포맷 스트링과 인자 분리</strong>
-                            <p>포맷 문자열 위치에는 고정된 형식("%s")을 사용하고, 외부 입력은 인자로 전달합니다.</p>
+                            <strong data-en="1. Separate the format string from the arguments">1. 포맷 스트링과 인자 분리</strong>
+                            <p data-en="Use a fixed format (&quot;%s&quot;) in the format-string position, and pass external input as an argument.">포맷 문자열 위치에는 고정된 형식("%s")을 사용하고, 외부 입력은 인자로 전달합니다.</p>
                             <div class="hint-code">
 System.out.printf("%s", userInput);
                             </div>
@@ -154,16 +158,16 @@ System.out.printf("%s", userInput);
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>포맷 문자열을 처리하는 함수 사용 시, 사용자 입력값이 포맷 문자열(Format String)로 해석되지 않도록 해야 합니다.</p>
+                                <p data-en="When using a function that processes a format string, you must ensure that user input is not interpreted as a format string.">포맷 문자열을 처리하는 함수 사용 시, 사용자 입력값이 포맷 문자열(Format String)로 해석되지 않도록 해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Format String Injection</p>
-                                <p>입력값에 포함된 포맷 지정자(%s, %x 등)가 실행되어 메모리 내용을 읽거나 프로그램 동작을 방해할 수 있습니다.</p>
+                                <p data-en="Format specifiers (%s, %x, etc.) contained in the input are evaluated, which can read memory contents or disrupt program behavior.">입력값에 포함된 포맷 지정자(%s, %x 등)가 실행되어 메모리 내용을 읽거나 프로그램 동작을 방해할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -174,26 +178,26 @@ System.out.printf("%s", userInput);
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 포맷팅 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 안전한 포맷팅 사용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify formatting vulnerability">포맷팅 취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Use safe formatting">안전한 포맷팅 사용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">formatter.py</span>
-                            <span class="toolbar-hint">💡 사용자 입력을 포맷 스트링으로 쓰지 말고, 인자로 넘기세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Don't use user input as the format string; pass it as an argument.">💡 사용자 입력을 포맷 스트링으로 쓰지 말고, 인자로 넘기세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">def format_message(user_input, value):
@@ -208,19 +212,19 @@ System.out.printf("%s", userInput);
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 정적 포맷 스트링 사용</strong>
-                            <p>포맷 템플릿을 코드 내에 고정하고, 입력값은 데이터로만 처리합니다.</p>
+                            <strong data-en="1. Use a static format string">1. 정적 포맷 스트링 사용</strong>
+                            <p data-en="Fix the format template in the code and treat input values only as data.">포맷 템플릿을 코드 내에 고정하고, 입력값은 데이터로만 처리합니다.</p>
                             <div class="hint-code">
 return "User Input: {}".format(value)
 # 또는 f-string (Python 3.6+)
@@ -236,16 +240,16 @@ return f"User Input: {value}"
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>Python의 `format()` 메소드를 사용할 때, 포맷 문자열 자체를 외부 입력으로 받으면 내부 속성 접근 등의 위험이 있으므로 이를 방지해야 합니다.</p>
+                                <p data-en="When using Python's `format()` method, taking the format string itself from external input risks internal attribute access and must be prevented.">Python의 `format()` 메소드를 사용할 때, 포맷 문자열 자체를 외부 입력으로 받으면 내부 속성 접근 등의 위험이 있으므로 이를 방지해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Format String Vulnerability</p>
-                                <p>신뢰할 수 없는 포맷 문자열은 정보 유출이나 예기치 않은 동작을 유발할 수 있습니다.</p>
+                                <p data-en="An untrusted format string can cause information disclosure or unexpected behavior.">신뢰할 수 없는 포맷 문자열은 정보 유출이나 예기치 않은 동작을 유발할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -259,6 +263,22 @@ return f"User Input: {value}"
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
             event.target.closest('.mode-tab').classList.add('active');
@@ -287,31 +307,40 @@ return f"User Input: {value}"
             if (isEditingJava) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             updateChecklist('progressChecklistJava', 1, true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>사용자 입력을 포맷 스트링으로 직접 사용하여 정보 유출 위험이 있습니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>사용자 입력을 포맷 스트링으로 직접 사용하여 정보 유출 위험이 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>User input is used directly as a format string, creating an information-disclosure risk.</p></div>`);
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusJava'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
             if (code.includes('"%s", userInput')) {
                 updateChecklist('progressChecklistJava', 2, true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>고정된 포맷 문자열("%s")을 사용하여 안전합니다.</p></div>`;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값을 인자로 분리하여 포맷 스트링 삽입을 방어했습니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>고정된 포맷 문자열("%s")을 사용하여 안전합니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>It is safe because a fixed format string ("%s") is used.</p></div>`);
+                const st=document.getElementById('codeStatusJava'); st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code'); st.className = 'status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값을 인자로 분리하여 포맷 스트링 삽입을 방어했습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>By separating the input as an argument, format string injection is prevented.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>printf의 첫 번째 인자로 "%s"를 사용하고, userInput을 두 번째 인자로 넘기세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>printf의 첫 번째 인자로 "%s"를 사용하고, userInput을 두 번째 인자로 넘기세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use "%s" as printf's first argument, and pass userInput as the second argument.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -326,8 +355,8 @@ return f"User Input: {value}"
                 if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
+                const st=document.getElementById('codeStatusJava'); st.className = 'status-badge status-vulnerable';
+                st.textContent=L('취약한 코드','Vulnerable code'); st.dataset.ko='취약한 코드'; st.setAttribute('data-en','Vulnerable code');
                 for(let i=0; i<3; i++) updateChecklist('progressChecklistJava', i, false);
             } else { resetCodingPython(); }
         }
@@ -343,31 +372,40 @@ return f"User Input: {value}"
             if (isEditingPython) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             updateChecklist('progressChecklistPython', 1, true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>사용자 입력을 포맷 템플릿으로 사용하여 내부 속성 접근 위험이 있습니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>사용자 입력을 포맷 템플릿으로 사용하여 내부 속성 접근 위험이 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>User input is used as a format template, creating a risk of internal attribute access.</p></div>`);
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const st=document.getElementById('codeStatusPython'); st.textContent=L('수정 중','Editing'); st.dataset.ko='수정 중'; st.setAttribute('data-en','Editing'); st.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
             if ((code.includes('"{}"') || code.includes('"{0}"') || code.includes('f"')) && !code.includes('user_input.format')) {
                 updateChecklist('progressChecklistPython', 2, true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>정적 포맷 스트링을 사용하여 안전하게 처리했습니다.</p></div>`;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드'; document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값을 데이터로만 처리하여 포맷 스트링 취약점을 방어했습니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>정적 포맷 스트링을 사용하여 안전하게 처리했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You handled it safely by using a static format string.</p></div>`);
+                const st=document.getElementById('codeStatusPython'); st.textContent=L('안전한 코드','Secure code'); st.dataset.ko='안전한 코드'; st.setAttribute('data-en','Secure code'); st.className = 'status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값을 데이터로만 처리하여 포맷 스트링 취약점을 방어했습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>By treating input only as data, the format string vulnerability is prevented.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>user_input.format() 대신 "{}".format(value) 또는 f-string을 사용하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>user_input.format() 대신 "{}".format(value) 또는 f-string을 사용하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Instead of user_input.format(), use "{}".format(value) or an f-string.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -380,22 +418,25 @@ return f"User Input: {value}"
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const st=document.getElementById('codeStatusPython'); st.className = 'status-badge status-vulnerable';
+            st.textContent=L('취약한 코드','Vulnerable code'); st.dataset.ko='취약한 코드'; st.setAttribute('data-en','Vulnerable code');
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">2000년대 다수 유닉스 데몬이 <b>포맷스트링 취약점</b>으로 메모리 읽기·쓰기 및 코드 실행에 악용됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="In the 2000s, many Unix daemons were exploited via <b>format string vulnerabilities</b> for memory read/write and code execution.">2000년대 다수 유닉스 데몬이 <b>포맷스트링 취약점</b>으로 메모리 읽기·쓰기 및 코드 실행에 악용됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-134</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

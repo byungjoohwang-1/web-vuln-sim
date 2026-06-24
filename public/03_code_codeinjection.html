@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>코드 삽입 (Code Injection) - 실습 시뮬레이터</title>
+    <title data-en="Code Injection - Practice Simulator">코드 삽입 (Code Injection) - 실습 시뮬레이터</title>
     <!-- Prism.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
@@ -134,52 +134,56 @@
         .info-content { color: #555; line-height: 1.6; }
 
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>💉 코드 삽입 (Code Injection) - 실습 시뮬레이터</h1>
+            <h1 data-en="💉 Code Injection - Practice Simulator">💉 코드 삽입 (Code Injection) - 실습 시뮬레이터</h1>
             <p>CWE-94: Improper Control of Generation of Code ('Code Injection')</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">ScriptEngine.eval() 취약점</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="ScriptEngine.eval() vulnerability">ScriptEngine.eval() 취약점</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">eval() 함수 취약점</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="eval() function vulnerability">eval() 함수 취약점</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약한 eval 인지</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 정규식(matches) 검증 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Recognize vulnerable eval">취약한 eval 인지</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply regex (matches) validation">정규식(matches) 검증 적용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">CodeInjectionController.java</span>
-                            <span class="toolbar-hint">💡 정규식을 이용해 특수문자 입력 시 예외를 발생시키세요</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use a regular expression to throw an exception when special characters are entered">💡 정규식을 이용해 특수문자 입력 시 예외를 발생시키세요</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">import javax.script.*;
@@ -214,19 +218,19 @@ public class CodeInjectionController {
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드 (정규식 필터링)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (Regex Filtering)">💡 수정 가이드 (정규식 필터링)</div>
                         <div class="hint-step">
-                            <strong>1. 정규식을 이용한 특수문자 검증</strong>
-                            <p>입력 값의 형태에 따라 정규 표현식을 적용하여 검증합니다.</p>
+                            <strong data-en="1. Validate special characters using a regular expression">1. 정규식을 이용한 특수문자 검증</strong>
+                            <p data-en="Validate by applying a regular expression according to the expected format of the input value.">입력 값의 형태에 따라 정규 표현식을 적용하여 검증합니다.</p>
                             <div class="hint-code">
 // 정규식을 이용하여 특수문자 입력시 예외를 발생시킨다.
 if (src.matches("[\\w]*") == false) {
@@ -234,10 +238,10 @@ if (src.matches("[\\w]*") == false) {
 }
                             </div>
                         </div>
-                        <div class="info-title" style="margin-top: 15px;">💡 수정 가이드 (화이트리스트)</div>
+                        <div class="info-title" style="margin-top: 15px;" data-en="💡 Fix Guide (Whitelist)">💡 수정 가이드 (화이트리스트)</div>
                         <div class="hint-step">
-                            <strong>2. 유효한 문자만 허용 (WhiteList)</strong>
-                            <p>화이트리스트 방식을 적용하여 유효한 문자인 경우에만 실행합니다.</p>
+                            <strong data-en="2. Allow only valid characters (WhiteList)">2. 유효한 문자만 허용 (WhiteList)</strong>
+                            <p data-en="Apply a whitelist approach so that execution happens only for valid characters.">화이트리스트 방식을 적용하여 유효한 문자인 경우에만 실행합니다.</p>
                             <div class="hint-code">
 // 유효한 문자 "_" 일 경우 실행할 메소드 호출한다.
 if (src.matches("UNDER_BAR") == true) {
@@ -260,16 +264,16 @@ if (src.matches("UNDER_BAR") == true) {
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>사용자의 입력을 <code>ScriptEngineManager</code>로 실행하고 있습니다. 공격자는 조작된 인수를 이용해 시스템 명령어를 실행하거나 파일을 조작할 수 있습니다. 입력 값을 필터링하여 사전에 검증하는 코드를 추가하세요.</p>
+                                <p data-en="The user's input is being executed via <code>ScriptEngineManager</code>. An attacker can use crafted arguments to run system commands or manipulate files. Add code that filters and validates the input value in advance.">사용자의 입력을 <code>ScriptEngineManager</code>로 실행하고 있습니다. 공격자는 조작된 인수를 이용해 시스템 명령어를 실행하거나 파일을 조작할 수 있습니다. 입력 값을 필터링하여 사전에 검증하는 코드를 추가하세요.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Dynamic Code Execution</p>
-                                <p>외부 입력값인 <code>src</code>를 검증 없이 <code>scriptEngine.eval(src)</code>로 실행하고 있어 안전하지 않습니다.</p>
+                                <p data-en="The external input <code>src</code> is executed via <code>scriptEngine.eval(src)</code> without validation, which is unsafe.">외부 입력값인 <code>src</code>를 검증 없이 <code>scriptEngine.eval(src)</code>로 실행하고 있어 안전하지 않습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -280,26 +284,26 @@ if (src.matches("UNDER_BAR") == true) {
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> eval() 위험성 파악</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> isalnum() 검증 추가</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Understand eval() danger">eval() 위험성 파악</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Add isalnum() validation">isalnum() 검증 추가</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">views.py</span>
-                            <span class="toolbar-hint">💡 입력값이 영문/숫자인지 확인하는 isalnum()을 사용하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use isalnum() to check whether the input is alphanumeric">💡 입력값이 영문/숫자인지 확인하는 isalnum()을 사용하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">from django.shortcuts import render
@@ -328,19 +332,19 @@ def route(request):
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 입력값 검증 (isalnum)</strong>
-                            <p>사용자 입력을 영문, 숫자로 제한하여 특수문자가 포함된 경우 에러를 반환합니다.</p>
+                            <strong data-en="1. Input validation (isalnum)">1. 입력값 검증 (isalnum)</strong>
+                            <p data-en="Restrict user input to letters and digits, returning an error if special characters are included.">사용자 입력을 영문, 숫자로 제한하여 특수문자가 포함된 경우 에러를 반환합니다.</p>
                             <div class="hint-code">
 if message.isalnum():
     ret = eval(message)
@@ -357,16 +361,16 @@ return render(request, '/error.html')
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>외부 입력값을 검증 없이 <code>eval()</code>에 사용하면 파이썬 코드를 통한 악성 기능 실행이 가능합니다. 예: <code>compile('import time; time.sleep(20)', ...)</code> 등을 통한 서비스 거부 공격.</p>
+                                <p data-en="Using external input in <code>eval()</code> without validation allows malicious functionality to run through Python code. For example, a denial-of-service attack via <code>compile('import time; time.sleep(20)', ...)</code>.">외부 입력값을 검증 없이 <code>eval()</code>에 사용하면 파이썬 코드를 통한 악성 기능 실행이 가능합니다. 예: <code>compile('import time; time.sleep(20)', ...)</code> 등을 통한 서비스 거부 공격.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Code Injection (CWE-94)</p>
-                                <p>입력값 <code>message</code>를 검증 없이 <code>eval()</code>로 실행하고 있어 공격자가 시스템 명령어를 실행하거나 라이브러리를 로드할 수 있습니다.</p>
+                                <p data-en="The input <code>message</code> is executed via <code>eval()</code> without validation, allowing an attacker to run system commands or load libraries.">입력값 <code>message</code>를 검증 없이 <code>eval()</code>로 실행하고 있어 공격자가 시스템 명령어를 실행하거나 라이브러리를 로드할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -381,6 +385,22 @@ return render(request, '/error.html')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // === 공통 로직 ===
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -426,15 +446,16 @@ return render(request, '/error.html')
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
@@ -443,15 +464,20 @@ return render(request, '/error.html')
             updateChecklist('progressChecklistJava', 1, true);
             const feedback = document.getElementById('feedbackJava');
             
-            feedback.innerHTML = `
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p><code>CodeInjectionController</code>에서 사용자 입력 <code>src</code>를 검증 없이 <code>eval()</code>로 실행하고 있습니다. 이는 공격자가 임의의 코드를 실행하여 파일을 조작하거나 시스템을 장악할 수 있게 합니다.</p>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>In <code>CodeInjectionController</code>, the user input <code>src</code> is executed via <code>eval()</code> without validation. This lets an attacker run arbitrary code to manipulate files or take over the system.</p>
+                </div>
+            `);
+
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중';
+            const stJ=document.getElementById('codeStatusJava'); stJ.textContent = L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing');
             document.getElementById('codeStatusJava').className = 'status-badge status-editing';
         }
 
@@ -469,24 +495,30 @@ return render(request, '/error.html')
             if (hasMatches && hasException) {
                 passed = true;
                 updateChecklist('progressChecklistJava', 2, true);
-                messages.push("✅ 정규표현식(matches)을 이용한 입력값 검증과 예외 처리가 확인되었습니다.");
+                messages.push(L("✅ 정규표현식(matches)을 이용한 입력값 검증과 예외 처리가 확인되었습니다.","✅ Input validation using a regular expression (matches) and exception handling were confirmed."));
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                messages.push("❌ <code>matches()</code> 메소드를 사용하여 입력값을 검증하고, 유효하지 않을 경우 <code>IllegalArgumentException</code>을 발생시켜야 합니다.");
+                messages.push(L("❌ <code>matches()</code> 메소드를 사용하여 입력값을 검증하고, 유효하지 않을 경우 <code>IllegalArgumentException</code>을 발생시켜야 합니다.","❌ You must validate the input using the <code>matches()</code> method and throw an <code>IllegalArgumentException</code> when it is invalid."));
             }
 
             if (passed) {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>안전합니다! 정규표현식으로 입력값을 사전에 검증하여 코드 삽입 위협을 완화했습니다.</p>
                         <br>${messages.join('<br>')}
                     </div>
-                `;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
+                `,`
+                    <div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Safe! By validating the input in advance with a regular expression, you mitigated the code injection threat.</p>
+                        <br>${messages.join('<br>')}
+                    </div>
+                `);
+                const stJ=document.getElementById('codeStatusJava'); stJ.textContent = L('안전한 코드','Secure code'); stJ.dataset.ko='안전한 코드'; stJ.setAttribute('data-en','Secure code');
                 document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                
-                rightPanel.innerHTML = `
+
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
@@ -494,14 +526,27 @@ return render(request, '/error.html')
                             <p>입력 값의 형태에 따라 정규 표현식을 적용하거나, 화이트리스트 방식을 사용하여 유효한 문자인 경우에만 실행되도록 조치했습니다.</p>
                         </div>
                     </div>
-                `;
+                `,`
+                    <div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>Depending on the input format, a regular expression or a whitelist approach was applied so that execution only happens for valid characters.</p>
+                        </div>
+                    </div>
+                `);
             } else {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>${messages.join('<br>')}
                     </div>
-                `;
+                `,`
+                    <div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>${messages.join('<br>')}
+                    </div>
+                `);
             }
         }
 
@@ -527,8 +572,8 @@ public class CodeInjectionController {
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
                 document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
-                
+                const stJ=document.getElementById('codeStatusJava'); stJ.textContent = L('취약한 코드','Vulnerable code'); stJ.dataset.ko='취약한 코드'; stJ.setAttribute('data-en','Vulnerable code');
+
                 for(let i=0; i<3; i++) updateChecklist('progressChecklistJava', i, false);
             } else {
                 resetCodingPython();
@@ -551,15 +596,16 @@ public class CodeInjectionController {
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
@@ -568,15 +614,20 @@ public class CodeInjectionController {
             updateChecklist('progressChecklistPython', 1, true);
             const feedback = document.getElementById('feedbackPython');
             
-            feedback.innerHTML = `
+            feedback.innerHTML = L(`
                 <div class="feedback-item feedback-error">
                     <strong>🚨 보안 취약점 발견</strong>
                     <p>입력값을 <code>eval(message)</code>에 직접 사용하고 있어, 공격자가 <code>compile()</code> 등을 통해 악성 코드를 실행할 수 있습니다.</p>
                 </div>
-            `;
-            
+            `,`
+                <div class="feedback-item feedback-error">
+                    <strong>🚨 Security vulnerability found</strong>
+                    <p>The input is used directly in <code>eval(message)</code>, so an attacker can run malicious code via <code>compile()</code> and similar.</p>
+                </div>
+            `);
+
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent = L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing');
             document.getElementById('codeStatusPython').className = 'status-badge status-editing';
         }
 
@@ -592,24 +643,30 @@ public class CodeInjectionController {
             if (code.includes('isalnum()')) {
                 passed = true;
                 updateChecklist('progressChecklistPython', 2, true);
-                messages.push("✅ isalnum()을 이용한 입력값 검증 코드가 확인되었습니다.");
+                messages.push(L("✅ isalnum()을 이용한 입력값 검증 코드가 확인되었습니다.","✅ Input validation code using isalnum() was confirmed."));
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                messages.push("❌ <code>isalnum()</code> 메소드를 사용하여 입력값이 영문/숫자인지 검증해야 합니다.");
+                messages.push(L("❌ <code>isalnum()</code> 메소드를 사용하여 입력값이 영문/숫자인지 검증해야 합니다.","❌ You must use the <code>isalnum()</code> method to validate that the input is alphanumeric."));
             }
 
             if (passed) {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
                         <p>훌륭합니다! 입력값이 영문과 숫자로만 구성되었는지 확인하여 악성 특수문자나 코드가 실행되는 것을 막았습니다.</p>
                         <br>${messages.join('<br>')}
                     </div>
-                `;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+                `,`
+                    <div class="feedback-item feedback-success">
+                        <strong>🎉 Validation passed!</strong>
+                        <p>Excellent! By checking that the input consists only of letters and digits, you prevented malicious special characters or code from being executed.</p>
+                        <br>${messages.join('<br>')}
+                    </div>
+                `);
+                const stP=document.getElementById('codeStatusPython'); stP.textContent = L('안전한 코드','Secure code'); stP.dataset.ko='안전한 코드'; stP.setAttribute('data-en','Secure code');
                 document.getElementById('codeStatusPython').className = 'status-badge status-secure';
 
-                rightPanel.innerHTML = `
+                rightPanel.innerHTML = L(`
                     <div class="info-section">
                         <div class="info-title">✅ 안전한 상태</div>
                         <div class="info-content">
@@ -617,14 +674,27 @@ public class CodeInjectionController {
                             <p>사용자 입력을 영문, 숫자로 엄격하게 제한하여 코드 삽입 공격 위험을 완화했습니다.</p>
                         </div>
                     </div>
-                `;
+                `,`
+                    <div class="info-section">
+                        <div class="info-title">✅ Secure state</div>
+                        <div class="info-content">
+                            <p style="color: #28a745"><strong>Secure coding applied</strong></p>
+                            <p>By strictly restricting user input to letters and digits, you mitigated the risk of a code injection attack.</p>
+                        </div>
+                    </div>
+                `);
             } else {
-                feedback.innerHTML = `
+                feedback.innerHTML = L(`
                     <div class="feedback-item feedback-warning">
                         <strong>⚠️ 보완 필요</strong>
                         <br>${messages.join('<br>')}
                     </div>
-                `;
+                `,`
+                    <div class="feedback-item feedback-warning">
+                        <strong>⚠️ Needs improvement</strong>
+                        <br>${messages.join('<br>')}
+                    </div>
+                `);
             }
         }
 
@@ -647,22 +717,25 @@ def route(request):
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
             document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent = L('취약한 코드','Vulnerable code'); stP.dataset.ko='취약한 코드'; stP.setAttribute('data-en','Vulnerable code');
 
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">2017년 <b>Equifax</b> 사고 — Apache Struts의 OGNL 코드 인젝션(CVE-2017-5638)으로 약 1.4억 명의 개인정보가 유출됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="The 2017 <b>Equifax</b> breach — OGNL code injection in Apache Struts (CVE-2017-5638) leaked the personal data of roughly 140 million people.">2017년 <b>Equifax</b> 사고 — Apache Struts의 OGNL 코드 인젝션(CVE-2017-5638)으로 약 1.4억 명의 개인정보가 유출됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-94</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A03 Injection</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

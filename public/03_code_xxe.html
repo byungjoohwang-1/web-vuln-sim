@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부적절한 XML 외부개체 참조 (XXE) - 실습 시뮬레이터</title>
+    <title data-en="Improper Restriction of XML External Entity Reference (XXE) - Practice Simulator">부적절한 XML 외부개체 참조 (XXE) - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* 동일한 CSS 스타일 사용 */
@@ -66,52 +66,56 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>📄 부적절한 XML 외부개체 참조 (XXE) - 실습 시뮬레이터</h1>
+            <h1 data-en="📄 Improper Restriction of XML External Entity Reference (XXE) - Practice Simulator">📄 부적절한 XML 외부개체 참조 (XXE) - 실습 시뮬레이터</h1>
             <p>CWE-611: Improper Restriction of XML External Entity Reference</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">KISA 가이드: DTD 비활성화</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="KISA guide: disable DTD">KISA 가이드: DTD 비활성화</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">lxml: resolve_entities=False</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="lxml: resolve_entities=False">lxml: resolve_entities=False</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> XXE 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> setFeature로 엔티티 비활성화</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify XXE vulnerability">XXE 취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Disable entities via setFeature">setFeature로 엔티티 비활성화</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">XmlParser.java</span>
-                            <span class="toolbar-hint">💡 setFeature를 사용하여 외부 개체 참조를 비활성화하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use setFeature to disable external entity references.">💡 setFeature를 사용하여 외부 개체 참조를 비활성화하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -130,19 +134,19 @@ Document doc = builder.parse(new InputSource(new StringReader(xmlString)));</tex
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드 (KISA 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (per KISA guide)">💡 수정 가이드 (KISA 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. DOCTYPE 선언 및 외부 엔티티 비활성화</strong>
-                            <p>파서 설정(setFeature)을 통해 외부 개체 참조를 막습니다.</p>
+                            <strong data-en="1. Disable DOCTYPE declaration and external entities">1. DOCTYPE 선언 및 외부 엔티티 비활성화</strong>
+                            <p data-en="Block external entity references through parser settings (setFeature).">파서 설정(setFeature)을 통해 외부 개체 참조를 막습니다.</p>
                             <div class="hint-code">
 try {
     factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
@@ -163,20 +167,20 @@ try {
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과 및 설명</span>
+                        <span class="panel-title" data-en="📊 Analysis Result & Explanation">📊 분석 결과 및 설명</span>
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>XML 파서가 신뢰할 수 없는 외부 DTD나 외부 엔티티를 처리하지 않도록 설정하여 XXE 공격을 방어해야 합니다.</p>
+                                <p data-en="You must defend against XXE attacks by configuring the XML parser so that it does not process untrusted external DTDs or external entities.">XML 파서가 신뢰할 수 없는 외부 DTD나 외부 엔티티를 처리하지 않도록 설정하여 XXE 공격을 방어해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">XXE (XML External Entity)</p>
-                                <p>악의적인 XML 입력이 서버의 로컬 파일을 참조하거나 내부 네트워크를 스캔할 수 있습니다.</p>
+                                <p data-en="Malicious XML input can reference local files on the server or scan the internal network.">악의적인 XML 입력이 서버의 로컬 파일을 참조하거나 내부 네트워크를 스캔할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -187,26 +191,26 @@ try {
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> resolve_entities=False 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify vulnerability">취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply resolve_entities=False">resolve_entities=False 적용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">xml_util.py (lxml)</span>
-                            <span class="toolbar-hint">💡 resolve_entities 옵션을 False로 설정하세요</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Set the resolve_entities option to False">💡 resolve_entities 옵션을 False로 설정하세요</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">from lxml import etree
@@ -227,19 +231,19 @@ def parse_xml(xml_string):
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드 (Python 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (per Python guide)">💡 수정 가이드 (Python 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 엔티티 해석 비활성화</strong>
-                            <p>lxml 파서 생성 시 `resolve_entities=False` 옵션을 사용합니다.</p>
+                            <strong data-en="1. Disable entity resolution">1. 엔티티 해석 비활성화</strong>
+                            <p data-en="When creating the lxml parser, use the `resolve_entities=False` option.">lxml 파서 생성 시 `resolve_entities=False` 옵션을 사용합니다.</p>
                             <div class="hint-code">
 # resolve_entities=False 로 외부 엔티티 참조 차단
 parser = etree.XMLParser(resolve_entities=False)
@@ -251,20 +255,20 @@ tree = etree.fromstring(xml_string, parser=parser)
 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과 및 설명</span>
+                        <span class="panel-title" data-en="📊 Analysis Result & Explanation">📊 분석 결과 및 설명</span>
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>Python의 lxml 라이브러리 사용 시, 외부 엔티티 해석 기능을 명시적으로 꺼야 안전합니다.</p>
+                                <p data-en="When using Python's lxml library, it is safe only when you explicitly disable external entity resolution.">Python의 lxml 라이브러리 사용 시, 외부 엔티티 해석 기능을 명시적으로 꺼야 안전합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Insecure XML Parser Config</p>
-                                <p>기본 설정된 파서는 XML 내의 외부 리소스 참조를 허용할 수 있습니다.</p>
+                                <p data-en="A parser with default settings can allow external resource references within the XML.">기본 설정된 파서는 XML 내의 외부 리소스 참조를 허용할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -278,6 +282,22 @@ tree = etree.fromstring(xml_string, parser=parser)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // 공통 로직
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -307,32 +327,41 @@ tree = etree.fromstring(xml_string, parser=parser)
             if (isEditingJava) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
             updateChecklist('progressChecklistJava', 1, true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>외부 엔티티 참조 기능이 활성화되어 있어 XXE 공격에 취약합니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>외부 엔티티 참조 기능이 활성화되어 있어 XXE 공격에 취약합니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>External entity reference is enabled, making it vulnerable to XXE attacks.</p></div>`);
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing'); stJ.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
             // disallow-doctype-decl 체크
             if (code.includes('disallow-doctype-decl') && code.includes('setFeature')) {
                 updateChecklist('progressChecklistJava', 2, true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>XML 파서의 외부 엔티티 참조 기능을 안전하게 비활성화했습니다.</p></div>`;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드'; document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>XXE 취약점이 제거되었습니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>XML 파서의 외부 엔티티 참조 기능을 안전하게 비활성화했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You safely disabled the XML parser's external entity reference feature.</p></div>`);
+                const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('안전한 코드','Secure code'); stJ.dataset.ko='안전한 코드'; stJ.setAttribute('data-en','Secure code'); stJ.className = 'status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>XXE 취약점이 제거되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>The XXE vulnerability has been removed.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p><code>disallow-doctype-decl</code> 기능을 true로 설정하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p><code>disallow-doctype-decl</code> 기능을 true로 설정하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Set the <code>disallow-doctype-decl</code> feature to true.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -348,8 +377,8 @@ Document doc = builder.parse(new InputSource(new StringReader(xmlString)));`;
                 if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
+                const stJ=document.getElementById('codeStatusJava'); stJ.className = 'status-badge status-vulnerable';
+                stJ.textContent=L('취약한 코드','Vulnerable code'); stJ.dataset.ko='취약한 코드'; stJ.setAttribute('data-en','Vulnerable code');
                 for(let i=0; i<3; i++) updateChecklist('progressChecklistJava', i, false);
             } else { resetCodingPython(); }
         }
@@ -365,31 +394,40 @@ Document doc = builder.parse(new InputSource(new StringReader(xmlString)));`;
             if (isEditingPython) {
                 displayDiv.style.display = 'none'; editor.style.display = 'block';
                 editor.value = preCode.textContent; editor.focus();
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block'; editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             updateChecklist('progressChecklistPython', 1, true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>lxml의 기본 설정이 외부 엔티티를 허용할 수 있습니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>lxml의 기본 설정이 외부 엔티티를 허용할 수 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>lxml's default settings may allow external entities.</p></div>`);
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent=L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing'); stP.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
             if (code.includes('resolve_entities=False')) {
                 updateChecklist('progressChecklistPython', 2, true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>resolve_entities=False 옵션이 적용되었습니다.</p></div>`;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드'; document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>lxml 파서가 안전하게 설정되었습니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>resolve_entities=False 옵션이 적용되었습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>The resolve_entities=False option has been applied.</p></div>`);
+                const stP=document.getElementById('codeStatusPython'); stP.textContent=L('안전한 코드','Secure code'); stP.dataset.ko='안전한 코드'; stP.setAttribute('data-en','Secure code'); stP.className = 'status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>lxml 파서가 안전하게 설정되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>The lxml parser has been configured safely.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>XMLParser 생성 시 <code>resolve_entities=False</code> 인자를 추가하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>XMLParser 생성 시 <code>resolve_entities=False</code> 인자를 추가하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Add the <code>resolve_entities=False</code> argument when creating the XMLParser.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -405,22 +443,25 @@ def parse_xml(xml_string):
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stP=document.getElementById('codeStatusPython'); stP.className = 'status-badge status-vulnerable';
+            stP.textContent=L('취약한 코드','Vulnerable code'); stP.dataset.ko='취약한 코드'; stP.setAttribute('data-en','Vulnerable code');
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>XXE</b>로 외부 엔터티를 통해 서버 내부 파일이 유출되거나 SSRF로 연결된 사례가 다수입니다.</div>
+      <div style="margin-bottom:12px;" data-en="There are many cases where <b>XXE</b> leaked internal server files through external entities or chained into SSRF."><b>XXE</b>로 외부 엔터티를 통해 서버 내부 파일이 유출되거나 SSRF로 연결된 사례가 다수입니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-611</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A05 Security Misconfiguration</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

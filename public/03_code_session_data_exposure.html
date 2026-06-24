@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>잘못된 세션에 의한 데이터 정보 노출 - 실습 시뮬레이터</title>
+    <title data-en="Exposure of Data Element to Wrong Session - Practice Simulator">잘못된 세션에 의한 데이터 정보 노출 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,52 +72,56 @@
         .easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
         .easybox b { color:#c0392b; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
-        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+        <div class="top-nav"><a href="index.html" data-en="&larr; Main">&larr; 메인으로</a></div>
         <div class="header">
-            <h1>🧷 잘못된 세션에 의한 데이터 정보 노출 - 실습 시뮬레이터</h1>
+            <h1 data-en="🧷 Exposure of Data Element to Wrong Session - Practice Simulator">🧷 잘못된 세션에 의한 데이터 정보 노출 - 실습 시뮬레이터</h1>
             <p>CWE-488: Exposure of Data Element to Wrong Session</p>
-            <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · 캡슐화</span>
+            <span class="kisa-tag" data-en="KISA Software Security Weakness Diagnosis Guide (2021) · Encapsulation">KISA 소프트웨어 보안약점 진단가이드(2021) · 캡슐화</span>
         </div>
 
-        <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br><b>모두가 공유하는 칠판</b>(공유 필드)에 내 정보를 적으면 옆 사람에게 보입니다. 사용자별 세션에 따로 보관해야 합니다.</div>
+        <div class="easybox"><span class="tag" data-en="💡 In simple terms">💡 쉽게 말하면</span><br><span data-en="If you write your information on a <b>blackboard shared by everyone</b> (a shared field), the person next to you can see it. You must store it separately in a per-user session."><b>모두가 공유하는 칠판</b>(공유 필드)에 내 정보를 적으면 옆 사람에게 보입니다. 사용자별 세션에 따로 보관해야 합니다.</span></div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">&#9749;</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">요청지역변수/세션</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Request-local variable / session">요청지역변수/세션</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">&#128013;</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">전역 대신 세션</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Session instead of global">전역 대신 세션</div>
             </button>
         </div>
 
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 공유 상태 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 세션/지역변수 격리</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify shared state">공유 상태 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Isolate via session/local variable">세션/지역변수 격리</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#9749; Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="&#9749; Java Code Editor">&#9749; Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">AccountServlet.java</span>
-                            <span class="toolbar-hint">&#128161; 상태를 인스턴스 필드가 아닌 지역변수/HttpSession에 저장하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Store state in a local variable / HttpSession, not in an instance field.">&#128161; 상태를 인스턴스 필드가 아닌 지역변수/HttpSession에 저장하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public class AccountServlet extends HttpServlet {
@@ -139,17 +143,17 @@
 }</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 상태 격리</strong>
-                            <p>공유 필드 제거, 세션 사용.</p>
+                            <strong data-en="1. Isolate state">1. 상태 격리</strong>
+                            <p data-en="Remove the shared field and use the session.">공유 필드 제거, 세션 사용.</p>
                             <div class="hint-code">protected void doGet(HttpServletRequest req, HttpServletResponse res) {
     String user = req.getParameter("user");      // 요청 지역변수
     req.getSession().setAttribute("user", user);  // 사용자별 세션
@@ -159,17 +163,17 @@
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>멀티스레드 환경에서 사용자별 데이터를 공유 필드가 아닌 세션/지역변수에 보관합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="In a multi-threaded environment, store per-user data in a session/local variable rather than a shared field.">멀티스레드 환경에서 사용자별 데이터를 공유 필드가 아닌 세션/지역변수에 보관합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Wrong-Session Data Exposure</p>
-                                <p>공유 인스턴스 필드로 동시 사용자 정보가 교차 노출됩니다.</p>
+                                <p data-en="A shared instance field causes concurrent users' data to be exposed across requests.">공유 인스턴스 필드로 동시 사용자 정보가 교차 노출됩니다.</p>
                             </div>
                         </div>
                     </div>
@@ -178,24 +182,24 @@
         </div>
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 전역 상태 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 세션 격리</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify global state">전역 상태 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Isolate via session">세션 격리</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#128013; Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="&#128013; Python Code Editor">&#128013; Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">app.py</span>
-                            <span class="toolbar-hint">&#128161; 모듈 전역 변수 대신 요청별 session을 사용하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Use a per-request session instead of a module-level global variable.">&#128161; 모듈 전역 변수 대신 요청별 session을 사용하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython"># [취약] 모듈 전역 변수에 사용자 상태 저장 → 동시요청 교차 노출
@@ -215,17 +219,17 @@ def balance():
     return load_balance(current_user)</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 상태 격리</strong>
-                            <p>전역 제거, 세션 사용.</p>
+                            <strong data-en="1. Isolate state">1. 상태 격리</strong>
+                            <p data-en="Remove the global and use the session.">전역 제거, 세션 사용.</p>
                             <div class="hint-code">@app.route("/balance")
 def balance():
     user = request.args.get("user")   # 요청 지역변수
@@ -235,17 +239,17 @@ def balance():
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>사용자별 상태를 전역이 아닌 세션/지역변수에 보관합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Store per-user state in a session/local variable rather than a global.">사용자별 상태를 전역이 아닌 세션/지역변수에 보관합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Wrong-Session Data Exposure</p>
-                                <p>전역 상태로 동시 사용자 정보가 교차 노출됩니다.</p>
+                                <p data-en="Global state causes concurrent users' data to be exposed across requests.">전역 상태로 동시 사용자 정보가 교차 노출됩니다.</p>
                             </div>
                         </div>
                     </div>
@@ -258,6 +262,22 @@ def balance():
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         const VULN_JAVA = `public class AccountServlet extends HttpServlet {
     // [취약] 인스턴스 필드는 모든 요청/사용자가 공유 → 타 사용자 정보 노출
     private String currentUser;
@@ -313,25 +333,25 @@ def balance():
             const d=document.getElementById('codeDisplayContainerJava'), e=document.getElementById('codeEditorJava'),
                   b=document.getElementById('editBtnJava'), p=document.getElementById('codeDisplayJava');
             isEditingJava=!isEditingJava;
-            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); b.classList.remove('editing'); }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava',0,true); updateChecklist('progressChecklistJava',1,true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>서블릿 인스턴스는 모든 요청이 공유하므로 동시 요청 간 사용자 데이터가 뒤섞입니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(`<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>서블릿 인스턴스는 모든 요청이 공유하므로 동시 요청 간 사용자 데이터가 뒤섞입니다.</p></div>`,`<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>A servlet instance is shared by all requests, so user data gets mixed up across concurrent requests.</p></div>`);
             document.getElementById('validateBtnJava').disabled=false;
-            const s=document.getElementById('codeStatusJava'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusJava'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodeJava() {
             const code=document.getElementById('codeEditorJava').value;
             if(passesChecks(code, CHECK_JAVA)){
                 updateChecklist('progressChecklistJava',2,true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>상태를 요청 지역변수/세션에 저장하여 사용자 간 격리했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusJava'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>요청/세션별로 데이터가 격리됩니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(`<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>상태를 요청 지역변수/세션에 저장하여 사용자 간 격리했습니다.</p></div>`,`<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You stored state in a request-local variable/session, isolating it between users.</p></div>`);
+                const s=document.getElementById('codeStatusJava'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(`<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>요청/세션별로 데이터가 격리됩니다.</p></div></div>`,`<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>Data is isolated per request/session.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava',2,false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>currentUser 필드 대신 지역변수 또는 HttpSession을 사용하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(`<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>currentUser 필드 대신 지역변수 또는 HttpSession을 사용하세요.</p></div>`,`<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use a local variable or HttpSession instead of the currentUser field.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -341,7 +361,7 @@ def balance():
                 if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML='';
                 document.getElementById('validateBtnJava').disabled=true;
-                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
                 for(let i=0;i<3;i++) updateChecklist('progressChecklistJava',i,false);
             } else { resetCodingPython(); }
         }
@@ -352,25 +372,25 @@ def balance():
             const d=document.getElementById('codeDisplayContainerPython'), e=document.getElementById('codeEditorPython'),
                   b=document.getElementById('editBtnPython'), p=document.getElementById('codeDisplayPython');
             isEditingPython=!isEditingPython;
-            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); b.classList.remove('editing'); }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython',0,true); updateChecklist('progressChecklistPython',1,true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>전역 변수는 모든 요청이 공유하여 동시 요청 시 사용자 정보가 섞입니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(`<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>전역 변수는 모든 요청이 공유하여 동시 요청 시 사용자 정보가 섞입니다.</p></div>`,`<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>A global variable is shared by all requests, so user data gets mixed up under concurrent requests.</p></div>`);
             document.getElementById('validateBtnPython').disabled=false;
-            const s=document.getElementById('codeStatusPython'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusPython'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodePython() {
             const code=document.getElementById('codeEditorPython').value;
             if(passesChecks(code, CHECK_PY)){
                 updateChecklist('progressChecklistPython',2,true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>요청별 session/지역변수로 사용자 데이터를 격리했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusPython'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>요청별로 데이터가 격리됩니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(`<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>요청별 session/지역변수로 사용자 데이터를 격리했습니다.</p></div>`,`<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You isolated user data using a per-request session/local variable.</p></div>`);
+                const s=document.getElementById('codeStatusPython'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(`<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>요청별로 데이터가 격리됩니다.</p></div></div>`,`<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>Data is isolated per request.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython',2,false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>전역 변수 대신 session 또는 요청 지역변수를 사용하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(`<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>전역 변수 대신 session 또는 요청 지역변수를 사용하세요.</p></div>`,`<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use a session or a request-local variable instead of a global variable.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -379,21 +399,24 @@ def balance():
             if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML='';
             document.getElementById('validateBtnPython').disabled=true;
-            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
             for(let i=0;i<3;i++) updateChecklist('progressChecklistPython',i,false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">세션 간 데이터가 격리되지 않아 한 사용자의 정보가 다른 사용자에게 노출된 사례가 있습니다.</div>
+      <div style="margin-bottom:12px;" data-en="There have been cases where data was not isolated between sessions, exposing one user's information to another user.">세션 간 데이터가 격리되지 않아 한 사용자의 정보가 다른 사용자에게 노출된 사례가 있습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-488</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

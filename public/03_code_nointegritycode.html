@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>무결성 검사 없는 코드 다운로드 - 실습 시뮬레이터</title>
+    <title data-en="Download of Code Without Integrity Check - Practice Simulator">무결성 검사 없는 코드 다운로드 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* SignatureVerificationSimulator와 동일한 스타일 구조 (색상 테마: Red) */
@@ -61,6 +61,9 @@
         .info-section { margin-bottom: 20px; }
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d63031; }
         .info-content { color: #555; line-height: 1.6; }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 <!-- RESP-NET -->
 <style>
@@ -74,43 +77,44 @@
 </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>📦 무결성 검사 없는 코드 다운로드 - 실습 시뮬레이터</h1>
+            <h1 data-en="📦 Download of Code Without Integrity Check - Practice Simulator">📦 무결성 검사 없는 코드 다운로드 - 실습 시뮬레이터</h1>
             <p>CWE-494: Download of Code Without Integrity Check</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">해시값 검증</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Hash value verification">해시값 검증</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">Checksum 확인</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Checksum verification">Checksum 확인</div>
             </button>
         </div>
 
         <!-- Java Mode -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 무결성 검사 로직 추가</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Add integrity check logic">무결성 검사 로직 추가</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">Updater.java</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public void updateSoftware(String url, String expectedHash) {
@@ -130,30 +134,30 @@
 }</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 해시 비교 로직 추가</strong>
-                            <p>다운로드한 파일의 해시를 계산하고 예상된 해시값과 비교하세요.</p>
+                            <strong data-en="1. Add hash comparison logic">1. 해시 비교 로직 추가</strong>
+                            <p data-en="Compute the hash of the downloaded file and compare it against the expected hash value.">다운로드한 파일의 해시를 계산하고 예상된 해시값과 비교하세요.</p>
                             <div class="hint-code">if (!calculateHash(file).equals(expectedHash)) { throw ... }</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과</span>
+                        <span class="panel-title" data-en="📊 Analysis Result">📊 분석 결과</span>
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>외부에서 파일을 다운로드할 때는 반드시 원본 파일이 변조되지 않았는지(무결성) 검증해야 합니다. 해시값 비교 로직을 추가하세요.</p>
+                                <p data-en="When downloading a file from an external source, you must always verify that the original file has not been tampered with (integrity). Add hash value comparison logic.">외부에서 파일을 다운로드할 때는 반드시 원본 파일이 변조되지 않았는지(무결성) 검증해야 합니다. 해시값 비교 로직을 추가하세요.</p>
                             </div>
                         </div>
                     </div>
@@ -164,22 +168,22 @@
         <!-- Python Mode -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 실행 전 검증 추가</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Add verification before execution">실행 전 검증 추가</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">download_script.py</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">import requests
@@ -203,30 +207,30 @@ def run_remote_script(url, expected_hash):
     exec(code)</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드</div>
+                        <div class="info-title" data-en="💡 Fix Guide">💡 수정 가이드</div>
                         <div class="hint-step">
-                            <strong>1. 해시 검증</strong>
-                            <p>다운로드된 코드의 SHA-256 해시를 계산하여 비교합니다.</p>
+                            <strong data-en="1. Hash verification">1. 해시 검증</strong>
+                            <p data-en="Compute and compare the SHA-256 hash of the downloaded code.">다운로드된 코드의 SHA-256 해시를 계산하여 비교합니다.</p>
                             <div class="hint-code">if hashlib.sha256(code).hexdigest() == expected_hash: exec(code)</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">📊 분석 결과</span>
+                        <span class="panel-title" data-en="📊 Analysis Result">📊 분석 결과</span>
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>원격 코드를 실행하는 것은 매우 위험합니다. 실행 전 반드시 암호화 해시 함수를 사용하여 코드의 무결성을 검증하세요.</p>
+                                <p data-en="Executing remote code is extremely dangerous. Before execution, you must verify the integrity of the code using a cryptographic hash function.">원격 코드를 실행하는 것은 매우 위험합니다. 실행 전 반드시 암호화 해시 함수를 사용하여 코드의 무결성을 검증하세요.</p>
                             </div>
                         </div>
                     </div>
@@ -241,6 +245,22 @@ def run_remote_script(url, expected_hash):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // 공통 로직
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -270,17 +290,17 @@ def run_remote_script(url, expected_hash):
             isEditingJava = !isEditingJava;
             if(isEditingJava) {
                 display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayJava').textContent;
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayJava').textContent = editor.value;
-                Prism.highlightElement(document.getElementById('codeDisplayJava')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                Prism.highlightElement(document.getElementById('codeDisplayJava')); btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing'); btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava', 0, true);
-            document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">🚨 파일 검증 없이 execute()가 호출되고 있습니다.</div>';
+            document.getElementById('feedbackJava').innerHTML = L('<div class="feedback-item feedback-error">🚨 파일 검증 없이 execute()가 호출되고 있습니다.</div>','<div class="feedback-item feedback-error">🚨 execute() is being called without verifying the file.</div>');
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중'; document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing'); stJ.className = 'status-badge status-editing';
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
@@ -293,11 +313,11 @@ def run_remote_script(url, expected_hash):
             }
 
             if(passed) {
-                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 실행 전 무결성 검증 로직이 추가되었습니다.</div>';
-                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
+                document.getElementById('feedbackJava').innerHTML = L('<div class="feedback-item feedback-success">🎉 성공! 실행 전 무결성 검증 로직이 추가되었습니다.</div>','<div class="feedback-item feedback-success">🎉 Success! Integrity verification logic has been added before execution.</div>');
+                const stJ=document.getElementById('codeStatusJava'); stJ.className = 'status-badge status-secure';
+                stJ.textContent=L('안전한 코드','Secure code'); stJ.dataset.ko='안전한 코드'; stJ.setAttribute('data-en','Secure code');
             } else {
-                document.getElementById('feedbackJava').innerHTML = '<div class="feedback-item feedback-error">❌ 해시값 비교 로직(equals 등)을 추가하세요.</div>';
+                document.getElementById('feedbackJava').innerHTML = L('<div class="feedback-item feedback-error">❌ 해시값 비교 로직(equals 등)을 추가하세요.</div>','<div class="feedback-item feedback-error">❌ Add hash value comparison logic (e.g., equals).</div>');
             }
         }
         function resetCoding(mode) {
@@ -339,17 +359,17 @@ def run_remote_script(url, expected_hash):
             isEditingPython = !isEditingPython;
             if(isEditingPython) {
                 display.style.display = 'none'; editor.style.display = 'block'; editor.value = document.getElementById('codeDisplayPython').textContent;
-                btn.textContent = '💾 저장'; btn.classList.add('editing');
+                btn.textContent = L('💾 저장','💾 Save'); btn.classList.add('editing');
             } else {
                 display.style.display = 'block'; editor.style.display = 'none'; document.getElementById('codeDisplayPython').textContent = editor.value;
-                Prism.highlightElement(document.getElementById('codeDisplayPython')); btn.textContent = '✏️ 편집'; btn.classList.remove('editing');
+                Prism.highlightElement(document.getElementById('codeDisplayPython')); btn.textContent = L('✏️ 편집','✏️ Edit'); btn.classList.remove('editing'); btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
-            document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">🚨 검증 없는 exec() 호출은 매우 위험합니다.</div>';
+            document.getElementById('feedbackPython').innerHTML = L('<div class="feedback-item feedback-error">🚨 검증 없는 exec() 호출은 매우 위험합니다.</div>','<div class="feedback-item feedback-error">🚨 Calling exec() without verification is extremely dangerous.</div>');
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중'; document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent=L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing'); stP.className = 'status-badge status-editing';
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
@@ -362,25 +382,28 @@ def run_remote_script(url, expected_hash):
             }
 
             if(passed) {
-                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-success">🎉 성공! 해시 검증 로직이 추가되었습니다.</div>';
-                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
+                document.getElementById('feedbackPython').innerHTML = L('<div class="feedback-item feedback-success">🎉 성공! 해시 검증 로직이 추가되었습니다.</div>','<div class="feedback-item feedback-success">🎉 Success! Hash verification logic has been added.</div>');
+                const stP=document.getElementById('codeStatusPython'); stP.className = 'status-badge status-secure';
+                stP.textContent=L('안전한 코드','Secure code'); stP.dataset.ko='안전한 코드'; stP.setAttribute('data-en','Secure code');
             } else {
-                document.getElementById('feedbackPython').innerHTML = '<div class="feedback-item feedback-error">❌ 해시 비교 로직(== expected_hash)을 추가하세요.</div>';
+                document.getElementById('feedbackPython').innerHTML = L('<div class="feedback-item feedback-error">❌ 해시 비교 로직(== expected_hash)을 추가하세요.</div>','<div class="feedback-item feedback-error">❌ Add hash comparison logic (== expected_hash).</div>');
             }
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>무결성 검증 없는 코드/업데이트 다운로드</b>는 공급망 변조의 통로로, 정상 배포로 위장한 악성코드 유포에 악용됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="<b>Downloading code/updates without integrity verification</b> serves as a channel for supply-chain tampering and has been exploited to distribute malware disguised as legitimate releases."><b>무결성 검증 없는 코드/업데이트 다운로드</b>는 공급망 변조의 통로로, 정상 배포로 위장한 악성코드 유포에 악용됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-494</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A08 Software & Data Integrity</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

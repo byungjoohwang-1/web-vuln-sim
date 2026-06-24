@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>금융권 프로세스 검증 누락 시뮬레이터</title>
+    <title data-en="Financial Process Validation Bypass Simulator">금융권 프로세스 검증 누락 시뮬레이터</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -14,6 +14,9 @@
         .process-step.active { background: #3b82f6; color: white; }
         .process-step.completed { background: #10b981; color: white; }
         .process-step.bypassed { background: #ef4444; color: white; }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 <!-- RESP-NET -->
 <style>
@@ -27,7 +30,8 @@
 </style>
 </head>
 <body class="bg-gray-100 p-4">
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
 
     <!-- 평가기준 배너 -->
     <div class="max-w-7xl mx-auto mb-4">
@@ -35,8 +39,8 @@
             <div class="flex items-center gap-3">
                 <i class="fas fa-clipboard-check text-2xl"></i>
                 <div>
-                    <h1 class="font-bold text-lg">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-043</h1>
-                    <p class="text-sm">프로세스 검증 누락 (PV) | 위험도: 4 (높음) | 통제구분: 5.4.2 거래 무결성</p>
+                    <h1 class="font-bold text-lg" data-en="Electronic Financial Infrastructure Security Vulnerability Assessment Criteria - WEB-SER-043">전자금융기반시설 보안 취약점 평가기준 - WEB-SER-043</h1>
+                    <p class="text-sm" data-en="Process Validation Missing (PV) | Risk: 4 (High) | Control: 5.4.2 Transaction Integrity">프로세스 검증 누락 (PV) | 위험도: 4 (높음) | 통제구분: 5.4.2 거래 무결성</p>
                 </div>
             </div>
         </div>
@@ -54,18 +58,18 @@
                     <div class="flex items-center gap-3">
                         <i class="fas fa-building-columns text-2xl"></i>
                         <div>
-                            <h2 class="text-xl font-bold">XX은행</h2>
-                            <p class="text-sm">인터넷뱅킹 계좌이체 시스템</p>
+                            <h2 class="text-xl font-bold" data-en="XX Bank">XX은행</h2>
+                            <p class="text-sm" data-en="Internet Banking Wire Transfer System">인터넷뱅킹 계좌이체 시스템</p>
                         </div>
                     </div>
-                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm">
+                    <div class="mt-2 bg-red-500 px-3 py-1 rounded text-sm" data-en="<i class=&quot;fas fa-exclamation-triangle&quot;></i> Vulnerability: Missing step-by-step validation">
                         <i class="fas fa-exclamation-triangle"></i> 취약점: 단계별 검증 누락
                     </div>
                 </div>
 
                 <!-- 정상 프로세스 플로우 -->
                 <div class="bg-white p-5 rounded-lg shadow-lg">
-                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <h3 class="font-bold text-lg mb-3 flex items-center gap-2" data-en="<i class=&quot;fas fa-route text-blue-600&quot;></i> Normal Transfer Process">
                         <i class="fas fa-route text-blue-600"></i>
                         정상 이체 프로세스
                     </h3>
@@ -74,43 +78,43 @@
                         <div id="step1Box" class="process-step bg-gray-200 p-3 rounded">
                             <div class="flex items-center gap-2">
                                 <span class="bg-white text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                                <span class="font-bold">이체 정보 입력</span>
+                                <span class="font-bold" data-en="Enter Transfer Details">이체 정보 입력</span>
                             </div>
-                            <p class="text-xs mt-1 ml-8">받는 계좌, 금액, 내용 입력</p>
+                            <p class="text-xs mt-1 ml-8" data-en="Enter recipient account, amount, memo">받는 계좌, 금액, 내용 입력</p>
                         </div>
                         
                         <div id="step2Box" class="process-step bg-gray-200 p-3 rounded">
                             <div class="flex items-center gap-2">
                                 <span class="bg-white text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">2</span>
-                                <span class="font-bold">이체 정보 확인</span>
+                                <span class="font-bold" data-en="Confirm Transfer Details">이체 정보 확인</span>
                             </div>
-                            <p class="text-xs mt-1 ml-8">입력 내용 검토 및 확인</p>
+                            <p class="text-xs mt-1 ml-8" data-en="Review and confirm entered details">입력 내용 검토 및 확인</p>
                         </div>
                         
                         <div id="step3Box" class="process-step bg-gray-200 p-3 rounded">
                             <div class="flex items-center gap-2">
                                 <span class="bg-white text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                                <span class="font-bold">OTP 인증</span>
+                                <span class="font-bold" data-en="OTP Authentication">OTP 인증</span>
                             </div>
-                            <p class="text-xs mt-1 ml-8">보안카드 또는 OTP 번호 입력</p>
+                            <p class="text-xs mt-1 ml-8" data-en="Enter security card or OTP number">보안카드 또는 OTP 번호 입력</p>
                         </div>
                         
                         <div id="step4Box" class="process-step bg-gray-200 p-3 rounded">
                             <div class="flex items-center gap-2">
                                 <span class="bg-white text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                                <span class="font-bold">이체 실행</span>
+                                <span class="font-bold" data-en="Execute Transfer">이체 실행</span>
                             </div>
-                            <p class="text-xs mt-1 ml-8">최종 이체 처리</p>
+                            <p class="text-xs mt-1 ml-8" data-en="Final transfer processing">최종 이체 처리</p>
                         </div>
                     </div>
 
                     <div class="mt-4 flex gap-2">
                         <button onclick="normalProcess()" 
-                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm" data-en="<i class=&quot;fas fa-play&quot;></i> Run Normal Process">
                             <i class="fas fa-play"></i> 정상 프로세스 실행
                         </button>
-                        <button onclick="resetProcess()" 
-                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
+                        <button onclick="resetProcess()"
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm" data-en="<i class=&quot;fas fa-redo&quot;></i> Reset">
                             <i class="fas fa-redo"></i> 초기화
                         </button>
                     </div>
@@ -118,25 +122,25 @@
 
                 <!-- 공격 시나리오 버튼 -->
                 <div class="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
-                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <h3 class="font-bold mb-3 flex items-center gap-2" data-en="<i class=&quot;fas fa-flask text-red-400&quot;></i> Attack Scenarios">
                         <i class="fas fa-flask text-red-400"></i>
                         공격 시나리오
                     </h3>
                     <div class="space-y-2">
                         <button onclick="attackScenario(1)" 
-                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm">
+                                class="w-full text-left bg-red-900 hover:bg-red-800 px-3 py-2 rounded text-sm" data-en="<i class=&quot;fas fa-forward&quot;></i> Scenario 1: Skip Step 2,3">
                             <i class="fas fa-forward"></i> 시나리오 1: Step 2,3 건너뛰기
                         </button>
                         <button onclick="attackScenario(2)" 
-                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm">
+                                class="w-full text-left bg-orange-900 hover:bg-orange-800 px-3 py-2 rounded text-sm" data-en="<i class=&quot;fas fa-code&quot;></i> Scenario 2: Direct API Call">
                             <i class="fas fa-code"></i> 시나리오 2: API 직접 호출
                         </button>
                         <button onclick="attackScenario(3)" 
-                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm">
+                                class="w-full text-left bg-purple-900 hover:bg-purple-800 px-3 py-2 rounded text-sm" data-en="<i class=&quot;fas fa-arrows-spin&quot;></i> Scenario 3: Token Reuse">
                             <i class="fas fa-arrows-spin"></i> 시나리오 3: 토큰 재사용
                         </button>
                         <button onclick="attackScenario(4)" 
-                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm">
+                                class="w-full text-left bg-yellow-900 hover:bg-yellow-800 px-3 py-2 rounded text-sm" data-en="<i class=&quot;fas fa-unlock&quot;></i> Scenario 4: Transfer without OTP">
                             <i class="fas fa-unlock"></i> 시나리오 4: OTP 없이 이체
                         </button>
                     </div>
@@ -145,10 +149,10 @@
                 <!-- 취약한 코드 -->
                 <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold text-red-400">
+                        <h3 class="font-bold text-red-400" data-en="<i class=&quot;fas fa-skull-crossbones&quot;></i> Vulnerable Java Code">
                             <i class="fas fa-skull-crossbones"></i> 취약한 Java 코드
                         </h3>
-                        <span class="text-xs bg-red-600 px-2 py-1 rounded">위험</span>
+                        <span class="text-xs bg-red-600 px-2 py-1 rounded" data-en="Danger">위험</span>
                     </div>
                     <pre class="code-font text-xs overflow-x-auto"><code><span class="text-gray-500">// ❌ 프로세스 검증 누락</span>
 @PostMapping("/transfer/execute")
@@ -179,24 +183,24 @@ public String executeTransfer(
                 <!-- 공격 실행 결과 -->
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
-                        <h3 class="font-bold">
+                        <h3 class="font-bold" data-en="<i class=&quot;fas fa-terminal&quot;></i> Attack Execution Result">
                             <i class="fas fa-terminal"></i> 공격 실행 결과
                         </h3>
-                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded">
+                        <span id="statusBadge" class="text-xs bg-green-500 text-gray-900 px-3 py-1 rounded" data-en="Waiting">
                             대기중
                         </span>
                     </div>
                     <div id="attackResult" class="p-5 min-h-[300px] bg-white">
                         <div class="text-center text-gray-400 py-10">
                             <i class="fas fa-shield-halved text-5xl mb-3 opacity-30"></i>
-                            <p class="text-sm">공격 시나리오를 선택하세요</p>
+                            <p class="text-sm" data-en="Select an attack scenario">공격 시나리오를 선택하세요</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- 공격 단계 -->
                 <div id="attackStages" class="hidden bg-red-100 border-l-4 border-red-600 p-4 rounded-lg">
-                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                    <h4 class="font-bold text-red-700 mb-2 flex items-center gap-2" data-en="<i class=&quot;fas fa-list-ol&quot;></i> Attack Progress Steps">
                         <i class="fas fa-list-ol"></i> 공격 진행 단계
                     </h4>
                     <div id="stagesContent" class="text-sm text-red-700 space-y-1"></div>
@@ -213,10 +217,10 @@ public String executeTransfer(
                 <!-- 안전한 코드 -->
                 <div class="bg-gray-900 text-white p-4 rounded-lg shadow-lg">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold text-green-400">
+                        <h3 class="font-bold text-green-400" data-en="<i class=&quot;fas fa-shield-halved&quot;></i> Secure Java Code">
                             <i class="fas fa-shield-halved"></i> 안전한 Java 코드
                         </h3>
-                        <span class="text-xs bg-green-600 px-2 py-1 rounded">권장</span>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded" data-en="Recommended">권장</span>
                     </div>
                     <pre class="code-font text-xs overflow-x-auto max-h-[350px]"><code><span class="text-green-400">// ✅ 프로세스 검증 구현</span>
 
@@ -326,67 +330,67 @@ public String executeTransfer(String executeToken,
 
                 <!-- 방어 체크리스트 -->
                 <div class="bg-white p-4 rounded-lg shadow-lg">
-                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <h3 class="font-bold mb-3 flex items-center gap-2" data-en="<i class=&quot;fas fa-list-check text-red-600&quot;></i> Process Validation Checklist">
                         <i class="fas fa-list-check text-red-600"></i>
                         프로세스 검증 체크리스트
                     </h3>
                     <div class="space-y-2 text-sm">
                         <div class="flex items-start gap-2">
                             <i class="fas fa-check text-green-500 mt-1"></i>
-                            <div><strong>단계별 토큰:</strong> 각 단계마다 고유 토큰 생성</div>
+                            <div data-en="<strong>Per-step token:</strong> Generate a unique token at each step"><strong>단계별 토큰:</strong> 각 단계마다 고유 토큰 생성</div>
                         </div>
                         <div class="flex items-start gap-2">
                             <i class="fas fa-check text-green-500 mt-1"></i>
-                            <div><strong>이전 단계 검증:</strong> currentStep 확인</div>
+                            <div data-en="<strong>Previous step validation:</strong> Check currentStep"><strong>이전 단계 검증:</strong> currentStep 확인</div>
                         </div>
                         <div class="flex items-start gap-2">
                             <i class="fas fa-check text-green-500 mt-1"></i>
-                            <div><strong>토큰 일회용:</strong> 사용 후 즉시 삭제</div>
+                            <div data-en="<strong>One-time token:</strong> Delete immediately after use"><strong>토큰 일회용:</strong> 사용 후 즉시 삭제</div>
                         </div>
                         <div class="flex items-start gap-2">
                             <i class="fas fa-check text-green-500 mt-1"></i>
-                            <div><strong>시간 제한:</strong> OTP 3분 유효기간</div>
+                            <div data-en="<strong>Time limit:</strong> OTP valid for 3 minutes"><strong>시간 제한:</strong> OTP 3분 유효기간</div>
                         </div>
                         <div class="flex items-start gap-2">
                             <i class="fas fa-check text-green-500 mt-1"></i>
-                            <div><strong>세션 정리:</strong> 완료 후 모든 데이터 삭제</div>
+                            <div data-en="<strong>Session cleanup:</strong> Delete all data after completion"><strong>세션 정리:</strong> 완료 후 모든 데이터 삭제</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 평가 판정 -->
                 <div id="judgementBox" class="hidden bg-gray-900 text-white p-4 rounded-lg">
-                    <h3 class="font-bold text-indigo-400 mb-2 text-sm">
+                    <h3 class="font-bold text-indigo-400 mb-2 text-sm" data-en="<i class=&quot;fas fa-gavel&quot;></i> Assessment Verdict">
                         <i class="fas fa-gavel"></i> 평가 판정
                     </h3>
                     <div class="text-xs space-y-1">
-                        <div><strong>평가항목:</strong> WEB-SER-043 프로세스 검증 누락</div>
-                        <div><strong>판정:</strong> <span id="judgement" class="text-red-400">취약</span></div>
-                        <div><strong>근거:</strong> <span id="evidence"></span></div>
+                        <div data-en="<strong>Assessment item:</strong> WEB-SER-043 Process Validation Missing"><strong>평가항목:</strong> WEB-SER-043 프로세스 검증 누락</div>
+                        <div><strong data-en="Verdict:">판정:</strong> <span id="judgement" class="text-red-400" data-en="Vulnerable">취약</span></div>
+                        <div><strong data-en="Basis:">근거:</strong> <span id="evidence"></span></div>
                     </div>
                 </div>
 
                 <!-- 피해 시나리오 -->
                 <div id="damageBox" class="hidden bg-red-700 text-white p-4 rounded-lg">
-                    <h3 class="font-bold mb-3">
+                    <h3 class="font-bold mb-3" data-en="<i class=&quot;fas fa-fire&quot;></i> Real-world Damage Cases">
                         <i class="fas fa-fire"></i> 실제 피해 사례
                     </h3>
                     <div class="space-y-2 text-sm">
                         <div class="flex gap-2">
                             <span class="font-bold">1.</span>
-                            <div><strong>OTP 우회 이체</strong><br>인증 없이 무단 이체</div>
+                            <div data-en="<strong>OTP-bypass transfer</strong><br>Unauthorized transfer without authentication"><strong>OTP 우회 이체</strong><br>인증 없이 무단 이체</div>
                         </div>
                         <div class="flex gap-2">
                             <span class="font-bold">2.</span>
-                            <div><strong>반복 이체 공격</strong><br>토큰 재사용으로 다중 이체</div>
+                            <div data-en="<strong>Repeated transfer attack</strong><br>Multiple transfers via token reuse"><strong>반복 이체 공격</strong><br>토큰 재사용으로 다중 이체</div>
                         </div>
                         <div class="flex gap-2">
                             <span class="font-bold">3.</span>
-                            <div><strong>금액 변조</strong><br>확인 단계 건너뛰고 금액 조작</div>
+                            <div data-en="<strong>Amount tampering</strong><br>Skip confirmation step and manipulate amount"><strong>금액 변조</strong><br>확인 단계 건너뛰고 금액 조작</div>
                         </div>
                         <div class="flex gap-2">
                             <span class="font-bold">4.</span>
-                            <div><strong>대량 피해</strong><br>자동화 공격으로 다수 계좌 탈취</div>
+                            <div data-en="<strong>Large-scale damage</strong><br>Automated attacks compromise many accounts"><strong>대량 피해</strong><br>자동화 공격으로 다수 계좌 탈취</div>
                         </div>
                     </div>
                 </div>
@@ -396,12 +400,28 @@ public String executeTransfer(String executeToken,
     </div>
 
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         async function normalProcess() {
             resetProcess();
             await sleep(300);
             
             var badge = document.getElementById('statusBadge');
-            badge.textContent = '진행중';
+            badge.textContent = L('진행중','In progress'); badge.dataset.ko='진행중'; badge.setAttribute('data-en','In progress');
             badge.className = 'text-xs bg-blue-500 text-white px-3 py-1 rounded';
             
             // Step 1
@@ -424,10 +444,10 @@ public String executeTransfer(String executeToken,
             await sleep(1000);
             document.getElementById('step4Box').className = 'process-step completed p-3 rounded';
             
-            badge.textContent = '완료';
+            badge.textContent = L('완료','Done'); badge.dataset.ko='완료'; badge.setAttribute('data-en','Done');
             badge.className = 'text-xs bg-green-500 text-white px-3 py-1 rounded';
-            
-            document.getElementById('attackResult').innerHTML = 
+
+            document.getElementById('attackResult').innerHTML = L(
                 '<div class="bg-green-50 border-l-4 border-green-500 p-4">' +
                 '<h4 class="font-bold text-green-700 mb-2">✅ 정상 프로세스 완료</h4>' +
                 '<p class="text-sm mb-2">모든 단계가 순차적으로 실행되었습니다.</p>' +
@@ -436,7 +456,16 @@ public String executeTransfer(String executeToken,
                 '<p>✓ Step 2: 이체 정보 확인 완료</p>' +
                 '<p>✓ Step 3: OTP 인증 완료</p>' +
                 '<p>✓ Step 4: 이체 실행 완료</p>' +
-                '</div></div>';
+                '</div></div>',
+                '<div class="bg-green-50 border-l-4 border-green-500 p-4">' +
+                '<h4 class="font-bold text-green-700 mb-2">✅ Normal process completed</h4>' +
+                '<p class="text-sm mb-2">All steps were executed in sequence.</p>' +
+                '<div class="bg-white p-3 rounded border text-xs">' +
+                '<p>✓ Step 1: Enter transfer details — done</p>' +
+                '<p>✓ Step 2: Confirm transfer details — done</p>' +
+                '<p>✓ Step 3: OTP authentication — done</p>' +
+                '<p>✓ Step 4: Execute transfer — done</p>' +
+                '</div></div>');
         }
 
         function resetProcess() {
@@ -445,10 +474,13 @@ public String executeTransfer(String executeToken,
             document.getElementById('step3Box').className = 'process-step bg-gray-200 p-3 rounded';
             document.getElementById('step4Box').className = 'process-step bg-gray-200 p-3 rounded';
             
-            document.getElementById('attackResult').innerHTML = 
+            document.getElementById('attackResult').innerHTML = L(
                 '<div class="text-center text-gray-400 py-10">' +
                 '<i class="fas fa-shield-halved text-5xl mb-3 opacity-30"></i>' +
-                '<p class="text-sm">공격 시나리오를 선택하세요</p></div>';
+                '<p class="text-sm">공격 시나리오를 선택하세요</p></div>',
+                '<div class="text-center text-gray-400 py-10">' +
+                '<i class="fas fa-shield-halved text-5xl mb-3 opacity-30"></i>' +
+                '<p class="text-sm">Select an attack scenario</p></div>');
             
             document.getElementById('attackStages').classList.add('hidden');
             document.getElementById('terminalBox').classList.add('hidden');
@@ -456,8 +488,8 @@ public String executeTransfer(String executeToken,
             document.getElementById('damageBox').classList.add('hidden');
             document.getElementById('terminalLines').innerHTML = '';
             
-            document.getElementById('statusBadge').textContent = '대기중';
-            document.getElementById('statusBadge').className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
+            var sb=document.getElementById('statusBadge'); sb.textContent = L('대기중','Waiting'); sb.dataset.ko='대기중'; sb.setAttribute('data-en','Waiting');
+            sb.className = 'text-xs bg-green-500 text-gray-900 px-3 py-1 rounded';
         }
 
         async function attackScenario(type) {
@@ -474,42 +506,46 @@ public String executeTransfer(String executeToken,
             
             if (type === 1) {
                 // 시나리오 1: Step 건너뛰기
-                document.getElementById('stagesContent').innerHTML = 
+                document.getElementById('stagesContent').innerHTML = L(
                     '<div>1. Step 1: 이체 정보 입력</div>' +
                     '<div>2. Step 2, 3 건너뛰기 (OTP 우회)</div>' +
                     '<div>3. Step 4 직접 호출</div>' +
-                    '<div>4. 이체 실행 성공!</div>';
-                
-                badge.textContent = '공격중';
+                    '<div>4. 이체 실행 성공!</div>',
+                    '<div>1. Step 1: Enter transfer details</div>' +
+                    '<div>2. Skip Step 2, 3 (OTP bypass)</div>' +
+                    '<div>3. Call Step 4 directly</div>' +
+                    '<div>4. Transfer executed successfully!</div>');
+
+                badge.textContent = L('공격중','Attacking'); badge.dataset.ko='공격중'; badge.setAttribute('data-en','Attacking');
                 badge.className = 'text-xs bg-red-500 text-white px-3 py-1 rounded';
-                
+
                 // Step 1
                 document.getElementById('step1Box').className = 'process-step active p-3 rounded';
-                addTerminalLine('> Step 1: 이체 정보 입력');
+                addTerminalLine(L('> Step 1: 이체 정보 입력','> Step 1: Enter transfer details'));
                 await sleep(800);
                 document.getElementById('step1Box').className = 'process-step completed p-3 rounded';
-                addTerminalLine('> 받는 계좌: 110-123-456789');
-                addTerminalLine('> 금액: 5,000,000원');
+                addTerminalLine(L('> 받는 계좌: 110-123-456789','> Recipient account: 110-123-456789'));
+                addTerminalLine(L('> 금액: 5,000,000원','> Amount: 5,000,000 KRW'));
                 await sleep(500);
-                
+
                 // Step 2, 3 건너뛰기
                 document.getElementById('step2Box').className = 'process-step bypassed p-3 rounded';
                 document.getElementById('step3Box').className = 'process-step bypassed p-3 rounded';
-                addTerminalLine('> [!] Step 2, 3 건너뛰기!', 'text-red-400');
+                addTerminalLine(L('> [!] Step 2, 3 건너뛰기!','> [!] Skipping Step 2, 3!'), 'text-red-400');
                 await sleep(800);
-                
+
                 // Step 4 직접 실행
-                addTerminalLine('> POST /transfer/execute 직접 호출', 'text-yellow-400');
+                addTerminalLine(L('> POST /transfer/execute 직접 호출','> POST /transfer/execute direct call'), 'text-yellow-400');
                 await sleep(500);
                 document.getElementById('step4Box').className = 'process-step active p-3 rounded';
                 addTerminalLine('> toAccount=110123456789&amount=5000000');
                 await sleep(1000);
-                
+
                 document.getElementById('step4Box').className = 'process-step completed p-3 rounded';
-                addTerminalLine('> ✓ 이체 실행 성공!', 'text-red-400');
-                addTerminalLine('> OTP 없이 500만원 이체 완료', 'text-red-400');
-                
-                result.innerHTML = 
+                addTerminalLine(L('> ✓ 이체 실행 성공!','> ✓ Transfer executed successfully!'), 'text-red-400');
+                addTerminalLine(L('> OTP 없이 500만원 이체 완료','> 5,000,000 KRW transferred without OTP'), 'text-red-400');
+
+                result.innerHTML = L(
                     '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
                     '<h4 class="font-bold text-red-700 mb-3">🚨 프로세스 우회 성공</h4>' +
                     '<div class="bg-white p-3 rounded mb-3 border">' +
@@ -525,45 +561,65 @@ public String executeTransfer(String executeToken,
                     '<p class="font-bold">💰 이체 완료</p>' +
                     '<p>금액: 5,000,000원</p>' +
                     '<p>OTP 인증: 없음</p>' +
-                    '</div></div>';
-                
-                document.getElementById('evidence').textContent = '단계별 검증 미수행';
+                    '</div></div>',
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 Process bypass succeeded</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">Attack analysis:</p>' +
+                    '<table class="w-full text-xs">' +
+                    '<tr class="border-b"><th class="text-left py-1">Step</th><th class="text-left py-1">Status</th></tr>' +
+                    '<tr class="border-b"><td class="py-1">Step 1</td><td class="py-1 text-green-600">Completed</td></tr>' +
+                    '<tr class="border-b bg-red-50"><td class="py-1">Step 2</td><td class="py-1 text-red-600">Skipped</td></tr>' +
+                    '<tr class="border-b bg-red-50"><td class="py-1">Step 3 (OTP)</td><td class="py-1 text-red-600">Skipped</td></tr>' +
+                    '<tr><td class="py-1">Step 4</td><td class="py-1 text-red-600">Bypass executed</td></tr>' +
+                    '</table></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💰 Transfer completed</p>' +
+                    '<p>Amount: 5,000,000 KRW</p>' +
+                    '<p>OTP authentication: none</p>' +
+                    '</div></div>');
+
+                var ev=document.getElementById('evidence'); ev.textContent = L('단계별 검증 미수행','No step-by-step validation performed'); ev.dataset.ko='단계별 검증 미수행'; ev.setAttribute('data-en','No step-by-step validation performed');
                 
             } else if (type === 2) {
                 // 시나리오 2: API 직접 호출
-                document.getElementById('stagesContent').innerHTML = 
+                document.getElementById('stagesContent').innerHTML = L(
                     '<div>1. Burp Suite로 정상 요청 캡처</div>' +
                     '<div>2. /transfer/execute API 분석</div>' +
                     '<div>3. 필요 파라미터 파악</div>' +
-                    '<div>4. curl로 직접 호출</div>';
-                
-                addTerminalLine('> Burp Suite 실행...');
+                    '<div>4. curl로 직접 호출</div>',
+                    '<div>1. Capture a normal request with Burp Suite</div>' +
+                    '<div>2. Analyze the /transfer/execute API</div>' +
+                    '<div>3. Identify required parameters</div>' +
+                    '<div>4. Call directly with curl</div>');
+
+                addTerminalLine(L('> Burp Suite 실행...','> Launching Burp Suite...'));
                 await sleep(500);
-                addTerminalLine('> 정상 이체 요청 캡처 완료');
+                addTerminalLine(L('> 정상 이체 요청 캡처 완료','> Normal transfer request captured'));
                 await sleep(500);
-                addTerminalLine('> API 엔드포인트 분석:');
+                addTerminalLine(L('> API 엔드포인트 분석:','> Analyzing API endpoint:'));
                 addTerminalLine('  POST /transfer/execute', 'text-yellow-400');
                 await sleep(500);
-                addTerminalLine('> 필요 파라미터:');
-                addTerminalLine('  - toAccount (계좌번호)');
-                addTerminalLine('  - amount (금액)');
+                addTerminalLine(L('> 필요 파라미터:','> Required parameters:'));
+                addTerminalLine(L('  - toAccount (계좌번호)','  - toAccount (account number)'));
+                addTerminalLine(L('  - amount (금액)','  - amount (amount)'));
                 await sleep(800);
-                addTerminalLine('> curl 명령어 생성:', 'text-yellow-400');
+                addTerminalLine(L('> curl 명령어 생성:','> Generating curl command:'), 'text-yellow-400');
                 await sleep(300);
                 addTerminalLine('curl -X POST https://bank.com/transfer/execute \\', 'text-green-400');
                 addTerminalLine('  -d "toAccount=999-888-777777" \\', 'text-green-400');
                 addTerminalLine('  -d "amount=10000000" \\', 'text-green-400');
                 addTerminalLine('  -H "Cookie: JSESSIONID=ABC123..."', 'text-green-400');
                 await sleep(1000);
-                addTerminalLine('> [!] 이체 성공!', 'text-red-400');
-                addTerminalLine('> 1천만원 이체 완료', 'text-red-400');
+                addTerminalLine(L('> [!] 이체 성공!','> [!] Transfer succeeded!'), 'text-red-400');
+                addTerminalLine(L('> 1천만원 이체 완료','> 10,000,000 KRW transferred'), 'text-red-400');
                 
                 document.getElementById('step1Box').className = 'process-step bypassed p-3 rounded';
                 document.getElementById('step2Box').className = 'process-step bypassed p-3 rounded';
                 document.getElementById('step3Box').className = 'process-step bypassed p-3 rounded';
                 document.getElementById('step4Box').className = 'process-step completed p-3 rounded';
                 
-                result.innerHTML = 
+                result.innerHTML = L(
                     '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
                     '<h4 class="font-bold text-red-700 mb-3">🚨 API 직접 호출 성공</h4>' +
                     '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
@@ -578,48 +634,67 @@ public String executeTransfer(String executeToken,
                     '<p>금액: 10,000,000원</p>' +
                     '<p>방법: API 직접 호출</p>' +
                     '<p>검증: 없음</p>' +
-                    '</div></div>';
-                
-                document.getElementById('evidence').textContent = 'API 레벨 검증 부재';
-                badge.textContent = '치명적';
+                    '</div></div>',
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 Direct API call succeeded</h4>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                    '<div class="text-white mb-2">$ curl -X POST \\</div>' +
+                    '<div>  https://bank.com/transfer/execute \\</div>' +
+                    '<div>  -d "toAccount=999888777777" \\</div>' +
+                    '<div>  -d "amount=10000000"</div>' +
+                    '<div class="text-red-400 mt-2">{"status":"success"}</div>' +
+                    '</div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💰 Unauthorized transfer</p>' +
+                    '<p>Amount: 10,000,000 KRW</p>' +
+                    '<p>Method: direct API call</p>' +
+                    '<p>Validation: none</p>' +
+                    '</div></div>');
+
+                var ev2=document.getElementById('evidence'); ev2.textContent = L('API 레벨 검증 부재','No API-level validation'); ev2.dataset.ko='API 레벨 검증 부재'; ev2.setAttribute('data-en','No API-level validation');
+                badge.textContent = L('치명적','Critical'); badge.dataset.ko='치명적'; badge.setAttribute('data-en','Critical');
                 badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
-                
+
             } else if (type === 3) {
                 // 시나리오 3: 토큰 재사용
-                document.getElementById('stagesContent').innerHTML = 
+                document.getElementById('stagesContent').innerHTML = L(
                     '<div>1. 정상 프로세스로 토큰 획득</div>' +
                     '<div>2. 이체 실행 후 토큰 저장</div>' +
                     '<div>3. 동일 토큰으로 재요청</div>' +
-                    '<div>4. 중복 이체 실행!</div>';
-                
-                addTerminalLine('> 정상 이체 프로세스 시작...');
+                    '<div>4. 중복 이체 실행!</div>',
+                    '<div>1. Obtain token via the normal process</div>' +
+                    '<div>2. Save the token after transfer</div>' +
+                    '<div>3. Re-request with the same token</div>' +
+                    '<div>4. Duplicate transfer executed!</div>');
+
+                addTerminalLine(L('> 정상 이체 프로세스 시작...','> Starting normal transfer process...'));
                 await sleep(500);
-                
+
                 document.getElementById('step1Box').className = 'process-step completed p-3 rounded';
                 document.getElementById('step2Box').className = 'process-step completed p-3 rounded';
                 document.getElementById('step3Box').className = 'process-step completed p-3 rounded';
-                
-                addTerminalLine('> executeToken 획득: abc123def456');
+
+                addTerminalLine(L('> executeToken 획득: abc123def456','> executeToken obtained: abc123def456'));
                 await sleep(500);
-                
+
                 document.getElementById('step4Box').className = 'process-step completed p-3 rounded';
-                addTerminalLine('> ✓ 1차 이체 완료 (100만원)');
+                addTerminalLine(L('> ✓ 1차 이체 완료 (100만원)','> ✓ Transfer #1 completed (1,000,000 KRW)'));
                 await sleep(800);
-                
-                addTerminalLine('> [!] 토큰 재사용 시도!', 'text-red-400');
+
+                addTerminalLine(L('> [!] 토큰 재사용 시도!','> [!] Token reuse attempt!'), 'text-red-400');
                 await sleep(500);
                 addTerminalLine('> POST /transfer/execute', 'text-yellow-400');
-                addTerminalLine('> executeToken=abc123def456 (동일)');
+                addTerminalLine(L('> executeToken=abc123def456 (동일)','> executeToken=abc123def456 (same)'));
                 await sleep(1000);
-                addTerminalLine('> ✓ 2차 이체 완료 (100만원)', 'text-red-400');
+                addTerminalLine(L('> ✓ 2차 이체 완료 (100만원)','> ✓ Transfer #2 completed (1,000,000 KRW)'), 'text-red-400');
                 await sleep(500);
-                addTerminalLine('> ✓ 3차 이체 완료 (100만원)', 'text-red-400');
+                addTerminalLine(L('> ✓ 3차 이체 완료 (100만원)','> ✓ Transfer #3 completed (1,000,000 KRW)'), 'text-red-400');
                 await sleep(500);
-                addTerminalLine('> ✓ 4차 이체 완료 (100만원)', 'text-red-400');
+                addTerminalLine(L('> ✓ 4차 이체 완료 (100만원)','> ✓ Transfer #4 completed (1,000,000 KRW)'), 'text-red-400');
                 await sleep(500);
-                addTerminalLine('> 총 피해액: 400만원', 'text-red-400');
+                addTerminalLine(L('> 총 피해액: 400만원','> Total loss: 4,000,000 KRW'), 'text-red-400');
                 
-                result.innerHTML = 
+                result.innerHTML = L(
                     '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
                     '<h4 class="font-bold text-red-700 mb-3">🚨 토큰 재사용 공격</h4>' +
                     '<div class="bg-white p-3 rounded mb-3 border">' +
@@ -635,55 +710,75 @@ public String executeTransfer(String executeToken,
                     '<p class="font-bold">💰 중복 이체 피해</p>' +
                     '<p>총 피해액: 4,000,000원</p>' +
                     '<p>이체 횟수: 4회 (1회만 인증)</p>' +
-                    '</div></div>';
-                
-                document.getElementById('evidence').textContent = '토큰 일회용 검증 미수행';
-                badge.textContent = '치명적';
+                    '</div></div>',
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 Token reuse attack</h4>' +
+                    '<div class="bg-white p-3 rounded mb-3 border">' +
+                    '<p class="text-sm font-bold mb-2">Transfer history:</p>' +
+                    '<table class="w-full text-xs">' +
+                    '<tr class="border-b"><th class="text-left py-1">No.</th><th class="text-left py-1">Amount</th><th class="text-left py-1">Token</th></tr>' +
+                    '<tr class="border-b"><td class="py-1">#1</td><td class="py-1">1,000,000 KRW</td><td class="py-1 text-xs">abc123...</td></tr>' +
+                    '<tr class="border-b bg-red-50"><td class="py-1">#2</td><td class="py-1 text-red-600">1,000,000 KRW</td><td class="py-1 text-red-600 text-xs">abc123... (reused)</td></tr>' +
+                    '<tr class="border-b bg-red-50"><td class="py-1">#3</td><td class="py-1 text-red-600">1,000,000 KRW</td><td class="py-1 text-red-600 text-xs">abc123... (reused)</td></tr>' +
+                    '<tr class="bg-red-50"><td class="py-1">#4</td><td class="py-1 text-red-600">1,000,000 KRW</td><td class="py-1 text-red-600 text-xs">abc123... (reused)</td></tr>' +
+                    '</table></div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💰 Duplicate transfer damage</p>' +
+                    '<p>Total loss: 4,000,000 KRW</p>' +
+                    '<p>Transfer count: 4 (authenticated only once)</p>' +
+                    '</div></div>');
+
+                var ev3=document.getElementById('evidence'); ev3.textContent = L('토큰 일회용 검증 미수행','No one-time token validation'); ev3.dataset.ko='토큰 일회용 검증 미수행'; ev3.setAttribute('data-en','No one-time token validation');
+                badge.textContent = L('치명적','Critical'); badge.dataset.ko='치명적'; badge.setAttribute('data-en','Critical');
                 badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
-                
+
             } else if (type === 4) {
                 // 시나리오 4: OTP 없이 이체
-                document.getElementById('stagesContent').innerHTML = 
+                document.getElementById('stagesContent').innerHTML = L(
                     '<div>1. 세션 하이재킹으로 로그인</div>' +
                     '<div>2. Step 1,2만 완료</div>' +
                     '<div>3. OTP 인증 우회</div>' +
-                    '<div>4. 대량 이체 자동화</div>';
-                
-                addTerminalLine('> XSS로 세션 쿠키 탈취');
+                    '<div>4. 대량 이체 자동화</div>',
+                    '<div>1. Log in via session hijacking</div>' +
+                    '<div>2. Complete only Step 1,2</div>' +
+                    '<div>3. Bypass OTP authentication</div>' +
+                    '<div>4. Automate bulk transfers</div>');
+
+                addTerminalLine(L('> XSS로 세션 쿠키 탈취','> Stealing session cookie via XSS'));
                 await sleep(500);
                 addTerminalLine('> JSESSIONID=DEF789...');
                 await sleep(500);
-                addTerminalLine('> 피해자 계정 로그인 성공');
+                addTerminalLine(L('> 피해자 계정 로그인 성공','> Logged into victim account successfully'));
                 await sleep(800);
-                
+
                 document.getElementById('step1Box').className = 'process-step completed p-3 rounded';
-                addTerminalLine('> Step 1: 이체 정보 입력 (자동화)');
+                addTerminalLine(L('> Step 1: 이체 정보 입력 (자동화)','> Step 1: Enter transfer details (automated)'));
                 await sleep(500);
-                
+
                 document.getElementById('step2Box').className = 'process-step completed p-3 rounded';
-                addTerminalLine('> Step 2: 확인 단계 (자동 통과)');
+                addTerminalLine(L('> Step 2: 확인 단계 (자동 통과)','> Step 2: Confirmation step (auto-passed)'));
                 await sleep(500);
-                
+
                 document.getElementById('step3Box').className = 'process-step bypassed p-3 rounded';
-                addTerminalLine('> [!] Step 3: OTP 검증 우회!', 'text-red-400');
+                addTerminalLine(L('> [!] Step 3: OTP 검증 우회!','> [!] Step 3: OTP validation bypassed!'), 'text-red-400');
                 await sleep(800);
-                
+
                 document.getElementById('step4Box').className = 'process-step completed p-3 rounded';
-                addTerminalLine('> Python 스크립트 실행...', 'text-yellow-400');
+                addTerminalLine(L('> Python 스크립트 실행...','> Running Python script...'), 'text-yellow-400');
                 await sleep(500);
-                addTerminalLine('> 이체 #1: 500,000원 성공', 'text-red-400');
+                addTerminalLine(L('> 이체 #1: 500,000원 성공','> Transfer #1: 500,000 KRW success'), 'text-red-400');
                 await sleep(300);
-                addTerminalLine('> 이체 #2: 500,000원 성공', 'text-red-400');
+                addTerminalLine(L('> 이체 #2: 500,000원 성공','> Transfer #2: 500,000 KRW success'), 'text-red-400');
                 await sleep(300);
-                addTerminalLine('> 이체 #3: 500,000원 성공', 'text-red-400');
+                addTerminalLine(L('> 이체 #3: 500,000원 성공','> Transfer #3: 500,000 KRW success'), 'text-red-400');
                 await sleep(300);
-                addTerminalLine('> 이체 #4: 500,000원 성공', 'text-red-400');
+                addTerminalLine(L('> 이체 #4: 500,000원 성공','> Transfer #4: 500,000 KRW success'), 'text-red-400');
                 await sleep(300);
-                addTerminalLine('> 이체 #5: 500,000원 성공', 'text-red-400');
+                addTerminalLine(L('> 이체 #5: 500,000원 성공','> Transfer #5: 500,000 KRW success'), 'text-red-400');
                 await sleep(500);
-                addTerminalLine('> 총 250만원 빼돌림 완료', 'text-red-400');
+                addTerminalLine(L('> 총 250만원 빼돌림 완료','> Total of 2,500,000 KRW siphoned'), 'text-red-400');
                 
-                result.innerHTML = 
+                result.innerHTML = L(
                     '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
                     '<h4 class="font-bold text-red-700 mb-3">🚨 자동화 공격 성공</h4>' +
                     '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
@@ -701,10 +796,28 @@ public String executeTransfer(String executeToken,
                     '<p>이체 횟수: 5회</p>' +
                     '<p>총 피해액: 2,500,000원</p>' +
                     '<p>소요 시간: 3초</p>' +
-                    '</div></div>';
-                
-                document.getElementById('evidence').textContent = 'OTP 검증 강제 미수행';
-                badge.textContent = '치명적';
+                    '</div></div>',
+                    '<div class="bg-red-50 border-l-4 border-red-500 p-4">' +
+                    '<h4 class="font-bold text-red-700 mb-3">🚨 Automated attack succeeded</h4>' +
+                    '<div class="bg-gray-900 text-green-400 p-3 rounded mb-3 code-font text-xs">' +
+                    '<div class="text-white">import requests</div>' +
+                    '<div></div>' +
+                    '<div>for i in range(5):</div>' +
+                    '<div class="ml-4">requests.post(</div>' +
+                    '<div class="ml-8">"https://bank.com/transfer/execute",</div>' +
+                    '<div class="ml-8">data={"amount": 500000}</div>' +
+                    '<div class="ml-4">)</div>' +
+                    '<div class="text-red-400 mt-2"># 5 transfers in a row without OTP!</div>' +
+                    '</div>' +
+                    '<div class="bg-red-900 text-red-100 p-3 rounded text-sm">' +
+                    '<p class="font-bold">💰 Automated attack damage</p>' +
+                    '<p>Transfer count: 5</p>' +
+                    '<p>Total loss: 2,500,000 KRW</p>' +
+                    '<p>Time taken: 3 seconds</p>' +
+                    '</div></div>');
+
+                var ev4=document.getElementById('evidence'); ev4.textContent = L('OTP 검증 강제 미수행','OTP validation not enforced'); ev4.dataset.ko='OTP 검증 강제 미수행'; ev4.setAttribute('data-en','OTP validation not enforced');
+                badge.textContent = L('치명적','Critical'); badge.dataset.ko='치명적'; badge.setAttribute('data-en','Critical');
                 badge.className = 'text-xs bg-red-600 text-white px-3 py-1 rounded';
             }
         }
@@ -721,18 +834,21 @@ public String executeTransfer(String executeToken,
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents &amp; Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">거래·결제의 <b>처리 흐름 검증</b>이 미흡해 중간 단계를 건너뛰고 최종 승인에 도달하는 우회가 발생했습니다.</div>
+      <div style="margin-bottom:12px;" data-en="Insufficient <b>processing-flow validation</b> in transactions/payments allowed bypassing intermediate steps to reach final approval.">거래·결제의 <b>처리 흐름 검증</b>이 미흡해 중간 단계를 건너뛰고 최종 승인에 도달하는 우회가 발생했습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-841</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

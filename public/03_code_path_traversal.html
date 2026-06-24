@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>경로 조작 및 자원 삽입 - 실습 시뮬레이터</title>
+    <title data-en="Path Traversal & Resource Injection - Practice Simulator">경로 조작 및 자원 삽입 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         /* 기본 스타일 유지 */
@@ -121,52 +121,56 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)" data-en="← Main">← 메인</a>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
         <div class="header">
-            <h1>📂 경로 조작 및 자원 삽입 - 실습 시뮬레이터</h1>
+            <h1 data-en="📂 Path Traversal & Resource Injection - Practice Simulator">📂 경로 조작 및 자원 삽입 - 실습 시뮬레이터</h1>
             <p>CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')</p>
         </div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">☕</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">KISA 개발보안 가이드 기준</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Per KISA secure development guide">KISA 개발보안 가이드 기준</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">🐍</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">Python 시큐어코딩 가이드 기준</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Per Python secure coding guide">Python 시큐어코딩 가이드 기준</div>
             </button>
         </div>
 
         <!-- Java 모드 -->
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 경로 순회 취약점 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> FilenameUtils.getName() 적용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify path traversal vulnerability">경로 순회 취약점 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Apply FilenameUtils.getName()">FilenameUtils.getName() 적용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">✏️ Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="✏️ Java Code Editor">✏️ Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">FileController.java</span>
-                            <span class="toolbar-hint">💡 Apache Commons IO의 FilenameUtils.getName()을 사용하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Use Apache Commons IO's FilenameUtils.getName().">💡 Apache Commons IO의 FilenameUtils.getName()을 사용하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">import java.io.*;
@@ -207,27 +211,27 @@ public class FileController {
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackJava"></div>
 
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">💡 수정 가이드 (KISA 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (per KISA guide)">💡 수정 가이드 (KISA 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. FilenameUtils.getName() 사용 (권장)</strong>
-                            <p>Apache Commons IO 라이브러리의 <code>getName()</code> 메서드는 경로 정보를 모두 제거하고 파일명만 반환합니다.</p>
+                            <strong data-en="1. Use FilenameUtils.getName() (recommended)">1. FilenameUtils.getName() 사용 (권장)</strong>
+                            <p data-en="The <code>getName()</code> method of the Apache Commons IO library removes all path information and returns only the file name.">Apache Commons IO 라이브러리의 <code>getName()</code> 메서드는 경로 정보를 모두 제거하고 파일명만 반환합니다.</p>
                             <div class="hint-code">
 fileName = FilenameUtils.getName(fileName);
 File file = new File("/data/uploads/" + fileName);
                             </div>
                         </div>
                         <div class="hint-step">
-                            <strong>2. 경로 순회 문자 필터링 (대안)</strong>
-                            <p>라이브러리를 사용할 수 없는 경우, 경로 순회 문자를 체크하여 예외 처리합니다.</p>
+                            <strong data-en="2. Filter path traversal characters (alternative)">2. 경로 순회 문자 필터링 (대안)</strong>
+                            <p data-en="If a library is unavailable, check for path traversal characters and raise an exception.">라이브러리를 사용할 수 없는 경우, 경로 순회 문자를 체크하여 예외 처리합니다.</p>
                             <div class="hint-code">
 if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
     throw new SecurityException("Invalid filename");
@@ -243,16 +247,16 @@ if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")
                     </div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>공격자가 <code>../../etc/passwd</code>와 같은 입력을 통해 허용되지 않은 상위 디렉터리의 파일에 접근하는 것을 막아야 합니다.</p>
+                                <p data-en="You must prevent an attacker from accessing files in disallowed parent directories through input such as <code>../../etc/passwd</code>.">공격자가 <code>../../etc/passwd</code>와 같은 입력을 통해 허용되지 않은 상위 디렉터리의 파일에 접근하는 것을 막아야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Path Traversal (CWE-22)</p>
-                                <p>입력값을 그대로 경로에 결합하면 운영체제의 파일 시스템 경로 해석 규칙에 따라 의도치 않은 파일이 노출될 수 있습니다.</p>
+                                <p data-en="If the input is concatenated directly into the path, the OS file system path resolution rules may expose unintended files.">입력값을 그대로 경로에 결합하면 운영체제의 파일 시스템 경로 해석 규칙에 따라 의도치 않은 파일이 노출될 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -263,26 +267,26 @@ if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")
         <!-- Python 모드 -->
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">✅ 학습 진행도</div>
+                <div class="progress-title" data-en="✅ Learning Progress">✅ 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> 취약한 open() 사용 확인</li>
-                    <li class="checklist-item"><span class="checklist-icon">⬜</span> os.path.basename 사용</li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Identify vulnerable open() use">취약한 open() 사용 확인</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">⬜</span> <span data-en="Use os.path.basename">os.path.basename 사용</span></li>
                 </ul>
             </div>
 
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">🐍 Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="🐍 Python Code Editor">🐍 Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
 
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">file_service.py</span>
-                            <span class="toolbar-hint">💡 os.path.basename()으로 파일명만 추출하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">✏️ 편집</button>
+                            <span class="toolbar-hint" data-en="💡 Extract only the file name with os.path.basename().">💡 os.path.basename()으로 파일명만 추출하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="✏️ Edit">✏️ 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">import os
@@ -317,19 +321,19 @@ def get_file_content():
                     </div>
 
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">🔍 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>✅ 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">💡 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">🔄 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="🔍 Diagnose">🔍 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="✅ Validate">✅ 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="💡 Hint">💡 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="🔄 Reset">🔄 초기화</button>
                     </div>
 
                     <div class="feedback" id="feedbackPython"></div>
 
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">💡 수정 가이드 (Python 가이드 기준)</div>
+                        <div class="info-title" data-en="💡 Fix Guide (per Python guide)">💡 수정 가이드 (Python 가이드 기준)</div>
                         <div class="hint-step">
-                            <strong>1. os.path.basename() 사용</strong>
-                            <p>입력된 경로에서 디렉터리 부분을 제거하고 파일명만 반환하여 경로 조작을 방지합니다.</p>
+                            <strong data-en="1. Use os.path.basename()">1. os.path.basename() 사용</strong>
+                            <p data-en="Remove the directory portion from the supplied path and return only the file name to prevent path manipulation.">입력된 경로에서 디렉터리 부분을 제거하고 파일명만 반환하여 경로 조작을 방지합니다.</p>
                             <div class="hint-code">
 filename = os.path.basename(filename)
 file_path = os.path.join('/var/www/uploads', filename)
@@ -344,16 +348,16 @@ file_path = os.path.join('/var/www/uploads', filename)
                     </div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">🎯 목표</div>
+                            <div class="info-title" data-en="🎯 Goal">🎯 목표</div>
                             <div class="info-content">
-                                <p>외부 입력값이 파일 시스템 경로로 사용될 때, 상위 디렉터리(..)로 이동하지 못하도록 제한해야 합니다.</p>
+                                <p data-en="When external input is used as a file system path, you must prevent it from moving to a parent directory (..).">외부 입력값이 파일 시스템 경로로 사용될 때, 상위 디렉터리(..)로 이동하지 못하도록 제한해야 합니다.</p>
                             </div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">⚠️ 현재 취약점</div>
+                            <div class="info-title" data-en="⚠️ Current Vulnerability">⚠️ 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Directory Traversal</p>
-                                <p><code>os.path.join</code>을 사용하더라도 <code>filename</code>이 <code>../</code>을 포함하면 상위 경로로 이동할 수 있습니다.</p>
+                                <p data-en="Even when using <code>os.path.join</code>, if <code>filename</code> contains <code>../</code> it can move to a parent path."><code>os.path.join</code>을 사용하더라도 <code>filename</code>이 <code>../</code>을 포함하면 상위 경로로 이동할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -367,6 +371,22 @@ file_path = os.path.join('/var/www/uploads', filename)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         // === 공통 로직 ===
         function switchMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -411,15 +431,16 @@ file_path = os.path.join('/var/www/uploads', filename)
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
@@ -427,10 +448,11 @@ file_path = os.path.join('/var/www/uploads', filename)
             updateChecklist('progressChecklistJava', 0, true);
             updateChecklist('progressChecklistJava', 1, true);
             const feedback = document.getElementById('feedbackJava');
-            feedback.innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>사용자 입력값을 검증 없이 파일 경로 생성에 사용하여 중요 시스템 파일에 접근할 위험이 있습니다.</p></div>`;
+            feedback.innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>사용자 입력값을 검증 없이 파일 경로 생성에 사용하여 중요 시스템 파일에 접근할 위험이 있습니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>User input is used to build the file path without validation, risking access to critical system files.</p></div>`);
             document.getElementById('validateBtnJava').disabled = false;
-            document.getElementById('codeStatusJava').textContent = '수정 중';
-            document.getElementById('codeStatusJava').className = 'status-badge status-editing';
+            const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('수정 중','Editing'); stJ.dataset.ko='수정 중'; stJ.setAttribute('data-en','Editing'); stJ.className = 'status-badge status-editing';
         }
 
         function validateCodeJava() {
@@ -448,12 +470,17 @@ file_path = os.path.join('/var/www/uploads', filename)
             }
 
             if (passed) {
-                feedback.innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>입력된 파일명에서 경로 정보를 제거하거나 경로 순회 문자를 차단하여 안전해졌습니다.</p></div>`;
-                document.getElementById('codeStatusJava').textContent = '안전한 코드';
-                document.getElementById('codeStatusJava').className = 'status-badge status-secure';
-                rightPanel.innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>FilenameUtils.getName() 또는 엄격한 필터링을 통해 경로 조작 공격을 방어했습니다.</p></div></div>`;
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>입력된 파일명에서 경로 정보를 제거하거나 경로 순회 문자를 차단하여 안전해졌습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>It is now safe because path information is stripped from the supplied file name or path traversal characters are blocked.</p></div>`);
+                const stJ=document.getElementById('codeStatusJava'); stJ.textContent=L('안전한 코드','Secure code'); stJ.dataset.ko='안전한 코드'; stJ.setAttribute('data-en','Secure code'); stJ.className = 'status-badge status-secure';
+                rightPanel.innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>FilenameUtils.getName() 또는 엄격한 필터링을 통해 경로 조작 공격을 방어했습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>FilenameUtils.getName() or strict filtering defends against the path manipulation attack.</p></div></div>`);
             } else {
-                feedback.innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>FilenameUtils.getName()을 사용하거나 '..' 문자열을 체크하여 예외를 발생시키세요.</p></div>`;
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>FilenameUtils.getName()을 사용하거나 '..' 문자열을 체크하여 예외를 발생시키세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use FilenameUtils.getName(), or check for the '..' string and raise an exception.</p></div>`);
             }
         }
 
@@ -481,8 +508,8 @@ public class FileController {
                 if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML = '';
                 document.getElementById('validateBtnJava').disabled = true;
-                document.getElementById('codeStatusJava').className = 'status-badge status-vulnerable';
-                document.getElementById('codeStatusJava').textContent = '취약한 코드';
+                const stJ=document.getElementById('codeStatusJava'); stJ.className = 'status-badge status-vulnerable';
+                stJ.textContent=L('취약한 코드','Vulnerable code'); stJ.dataset.ko='취약한 코드'; stJ.setAttribute('data-en','Vulnerable code');
                 for(let i=0; i<3; i++) updateChecklist('progressChecklistJava', i, false);
             } else {
                 resetCodingPython();
@@ -504,25 +531,27 @@ public class FileController {
                 editor.style.display = 'block';
                 editor.value = preCode.textContent;
                 editor.focus();
-                btn.textContent = '💾 저장';
+                btn.textContent = L('💾 저장','💾 Save');
                 btn.classList.add('editing');
             } else {
                 displayDiv.style.display = 'block';
                 editor.style.display = 'none';
                 preCode.textContent = editor.value;
                 if(window.Prism) Prism.highlightElement(preCode);
-                btn.textContent = '✏️ 편집';
+                btn.textContent = L('✏️ 편집','✏️ Edit');
                 btn.classList.remove('editing');
+                btn.dataset.ko = '✏️ 편집'; btn.setAttribute('data-en','✏️ Edit');
             }
         }
 
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython', 0, true);
             updateChecklist('progressChecklistPython', 1, true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 그대로 파일 경로에 결합하여 경로 탐색 공격에 취약합니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>입력값을 그대로 파일 경로에 결합하여 경로 탐색 공격에 취약합니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The input is concatenated directly into the file path, making it vulnerable to path traversal attacks.</p></div>`);
             document.getElementById('validateBtnPython').disabled = false;
-            document.getElementById('codeStatusPython').textContent = '수정 중';
-            document.getElementById('codeStatusPython').className = 'status-badge status-editing';
+            const stP=document.getElementById('codeStatusPython'); stP.textContent=L('수정 중','Editing'); stP.dataset.ko='수정 중'; stP.setAttribute('data-en','Editing'); stP.className = 'status-badge status-editing';
         }
 
         function validateCodePython() {
@@ -532,13 +561,18 @@ public class FileController {
             
             if (code.includes('os.path.basename')) {
                 updateChecklist('progressChecklistPython', 2, true);
-                feedback.innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>os.path.basename()을 사용하여 경로 정보를 안전하게 제거했습니다.</p></div>`;
-                document.getElementById('codeStatusPython').textContent = '안전한 코드';
-                document.getElementById('codeStatusPython').className = 'status-badge status-secure';
-                rightPanel.innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값에서 파일명만 추출하여 경로 조작을 방지했습니다.</p></div></div>`;
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>os.path.basename()을 사용하여 경로 정보를 안전하게 제거했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You used os.path.basename() to safely strip path information.</p></div>`);
+                const stP=document.getElementById('codeStatusPython'); stP.textContent=L('안전한 코드','Secure code'); stP.dataset.ko='안전한 코드'; stP.setAttribute('data-en','Secure code'); stP.className = 'status-badge status-secure';
+                rightPanel.innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color: #28a745"><strong>Secure Coding 적용 완료</strong></p><p>입력값에서 파일명만 추출하여 경로 조작을 방지했습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color: #28a745"><strong>Secure coding applied</strong></p><p>By extracting only the file name from the input, path manipulation is prevented.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython', 2, false);
-                feedback.innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p><code>os.path.basename(filename)</code>을 사용하여 순수 파일명만 추출하세요.</p></div>`;
+                feedback.innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p><code>os.path.basename(filename)</code>을 사용하여 순수 파일명만 추출하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use <code>os.path.basename(filename)</code> to extract only the pure file name.</p></div>`);
             }
         }
 
@@ -562,22 +596,25 @@ def get_file_content():
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML = '';
             document.getElementById('validateBtnPython').disabled = true;
-            document.getElementById('codeStatusPython').className = 'status-badge status-vulnerable';
-            document.getElementById('codeStatusPython').textContent = '취약한 코드';
+            const stP=document.getElementById('codeStatusPython'); stP.className = 'status-badge status-vulnerable';
+            stP.textContent=L('취약한 코드','Vulnerable code'); stP.dataset.ko='취약한 코드'; stP.setAttribute('data-en','Vulnerable code');
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;"><b>경로 조작</b>으로 ../ 입력을 통해 설정파일·인증정보 등 임의 파일이 읽힌 사고가 다수 보고됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="Many incidents have been reported where <b>path manipulation</b> via ../ input allowed arbitrary files such as config files and credentials to be read."><b>경로 조작</b>으로 ../ 입력을 통해 설정파일·인증정보 등 임의 파일이 읽힌 사고가 다수 보고됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-22</span>
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">OWASP A01 Broken Access Control</span>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

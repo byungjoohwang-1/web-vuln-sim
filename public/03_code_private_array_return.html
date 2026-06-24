@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Public 메서드의 Private 배열 반환 - 실습 시뮬레이터</title>
+    <title data-en="Returning a Private Array From a Public Method - Practice Simulator">Public 메서드의 Private 배열 반환 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,52 +72,56 @@
         .easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
         .easybox b { color:#c0392b; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+        <div class="top-nav"><a href="index.html" data-en="&larr; Main">&larr; 메인으로</a></div>
+        <div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
         <div class="header">
-            <h1>📤 Public 메서드의 Private 배열 반환 - 실습 시뮬레이터</h1>
+            <h1 data-en="📤 Returning a Private Array From a Public Method - Practice Simulator">📤 Public 메서드의 Private 배열 반환 - 실습 시뮬레이터</h1>
             <p>CWE-495: Private Data Structure Returned From a Public Method</p>
-            <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · 캡슐화</span>
+            <span class="kisa-tag" data-en="KISA Software Security Weakness Diagnosis Guide (2021) · Encapsulation">KISA 소프트웨어 보안약점 진단가이드(2021) · 캡슐화</span>
         </div>
 
-        <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>내부 장부(배열)를 <b>원본 그대로 건네주면</b> 받은 사람이 내 것을 고칠 수 있습니다. <b>복사본</b>을 줍니다.</div>
+        <div class="easybox"><span class="tag" data-en="💡 In simple terms">💡 쉽게 말하면</span><br><span data-en="If you hand over your internal ledger (array) <b>as the original</b>, the receiver can modify your own copy. Hand over a <b>copy</b> instead.">내부 장부(배열)를 <b>원본 그대로 건네주면</b> 받은 사람이 내 것을 고칠 수 있습니다. <b>복사본</b>을 줍니다.</span></div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">&#9749;</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">방어적 복사 반환</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Return a defensive copy">방어적 복사 반환</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">&#128013;</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">복사본 반환</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Return a copy">복사본 반환</div>
             </button>
         </div>
 
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 내부 참조 반환 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 방어적 복사</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify return of internal reference">내부 참조 반환 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Defensive copy">방어적 복사</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#9749; Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="&#9749; Java Code Editor">&#9749; Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">Account.java</span>
-                            <span class="toolbar-hint">&#128161; 내부 배열은 clone()/복사본으로 반환하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Return the internal array as a clone()/copy.">&#128161; 내부 배열은 clone()/복사본으로 반환하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public class Account {
@@ -137,17 +141,17 @@
 }</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 방어적 복사</strong>
-                            <p>복사본을 반환.</p>
+                            <strong data-en="1. Defensive copy">1. 방어적 복사</strong>
+                            <p data-en="Return a copy.">복사본을 반환.</p>
                             <div class="hint-code">public int[] getTransactions() {
     return transactions.clone();   // 방어적 복사
 }</div>
@@ -155,17 +159,17 @@
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>내부 가변 배열은 복사본으로 반환하여 캡슐화를 지킵니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Return internal mutable arrays as a copy to preserve encapsulation.">내부 가변 배열은 복사본으로 반환하여 캡슐화를 지킵니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Private Array Exposure</p>
-                                <p>내부 참조 반환으로 외부에서 상태를 변경할 수 있습니다.</p>
+                                <p data-en="Returning the internal reference lets external callers change the state.">내부 참조 반환으로 외부에서 상태를 변경할 수 있습니다.</p>
                             </div>
                         </div>
                     </div>
@@ -174,24 +178,24 @@
         </div>
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 내부 참조 반환 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 복사본 반환</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify return of internal reference">내부 참조 반환 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Return a copy">복사본 반환</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#128013; Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="&#128013; Python Code Editor">&#128013; Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">account.py</span>
-                            <span class="toolbar-hint">&#128161; 내부 리스트는 복사본(list()/[:])으로 반환하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Return the internal list as a copy (list()/[:]).">&#128161; 내부 리스트는 복사본(list()/[:])으로 반환하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">class Account:
@@ -209,34 +213,34 @@
         return self._transactions</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 방어적 복사</strong>
-                            <p>복사본 반환.</p>
+                            <strong data-en="1. Defensive copy">1. 방어적 복사</strong>
+                            <p data-en="Return a copy.">복사본 반환.</p>
                             <div class="hint-code">def get_transactions(self):
     return list(self._transactions)   # 복사본</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>내부 가변 컬렉션은 복사본으로 반환합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Return internal mutable collections as a copy.">내부 가변 컬렉션은 복사본으로 반환합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Private List Exposure</p>
-                                <p>내부 참조 반환으로 외부에서 상태가 변경됩니다.</p>
+                                <p data-en="Returning the internal reference lets external callers change the state.">내부 참조 반환으로 외부에서 상태가 변경됩니다.</p>
                             </div>
                         </div>
                     </div>
@@ -249,6 +253,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         const VULN_JAVA = `public class Account {
     private int[] transactions;
     // [취약] 내부 배열 참조를 그대로 반환 → 외부에서 내부 상태 변경 가능
@@ -302,25 +322,25 @@
             const d=document.getElementById('codeDisplayContainerJava'), e=document.getElementById('codeEditorJava'),
                   b=document.getElementById('editBtnJava'), p=document.getElementById('codeDisplayJava');
             isEditingJava=!isEditingJava;
-            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.classList.remove('editing'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava',0,true); updateChecklist('progressChecklistJava',1,true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>반환된 내부 배열을 호출자가 수정하면 객체 내부 상태가 깨집니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(`<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>반환된 내부 배열을 호출자가 수정하면 객체 내부 상태가 깨집니다.</p></div>`,`<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>If the caller modifies the returned internal array, the object's internal state is broken.</p></div>`);
             document.getElementById('validateBtnJava').disabled=false;
-            const s=document.getElementById('codeStatusJava'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusJava'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodeJava() {
             const code=document.getElementById('codeEditorJava').value;
             if(passesChecks(code, CHECK_JAVA)){
                 updateChecklist('progressChecklistJava',2,true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>clone()/복사본을 반환하여 내부 상태를 보호했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusJava'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>내부 배열이 외부 변경으로부터 보호됩니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(`<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>clone()/복사본을 반환하여 내부 상태를 보호했습니다.</p></div>`,`<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You protected the internal state by returning a clone()/copy.</p></div>`);
+                const s=document.getElementById('codeStatusJava'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(`<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>내부 배열이 외부 변경으로부터 보호됩니다.</p></div></div>`,`<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The internal array is protected from external modification.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava',2,false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>return transactions.clone(); 처럼 복사본을 반환하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(`<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>return transactions.clone(); 처럼 복사본을 반환하세요.</p></div>`,`<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Return a copy, e.g. return transactions.clone();</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -330,7 +350,7 @@
                 if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML='';
                 document.getElementById('validateBtnJava').disabled=true;
-                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
                 for(let i=0;i<3;i++) updateChecklist('progressChecklistJava',i,false);
             } else { resetCodingPython(); }
         }
@@ -341,25 +361,25 @@
             const d=document.getElementById('codeDisplayContainerPython'), e=document.getElementById('codeEditorPython'),
                   b=document.getElementById('editBtnPython'), p=document.getElementById('codeDisplayPython');
             isEditingPython=!isEditingPython;
-            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.classList.remove('editing'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython',0,true); updateChecklist('progressChecklistPython',1,true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>반환된 내부 리스트를 호출자가 수정하면 객체 상태가 깨집니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(`<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>반환된 내부 리스트를 호출자가 수정하면 객체 상태가 깨집니다.</p></div>`,`<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>If the caller modifies the returned internal list, the object's state is broken.</p></div>`);
             document.getElementById('validateBtnPython').disabled=false;
-            const s=document.getElementById('codeStatusPython'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusPython'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodePython() {
             const code=document.getElementById('codeEditorPython').value;
             if(passesChecks(code, CHECK_PY)){
                 updateChecklist('progressChecklistPython',2,true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>복사본을 반환하여 내부 상태를 보호했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusPython'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>내부 리스트가 외부 변경으로부터 보호됩니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(`<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>복사본을 반환하여 내부 상태를 보호했습니다.</p></div>`,`<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You protected the internal state by returning a copy.</p></div>`);
+                const s=document.getElementById('codeStatusPython'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(`<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>내부 리스트가 외부 변경으로부터 보호됩니다.</p></div></div>`,`<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The internal list is protected from external modification.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython',2,false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>return list(self._transactions) 등 복사본을 반환하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(`<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>return list(self._transactions) 등 복사본을 반환하세요.</p></div>`,`<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Return a copy, e.g. return list(self._transactions).</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -368,21 +388,24 @@
             if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML='';
             document.getElementById('validateBtnPython').disabled=true;
-            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
             for(let i=0;i<3;i++) updateChecklist('progressChecklistPython',i,false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">Private 배열의 참조를 그대로 반환해 외부에서 내부 데이터를 변조할 수 있는 캡슐화 결함입니다.</div>
+      <div style="margin-bottom:12px;" data-en="An encapsulation flaw where returning a private array's reference directly lets external code tamper with internal data.">Private 배열의 참조를 그대로 반환해 외부에서 내부 데이터를 변조할 수 있는 캡슐화 결함입니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-495</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>

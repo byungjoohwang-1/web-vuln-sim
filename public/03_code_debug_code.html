@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>제거되지 않은 디버그 코드 - 실습 시뮬레이터</title>
+    <title data-en="Leftover Debug Code - Practice Simulator">제거되지 않은 디버그 코드 - 실습 시뮬레이터</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,52 +72,56 @@
         .easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
         .easybox b { color:#c0392b; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+        .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+        .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
+        .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
 </head>
 <body>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
     <div class="container">
-        <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+        <div class="top-nav"><a href="index.html" data-en="&larr; Main">&larr; 메인으로</a></div>
         <div class="header">
-            <h1>🐞 제거되지 않은 디버그 코드 - 실습 시뮬레이터</h1>
+            <h1 data-en="🐞 Leftover Debug Code - Practice Simulator">🐞 제거되지 않은 디버그 코드 - 실습 시뮬레이터</h1>
             <p>CWE-489: Active Debug Code</p>
-            <span class="kisa-tag">KISA 소프트웨어 보안약점 진단가이드(2021) · 캡슐화</span>
+            <span class="kisa-tag" data-en="KISA Software Security Weakness Diagnosis Guide (2021) · Encapsulation">KISA 소프트웨어 보안약점 진단가이드(2021) · 캡슐화</span>
         </div>
 
-        <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br>개발용 디버그 출력·<b>뒷문(백도어)</b>을 운영에 남기면 비밀번호 유출·인증 우회 통로가 됩니다. 출시 전 반드시 제거합니다.</div>
+        <div class="easybox" data-en="<span class=&quot;tag&quot;>💡 In simple terms</span><br>Leaving development debug output and a <b>backdoor</b> in production becomes a channel for password leakage and authentication bypass. Always remove them before release."><span class="tag">💡 쉽게 말하면</span><br>개발용 디버그 출력·<b>뒷문(백도어)</b>을 운영에 남기면 비밀번호 유출·인증 우회 통로가 됩니다. 출시 전 반드시 제거합니다.</div>
 
         <div class="mode-tabs">
             <button class="mode-tab active" onclick="switchMode('java')">
                 <div class="mode-icon">&#9749;</div>
-                <div class="mode-title">Java 시큐어 코딩</div>
-                <div class="mode-desc">디버그/백도어 제거</div>
+                <div class="mode-title" data-en="Java Secure Coding">Java 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Remove debug code/backdoor">디버그/백도어 제거</div>
             </button>
             <button class="mode-tab" onclick="switchMode('python')">
                 <div class="mode-icon">&#128013;</div>
-                <div class="mode-title">Python 시큐어 코딩</div>
-                <div class="mode-desc">디버그/백도어 제거</div>
+                <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
+                <div class="mode-desc" data-en="Remove debug code/backdoor">디버그/백도어 제거</div>
             </button>
         </div>
 
         <div id="java-mode" class="content-wrapper active">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistJava">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 디버그/백도어 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 코드 제거</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify debug code/backdoor">디버그/백도어 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Remove the code">코드 제거</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#9749; Java 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusJava">취약한 코드</span>
+                        <span class="panel-title" data-en="&#9749; Java Code Editor">&#9749; Java 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusJava" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">LoginService.java</span>
-                            <span class="toolbar-hint">&#128161; 디버그 출력과 테스트 백도어를 제거하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Remove the debug output and the test backdoor.">&#128161; 디버그 출력과 테스트 백도어를 제거하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnJava" onclick="toggleEditModeJava()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerJava">
                             <pre><code class="language-java" id="codeDisplayJava">public boolean login(String id, String pw) {
@@ -135,17 +139,17 @@
 }</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodeJava()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('java')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('java')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodeJava()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodeJava()" id="validateBtnJava" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('java')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('java')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackJava"></div>
                     <div class="hint-panel" id="hintPanelJava">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 정리</strong>
-                            <p>디버그 출력·백도어 삭제.</p>
+                            <strong data-en="1. Clean up">1. 정리</strong>
+                            <p data-en="Delete the debug output and backdoor.">디버그 출력·백도어 삭제.</p>
                             <div class="hint-code">public boolean login(String id, String pw) {
     return authService.verify(id, pw);
 }</div>
@@ -153,17 +157,17 @@
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelJava">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>운영 배포 전 디버그 코드와 백도어를 모두 제거해야 합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Before production deployment, all debug code and backdoors must be removed.">운영 배포 전 디버그 코드와 백도어를 모두 제거해야 합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Active Debug Code</p>
-                                <p>디버그 출력/백도어로 정보 노출과 인증 우회가 발생합니다.</p>
+                                <p data-en="Debug output/backdoor causes information exposure and authentication bypass.">디버그 출력/백도어로 정보 노출과 인증 우회가 발생합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -172,24 +176,24 @@
         </div>
         <div id="python-mode" class="content-wrapper">
             <div class="progress-indicator">
-                <div class="progress-title">&#9989; 학습 진행도</div>
+                <div class="progress-title" data-en="&#9989; Learning Progress">&#9989; 학습 진행도</div>
                 <ul class="checklist" id="progressChecklistPython">
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 진단 시작</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 디버그/백도어 식별</li>
-                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> 코드 제거</li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Start diagnosis">진단 시작</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Identify debug code/backdoor">디버그/백도어 식별</span></li>
+                    <li class="checklist-item"><span class="checklist-icon">&#11036;</span> <span data-en="Remove the code">코드 제거</span></li>
                 </ul>
             </div>
             <div class="main-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">&#128013; Python 코드 에디터</span>
-                        <span class="status-badge status-vulnerable" id="codeStatusPython">취약한 코드</span>
+                        <span class="panel-title" data-en="&#128013; Python Code Editor">&#128013; Python 코드 에디터</span>
+                        <span class="status-badge status-vulnerable" id="codeStatusPython" data-en="Vulnerable code">취약한 코드</span>
                     </div>
                     <div class="code-editor">
                         <div class="editor-toolbar">
                             <span class="toolbar-title">login.py</span>
-                            <span class="toolbar-hint">&#128161; print 디버그와 테스트 백도어를 제거하세요.</span>
-                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()">&#9999;&#65039; 편집</button>
+                            <span class="toolbar-hint" data-en="&#128161; Remove the print debug output and the test backdoor.">&#128161; print 디버그와 테스트 백도어를 제거하세요.</span>
+                            <button class="edit-toggle-btn" id="editBtnPython" onclick="toggleEditModePython()" data-en="&#9999;&#65039; Edit">&#9999;&#65039; 편집</button>
                         </div>
                         <div class="code-display" id="codeDisplayContainerPython">
                             <pre><code class="language-python" id="codeDisplayPython">def login(uid, pw):
@@ -207,34 +211,34 @@
     return auth.verify(uid, pw)</textarea>
                     </div>
                     <div class="control-panel">
-                        <button class="btn btn-analyze" onclick="analyzeCodePython()">&#128269; 진단하기</button>
-                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled>&#9989; 검증하기</button>
-                        <button class="btn btn-hint" onclick="toggleHint('python')">&#128161; 힌트</button>
-                        <button class="btn btn-reset" onclick="resetCoding('python')">&#128260; 초기화</button>
+                        <button class="btn btn-analyze" onclick="analyzeCodePython()" data-en="&#128269; Diagnose">&#128269; 진단하기</button>
+                        <button class="btn btn-validate" onclick="validateCodePython()" id="validateBtnPython" disabled data-en="&#9989; Validate">&#9989; 검증하기</button>
+                        <button class="btn btn-hint" onclick="toggleHint('python')" data-en="&#128161; Hint">&#128161; 힌트</button>
+                        <button class="btn btn-reset" onclick="resetCoding('python')" data-en="&#128260; Reset">&#128260; 초기화</button>
                     </div>
                     <div class="feedback" id="feedbackPython"></div>
                     <div class="hint-panel" id="hintPanelPython">
-                        <div class="info-title">&#128161; 수정 가이드 (KISA 기준)</div>
+                        <div class="info-title" data-en="&#128161; Fix Guide (KISA standard)">&#128161; 수정 가이드 (KISA 기준)</div>
                         <div class="hint-step">
-                            <strong>1. 정리</strong>
-                            <p>디버그 출력·백도어 삭제.</p>
+                            <strong data-en="1. Clean up">1. 정리</strong>
+                            <p data-en="Delete the debug output and backdoor.">디버그 출력·백도어 삭제.</p>
                             <div class="hint-code">def login(uid, pw):
     return auth.verify(uid, pw)</div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">&#128202; 분석 결과 및 설명</span></div>
+                    <div class="panel-header"><span class="panel-title" data-en="&#128202; Analysis Result & Explanation">&#128202; 분석 결과 및 설명</span></div>
                     <div id="rightPanelPython">
                         <div class="info-section">
-                            <div class="info-title">&#127919; 목표</div>
-                            <div class="info-content"><p>운영 코드에서 디버그/백도어를 제거합니다.</p></div>
+                            <div class="info-title" data-en="&#127919; Goal">&#127919; 목표</div>
+                            <div class="info-content"><p data-en="Remove the debug code/backdoor from production code.">운영 코드에서 디버그/백도어를 제거합니다.</p></div>
                         </div>
                         <div class="info-section">
-                            <div class="info-title">&#9888;&#65039; 현재 취약점</div>
+                            <div class="info-title" data-en="&#9888;&#65039; Current Vulnerability">&#9888;&#65039; 현재 취약점</div>
                             <div class="info-content">
                                 <p style="color:#dc3545; font-weight:bold;">Active Debug Code</p>
-                                <p>디버그 출력/백도어로 정보 노출·인증 우회가 발생합니다.</p>
+                                <p data-en="Debug output/backdoor causes information exposure and authentication bypass.">디버그 출력/백도어로 정보 노출·인증 우회가 발생합니다.</p>
                             </div>
                         </div>
                     </div>
@@ -247,6 +251,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script>
+        // === i18n ===
+        function L(ko,en){ return (localStorage.getItem('wvs_lang')==='en') ? en : ko; }
+        function applyLang(lang){
+            document.querySelectorAll('[data-en]').forEach(function(el){
+                if(el.dataset.ko===undefined) el.dataset.ko = el.innerHTML;
+                el.innerHTML = (lang==='en') ? el.getAttribute('data-en') : el.dataset.ko;
+            });
+            var t = document.querySelector('title[data-en]');
+            if(t){ if(t.dataset.ko===undefined) t.dataset.ko=t.textContent; t.textContent=(lang==='en')?t.getAttribute('data-en'):t.dataset.ko; }
+            document.documentElement.lang = lang;
+            var bk=document.getElementById('lang-ko'), be=document.getElementById('lang-en');
+            if(bk) bk.classList.toggle('on', lang!=='en');
+            if(be) be.classList.toggle('on', lang==='en');
+        }
+        function setLang(lang){ localStorage.setItem('wvs_lang',lang); applyLang(lang); }
+
         const VULN_JAVA = `public boolean login(String id, String pw) {
     // [취약] 운영에 남은 디버그 출력 + 테스트 백도어
     System.out.println("DEBUG pw=" + pw);
@@ -299,25 +319,33 @@
             const d=document.getElementById('codeDisplayContainerJava'), e=document.getElementById('codeEditorJava'),
                   b=document.getElementById('editBtnJava'), p=document.getElementById('codeDisplayJava');
             isEditingJava=!isEditingJava;
-            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingJava){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.classList.remove('editing'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); }
         }
         function analyzeCodeJava() {
             updateChecklist('progressChecklistJava',0,true); updateChecklist('progressChecklistJava',1,true);
-            document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>디버그 출력으로 비밀번호가 로그에 남고, 테스트 백도어로 인증이 우회됩니다.</p></div>`;
+            document.getElementById('feedbackJava').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>디버그 출력으로 비밀번호가 로그에 남고, 테스트 백도어로 인증이 우회됩니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The debug output leaves the password in the logs, and the test backdoor bypasses authentication.</p></div>`);
             document.getElementById('validateBtnJava').disabled=false;
-            const s=document.getElementById('codeStatusJava'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusJava'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodeJava() {
             const code=document.getElementById('codeEditorJava').value;
             if(passesChecks(code, CHECK_JAVA)){
                 updateChecklist('progressChecklistJava',2,true);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>디버그 출력과 백도어 분기를 제거했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusJava'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelJava').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>운영 코드에서 디버그/백도어가 제거되었습니다.</p></div></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>디버그 출력과 백도어 분기를 제거했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You removed the debug output and the backdoor branch.</p></div>`);
+                const s=document.getElementById('codeStatusJava'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelJava').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>운영 코드에서 디버그/백도어가 제거되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The debug code/backdoor has been removed from the production code.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistJava',2,false);
-                document.getElementById('feedbackJava').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>System.out.println 디버그 출력과 "test" 백도어 분기를 모두 제거하세요.</p></div>`;
+                document.getElementById('feedbackJava').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>System.out.println 디버그 출력과 "test" 백도어 분기를 모두 제거하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Remove both the System.out.println debug output and the "test" backdoor branch.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -327,7 +355,7 @@
                 if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayJava'));
                 document.getElementById('feedbackJava').innerHTML='';
                 document.getElementById('validateBtnJava').disabled=true;
-                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+                const s=document.getElementById('codeStatusJava'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
                 for(let i=0;i<3;i++) updateChecklist('progressChecklistJava',i,false);
             } else { resetCodingPython(); }
         }
@@ -338,25 +366,33 @@
             const d=document.getElementById('codeDisplayContainerPython'), e=document.getElementById('codeEditorPython'),
                   b=document.getElementById('editBtnPython'), p=document.getElementById('codeDisplayPython');
             isEditingPython=!isEditingPython;
-            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent='💾 저장'; b.classList.add('editing'); }
-            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent='✏️ 편집'; b.classList.remove('editing'); }
+            if(isEditingPython){ d.style.display='none'; e.style.display='block'; e.value=p.textContent; e.focus(); b.textContent=L('💾 저장','💾 Save'); b.classList.add('editing'); }
+            else { d.style.display='block'; e.style.display='none'; p.textContent=e.value; if(window.Prism)Prism.highlightElement(p); b.textContent=L('✏️ 편집','✏️ Edit'); b.classList.remove('editing'); b.dataset.ko='✏️ 편집'; b.setAttribute('data-en','✏️ Edit'); }
         }
         function analyzeCodePython() {
             updateChecklist('progressChecklistPython',0,true); updateChecklist('progressChecklistPython',1,true);
-            document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>print 디버그로 비밀번호가 노출되고, 백도어로 인증이 우회됩니다.</p></div>`;
+            document.getElementById('feedbackPython').innerHTML = L(
+                `<div class="feedback-item feedback-error"><strong>🚨 보안 취약점 발견</strong><p>print 디버그로 비밀번호가 노출되고, 백도어로 인증이 우회됩니다.</p></div>`,
+                `<div class="feedback-item feedback-error"><strong>🚨 Security vulnerability found</strong><p>The print debug exposes the password, and the backdoor bypasses authentication.</p></div>`);
             document.getElementById('validateBtnPython').disabled=false;
-            const s=document.getElementById('codeStatusPython'); s.textContent='수정 중'; s.className='status-badge status-editing';
+            const s=document.getElementById('codeStatusPython'); s.textContent=L('수정 중','Editing'); s.dataset.ko='수정 중'; s.setAttribute('data-en','Editing'); s.className='status-badge status-editing';
         }
         function validateCodePython() {
             const code=document.getElementById('codeEditorPython').value;
             if(passesChecks(code, CHECK_PY)){
                 updateChecklist('progressChecklistPython',2,true);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>디버그 출력과 백도어 분기를 제거했습니다.</p></div>`;
-                const s=document.getElementById('codeStatusPython'); s.textContent='안전한 코드'; s.className='status-badge status-secure';
-                document.getElementById('rightPanelPython').innerHTML = `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>디버그/백도어가 제거되었습니다.</p></div></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>디버그 출력과 백도어 분기를 제거했습니다.</p></div>`,
+                    `<div class="feedback-item feedback-success"><strong>🎉 Validation passed!</strong><p>You removed the debug output and the backdoor branch.</p></div>`);
+                const s=document.getElementById('codeStatusPython'); s.textContent=L('안전한 코드','Secure code'); s.dataset.ko='안전한 코드'; s.setAttribute('data-en','Secure code'); s.className='status-badge status-secure';
+                document.getElementById('rightPanelPython').innerHTML = L(
+                    `<div class="info-section"><div class="info-title">✅ 안전한 상태</div><div class="info-content"><p style="color:#28a745"><strong>Secure Coding 적용 완료</strong></p><p>디버그/백도어가 제거되었습니다.</p></div></div>`,
+                    `<div class="info-section"><div class="info-title">✅ Secure state</div><div class="info-content"><p style="color:#28a745"><strong>Secure coding applied</strong></p><p>The debug code/backdoor has been removed.</p></div></div>`);
             } else {
                 updateChecklist('progressChecklistPython',2,false);
-                document.getElementById('feedbackPython').innerHTML = `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>print("DEBUG...) 와 == "test" 백도어를 모두 제거하세요.</p></div>`;
+                document.getElementById('feedbackPython').innerHTML = L(
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>print("DEBUG...) 와 == "test" 백도어를 모두 제거하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Remove both the print("DEBUG...) output and the == "test" backdoor.</p></div>`);
             }
         }
         function resetCodingPython() {
@@ -365,21 +401,24 @@
             if(window.Prism)Prism.highlightElement(document.getElementById('codeDisplayPython'));
             document.getElementById('feedbackPython').innerHTML='';
             document.getElementById('validateBtnPython').disabled=true;
-            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent='취약한 코드';
+            const s=document.getElementById('codeStatusPython'); s.className='status-badge status-vulnerable'; s.textContent=L('취약한 코드','Vulnerable code'); s.dataset.ko='취약한 코드'; s.setAttribute('data-en','Vulnerable code');
             for(let i=0;i<3;i++) updateChecklist('progressChecklistPython',i,false);
         }
+
+        // 초기 언어 적용
+        applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
 <!-- REF-CARD -->
 <div style="max-width:1000px;margin:18px auto 28px;padding:0 16px;font-family:'Segoe UI',Roboto,'Malgun Gothic',sans-serif;">
   <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
-    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;">📰 실제 사고사례 &amp; 표준 매핑</div>
+    <div style="background:linear-gradient(90deg,#1e293b,#334155);color:#fff;padding:12px 18px;font-weight:700;font-size:15px;" data-en="📰 Real-world Incidents & Standard Mapping">📰 실제 사고사례 &amp; 표준 매핑</div>
     <div style="background:#fff;padding:16px 18px;color:#2c3e50;line-height:1.7;font-size:14.5px;">
-      <div style="margin-bottom:12px;">운영 환경에 남은 <b>디버그/테스트 엔드포인트</b>가 노출돼 인증을 우회하거나 내부 정보가 드러난 사례가 다수 보고됐습니다.</div>
+      <div style="margin-bottom:12px;" data-en="Many cases have been reported where <b>debug/test endpoints</b> left in the production environment were exposed, allowing authentication bypass or revealing internal information.">운영 환경에 남은 <b>디버그/테스트 엔드포인트</b>가 노출돼 인증을 우회하거나 내부 정보가 드러난 사례가 다수 보고됐습니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="rc-tag" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace;">🏷️ CWE-489</span>
         
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#94a3b8;">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
+      <div style="margin-top:12px;font-size:12px;color:#94a3b8;" data-en="※ Educational summary based on publicly known cases · CWE/OWASP are public standard classifications">※ 공개적으로 알려진 사례 기반 교육용 요약 · CWE/OWASP는 공개 표준 분류</div>
     </div>
   </div>
 </div>
