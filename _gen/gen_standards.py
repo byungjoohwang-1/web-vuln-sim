@@ -51,6 +51,29 @@ def bi(ko, en):
             '<span class="en">' + esc(en or ko) + '</span>')
 
 
+def hl_markers(code):
+    """공식 예제(단일 페인) 안의 // Compliant / // Non-compliant 라인 주석을
+    색상 하이라이트해 위반·준수 라인을 한눈에 보이게 한다(블록 분리는 불가하므로 인라인 표시)."""
+    lines = []
+    for line in code.split('\n'):
+        pos = line.find('//')
+        if pos < 0:
+            lines.append(esc(line))
+            continue
+        comment = line[pos:]
+        cl = comment.lower()
+        cls = None
+        if 'non-compliant' in cl or 'noncompliant' in cl or 'non compliant' in cl:
+            cls = 'mk-bad'
+        elif 'compliant' in cl:
+            cls = 'mk-good'
+        if cls:
+            lines.append(esc(line[:pos]) + '<span class="' + cls + '">' + esc(comment) + '</span>')
+        else:
+            lines.append(esc(line))
+    return '\n'.join(lines)
+
+
 STANDARDS = [
  {'key': 'misrac', 'name': 'MISRA C:2012', 'lang': 'c',
   'full': 'Guidelines for the use of the C language in critical systems',
@@ -239,6 +262,9 @@ pre{background:var(--bg);color:#e2e8f0;padding:14px 15px;border-radius:0 0 9px 9
 /* ── 추가 개선: 공식예제 배지·복사·맨위로·검색·접근성 ── */
 .rid .off{font-size:10.5px;font-weight:700;color:#334155;background:#e2e8f0;border-radius:20px;padding:3px 9px}
 .chdr.off{background:#475569}
+.chdr.off b{padding:0 2px}
+.mk-bad{color:#fca5a5;font-weight:700}
+.mk-good{color:#86efac;font-weight:700}
 .pane{position:relative}
 .copy{position:absolute;top:6px;right:8px;z-index:2;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:6px;font-size:11px;font-weight:700;padding:3px 8px;cursor:pointer;opacity:.5;font-family:'JetBrains Mono',monospace}
 .copy:hover,.copy:focus-visible{opacity:1;color:#7dd3fc}
@@ -273,9 +299,9 @@ def render_card(sk, i, r, lang):
           '<h3>' + bi(r['title'], title_en) + '</h3>'
           '<div class="sw">' + prac + '</div>'
           '<div class="pane show" id="' + cid + 'b"><div class="chdr off">📄 '
-          '<span class="ko">공식 예제 (코드 내 위반·준수 주석 참고)</span>'
-          '<span class="en">Official example (see inline compliant / non-compliant notes)</span></div>'
-          '<pre>' + esc(r['bad']) + '</pre></div>'
+          '<span class="ko">공식 예제 — <b class="mk-bad">// Non-compliant</b> 위반 · <b class="mk-good">// Compliant</b> 준수 라인</span>'
+          '<span class="en">Official example — <b class="mk-bad">// Non-compliant</b> vs <b class="mk-good">// Compliant</b> lines</span></div>'
+          '<pre>' + hl_markers(r['bad']) + '</pre></div>'
           '<div class="why">⚠️ ' + bi(r['why'], why_en) + '</div>'
           '</div>')
     return (
