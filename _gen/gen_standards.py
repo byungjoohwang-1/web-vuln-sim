@@ -8,6 +8,10 @@ rule 스키마: {id, cat, title, why, bad, good [, title_en, why_en]}
   - title_en/why_en 없으면 한국어로 폴백(점진 전환 호환).
 """
 import html, os, importlib, re
+try:
+    from std_pdf_overrides import PDF_EXAMPLE_OVERRIDES
+except Exception:
+    PDF_EXAMPLE_OVERRIDES = {}
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public')
 
@@ -18,6 +22,27 @@ def esc(s):
 
 def _rules(mod):
     return importlib.import_module(mod).RULES
+
+
+def apply_pdf_overrides(std_key, rules):
+    """Apply locally extracted MISRA PDF examples over existing rule data."""
+    overrides = PDF_EXAMPLE_OVERRIDES.get(std_key, {})
+    if not overrides:
+        return rules
+    out = []
+    for rule in rules:
+        r = dict(rule)
+        o = overrides.get(r.get('id'))
+        if o:
+            if o.get('bad'):
+                r['bad'] = o['bad']
+            if o.get('good'):
+                r['good'] = o['good']
+            r['pdf_example'] = True
+            # PDF examples are often focused snippets, not self-contained programs.
+            r['compiles'] = False
+        out.append(r)
+    return out
 
 
 def bi(ko, en):
@@ -179,6 +204,7 @@ body:not(.lang-en) .en{display:none}body.lang-en .ko{display:none}
 .rid .id{font-family:'JetBrains Mono',monospace;font-weight:700;background:#0b1220;color:#7dd3fc;padding:4px 11px;border-radius:8px;font-size:13px}
 .rid .cat{font-size:11px;font-weight:700;color:#7c3aed;background:#f3e8ff;border-radius:20px;padding:3px 10px}
 .rid .ok{font-size:10.5px;font-weight:700;color:#15803d;background:#dcfce7;border-radius:20px;padding:3px 9px}
+.rid .pdf{font-size:10.5px;font-weight:700;color:#9a3412;background:#ffedd5;border-radius:20px;padding:3px 9px}
 .card h3{font-size:15px;color:var(--ink);margin:2px 0 11px;line-height:1.5}
 .sw{display:flex;gap:5px;background:#0b1220;border-radius:9px;padding:4px;width:fit-content;margin-bottom:10px;flex-wrap:wrap}
 .sw button{border:none;background:transparent;color:#94a3b8;font-weight:700;font-size:12px;padding:7px 13px;border-radius:7px;cursor:pointer;font-family:inherit}
@@ -210,6 +236,20 @@ pre{background:var(--bg);color:#e2e8f0;padding:14px 15px;border-radius:0 0 9px 9
  .ide{height:84vh}.ide-body{flex-direction:column}.ide-out{width:100%;max-width:none;border-left:none;border-top:1px solid #1e293b;height:34%}
 }
 .menubtn{display:none;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:8px;padding:5px 11px;font-size:13px}
+/* ── 추가 개선: 공식예제 배지·복사·맨위로·검색·접근성 ── */
+.rid .off{font-size:10.5px;font-weight:700;color:#334155;background:#e2e8f0;border-radius:20px;padding:3px 9px}
+.chdr.off{background:#475569}
+.pane{position:relative}
+.copy{position:absolute;top:6px;right:8px;z-index:2;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:6px;font-size:11px;font-weight:700;padding:3px 8px;cursor:pointer;opacity:.5;font-family:'JetBrains Mono',monospace}
+.copy:hover,.copy:focus-visible{opacity:1;color:#7dd3fc}
+.totop{position:fixed;right:16px;bottom:16px;z-index:60;display:none;width:42px;height:42px;border-radius:50%;border:none;background:#0ea5e9;color:#fff;font-size:18px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.totop.on{display:block}
+.scount{color:#7dd3fc;font-size:11.5px;font-family:'JetBrains Mono',monospace;padding:0 6px 8px;display:none}
+body.searching .scount{display:block}
+body.searching .panel{display:block!important}
+body.searching .ov{display:none}
+.sech.hide,.card.hide{display:none}
+.snode:focus-visible,.langtog:focus-visible,.seclist a:focus-visible,.menubtn:focus-visible{outline:2px solid #7dd3fc;outline-offset:2px}
 """
 
 
@@ -219,13 +259,31 @@ def render_card(sk, i, r, lang):
     why_en = r.get('why_en') or r['why']
     blob = esc(r['id'] + ' ' + r['title'] + ' ' + title_en + ' ' + r.get('cat', ''))
     okbadge = '<span class="ok">✓ compilable</span>' if r.get('compiles') else ''
-    return (
+    if r.get('pdf_example'):
+        okbadge += '<span class="pdf">PDF example</span>'
+    head = (
       '<div class="card" data-s="' + blob + '">'
-      '<div class="rid"><span class="id">' + esc(r['id']) + '</span><span class="cat">' + esc(r['cat']) + '</span>' + okbadge + '</div>'
+      '<div class="rid"><span class="id">' + esc(r['id']) + '</span><span class="cat">' + esc(r['cat']) + '</span>' + okbadge)
+    prac = ('<button class="prac" onclick="practice(\'' + cid + '\',\'' + lang + '\')">🧪 '
+            '<span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button>')
+    if r.get('single'):
+        # 공식 추출 예제(위반·준수 주석 포함) — 단일 페인
+        return (
+          head + '<span class="off">📄 <span class="ko">공식 예제</span><span class="en">Official example</span></span></div>'
+          '<h3>' + bi(r['title'], title_en) + '</h3>'
+          '<div class="sw">' + prac + '</div>'
+          '<div class="pane show" id="' + cid + 'b"><div class="chdr off">📄 '
+          '<span class="ko">공식 예제 (코드 내 위반·준수 주석 참고)</span>'
+          '<span class="en">Official example (see inline compliant / non-compliant notes)</span></div>'
+          '<pre>' + esc(r['bad']) + '</pre></div>'
+          '<div class="why">⚠️ ' + bi(r['why'], why_en) + '</div>'
+          '</div>')
+    return (
+      head + '</div>'
       '<h3>' + bi(r['title'], title_en) + '</h3>'
       '<div class="sw"><button class="on bad" onclick="sw(\'' + cid + '\',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button>'
       '<button class="good" onclick="sw(\'' + cid + '\',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button>'
-      '<button class="prac" onclick="practice(\'' + cid + '\',\'' + lang + '\')">🧪 <span class="ko">IDE에서 연습</span><span class="en">Practice in IDE</span></button></div>'
+      + prac + '</div>'
       '<div class="pane show" id="' + cid + 'b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>' + esc(r['bad']) + '</pre></div>'
       '<div class="pane" id="' + cid + 'g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>' + esc(r['good']) + '</pre></div>'
       '<div class="why">⚠️ ' + bi(r['why'], why_en) + '</div>'
@@ -266,24 +324,43 @@ def render_panel(s, active):
 
 
 def render_side():
-    out = '<input class="sb" type="text" placeholder="🔎 search id / title…" oninput="gsearch(this.value)">'
+    out = ('<input class="sb" type="search" aria-label="search rules by id or title" '
+           'placeholder="🔎 search id / title (all standards)…" oninput="gsearch(this.value)">'
+           '<div class="scount" id="scount"></div>')
     for idx, s in enumerate(STANDARDS):
         secs = grouped(s)
-        out += ('<div class="snode' + (' on open' if idx == 0 else '') + '" id="sn-' + s['key'] + '" onclick="selStd(\'' + s['key'] + '\')">'
+        out += ('<div class="snode' + (' on open' if idx == 0 else '') + '" id="sn-' + s['key'] + '"'
+                ' role="button" tabindex="0" aria-label="' + esc(s['name']) + '"'
+                ' onclick="selStd(\'' + s['key'] + '\')" onkeydown="kd(event)">'
                 '<span class="tw">▶</span><span class="nm">' + esc(s['name']) + '</span>'
                 '<span class="cnt">' + str(len(s['rules'])) + '</span></div>')
         links = ''
         for sec, items in secs:
             ko, en = sec_label(s['key'], sec)
-            links += ('<a onclick="goSec(\'' + s['key'] + '\',\'' + sec + '\')"><span class="sc">' + esc(sec) + '</span>'
+            links += ('<a role="link" tabindex="0" onkeydown="kd(event)" onclick="goSec(\'' + s['key'] + '\',\'' + sec + '\')"><span class="sc">' + esc(sec) + '</span>'
                       + bi(ko, en) + '<span class="scnt">' + str(len(items)) + '</span></a>')
         out += '<div class="seclist' + (' show' if idx == 0 else '') + '" id="sl-' + s['key'] + '">' + links + '</div>'
     return out
 
 
+def _clean_rules(rules):
+    """불완전한 룰 제거 + 위반/준수가 동일한 (공식 추출) 룰은 single 플래그.
+    AUTOSAR 공식 예제는 한 파일에 위반·준수 주석이 함께 있어 bad==good 이 되므로,
+    의미 없는 토글 대신 단일 '공식 예제' 페인으로 렌더하도록 표시한다."""
+    out = []
+    for r in rules:
+        if not (r.get('bad') and r.get('good') and r.get('why') and r.get('title')):
+            continue  # 빈/불완전 룰 제외
+        if r['bad'] == r['good']:
+            r = dict(r)
+            r['single'] = True
+        out.append(r)
+    return out
+
+
 def build():
     for s in STANDARDS:
-        s['rules'] = _rules(s['mod'])
+        s['rules'] = _clean_rules(apply_pdf_overrides(s['key'], _rules(s['mod'])))
     panels = ''.join(render_panel(s, i == 0) for i, s in enumerate(STANDARDS))
     total = sum(len(s['rules']) for s in STANDARDS)
     side = render_side()
@@ -291,6 +368,7 @@ def build():
     html_doc = (
       '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">'
       '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+      '<meta name="description" content="MISRA C:2012 / MISRA C++:2023 / CERT C / CERT C++ / AUTOSAR C++14 coding-standard rules with non-compliant vs compliant examples and a live Wandbox practice IDE. KO/EN.">'
       '<title>C/C++ 코딩 표준 — MISRA · CERT · AUTOSAR</title>'
       '<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">'
       '<style>' + CSS + '</style></head><body>'
@@ -298,7 +376,7 @@ def build():
       '<a href="index.html">← <span class="ko">홈</span><span class="en">Home</span></a> '
       '<a href="vuln-hub.html"><span class="ko">취약점 학습 허브</span><span class="en">Vuln Hub</span></a>'
       '<span class="sp"></span>'
-      '<span class="langtog" onclick="toggleLang()"><b class="ko">한국어</b><b class="en">English</b>'
+      '<span class="langtog" role="button" tabindex="0" aria-label="toggle language" onclick="toggleLang()" onkeydown="kd(event)"><b class="ko">한국어</b><b class="en">English</b>'
       ' <span class="ko">→ EN</span><span class="en">→ 한</span></span></div>'
       '<div class="layout"><div class="side" id="side">' + side + '</div>'
       '<div class="main">'
@@ -307,8 +385,8 @@ def build():
       '<span class="en">Compare the five major embedded/safety-critical/security C/C++ coding standards rule-by-rule with non-compliant vs compliant examples. Navigate standard→section in the left tree, and run code live with the 🧪 button.</span></p></div>'
       + panels +
       '<div class="foot">' + esc(counts) + ' &nbsp;|&nbsp; <span class="ko">대표 규칙</span><span class="en">rules</span> ' + str(total) + ' · '
-      '<span class="ko">사내 교육용. 규칙 ID·제목·분류는 각 표준(및 CERT 공식 사이트) 대조 인용, 코드 예제와 해설은 직접 작성.</span>'
-      '<span class="en">Internal training. Rule IDs/titles/classes cited from each standard (CERT cross-checked vs the official site); all example code and explanations are originally written.</span></div></div></div>'
+      '<span class="ko">사내 교육용. MISRA C:2012 / MISRA C++:2023의 매칭 가능한 예제 코드는 로컬 PDF에서 추출해 반영했고, 나머지 표준·미매칭 룰은 기존 교육용 예제를 유지합니다.</span>'
+      '<span class="en">Internal training. Matched MISRA C:2012 / MISRA C++:2023 examples are extracted from the local PDFs; other standards and unmatched rules keep the existing training examples.</span></div></div></div>'
       # ── 연습 IDE ──
       '<div class="ide" id="ide"><div class="ide-bar"><span class="ide-title">🧪 <span class="ko">연습 IDE</span><span class="en">Practice IDE</span></span>'
       '<select id="ideLang" onchange="setLang(this.value)"><option value="c">C</option><option value="cpp">C++</option></select>'
@@ -320,21 +398,33 @@ def build():
       '<div class="ide-out"><div class="ide-outhdr"><span class="ko">실행 결과 (Wandbox 원격 gcc)</span><span class="en">Output (Wandbox remote gcc)</span></div><pre id="ideOut">▶</pre></div></div>'
       '<div class="ide-note"><span class="ko">⚠️ 예시는 규칙 설명용입니다. \'main 스캐폴드\'로 골격을 감싸 실행하세요.</span>'
       '<span class="en">⚠️ Examples illustrate the rule. Use \'main scaffold\' to wrap a runnable skeleton.</span></div></div>'
+      '<button class="totop" id="totop" onclick="window.scrollTo({top:0,behavior:\'smooth\'})" aria-label="back to top">↑</button>'
       '<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>'
       '<script>'
-      'function toggleLang(){document.body.classList.toggle("lang-en");try{localStorage.setItem("std_lang",document.body.classList.contains("lang-en")?"en":"ko");}catch(e){}}'
-      'try{if(localStorage.getItem("std_lang")==="en")document.body.classList.add("lang-en");}catch(e){}'
+      # 언어 선택은 사이트 전역(wvs_lang)과 공유 — 다른 페이지에서 EN 선택 시 이어짐. ?lang= 파라미터도 지원.
+      'function curLangPref(){try{var p=new URLSearchParams(location.search).get("lang");if(p)return p;return localStorage.getItem("wvs_lang")||localStorage.getItem("lang")||localStorage.getItem("std_lang")||"ko";}catch(e){return "ko";}}'
+      'function toggleLang(){var en=!document.body.classList.contains("lang-en");document.body.classList.toggle("lang-en",en);var v=en?"en":"ko";try{localStorage.setItem("wvs_lang",v);localStorage.setItem("lang",v);localStorage.setItem("std_lang",v);}catch(e){}}'
+      'document.body.classList.toggle("lang-en",curLangPref()==="en");'
       'function toggleSide(){document.getElementById("side").classList.toggle("open");}'
       'function selStd(k){document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+k));'
       'document.querySelectorAll(".snode").forEach(n=>{var on=n.id==="sn-"+k;n.classList.toggle("on",on);n.classList.toggle("open",on);});'
-      'document.querySelectorAll(".seclist").forEach(l=>l.classList.toggle("show",l.id==="sl-"+k));window.scrollTo(0,0);}'
+      'document.querySelectorAll(".seclist").forEach(l=>l.classList.toggle("show",l.id==="sl-"+k));'
+      'try{history.replaceState(null,"","#"+k);}catch(e){}window.scrollTo(0,0);}'
       'function goSec(k,sec){selStd(k);var el=document.getElementById("sec-"+k+"-"+sec);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});'
+      'try{history.replaceState(null,"","#sec-"+k+"-"+sec);}catch(e){}'
       'document.getElementById("side").classList.remove("open");}'
+      'function kd(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();e.currentTarget.click();}}'
       'function sw(id,good){document.getElementById(id+"b").classList.toggle("show",!good);'
       'document.getElementById(id+"g").classList.toggle("show",!!good);'
       'var bt=event.currentTarget.parentNode.children;bt[0].classList.toggle("on",!good);bt[1].classList.toggle("on",!!good);}'
-      'function gsearch(q){q=q.toLowerCase();var p=document.querySelector(".panel.on");if(!p)return;'
-      'p.querySelectorAll(".card").forEach(c=>{c.style.display=(c.getAttribute("data-s")||"").toLowerCase().indexOf(q)>=0?"":"none";});}'
+      # 전역 검색 — 모든 표준을 가로질러 검색하고 일치 카드만 노출, 빈 섹션은 숨김.
+      'function gsearch(q){q=q.trim().toLowerCase();var sc=document.getElementById("scount");'
+      'if(!q){document.body.classList.remove("searching");document.querySelectorAll(".card.hide,.sech.hide").forEach(function(e){e.classList.remove("hide");});sc.textContent="";return;}'
+      'document.body.classList.add("searching");var total=0;'
+      'document.querySelectorAll(".panel").forEach(function(p){'
+      'p.querySelectorAll(".card").forEach(function(c){var hit=(c.getAttribute("data-s")||"").toLowerCase().indexOf(q)>=0;c.classList.toggle("hide",!hit);if(hit)total++;});'
+      'p.querySelectorAll(".sech").forEach(function(h){var n=h.nextElementSibling,any=false;while(n&&n.classList.contains("card")){if(!n.classList.contains("hide")){any=true;break;}n=n.nextElementSibling;}h.classList.toggle("hide",!any);});});'
+      'sc.textContent=total+" match"+(total===1?"":"es");}'
       # IDE
       'var ed=null,curLang="c",seed="";'
       'function ensureMonaco(cb){if(window.monaco&&ed){cb();return;}'
@@ -361,6 +451,12 @@ def build():
       'if(j.program_output)t+=j.program_output;if(j.program_error)t+="\\n[stderr]\\n"+j.program_error;'
       'out.textContent=t.trim()||"(no output · status "+(j.status||"?")+")";})'
       '.catch(function(e){out.textContent="🚫 "+e;});}'
+      # 코드 복사 버튼 주입
+      'document.querySelectorAll(".pane pre").forEach(function(pre){var b=document.createElement("button");b.className="copy";b.type="button";b.textContent="copy";b.setAttribute("aria-label","copy code");b.onclick=function(ev){ev.stopPropagation();if(navigator.clipboard)navigator.clipboard.writeText(pre.textContent);var o=b.textContent;b.textContent="✓";setTimeout(function(){b.textContent=o;},1200);};pre.parentNode.appendChild(b);});'
+      # 맨 위로 버튼
+      'var _tt=document.getElementById("totop");if(_tt)window.addEventListener("scroll",function(){_tt.classList.toggle("on",window.scrollY>500);},{passive:true});'
+      # 로드 시 해시 라우팅(#표준 / #sec-표준-섹션) — 딥링크/공유 지원
+      '(function(){var h=decodeURIComponent((location.hash||"").replace(/^#/,""));if(!h)return;if(h.indexOf("sec-")===0){var m=h.match(/^sec-([a-z]+)-(.+)$/);if(m){goSec(m[1],m[2]);return;}}if(["misrac","misracpp","certc","certcpp","autosar"].indexOf(h)>=0)selStd(h);})();'
       '</script></body></html>')
     open(os.path.join(OUT, 'coding-standards.html'), 'w', encoding='utf-8').write(html_doc)
     print('wrote coding-standards.html | standards=%d rules=%d' % (len(STANDARDS), total))
