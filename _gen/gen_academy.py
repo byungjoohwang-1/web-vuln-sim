@@ -71,6 +71,9 @@ h2.st{font-size:23px;margin-bottom:6px}.sub{color:var(--muted);font-size:14px;ma
 .ccard.open{grid-column:1/-1}
 .ccard .fld{margin-top:12px}.ccard .fld .lb{font-size:12px;font-weight:700;color:var(--p);margin-bottom:3px}.ccard .fld .tx{font-size:14px;color:#334155;line-height:1.65}
 .dtnote{font-size:12px;color:var(--muted);line-height:1.55;margin:2px 0 8px}
+.exambox{border:1px solid #f59e0b;border-left-width:4px;background:#fffbeb;border-radius:9px;padding:9px 12px;margin:0 0 12px}
+.examh{font-weight:700;color:#b45309;font-size:13px;margin-bottom:4px}
+.examb{font-size:13px;line-height:1.6;color:#7c2d12;white-space:pre-wrap}
 .dtree{display:flex;flex-direction:column;align-items:stretch;gap:0}
 .dtstep{display:flex;align-items:flex-start;gap:9px;border:1px solid var(--line);border-left-width:4px;border-radius:9px;padding:8px 11px;background:#f8fafc}
 .dtstep.safe{border-left-color:#16a34a;background:#f0fdf4}.dtstep.risk{border-left-color:#dc2626;background:#fef2f2}.dtstep.cond{border-left-color:#f59e0b;background:#fffbeb}
@@ -320,6 +323,53 @@ select.pin{width:100%;max-width:360px;padding:9px 11px;border:1px solid #cbd5e1;
 .lb-lv{color:#7c3aed;font-weight:700;font-size:13px}.lb-xp{font-weight:700;color:#1e293b;text-align:right;font-size:13px}.lb-st{text-align:right;font-size:13px}
 @media(max-width:768px){.gam-lv .lv-bar{width:80px}.gam-row{gap:7px}.gam-chip{font-size:12px;padding:6px 11px}
   .lb-row{grid-template-columns:38px 1fr 56px 70px;font-size:12.5px}.lb-st{display:none}}
+/* B2B SaaS Demo CSS */
+.saas-container{display:flex;flex-direction:column;gap:24px}
+.saas-section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 6px 18px rgba(2,6,23,.05)}
+.saas-section h3{font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:#1e293b}
+.saas-badge{background:#4f46e5;color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 9px;text-transform:uppercase}
+.saas-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){.saas-grid-2{grid-template-columns:1fr}}
+.sandbox-box{border:1px solid #1e293b;border-radius:12px;overflow:hidden;background:#0f172a;color:#cbd5e1;font-family:'JetBrains Mono',monospace}
+.sandbox-header{background:#1e293b;padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #0f172a}
+.sandbox-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.sandbox-body{padding:14px;font-size:12.5px;min-height:120px;display:flex;flex-direction:column;gap:10px}
+.sandbox-editor-p{background:#020617;padding:10px;border-radius:8px;border:1px solid #334155;color:#e2e8f0;font-size:12.5px;line-height:1.55}
+.sandbox-input-row{display:flex;gap:8px;align-items:center;margin-top:6px}
+.sandbox-input{flex:1;background:#1e293b;border:1px solid #475569;color:#fff;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:13px}
+.sandbox-input:focus{outline:none;border-color:#6366f1}
+.sandbox-preview{background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-family:sans-serif;font-size:13px;min-height:90px}
+.sandbox-preview.exploited{background:#fef2f2;border-color:#fca5a5}
+.sandbox-preview.secured{background:#f0fdf4;border-color:#bbf7d0}
+.sandbox-console{background:#020617;color:#38bdf8;padding:8px 12px;border-radius:6px;font-size:12px;min-height:48px;white-space:pre-wrap}
+.hook-ide{border:1px solid #2e3440;border-radius:10px;background:#232731;color:#d8dee9;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow:hidden}
+.hook-ide-h{background:#2f343f;padding:8px 12px;font-size:11.5px;display:flex;align-items:center;justify-content:space-between}
+.hook-ide-body{padding:14px;position:relative}
+.hook-warning{background:rgba(235,94,85,0.15);border-left:4px solid #eb5e55;padding:10px 12px;border-radius:0 6px 6px 0;margin-top:10px}
+.hook-warning-h{color:#eb5e55;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
+.hook-warning-b{font-size:12px;color:#cbd5e1;margin-top:4px}
+.hook-warning-lnk{color:#a5b4fc;text-decoration:underline;cursor:pointer;font-weight:700}
+.hook-jira{border:1.5px dashed #3b82f6;border-radius:10px;background:#eff6ff;padding:14px;color:#1e3a8a}
+.hook-jira-h{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.hook-jira-widget{background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;margin-top:8px}
+.persona-sel{padding:10px 14px;border:1.5px solid var(--p);border-radius:10px;font-size:14px;width:100%;max-width:320px;font-family:inherit;margin-bottom:14px}
+.persona-paths{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.persona-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#f8fafc;transition:.2s}
+.persona-card.active{border-color:var(--p);background:#eef2ff;box-shadow:0 0 0 2px var(--p) inset}
+.persona-card-h{font-weight:700;font-size:14.5px;margin-bottom:4px}
+.persona-card-d{font-size:12px;color:var(--muted)}
+.tour-lb{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.tour-row{display:grid;grid-template-columns:48px 1fr 64px 80px;padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;align-items:center}
+.tour-row.head{background:#f8fafc;font-weight:700;border-bottom-width:2px;font-size:11.5px;color:var(--muted)}
+.tour-rank{text-align:center;font-weight:700}
+.tour-name{font-weight:600}
+.tour-xp{text-align:right;font-family:'JetBrains Mono',monospace;color:#4f46e5;font-weight:700}
+.tour-streak{text-align:right}
+.semgrep-panel{display:grid;grid-template-columns:1fr 1.2fr;gap:14px}
+@media(max-width:820px){.semgrep-panel{grid-template-columns:1fr}}
+.semgrep-log{background:#0f172a;color:#f8fafc;border-radius:12px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;border:1px solid #1e293b;overflow-y:auto;max-height:280px}
+.semgrep-finding{border-left:3px solid #ef4444;background:rgba(239,68,68,0.1);padding:6px 10px;margin-bottom:10px;border-radius:0 6px 6px 0}
+.semgrep-finding.fixed{border-left-color:#22c55e;background:rgba(34,197,94,0.1)}
 @media print{
   body{background:#fff!important}
   body *{visibility:hidden}
@@ -345,6 +395,7 @@ select.pin{width:100%;max-width:360px;padding:9px 11px;border:1px solid #cbd5e1;
   <button class="tab" data-v="design" onclick="tab('design')">📐 설계 진단</button>
   <button class="tab" data-v="ide" onclick="tab('ide')">💻 코드 실행</button>
   <button class="tab" data-v="wrong" onclick="tab('wrong')">❌ 오답노트</button>
+  <button class="tab" data-v="saas" onclick="tab('saas')">🚀 B2B 상용화 데모</button>
 </div></div>
 <div class="wrap" id="mainviews">
   <div class="view on" id="v-dash"></div>
@@ -357,6 +408,7 @@ select.pin{width:100%;max-width:360px;padding:9px 11px;border:1px solid #cbd5e1;
   <div class="view" id="v-design"></div>
   <div class="view" id="v-ide"></div>
   <div class="view" id="v-wrong"></div>
+  <div class="view" id="v-saas"></div>
 </div>
 <div id="printArea" aria-hidden="true"></div>
 <datalist id="kisa49"></datalist>
@@ -597,7 +649,7 @@ function tab(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');window.scrollTo(0,0);
   gam.visited[v]=true;save('gam',gam);
-  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,design:rDesign,ide:rIDE,wrong:rWrong}[v])();
+  ({dash:rDash,path:rPath,basics:rBasics,learn:rLearn,flash:rFlash,exam:rExam,prac:rPrac,design:rDesign,ide:rIDE,wrong:rWrong,saas:rSaas}[v])();
 }
 // 스크린리더 알림(aria-live)
 function announce(msg){const el=document.getElementById('ariaLive');if(!el)return;el.textContent='';setTimeout(()=>{el.textContent=msg;},40);}
@@ -654,7 +706,7 @@ function rLearn(){
   const cards=list.map(x=>{const gi=CONCEPTS.indexOf(x),done=learned[x.name]?' done':'';
     const sim=SIMMAP[x.name]?'<a class="simlink" href="'+SIMMAP[x.name]+'">🔗 관련 시뮬레이터로 →</a>':'';
     return '<div class="ccard'+done+'" id="cc'+gi+'"><div class="ch" onclick="toggleCard('+gi+')"><div><h4>'+esc(x.name)+'</h4><div class="cwe">'+esc(x.cwe)+'</div></div><span class="badge" style="background:'+CCOLOR[x.cat]+'">'+x.cat+'</span></div>'+
-      '<div class="detail">'+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+treeHtml(x.tree)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
+      '<div class="detail">'+examHtml(x.exam)+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+treeHtml(x.tree)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
   document.getElementById('v-learn').innerHTML='<h2 class="st">📖 개념 학습 — 49개 보안약점</h2><p class="sub">카드를 펼치면 정의·위협·진단법과 함께 <b>KISA 가이드의 Java·Python 안전하지 않은/안전한 코드 예제</b>를 확인할 수 있습니다. (Java=진단가이드, Python=시큐어코딩 가이드)</p><div class="catbar">'+chips+'<button class="cchip" style="margin-left:auto" onclick="printSummary()" title="49개 약점 요약표를 PDF로 인쇄/저장">🖨️ 요약 인쇄(PDF)</button></div>'+catInfoHtml(learnCat)+'<div class="cgrid">'+cards+'</div>';
 }
 // 49개 약점 요약표 인쇄/PDF 저장 (오프라인 복습용)
@@ -686,6 +738,10 @@ function treeHtml(tree){
   return '<div class="fld"><div class="lb">🔍 진단 의사결정 흐름</div>'+
     '<div class="dtnote">코드를 보고 위에서 아래로 점검합니다. 먼저 <b>안전</b> 분기로 빠지면 해당 약점은 성립하지 않고, '+
     '마지막 <b>위험</b> 게이트까지 도달하면 정탐입니다.</div><div class="dtree">'+steps+'</div></div>';
+}
+function examHtml(exam){
+  if(!exam)return '';
+  return '<div class="exambox"><div class="examh">⭐ 시험 강조 포인트</div><div class="examb">'+esc(exam)+'</div></div>';
 }
 function codePane(vuln,safe){
   return '<div class="codepair"><div class="cp"><div class="cph bad">🚫 안전하지 않은 코드</div><pre class="cpre">'+esc(vuln||'(예제 없음)')+'</pre></div>'+
@@ -849,7 +905,7 @@ const LASHR = {
   '운영체제 명령어 삽입':{any:[/subprocess\.(run|popen|call|check_output)\s*\(\s*\[/i,/new\s+processbuilder\s*\(/i]},
   '코드 삽입':{any:[/ast\.literal_eval/i,/json\.loads/i],none:[/\beval\s*\(/i,/\bexec\s*\(/i]},
   '적절하지 않은 난수값 사용':{any:[/securerandom/i,/secrets\./i,/systemrandom/i,/getrandomvalues/i,/randombytes/i],none:[/new\s+random\s*\(/i,/math\.random/i,/\brand\s*\(/i]},
-  '솔트 없이 일방향 해시함수 사용':{all:[/(bcrypt|pbkdf2|scrypt|argon2)/i],any:[/gensalt/i,/getsalt/i,/\bsalt\b/i,/securerandom/i,/token_bytes/i,/os\.urandom/i]},
+  '솔트 없이 일방향 해시함수 사용':{all:[/(bcrypt|pbkdf2|scrypt|argon2|sha-?256|sha-?512|messagedigest)/i],any:[/gensalt/i,/getsalt/i,/\bsalt\b/i,/securerandom/i,/token_bytes/i,/os\.urandom/i]},
   '제거되지 않고 남은 디버그 코드':{none:[/system\.out\.print/i,/printstacktrace/i,/console\.log/i,/\bprintln\b/i,/\bdebug\b/i,/todo|fixme/i,/backdoor/i]},
   '신뢰되지 않는 URL 주소로 자동접속 연결':{any:[/\.contains\s*\(/i,/allowlist|whitelist|allowed/i,/set\.of\s*\(/i,/startswith\s*\(\s*["']\//i]},
   'HTTP 응답 분할':{any:[/\.matches\s*\(/i,/replaceall\s*\(/i,/\.replace\s*\(/i,/pattern\./i,/\\r|\\n|%0d|%0a/i]},
@@ -874,7 +930,7 @@ const LASHR = {
   '부적절한 인증서 유효성 검증':{any:[/protocol_tls_client/i,/load_verify_locations/i,/wrap_socket/i,/check_hostname\s*=\s*true/i,/verify_mode\s*=\s*ssl\.cert_required/i],none:[/cert_none/i,/check_hostname\s*=\s*false/i]},
   '사용자 하드디스크에 저장되는 쿠키를 통한 정보 노출':{all:[/set_cookie|setcookie|new\s+cookie/i],any:[/secure\s*=\s*true/i,/httponly\s*=\s*true/i,/sethttponly|setsecure/i,/max_age/i,/samesite/i]},
   '무결성 검사 없는 코드 다운로드':{any:[/hashlib/i,/sha-?256/i,/hexdigest/i,/checksum/i,/\bhmac\b/i,/\.digest\b/i,/\bsignature\b/i]},
-  '반복된 인증시도 제한 기능 부재':{any:[/max_attempts|maxattempts|max_tries|maxtries/i,/\battempts?\b/i,/count\s*</i,/lockout|ratelimit|rate_limit/i]},
+  '반복된 인증시도 제한 기능 부재':{any:[/max_attempts|maxattempts|max_tries|maxtries/i,/attempts?/i,/count\s*</i,/lockout|ratelimit|rate_limit|islocked/i]},
   '종료되지 않는 반복문 또는 재귀함수':{any:[/if\s*\([^)]*<=?\s*[01]\b/,/if\s*\([^)]*==\s*[01]\b/,/return\s+1\b/,/\bbreak\b/,/<=\s*0\b/]},
   '오류 메시지 정보 노출':{any:[/logger\.(error|warn|info)/i,/log\.(error|warn|info)/i,/logging\./i,/slf4j/i],none:[/printstacktrace/i,/println\s*\(\s*e\b/i,/print\s*\([^)]*traceback/i]},
   '오류 상황 대응 부재':{all:[/catch\s*\(|except\s+/i],any:[/return\s+\w+/i,/throw\s+/i,/\braise\b/i,/setmessage/i,/log(ger)?\./i],none:[/catch\s*\([^)]*\)\s*\{\s*\}/i,/except[^:]*:\s*pass/i]},
@@ -1187,6 +1243,352 @@ function rWrong(){
 function delWrong(i){wrongs.splice(i,1);save('wrong',wrongs);rWrong();}
 function clearWrong(){if(confirm('오답노트를 전부 비울까요?')){wrongs=[];save('wrong',wrongs);rWrong();}}
 
+// ===== B2B SaaS 상용화 데모 기능 =====
+function rSaas() {
+  document.getElementById('v-saas').innerHTML = `
+    <h2 class="st">🚀 B2B SaaS 상용화 핵심 피처 데모</h2>
+    <p class="sub">글로벌 1티어 보안 교육 서비스 수준의 핵심 기능 데모 및 상용화 인터랙티브 프리뷰입니다.</p>
+    
+    <div class="saas-container">
+      
+      <!-- 1) Exploit-to-Fix Sandbox -->
+      <div class="saas-section">
+        <h3><span class="saas-badge">Feature 1</span> Exploit-to-Fix 양방향 대화형 샌드박스</h3>
+        <p class="sub" style="margin-bottom:14px">소스 코드의 보안 결함을 수정하기 전, 실제 해커의 공격을 연출해 보고(Exploit), 코드를 수정한 뒤 방어가 성공적으로 이루어지는지(Fix) 직접 테스트할 수 있는 시각적 실습 도구입니다.</p>
+        
+        <div class="saas-grid-2">
+          <!-- Left: Code & Input -->
+          <div class="sandbox-box">
+            <div class="sandbox-header">
+              <span>📄 ProductController.java (SQL Injection 취약)</span>
+              <div>
+                <span class="sandbox-dot" style="background:#ef4444"></span>
+                <span class="sandbox-dot" style="background:#f59e0b"></span>
+                <span class="sandbox-dot" style="background:#22c55e"></span>
+              </div>
+            </div>
+            <div class="sandbox-body">
+              <div class="sandbox-editor-p" id="sandboxCode">
+// 취약한 원래 코드: 문자열 연결로 SQL 쿼리 생성
+String query = "SELECT * FROM products WHERE category = '" + input + "'";
+Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery(query);
+              </div>
+              <div class="sandbox-input-row">
+                <label style="font-size:12px;color:#94a3b8">공격 값 (SQLi Payload):</label>
+                <input class="sandbox-input" id="sandboxInput" value="' OR '1'='1">
+                <button class="qbtn ghost" onclick="runSandboxExploit()" style="padding:6px 14px;font-size:12px">💥 공격 수행</button>
+              </div>
+              <div class="sandbox-input-row" style="border-top:1px solid #1e293b;padding-top:10px">
+                <button class="qbtn" onclick="runSandboxFix()" style="padding:8px 16px;font-size:13px;width:100%">🔧 안전한 코드로 수정 및 패치 적용</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right: Visual Feedback & Console -->
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:12px;font-weight:700;color:var(--muted)">🖥️ 웹 애플리케이션 화면 (실시간 변경)</div>
+            <div class="sandbox-preview" id="sandboxPreview">
+              <h4 style="margin-bottom:6px">📦 상품 검색 페이지</h4>
+              <div id="sandboxUI">검색어를 입력하고 공격을 시도해 보세요.</div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--muted)">💻 데이터베이스 실시간 디버그 로그</div>
+            <div class="sandbox-console" id="sandboxConsole">Waiting for action...</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 2) Contextual Developer Hook -->
+      <div class="saas-section">
+        <h3><span class="saas-badge">Feature 2</span> 개발 파이프라인(IDE & Jira) 콘텍스트 연계 학습</h3>
+        <p class="sub" style="margin-bottom:14px">개발자가 취약점을 생성하거나 결함 티켓을 받았을 때, 업무를 벗어나지 않고 그 자리에서 즉시 본 포털의 핵심 강의 카드로 연결되는 플러그인 연동 데모입니다.</p>
+        
+        <div class="saas-grid-2">
+          <!-- IDE plugin simulator -->
+          <div class="hook-ide">
+            <div class="hook-ide-h">
+              <span>Untitled-1.py — Visual Studio Code</span>
+              <span style="color:#64748b">Line 12, Col 8</span>
+            </div>
+            <div class="hook-ide-body">
+              <pre style="background:transparent;padding:0;font-size:12px">import os
+def execute_cmd(user_dir):
+    # 외부 입력값의 무검증 운영체제 명령 실행
+    os.system("ls -la " + user_dir)</pre>
+              <div class="hook-warning">
+                <div class="hook-warning-h">⚠️ Semgrep Alert: KISA-OS-Command-Injection</div>
+                <div class="hook-warning-b">
+                  외부 입력이 검증 없이 시스템 쉘 명령으로 전달됩니다. 위험도: <b style="color:#ef4444">High</b><br>
+                  <span class="hook-warning-lnk" onclick="tab('learn');setLearnCat('입력검증');setTimeout(()=>toggleCard(4),100);">👉 KISA 49개 표준 대응법 카드 열기 (CWE-78)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Jira ticket widget simulator -->
+          <div class="hook-jira">
+            <div class="hook-jira-h">🌐 Jira Ticket: SEC-402 (XSS 취약점 발생)</div>
+            <div>
+              <b>요약:</b> 사용자 피드백 페이지에 스크립트 주입 취약점이 발견되었습니다. (CWE-79)<br>
+              <div class="hook-jira-widget">
+                <div style="font-size:12px;color:#1e3a8a;font-weight:700;margin-bottom:4px">🎓 연관 시큐어 코딩 빠른 복습</div>
+                <div style="font-size:11.5px;color:#475569">
+                  아래 카드로 인출 학습을 마치면 티켓이 부분 할당 해제됩니다.<br>
+                  <b>Q. XSS를 막기 위한 대표적인 문자열 치환 및 인코딩 기술은?</b>
+                </div>
+                <button class="qbtn ghost" style="padding:4px 10px;font-size:11px;margin-top:6px" onclick="tab('flash');setFlashCat('입력검증');">🃏 플래시 카드로 빠르게 정답 확인</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 3) Adaptive Persona Paths -->
+      <div class="saas-section">
+        <h3><span class="saas-badge">Feature 3</span> 개발 직군 맞춤형 적응형 커리큘럼</h3>
+        <p class="sub" style="margin-bottom:14px">임베디드 C 개발자가 불필요하게 웹 취약점을 풀지 않도록, 개발자 페르소나에 맞춰 KISA 49개 약점을 맞춤 필터링하는 로직입니다.</p>
+        
+        <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px">직군 페르소나 선택:</label>
+        <select class="persona-sel" id="personaSel" onchange="filterPersonaPath()">
+          <option value="all">전체 커리큘럼 (49개 약점)</option>
+          <option value="fe">Frontend Web Developer (React / TS)</option>
+          <option value="be">Backend Enterprise Developer (Java / Spring)</option>
+          <option value="emb">Embedded / System Developer (C / C++)</option>
+          <option value="devops">Cloud & DevOps Architect</option>
+        </select>
+        
+        <div class="persona-paths" id="personaPaths"></div>
+      </div>
+      
+      <!-- 4) Tournament Leaderboard -->
+      <div class="saas-section">
+        <h3><span class="saas-badge">Feature 4</span> 사내 토너먼트 실시간 리더보드 시뮬레이터</h3>
+        <p class="sub" style="margin-bottom:14px">B2B SaaS 도입 시 부서원 간의 경쟁 심리를 자극하여 교육 완주율을 80% 이상으로 극대화하는 게이미피케이션 실시간 동적 대시보드 데모입니다.</p>
+        
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:12.5px;font-weight:700;color:#4f46e5">🏆 사내 시큐어코딩 토너먼트 (26-06 시즌)</span>
+          <button class="qbtn ghost" style="padding:6px 14px;font-size:12px" onclick="simulateTournamentScore()">⚡ 실시간 점수 업데이트 시뮬레이션</button>
+        </div>
+        
+        <div class="tour-lb" id="tourLb"></div>
+      </div>
+      
+      <!-- 5) Semgrep Debugging Training -->
+      <div class="saas-section">
+        <h3><span class="saas-badge">Feature 5</span> 실제 SAST 도구(Semgrep) 연동 로그 디버깅 훈련</h3>
+        <p class="sub" style="margin-bottom:14px">학습자가 작성한 코드를 백엔드 정적 분석 도구로 분석한 뒤 출력되는 경고 로그를 직접 보며 취약점을 정밀 수정하는 실전형 워크플로우 훈련 화면입니다.</p>
+        
+        <div class="semgrep-panel">
+          <!-- Log output -->
+          <div class="semgrep-log" id="semgrepLog">
+[semgrep] Scanning app.py...
+[semgrep] Found 1 issue:
+
+[KISA-CWE-327] 취약한 암호 알고리즘 사용
+  --> app.py:15
+  --> import hashlib
+  --> h = hashlib.md5(passwd.encode()).hexdigest()
+      
+[!] MD5는 충돌 쌍 탐지가 용이하여 비밀번호 일방향 암호화에 안전하지 않습니다.
+[!] 안전한 암호 모듈(SHA-256, bcrypt 등)로 교체하세요.
+          </div>
+          
+          <!-- Code Edit & Fix -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="sandbox-box" style="border-color:#334155">
+              <div class="sandbox-header" style="background:#1e293b">
+                <span>📝 app.py (비밀번호 저장 모듈)</span>
+                <span style="font-size:11px;color:#22c55e" id="semgrepStatus">🔴 취약점 발견</span>
+              </div>
+              <div class="sandbox-body" style="padding:10px">
+                <textarea class="codearea" id="semgrepCodeInput" style="height:120px;font-size:12.5px;line-height:1.5;resize:none">
+import hashlib
+def save_password(passwd):
+    # 취약한 md5 사용
+    return hashlib.md5(passwd.encode()).hexdigest()
+</textarea>
+                <button class="qbtn" style="padding:8px;font-size:12.5px;width:100%" onclick="runSemgrepScan()">⚙️ Semgrep 스캔 실행</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  `;
+  filterPersonaPath();
+  renderTournament();
+}
+
+function runSandboxExploit() {
+  const payload = document.getElementById('sandboxInput').value;
+  const dbConsole = document.getElementById('sandboxConsole');
+  const ui = document.getElementById('sandboxUI');
+  const preview = document.getElementById('sandboxPreview');
+  
+  dbConsole.textContent = "Executing Query: SELECT * FROM products WHERE category = '" + payload + "'\n";
+  
+  if (payload.includes("' OR '1'='1")) {
+    dbConsole.textContent += "Database Dump Successful!\nFetched all records from PRODUCTS table.\n";
+    ui.innerHTML = `
+      <div style="color:#ef4444;font-weight:700;margin-bottom:8px">💥 SQL Injection 공격 성공! DB가 노출되었습니다.</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;text-align:left">
+        <tr style="background:#feca57;color:#1e272e"><th>ID</th><th>이름</th><th>비밀번호</th></tr>
+        <tr><td>1</td><td>admin</td><td>admin_p@ss_kisa1!</td></tr>
+        <tr><td>2</td><td>db_user</td><td>db_pwd_9219</td></tr>
+        <tr><td>3</td><td>tester</td><td>test1234</td></tr>
+      </table>
+    `;
+    preview.className = "sandbox-preview exploited";
+  } else {
+    dbConsole.textContent += "No records returned or query syntax error.\n";
+    ui.innerHTML = "결과 없음: 입력값을 다시 확인하고 `' OR '1'='1` 등의 공격 페이로드를 입력해 보세요.";
+    preview.className = "sandbox-preview";
+  }
+}
+
+function runSandboxFix() {
+  const codeBox = document.getElementById('sandboxCode');
+  const dbConsole = document.getElementById('sandboxConsole');
+  const ui = document.getElementById('sandboxUI');
+  const preview = document.getElementById('sandboxPreview');
+  
+  codeBox.innerHTML = `// 안전한 코드: Prepared Statement 적용
+String query = "SELECT * FROM products WHERE category = ?";
+PreparedStatement pstmt = conn.prepareStatement(query);
+pstmt.setString(1, input);
+ResultSet rs = pstmt.executeQuery();`;
+  
+  const payload = document.getElementById('sandboxInput').value;
+  dbConsole.textContent = "Applying secure code patch...\nPrepared Statement Engine Active.\n";
+  dbConsole.textContent += "Executing Query: SELECT * FROM products WHERE category = ?\n";
+  dbConsole.textContent += "Bound parameter [1] = " + payload + "\nQuery safe. 0 records matched.\n";
+  
+  ui.innerHTML = `
+    <div style="color:#22c55e;font-weight:700;margin-bottom:4px">🛡️ SQL Injection 공격 차단 성공!</div>
+    <p style="font-size:12px;color:#475569">매개변수 바인딩 처리에 의해 SQL 페이로드가 일반 문자열로 취급되어 안전합니다.</p>
+  `;
+  preview.className = "sandbox-preview secured";
+}
+
+const PERSONA_DATA = {
+  all: [
+    {name: 'SQL 삽입', cwe: 'CWE-89', cat: '입력검증'},
+    {name: '크로스사이트 스크립트(XSS)', cwe: 'CWE-79', cat: '입력검증'},
+    {name: '하드코드된 중요정보', cwe: 'CWE-798', cat: '보안기능'},
+    {name: '메모리 버퍼 오버플로우', cwe: 'CWE-120', cat: '코드오류'},
+    {name: '취약한 API 사용', cwe: 'CWE-676', cat: 'API오용'}
+  ],
+  fe: [
+    {name: '크로스사이트 스크립트(XSS)', cwe: 'CWE-79', cat: '입력검증'},
+    {name: '신뢰되지 않는 URL 주소로 자동접속 연결', cwe: 'CWE-601', cat: '입력검증'},
+    {name: '크로스사이트 요청 위조(CSRF)', cwe: 'CWE-352', cat: '보안기능'}
+  ],
+  be: [
+    {name: 'SQL 삽입', cwe: 'CWE-89', cat: '입력검증'},
+    {name: '하드코드된 중요정보', cwe: 'CWE-798', cat: '보안기능'},
+    {name: '신뢰할 수 없는 데이터의 역직렬화', cwe: 'CWE-502', cat: '코드오류'}
+  ],
+  emb: [
+    {name: '메모리 버퍼 오버플로우', cwe: 'CWE-120', cat: '코드오류'},
+    {name: '해제된 자원 사용', cwe: 'CWE-416', cat: '코드오류'},
+    {name: '취약한 API 사용', cwe: 'CWE-676', cat: 'API오용'}
+  ],
+  devops: [
+    {name: '중요한 자원에 대한 잘못된 권한 설정', cwe: 'CWE-732', cat: '보안기능'},
+    {name: '하드코드된 중요정보', cwe: 'CWE-798', cat: '보안기능'},
+    {name: '적절하지 않은 난수값 사용', cwe: 'CWE-330', cat: '보안기능'}
+  ]
+};
+
+function filterPersonaPath() {
+  const sel = document.getElementById('personaSel').value;
+  const list = PERSONA_DATA[sel] || PERSONA_DATA.all;
+  const host = document.getElementById('personaPaths');
+  
+  host.innerHTML = list.map(item => `
+    <div class="persona-card active">
+      <div class="persona-card-h">${esc(item.name)}</div>
+      <div class="persona-card-d">${item.cwe} · <span style="color:${CCOLOR[item.cat] || '#666'}">${item.cat}</span></div>
+    </div>
+  `).join('');
+}
+
+let MOCK_TOURNAMENT = [
+  {rank: 1, name: '김보안 (기술연구소)', xp: 2450, streak: 8},
+  {rank: 2, name: '이개발 (BE개발팀)', xp: 2210, streak: 5},
+  {rank: 3, name: '박진단 (인프라실)', xp: 1980, streak: 3},
+  {rank: 4, name: '최코딩 (FE개발팀)', xp: 1850, streak: 6},
+  {rank: 5, name: '나배움 (신입사원)', xp: 1420, streak: 2}
+];
+
+function renderTournament() {
+  const host = document.getElementById('tourLb');
+  const rows = MOCK_TOURNAMENT.map(p => `
+    <div class="tour-row">
+      <div class="tour-rank">${p.rank}</div>
+      <div class="tour-name">${esc(p.name)}</div>
+      <div class="tour-xp">${p.xp} XP</div>
+      <div class="tour-streak">🔥 ${p.streak}일</div>
+    </div>
+  `).join('');
+  
+  host.innerHTML = `
+    <div class="tour-row head">
+      <div class="tour-rank">순위</div>
+      <div class="tour-name">이름 (소속)</div>
+      <div class="tour-xp">누적 XP</div>
+      <div class="tour-streak">스트릭</div>
+    </div>
+    ${rows}
+  `;
+}
+
+function simulateTournamentScore() {
+  MOCK_TOURNAMENT.forEach(p => {
+    p.xp += Math.floor(Math.random() * 80) + 20;
+    if (Math.random() > 0.6) p.streak += 1;
+  });
+  MOCK_TOURNAMENT.sort((a,b) => b.xp - a.xp);
+  MOCK_TOURNAMENT.forEach((p, i) => p.rank = i + 1);
+  renderTournament();
+  gamToast("⚡ 실시간 리더보드가 업데이트되었습니다!");
+}
+
+function runSemgrepScan() {
+  const code = document.getElementById('semgrepCodeInput').value;
+  const log = document.getElementById('semgrepLog');
+  const status = document.getElementById('semgrepStatus');
+  
+  log.textContent = "[semgrep] Scanning app.py...\n";
+  
+  if (code.includes("md5") || code.includes("MD5")) {
+    log.textContent += `[semgrep] Found 1 issue:
+
+[KISA-CWE-327] 취약한 암호 알고리즘 사용
+  --> app.py
+  --> import hashlib
+  --> h = hashlib.md5(...)
+      
+[!] MD5는 충돌 쌍 탐지가 용이하여 비밀번호 일방향 암호화에 안전하지 않습니다.
+[!] 안전한 암호 모듈(SHA-256, bcrypt 등)로 교체하세요.`;
+    status.textContent = "🔴 취약점 발견";
+    status.style.color = "#ef4444";
+  } else if (code.includes("sha256") || code.includes("SHA256") || code.includes("bcrypt")) {
+    log.textContent += `[semgrep] Scan Finished.
+[semgrep] 0 issues found.
+[semgrep] Code quality is compliance-ready! ✅`;
+    status.textContent = "🟢 안전함";
+    status.style.color = "#22c55e";
+    gamToast("🎉 Semgrep 취약점 조치 완료! 25 XP 획득");
+    awardXp(25, "Semgrep 디버깅 훈련 성공");
+  } else {
+    log.textContent += "[semgrep] Scan finished.\n[semgrep] Warning: md5 취약점은 해결되었으나 검증된 표준 알고리즘(sha256 등)을 사용하는지 확인해 보세요.";
+    status.textContent = "🟡 점검 필요";
+    status.style.color = "#f59e0b";
+  }
+}
+
 // ===== 접근성(WCAG) 초기화: 탭 ARIA · 패널 role · 1교시 키보드 단축키 =====
 function a11yInit(){
   document.querySelectorAll('.tab').forEach(t=>{t.setAttribute('role','tab');t.setAttribute('aria-selected',t.classList.contains('on')?'true':'false');});
@@ -1217,9 +1619,11 @@ def main():
     rn = importlib.import_module('_runnable')
     dz = importlib.import_module('_design')
     tr = importlib.import_module('specs_trees')
-    # 진단 의사결정 흐름(TREES)을 약점명으로 join 하여 각 개념카드에 주입
+    ex = importlib.import_module('_exam_emphasis')
+    # 진단 의사결정 흐름(TREES)·시험 강조(EXAM)를 약점명으로 join 하여 각 개념카드에 주입
     for c in a.CONCEPTS:
         c['tree'] = tr.TREES.get(c['name'])
+        c['exam'] = ex.EXAM.get(c['name'])
     # <script> 조기 종료 방지: 임베드 데이터의 </ 를 <\/ 로 이스케이프(런타임 JS 파싱 동일)
     def jdump(o):
         return json.dumps(o, ensure_ascii=False).replace('</', '<\\/')
