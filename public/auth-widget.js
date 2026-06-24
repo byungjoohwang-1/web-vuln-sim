@@ -1,6 +1,6 @@
 // 공통 Google 로그인 + 학습 진도 클라우드 동기화 위젯 (전 페이지 공통, Firebase 무료/Spark)
 // Firebase Auth(Google) + Firestore(users/{uid}.store = localStorage 스냅샷). Cloud Functions 미사용(무과금).
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
          setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp,
@@ -15,7 +15,7 @@ const firebaseConfig = {
   appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();

@@ -4,5 +4,7 @@
 from std_autosar_p1 import RULES as _p1
 from std_autosar_p2 import RULES as _p2
 from std_autosar_p3 import RULES as _p3
+from std_autosar_extracted import RULES as _extracted
 
-RULES = _p1 + _p2 + _p3
+RULES = _p1 + _p2 + _p3 + _extracted
+

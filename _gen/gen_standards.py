@@ -12,6 +12,14 @@ try:
     from std_pdf_overrides import PDF_EXAMPLE_OVERRIDES
 except Exception:
     PDF_EXAMPLE_OVERRIDES = {}
+try:
+    from std_pdf_full_rules import PDF_FULL_RULES
+except Exception:
+    PDF_FULL_RULES = {}
+try:
+    from std_cert_sei_rules import SEI_CERT_RULES
+except Exception:
+    SEI_CERT_RULES = {}
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public')
 
@@ -43,6 +51,73 @@ def apply_pdf_overrides(std_key, rules):
             r['compiles'] = False
         out.append(r)
     return out
+
+
+def merge_pdf_full_rules(std_key, rules):
+    """Use the local MISRA PDFs as the canonical rule order/count when available."""
+    full = PDF_FULL_RULES.get(std_key, {})
+    if not full:
+        return rules
+    by_id = {r.get('id'): dict(r) for r in rules}
+    merged = []
+    used = set()
+    for pdf_rule in full:
+        rid = pdf_rule.get('id')
+        if rid in by_id:
+            r = by_id[rid]
+            r['pdf_rule'] = True
+            merged.append(r)
+        else:
+            merged.append(dict(pdf_rule))
+        used.add(rid)
+    return merged
+
+
+def cert_placeholder(lang, gid, title, compliant):
+    mark = 'Compliant' if compliant else 'Non-compliant'
+    return (
+        f"/* {mark} training placeholder for {gid}\n"
+        f" * SEI official index entry: {title}\n"
+        f" * Add a reviewed {lang} example before using this item as a hands-on lab.\n"
+        f" */"
+    )
+
+
+def merge_sei_cert_rules(std_key, rules):
+    """Use the SEI public index as canonical for CERT C/C++ guideline coverage."""
+    official = SEI_CERT_RULES.get(std_key, [])
+    if not official:
+        return rules
+    by_id = {r.get('id'): dict(r) for r in rules}
+    merged = []
+    used = set()
+    lang = 'C++' if std_key == 'certcpp' else 'C'
+    for item in official:
+        gid = item.get('id')
+        if gid in by_id:
+            r = by_id[gid]
+            r['sei_rule'] = True
+            merged.append(r)
+        else:
+            section = item.get('section') or (gid[:3] if gid else 'MSC')
+            kind = item.get('kind') or 'Rule'
+            title = item.get('title') or gid
+            is_rec = kind.lower().startswith('rec')
+            merged.append({
+                'id': gid,
+                'cat': section + ' · ' + ('Rec' if is_rec else 'Rule') + ' · SEI',
+                'title': title,
+                'title_en': item.get('title_en') or title,
+                'bad': cert_placeholder(lang, gid, title, False),
+                'good': cert_placeholder(lang, gid, title, True),
+                'why': f'{gid}는 SEI CERT 공식 공개 인덱스 기준으로 추가한 항목입니다. 현재 항목은 목록 완전성을 위해 먼저 반영했으며, 실습 전 공식 페이지와 정적분석 진단 기준으로 예제를 보강하세요.',
+                'why_en': f'{gid} was added from the official public SEI CERT index. It is included for coverage completeness; add reviewed examples against the official page and static-analysis diagnostics before hands-on use.',
+                'compiles': False,
+                'sei_rule': True,
+                'source_url': item.get('source_url', ''),
+            })
+        used.add(gid)
+    return merged
 
 
 def bi(ko, en):
@@ -131,7 +206,7 @@ SEC_NAME = {
  'STR': ('문자·문자열', 'Strings'), 'MEM': ('메모리 관리', 'Memory'),
  'FIO': ('입출력', 'Input/Output'), 'ENV': ('환경', 'Environment'),
  'SIG': ('시그널', 'Signals'), 'ERR': ('오류 처리', 'Error Handling'),
- 'CON': ('동시성', 'Concurrency'), 'MSC': ('기타', 'Miscellaneous'),
+ 'CON': ('동시성', 'Concurrency'), 'API': ('API', 'Application Programming Interfaces'), 'MSC': ('기타', 'Miscellaneous'),
  'POS': ('POSIX', 'POSIX'), 'WIN': ('Windows', 'Windows'),
  'CTR': ('컨테이너', 'Containers'), 'OOP': ('객체지향', 'OOP'),
  # MISRA C 카테고리
@@ -228,6 +303,7 @@ body:not(.lang-en) .en{display:none}body.lang-en .ko{display:none}
 .rid .cat{font-size:11px;font-weight:700;color:#7c3aed;background:#f3e8ff;border-radius:20px;padding:3px 10px}
 .rid .ok{font-size:10.5px;font-weight:700;color:#15803d;background:#dcfce7;border-radius:20px;padding:3px 9px}
 .rid .pdf{font-size:10.5px;font-weight:700;color:#9a3412;background:#ffedd5;border-radius:20px;padding:3px 9px}
+.rid .sei{font-size:10.5px;font-weight:700;color:#075985;background:#e0f2fe;border-radius:20px;padding:3px 9px}
 .card h3{font-size:15px;color:var(--ink);margin:2px 0 11px;line-height:1.5}
 .sw{display:flex;gap:5px;background:#0b1220;border-radius:9px;padding:4px;width:fit-content;margin-bottom:10px;flex-wrap:wrap}
 .sw button{border:none;background:transparent;color:#94a3b8;font-weight:700;font-size:12px;padding:7px 13px;border-radius:7px;cursor:pointer;font-family:inherit}
@@ -285,6 +361,10 @@ def render_card(sk, i, r, lang):
     why_en = r.get('why_en') or r['why']
     blob = esc(r['id'] + ' ' + r['title'] + ' ' + title_en + ' ' + r.get('cat', ''))
     okbadge = '<span class="ok">✓ compilable</span>' if r.get('compiles') else ''
+    if r.get('sei_rule'):
+        okbadge += '<span class="sei">SEI index</span>'
+    if r.get('pdf_rule') and not r.get('pdf_example'):
+        okbadge += '<span class="pdf rule">PDF rule</span>'
     if r.get('pdf_example'):
         okbadge += '<span class="pdf">PDF example</span>'
     head = (
@@ -386,7 +466,9 @@ def _clean_rules(rules):
 
 def build():
     for s in STANDARDS:
-        s['rules'] = _clean_rules(apply_pdf_overrides(s['key'], _rules(s['mod'])))
+        base_rules = merge_pdf_full_rules(s['key'], _rules(s['mod']))
+        base_rules = merge_sei_cert_rules(s['key'], base_rules)
+        s['rules'] = _clean_rules(apply_pdf_overrides(s['key'], base_rules))
     panels = ''.join(render_panel(s, i == 0) for i, s in enumerate(STANDARDS))
     total = sum(len(s['rules']) for s in STANDARDS)
     side = render_side()

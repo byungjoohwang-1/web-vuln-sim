@@ -1637,7 +1637,26 @@ def main():
                .replace('__RUNNABLE__', jdump(rn.RUNNABLE))
                .replace('__DESIGN__', jdump(dz.DESIGN)))
     open(os.path.join(OUT, 'secure-dev-academy.html'), 'w', encoding='utf-8').write(html)
-    print('wrote secure-dev-academy.html | concepts=%d quiz(BANK) practical=%d theory=%d basics=%d tools=%d runnable=%d design=%d'
+    
+    # Export JS data for standalone training portal pages
+    js_dir = os.path.join(OUT, 'js')
+    if not os.path.exists(js_dir):
+        os.makedirs(js_dir)
+    js_data = f"""// Auto-generated academy data
+window.ACADEMY_DATA = {{
+  CONCEPTS: {jdump(a.CONCEPTS)},
+  QUIZ: {get_quiz_bank()},
+  PRACTICAL: {jdump(pr.PRACTICAL)},
+  THEORY: {jdump(pr.THEORY)},
+  CODE49: {jdump(cc.CODE49)},
+  BASICS: {jdump(bs.BASICS)},
+  TOOLS: {jdump({'tools': tl.TOOLS, 'position': tl.POSITION})},
+  RUNNABLE: {jdump(rn.RUNNABLE)},
+  DESIGN: {jdump(dz.DESIGN)}
+}};"""
+    open(os.path.join(js_dir, 'academy-data.js'), 'w', encoding='utf-8').write(js_data)
+    
+    print('wrote secure-dev-academy.html & js/academy-data.js | concepts=%d quiz(BANK) practical=%d theory=%d basics=%d tools=%d runnable=%d design=%d'
           % (len(a.CONCEPTS), len(pr.PRACTICAL), len(pr.THEORY), len(bs.BASICS), len(tl.TOOLS), len(rn.RUNNABLE), len(dz.DESIGN)))
 
 

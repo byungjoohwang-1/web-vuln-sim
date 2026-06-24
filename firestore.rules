@@ -15,5 +15,23 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == uid;
     }
+    // 무료 공개형 강의실: 로그인한 강사는 클래스를 만들고, 학생은 참여 코드로 조회 후 본인 진행률만 갱신한다.
+    match /classes/{classId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.instructorUid == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.instructorUid == request.auth.uid;
+
+      match /members/{uid} {
+        allow read: if request.auth != null
+          && (request.auth.uid == uid
+            || get(/databases/$(database)/documents/classes/$(classId)).data.instructorUid == request.auth.uid);
+        allow create, update: if request.auth != null && request.auth.uid == uid;
+        allow delete: if request.auth != null
+          && (request.auth.uid == uid
+            || get(/databases/$(database)/documents/classes/$(classId)).data.instructorUid == request.auth.uid);
+      }
+    }
   }
 }

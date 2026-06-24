@@ -138,7 +138,7 @@ int main() {
   'why':'근거: std::vector<bool> 은 메모리 절약을 위해 각 원소를 1비트로 압축한 특수화라, operator[] 가 bool& 가 아니라 비트를 가리키는 프록시 객체를 반환한다. 영향: auto x = v[i] 가 프록시를 잡아 예상과 다르게 동작하고, &v[i] 로 진짜 bool* 를 얻을 수 없으며, 다른 컨테이너를 가정한 제네릭 코드가 깨진다. 대응: 불리언 시퀀스가 필요하면 크기가 고정이면 std::bitset 을, 가변이면 std::vector<std::uint8_t>(또는 char) 처럼 일반 원소 의미를 갖는 타입을 사용한다.',
   'why_en':'Rationale: std::vector<bool> is a specialization that packs each element into a single bit to save memory, so operator[] returns a proxy object referring to a bit, not a bool&. Impact: auto x = v[i] captures the proxy and behaves unexpectedly, you cannot obtain a real bool* via &v[i], and generic code assuming a normal container breaks. Fix: use std::bitset for a fixed-size boolean sequence, or a type with normal element semantics like std::vector<std::uint8_t> (or char) for a dynamic one.'},
 
- {'id':'A18-1-3','cat':'Required · Automated',
+ {'id':'A18-1-3','cat':'Required · Automated','compiles':False,
   'title':'std::auto_ptr 를 사용하지 않는다',
   'title_en':'The std::auto_ptr type shall not be used',
   'bad': r"""#include <memory>
@@ -691,7 +691,7 @@ int main() {
   'why':'근거: catch 핸들러는 선언된 순서대로 검사되며 던져진 예외와 호환되는 첫 핸들러가 선택된다(가상 디스패치가 아니라 순차 매칭). 영향: 기반 클래스 핸들러를 먼저 두면 모든 파생 예외가 거기서 잡혀, 뒤에 둔 더 구체적인 핸들러는 영영 도달하지 못해 의도한 세분화 처리가 사라진다. 대응: 핸들러를 가장 파생된 타입부터 기반 타입 순으로 배치해 구체적 예외가 먼저 잡히게 한다.',
   'why_en':'Rationale: catch handlers are examined in declaration order and the first one compatible with the thrown exception is chosen (sequential matching, not virtual dispatch). Impact: placing a base-class handler first catches all derived exceptions there, so a more specific handler placed afterwards is never reached and the intended fine-grained handling is lost. Fix: order handlers from the most derived type down to the base type so specific exceptions are caught first.'},
 
- {'id':'M15-3-7','cat':'Required · Automated',
+ {'id':'M15-3-7','cat':'Required · Automated','compiles':False,
   'title':'catch-all(...) 핸들러는 마지막에 둔다',
   'title_en':'Where multiple handlers are provided, any ellipsis (catch-all) handler shall occur last',
   'bad': r"""    try { f(); }

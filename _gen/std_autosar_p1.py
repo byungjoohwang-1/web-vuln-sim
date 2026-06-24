@@ -175,7 +175,7 @@ int main() {
   'why':'근거: wchar_t 의 크기와 인코딩은 구현정의라 Windows 에서는 16비트(UTF-16), 대부분의 유닉스에서는 32비트(UTF-32)로 서로 다르다. 영향: wchar_t 로 직렬화·파일 포맷·프로토콜을 다루면 플랫폼 간에 폭과 인코딩이 어긋나 데이터가 깨지고, 코드가 한 플랫폼에 고착된다. 대응: 폭이 표준으로 고정된 char16_t/char32_t(및 std::u16string/u32string)를 사용해 이식 가능한 유니코드 처리를 한다.',
   'why_en':'Rationale: the size and encoding of wchar_t are implementation-defined, being 16-bit (UTF-16) on Windows but 32-bit (UTF-32) on most Unix systems. Impact: using wchar_t for serialization, file formats, or protocols mismatches width and encoding across platforms, corrupting data and locking code to one platform. Fix: use char16_t/char32_t (and std::u16string/u32string) whose widths are fixed by the standard for portable Unicode handling.'},
 
- {'id':'A3-1-1','cat':'Required · Automated',
+ {'id':'A3-1-1','cat':'Required · Automated','compiles':False,
   'title':'헤더는 자체적으로(self-contained) 포함 순서와 무관하게 컴파일되어야 한다',
   'title_en':'It shall be possible to include any header file in multiple translation units without violating the ODR',
   'bad': r"""// shape.h — Point 를 쓰면서 그 정의를 포함하지 않음
