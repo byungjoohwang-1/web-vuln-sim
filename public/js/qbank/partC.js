@@ -473,7 +473,7 @@ window.__QBANK.THEORY.push(
 
   // ---------- SHORT ----------
   { type:"SHORT", cat:"시간상태", q:"파일을 검사(check)한 시점과 사용(use)하는 시점 사이의 경쟁조건을 가리키는 보안약점의 약어는?", a:"TOCTOU", answers:["TOCTTOU","Time-of-check to time-of-use","TOC TOU"], e:"Time-Of-Check to Time-Of-Use 경쟁조건." },
-  { type:"SHORT", cat:"시간상태", q:"중첩 수량자 등으로 정규식 백트래킹이 폭발해 CPU를 고갈시키는 서비스 거부 공격의 약어는?", a:"ReDoS", answers:["Regular expression Denominator of Service","정규식 DoS","정규표현식 서비스 거부"], e:"Regular expression Denial of Service." },
+  { type:"SHORT", cat:"시간상태", q:"중첩 수량자 등으로 정규식 백트래킹이 폭발해 CPU를 고갈시키는 서비스 거부 공격의 약어는?", a:"ReDoS", answers:["Regular expression Denial of Service","정규식 DoS","정규표현식 서비스 거부"], e:"Regular expression Denial of Service." },
   { type:"SHORT", cat:"에러처리", q:"Java에서 객체 생성 없이 예외의 원인을 보존하며 다른 예외로 재전파하는 기법을 무엇이라 하는가? (한글 또는 영어)", a:"예외 체이닝", answers:["exception chaining","예외 연쇄","cause 예외","chained exception"], e:"throw new XException(msg, cause) 형태로 원인 예외를 보존한다." },
   { type:"SHORT", cat:"코드오류", q:"null인 객체 참조에 대해 메소드/필드 접근을 시도해 발생하는 결함의 영문 약어는?", a:"NPE", answers:["NullPointerException","Null Pointer Dereference","널 포인터 역참조","null pointer"], e:"Null Pointer Dereference / NullPointerException." },
   { type:"SHORT", cat:"코드오류", q:"Python에서 파일·소켓 등 자원을 블록 종료 시 자동으로 닫아주는 구문(키워드)은?", a:"with", answers:["with 문","context manager","컨텍스트 매니저","with statement"], e:"with 컨텍스트 매니저는 예외 발생 시에도 자원을 닫는다." },
