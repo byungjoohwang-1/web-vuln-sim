@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#22c55e">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>코드 수정 실습실 · Code-Fix Lab</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+    --ink:#e2e8f0; --muted:#94a3b8; --accent:#22c55e; --accent2:#38bdf8;
+    --bad:#ef4444; --warn:#f59e0b; --mono:'JetBrains Mono','Consolas','D2Coding',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  a{color:var(--accent2);text-decoration:none}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#0a101e;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30}
+  .topbar a{color:#cbd5e1;font-size:14px}
+  .topbar .sp{flex:1}
+  .langbtn{background:#1e293b;border:1px solid var(--border);color:#cbd5e1;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:13px}
+  .wrap{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
+  .hero h1{font-size:23px;margin:6px 0 4px}
+  .hero .sub{color:var(--muted);font-size:14px;max-width:880px}
+  .kisa{font-size:12px;background:#052e16;color:#86efac;border:1px solid #14532d;border-radius:999px;padding:3px 10px;margin-left:8px;vertical-align:middle}
+  .statbar{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 16px;min-width:120px}
+  .stat .n{font-size:20px;font-weight:700;color:#fff}
+  .stat .l{font-size:12px;color:var(--muted)}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px;align-items:center}
+  .filters select,.filters input{background:var(--panel2);border:1px solid var(--border);color:var(--ink);border-radius:7px;padding:7px 10px;font-size:13px}
+  .layout{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .list{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px;max-height:74vh;overflow:auto}
+  .ex{padding:10px 12px;border-radius:9px;border:1px solid transparent;cursor:pointer;margin-bottom:4px}
+  .ex:hover{background:var(--panel2)}
+  .ex.active{background:#0e1f17;border-color:#14532d}
+  .ex .t{font-size:13.5px;font-weight:600;color:#e2e8f0}
+  .ex .m{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .pill{font-size:10.5px;padding:1px 7px;border-radius:999px;border:1px solid var(--border);background:#0b1220;color:#cbd5e1}
+  .pill.lang{color:#fbbf24;border-color:#7c5e10}
+  .pill.diff-하{color:#86efac}.pill.diff-중{color:#fcd34d}.pill.diff-상{color:#fca5a5}
+  .ex .check{color:var(--accent);font-weight:700}
+  .work{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;min-height:60vh}
+  .empty{color:var(--muted);text-align:center;padding:80px 20px}
+  .whead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+  .whead h2{font-size:18px;margin:0}
+  .tag{font-size:11px;padding:2px 9px;border-radius:999px;font-weight:600}
+  .tag.cwe{background:#1e293b;color:#cbd5e1}
+  .tag.bad{background:#3b1418;color:#fca5a5}
+  .objective{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13.5px;color:#cbd5e1;margin:10px 0}
+  .editor-wrap{display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#0a0f1c;font-family:var(--mono);font-size:13px;margin-top:8px}
+  .gutter{padding:12px 8px 12px 12px;text-align:right;color:#475569;background:#0b1220;user-select:none;white-space:pre;line-height:1.5;min-width:42px}
+  #editor{flex:1;background:transparent;color:#e2e8f0;border:0;outline:none;resize:vertical;padding:12px;line-height:1.5;font-family:var(--mono);font-size:13px;min-height:240px;white-space:pre;overflow-wrap:normal;overflow-x:auto;tab-size:4}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .act{border:0;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .act.grade{background:var(--accent);color:#04240f}
+  .act.ghost{background:#1e293b;color:#cbd5e1}
+  .act.reveal{background:#26344d;color:#cbd5e1}
+  .result{margin-top:14px;border-radius:9px;padding:13px 15px;font-size:13.5px;display:none}
+  .result.show{display:block}
+  .result.pass{background:#052e16;border:1px solid #14532d;color:#bbf7d0}
+  .result.fail{background:#2a1015;border:1px solid #5b1a22;color:#fecaca}
+  .result h3{margin:0 0 6px;font-size:15px}
+  .result ul{margin:6px 0 0;padding-left:18px}
+  .result code{background:#1e293b;padding:1px 6px;border-radius:5px;font-family:var(--mono);color:#fde68a}
+  .solution{margin-top:12px;display:none}
+  .solution.show{display:block}
+  .solution pre{background:#0a0f1c;border:1px solid #14532d;border-radius:9px;padding:13px;overflow:auto;font-family:var(--mono);font-size:12.5px;color:#bbf7d0}
+  .disc{margin-top:22px;color:#64748b;font-size:12px;text-align:center}
+  body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0e1f17;border:1px solid #14532d;color:#bbf7d0;padding:10px 18px;border-radius:9px;font-size:13px;z-index:60;opacity:0;transition:opacity .3s}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <a href="training-dashboard.html"><span data-en="Dashboard">학습 대시보드</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>🛠️ <span data-en="Code-Fix Lab">코드 수정 실습실</span>
+        <span class="kisa"><span data-en="Fix it · Engine verifies">고치면 · 엔진이 검증</span></span></h1>
+      <div class="sub" data-en="Real hands-on training: rewrite the vulnerable snippet so the weakness is gone. A client-side static-analysis engine checks that you added the right defenses and removed the dangerous calls — no answer peeking required.">
+        실전 실습입니다. 취약한 코드를 직접 고쳐 약점을 제거하세요. 클라이언트 측 정적분석 엔진이 올바른 방어를 추가했는지, 위험한 호출을 제거했는지 자동으로 검증합니다.
+      </div>
+    </div>
+
+    <div class="statbar">
+      <div class="stat"><div class="n" id="st-solved">0 / 0</div><div class="l" data-en="Solved">해결한 과제</div></div>
+      <div class="stat"><div class="n" id="st-xp">0</div><div class="l" data-en="XP">경험치</div></div>
+      <div class="stat"><div class="n" id="st-level">Lv.1</div><div class="l" data-en="Level">레벨</div></div>
+      <div class="stat"><div class="n" id="st-rate">0%</div><div class="l" data-en="Completion">완료율</div></div>
+    </div>
+
+    <div class="filters">
+      <select id="f-lang"><option value="">🌐 <span>전체 언어</span></option><option value="Java">Java</option><option value="Python">Python</option><option value="C">C</option></select>
+      <select id="f-cat"><option value="" data-en="All categories">전체 분류</option></select>
+      <select id="f-diff"><option value="" data-en="All levels">전체 난이도</option><option value="하" data-en="Easy">하</option><option value="중" data-en="Medium">중</option><option value="상" data-en="Hard">상</option></select>
+      <select id="f-status"><option value="" data-en="All">전체</option><option value="unsolved" data-en="Unsolved">미해결</option><option value="solved" data-en="Solved">해결됨</option></select>
+      <input id="f-search" type="text" placeholder="검색 (제목/CWE)" style="flex:1;min-width:140px">
+    </div>
+
+    <div class="layout">
+      <div class="list" id="exlist"></div>
+      <div class="work" id="work">
+        <div class="empty" data-en="← Pick an exercise from the list to start fixing code.">← 왼쪽 목록에서 과제를 선택해 코드 수정을 시작하세요.</div>
+      </div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation. Grading runs entirely in your browser via a lexical static-analysis engine; it verifies defensive patterns, not full program semantics.">
+      ⚠️ 교육용 실습입니다. 채점은 브라우저 내 어휘 기반 정적분석 엔진으로만 수행되며, 프로그램의 전체 의미가 아니라 방어 패턴의 존재 여부를 검증합니다.
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-data-ext.js"></script>
+<script src="js/sast-engine.js"></script>
+<script src="js/codefix-grader.js"></script>
+<script src="js/academy-state.js"></script>
+<script>
+/* ---------- i18n (self-contained, matches sim pages) ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.body.classList.toggle('lang-en',en);
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.dataset.ko===undefined) el.dataset.ko=el.innerHTML;
+    el.innerHTML = en ? el.dataset.en : el.dataset.ko;
+  });
+  if(window.__active) renderWork(window.__active);
+  renderList();
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* ---------- data ---------- */
+var ITEMS = (window.ACADEMY_DATA && window.ACADEMY_DATA.PRACTICAL || [])
+  .filter(function(x){return x.isTruePositive && x.safeCode && x.code;});
+var XP_BY_DIFF = {'하':20,'중':30,'상':40};
+
+/* ---------- progress store ---------- */
+function loadProg(){try{return JSON.parse(localStorage.getItem('sda_codefix')||'{}');}catch(e){return {};}}
+function saveProg(p){try{localStorage.setItem('sda_codefix',JSON.stringify(p));}catch(e){}}
+var PROG = loadProg();
+PROG.passed = PROG.passed || {};
+PROG.assisted = PROG.assisted || {};
+
+/* ---------- toast ---------- */
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2600);}
+
+/* ---------- stats ---------- */
+function refreshStats(){
+  var solved = Object.keys(PROG.passed).filter(function(id){return ITEMS.some(function(x){return x.id===id;});}).length;
+  document.getElementById('st-solved').textContent = solved+' / '+ITEMS.length;
+  document.getElementById('st-rate').textContent = ITEMS.length? Math.round(solved/ITEMS.length*100)+'%':'0%';
+  var lvl=1,xp=0;
+  try{ if(window.AcademyState){var u=AcademyState.getUnifiedStats?AcademyState.getUnifiedStats():AcademyState.getProgress();xp=u.xp||0;lvl=u.level||1;} }catch(e){}
+  document.getElementById('st-xp').textContent = xp;
+  document.getElementById('st-level').textContent = 'Lv.'+lvl;
+}
+
+/* ---------- filters ---------- */
+function populateCats(){
+  var cats=[];ITEMS.forEach(function(x){if(cats.indexOf(x.cat)<0)cats.push(x.cat);});
+  var sel=document.getElementById('f-cat');
+  cats.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+}
+function currentFilter(){
+  return {
+    lang:document.getElementById('f-lang').value,
+    cat:document.getElementById('f-cat').value,
+    diff:document.getElementById('f-diff').value,
+    status:document.getElementById('f-status').value,
+    q:(document.getElementById('f-search').value||'').toLowerCase()
+  };
+}
+function filtered(){
+  var f=currentFilter();
+  return ITEMS.filter(function(x){
+    if(f.lang && x.lang!==f.lang) return false;
+    if(f.cat && x.cat!==f.cat) return false;
+    if(f.diff && x.diff!==f.diff) return false;
+    if(f.status==='solved' && !PROG.passed[x.id]) return false;
+    if(f.status==='unsolved' && PROG.passed[x.id]) return false;
+    if(f.q){var hay=(x.title+' '+x.cwe+' '+(x.weaknessName||'')).toLowerCase();if(hay.indexOf(f.q)<0)return false;}
+    return true;
+  });
+}
+
+/* ---------- list ---------- */
+function renderList(){
+  var box=document.getElementById('exlist');
+  var rows=filtered();
+  if(!rows.length){box.innerHTML='<div class="empty" style="padding:40px 10px">'+L('조건에 맞는 과제가 없습니다.','No exercises match the filter.')+'</div>';return;}
+  box.innerHTML='';
+  rows.forEach(function(x){
+    var d=document.createElement('div');
+    d.className='ex'+(window.__active&&window.__active.id===x.id?' active':'');
+    var done=PROG.passed[x.id];
+    d.innerHTML='<div class="t">'+(done?'<span class="check">✔ </span>':'')+esc(x.title)+'</div>'+
+      '<div class="m"><span class="pill lang">'+x.lang+'</span>'+
+      '<span class="pill diff-'+x.diff+'">'+L('난이도 ','Lv ')+x.diff+'</span>'+
+      '<span class="pill">'+esc(x.cwe)+'</span>'+
+      '<span class="pill">'+esc(x.cat)+'</span></div>';
+    d.onclick=function(){selectItem(x);};
+    box.appendChild(d);
+  });
+}
+
+/* ---------- workspace ---------- */
+function selectItem(x){
+  window.__active=x;
+  renderList();
+  renderWork(x);
+}
+function renderWork(x){
+  var done=PROG.passed[x.id];
+  var w=document.getElementById('work');
+  w.innerHTML=
+    '<div class="whead"><h2>'+esc(x.title)+'</h2>'+
+      '<span class="tag cwe">'+esc(x.cwe)+'</span>'+
+      '<span class="tag bad">VULNERABLE</span>'+
+      '<span class="pill lang">'+x.lang+'</span>'+
+      '<span class="pill diff-'+x.diff+'">'+L('난이도 ','Lv ')+x.diff+'</span>'+
+      (done?'<span class="tag" style="background:#052e16;color:#86efac">'+L('✔ 해결됨','✔ Solved')+'</span>':'')+
+    '</div>'+
+    '<div class="objective"><b>'+L('목표','Goal')+':</b> '+
+      L('아래 코드의 <b>'+esc(x.weaknessName||x.cwe)+'</b> 약점을 제거하도록 수정하세요. 올바른 방어 코드를 추가하고 위험한 호출을 없애면 통과합니다.',
+        'Rewrite the code below to remove the <b>'+esc(x.weaknessName||x.cwe)+'</b> weakness. You pass when the right defenses are present and the dangerous calls are gone.')+
+    '</div>'+
+    '<div class="editor-wrap"><div class="gutter" id="gutter">1</div>'+
+      '<textarea id="editor" spellcheck="false"></textarea></div>'+
+    '<div class="btns">'+
+      '<button class="act grade" onclick="doGrade()">✅ '+L('채점','Grade')+'</button>'+
+      '<button class="act ghost" onclick="resetCode()">↺ '+L('초기화','Reset')+'</button>'+
+      '<button class="act ghost" onclick="showHint()">💡 '+L('힌트','Hint')+'</button>'+
+      '<button class="act reveal" onclick="revealSolution()">👁 '+L('모범답안 보기','Reveal solution')+'</button>'+
+    '</div>'+
+    '<div class="result" id="result"></div>'+
+    '<div class="solution" id="solution"></div>';
+  var ed=document.getElementById('editor');
+  ed.value=x.code;
+  ed.addEventListener('input',syncGutter);
+  ed.addEventListener('scroll',syncGutterScroll);
+  ed.addEventListener('keydown',handleTab);
+  syncGutter();
+}
+function syncGutter(){
+  var ed=document.getElementById('editor');if(!ed)return;
+  var lines=ed.value.split('\n').length;
+  var g=document.getElementById('gutter');
+  var s='';for(var i=1;i<=lines;i++)s+=i+(i<lines?'\n':'');
+  g.textContent=s;syncGutterScroll();
+}
+function syncGutterScroll(){var ed=document.getElementById('editor'),g=document.getElementById('gutter');if(ed&&g)g.scrollTop=ed.scrollTop;}
+function handleTab(e){
+  if(e.key==='Tab'){e.preventDefault();var ed=e.target,s=ed.selectionStart,en=ed.selectionEnd;
+    ed.value=ed.value.slice(0,s)+'    '+ed.value.slice(en);ed.selectionStart=ed.selectionEnd=s+4;syncGutter();}
+}
+function resetCode(){var x=window.__active;if(!x)return;document.getElementById('editor').value=x.code;syncGutter();hideResult();}
+function hideResult(){var r=document.getElementById('result');if(r){r.className='result';r.innerHTML='';}}
+
+function showHint(){
+  var x=window.__active;if(!x)return;
+  var need=(x.safeCodeKeywords||[]).map(function(k){var s=String(k);return s.length<=2?s.charAt(0)+'·':s.charAt(0)+'·'.repeat(Math.min(s.length-1,4));});
+  var r=document.getElementById('result');
+  r.className='result show fail';
+  r.style.background='#0f172a';r.style.borderColor='#334155';r.style.color='#cbd5e1';
+  r.innerHTML='<h3>💡 '+L('힌트','Hint')+'</h3>'+
+    '<div>'+esc(x.explanation||'')+'</div>'+
+    '<div style="margin-top:8px">'+L('이 수정에 필요한 핵심 요소','Required elements')+' ('+(x.safeCodeKeywords||[]).length+'): '+
+    need.map(function(n){return '<code>'+esc(n)+'</code>';}).join(' ')+'</div>';
+}
+function revealSolution(){
+  var x=window.__active;if(!x)return;
+  PROG.assisted[x.id]=true;saveProg(PROG);
+  var s=document.getElementById('solution');
+  s.className='solution show';
+  s.innerHTML='<div style="font-size:12px;color:#86efac;margin-bottom:4px">'+L('모범답안 (참고용 — 보면 XP가 절반으로 적용됩니다)','Reference solution (XP halved once revealed)')+'</div>'+
+    '<pre>'+esc(x.safeCode)+'</pre>';
+}
+
+/* ---------- grading ---------- */
+function doGrade(){
+  var x=window.__active;if(!x)return;
+  var code=document.getElementById('editor').value;
+  var res=window.CodeFixGrader.grade(x,code);
+  var r=document.getElementById('result');
+  if(!res.ok){r.className='result show fail';r.innerHTML='<h3>⚠ '+esc(res.error)+'</h3>';return;}
+  if(res.pass){
+    r.className='result show pass';
+    var first=!PROG.passed[x.id];
+    var assisted=!!PROG.assisted[x.id];
+    var xp=XP_BY_DIFF[x.diff]||20; if(assisted) xp=Math.round(xp/2);
+    r.innerHTML='<h3>✅ '+L('통과! 약점이 제거되었습니다.','Passed! The weakness is gone.')+'</h3>'+
+      '<div>'+L('필수 방어 요소를 모두 갖추었고 위험한 호출이 사라졌습니다.','All required defenses are present and the dangerous calls are gone.')+'</div>'+
+      (first?'<div style="margin-top:6px">🎉 +'+xp+' XP'+(assisted?' ('+L('모범답안 참고','assisted')+')':'')+'</div>':'<div style="margin-top:6px">'+L('이미 해결한 과제입니다.','Already solved.')+'</div>');
+    if(first){
+      PROG.passed[x.id]=true;saveProg(PROG);
+      try{ if(window.AcademyState&&AcademyState.completePractical) AcademyState.completePractical(x.id,100,xp); }catch(e){}
+      toast(L('✨ 과제 해결! +'+xp+' XP','✨ Solved! +'+xp+' XP'));
+      refreshStats();renderList();
+    }
+  }else{
+    r.className='result show fail';
+    var html='<h3>❌ '+L('아직 약점이 남아 있습니다.','Not fixed yet.')+'</h3><ul>';
+    if(!res.changed) html+='<li>'+L('코드를 수정하지 않았습니다. 취약한 부분을 직접 고쳐 보세요.','You have not changed the code yet.')+'</li>';
+    if(res.missing&&res.missing.length) html+='<li>'+L('아직 적용되지 않은 방어 요소','Missing defensive elements')+': '+res.missing.map(function(m){return '<code>'+esc(m)+'</code>';}).join(' ')+'</li>';
+    if(res.danger&&res.danger.length) html+='<li>'+L('아직 남아 있는 위험한 호출/설정','Dangerous calls still present')+': '+res.danger.map(function(d){return '<code>'+esc(d)+'</code>';}).join(' ')+'</li>';
+    html+='</ul>';
+    r.innerHTML=html;
+  }
+}
+
+/* ---------- util ---------- */
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ---------- init ---------- */
+['f-lang','f-cat','f-diff','f-status'].forEach(function(id){document.getElementById(id).addEventListener('change',renderList);});
+document.getElementById('f-search').addEventListener('input',renderList);
+document.addEventListener('DOMContentLoaded',function(){
+  applyLang();populateCats();renderList();refreshStats();
+  // deep-link: ?id=CD-01
+  try{var q=new URLSearchParams(location.search).get('id');if(q){var it=ITEMS.find(function(x){return x.id===q;});if(it)selectItem(it);}}catch(e){}
+});
+</script>
+</body>
+</html>
