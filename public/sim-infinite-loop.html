@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>종료되지 않는 반복문/재귀(자원 고갈·ReDoS) 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="종료되지 않는 반복문/재귀(자원 고갈·ReDoS) 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="종료되지 않는 반복문/재귀(자원 고갈·ReDoS) 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-infinite-loop.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="제어되지 않는 반복문/재귀와 ReDoS(악성 정규식 백트래킹) 취약점 모의 실습: 입력 길이에 따라 폭발하는 연산량을 시뮬레이션하고 길이 제한·선형 정규식·재귀 깊이 가드 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:340px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .meterbox{margin-top:12px}
+    .meterlbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:4px}
+    .meter{height:20px;background:#05080f;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+    .meter .fill{height:100%;width:0;transition:width .12s linear;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444)}
+    .seg{display:inline-flex;border:1px solid #334155;border-radius:8px;overflow:hidden;margin:4px 0}
+    .seg button{background:#0f172a;color:#cbd5e1;border:none;padding:7px 14px;font-family:var(--mono);font-size:12px;cursor:pointer}
+    .seg button.on{background:var(--accent);color:#04222e;font-weight:700}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>♾️ <span data-en="Uncontrolled Loop / Recursion (ReDoS &amp; Resource Exhaustion) Simulator">종료되지 않는 반복문/재귀 시뮬레이터</span>
+        <span class="kisa">KISA A-3 · <span data-en="Uncontrolled Loop / Recursion">제어되지 않는 반복문/재귀</span></span></h1>
+      <div class="sub" data-en="An attacker-supplied input forces unbounded work: a catastrophic-backtracking (ReDoS) regex, or a loop/recursion with no real termination guard. CPU pins to 100% and the request thread hangs — a denial of service.">
+        공격자가 제어하는 입력이 무한에 가까운 연산을 유발합니다. 백트래킹이 폭발하는 ReDoS 정규식, 혹은 종료 조건이 없는 반복문/재귀로 CPU가 100%에 묶이고 요청 스레드가 멈춥니다(서비스 거부).
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable input handler">취약한 입력 처리기</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="Pick the failure mode. We <b>simulate</b> the work — we never actually run the evil regex on a huge string or spin a real infinite loop (that would hang your browser). The meter shows the modelled step count.">
+        실패 유형을 선택하세요. 연산은 <b>시뮬레이션</b>합니다 — 거대한 입력에 실제 악성 정규식을 돌리거나 진짜 무한 루프를 만들지 않습니다(브라우저가 멈춤). 미터는 모델링된 스텝 수를 보여줍니다.
+      </div>
+
+      <div class="seg" id="modeSeg">
+        <button data-mode="redos" class="on" onclick="setMode('redos')" data-en="ReDoS regex (a+)+$">ReDoS 정규식 (a+)+$</button>
+        <button data-mode="loop" onclick="setMode('loop')" data-en="Unbounded loop / recursion">무한 반복/재귀</button>
+      </div>
+
+      <label data-en="Attacker input (its length drives the explosion)">공격자 입력 (길이가 폭발을 유발)</label>
+      <input id="v_in" value="aaaaaaaaaaaaaaaaaaaaaaaa!">
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Process input">입력 처리</span></button>
+        <button class="act ghost" onclick="resetMeter('v')">↺ <span data-en="Reset">초기화</span></button>
+      </div>
+
+      <div class="meterbox">
+        <div class="meterlbl"><span data-en="CPU / backtracking steps (modelled)">CPU / 백트래킹 스텝 (모델)</span><span id="v_pct">0%</span></div>
+        <div class="meter"><div class="fill" id="v_fill"></div></div>
+      </div>
+      <div class="out" id="v_out" data-en="(no run yet)">(실행 전)</div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Hardened handler: bounds + linear regex + depth guard">안전한 처리기: 경계·선형 정규식·깊이 가드</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="Same input, defended: length is clamped, the regex is anchored/linear (no nested quantifier), the loop has a hard iteration cap, and the recursion has a depth limit + a wall-clock timeout. Work stays linear and bounded.">
+        같은 입력에 방어 적용: 길이를 제한하고, 정규식을 앵커·선형(중첩 수량자 제거)으로 바꾸며, 반복문에 상한을 두고, 재귀에는 깊이 제한과 시간 제한(타임아웃)을 둡니다. 연산이 선형·유한으로 유지됩니다.
+      </div>
+      <label data-en="same input, validated">동일 입력 (검증 적용)</label>
+      <input id="s_in" value="aaaaaaaaaaaaaaaaaaaaaaaa!">
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Process safely">안전하게 처리</span></button>
+        <button class="act ghost" onclick="resetMeter('s')">↺ <span data-en="Reset">초기화</span></button>
+      </div>
+      <div class="meterbox">
+        <div class="meterlbl"><span data-en="CPU / steps (bounded)">CPU / 스텝 (제한됨)</span><span id="s_pct">0%</span></div>
+        <div class="meter"><div class="fill" id="s_fill"></div></div>
+      </div>
+      <div class="out" id="s_out" data-en="(no run yet)">(실행 전)</div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// ReDoS: 중첩 수량자 → 지수 백트래킹
+Pattern p = Pattern.compile("(a+)+$");
+p.matcher(userInput).matches();   // "aaaa...!" 에서 폭발
+
+// 무한 루프: 종료 조건이 입력에 의존
+while (true) {                      // 또는 잘못된 조건
+    process(queue.poll());         // queue 가 비어도 탈출 못함
+}
+
+// 무한 재귀: 종료/깊이 가드 없음
+int depth(Node n){ return 1 + depth(n.next); } // 순환 시 StackOverflow</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// 선형 정규식 + 입력 길이 제한
+if (userInput.length() &gt; 256) reject();
+Pattern p = Pattern.compile("^a+$");   // 중첩 수량자 제거 (또는 RE2)
+
+// 반복문 상한
+for (int i = 0; i &lt; MAX_ITERS &amp;&amp; !queue.isEmpty(); i++)
+    process(queue.poll());
+
+// 재귀 깊이 가드 + 타임아웃
+int depth(Node n, int d){
+    if (n == null || d &gt; MAX_DEPTH) return d;   // 가드
+    return depth(n.next, d + 1);
+}
+// 정규식/파싱은 별도 스레드에서 timeout 으로 강제 종료</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Why it explodes:</b> nested quantifiers like <code>(a+)+</code> let the engine split the same characters in exponentially many ways; when the final anchor fails (a trailing <code>!</code>), it backtracks through all of them — O(2^n). Unbounded loops/recursion have no input-independent stop. <b>Defense:</b> cap input length; use linear/atomic regex or RE2; bound every loop; guard recursion depth; wrap risky work in a timeout so one request can't pin the CPU."><b>폭발 원리:</b> <code>(a+)+</code> 같은 중첩 수량자는 같은 문자열을 지수적으로 많은 방식으로 나눌 수 있어, 끝의 앵커가 실패하면(끝의 <code>!</code>) 그 모든 경우를 백트래킹합니다 — O(2^n). 무한 반복/재귀는 입력과 무관한 종료점이 없습니다. <b>방어:</b> 입력 길이 제한 · 선형/원자적 정규식 또는 RE2 사용 · 모든 반복문에 상한 · 재귀 깊이 가드 · 위험 연산은 타임아웃으로 감싸 한 요청이 CPU를 점유하지 못하게 합니다.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. Step counts and CPU meters are computed models with a hard cap; no real evil regex or infinite loop is executed.">
+      ⚠️ 교육용 시뮬레이션입니다. 스텝 수와 CPU 미터는 상한이 걸린 계산 모델이며, 실제 악성 정규식이나 무한 루프를 실행하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var MODE='redos';
+var STEP_CAP=5000000; // 모델 상한 (실제 연산 아님)
+var anim=null;
+
+function setMode(m){
+  MODE=m;
+  document.querySelectorAll('#modeSeg button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-mode')===m);
+  });
+  // 모드에 맞는 기본 입력 제안
+  if(m==='redos'){ document.getElementById('v_in').value='aaaaaaaaaaaaaaaaaaaaaaaa!'; }
+  else { document.getElementById('v_in').value='n=40 (재귀 깊이/반복 횟수 트리거)'; }
+  document.getElementById('s_in').value=document.getElementById('v_in').value;
+}
+
+var PRESETS=[
+  {label:'redos 20×a + !', m:'redos', v:'aaaaaaaaaaaaaaaaaaaa!'},
+  {label:'redos 28×a + !', m:'redos', v:'aaaaaaaaaaaaaaaaaaaaaaaaaaaa!'},
+  {label:'redos 35×a + !', m:'redos', v:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!'},
+  {label:'loop n=50', m:'loop', v:'n=50'},
+  {label:'recursion ∞', m:'loop', v:'cyclic-linked-list (no base case)'}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.textContent=p.label;
+    b.title=L('모드: ','mode: ')+p.m;
+    b.onclick=function(){ setMode(p.m); document.getElementById('v_in').value=p.v; document.getElementById('s_in').value=p.v; };
+    box.appendChild(b);
+  });
+}
+
+function countA(s){ var m=(s||'').match(/^a+/i); return m?m[0].length:0; }
+function parseN(s){ var m=(s||'').match(/(\d+)/); return m?parseInt(m[1],10):0; }
+
+// 모델: ReDoS 스텝 추정 = 2^n (n = 선행 a 개수), 끝이 매칭 실패할 때
+function estimateRedosSteps(input){
+  var hasA=/^a+/i.test(input);
+  var failsAnchor=!/^a+$/i.test(input); // 'aaaa!' 처럼 a 외 문자가 끝에 있으면 실패 → 백트래킹 폭발
+  if(!hasA) return {steps:input.length, exploded:false};
+  if(!failsAnchor) return {steps:input.length, exploded:false}; // 'aaaa' 는 빨리 매칭
+  var n=countA(input);
+  // 2^n 모델 (상한 클램프)
+  var steps=Math.pow(2, Math.min(n,60));
+  return {steps:steps, exploded:true, n:n};
+}
+
+function animateMeter(prefix, targetSteps, capped, doneText){
+  var fill=document.getElementById(prefix+'_fill');
+  var pct=document.getElementById(prefix+'_pct');
+  var out=document.getElementById(prefix+'_out');
+  if(anim){clearInterval(anim);anim=null;}
+  var shown=0;
+  var ratio=Math.min(1, targetSteps/STEP_CAP);
+  var goalPct=Math.round(ratio*100);
+  var tick=0, ticks=24;
+  anim=setInterval(function(){
+    tick++;
+    var p=Math.round(goalPct*(tick/ticks));
+    if(p>100)p=100;
+    fill.style.width=p+'%';
+    pct.textContent=p+'%';
+    if(tick>=ticks){
+      clearInterval(anim);anim=null;
+      out.innerHTML=doneText;
+    }
+  },45);
+}
+
+function runVuln(){
+  var input=document.getElementById('v_in').value;
+  resetMeter('v');
+  if(MODE==='redos'){
+    var r=estimateRedosSteps(input);
+    if(r.exploded){
+      var steps=r.steps;
+      var stepStr = steps>=1e6 ? steps.toExponential(2) : steps.toLocaleString('en-US');
+      var capHit = steps>=STEP_CAP;
+      animateMeter('v', steps, capHit,
+        'regex  = (a+)+$\n'+
+        'input  = "'+escapeHtml(input)+'"   ('+L('선행 a','leading a')+' = '+r.n+')\n'+
+        'match()...\n'+
+        L('추정 백트래킹 스텝','estimated backtracking steps')+' ≈ 2^'+r.n+' = '+stepStr+'\n\n'+
+        '<span style="color:#fca5a5">🔥 '+L('치명적 백트래킹 — CPU 100%, 요청 스레드 HUNG.','CATASTROPHIC backtracking — CPU 100%, request thread HUNG.')+'</span>\n'+
+        '<span style="color:#fca5a5">'+L('단 한 글자만 더 붙이면 시간이 2배가 됩니다 → 서비스 거부(DoS).','each extra char DOUBLES the time → denial of service (DoS).')+'</span>'+
+        (capHit?'\n<span style="color:#f59e0b">'+L('(시뮬 상한에서 정지 — 실제로는 수 분~수 시간 점유)','(stopped at sim cap — real engine would pin for minutes–hours)')+'</span>':''));
+    } else {
+      animateMeter('v', input.length+5, false,
+        'regex  = (a+)+$\n'+
+        'input  = "'+escapeHtml(input)+'"\n'+
+        '<span style="color:#86efac">✓ '+L('이 입력은 빠르게 매칭/실패합니다. 끝에 a가 아닌 문자(예: !)를 붙여 백트래킹을 유발해 보세요.','this input matches/fails quickly. Append a non-a char (e.g. !) at the end to trigger backtracking.')+'</span>');
+    }
+  } else {
+    // 무한 루프/재귀
+    var n=parseN(input);
+    var cyclic=/cyclic|no base|∞|infinite/i.test(input);
+    if(cyclic || n===0){
+      animateMeter('v', STEP_CAP, true,
+        'while(true){ process(queue.poll()); }   // '+L('또는 base case 없는 재귀','or recursion w/ no base case')+'\n'+
+        L('반복/재귀 카운터','iteration / recursion counter')+': 1 → 2 → 3 → ... → '+L('정지 안 함','never stops')+'\n\n'+
+        '<span style="color:#fca5a5">💥 '+L('종료 조건 없음 — 스택 오버플로 / 스레드 영구 점유.','no termination condition — StackOverflow / thread pinned forever.')+'</span>\n'+
+        '<span style="color:#fca5a5">'+L('워커 풀이 고갈되면 전체 서비스가 응답 불능이 됩니다.','as the worker pool drains, the whole service stops responding.')+'</span>');
+    } else {
+      // n 에 비례하지만 가드 없는 경우 — 큰 n 이면 위험
+      var steps=Math.pow(2, Math.min(n,40)); // 잘못 설계된 지수 재귀(예: naive fib) 모델
+      var capHit=steps>=STEP_CAP;
+      animateMeter('v', steps, capHit,
+        'fib(n) { return fib(n-1)+fib(n-2); }   // '+L('메모이제이션 없음','no memoization')+'\n'+
+        'n = '+n+'\n'+
+        L('호출 횟수','call count')+' ≈ 2^'+n+' = '+(steps>=1e6?steps.toExponential(2):steps.toLocaleString('en-US'))+'\n\n'+
+        '<span style="color:#fca5a5">🔥 '+L('지수적 호출 — n을 조금만 키워도 폭발 → DoS.','exponential calls — a slightly larger n explodes → DoS.')+'</span>');
+    }
+  }
+}
+
+function runSecure(){
+  var input=document.getElementById('s_in').value;
+  resetMeter('s');
+  var MAXLEN=256;
+  var clamped=input.length>MAXLEN;
+  var safeInput=input.slice(0,MAXLEN);
+  if(MODE==='redos'){
+    // 선형 정규식 ^a+$ → 스텝 = 입력 길이
+    var steps=safeInput.length;
+    animateMeter('s', steps, false,
+      'len check: '+input.length+' / max '+MAXLEN+(clamped?' → '+L('거부','reject'):'  ✓')+'\n'+
+      'regex  = ^a+$   ('+L('중첩 수량자 제거 · 선형','no nested quantifier · linear')+')\n'+
+      'match()  '+L('스텝','steps')+' = O(n) = '+steps+'\n\n'+
+      '<span style="color:#86efac">🛡 '+L('백트래킹 없음 — 입력이 길어도 선형 시간. CPU 안전.','no backtracking — linear time even for long input. CPU safe.')+'</span>');
+  } else {
+    var n=parseN(input);
+    var MAX_ITERS=100000, MAX_DEPTH=1000;
+    var cyclic=/cyclic|no base|∞|infinite/i.test(input);
+    var used = cyclic ? MAX_DEPTH : Math.min(n||10, MAX_DEPTH);
+    animateMeter('s', used, false,
+      'for(i=0; i<MAX_ITERS && !queue.isEmpty(); i++) ...   // '+L('반복 상한','iteration cap')+'\n'+
+      'depth(n,d){ if(d>MAX_DEPTH) return d; ... }          // '+L('깊이 가드','depth guard')+'\n'+
+      'runWithTimeout(task, 200ms)                          // '+L('시간 제한','wall-clock timeout')+'\n\n'+
+      (cyclic
+        ? '<span style="color:#86efac">🛡 '+L('순환 입력이라도 깊이 가드/타임아웃에서 안전하게 중단됩니다.','even a cyclic input is safely aborted by the depth guard / timeout.')+'</span>'
+        : '<span style="color:#86efac">🛡 '+L('연산이 상한 내에서 종료됩니다 ('+used+' 스텝). 한 요청이 CPU를 점유하지 못합니다.','work finishes within bounds ('+used+' steps). No single request can pin the CPU.')+'</span>'));
+  }
+}
+
+function resetMeter(prefix){
+  if(anim){clearInterval(anim);anim=null;}
+  document.getElementById(prefix+'_fill').style.width='0';
+  document.getElementById(prefix+'_pct').textContent='0%';
+}
+
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets();
+</script>
+</body>
+</html>

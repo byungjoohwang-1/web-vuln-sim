@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>외부 참조를 Private 필드에 저장 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="외부 참조를 Private 필드에 저장 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="외부 참조를 Private 필드에 저장 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-public-to-private.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="생성자/세터가 호출자의 배열 참조를 private 필드에 그대로 저장해, 외부에서 원본 배열을 변조하면 객체 내부 상태가 함께 바뀌는 취약점 모의 실습과 방어적 복사 방어 비교.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .state{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .statebox{flex:1;min-width:200px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px}
+    .statebox h3{font-size:12px;color:#94a3b8;font-family:var(--mono);margin-bottom:6px}
+    .statebox .val{font-family:var(--mono);font-size:13px;color:#e2e8f0}
+    .changed{color:#fca5a5;font-weight:700}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🪝 <span data-en="Storing an External Reference into a Private Field">외부 참조를 Private 필드에 저장</span>
+        <span class="kisa">KISA A-6 · <span data-en="Store Caller's Mutable Array Reference">호출자 배열 참조 저장</span></span></h1>
+      <div class="sub" data-en="A constructor/setter saves the caller's array reference directly into a private field. The caller keeps that same reference and mutates it later — and the object's internal state changes underneath it, with no method call.">
+        생성자/세터가 호출자의 배열 <b>참조</b>를 private 필드에 그대로 저장합니다. 호출자는 같은 참조를 들고 있다가 나중에 변조하고, 메서드 호출 없이도 객체의 내부 상태가 그 아래에서 함께 바뀝니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Constructor stores the caller's array directly">생성자가 호출자 배열을 그대로 저장</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="<code>new Order(items)</code> does <code>this.items = items;</code> — it aliases the caller's array. The caller still owns a live reference and can edit the order's contents after construction.">
+        <code>new Order(items)</code>는 <code>this.items = items;</code>로 호출자 배열을 <b>앨리어싱</b>합니다. 호출자는 여전히 살아있는 참조를 들고 있어, 생성 후에도 주문 내용을 마음대로 수정할 수 있습니다.
+      </div>
+
+      <label data-en="External array passed in at construction">생성 시 전달한 외부 배열</label>
+      <input id="v_init" value="apple:1, book:1">
+      <label data-en="Post-construction mutation of the EXTERNAL array">생성 이후 외부 배열에 가할 변조</label>
+      <select id="v_op">
+        <option value="add" data-en="external.push('LAPTOP:0')  — inject free item">external.push('LAPTOP:0') — 무료 품목 주입</option>
+        <option value="price" data-en="external[0] = 'apple:-9999'  — negative price">external[0] = 'apple:-9999' — 음수 가격</option>
+        <option value="clear" data-en="external.length = 0  — empty the order">external.length = 0 — 주문 비우기</option>
+      </select>
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="buildVuln()">🏗 <span data-en="new Order(external)">객체 생성</span></button>
+        <button class="act run" onclick="mutateVuln()">💥 <span data-en="Mutate external array">외부 배열 변조</span></button>
+      </div>
+      <div class="state">
+        <div class="statebox"><h3 data-en="EXTERNAL array (caller owns)">외부 배열 (호출자 소유)</h3><div class="val" id="v_ext">—</div></div>
+        <div class="statebox"><h3 data-en="ORDER internal state (private)">Order 내부 상태 (private)</h3><div class="val" id="v_internal">—</div></div>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Constructor stores a defensive copy">생성자가 방어적 복사본을 저장</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The fix does <code>this.items = Arrays.copyOf(input, input.length);</code> on input. The object owns its own array, so later mutations to the caller's array can't reach inside.">
+        수정본은 입력 시 <code>this.items = Arrays.copyOf(input, input.length);</code>로 복사합니다. 객체가 자신만의 배열을 소유하므로, 이후 호출자 배열을 변조해도 내부에 닿지 못합니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="buildSecure()">🏗 <span data-en="new Order(external) [copy]">객체 생성 [복사]</span></button>
+        <button class="act fix" onclick="mutateSecure()">🧪 <span data-en="Try same mutation">동일 변조 시도</span></button>
+      </div>
+      <div class="state">
+        <div class="statebox"><h3 data-en="EXTERNAL array (caller owns)">외부 배열 (호출자 소유)</h3><div class="val" id="s_ext">—</div></div>
+        <div class="statebox"><h3 data-en="ORDER internal state (private)">Order 내부 상태 (private)</h3><div class="val" id="s_internal">—</div></div>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// Java
+public class Order {
+  private String[] items;
+
+  public Order(String[] items) {
+    this.items = items;            // ⚠ stores caller's ref
+  }
+  public void setItems(String[] items) {
+    this.items = items;            // ⚠ same problem
+  }
+  public String[] view(){ return items.clone(); }
+}
+
+// caller keeps the reference and edits it later:
+String[] cart = {"apple:1"};
+Order o = new Order(cart);
+cart[0] = "apple:-9999";           // order changed!
+cart = append(cart, "LAPTOP:0");   // (re-set) injects item</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// Java — defensive copy on input
+public class Order {
+  private final String[] items;
+
+  public Order(String[] items) {
+    // copy so we don't alias the caller's array
+    this.items = Arrays.copyOf(items, items.length);
+  }
+  public void setItems(String[] items) {
+    this.items = Arrays.copyOf(items, items.length);
+  }
+  public String[] view(){ return items.clone(); }
+}
+
+// caller's later edits hit only their own array:
+String[] cart = {"apple:1"};
+Order o = new Order(cart);
+cart[0] = "apple:-9999";           // order UNCHANGED</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Symmetry tip:</b> this is the input-side twin of &quot;returning a private array&quot;. Both are <i>aliasing</i> bugs — copy on the way <b>in</b> (constructors/setters) <i>and</i> on the way <b>out</b> (getters). <b>Defense keys:</b> <code>Arrays.copyOf</code>/<code>clone()</code> on stored input · prefer immutable collections (<code>List.copyOf</code>) and <code>final</code> fields · validate the copy, not the original (TOCTOU-safe) · for nested mutable objects, deep-copy."><b>대칭 팁:</b> 이것은 &quot;private 배열 반환&quot;의 입력 측 쌍둥이입니다. 둘 다 <i>앨리어싱</i> 버그이며 — 들어올 때(생성자/세터)와 나갈 때(게터) <b>모두</b> 복사해야 합니다. <b>방어 핵심:</b> 저장하는 입력에 <code>Arrays.copyOf</code>/<code>clone()</code> · 불변 컬렉션(<code>List.copyOf</code>)과 <code>final</code> 필드 선호 · 원본이 아닌 복사본을 검증(TOCTOU 안전) · 중첩 가변 객체는 깊은 복사.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. The object, its private field and the caller are all in-page JavaScript mocks of the Java behaviour; no real system is involved.">
+      ⚠️ 교육용 시뮬레이션입니다. 객체·private 필드·호출자는 모두 Java 동작을 모사한 페이지 내부 JavaScript mock이며 실제 시스템은 없습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var PRESETS=[
+  {label:'inject free item', op:'add'},
+  {label:'negative price', op:'price'},
+  {label:'empty order', op:'clear'}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button'); b.textContent=p.label;
+    b.onclick=function(){document.getElementById('v_op').value=p.op;};
+    box.appendChild(b);
+  });
+}
+
+function parseItems(s){ return (s||'').split(',').map(function(x){return x.trim();}).filter(function(x){return x;}); }
+function fmt(arr){ return arr.length? '['+arr.map(escapeHtml).join(', ')+']' : '[]'; }
+
+// ---- Vulnerable: this.items = input (alias) ----
+var vExt, vOrder;
+function buildVuln(){
+  vExt = parseItems(document.getElementById('v_init').value);
+  vOrder = { items: vExt };                 // ⚠ stores the SAME reference
+  renderVuln();
+  document.getElementById('v_out').textContent=
+    'String[] cart = '+fmt(vExt)+';\nOrder o = new Order(cart);   // this.items = cart  (alias)\n'+
+    L('o.items 와 cart 가 같은 배열 객체인가? ','is o.items the same array object as cart? ')+(vOrder.items===vExt?'true ⚠':'false');
+}
+function renderVuln(){
+  document.getElementById('v_ext').innerHTML = vExt?fmt(vExt):'—';
+  document.getElementById('v_internal').innerHTML = vOrder?fmt(vOrder.items):'—';
+}
+function mutateVuln(){
+  if(!vOrder){ buildVuln(); }
+  var op=document.getElementById('v_op').value, code='';
+  if(op==='add'){ vExt.push('LAPTOP:0'); code="cart.push(\"LAPTOP:0\");"; }
+  else if(op==='price'){ if(vExt.length) vExt[0]='apple:-9999'; code="cart[0] = \"apple:-9999\";"; }
+  else if(op==='clear'){ vExt.length=0; code="cart.length = 0;"; }
+  renderVuln();
+  document.getElementById('v_out').textContent=
+    '// '+L('생성 이후 외부 배열만 수정','only the external array is edited after construction')+'\n'+code+'\n\n'+
+    '🚨 '+L('Order의 메서드를 전혀 호출하지 않았는데도 내부 items 가 함께 변조되었습니다 — 같은 참조를 공유하기 때문.',
+            'no Order method was called, yet the internal items changed too — because they share the same reference.');
+}
+
+// ---- Secure: this.items = copyOf(input) ----
+var sExt, sOrder;
+function buildSecure(){
+  sExt = parseItems(document.getElementById('v_init').value);
+  sOrder = { items: sExt.slice() };         // copy
+  renderSecure();
+  document.getElementById('s_out').textContent=
+    'String[] cart = '+fmt(sExt)+';\nOrder o = new Order(cart);   // this.items = copyOf(cart)\n'+
+    L('o.items 와 cart 가 같은 객체인가? ','is o.items the same object as cart? ')+(sOrder.items===sExt?'true':'false ✅');
+}
+function renderSecure(){
+  document.getElementById('s_ext').innerHTML = sExt?fmt(sExt):'—';
+  document.getElementById('s_internal').innerHTML = sOrder?fmt(sOrder.items):'—';
+}
+function mutateSecure(){
+  if(!sOrder){ buildSecure(); }
+  var op=document.getElementById('v_op').value, code='';
+  if(op==='add'){ sExt.push('LAPTOP:0'); code="cart.push(\"LAPTOP:0\");"; }
+  else if(op==='price'){ if(sExt.length) sExt[0]='apple:-9999'; code="cart[0] = \"apple:-9999\";"; }
+  else if(op==='clear'){ sExt.length=0; code="cart.length = 0;"; }
+  renderSecure();
+  document.getElementById('s_out').textContent=
+    '// '+L('동일한 외부 변조','same external mutation')+'\n'+code+'\n\n'+
+    '🛡 '+L('외부 배열은 바뀌었지만 Order 내부 items 는 그대로입니다 — 생성 시 복사가 끊어 놨습니다.',
+            'the external array changed, but the Order\'s internal items is unchanged — the copy-on-input severed the link.');
+}
+
+window.renderDynamic=function(){ buildPresets(); renderVuln(); renderSecure(); };
+buildPresets(); buildVuln(); buildSecure();
+</script>
+</body>
+</html>

@@ -129,6 +129,286 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+
+        /* Exploit Simulator Styles */
+        .exploit-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        @media (max-width: 1100px) {
+            .exploit-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .burp-window {
+            background: #2b2b2b;
+            border: 2px solid #d9534f;
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(217, 83, 79, 0.15);
+        }
+        .burp-titlebar {
+            background: #1e1e1e;
+            padding: 12px 18px;
+            border-bottom: 2px solid #d9534f;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #d9534f;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .burp-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .burp-logo-dot {
+            width: 10px;
+            height: 10px;
+            background: #d9534f;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        .burp-controls {
+            background: #333;
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #444;
+            align-items: center;
+        }
+        .burp-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #555;
+            transition: all 0.2s;
+        }
+        .burp-btn-forward {
+            background: #d9534f;
+            color: white;
+            border-color: #d9534f;
+        }
+        .burp-btn-forward:hover {
+            background: #c9302c;
+            box-shadow: 0 0 12px rgba(217, 83, 79, 0.4);
+        }
+        .burp-payload-helper {
+            background: #242424;
+            padding: 15px;
+            border-top: 1px solid #333;
+        }
+        .helper-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #d9534f;
+        }
+        .payload-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .payload-chip {
+            background: #1c1c1c;
+            color: #cbd5e1;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .payload-chip:hover {
+            background: #333;
+            border-color: #d9534f;
+            color: white;
+        }
+        .visual-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow: hidden;
+        }
+        .defense-toggle-container {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .defense-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .defense-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .defense-badge.off {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+        }
+        .defense-badge.on {
+            background: #dcfce7;
+            color: #22c55e;
+            border: 1px solid #bbf7d0;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #22c55e;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+        .flow-node {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fdfdfd;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .flow-node.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+        }
+        .node-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+        .query-box {
+            background: #1e1e1e;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 13.5px;
+            line-height: 1.4;
+            overflow-x: auto;
+        }
+        .query-injected {
+            color: #f43f5e;
+            font-weight: bold;
+            text-decoration: underline;
+            animation: flash-red 1s infinite alternate;
+        }
+        .query-safe {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .terminal-output-window {
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #0f172a;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .terminal-header {
+            background: #1e293b;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #334155;
+        }
+        .dot-btn {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .terminal-title {
+            flex-grow: 1;
+            margin-left: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: monospace;
+        }
+        .terminal-body {
+            padding: 15px;
+            min-height: 150px;
+            font-size: 13px;
+            font-family: 'Consolas', monospace;
+            color: #38bdf8;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        @keyframes flash-red {
+            from { text-shadow: 0 0 4px rgba(244, 63, 94, 0.4); }
+            to { text-shadow: 0 0 12px rgba(244, 63, 94, 0.9), 0 0 20px rgba(244, 63, 94, 0.9); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
         .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
         .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
         .langbar button.on { background:#3b82f6; color:#fff; }
@@ -153,6 +433,11 @@
                 <div class="mode-icon">🐍</div>
                 <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
                 <div class="mode-desc" data-en="Per Python secure coding guide">Python 시큐어코딩 가이드 기준</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('exploit')">
+                <div class="mode-icon">⚔️</div>
+                <div class="mode-title" data-en="Interactive Exploit Simulator">공격 시뮬레이터</div>
+                <div class="mode-desc" data-en="OS Command Execution & Bypass">OS 명령어 삽입 및 우회</div>
             </button>
         </div>
 
@@ -324,6 +609,94 @@ subprocess.run(["ping", "-c", "3", ip])
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Shell Injection</p>
                                 <p data-en="<code>os.system</code> internally calls <code>/bin/sh -c</code>, so shell meta-characters can be used."><code>os.system</code>은 내부적으로 <code>/bin/sh -c</code>를 호출하므로 쉘 메타문자 사용이 가능합니다.</p>
+                            </div>
+                        </div>
+            </div>
+        </div>
+
+        <!-- 공격 시뮬레이터 (Exploit Simulator) 모드 -->
+        <div id="exploit-mode" class="content-wrapper">
+            <div class="progress-indicator" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #e2e8f0; border: 1px solid #334155; margin-bottom: 20px;">
+                <div class="progress-title" style="color: #38bdf8; display: flex; align-items: center; gap: 8px;" data-en="⚔️ Interactive OS Command Injection Simulator">⚔️ 인터랙티브 운영체제 명령어 주입 시뮬레이터</div>
+                <p style="font-size: 14px; line-height: 1.6; opacity: 0.9; margin: 0;" data-en="Simulate OS Command Injection attacks. Submit malicious IP payloads with shell command separators (e.g. ;, |, &, &&), trace dynamic shell construction, and witness output logs showing server file leaks or command blockages in real-time.">
+                    운영체제 명령어 주입(Command Injection) 공격 과정을 시뮬레이션합니다. 쉘 명령어 구분자(;, |, &, &&)가 포함된 악성 IP 페이로드를 입력하여 서버측 동적 명령어 구성 방식을 확인하고, 서버 파일 노출 또는 필터링에 의한 안전 차단 과정을 실시간 터미널 화면으로 관찰하세요.
+                </p>
+            </div>
+
+            <div class="exploit-container">
+                <!-- Left Column: Attack Form -->
+                <div class="burp-window">
+                    <div class="burp-titlebar">
+                        <div class="burp-logo">
+                            <div class="burp-logo-dot"></div>
+                            <span>Network Utility - Web Ping Console</span>
+                        </div>
+                        <span style="font-size: 11px; opacity: 0.7;">SecureDev Router Control</span>
+                    </div>
+                    
+                    <div class="burp-controls" style="background: #2b2b2b; color: #fff;">
+                        <span style="font-size:12px; font-weight: bold;" data-en="Vulnerable IP Input Field">취약한 IP 입력 창</span>
+                    </div>
+
+                    <div style="padding: 15px; background: #1e1e1e; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #333;">
+                        <div>
+                            <label style="display:block; font-size:12px; color:#aaa; margin-bottom: 5px;" data-en="Ping Target IP Address">대상 IP 주소</label>
+                            <input type="text" id="cmdIpAddress" value="8.8.8.8" style="width:100%; padding:10px; background:#2b2b2b; border:1px solid #444; color:#a6e22e; font-family:monospace; outline:none; font-size: 14px;">
+                        </div>
+                        <button class="burp-btn burp-btn-forward" onclick="runCmdSimulation()" style="width:100%; margin-top:5px;" data-en="Execute Ping ➔">핑 명령어 실행 ➔</button>
+                    </div>
+
+                    <div class="burp-payload-helper">
+                        <div class="helper-title" data-en="💡 Quick OS Command Injection Payloads:">💡 커맨드 인젝션 페이로드 프리셋 (클릭 시 자동 삽입):</div>
+                        <div class="payload-list">
+                            <button class="payload-chip" onclick="setCmdPayload('8.8.8.8')" data-en="Normal IP">정상 IP 요청</button>
+                            <button class="payload-chip" onclick="setCmdPayload('8.8.8.8; cat /etc/passwd')" style="border-color:#ff9800; color:#ff9800;" data-en="Linux cat /etc/passwd">리눅스 패스워드 파일 조회</button>
+                            <button class="payload-chip" onclick="setCmdPayload('127.0.0.1 & dir')" style="border-color:#a855f7; color:#a855f7;" data-en="Windows dir Directory list">윈도우즈 디렉토리 조회</button>
+                            <button class="payload-chip" onclick="setCmdPayload('8.8.8.8; cat flag.txt')" style="border-color:#ef4444; color:#ef4444;" data-en="Read secret flag.txt">비밀 flag.txt 파일 탈취</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Visualizer -->
+                <div class="visual-panel">
+                    <div class="defense-toggle-container">
+                        <div class="defense-label">
+                            <span data-en="🛡️ Regex IP Whitelist Validation Defense">🛡️ 정규표현식 IP 화이트리스트 검증 (Secure Coding)</span>
+                            <span class="defense-badge off" id="defenseBadge" data-en="OFF">OFF</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="defenseToggle" onchange="toggleDefenseMode()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Flow Diagram -->
+                    <div class="flow-diagram">
+                        <!-- Node 1: Command Constructor -->
+                        <div class="flow-node active" id="flowNodeServer">
+                            <div class="node-header">
+                                <span data-en="⚙️ Server-side OS Command Constructor">⚙️ 서버측 OS 명령어 구성 엔진</span>
+                                <span style="color:#3b82f6;" id="serverStatus" data-en="Idle">대기 중</span>
+                            </div>
+                            <div class="query-box" id="constructedCommandBox">
+                                String cmd = "ping -c 3 " + ip;
+                            </div>
+                        </div>
+
+                        <!-- Node 2: Terminal Output -->
+                        <div class="flow-node" id="flowNodeTerminal">
+                            <div class="node-header">
+                                <span data-en="🖥️ System Command Shell & Terminal stdout">🖥️ 시스템 명령 쉘 및 터미널 출력</span>
+                                <span style="color:#10b981;" id="terminalStatus" data-en="Waiting">대기 중</span>
+                            </div>
+                            <div class="terminal-output-window">
+                                <div class="terminal-header">
+                                    <div class="dot-btn dot-red"></div>
+                                    <div class="dot-btn dot-yellow"></div>
+                                    <div class="dot-btn dot-green"></div>
+                                    <div class="terminal-title">bash - securedev-server</div>
+                                </div>
+                                <div class="terminal-body" id="terminalOutputBody">guest@securedev-web:~$ _</div>
                             </div>
                         </div>
                     </div>
@@ -505,6 +878,131 @@ def ping_host(ip):
             const stP=document.getElementById('codeStatusPython'); stP.className = 'status-badge status-vulnerable';
             stP.textContent=L('취약한 코드','Vulnerable code'); stP.dataset.ko='취약한 코드'; stP.setAttribute('data-en','Vulnerable code');
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
+        }
+
+        // === Exploit Simulator Logic ===
+        let isDefenseOn = false;
+
+        function toggleDefenseMode() {
+            isDefenseOn = document.getElementById('defenseToggle').checked;
+            const badge = document.getElementById('defenseBadge');
+            const qBox = document.getElementById('constructedCommandBox');
+            
+            if (isDefenseOn) {
+                badge.className = 'defense-badge on';
+                badge.textContent = L('ON', 'ON');
+                badge.setAttribute('data-en', 'ON');
+                qBox.innerHTML = `// [Regex Whitelist Match Mode]<br>if (!ip.matches("^[0-9\\\\.]+$")) {<br>&nbsp;&nbsp;&nbsp;&nbsp;throw new IllegalArgumentException("Invalid IP");<br>}<br>String cmd = "ping -c 3 " + ip;<br>Runtime.getRuntime().exec(cmd);`;
+            } else {
+                badge.className = 'defense-badge off';
+                badge.textContent = L('OFF', 'OFF');
+                badge.setAttribute('data-en', 'OFF');
+                qBox.innerHTML = `// [Vulnerable Direct Concatenation]<br>String cmd = "ping -c 3 " + ip;<br>Runtime.getRuntime().exec(cmd);`;
+            }
+            resetExploitSimulation();
+        }
+
+        function setCmdPayload(payload) {
+            document.getElementById('cmdIpAddress').value = payload;
+            document.getElementById('cmdIpAddress').focus();
+        }
+
+        function updateDynamicEl(id, koText, enText) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = L(koText, enText);
+            el.dataset.ko = koText;
+            el.setAttribute('data-en', enText);
+        }
+
+        function resetExploitSimulation() {
+            updateDynamicEl('serverStatus', '대기 중', 'Idle');
+            document.getElementById('serverStatus').style.color = '#3b82f6';
+            updateDynamicEl('terminalStatus', '대기 중', 'Waiting');
+            document.getElementById('terminalStatus').style.color = '#10b981';
+
+            // Reset nodes active states
+            document.getElementById('flowNodeServer').className = 'flow-node active';
+            document.getElementById('flowNodeTerminal').className = 'flow-node';
+
+            // Reset terminal output
+            document.getElementById('terminalOutputBody').innerHTML = "guest@securedev-web:~$ _";
+        }
+
+        function runCmdSimulation() {
+            resetExploitSimulation();
+            
+            const ip = document.getElementById('cmdIpAddress').value;
+
+            // Step 1: Server processes command
+            updateDynamicEl('serverStatus', '명령어 조립 중...', 'Constructing command...');
+            
+            setTimeout(() => {
+                let isBlocked = false;
+                
+                if (isDefenseOn) {
+                    // Check whitelist
+                    const ipPattern = /^[0-9\.]+$/;
+                    if (!ipPattern.test(ip)) {
+                        isBlocked = true;
+                    }
+                }
+
+                if (isBlocked) {
+                    updateDynamicEl('serverStatus', '차단됨 (Invalid IP)', 'Blocked (Invalid IP)');
+                    document.getElementById('serverStatus').style.color = '#ef4444';
+                    
+                    document.getElementById('terminalOutputBody').innerHTML = `guest@securedev-web:~$ ping -c 3 ${ip}\n<span style="color:#ef4444;">java.lang.IllegalArgumentException: Invalid IP format! Command execution blocked by security filter.</span>\n\nguest@securedev-web:~$ _`;
+                    return;
+                }
+
+                updateDynamicEl('serverStatus', '실행 완료', 'Executed');
+                document.getElementById('serverStatus').style.color = '#10b981';
+                
+                // Move node active
+                document.getElementById('flowNodeServer').className = 'flow-node';
+                document.getElementById('flowNodeTerminal').className = 'flow-node active';
+                updateDynamicEl('terminalStatus', '명령어 실행 중...', 'Executing command...');
+
+                setTimeout(() => {
+                    updateDynamicEl('terminalStatus', '실행 완료', 'Execution Completed');
+                    
+                    let terminalBody = document.getElementById('terminalOutputBody');
+                    let outputHtml = `guest@securedev-web:~$ ping -c 3 ${ip}\n`;
+
+                    const lowerIp = ip.toLowerCase();
+                    const hasMeta = lowerIp.includes(';') || lowerIp.includes('&') || lowerIp.includes('|');
+
+                    if (hasMeta && !isDefenseOn) {
+                        // Exploit script execution
+                        outputHtml += `PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.\n64 bytes from 8.8.8.8: icmp_seq=1 ttl=119 time=14.2 ms\n--- 8.8.8.8 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss\n\n`;
+                        
+                        if (ip.includes("passwd")) {
+                            outputHtml += `<span style="color:#ef4444; font-weight:bold;">[Executing injected command: cat /etc/passwd]</span>\nroot:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nbin:x:2:2:bin:/bin:/usr/sbin/nologin\nsys:x:3:3:sys:/dev:/usr/sbin/nologin\nguest:x:1001:1001:guest:/home/guest:/bin/bash\n\n`;
+                            alert(L("🚨 [OS Command Injection 성공] 시스템 민감 파일(/etc/passwd)이 노출되었습니다!\nFlag: wvs_flag{rce_passwd_file_read}", "🚨 [OS Command Injection Success] Sensitive system file (/etc/passwd) leaked!\nFlag: wvs_flag{rce_passwd_file_read}"));
+                        } else if (ip.includes("dir")) {
+                            outputHtml += `<span style="color:#ef4444; font-weight:bold;">[Executing injected command: dir]</span>\n Volume in drive C has no label.\n Directory of C:\\app\\web-vuln-sim\n\n2026-06-27  12:00    <DIR>          .\n2026-06-27  12:00    <DIR>          ..\n2026-06-27  12:00             1,402 server.js\n2026-06-27  12:00             8,291 index.html\n\n`;
+                            alert(L("🚨 [OS Command Injection 성공] 시스템 디렉토리 목록(dir)이 노출되었습니다!\nFlag: wvs_flag{rce_directory_listing_success}", "🚨 [OS Command Injection Success] Directory listing (dir) leaked!\nFlag: wvs_flag{rce_directory_listing_success}"));
+                        } else if (ip.includes("flag.txt")) {
+                            outputHtml += `<span style="color:#ef4444; font-weight:bold;">[Executing injected command: cat flag.txt]</span>\nwvs_flag{command_injection_rce_success}\n\n`;
+                            alert(L("🚨 [OS Command Injection 성공] flag.txt 파일의 플래그를 획득했습니다!\nFlag: wvs_flag{command_injection_rce_success}", "🚨 [OS Command Injection Success] Read flag.txt successfully!\nFlag: wvs_flag{command_injection_rce_success}"));
+                        } else {
+                            outputHtml += `<span style="color:#ef4444; font-weight:bold;">[Executing injected command]</span>\nCommand output executed successfully.\n\n`;
+                        }
+                    } else {
+                        // Normal Ping output
+                        outputHtml += `PING ${ip} (${ip}) 56(84) bytes of data.\n`;
+                        outputHtml += `64 bytes from ${ip}: icmp_seq=1 ttl=119 time=14.2 ms\n`;
+                        outputHtml += `64 bytes from ${ip}: icmp_seq=2 ttl=119 time=15.1 ms\n`;
+                        outputHtml += `64 bytes from ${ip}: icmp_seq=3 ttl=119 time=13.8 ms\n`;
+                        outputHtml += `--- ${ip} ping statistics ---\n`;
+                        outputHtml += `3 packets transmitted, 3 received, 0% packet loss, time 2003ms\n\n`;
+                    }
+                    
+                    terminalBody.innerHTML = outputHtml + `guest@securedev-web:~$ _`;
+                }, 1200);
+
+            }, 1000);
         }
 
         // 초기 언어 적용

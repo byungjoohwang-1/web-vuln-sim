@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>충분하지 않은 키 길이 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="충분하지 않은 키 길이 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="충분하지 않은 키 길이 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-weak-keylength.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="충분하지 않은 키 길이(Insufficient Key Length) 모의 실습: DES 56비트·RSA-512/1024·AES·ECC의 무차별 대입/인수분해 소요 시간을 추정하고 NIST/KISA 최소 권고 키 길이와 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    input[type=range]{padding:0}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--mono)}
+    th,td{border:1px solid var(--border);padding:6px 8px;text-align:left}th{background:#0f172a;color:#7dd3fc}
+    .bar{height:22px;border-radius:6px;margin-top:10px;background:#0f172a;overflow:hidden;border:1px solid var(--border)}
+    .bar>span{display:block;height:100%;transition:width .4s}
+    .verdict{font-weight:800;font-size:16px;font-family:var(--mono)}
+    .vbroken{color:#fca5a5}.vlegacy{color:#fdba74}.vok{color:#fde047}.vstrong{color:#86efac}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>📏 <span data-en="Insufficient Key Length Simulator">충분하지 않은 키 길이 시뮬레이터</span>
+        <span class="kisa">KISA A-2 · <span data-en="Insufficient Key Length">충분하지 않은 키 길이</span></span></h1>
+      <div class="sub" data-en="A correct algorithm with too few key bits is still breakable. Pick an algorithm and key size to estimate brute-force / factoring time and get a verdict — DES-56 falls in hours, AES-256 is infeasible. Then compare with NIST/KISA minimums.">
+        올바른 알고리즘이라도 키 비트가 부족하면 깨집니다. 알고리즘과 키 길이를 골라 무차별 대입/인수분해 소요 시간을 추정하고 판정을 확인하세요 — DES-56은 수 시간, AES-256은 사실상 불가. 이후 NIST/KISA 최소 권고와 비교합니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모: 추정기 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Key-strength estimator">키 강도 추정기</span> <span class="tag bad">INTERACTIVE</span></h2>
+      <div class="note" data-en="Symmetric keys take ~2^(bits) work to brute force; RSA/ECC are broken by factoring/discrete-log, so their effective security is far below their bit length (e.g. RSA-2048 ≈ 112-bit security). Numbers are order-of-magnitude estimates.">
+        대칭키는 무차별 대입에 약 2^(비트) 연산이 필요하고, RSA/ECC는 인수분해/이산로그로 깨지므로 실효 보안 강도가 비트 길이보다 훨씬 낮습니다(예: RSA-2048 ≈ 112비트 강도). 수치는 자릿수 수준 추정입니다.
+      </div>
+      <div class="row">
+        <div class="col">
+          <label data-en="Algorithm">알고리즘</label>
+          <select id="alg" onchange="syncSizes();estimate()"></select>
+        </div>
+        <div class="col">
+          <label data-en="Key size (bits)">키 길이 (비트)</label>
+          <select id="bits" onchange="estimate()"></select>
+        </div>
+      </div>
+      <label data-en="Attacker capability">공격자 능력</label>
+      <select id="attacker" onchange="estimate()">
+        <option value="1e9" data-en="single GPU (10^9 keys/s)">단일 GPU (10^9 keys/s)</option>
+        <option value="1e15" selected data-en="large cluster (10^15 keys/s)">대규모 클러스터 (10^15 keys/s)</option>
+        <option value="1e18" data-en="nation-state (10^18 keys/s)">국가급 (10^18 keys/s)</option>
+      </select>
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="estimate()">▶ <span data-en="Estimate crack time">크랙 시간 추정</span></button>
+      </div>
+      <div class="bar"><span id="bar"></span></div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교: 권고표 -->
+    <div class="card secure">
+      <h2>② <span data-en="NIST / KISA recommended minimums">NIST / KISA 권고 최소 키 길이</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="Choose key sizes that give at least 112-bit (legacy) or 128-bit (modern) security. Below: symmetric ≥128, RSA/DH ≥2048 (prefer 3072), ECC ≥256.">
+        최소 112비트(레거시) 또는 128비트(현대) 보안 강도를 주는 키 길이를 선택하세요. 아래: 대칭키 ≥128, RSA/DH ≥2048(권장 3072), ECC ≥256.
+      </div>
+      <table>
+        <thead><tr><th data-en="Type">종류</th><th data-en="Broken">위험</th><th data-en="Minimum">최소</th><th data-en="Recommended">권장</th></tr></thead>
+        <tbody>
+          <tr><td>AES (symmetric)</td><td class="vbroken">&lt;112</td><td>128</td><td class="vstrong">256</td></tr>
+          <tr><td>RSA / DH</td><td class="vbroken">512 / 1024</td><td>2048</td><td class="vstrong">3072+</td></tr>
+          <tr><td>ECC (ECDSA/ECDH)</td><td class="vbroken">&lt;224</td><td>256</td><td class="vstrong">384</td></tr>
+          <tr><td>DES / 3DES</td><td class="vbroken">56 / 112*</td><td colspan="2" data-en="retired — use AES">폐기 — AES 사용</td></tr>
+          <tr><td>Hash (collision)</td><td class="vbroken">MD5 / SHA-1</td><td>SHA-256</td><td class="vstrong">SHA-384/512</td></tr>
+        </tbody>
+      </table>
+      <div class="btns">
+        <button class="act fix" onclick="useRecommended()">▶ <span data-en="Load AES-256 into estimator">추정기에 AES-256 적용</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// Java — 너무 짧은 키
+KeyGenerator kg = KeyGenerator.getInstance("DES");
+kg.init(56);                       // DES 56비트 → 수 시간 내 크랙
+
+KeyPairGenerator rsa = KeyPairGenerator.getInstance("RSA");
+rsa.initialize(512);               // RSA-512 → 노트북에서 인수분해</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// Java — 충분한 키 길이
+KeyGenerator kg = KeyGenerator.getInstance("AES");
+kg.init(256);                      // AES-256 → 무차별 대입 비현실적
+
+KeyPairGenerator rsa = KeyPairGenerator.getInstance("RSA");
+rsa.initialize(3072);              // RSA-3072 (또는 ECC P-256)
+KeyPairGenerator ec = KeyPairGenerator.getInstance("EC");
+ec.initialize(new ECGenParameterSpec("secp256r1"));</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> match key size to the required security level (≥112-bit legacy, ≥128-bit modern); never hardcode short defaults; plan key sizes for the data's lifetime and crypto-agility for migration. Remember RSA/ECC bit length ≠ effective security."><b>방어 핵심:</b> 요구 보안 등급에 맞는 키 길이 선택(레거시 ≥112, 현대 ≥128) · 짧은 기본값 하드코딩 금지 · 데이터 수명을 고려한 키 길이와 마이그레이션용 암호 민첩성 확보 · RSA/ECC 비트 길이는 실효 보안 강도와 다름.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. All crack-time figures are order-of-magnitude estimates computed in-page; no keys are generated or attacked.">
+      ⚠️ 교육용 시뮬레이션입니다. 모든 크랙 시간은 페이지 내부에서 계산한 자릿수 수준 추정치이며 실제 키 생성·공격은 없습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+// algorithm catalog: sizes + effective security bits per size
+var ALGS = {
+  'DES (symmetric)':      {sizes:[56], eff:function(b){return b;}, kind:'sym'},
+  '3DES (symmetric)':     {sizes:[112,168], eff:function(b){return b===168?112:b;}, kind:'sym'},
+  'AES (symmetric)':      {sizes:[128,192,256], eff:function(b){return b;}, kind:'sym'},
+  'RSA / DH':             {sizes:[512,1024,2048,3072,4096], eff:rsaEff, kind:'asym'},
+  'ECC (ECDSA/ECDH)':     {sizes:[160,224,256,384,521], eff:function(b){return Math.round(b/2);}, kind:'ecc'}
+};
+// rough RSA strength mapping (NIST SP800-57)
+function rsaEff(b){
+  if(b<=512) return 50; if(b<=1024) return 80; if(b<=2048) return 112;
+  if(b<=3072) return 128; if(b<=4096) return 152; return 160;
+}
+
+function fillSelect(id, items, fmt){
+  var s=document.getElementById(id); s.innerHTML='';
+  items.forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=fmt?fmt(v):v;s.appendChild(o);});
+}
+function syncSizes(){
+  var alg=document.getElementById('alg').value;
+  fillSelect('bits', ALGS[alg].sizes, function(v){return v+'-bit';});
+}
+
+function humanTime(seconds){
+  if(!isFinite(seconds)||seconds>1e30) return {t:L('사실상 불가능 (우주 나이 초과)','infeasible (longer than the age of the universe)'), huge:true};
+  var u=[[1,'s'],[60,L('분','min')],[3600,L('시간','hr')],[86400,L('일','days')],[31557600,L('년','yr')]];
+  if(seconds<1) return {t:'< 1 '+L('초','s'), huge:false};
+  var v=seconds, unit='s';
+  for(var i=u.length-1;i>=0;i--){ if(seconds>=u[i][0]){ v=seconds/u[i][0]; unit=u[i][1]; break; } }
+  if(unit===(L('년','yr'))){
+    if(v>1e12) return {t:'≈ '+v.toExponential(1)+' '+L('년 (사실상 불가능)','yr (infeasible)'), huge:true};
+    if(v>1e6) return {t:'≈ '+v.toExponential(1)+' '+L('년','yr'), huge:true};
+  }
+  return {t:'≈ '+(v<10?v.toFixed(1):Math.round(v))+' '+unit, huge:false};
+}
+
+function verdict(eff){
+  if(eff<64)  return {k:L('깨짐','Broken'), c:'vbroken', w:12, col:'#ef4444'};
+  if(eff<100) return {k:L('레거시(위험)','Legacy'), c:'vlegacy', w:40, col:'#f59e0b'};
+  if(eff<128) return {k:L('허용(레거시 한계)','Acceptable'), c:'vok', w:70, col:'#eab308'};
+  return {k:L('강함','Strong'), c:'vstrong', w:100, col:'#22c55e'};
+}
+
+function estimate(){
+  var alg=document.getElementById('alg').value;
+  var bits=parseInt(document.getElementById('bits').value,10);
+  var rate=parseFloat(document.getElementById('attacker').value);
+  var eff=ALGS[alg].eff(bits);
+  // expected work = 2^(eff-1) operations
+  var ops=Math.pow(2, eff-1);
+  var seconds=ops/rate;
+  var ht=humanTime(seconds);
+  var vd=verdict(eff);
+  var bar=document.getElementById('bar');
+  bar.style.width=vd.w+'%'; bar.style.background=vd.col;
+  var note='';
+  if(ALGS[alg].kind!=='sym') note='\n'+L('실효 보안 강도','effective security')+': ≈ '+eff+'-bit '+L('(인수분해/이산로그 고려)','(after factoring/discrete-log)');
+  document.getElementById('v_out').innerHTML=
+    alg+' @ '+bits+'-bit'+'\n'+
+    L('키 공간','key space')+': 2^'+eff+'  ('+L('기대 작업량','expected work')+' 2^'+(eff-1)+')\n'+
+    L('공격 속도','attack rate')+': '+rate.toExponential(0)+' /s'+note+'\n'+
+    L('예상 크랙 시간','estimated crack time')+': '+ht.t+'\n\n'+
+    '<span class="verdict '+vd.c+'">'+L('판정','VERDICT')+': '+vd.k+'</span>\n'+
+    (eff<100 ? '<span class="deny">⚠ '+L('현재 기준 미달 — 더 긴 키로 교체 필요.','below current minimums — migrate to a longer key.')+'</span>'
+             : '<span class="ok">🛡 '+L('현재 권고 기준을 충족합니다.','meets current recommendations.')+'</span>');
+}
+
+var PRESETS=[
+  {label:'DES-56', alg:'DES (symmetric)', b:56, d:L('1998년 DES Cracker가 며칠 만에 깸','cracked in days by the 1998 DES Cracker')},
+  {label:'RSA-512', alg:'RSA / DH', b:512, d:L('노트북에서 인수분해 가능','factorable on a laptop')},
+  {label:'RSA-1024', alg:'RSA / DH', b:1024, d:L('국가급에 취약, 폐기 권고','vulnerable to nation-states, deprecated')},
+  {label:'AES-128', alg:'AES (symmetric)', b:128, d:L('현대 최소 기준','modern minimum')},
+  {label:'AES-256', alg:'AES (symmetric)', b:256, d:L('사실상 무차별 대입 불가','brute force infeasible')},
+  {label:'ECC-256', alg:'ECC (ECDSA/ECDH)', b:256, d:L('128비트 강도','128-bit security')}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button'); b.textContent=p.label; b.title=p.d;
+    b.onclick=function(){ document.getElementById('alg').value=p.alg; syncSizes();
+      document.getElementById('bits').value=p.b; estimate(); };
+    box.appendChild(b);
+  });
+}
+function useRecommended(){
+  document.getElementById('alg').value='AES (symmetric)'; syncSizes();
+  document.getElementById('bits').value=256; estimate();
+  document.getElementById('s_out').innerHTML=
+    '<span class="ok">🛡 '+L('AES-256을 추정기에 적용했습니다. 위 ① 카드에서 "사실상 불가능" 판정을 확인하세요.',
+      'Loaded AES-256 into the estimator. See the "infeasible" verdict in card ① above.')+'</span>';
+}
+
+function init(){
+  fillSelect('alg', Object.keys(ALGS));
+  document.getElementById('alg').value='DES (symmetric)';
+  syncSizes();
+  buildPresets();
+  estimate();
+}
+window.renderDynamic=function(){ init(); };
+init();
+</script>
+</body>
+</html>

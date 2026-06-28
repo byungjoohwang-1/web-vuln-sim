@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부적절한 예외 처리(Improper Exception Handling) 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="부적절한 예외 처리(Improper Exception Handling) 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="부적절한 예외 처리(Improper Exception Handling) 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-improper-exception.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="부적절한 예외 처리 취약점 모의 실습: 예외를 통째로 삼켜 보안 검사를 무력화하는 빈 catch와, 스택 트레이스·SQL 오류·내부 경로를 사용자에게 노출하는 핸들러를 시연하고 안전한 예외 처리를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:380px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .seg{display:inline-flex;border:1px solid #334155;border-radius:8px;overflow:hidden;margin:4px 0}
+    .seg button{background:#0f172a;color:#cbd5e1;border:none;padding:7px 14px;font-family:var(--mono);font-size:12px;cursor:pointer}
+    .seg button.on{background:var(--accent);color:#04222e;font-weight:700}
+    .srvlog{background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;font-family:var(--mono);font-size:11.5px;color:#7dd3fc}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🪤 <span data-en="Improper Exception Handling Simulator">부적절한 예외 처리 시뮬레이터</span>
+        <span class="kisa">KISA A-4 · <span data-en="Improper Exception Handling">부적절한 예외 처리</span></span></h1>
+      <div class="sub" data-en="Two anti-patterns: (1) an over-broad empty catch that SWALLOWS an exception so a security check is silently skipped; (2) a handler that LEAKS the full stack trace / SQL error / internal path to the user. Both turn an error into a vulnerability.">
+        두 가지 안티패턴: (1) 광범위한 빈 catch가 예외를 통째로 삼켜 보안 검사가 조용히 건너뛰어집니다; (2) 핸들러가 전체 스택 트레이스·SQL 오류·내부 경로를 사용자에게 노출합니다. 둘 다 오류를 취약점으로 바꿉니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable handler">취약한 예외 핸들러</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="Choose the anti-pattern. <b>Swallow</b>: empty catch hides the failure of a license/permission check, so the action proceeds. <b>Leak</b>: the handler echoes the raw exception (stack trace, SQL, file path) to the response — information disclosure that maps your stack and DB schema.">
+        안티패턴을 선택하세요. <b>삼킴</b>: 빈 catch가 권한/검증 실패를 숨겨 동작이 그대로 진행됩니다. <b>노출</b>: 핸들러가 원본 예외(스택 트레이스·SQL·파일 경로)를 응답에 그대로 echo — 스택·DB 스키마를 알려주는 정보 노출.
+      </div>
+
+      <div class="seg" id="modeSeg">
+        <button data-mode="swallow" class="on" onclick="setMode('swallow')" data-en="Swallow (empty catch)">삼킴 (빈 catch)</button>
+        <button data-mode="leak" onclick="setMode('leak')" data-en="Leak (stack trace to user)">노출 (스택 트레이스)</button>
+      </div>
+
+      <label data-en="request input (e.g. a username / id that triggers an exception)">요청 입력 (예외를 유발하는 사용자명/id)</label>
+      <input id="v_in" value="admin' OR '1'='1">
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Send request">요청 전송</span></button>
+      </div>
+      <div style="margin-top:8px;font-size:11.5px;color:#94a3b8;font-family:var(--mono)" data-en="HTTP response shown to the attacker:">공격자에게 보이는 HTTP 응답:</div>
+      <div class="out" id="v_out" data-en="(no run yet)">(실행 전)</div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Secure handler: specific catch + safe message + server log">안전한 핸들러: 구체적 catch · 안전 메시지 · 서버 로그</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The fix never swallows a security-relevant failure (it aborts), catches the specific exception, logs full detail server-side with a correlation id, and returns only a generic message to the user.">
+        수정본은 보안 관련 실패를 절대 삼키지 않고(중단), 구체적 예외를 잡으며, 상세 내용은 상관관계 id와 함께 서버에만 기록하고, 사용자에게는 일반 메시지만 반환합니다.
+      </div>
+      <label data-en="same input">동일 입력</label>
+      <input id="s_in" value="admin' OR '1'='1">
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Send request (handled safely)">요청 전송 (안전 처리)</span></button>
+      </div>
+      <div style="margin-top:8px;font-size:11.5px;color:#94a3b8;font-family:var(--mono)" data-en="HTTP response shown to the user:">사용자에게 보이는 HTTP 응답:</div>
+      <div class="out" id="s_out" data-en="(no run yet)">(실행 전)</div>
+      <div style="margin-top:8px;font-size:11.5px;color:#94a3b8;font-family:var(--mono)" data-en="Internal server log (not visible to user):">내부 서버 로그 (사용자에게 미노출):</div>
+      <div class="srvlog" id="s_srv" data-en="(no run yet)">(실행 전)</div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// (1) 삼킴 — 보안 검사 실패가 사라진다
+try {
+    checkLicense(user);        // 실패하면 예외
+    enablePremiumFeature();    // 그래도 실행됨?!
+} catch (Exception e) {
+    // 아무것도 안 함 — 예외 통째로 삼킴
+}
+
+// (2) 노출 — 내부 정보를 사용자에게
+try {
+    runQuery("SELECT ... WHERE name='" + name + "'");
+} catch (Exception e) {
+    e.printStackTrace(response.getWriter()); // 스택/SQL 노출
+    response.send(e.toString());             // 경로/버전 노출
+}</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// (1) 보안 실패는 절대 삼키지 않는다
+try {
+    checkLicense(user);
+} catch (LicenseException e) {
+    log.warn("license check failed", e); // 서버 로그
+    return deny();                       // 동작 중단
+}
+enablePremiumFeature();                  // 통과한 경우만
+
+// (2) 구체적 catch + 일반 메시지 + 서버 로그
+try {
+    runParameterizedQuery(name);         // SQLi 자체도 차단
+} catch (SQLException e) {
+    String id = UUID.randomUUID().toString();
+    log.error("query failed id=" + id, e); // 상세는 서버만
+    return error(500, "처리 중 오류 (ref " + id + ")"); // 일반 메시지
+}</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Swallowing</b> an exception removes the only signal that a security control failed — the attacker proceeds as if authorized. <b>Leaking</b> a stack trace / SQL error / path hands the attacker a map of your framework versions, query structure, and filesystem, accelerating the next attack. <b>Defense:</b> catch the <i>specific</i> exception; never use an empty catch on security-relevant paths; log full detail server-side with a correlation id; return a generic message (plus the id) to the client; disable framework debug pages in production."><b>삼킴</b>은 보안 통제가 실패했다는 유일한 신호를 없애 — 공격자가 인가된 것처럼 진행합니다. <b>노출</b>은 스택 트레이스·SQL 오류·경로로 프레임워크 버전·쿼리 구조·파일시스템 지도를 공격자에게 넘겨 다음 공격을 가속합니다. <b>방어:</b> <i>구체적</i> 예외만 잡기 · 보안 경로에 빈 catch 금지 · 상세는 상관관계 id와 함께 서버에만 로깅 · 클라이언트에는 일반 메시지(+id)만 · 운영에서 프레임워크 디버그 페이지 비활성화.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. Stack traces, SQL errors, and server logs are fabricated in-page mocks; no real exception, database, or filesystem is involved.">
+      ⚠️ 교육용 시뮬레이션입니다. 스택 트레이스·SQL 오류·서버 로그는 페이지 내부에서 만든 mock이며, 실제 예외·데이터베이스·파일시스템과 무관합니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var MODE='swallow';
+function setMode(m){
+  MODE=m;
+  document.querySelectorAll('#modeSeg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode')===m); });
+  if(m==='swallow'){ document.getElementById('v_in').value="user=guest (license check throws)"; }
+  else { document.getElementById('v_in').value="admin' OR '1'='1"; }
+  document.getElementById('s_in').value=document.getElementById('v_in').value;
+}
+
+var PRESETS=[
+  {label:L('SQL 따옴표(노출 유발)','SQL quote (leak)'), m:'leak', v:"admin' OR '1'='1"},
+  {label:L('타입 오류(노출)','type error (leak)'), m:'leak', v:'id=%E0%A4%A'},
+  {label:L('라이선스 실패(삼킴)','license fail (swallow)'), m:'swallow', v:'user=guest (license check throws)'},
+  {label:L('권한 검사 예외(삼킴)','authz exception (swallow)'), m:'swallow', v:'role=none (authz throws)'}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.textContent=p.label;
+    b.onclick=function(){ setMode(p.m); document.getElementById('v_in').value=p.v; document.getElementById('s_in').value=p.v; };
+    box.appendChild(b);
+  });
+}
+
+function fakeStackTrace(input){
+  return 'java.sql.SQLSyntaxErrorException: You have an error in your SQL syntax;\n'+
+    "  near \"'"+escapeHtml(input)+"'\" at line 1\n"+
+    '  SQL: SELECT id,pw_hash,role FROM users WHERE name=\''+escapeHtml(input)+'\'\n'+
+    '    at com.acme.dao.UserDao.findByName(UserDao.java:88)\n'+
+    '    at com.acme.svc.AuthService.login(AuthService.java:142)\n'+
+    '    at com.acme.web.LoginController.post(LoginController.java:57)\n'+
+    '    at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1067)\n'+
+    '  driver: mysql-connector-j 8.0.33 | db: acme_prod@10.0.4.12:3306\n'+
+    '  config: /opt/acme/app/WEB-INF/application-prod.yml';
+}
+
+function runVuln(){
+  var input=document.getElementById('v_in').value;
+  var out=document.getElementById('v_out');
+  if(MODE==='swallow'){
+    out.innerHTML =
+      'POST /premium/enable   input="'+escapeHtml(input)+'"\n'+
+      'try { checkLicense(user); }   '+L('// 예외 발생: LicenseException','// throws LicenseException')+'\n'+
+      'catch(Exception e) { }        '+L('// 빈 catch — 삼킴','// empty catch — swallowed')+'\n'+
+      'enablePremiumFeature();       '+L('// 그대로 실행됨','// runs anyway')+'\n\n'+
+      'HTTP/1.1 200 OK\n'+
+      '{ "status":"premium enabled" }\n\n'+
+      '<span style="color:#fca5a5">💥 '+L('라이선스/권한 검사가 실패했는데 예외가 삼켜져 동작이 그대로 진행됨.','the license/authz check FAILED, but the swallowed exception let the action proceed.')+'</span>\n'+
+      '<span style="color:#fca5a5">'+L('보안 통제가 조용히 무력화 — 무단 기능 활성화.','security control silently bypassed — unauthorized feature enabled.')+'</span>';
+  } else {
+    out.innerHTML =
+      'POST /login   name="'+escapeHtml(input)+'"\n\n'+
+      'HTTP/1.1 500 Internal Server Error\n'+
+      'Content-Type: text/html\n\n'+
+      '<span style="color:#fca5a5">'+escapeHtml('Exception while processing request:')+'</span>\n'+
+      '<span style="color:#fca5a5">'+fakeStackTrace(input)+'</span>\n\n'+
+      '<span style="color:#f59e0b">🔓 '+L('스택 트레이스·SQL 쿼리·테이블 구조·드라이버 버전·DB 호스트·설정 경로가 전부 노출됨 → 다음 공격(SQLi/RCE)에 직접 활용.','full stack trace, SQL query, table layout, driver version, DB host, and config path all leaked → directly fuels the next attack (SQLi/RCE).')+'</span>';
+  }
+}
+
+function runSecure(){
+  var input=document.getElementById('s_in').value;
+  var out=document.getElementById('s_out');
+  var srv=document.getElementById('s_srv');
+  var refId='a1b2-'+Math.floor(1000+Math.random()*9000);
+  if(MODE==='swallow'){
+    out.innerHTML =
+      'POST /premium/enable   input="'+escapeHtml(input)+'"\n\n'+
+      'HTTP/1.1 403 Forbidden\n'+
+      '{ "error":"'+L('권한이 없습니다.','not authorized.')+'", "ref":"'+refId+'" }\n\n'+
+      '<span style="color:#86efac">🛡 '+L('보안 검사 실패를 삼키지 않고 즉시 동작 중단(deny). 무단 활성화 차단.','the security failure is NOT swallowed — the action is denied. unauthorized enable blocked.')+'</span>';
+    srv.textContent='WARN  authz id='+refId+'  checkLicense FAILED for '+input+'  → denied (LicenseException: not entitled)';
+  } else {
+    out.innerHTML =
+      'POST /login   name="'+escapeHtml(input)+'"\n\n'+
+      'HTTP/1.1 500 Internal Server Error\n'+
+      '{ "error":"'+L('처리 중 오류가 발생했습니다.','an error occurred while processing your request.')+'", "ref":"'+refId+'" }\n\n'+
+      '<span style="color:#86efac">🛡 '+L('사용자에겐 일반 메시지+추적용 ref만. 스택/SQL/경로 노출 없음.','user sees only a generic message + tracking ref. no stack trace, SQL, or path leaked.')+'</span>\n'+
+      '<span style="color:#86efac">'+L('(파라미터라이즈드 쿼리를 쓰면 이 예외 자체가 발생하지 않음)','(with a parameterized query, this exception would not even occur)')+'</span>';
+    srv.textContent='ERROR query id='+refId+'  SQLException at UserDao.findByName:88  input='+input+'  (full trace stored server-side only)';
+  }
+}
+
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets();
+</script>
+</body>
+</html>

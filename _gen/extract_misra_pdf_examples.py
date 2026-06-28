@@ -202,7 +202,11 @@ def has_noncompliant(s: str) -> bool:
 
 
 def has_compliant(s: str) -> bool:
-    return bool(re.search(r"(?i)\bcompliant\b", s))
+    # Do not count the "compliant" suffix inside "non-compliant" as a
+    # compliant marker. Several MISRA PDF examples contain only
+    # "Non-compliant" annotations inside the code block.
+    stripped = re.sub(r"(?i)\bnon\W*compliant\b", "", s)
+    return bool(re.search(r"(?i)\bcompliant\b", stripped))
 
 
 def blocks_after_labels(example: str) -> tuple[list[str], list[str]]:
@@ -258,7 +262,10 @@ def classify_blocks(section: str) -> tuple[str, str]:
     example = example[:stop]
     blocks = split_blocks(example)
     bad_blocks, good_blocks = blocks_after_labels(example)
-    if not bad_blocks and not good_blocks:
+    if not bad_blocks and not good_blocks and any(
+        has_compliant(block.lower()) and has_noncompliant(block.lower())
+        for block in blocks
+    ):
         bad_blocks, good_blocks = split_comment_classified(blocks)
     for block in blocks:
         low = block.lower()
@@ -329,7 +336,13 @@ def all_pdf_rule_ids(text: str) -> list[str]:
     for m in re.finditer(r"(?m)^(Dir|Rule)\s+(\d+(?:\.\d+)*)(?:\s|$)", text):
         if not is_real_rule_heading(text, m.start()):
             continue
-        rid = f"{m.group(1)} {m.group(2)}"
+        num = m.group(2)
+        # MISRA C/C++ rule & directive IDs always have at least one dot
+        # (e.g. "Rule 16.1", "Dir 4.8"). A bare "Rule 1" is a PDF mis-split
+        # (e.g. "Rule 16.1" wrapped onto two lines) — skip it.
+        if "." not in num:
+            continue
+        rid = f"{m.group(1)} {num}"
         if rid not in ids:
             ids.append(rid)
     return ids
@@ -415,7 +428,13 @@ def build_full_rules(overrides: dict[str, dict[str, dict[str, str]]]) -> dict[st
         for rid in all_pdf_rule_ids(text):
             sec = section_for(text, rid)
             meta = parse_meta(sec, rid, key)
-            payload = overrides.get(key, {}).get(rid, {})
+            payload = dict(overrides.get(key, {}).get(rid, {}))
+            if not payload and sec:
+                bad, good = classify_blocks(sec)
+                if bad:
+                    payload["bad"] = bad
+                if good:
+                    payload["good"] = good
             title = meta["title"]
             full[key].append(
                 {
@@ -423,8 +442,8 @@ def build_full_rules(overrides: dict[str, dict[str, dict[str, str]]]) -> dict[st
                     "cat": meta["cat"],
                     "title": title,
                     "title_en": title,
-                    "bad": payload.get("bad") or placeholder_code(key, rid, False),
-                    "good": payload.get("good") or placeholder_code(key, rid, True),
+                    "bad": payload.get("bad", ""),
+                    "good": payload.get("good", ""),
                     "why": f"{rid} ({title})은 로컬 PDF 원본 기준으로 추가한 MISRA 규칙입니다. 예제 코드를 기준으로 위반 조건과 준수 조건을 비교하며, 수업 전 정적분석 도구 결과와 함께 검증하세요.",
                     "why_en": f"{rid} ({title}) was added from the local PDF source. Compare the non-compliant and compliant examples, and verify them with static-analysis results before class delivery.",
                     "compiles": False,

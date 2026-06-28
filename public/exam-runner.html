@@ -428,6 +428,7 @@ select:focus, textarea:focus, input[type="text"]:focus {
 </div>
 
 <script src="js/academy-data.js"></script>
+<script src="js/academy-data-ext.js"></script>
 <script src="js/academy-state.js"></script>
 <script type="module" src="auth-widget.js"></script>
 <script>
@@ -698,17 +699,16 @@ function submitExam() {
           details.push('보안약점 분류 오답 (+0)');
         }
 
-        // Part 3: Explanation keywords grading (20 pts)
+        // Part 3: 설명 채점 (20점) — 핵심어 가점 + 오개념(negKw) 감점(획득점의 50% 이내로 제한해 정답 오인 방지)
         const rationaleText = ans.rationale || '';
-        let hitCount = 0;
         const required = q.reasonKeywords || [];
-        required.forEach(kw => {
-          if (rationaleText.includes(kw)) hitCount++;
-        });
-        
-        const keywordScore = required.length > 0 ? Math.round((hitCount / required.length) * 20) : 20;
+        const hitCount = required.filter(kw => rationaleText.includes(kw)).length;
+        const negTerms = (q.negKw || []).filter(kw => rationaleText.includes(kw));
+        let keywordScore = required.length > 0 ? (hitCount / required.length) * 20 : 20;
+        const penalty = Math.min(negTerms.length * 5, keywordScore * 0.5);
+        keywordScore = Math.max(0, Math.round(keywordScore - penalty));
         qScore += keywordScore;
-        details.push(`취약점 핵심 설명 점수: ${keywordScore}/20 (키워드 매칭 ${hitCount}/${required.length})`);
+        details.push(`취약점 핵심 설명 점수: ${keywordScore}/20 (핵심어 ${hitCount}/${required.length}${negTerms.length ? `, 오개념 표현 감점 -${Math.round(penalty)}: ${negTerms.join(', ')}` : ''})`);
 
         // Part 4: Safe code refactoring keywords grading (20 pts)
         const refactoredCode = ans.secureCode || '';
@@ -725,17 +725,16 @@ function submitExam() {
     } else {
       // For False Positives (safe codes)
       if (ans.isTruePositive === false) {
-        // Part 2: Explanation of why it is safe (60 pts)
+        // Part 2: 오탐 증명 설명 (60점) — 핵심어 가점 + 오개념(negKw) 감점(획득점의 50% 이내로 제한)
         const rationaleText = ans.rationale || '';
-        let hitCount = 0;
         const required = q.reasonKeywords || [];
-        required.forEach(kw => {
-          if (rationaleText.includes(kw)) hitCount++;
-        });
-
-        const explanationScore = required.length > 0 ? Math.round((hitCount / required.length) * 60) : 60;
+        const hitCount = required.filter(kw => rationaleText.includes(kw)).length;
+        const negTerms = (q.negKw || []).filter(kw => rationaleText.includes(kw));
+        let explanationScore = required.length > 0 ? (hitCount / required.length) * 60 : 60;
+        const penalty = Math.min(negTerms.length * 12, explanationScore * 0.5);
+        explanationScore = Math.max(0, Math.round(explanationScore - penalty));
         qScore += explanationScore;
-        details.push(`오탐 증명 의견 점수: ${explanationScore}/60 (키워드 매칭 ${hitCount}/${required.length})`);
+        details.push(`오탐 증명 의견 점수: ${explanationScore}/60 (핵심어 ${hitCount}/${required.length}${negTerms.length ? `, 오개념 표현 감점 -${Math.round(penalty)}: ${negTerms.join(', ')}` : ''})`);
       }
     }
 

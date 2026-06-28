@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XML 삽입(XML Injection) 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="XML 삽입(XML Injection) 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="XML 삽입(XML Injection) 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-xml-injection.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="XML 삽입(XML Injection) 모의 실습: 사용자 입력이 검증 없이 XML 문서에 연결되어 추가 태그를 주입하고 권한·가격 필드를 덮어쓰는 공격과 이스케이프·DOM 빌더 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:340px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .kv{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+    .kv .cell{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-family:var(--mono);font-size:12.5px;min-width:130px}
+    .kv .cell .k{color:#64748b;font-size:11px}
+    .kv .cell .val{font-size:14px;font-weight:700}
+    .danger{color:#fca5a5}.ok{color:#86efac}
+    .hl{background:#7f1d1d;color:#fecaca;border-radius:3px;padding:0 2px}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🧩 <span data-en="XML Injection Simulator">XML 삽입 시뮬레이터</span>
+        <span class="kisa">KISA #9 · <span data-en="XML Injection">XML 삽입</span></span></h1>
+      <div class="sub" data-en="A request field is concatenated straight into an XML document that the server parses (an order / SOAP message). Unescaped input lets an attacker inject extra XML tags that override sibling fields such as role or price.">
+        요청 필드가 검증 없이 서버가 파싱하는 XML 문서(주문/SOAP 메시지)에 그대로 연결됩니다. 이스케이프되지 않은 입력은 추가 XML 태그를 주입해 role·price 같은 형제 필드를 덮어쓸 수 있습니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable: string-concatenated XML order">취약: 문자열 연결로 만든 XML 주문</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="The server builds the order XML by concatenation: <code>&lt;user&gt;&lt;name&gt;{name}&lt;/name&gt;&lt;role&gt;user&lt;/role&gt;&lt;/user&gt;</code>. Because <b>name</b> is not escaped, injected <code>&lt;/name&gt;...&lt;/role&gt;</code> closes the element early and forges new tags. Most XML parsers keep the <b>last</b> duplicate element — so an injected role overrides the real one.">
+        서버는 주문 XML을 연결로 만듭니다: <code>&lt;user&gt;&lt;name&gt;{name}&lt;/name&gt;&lt;role&gt;user&lt;/role&gt;&lt;/user&gt;</code>. <b>name</b>이 이스케이프되지 않으므로 주입된 <code>&lt;/name&gt;...&lt;/role&gt;</code>가 요소를 일찍 닫고 새 태그를 위조합니다. 대부분의 XML 파서는 중복 요소 중 <b>마지막</b> 값을 채택하므로, 주입된 role이 실제 값을 덮어씁니다.
+      </div>
+      <label data-en="name field (attacker-controlled)">name 필드 (공격자 조작)</label>
+      <input id="v_name" value="alice">
+      <label data-en="quantity field (attacker-controlled)">quantity 필드 (공격자 조작)</label>
+      <input id="v_qty" value="1">
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Build &amp; parse order">주문 생성·파싱</span></button>
+        <button class="act ghost" onclick="clearOut('v')">✕ <span data-en="Clear">지우기</span></button>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Secure: XML-escaped + DOM builder">안전: XML 이스케이프 + DOM 빌더</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The fix escapes the five XML metacharacters (<code>&amp; &lt; &gt; &quot; '</code>) before insertion, or — better — builds the tree with a DOM/parameterized builder so text is always a text node and can never become markup. Schema validation then rejects out-of-range values.">
+        수정본은 삽입 전에 XML 메타문자 5종(<code>&amp; &lt; &gt; &quot; '</code>)을 이스케이프하거나, 더 나아가 DOM/파라미터화 빌더로 트리를 만들어 텍스트가 항상 텍스트 노드로만 남게 합니다. 스키마 검증으로 범위 밖 값은 거부합니다.
+      </div>
+      <label data-en="same name value, escaped">동일한 name 값 (이스케이프 적용)</label>
+      <input id="s_name" value="alice">
+      <label data-en="same quantity value, validated">동일한 quantity 값 (검증 적용)</label>
+      <input id="s_qty" value="1">
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Build safely &amp; parse">안전 생성·파싱</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code (Java / JAXP)">취약 vs 안전 코드 (Java / JAXP)</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// Java — 문자열 연결로 XML 조립 (위험)
+String xml =
+  "&lt;order&gt;&lt;user&gt;&lt;name&gt;" + name +
+  "&lt;/name&gt;&lt;role&gt;user&lt;/role&gt;&lt;/user&gt;" +
+  "&lt;qty&gt;" + qty + "&lt;/qty&gt;&lt;/order&gt;";
+
+Document doc = DocumentBuilderFactory.newInstance()
+   .newDocumentBuilder()
+   .parse(new InputSource(new StringReader(xml)));
+// name = "x&lt;/name&gt;&lt;role&gt;admin&lt;/role&gt;&lt;name&gt;y"
+// → role 요소가 추가 주입되어 admin 으로 승격</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// Java — DOM 빌더 + 이스케이프 + 스키마 검증
+Document doc = DocumentBuilderFactory.newInstance()
+                 .newDocumentBuilder().newDocument();
+Element user = doc.createElement("user");
+Element nm  = doc.createElement("name");
+nm.appendChild(doc.createTextNode(name)); // 항상 텍스트
+Element role = doc.createElement("role");
+role.appendChild(doc.createTextNode("user")); // 서버 고정
+user.appendChild(nm); user.appendChild(role);
+
+int q = Integer.parseInt(qty);            // 타입 검증
+if (q &lt; 1 || q &gt; 999) throw new BadRequest();
+// 스키마(XSD) 검증으로 구조까지 강제</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> never concatenate untrusted text into XML markup · escape <code>&amp; &lt; &gt; &quot; '</code> or build via DOM text nodes · validate against an XSD schema · set security-sensitive fields (role, price) on the server, never from the client. <br><b>Not the same as XXE:</b> XXE abuses external/DTD entities to read files; XML Injection abuses unescaped data to forge document <i>structure</i>.">
+        <b>방어 핵심:</b> 신뢰할 수 없는 텍스트를 XML 마크업에 연결 금지 · <code>&amp; &lt; &gt; &quot; '</code> 이스케이프 또는 DOM 텍스트 노드 사용 · XSD 스키마 검증 · role·price 같은 보안 필드는 클라이언트가 아니라 서버에서 고정. <br><b>XXE와 구분:</b> XXE는 외부/DTD 엔티티로 파일을 읽는 공격이고, XML 삽입은 이스케이프되지 않은 데이터로 문서 <i>구조</i>를 위조하는 공격입니다.
+      </div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. All XML is built and parsed in-page against a mock target; no real systems are accessed.">
+      ⚠️ 교육용 시뮬레이션입니다. 모든 XML은 페이지 내부 mock 대상에서만 생성·파싱되며 실제 시스템에 접근하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function clearOut(p){document.getElementById(p+'_out').innerHTML='';}
+
+var PRESETS=[
+  {label:'role → admin', name:'x</name><role>admin</role><name>y', qty:'1',
+   d:L('role 태그를 추가 주입해 admin 권한 탈취','inject a second role tag to escalate to admin')},
+  {label:'price/qty override', name:'alice', qty:'1</qty><price>0</price><qty>1',
+   d:L('price=0 태그를 주입해 결제 금액 조작','inject price=0 to manipulate the total')},
+  {label:'comment-out role', name:'alice</name><role>admin</role><!--', qty:'1',
+   d:L('주석으로 원래 role 무력화','comment out the legitimate role node')},
+  {label:'benign &amp;', name:'Tom &amp; Jerry', qty:'2',
+   d:L('정상 입력의 & 문자도 이스케이프 필요','ampersand in benign input still needs escaping')}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.innerHTML=p.label; b.title=p.d;
+    b.onclick=function(){
+      document.getElementById('v_name').value=decodeEnt(p.name);
+      document.getElementById('v_qty').value=decodeEnt(p.qty);
+      document.getElementById('s_name').value=decodeEnt(p.name);
+      document.getElementById('s_qty').value=decodeEnt(p.qty);
+    };
+    box.appendChild(b);
+  });
+}
+function decodeEnt(s){return (s+'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');}
+
+function xmlEscape(s){return (s+'').replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c];});}
+
+// mock 파서: 같은 이름의 마지막 요소를 채택 (실 파서 동작 모사)
+function mockParse(rawXml){
+  var fields={};
+  var re=/<(name|role|qty|price)>([\s\S]*?)<\/\1>/g, m;
+  while((m=re.exec(rawXml))!==null){ fields[m[1]]=m[2]; }
+  return fields;
+}
+
+function runVuln(){
+  var name=document.getElementById('v_name').value;
+  var qty=document.getElementById('v_qty').value;
+  // 취약: 그대로 연결
+  var raw='<order><user><name>'+name+'</name><role>user</role></user><qty>'+qty+'</qty></order>';
+  var parsed=mockParse(raw);
+  var role=parsed.role||'user';
+  var price=parsed.price;
+  var injected=(role!=='user')||(price!==undefined)||/<\/(name|role|qty)>/.test(name)||/<\/(qty|price)>/.test(qty);
+  var out=document.getElementById('v_out');
+  var SOM='@@HL@@', EOM='@@/HL@@';
+  var marked=raw.replace(/(<\/name><role>[^<]*<\/role><name>|<role>admin<\/role>|<\/qty><price>[^<]*<\/price>|<price>[^<]*<\/price>|<!--)/g, SOM+'$1'+EOM);
+  var hl=escapeHtml(marked).split(SOM).join('<span class="hl">').split(EOM).join('</span>');
+  out.innerHTML=
+    '<span style="color:#94a3b8">'+L('생성된 원시 XML (서버 전송):','generated raw XML (sent to server):')+'</span>\n'+hl+'\n\n'+
+    '<span style="color:#94a3b8">'+L('파서가 해석한 필드:','fields as the parser sees them:')+'</span>';
+  var kv='<div class="kv">'+
+    cell('name', parsed.name)+
+    cell('role', role, role!=='user')+
+    cell('qty', parsed.qty)+
+    (price!==undefined?cell('price', price, true):'')+
+    '</div>';
+  out.innerHTML+=kv+'\n'+
+    (injected
+      ? '<span class="danger">⚠ '+L('XML 삽입 성공! 추가 태그가 주입되어 role/price 같은 보안 필드가 위조되었습니다.',
+          'XML INJECTION SUCCEEDED — injected tags forged a security field (role/price).')+'</span>'+
+        (role==='admin'?'\n<span class="danger">🚨 '+L('권한 상승: user → admin','privilege escalation: user → admin')+'</span>':'')+
+        (price!==undefined?'\n<span class="danger">💸 '+L('결제 금액 조작: price='+price,'price tampering: price='+price)+'</span>':'')
+      : '<span class="ok">✔ '+L('주입 없음 (정상 주문).','no injection (clean order).')+'</span>');
+}
+
+function cell(k,v,bad){
+  return '<div class="cell"><div class="k">'+k+'</div><div class="val '+(bad?'danger':'ok')+'">'+escapeHtml(v===undefined?'∅':v)+'</div></div>';
+}
+
+function runSecure(){
+  var name=document.getElementById('s_name').value;
+  var qty=document.getElementById('s_qty').value;
+  var out=document.getElementById('s_out');
+  var qNum=parseInt(qty,10);
+  var qtyValid=/^\d+$/.test(qty.trim())&&qNum>=1&&qNum<=999;
+  var esc=xmlEscape(name);
+  // 안전: 이스케이프 + role 서버 고정 + qty 타입검증
+  var raw='<order><user><name>'+esc+'</name><role>user</role></user><qty>'+(qtyValid?qNum:'REJECTED')+'</qty></order>';
+  var parsed=mockParse(raw);
+  out.innerHTML=
+    '<span style="color:#94a3b8">'+L('안전하게 생성된 XML (이스케이프 적용):','safely generated XML (escaped):')+'</span>\n'+
+    escapeHtml(raw)+'\n\n'+
+    '<span style="color:#94a3b8">'+L('파서가 해석한 필드:','fields as the parser sees them:')+'</span>'+
+    '<div class="kv">'+cell('name',parsed.name)+cell('role',parsed.role)+cell('qty',qtyValid?String(qNum):'∅')+'</div>\n'+
+    (qtyValid?'':'<span class="danger">⛔ '+L('quantity 스키마 검증 실패 → 요청 거부','quantity failed schema validation → request rejected')+'</span>\n')+
+    '<span class="ok">🛡 '+L('주입 문자가 텍스트로 인코딩되어 마크업이 되지 못했습니다. role은 서버가 고정 → 권한 상승·가격 조작 차단.',
+      'injected characters were encoded as text and never became markup. role is fixed server-side → escalation and price tampering blocked.')+'</span>';
+}
+
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets();
+</script>
+</body>
+</html>

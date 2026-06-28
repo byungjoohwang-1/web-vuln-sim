@@ -4,5 +4,9 @@
 from std_misrac_p1 import RULES as _p1
 from std_misrac_p2 import RULES as _p2
 from std_misrac_p3 import RULES as _p3
+try:
+    from std_misrac_manual import RULES as _pm  # PDF에 예제 없던 룰의 수기 보강
+except Exception:
+    _pm = []
 
-RULES = _p1 + _p2 + _p3
+RULES = _p1 + _p2 + _p3 + _pm

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WVS DAST Console — Burp Suite 스타일 웹 취약점 스캐너 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="WVS DAST Console — Burp Suite 스타일 웹 취약점 스캐너 · WEB-VULN-SIM">
+<meta property="og:description" content="WVS DAST Console — Burp Suite 스타일 웹 취약점 스캐너 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-dast.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="Burp Suite Pro 스타일의 교육용 DAST 콘솔: Target 사이트맵, Proxy 히스토리, Repeater, Intruder, 자동 Scanner, Decoder로 mock 취약 웹앱을 진단합니다.">
+  <style>
+    :root{
+      --bg:#14110f; --panel:#1c1916; --panel2:#231f1b; --panel3:#2a2521; --border:#3a332d;
+      --ink:#ece6df; --muted:#9c9389; --accent:#ff6633; --accent2:#ffa07a;
+      --bad:#e0484d; --bad-bg:#3a1518; --good:#3fb950; --good-bg:#0f2a18; --warn:#e3a008; --info:#539bf5;
+      --mono:'JetBrains Mono','Consolas','Courier New',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+    a{color:var(--accent2);text-decoration:none}
+    /* top brand bar */
+    .brand{display:flex;align-items:center;gap:12px;background:#0e0c0a;border-bottom:1px solid var(--border);padding:7px 14px;flex:0 0 auto}
+    .brand .logo{font-weight:800;font-size:15px;color:var(--accent);font-family:var(--mono);letter-spacing:.5px}
+    .brand .logo span{color:var(--ink)}
+    .brand .tgt{font-family:var(--mono);font-size:12px;color:var(--muted);background:#1c1916;border:1px solid var(--border);border-radius:6px;padding:3px 9px}
+    .brand .tgt b{color:var(--good)}
+    .brand .sp{margin-left:auto}
+    .brand a.nav,.brand .langbtn{font-family:var(--mono);font-size:12px;color:#cdbfb2;border:1px solid var(--border);background:#1c1916;border-radius:6px;padding:4px 10px;cursor:pointer}
+    /* tab bar */
+    .tabbar{display:flex;background:#0e0c0a;border-bottom:1px solid var(--border);flex:0 0 auto;overflow-x:auto}
+    .tabbar button{border:none;background:transparent;color:var(--muted);font-family:var(--mono);font-size:12.5px;font-weight:700;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+    .tabbar button:hover{color:var(--ink)}
+    .tabbar button.on{color:var(--accent);border-bottom-color:var(--accent);background:#1c1916}
+    .tabbar .cnt{font-size:10px;color:#0e0c0a;background:var(--accent);border-radius:9px;padding:0 6px;margin-left:6px;font-weight:800}
+    /* main */
+    .main{flex:1;min-height:0;overflow:hidden;position:relative}
+    .view{position:absolute;inset:0;display:none;overflow:auto;padding:14px}
+    .view.on{display:block}
+    .split{display:flex;gap:12px;height:100%}
+    .split.v{flex-direction:column}
+    .pane{background:var(--panel);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;min-height:0;min-width:0}
+    .pane>.hd{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--accent2);padding:7px 11px;border-bottom:1px solid var(--border);background:var(--panel2);border-radius:8px 8px 0 0;display:flex;align-items:center;gap:8px;flex:0 0 auto}
+    .pane>.bd{flex:1;min-height:0;overflow:auto;padding:10px}
+    textarea,input,select{background:#0e0c0a;border:1px solid var(--border);color:var(--ink);border-radius:6px;font-family:var(--mono);font-size:12.5px;padding:8px}
+    textarea{width:100%;height:100%;resize:none;white-space:pre;overflow:auto;line-height:1.5}
+    .btn{cursor:pointer;border:none;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;padding:7px 14px}
+    .btn.go{background:var(--accent);color:#0e0c0a}.btn.go:hover{background:#ff7a4d}
+    .btn.alt{background:var(--panel3);color:var(--ink);border:1px solid var(--border)}
+    .btn.sm{padding:4px 9px;font-size:11px}
+    pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+    table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px}
+    th,td{border-bottom:1px solid var(--border);padding:5px 8px;text-align:left;white-space:nowrap}
+    th{position:sticky;top:0;background:var(--panel2);color:var(--accent2);z-index:1;cursor:pointer}
+    tbody tr{cursor:pointer}tbody tr:hover{background:var(--panel2)}
+    tbody tr.sel{background:#3a2a1e}
+    .sev{font-weight:800;border-radius:4px;padding:1px 7px;font-size:10.5px}
+    .sev.High{background:var(--bad-bg);color:#ff8a8e}.sev.Medium{background:#3a2a08;color:#ffcf4d}
+    .sev.Low{background:#2a2608;color:#e3e36a}.sev.Info{background:#11243a;color:#8fc0ff}
+    .pill{font-family:var(--mono);font-size:10.5px;border:1px solid var(--border);border-radius:999px;padding:1px 8px;color:var(--muted)}
+    .status2{color:var(--good)}.status4{color:var(--warn)}.status5{color:var(--bad)}.status3{color:var(--info)}
+    .tree{font-family:var(--mono);font-size:12px;line-height:1.9}
+    .tree .node{padding:1px 6px;border-radius:5px;cursor:pointer;display:block}
+    .tree .node:hover{background:var(--panel2)}.tree .node.sel{background:#3a2a1e;color:#fff}
+    .tree .m{display:inline-block;width:42px;color:var(--accent2);font-weight:700}
+    .kbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:12px}
+    .card h3{font-family:var(--mono);font-size:13px;color:var(--accent2);margin-bottom:8px}
+    .stat{display:flex;gap:12px;flex-wrap:wrap}
+    .stat .box{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px}
+    .stat .box .n{font-size:26px;font-weight:800;font-family:var(--mono)}
+    .stat .box .l{font-size:11px;color:var(--muted)}
+    .muted{color:var(--muted)}.mono{font-family:var(--mono)}
+    .hl-bad{color:#ff8a8e;font-weight:700}.hl-good{color:#7ee787;font-weight:700}
+    .findrow.sel{background:#3a2a1e}
+    .detail{font-size:12.5px;line-height:1.7}
+    .detail h4{color:var(--accent2);font-family:var(--mono);font-size:12px;margin:10px 0 4px}
+    .detail code{background:#0e0c0a;border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:var(--mono)}
+    .pos{background:var(--accent);color:#0e0c0a;font-weight:700;border-radius:3px;padding:0 2px}
+    .legend{font-size:11px;color:var(--muted);font-family:var(--mono)}
+    .disc{font-size:11px;color:var(--muted);padding:6px 14px;border-top:1px solid var(--border);background:#0e0c0a;flex:0 0 auto}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:820px){.split{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <span class="logo">WVS <span>DAST</span></span>
+    <span class="tgt"><span data-en="Target">대상</span>: <b id="tgtLabel">http://vuln-shop.local</b></span>
+    <span class="sp"></span>
+    <a class="nav" href="vuln-hub.html"><span data-en="Vuln Hub">취약점 허브</span></a>
+    <a class="nav" href="index.html"><span data-en="Home">홈</span></a>
+    <span class="langbtn" onclick="toggleLang()">KO ⇄ EN</span>
+  </div>
+
+  <div class="tabbar" id="tabbar"></div>
+
+  <div class="main">
+    <div class="view" id="v-dashboard"></div>
+    <div class="view" id="v-target"></div>
+    <div class="view" id="v-proxy"></div>
+    <div class="view" id="v-repeater"></div>
+    <div class="view" id="v-intruder"></div>
+    <div class="view" id="v-scanner"></div>
+    <div class="view" id="v-decoder"></div>
+  </div>
+
+  <div class="disc" data-en="⚠️ Educational simulation. The target http://vuln-shop.local is a fully in-page mock app — no real network requests are ever sent. Use only for learning.">
+    ⚠️ 교육용 시뮬레이션입니다. 대상 http://vuln-shop.local 은 전부 페이지 내부 mock 앱이며 실제 네트워크 요청은 전혀 전송되지 않습니다. 학습 용도로만 사용하세요.
+  </div>
+
+<script>
+/* ============================ i18n ============================ */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  buildTabs(); renderActive();
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* ============================ helpers ============================ */
+function esc(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function el(id){return document.getElementById(id);}
+function statusClass(code){return 'status'+String(code)[0];}
+function nowMs(){return Date.now();}
+
+/* ============================ mock target DB ============================ */
+var DB = {
+  users: [
+    {id:1, user:'admin', pass:'S3cr3t!Admin', role:'admin', email:'admin@vuln-shop.local'},
+    {id:2, user:'alice', pass:'alice123',    role:'user',  email:'alice@vuln-shop.local'},
+    {id:3, user:'bob',   pass:'bobpass',     role:'user',  email:'bob@example.com'}
+  ],
+  products:[
+    {id:1,name:'Laptop',price:1200},{id:2,name:'Phone',price:800},{id:3,name:'Headset',price:150}
+  ],
+  accounts:[
+    {id:1001,owner:'alice',balance:5230.50,card:'4111-11**-****-1234'},
+    {id:1002,owner:'bob',  balance:88120.00,card:'5500-00**-****-9911'},
+    {id:1003,owner:'admin',balance:999999.99,card:'3400-00**-****-0007'}
+  ]
+};
+var SECRET_FILE = 'root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin';
+var AWS_META = '{"Code":"Success","AccessKeyId":"AKIA' + 'EXAMPLE7F4K9",\n "SecretAccessKey":"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"}';
+
+/* ============================ mock HTTP server ============================ */
+/* returns {status, reason, headers:{}, body, time} */
+function mockServer(req){
+  var t0 = 18 + (req.path.length % 23);
+  var headers = {
+    'Server':'nginx/1.21.0',
+    'Content-Type':'text/html; charset=utf-8',
+    'X-Powered-By':'PHP/7.4.3'
+    /* note: intentionally missing X-Frame-Options / CSP / HSTS for scanner */
+  };
+  var q = parseQuery(req.query);
+  var path = req.path.split('?')[0];
+  var R = function(status,reason,body,extra){
+    if(extra) for(var k in extra) headers[k]=extra[k];
+    headers['Content-Length'] = (body||'').length;
+    return {status:status, reason:reason, headers:headers, body:body||'', time:t0};
+  };
+
+  if(path==='/' ){
+    return R(200,'OK',
+      '<html><head><title>vuln-shop</title></head><body>\n'+
+      '<h1>Welcome to vuln-shop</h1>\n<ul>\n'+
+      '  <li><a href="/search?q=phone">Search</a></li>\n'+
+      '  <li><a href="/product?id=1">Products</a></li>\n'+
+      '  <li><a href="/login">Login</a></li>\n'+
+      '  <li><a href="/download?file=manual.pdf">Downloads</a></li>\n'+
+      '  <li><a href="/api/account?id=1001">My account</a></li>\n'+
+      '  <li><a href="/ping?host=127.0.0.1">Network tools</a></li>\n'+
+      '  <li><a href="/redirect?url=/dashboard">Continue</a></li>\n'+
+      '  <li><a href="/fetch?url=http://example.com">Link preview</a></li>\n'+
+      '</ul>\n<!-- TODO: remove debug endpoint /admin before launch -->\n</body></html>');
+  }
+
+  if(path==='/search'){
+    var term = q.q||'';
+    // reflected XSS: term echoed unencoded
+    return R(200,'OK','<html><body><h2>Search results for: '+term+'</h2>\n<p>No products matched.</p></body></html>');
+  }
+
+  if(path==='/product'){
+    var id = q.id||'1';
+    var sql = "SELECT id,name,price FROM products WHERE id='"+id+"'";
+    if(/'/.test(id) && !/union/i.test(id) && !/or\s+'?1'?='?1/i.test(id)){
+      return R(500,'Internal Server Error',
+        'SQL error: You have an error in your SQL syntax near \''+esc(id)+'\' at line 1\n[query] '+sql);
+    }
+    if(/union\s+select/i.test(id)){
+      // UNION-based extraction → leak users
+      var leak = DB.users.map(function(u){return u.id+', '+u.user+':'+u.pass+', '+u.role;}).join('\n');
+      return R(200,'OK','<html><body><h2>Product</h2>\n[query] '+sql+'\n--- rows ---\n'+leak+'</body></html>');
+    }
+    if(/or\s+'?1'?='?1/i.test(id)){
+      var all = DB.products.map(function(p){return p.id+' '+p.name+' $'+p.price;}).join('\n');
+      return R(200,'OK','<html><body><h2>All products (filter bypassed)</h2>\n'+all+'</body></html>');
+    }
+    var p = DB.products.filter(function(x){return String(x.id)===String(id);})[0];
+    return R(200,'OK','<html><body><h2>'+(p?esc(p.name):'Not found')+'</h2>'+(p?'<p>$'+p.price+'</p>':'')+'</body></html>');
+  }
+
+  if(path==='/login'){
+    if(req.method!=='POST') return R(200,'OK','<html><body><form method=post action=/login>user/pass</form></body></html>');
+    var b = parseQuery(req.body||'');
+    var u=b.user||'', pw=b.pass||'';
+    var sql = "SELECT * FROM users WHERE user='"+u+"' AND pass='"+pw+"'";
+    if(/('|--|\bor\b).*(=|--)/i.test(u) || /'\s*or\s*'?1'?='?1/i.test(u) || /'--/.test(u)){
+      return R(200,'OK','{"auth":"ok","user":"admin","role":"admin","token":"eyJhbGciOiJub25lIn0.ADMIN.","note":"SQLi auth bypass"}\n[query] '+sql,{'Content-Type':'application/json'});
+    }
+    var hit = DB.users.filter(function(x){return x.user===u && x.pass===pw;})[0];
+    if(hit) return R(200,'OK','{"auth":"ok","user":"'+hit.user+'","role":"'+hit.role+'"}',{'Content-Type':'application/json'});
+    return R(401,'Unauthorized','{"auth":"fail"}',{'Content-Type':'application/json'});
+  }
+
+  if(path==='/ping'){
+    var host=q.host||'';
+    if(/[;|&`]|\$\(/.test(host)){
+      var injected = host.split(/[;|&]|\$\(|`/).slice(1).join(' ').replace(/\)$/,'').trim();
+      var out='PING '+host.split(/[;|&`]/)[0]+': 56 data bytes\n64 bytes: icmp_seq=0 ttl=64 time=0.04 ms\n';
+      if(/\bid\b/.test(injected)) out+='[cmd] '+injected+'\nuid=0(root) gid=0(root) groups=0(root)';
+      else if(/whoami/.test(injected)) out+='[cmd] '+injected+'\nroot';
+      else if(/cat\s+\/etc\/passwd/.test(injected)) out+='[cmd] '+injected+'\n'+SECRET_FILE;
+      else if(/ls/.test(injected)) out+='[cmd] '+injected+'\napp.js  config.php  .env  backup.sql';
+      else out+='[cmd] '+injected+'\n(command executed)';
+      return R(200,'OK',out,{'Content-Type':'text/plain'});
+    }
+    return R(200,'OK','PING '+host+': 56 data bytes\n64 bytes: icmp_seq=0 ttl=64 time=0.04 ms',{'Content-Type':'text/plain'});
+  }
+
+  if(path==='/download'){
+    var f=q.file||'';
+    if(/(\.\.\/|\.\.\\|%2e%2e)/i.test(f) && /(passwd|shadow|etc)/i.test(f)){
+      return R(200,'OK',SECRET_FILE,{'Content-Type':'text/plain'});
+    }
+    if(/(\.\.\/){2,}/.test(f)){
+      return R(200,'OK','[traversal] resolved outside web root: '+f+'\n'+SECRET_FILE,{'Content-Type':'text/plain'});
+    }
+    return R(200,'OK','(binary content of '+esc(f)+')',{'Content-Type':'application/octet-stream'});
+  }
+
+  if(path==='/redirect'){
+    var url=q.url||'/';
+    var external = /^(https?:)?\/\//i.test(url) || /^https?:/i.test(url) || /^\/\\/.test(url);
+    return R(302,'Found','Redirecting to '+url, {'Location':url, 'X-Redirect-External': external?'YES':'no'});
+  }
+
+  if(path==='/api/account'){
+    var id=q.id||'';
+    var a = DB.accounts.filter(function(x){return String(x.id)===String(id);})[0];
+    if(a) return R(200,'OK',JSON.stringify(a),{'Content-Type':'application/json'}); // IDOR: no ownership/auth check
+    return R(404,'Not Found','{"error":"no such account"}',{'Content-Type':'application/json'});
+  }
+
+  if(path==='/fetch'){
+    var url2=q.url||'';
+    if(/169\.254\.169\.254|metadata|localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|internal/i.test(url2)){
+      return R(200,'OK','[SSRF] server fetched internal resource: '+url2+'\n'+AWS_META,{'Content-Type':'application/json'});
+    }
+    return R(200,'OK','[preview] '+esc(url2)+' → 200 OK (title: Example Domain)');
+  }
+
+  if(path==='/import'){
+    var body=req.body||'';
+    if(/<!DOCTYPE/i.test(body) && /SYSTEM\s+["']file:/i.test(body)){
+      return R(200,'OK','<result>imported</result>\n<!-- XXE: external entity resolved -->\n'+SECRET_FILE);
+    }
+    return R(200,'OK','<result>imported '+(body.length)+' bytes</result>');
+  }
+
+  if(path==='/admin'){
+    // broken access control: no auth required
+    return R(200,'OK','<html><body><h1>ADMIN PANEL</h1>\nusers: '+DB.users.length+', revenue: $4.2M\n[no authentication required]</body></html>');
+  }
+
+  if(path==='/robots.txt') return R(200,'OK','User-agent: *\nDisallow: /admin\nDisallow: /backup.sql',{'Content-Type':'text/plain'});
+  if(path==='/.git/config') return R(200,'OK','[core]\n  repositoryformatversion = 0\n[remote "origin"]\n  url = git@github.com:vuln-shop/app.git',{'Content-Type':'text/plain'});
+  if(path==='/backup.sql') return R(200,'OK','-- MySQL dump\nINSERT INTO users VALUES (1,\'admin\',\'S3cr3t!Admin\');',{'Content-Type':'text/plain'});
+
+  return R(404,'Not Found','<html><body><h1>404 Not Found</h1></body></html>');
+}
+
+function parseQuery(s){
+  var o={}; (s||'').replace(/^[?&]/,'').split('&').forEach(function(kv){
+    if(!kv) return; var i=kv.indexOf('='); var k=i<0?kv:kv.slice(0,i); var v=i<0?'':kv.slice(i+1);
+    try{o[decodeURIComponent(k)]=decodeURIComponent(v.replace(/\+/g,' '));}catch(e){o[k]=v;}
+  });
+  return o;
+}
+
+/* ============================ request/response text ============================ */
+function rawRequest(req){
+  var line = req.method+' '+req.path+(req.query?('?'+req.query):'')+' HTTP/1.1';
+  var hd = ['Host: '+req.host];
+  for(var k in (req.headers||{})) hd.push(k+': '+req.headers[k]);
+  return line+'\n'+hd.join('\n')+'\n\n'+(req.body||'');
+}
+function rawResponse(res){
+  var hd=[]; for(var k in res.headers) hd.push(k+': '+res.headers[k]);
+  return 'HTTP/1.1 '+res.status+' '+res.reason+'\n'+hd.join('\n')+'\n\n'+res.body;
+}
+function parseRaw(text){
+  var parts = text.split(/\n\r?\n/);
+  var head = parts[0].split('\n');
+  var body = parts.slice(1).join('\n\n');
+  var m = (head[0]||'').match(/^(\w+)\s+(\S+)\s+HTTP/);
+  var method = m?m[1]:'GET', target = m?m[2]:'/';
+  var path=target, query='';
+  var qi = target.indexOf('?'); if(qi>=0){path=target.slice(0,qi);query=target.slice(qi+1);}
+  var headers={}, host='vuln-shop.local';
+  head.slice(1).forEach(function(h){var i=h.indexOf(':'); if(i<0)return; var k=h.slice(0,i).trim(),v=h.slice(i+1).trim();
+    if(k.toLowerCase()==='host') host=v; else headers[k]=v;});
+  return {method:method, host:host, path:path, query:query, headers:headers, body:body};
+}
+function mkReq(method,path,query,body){
+  return {method:method,host:'vuln-shop.local',path:path,query:query||'',
+    headers:{'User-Agent':'WVS-DAST/1.0','Accept':'*/*'+ '','Connection':'close',
+      'Content-Type':method==='POST'?'application/x-www-form-urlencoded':undefined},
+    body:body||''};
+}
+
+/* ============================ state ============================ */
+var history=[]; var hid=0; var selHist=null;
+var repeater={req: mkReq('GET','/product','id=1',''), res:null};
+var intruder={ template:'GET /product?id=§1§ HTTP/1.1\nHost: vuln-shop.local\nUser-Agent: WVS-DAST/1.0\n\n',
+  payloads:"1\n1'\n1 OR 1=1\n1 UNION SELECT 1,2,3\n0/**/OR/**/1=1", results:[] };
+var findings=[];
+
+function sendRequest(req, source){
+  var res = mockServer(req);
+  history.push({id:++hid, req:req, res:res, source:source||'manual',
+    method:req.method, path:req.path+(req.query?('?'+req.query):''), status:res.status, len:res.body.length, mime:(res.headers['Content-Type']||'').split(';')[0]});
+  return res;
+}
+
+/* ============================ crawl / site map ============================ */
+var SEED = ['/','/search?q=test','/product?id=1','/login','/download?file=manual.pdf',
+  '/api/account?id=1001','/ping?host=127.0.0.1','/redirect?url=/x','/fetch?url=http://example.com',
+  '/admin','/robots.txt','/.git/config','/backup.sql','/import'];
+var sitemap={};
+function crawl(){
+  SEED.forEach(function(t){
+    var qi=t.indexOf('?'); var path=qi<0?t:t.slice(0,qi); var query=qi<0?'':t.slice(qi+1);
+    var method = (path==='/login'||path==='/import')?'POST':'GET';
+    var body = path==='/login'?'user=alice&pass=alice123': (path==='/import'?'<order><item>1</item></order>':'');
+    var req = mkReq(method,path,query,body);
+    var res = sendRequest(req,'crawl');
+    sitemap[path]=sitemap[path]||[]; sitemap[path].push({req:req,res:res});
+  });
+}
+
+/* ============================ tabs ============================ */
+var TABS = [
+  {id:'dashboard', ko:'Dashboard', en:'Dashboard'},
+  {id:'target',    ko:'Target',    en:'Target'},
+  {id:'proxy',     ko:'Proxy',     en:'Proxy'},
+  {id:'repeater',  ko:'Repeater',  en:'Repeater'},
+  {id:'intruder',  ko:'Intruder',  en:'Intruder'},
+  {id:'scanner',   ko:'Scanner',   en:'Scanner'},
+  {id:'decoder',   ko:'Decoder',   en:'Decoder'}
+];
+var active='dashboard';
+function buildTabs(){
+  var bar=el('tabbar'); bar.innerHTML='';
+  TABS.forEach(function(t){
+    var b=document.createElement('button'); b.className=(t.id===active?'on':''); b.id='tab-'+t.id;
+    var cnt = t.id==='scanner'&&findings.length? '<span class="cnt">'+findings.length+'</span>'
+            : t.id==='proxy'&&history.length? '<span class="cnt">'+history.length+'</span>' : '';
+    b.innerHTML = L(t.ko,t.en)+cnt;
+    b.onclick=function(){active=t.id;buildTabs();renderActive();};
+    bar.appendChild(b);
+  });
+}
+function renderActive(){
+  TABS.forEach(function(t){el('v-'+t.id).classList.toggle('on',t.id===active);});
+  ({dashboard:renderDashboard,target:renderTarget,proxy:renderProxy,repeater:renderRepeater,
+    intruder:renderIntruder,scanner:renderScanner,decoder:renderDecoder})[active]();
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  var sev={High:0,Medium:0,Low:0,Info:0}; findings.forEach(function(f){sev[f.severity]++;});
+  el('v-dashboard').innerHTML =
+   '<div class="card"><h3>'+L('대상 개요','Target overview')+'</h3>'+
+   '<div class="stat">'+
+   '<div class="box"><div class="n">'+Object.keys(sitemap).length+'</div><div class="l">'+L('발견 경로','Discovered paths')+'</div></div>'+
+   '<div class="box"><div class="n">'+history.length+'</div><div class="l">'+L('전송 요청','Requests sent')+'</div></div>'+
+   '<div class="box"><div class="n" style="color:var(--bad)">'+findings.length+'</div><div class="l">'+L('탐지 이슈','Issues found')+'</div></div>'+
+   '<div class="box"><div class="n" style="color:var(--bad)">'+sev.High+'</div><div class="l">High</div></div>'+
+   '<div class="box"><div class="n" style="color:var(--warn)">'+sev.Medium+'</div><div class="l">Medium</div></div>'+
+   '</div></div>'+
+   '<div class="card"><h3>'+L('워크플로 — 실제 Burp Suite Pro 흐름','Workflow — mirrors real Burp Suite Pro')+'</h3>'+
+   '<div class="detail">'+
+   '<p>1. <b>Target</b> — '+L('사이트맵에서 엔드포인트를 탐색하고 요청을 Repeater/Intruder로 보냅니다.','Browse the site map; send requests to Repeater/Intruder.')+'</p>'+
+   '<p>2. <b>Proxy</b> — '+L('전송된 모든 요청의 HTTP 히스토리를 검토합니다.','Review the HTTP history of every request sent.')+'</p>'+
+   '<p>3. <b>Repeater</b> — '+L('단일 요청을 손으로 수정·재전송하며 응답 변화를 관찰합니다.','Hand-edit and replay a single request, observe the response.')+'</p>'+
+   '<p>4. <b>Intruder</b> — '+L('§위치§에 페이로드를 자동 대입해 퍼징/무차별 대입합니다.','Automate payloads into §positions§ for fuzzing/brute-force.')+'</p>'+
+   '<p>5. <b>Scanner</b> — '+L('자동 점검으로 취약점을 탐지하고 심각도/신뢰도와 함께 보고합니다.','Run automated audits; findings reported with severity/confidence.')+'</p>'+
+   '<p>6. <b>Decoder</b> — '+L('URL/Base64/HTML/Hex 인코딩·디코딩.','Encode/decode URL/Base64/HTML/Hex.')+'</p>'+
+   '</div></div>'+
+   '<div class="card"><h3>'+L('빠른 시작','Quick start')+'</h3>'+
+   '<div class="kbar"><button class="btn go" onclick="active=\'scanner\';buildTabs();renderActive();setTimeout(runScan,30)">▶ '+L('전체 자동 스캔 실행','Run full automated scan')+'</button>'+
+   '<button class="btn alt" onclick="active=\'target\';buildTabs();renderActive()">'+L('사이트맵 보기','Open site map')+'</button></div></div>';
+}
+
+/* ---------- Target / site map ---------- */
+var selPath=null;
+function renderTarget(){
+  var paths=Object.keys(sitemap);
+  var tree='<div class="tree">';
+  tree+='<div class="muted">http://vuln-shop.local</div>';
+  paths.forEach(function(p){
+    var entry=sitemap[p][0];
+    tree+='<span class="node'+(p===selPath?' sel':'')+'" onclick="selectPath(\''+p+'\')"><span class="m">'+entry.req.method+'</span>'+esc(p)+'</span>';
+  });
+  tree+='</div>';
+  var detail='';
+  if(selPath){
+    var e=sitemap[selPath][0];
+    detail='<div class="kbar"><button class="btn go sm" onclick="toRepeater(\''+selPath+'\')">→ Repeater</button>'+
+      '<button class="btn alt sm" onclick="toIntruder(\''+selPath+'\')">→ Intruder</button></div>'+
+      '<b class="mono" style="color:var(--accent2)">'+L('요청','Request')+'</b><pre>'+esc(rawRequest(e.req))+'</pre>'+
+      '<b class="mono" style="color:var(--accent2)">'+L('응답','Response')+'</b><pre>'+esc(rawResponse(e.res))+'</pre>';
+  } else detail='<div class="muted" style="padding:20px">'+L('왼쪽에서 경로를 선택하세요.','Select a path on the left.')+'</div>';
+  el('v-target').innerHTML='<div class="split"><div class="pane" style="flex:0 0 280px"><div class="hd">'+L('사이트맵','Site map')+'</div><div class="bd">'+tree+'</div></div>'+
+    '<div class="pane" style="flex:1"><div class="hd">'+L('상세','Detail')+'</div><div class="bd">'+detail+'</div></div></div>';
+}
+function selectPath(p){selPath=p;renderTarget();}
+function toRepeater(p){var e=sitemap[p][0];repeater.req=JSON.parse(JSON.stringify(e.req));repeater.res=null;active='repeater';buildTabs();renderActive();}
+function toIntruder(p){var e=sitemap[p][0];intruder.template=rawRequest(e.req).replace(/(\?[^=]*=)([^&\s]+)/, '$1§$2§');active='intruder';buildTabs();renderActive();}
+
+/* ---------- Proxy / HTTP history ---------- */
+function renderProxy(){
+  var rows=history.map(function(h){
+    return '<tr class="'+(selHist===h.id?'sel':'')+'" onclick="selHist='+h.id+';renderProxy()">'+
+      '<td>'+h.id+'</td><td>'+h.method+'</td><td>'+esc(h.path)+'</td>'+
+      '<td class="'+statusClass(h.status)+'">'+h.status+'</td><td>'+h.len+'</td><td>'+esc(h.mime||'')+'</td><td class="muted">'+h.source+'</td></tr>';
+  }).join('');
+  var sel = history.filter(function(h){return h.id===selHist;})[0];
+  var detail = sel ? ('<b class="mono" style="color:var(--accent2)">'+L('요청','Request')+'</b><pre>'+esc(rawRequest(sel.req))+'</pre>'+
+    '<b class="mono" style="color:var(--accent2)">'+L('응답','Response')+'</b><pre>'+esc(rawResponse(sel.res))+'</pre>')
+    : '<div class="muted" style="padding:20px">'+L('행을 선택하면 요청/응답이 표시됩니다.','Select a row to view request/response.')+'</div>';
+  el('v-proxy').innerHTML=
+    '<div class="split v" style="height:100%">'+
+    '<div class="pane" style="flex:1"><div class="hd">'+L('HTTP 히스토리','HTTP history')+' ('+history.length+')'+
+      '<span class="sp" style="margin-left:auto"></span><button class="btn alt sm" onclick="history=[];selHist=null;buildTabs();renderProxy()">'+L('지우기','Clear')+'</button></div>'+
+      '<div class="bd" style="padding:0"><table><thead><tr><th>#</th><th>'+L('메서드','Method')+'</th><th>'+L('경로','Path')+'</th><th>'+L('상태','Status')+'</th><th>'+L('길이','Len')+'</th><th>MIME</th><th>'+L('출처','Source')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+    '<div class="pane" style="flex:1"><div class="hd">'+L('상세','Detail')+'</div><div class="bd">'+detail+'</div></div>'+
+    '</div>';
+}
+
+/* ---------- Repeater ---------- */
+function renderRepeater(){
+  el('v-repeater').innerHTML=
+   '<div class="split" style="height:100%">'+
+   '<div class="pane" style="flex:1"><div class="hd">'+L('요청 (편집 가능)','Request (editable)')+
+     '<span class="sp" style="margin-left:auto"></span><button class="btn go sm" onclick="repSend()">▶ '+L('전송','Send')+'</button></div>'+
+     '<div class="bd" style="padding:0"><textarea id="repReq"></textarea></div></div>'+
+   '<div class="pane" style="flex:1"><div class="hd">'+L('응답','Response')+' <span id="repMeta" class="legend" style="margin-left:auto"></span></div>'+
+     '<div class="bd"><pre id="repRes" class="muted">'+L('전송을 눌러 응답을 확인하세요.','Press Send to get a response.')+'</pre></div></div>'+
+   '</div>';
+  el('repReq').value = rawRequest(repeater.req);
+  if(repeater.res){ el('repRes').className=''; el('repRes').textContent=rawResponse(repeater.res); }
+}
+function repSend(){
+  var req=parseRaw(el('repReq').value);
+  var t0=nowMs(); var res=sendRequest(req,'repeater'); repeater.req=req; repeater.res=res;
+  el('repRes').className=''; el('repRes').textContent=rawResponse(res);
+  el('repMeta').textContent = res.status+' '+res.reason+' · '+res.body.length+' bytes · '+res.time+' ms';
+  buildTabs();
+}
+
+/* ---------- Intruder ---------- */
+function renderIntruder(){
+  var rows=intruder.results.map(function(r,i){
+    var flag = r.flag? '<span class="hl-bad">'+r.flag+'</span>':'';
+    return '<tr onclick="intShow('+i+')"><td>'+(i)+'</td><td>'+esc(r.payload)+'</td><td class="'+statusClass(r.status)+'">'+r.status+'</td><td>'+r.len+'</td><td>'+r.time+'</td><td>'+flag+'</td></tr>';
+  }).join('');
+  el('v-intruder').innerHTML=
+   '<div class="split v" style="height:100%">'+
+   '<div class="pane" style="flex:0 0 auto"><div class="hd">'+L('요청 템플릿 — 페이로드 위치를 §...§ 로 표시','Request template — mark positions with §...§')+'</div>'+
+     '<div class="bd" style="height:150px;padding:0"><textarea id="intTpl">'+esc(intruder.template)+'</textarea></div></div>'+
+   '<div class="split" style="flex:0 0 auto;gap:12px">'+
+     '<div class="pane" style="flex:1"><div class="hd">'+L('페이로드 (한 줄에 하나)','Payloads (one per line)')+'</div>'+
+       '<div class="bd" style="height:130px;padding:0"><textarea id="intPay">'+esc(intruder.payloads)+'</textarea></div></div>'+
+     '<div class="pane" style="flex:0 0 220px"><div class="hd">'+L('공격','Attack')+'</div><div class="bd">'+
+       '<div class="legend">'+L('유형: Sniper (위치 1곳 순차 대입)','Type: Sniper (single position)')+'</div>'+
+       '<button class="btn go" style="margin-top:10px;width:100%" onclick="intStart()">▶ '+L('공격 시작','Start attack')+'</button>'+
+       '<div class="legend" style="margin-top:10px">'+L('빠른 페이로드:','Quick payloads:')+'</div>'+
+       '<button class="btn alt sm" style="margin-top:6px" onclick="intLoad(\'sqli\')">SQLi</button> '+
+       '<button class="btn alt sm" onclick="intLoad(\'xss\')">XSS</button> '+
+       '<button class="btn alt sm" onclick="intLoad(\'trav\')">Traversal</button> '+
+       '<button class="btn alt sm" onclick="intLoad(\'creds\')">'+L('비밀번호','Passwords')+'</button>'+
+     '</div></div>'+
+   '</div>'+
+   '<div class="pane" style="flex:1"><div class="hd">'+L('결과','Results')+' <span class="legend" style="margin-left:auto">'+L('길이/상태 이상은 강조 표시','length/status anomalies highlighted')+'</span></div>'+
+     '<div class="bd" style="padding:0"><table><thead><tr><th>#</th><th>Payload</th><th>'+L('상태','Status')+'</th><th>'+L('길이','Len')+'</th><th>ms</th><th>'+L('비고','Note')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+     '<pre id="intDetail" class="muted" style="padding:10px"></pre></div></div>'+
+   '</div>';
+}
+function intLoad(kind){
+  var P={ sqli:"1\n1'\n1' OR '1'='1\n1 UNION SELECT 1,2,3\n1; DROP TABLE users--\nadmin'--",
+    xss:"test\n<script>alert(1)<\\/script>\n\"><svg onload=alert(1)>\n'><img src=x onerror=alert(1)>",
+    trav:"manual.pdf\n../../../../etc/passwd\n..%2f..%2f..%2fetc%2fpasswd\n....//....//etc/passwd",
+    creds:"123456\npassword\nadmin\nletmein\nqwerty\nS3cr3t!Admin" };
+  el('intPay').value=P[kind]; intruder.payloads=P[kind];
+}
+function intStart(){
+  intruder.template=el('intTpl').value; intruder.payloads=el('intPay').value;
+  var tpl=intruder.template; var m=tpl.match(/§([^§]*)§/);
+  if(!m){ el('v-intruder'); alert(L('템플릿에 §위치§ 표시가 없습니다.','No §position§ marker in template.')); return; }
+  var pays=intruder.payloads.split('\n').filter(function(x){return x.length;});
+  var baseLen=null; intruder.results=[];
+  pays.forEach(function(pl){
+    var raw=tpl.replace(/§[^§]*§/, pl);
+    var req=parseRaw(raw); var res=sendRequest(req,'intruder');
+    if(baseLen===null) baseLen=res.body.length;
+    var flag='';
+    if(res.status>=500||/SQL error|syntax/i.test(res.body)) flag='SQL error';
+    else if(/uid=0\(root\)|root:x:0:0/.test(res.body)) flag=L('명령/파일 유출','cmd/file leak');
+    else if(/auth":"ok".*admin|SQLi auth bypass/.test(res.body)) flag=L('인증 우회','auth bypass');
+    else if(res.status===200 && baseLen!==null && Math.abs(res.body.length-baseLen)>40) flag=L('길이 이상','len anomaly');
+    intruder.results.push({payload:pl, status:res.status, len:res.body.length, time:res.time, flag:flag, raw:rawResponse(res)});
+  });
+  renderIntruder();
+  el('intDetail').textContent=L('완료: ','done: ')+pays.length+L(' 요청','requests');
+}
+function intShow(i){ el('intDetail').className=''; el('intDetail').textContent=intruder.results[i].raw; }
+
+/* ---------- Scanner ---------- */
+var CHECKS=[
+  {name:'SQL Injection',sev:'High',conf:'Firm',cwe:'CWE-89',
+   req:function(){return mkReq('GET','/product',"id=1'");},
+   det:function(res){return /SQL error|syntax/i.test(res.body);},
+   reqU:function(){return mkReq('GET','/product','id=1 UNION SELECT 1,2,3');},
+   rem:{ko:'파라미터화 질의(Prepared Statement)/ORM 사용, 입력 검증, 최소권한 DB 계정.',en:'Use parameterized queries/ORM, validate input, least-privilege DB account.'}},
+  {name:'SQLi Auth Bypass',sev:'High',conf:'Certain',cwe:'CWE-89',
+   req:function(){return mkReq('POST','/login','',"user="+encodeURIComponent("' OR '1'='1")+"&pass=x");},
+   det:function(res){return /auth":"ok".*admin|bypass/i.test(res.body);},
+   rem:{ko:'로그인 쿼리 파라미터화, 서버측 인증, 계정 잠금.',en:'Parameterize the login query, enforce server-side auth, lock accounts.'}},
+  {name:'Reflected XSS',sev:'High',conf:'Firm',cwe:'CWE-79',
+   req:function(){return mkReq('GET','/search','q='+encodeURIComponent('<script>alert(1)<\/script>'));},
+   det:function(res){return /<script>alert\(1\)<\/script>/.test(res.body);},
+   rem:{ko:'출력 시 컨텍스트별 인코딩, CSP, 입력 검증.',en:'Context-aware output encoding, CSP, input validation.'}},
+  {name:'OS Command Injection',sev:'High',conf:'Certain',cwe:'CWE-78',
+   req:function(){return mkReq('GET','/ping','host='+encodeURIComponent('127.0.0.1;id'));},
+   det:function(res){return /uid=0\(root\)/.test(res.body);},
+   rem:{ko:'셸 호출 회피, 인자 배열 실행, 허용목록 검증.',en:'Avoid the shell, use argument arrays, allow-list inputs.'}},
+  {name:'Path Traversal',sev:'High',conf:'Firm',cwe:'CWE-22',
+   req:function(){return mkReq('GET','/download','file='+encodeURIComponent('../../../../etc/passwd'));},
+   det:function(res){return /root:x:0:0/.test(res.body);},
+   rem:{ko:'경로 정규화 후 기준 디렉터리 검사, 화이트리스트 파일명.',en:'Canonicalize path and verify it stays under the base dir; allow-list names.'}},
+  {name:'IDOR / BOLA',sev:'High',conf:'Firm',cwe:'CWE-639',
+   req:function(){return mkReq('GET','/api/account','id=1002');},
+   det:function(res){return /"owner":"bob"/.test(res.body);},
+   rem:{ko:'객체 단위 인가 검사(소유자 확인), 추측 어려운 식별자.',en:'Per-object authorization (ownership check), unpredictable IDs.'}},
+  {name:'SSRF',sev:'High',conf:'Firm',cwe:'CWE-918',
+   req:function(){return mkReq('GET','/fetch','url='+encodeURIComponent('http://169.254.169.254/latest/meta-data/'));},
+   det:function(res){return /AccessKeyId|SSRF/.test(res.body);},
+   rem:{ko:'URL 허용목록, 내부 IP 대역 차단, 메타데이터 차단.',en:'URL allow-list, block internal ranges, block metadata endpoint.'}},
+  {name:'Open Redirect',sev:'Medium',conf:'Firm',cwe:'CWE-601',
+   req:function(){return mkReq('GET','/redirect','url='+encodeURIComponent('https://evil.example'));},
+   det:function(res){return res.headers['X-Redirect-External']==='YES';},
+   rem:{ko:'상대경로/허용목록 호스트만 리다이렉트, 경유 페이지.',en:'Only relative paths / allow-listed hosts; use an interstitial.'}},
+  {name:'XXE',sev:'High',conf:'Firm',cwe:'CWE-611',
+   req:function(){return mkReq('POST','/import','','<?xml version="1.0"?><!DOCTYPE r [<!ENTITY x SYSTEM "file:///etc/passwd">]><r>&x;</r>');},
+   det:function(res){return /root:x:0:0/.test(res.body);},
+   rem:{ko:'외부 엔터티/DTD 비활성화, 안전한 파서 설정.',en:'Disable external entities/DTDs; configure a safe parser.'}},
+  {name:'Broken Access Control (/admin)',sev:'High',conf:'Certain',cwe:'CWE-284',
+   req:function(){return mkReq('GET','/admin','');},
+   det:function(res){return res.status===200 && /ADMIN PANEL/.test(res.body);},
+   rem:{ko:'관리 기능 인증/인가 강제, 기본 거부.',en:'Enforce authn/authz on admin functions; deny by default.'}},
+  {name:'Sensitive File Exposure (.git/backup)',sev:'Medium',conf:'Certain',cwe:'CWE-538',
+   req:function(){return mkReq('GET','/.git/config','');},
+   det:function(res){return res.status===200 && /repositoryformatversion/.test(res.body);},
+   rem:{ko:'VCS/백업 파일 웹 노출 차단, 배포 산출물 정리.',en:'Block VCS/backup files from the web root; clean deploy artifacts.'}},
+  {name:'Missing Security Headers',sev:'Low',conf:'Certain',cwe:'CWE-693',
+   req:function(){return mkReq('GET','/','');},
+   det:function(res){return !res.headers['Content-Security-Policy'] && !res.headers['X-Frame-Options'];},
+   rem:{ko:'CSP, X-Frame-Options, HSTS, X-Content-Type-Options 추가.',en:'Add CSP, X-Frame-Options, HSTS, X-Content-Type-Options.'}},
+  {name:'Server Version Disclosure',sev:'Info',conf:'Certain',cwe:'CWE-200',
+   req:function(){return mkReq('GET','/','');},
+   det:function(res){return /X-Powered-By|nginx\/\d/.test(rawResponse(res));},
+   rem:{ko:'Server/X-Powered-By 헤더 숨김.',en:'Suppress Server / X-Powered-By headers.'}}
+];
+var selFinding=null;
+function runScan(){
+  findings=[];
+  CHECKS.forEach(function(c){
+    var req=c.req(); var res=sendRequest(req,'scanner');
+    var hit=c.det(res);
+    var evReq=req, evRes=res;
+    if(!hit && c.reqU){ var r2=c.reqU(); var s2=sendRequest(r2,'scanner'); if(/admin|:S3cr3t|root:x/.test(s2.body)){hit=true;evReq=r2;evRes=s2;} }
+    if(hit) findings.push({name:c.name,severity:c.sev,confidence:c.conf,cwe:c.cwe,
+      host:'vuln-shop.local',path:req.path,req:rawRequest(evReq),res:rawResponse(evRes),rem:c.rem});
+  });
+  var order={High:0,Medium:1,Low:2,Info:3};
+  findings.sort(function(a,b){return order[a.severity]-order[b.severity];});
+  selFinding=0; buildTabs(); renderScanner();
+}
+function renderScanner(){
+  var list = findings.length? findings.map(function(f,i){
+    return '<div class="findrow'+(selFinding===i?' sel':'')+'" style="padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer" onclick="selFinding='+i+';renderScanner()">'+
+      '<span class="sev '+f.severity+'">'+f.severity+'</span> <b class="mono">'+esc(f.name)+'</b>'+
+      '<div class="legend">'+esc(f.path)+' · '+f.cwe+' · '+L('신뢰도','Confidence')+': '+f.confidence+'</div></div>';
+  }).join('') : '<div class="muted" style="padding:20px">'+L('아직 스캔하지 않았습니다.','No scan run yet.')+'</div>';
+  var f=findings[selFinding];
+  var detail = f? ('<div class="detail">'+
+    '<span class="sev '+f.severity+'">'+f.severity+'</span> <b class="mono" style="font-size:14px">'+esc(f.name)+'</b>'+
+    '<div class="legend" style="margin:6px 0">'+f.cwe+' · '+f.host+f.path+' · '+L('신뢰도','Confidence')+': '+f.confidence+'</div>'+
+    '<h4>'+L('증거 요청','Evidence — request')+'</h4><pre>'+esc(f.req)+'</pre>'+
+    '<h4>'+L('증거 응답','Evidence — response')+'</h4><pre>'+esc(f.res.slice(0,900))+'</pre>'+
+    '<h4>'+L('대응 방안','Remediation')+'</h4><p>'+esc(L(f.rem.ko,f.rem.en))+'</p>'+
+    '</div>') : '<div class="muted" style="padding:20px">'+L('이슈를 선택하세요.','Select an issue.')+'</div>';
+  el('v-scanner').innerHTML=
+   '<div class="kbar"><button class="btn go" onclick="runScan()">▶ '+L('스캔 실행','Run scan')+'</button>'+
+   '<span class="legend">'+L('mock 대상의 모든 엔드포인트를 자동 점검합니다.','Audits every endpoint of the mock target.')+'</span></div>'+
+   '<div class="split" style="height:calc(100% - 46px)">'+
+   '<div class="pane" style="flex:0 0 340px"><div class="hd">'+L('탐지 이슈','Issues')+' ('+findings.length+')</div><div class="bd" style="padding:0">'+list+'</div></div>'+
+   '<div class="pane" style="flex:1"><div class="hd">'+L('이슈 상세','Issue detail')+'</div><div class="bd">'+detail+'</div></div>'+
+   '</div>';
+}
+
+/* ---------- Decoder ---------- */
+function renderDecoder(){
+  el('v-decoder').innerHTML=
+   '<div class="card"><h3>'+L('인코더 / 디코더','Encoder / Decoder')+'</h3>'+
+   '<textarea id="decIn" style="height:120px" oninput="decRun()" placeholder="'+L('변환할 텍스트 입력','enter text to transform')+'">&lt;script&gt;alert(1)&lt;/script&gt;</textarea>'+
+   '<div class="kbar" style="margin-top:10px">'+
+     ['URL','Base64','HTML','Hex'].map(function(t){return '<button class="btn alt sm" onclick="decDo(\''+t+'\',1)">'+t+' '+L('인코딩','encode')+'</button> <button class="btn alt sm" onclick="decDo(\''+t+'\',0)">'+t+' '+L('디코딩','decode')+'</button>';}).join(' ')+
+   '</div>'+
+   '<div style="margin-top:10px" class="legend">'+L('결과','Output')+':</div>'+
+   '<pre id="decOut" style="background:#0e0c0a;border:1px solid var(--border);border-radius:6px;padding:10px;min-height:70px"></pre>'+
+   '</div>';
+}
+function decDo(type,enc){
+  var s=el('decIn').value, out='';
+  try{
+    if(type==='URL') out= enc? encodeURIComponent(s): decodeURIComponent(s);
+    else if(type==='Base64') out= enc? btoa(unescape(encodeURIComponent(s))): decodeURIComponent(escape(atob(s)));
+    else if(type==='HTML') out= enc? esc(s): s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+    else if(type==='Hex') out= enc? s.split('').map(function(c){return c.charCodeAt(0).toString(16).padStart(2,'0');}).join(' ')
+                                  : s.trim().split(/\s+/).map(function(h){return String.fromCharCode(parseInt(h,16));}).join('');
+  }catch(e){ out='⚠ '+e.message; }
+  el('decOut').textContent=out;
+}
+function decRun(){ /* live preview hook (optional) */ }
+
+/* ============================ boot ============================ */
+window.renderDynamic=function(){ buildTabs(); renderActive(); };
+crawl();
+applyLang();   // builds tabs + renders active (dashboard)
+</script>
+</body>
+</html>

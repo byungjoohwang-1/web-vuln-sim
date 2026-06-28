@@ -358,15 +358,418 @@
         .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
         .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
         .langbar button.on { background:#3b82f6; color:#fff; }
+
+        /* Exploit Simulator Styles */
+        .exploit-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        @media (max-width: 1100px) {
+            .exploit-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .burp-window {
+            background: #2b2b2b;
+            border: 2px solid #ff6600;
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'Consolas', monospace;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(255, 102, 0, 0.15);
+        }
+        .burp-titlebar {
+            background: #1e1e1e;
+            padding: 12px 18px;
+            border-bottom: 2px solid #ff6600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ff6600;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .burp-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .burp-logo-dot {
+            width: 10px;
+            height: 10px;
+            background: #ff6600;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        .burp-controls {
+            background: #333333;
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #444;
+            align-items: center;
+        }
+        .burp-btn {
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #555;
+            transition: all 0.2s;
+        }
+        .burp-btn-intercept {
+            background: #ff6600;
+            color: #000;
+            border-color: #ff6600;
+        }
+        .burp-btn-intercept:hover {
+            box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+        }
+        .burp-btn-forward {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+        .burp-btn-forward:hover {
+            background: #16a34a;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+        .burp-btn-drop {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        .burp-btn-drop:hover {
+            background: #dc2626;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+        .burp-tabs {
+            display: flex;
+            background: #1e1e1e;
+            border-bottom: 1px solid #444;
+        }
+        .burp-tab {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-right: 1px solid #444;
+            cursor: pointer;
+            background: #2b2b2b;
+            color: #888;
+        }
+        .burp-tab.active {
+            background: #2b2b2b;
+            color: #ff6600;
+            border-top: 2px solid #ff6600;
+        }
+        .burp-editor-container {
+            position: relative;
+            flex-grow: 1;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+        .burp-textarea {
+            width: 100%;
+            flex-grow: 1;
+            background: #1e1e1e;
+            color: #22c55e;
+            border: none;
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+        }
+        .burp-payload-helper {
+            background: #242424;
+            padding: 15px;
+            border-top: 1px solid #333;
+        }
+        .helper-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ff6600;
+        }
+        .payload-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .payload-chip {
+            background: #1c1c1c;
+            color: #cbd5e1;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .payload-chip:hover {
+            background: #333;
+            border-color: #ff6600;
+            color: white;
+        }
+        .visual-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow: hidden;
+        }
+        .defense-toggle-container {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .defense-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .defense-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .defense-badge.off {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+        }
+        .defense-badge.on {
+            background: #dcfce7;
+            color: #22c55e;
+            border: 1px solid #bbf7d0;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #22c55e;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+        .flow-node {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fdfdfd;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .flow-node.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+        }
+        .node-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+        .query-box {
+            background: #1e1e1e;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 13.5px;
+            line-height: 1.4;
+            overflow-x: auto;
+        }
+        .query-injected {
+            color: #f43f5e;
+            font-weight: bold;
+            text-decoration: underline;
+            animation: flash-red 1s infinite alternate;
+        }
+        .query-safe {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .db-table-container {
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .db-table th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: bold;
+            text-align: left;
+            padding: 8px 12px;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .db-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.3s;
+        }
+        .db-row.matching {
+            background: #fee2e2 !important;
+            animation: flash-row-red 1.5s infinite;
+        }
+        .db-row.safe-matching {
+            background: #dcfce7 !important;
+        }
+        .db-row.scanning {
+            background: #fef9c3;
+        }
+        .browser-output-window {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .browser-header {
+            background: #e2e8f0;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .dot-btn {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .browser-address {
+            background: white;
+            border-radius: 4px;
+            flex-grow: 1;
+            margin-left: 10px;
+            padding: 2px 10px;
+            font-size: 11px;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+        .browser-body {
+            padding: 15px;
+            min-height: 100px;
+            font-size: 14px;
+        }
+        @keyframes flash-red {
+            from { text-shadow: 0 0 4px rgba(244, 63, 94, 0.4); }
+            to { text-shadow: 0 0 12px rgba(244, 63, 94, 0.9), 0 0 20px rgba(244, 63, 94, 0.9); }
+        }
+        @keyframes flash-row-red {
+            0%, 100% { background-color: #fee2e2; }
+            50% { background-color: #fca5a5; }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
     </style>
+
+    <!-- Presenter Mode Styling -->
+    <style>
+        body.presenter-mode {
+            font-size: 1.15rem !important;
+        }
+        body.presenter-mode .code-display, body.presenter-mode .code-textarea {
+            font-size: 18px !important;
+            line-height: 1.8 !important;
+        }
+        body.presenter-mode .checklist-item {
+            font-size: 16px !important;
+        }
+        body.presenter-mode .exploit-panel {
+            border: 2px solid #eab308 !important;
+            box-shadow: 0 15px 35px rgba(234, 179, 8, 0.25) !important;
+        }
+        body.presenter-mode .panel-title {
+            font-size: 22px !important;
+        }
+        body.presenter-mode .header h1 {
+            font-size: 32px !important;
+        }
+    </style>
+
+    <script src="/js/sast-engine.js"></script>
 </head>
 <body>
 <a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)" data-en="← Main">← 메인</a>
-<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button><button id="btn-presenter" onclick="togglePresenterMode()" style="background:#eab308;color:#000;margin-left:5px;border:none;padding:5px 11px;border-radius:6px;font:600 12px/1 'Malgun Gothic',sans-serif;cursor:pointer;" data-en="🎤 Presenter Mode">🎤 발표자 모드</button></div>
     <div class="container">
         <div class="header">
             <h1 data-en="💉 SQL Injection - Practice Simulator">💉 SQL 삽입 (SQL Injection) - 실습 시뮬레이터</h1>
             <p>CWE-89: Improper Neutralization of Special Elements used in an SQL Command</p>
+        
+            <!-- KISA Guide Mapping Reference -->
+            <div class="kisa-guide-reference" style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); padding: 6px 12px; border-radius: 6px; font-size: 13px; color: #1e40af; font-weight: 500;">
+                <span style="background: #1e40af; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; font-family: sans-serif;">KISA Guide</span>
+                <span data-en="KISA Secure Coding Guide (2021) Sec 1.1 (p. 16)">행정안전부·KISA 개발보안 가이드 (2021) - 1.1 SQL 삽입 (p. 16)</span>
+            </div>
         </div>
 
         <div class="mode-tabs">
@@ -379,6 +782,11 @@
                 <div class="mode-icon">🐍</div>
                 <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
                 <div class="mode-desc" data-en="Use Parameterized Query">Parameterized Query 사용</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('exploit')">
+                <div class="mode-icon">⚔️</div>
+                <div class="mode-title" data-en="Interactive Exploit Simulator">공격 시뮬레이터</div>
+                <div class="mode-desc" data-en="Burp Suite & DB visualizer">Burp Suite &amp; DB 시각화</div>
             </button>
         </div>
 
@@ -617,6 +1025,151 @@ def get_user_info(user_id):
                             </div>
                         </div>
                     </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- 공격 시뮬레이터 (Exploit Simulator) 모드 -->
+        <div id="exploit-mode" class="content-wrapper">
+            <div class="progress-indicator" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #e2e8f0; border: 1px solid #334155; margin-bottom: 20px;">
+                <div class="progress-title" style="color: #38bdf8; display: flex; align-items: center; gap: 8px;" data-en="⚔️ Interactive Exploit Simulator">⚔️ 인터랙티브 공격 시뮬레이터</div>
+                <p style="font-size: 14px; line-height: 1.6; opacity: 0.9; margin: 0;" data-en="Simulate a real SQL Injection attack using a Burp Suite interception simulation. Modify HTTP request payloads in real-time, trace the dynamic query assembly in the backend, observe the table scan execution in the database, and verify how Secure Coding defense thwarts the exploit.">
+                    Burp Suite 프록시 인터셉터 화면을 통해 실제 SQL Injection 공격 과정을 시뮬레이션합니다. 요청 본문(Payload)을 직접 편집하여 전송하고, 서버에서 생성되는 쿼리문, 데이터베이스의 전체 테이블 스캔 동작, 그리고 시큐어 코딩(PreparedStatement) 방어가 어떻게 이를 완벽히 차단하는지 실시간으로 모니터링하세요.
+                </p>
+            </div>
+
+            <div class="exploit-container">
+                <!-- Left Column: Burp Suite Interceptor -->
+                <div class="burp-window">
+                    <div class="burp-titlebar">
+                        <div class="burp-logo">
+                            <div class="burp-logo-dot"></div>
+                            <span>Burp Suite Professional - Proxy Interceptor</span>
+                        </div>
+                        <span style="font-size: 11px; opacity: 0.7;">v2026.6</span>
+                    </div>
+                    
+                    <div class="burp-controls">
+                        <button class="burp-btn burp-btn-intercept" id="burpInterceptBtn" data-en="Intercept is ON">Intercept is ON</button>
+                        <button class="burp-btn burp-btn-forward" onclick="runExploitSimulation()" data-en="Forward ➔">Forward ➔</button>
+                        <button class="burp-btn burp-btn-drop" onclick="resetExploitSimulation()" data-en="Drop">Drop</button>
+                        <span style="color:#888; font-size:12px; margin-left: 10px;" data-en="Target: http://bank.com/login">Target: http://bank.com/login</span>
+                    </div>
+
+                    <div class="burp-tabs">
+                        <div class="burp-tab active">Raw</div>
+                        <div class="burp-tab">Params</div>
+                        <div class="burp-tab">Headers</div>
+                        <div class="burp-tab">Hex</div>
+                    </div>
+
+                    <div class="burp-editor-container">
+                        <textarea class="burp-textarea" id="burpRequestArea" spellcheck="false">POST /login HTTP/1.1
+Host: bank.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 12
+
+userId=guest</textarea>
+                    </div>
+
+                    <div class="burp-payload-helper">
+                        <div class="helper-title" data-en="💡 Quick Payload Presets (Click to insert):">💡 공격 페이로드 프리셋 (클릭 시 자동 삽입):</div>
+                        <div class="payload-list">
+                            <button class="payload-chip" onclick="setBurpPayload('guest')" data-en="Normal user login (guest)">일반 로그인 (guest)</button>
+                            <button class="payload-chip" onclick="setBurpPayload('admin')" data-en="Target account check (admin)">대상 계정 조회 (admin)</button>
+                            <button class="payload-chip" onclick="setBurpPayload('admin\' --')" style="border-color:#ff9800; color:#ff9800;" data-en="Authentication bypass (admin' --)">인증 우회 (admin' --)</button>
+                            <button class="payload-chip" onclick="setBurpPayload('admin\' OR \'1\'=\'1')" style="border-color:#ef4444; color:#ef4444;" data-en="Always-True condition (admin' OR '1'='1)">항상 참 조건 (admin' OR '1'='1)</button>
+                            <button class="payload-chip" onclick="setBurpPayload('admin\' UNION SELECT password, 1, 1, 1 FROM users --')" style="border-color:#a855f7; color:#a855f7;" data-en="UNION data extraction">UNION 데이터 유출</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Visualizer -->
+                <div class="visual-panel">
+                    <div class="defense-toggle-container">
+                        <div class="defense-label">
+                            <span data-en="🛡️ Secure Coding Defense">🛡️ 시큐어 코딩 방어 (PreparedStatement)</span>
+                            <span class="defense-badge off" id="defenseBadge" data-en="OFF">OFF</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="defenseToggle" onchange="toggleDefenseMode()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Flow Diagram -->
+                    <div class="flow-diagram">
+                        <!-- Node 1: Dynamic SQL Translation -->
+                        <div class="flow-node active" id="flowNodeServer">
+                            <div class="node-header">
+                                <span data-en="⚙️ Server-side SQL Compiler">⚙️ 서버측 SQL 생성 엔진</span>
+                                <span style="color:#3b82f6;" id="serverStatus" data-en="Idle">대기 중</span>
+                            </div>
+                            <div class="query-box" id="generatedQueryBox">
+                                // [Dynamic String Concatenation Mode]<br>
+                                String query = "SELECT * FROM users WHERE id = '" + userId + "'";
+                            </div>
+                        </div>
+
+                        <!-- Node 2: Database Engine Scan -->
+                        <div class="flow-node" id="flowNodeDB">
+                            <div class="node-header">
+                                <span data-en="🗄️ Database Engine Table Scan">🗄️ 데이터베이스 엔진 테이블 스캔</span>
+                                <span style="color:#eab308;" id="dbStatus" data-en="Waiting">대기 중</span>
+                            </div>
+                            <div class="db-table-container">
+                                <table class="db-table">
+                                    <thead>
+                                        <tr>
+                                            <th>idx</th>
+                                            <th>id</th>
+                                            <th>password</th>
+                                            <th>role</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dbTableBody">
+                                        <tr class="db-row" id="dbRow-1">
+                                            <td>1</td>
+                                            <td>admin</td>
+                                            <td><span style="filter:blur(3px);">SuperP@ssw0rd!</span></td>
+                                            <td>Administrator</td>
+                                        </tr>
+                                        <tr class="db-row" id="dbRow-2">
+                                            <td>2</td>
+                                            <td>guest</td>
+                                            <td><span style="filter:blur(3px);">guestpwd123</span></td>
+                                            <td>User</td>
+                                        </tr>
+                                        <tr class="db-row" id="dbRow-3">
+                                            <td>3</td>
+                                            <td>alice</td>
+                                            <td><span style="filter:blur(3px);">alicepass</span></td>
+                                            <td>User</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Node 3: HTTP Client Output -->
+                        <div class="flow-node" id="flowNodeBrowser">
+                            <div class="node-header">
+                                <span data-en="💻 Browser Screen Output">💻 브라우저 화면 출력</span>
+                                <span style="color:#10b981;" id="browserStatus" data-en="Waiting">대기 중</span>
+                            </div>
+                            <div class="browser-output-window">
+                                <div class="browser-header">
+                                    <div class="dot-btn dot-red"></div>
+                                    <div class="dot-btn dot-yellow"></div>
+                                    <div class="dot-btn dot-green"></div>
+                                    <div class="browser-address">http://bank.com/login_result</div>
+                                </div>
+                                <div class="browser-body" id="browserOutputBody" data-en="Execute simulation to view output.">
+                                    시뮬레이션을 실행하면 화면에 출력 결과가 렌더링됩니다.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -730,8 +1283,14 @@ def get_user_info(user_id):
             let passed = true;
             let messages = [];
 
+            // Tokenize using sastEngine
+            const tokens = sastEngine.tokenizeJava(code);
+
             // 1. Statement 제거 및 PreparedStatement 사용 확인
-            if (code.includes('PreparedStatement') && !code.includes('Statement stmt =')) {
+            const hasPreparedStatement = sastEngine.hasToken(tokens, 'PreparedStatement');
+            const hasStatement = sastEngine.hasToken(tokens, 'Statement');
+            
+            if (hasPreparedStatement && !hasStatement) {
                 updateChecklist('progressChecklistJava', 1, true);
                 updateChecklist('progressChecklistJava', 2, true);
                 messages.push(L("✅ PreparedStatement 객체가 올바르게 선언되었습니다.","✅ The PreparedStatement object is correctly declared."));
@@ -742,7 +1301,13 @@ def get_user_info(user_id):
             }
 
             // 2. 바인딩 변수(?) 사용 확인
-            if (code.includes('id = ?') || code.includes('id=?')) {
+            const stringLiterals = sastEngine.getJavaStringLiterals(code);
+            const hasQueryPlaceholder = stringLiterals.some(lit => {
+                const cleanedLit = lit.replace(/["']/g, ''); // strip quotes
+                return cleanedLit.toLowerCase().includes('id = ?') || cleanedLit.toLowerCase().includes('id=?');
+            });
+
+            if (hasQueryPlaceholder) {
                 updateChecklist('progressChecklistJava', 3, true);
                 messages.push(L("✅ 쿼리에 바인딩 변수(?)가 사용되었습니다.","✅ A binding variable (?) is used in the query."));
             } else {
@@ -752,7 +1317,11 @@ def get_user_info(user_id):
             }
 
             // 3. setString 사용 확인
-            if (code.includes('.setString(1, userId)')) {
+            const hasSetString = tokens.some((t, idx) => {
+                return t === 'setString' && tokens[idx+1] === '(' && tokens[idx+2] === '1';
+            });
+
+            if (hasSetString) {
                 messages.push(L("✅ 입력값이 안전하게 바인딩되었습니다.","✅ The input value is bound safely."));
             } else {
                 passed = false;
@@ -760,6 +1329,11 @@ def get_user_info(user_id):
             }
 
             if (passed) {
+                // Record completion
+                try {
+                    localStorage.setItem('wvs_passed_03_code_sql_injection_java', 'true');
+                } catch(e){}
+
                 feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
@@ -908,8 +1482,16 @@ public class UserDao {
             let passed = true;
             let messages = [];
 
+            // Tokenize using sastEngine
+            const tokens = sastEngine.tokenizePython(code);
+            const stringLiterals = sastEngine.getPythonStringLiterals(code);
+
             // 1. 문자열 포맷팅 제거 확인
-            if (!code.includes('f"') && !code.includes('% user_id') && !code.includes(".format(")) {
+            const hasFString = stringLiterals.some(lit => lit.startsWith('f') || lit.startsWith('F'));
+            const hasPercentFormat = stringLiterals.some(lit => lit.includes('%s') || lit.includes('%user_id') || lit.includes('% user_id'));
+            const hasDotFormat = tokens.includes('format');
+            
+            if (!hasFString && !hasPercentFormat && !hasDotFormat) {
                 updateChecklist('progressChecklistPython', 1, true);
                 messages.push(L("✅ 문자열 포맷팅/연결이 제거되었습니다.","✅ String formatting/concatenation has been removed."));
             } else {
@@ -919,7 +1501,12 @@ public class UserDao {
             }
 
             // 2. 쿼리 파라미터 분리 (?)
-            if (code.includes('WHERE id = ?') || code.includes('WHERE id = %s')) {
+            const hasQueryPlaceholder = stringLiterals.some(lit => {
+                const cleanedLit = lit.replace(/["']/g, ''); // strip quotes
+                return cleanedLit.includes('id = ?') || cleanedLit.includes('id=?') || cleanedLit.includes('id = %s') || cleanedLit.includes('id=%s');
+            });
+
+            if (hasQueryPlaceholder) {
                 updateChecklist('progressChecklistPython', 2, true);
                 messages.push(L("✅ 쿼리 파라미터(?, %s)가 사용되었습니다.","✅ A query parameter (?, %s) is used."));
             } else {
@@ -929,7 +1516,16 @@ public class UserDao {
             }
 
             // 3. 튜플 전달
-            if (code.includes('execute(query, (user_id,))') || code.includes('execute(query, [user_id])')) {
+            const hasTupleExecution = tokens.some((t, idx) => {
+                if (t === 'execute') {
+                    // Check if second argument is present
+                    return code.includes('execute(query, (user_id,))') || code.includes('execute(query, [user_id])') ||
+                           code.includes('execute(query,(user_id,))') || code.includes('execute(query,[user_id])');
+                }
+                return false;
+            });
+
+            if (hasTupleExecution) {
                 updateChecklist('progressChecklistPython', 3, true);
                 messages.push(L("✅ 데이터가 튜플/리스트 형태로 전달되었습니다.","✅ The data is passed as a tuple/list."));
             } else {
@@ -939,6 +1535,11 @@ public class UserDao {
             }
 
             if (passed) {
+                // Record completion
+                try {
+                    localStorage.setItem('wvs_passed_03_code_sql_injection_python', 'true');
+                } catch(e){}
+
                 feedback.innerHTML = L(`
                     <div class="feedback-item feedback-success">
                         <strong>🎉 검증 성공!</strong>
@@ -1020,6 +1621,273 @@ def get_user_info(user_id):
             for(let i=0; i<4; i++) updateChecklist('progressChecklistPython', i, false);
         }
 
+        // === Exploit Simulator Logic ===
+        let isDefenseOn = false;
+
+        function toggleDefenseMode() {
+            isDefenseOn = document.getElementById('defenseToggle').checked;
+            const badge = document.getElementById('defenseBadge');
+            const qBox = document.getElementById('generatedQueryBox');
+            
+            if (isDefenseOn) {
+                badge.className = 'defense-badge on';
+                badge.textContent = L('ON', 'ON');
+                badge.setAttribute('data-en', 'ON');
+                qBox.innerHTML = `// [PreparedStatement Parameterized Binding Mode]<br>String query = "SELECT * FROM users WHERE id = ?";<br>pstmt.setString(1, userId);`;
+            } else {
+                badge.className = 'defense-badge off';
+                badge.textContent = L('OFF', 'OFF');
+                badge.setAttribute('data-en', 'OFF');
+                qBox.innerHTML = `// [Dynamic String Concatenation Mode]<br>String query = "SELECT * FROM users WHERE id = '" + userId + "'";`;
+            }
+            resetExploitSimulation();
+        }
+
+        function setBurpPayload(payload) {
+            const reqArea = document.getElementById('burpRequestArea');
+            reqArea.value = `POST /login HTTP/1.1
+Host: bank.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: ${12 + payload.length - 5}
+
+userId=${payload}`;
+            
+            // Highlight the payload briefly
+            reqArea.focus();
+            const start = reqArea.value.indexOf("userId=") + 7;
+            reqArea.setSelectionRange(start, reqArea.value.length);
+        }
+
+        function updateDynamicEl(id, koText, enText) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = L(koText, enText);
+            el.dataset.ko = koText;
+            el.setAttribute('data-en', enText);
+        }
+
+        function resetExploitSimulation() {
+            // Reset statuses
+            updateDynamicEl('serverStatus', '대기 중', 'Idle');
+            document.getElementById('serverStatus').style.color = '#3b82f6';
+            updateDynamicEl('dbStatus', '대기 중', 'Waiting');
+            document.getElementById('dbStatus').style.color = '#eab308';
+            updateDynamicEl('browserStatus', '대기 중', 'Waiting');
+            document.getElementById('browserStatus').style.color = '#10b981';
+
+            // Reset nodes
+            document.getElementById('flowNodeServer').className = 'flow-node active';
+            document.getElementById('flowNodeDB').className = 'flow-node';
+            document.getElementById('flowNodeBrowser').className = 'flow-node';
+
+            // Reset table rows styling
+            document.querySelectorAll('.db-row').forEach(row => {
+                row.className = 'db-row';
+            });
+
+            // Reset browser output
+            updateDynamicEl(
+                'browserOutputBody',
+                '시뮬레이션을 실행하면 화면에 출력 결과가 렌더링됩니다.',
+                'Execute simulation to view output.'
+            );
+        }
+
+        function runExploitSimulation() {
+            resetExploitSimulation();
+            
+            const reqText = document.getElementById('burpRequestArea').value;
+            // Parse payload
+            let payload = "guest";
+            const match = reqText.match(/userId=(.*)/);
+            if (match && match[1]) {
+                payload = match[1].trim();
+            }
+
+            const qBox = document.getElementById('generatedQueryBox');
+            const serverStatus = document.getElementById('serverStatus');
+            const dbStatus = document.getElementById('dbStatus');
+            const browserStatus = document.getElementById('browserStatus');
+
+            // Step 1: Server Side Query compilation
+            updateDynamicEl('serverStatus', '쿼리 컴파일 중...', 'Compiling query...');
+            
+            if (isDefenseOn) {
+                qBox.innerHTML = `// [PreparedStatement Parameterized Binding Mode]<br>String query = "SELECT * FROM users WHERE id = <span class="query-safe">?</span>";<br>pstmt.setString(1, "<span class="query-safe">${payload}</span>");`;
+            } else {
+                // If it contains injection
+                const isInjected = payload.includes("'");
+                const payloadClass = isInjected ? 'query-injected' : 'query-safe';
+                qBox.innerHTML = `// [Dynamic String Concatenation Mode]<br>String query = "SELECT * FROM users WHERE id = '<span class="${payloadClass}">${payload}</span>'";`;
+            }
+
+            // Animate flow
+            setTimeout(() => {
+                // Move focus to DB
+                document.getElementById('flowNodeServer').className = 'flow-node';
+                document.getElementById('flowNodeDB').className = 'flow-node active';
+                updateDynamicEl('serverStatus', '완료', 'Completed');
+                serverStatus.style.color = '#10b981';
+                updateDynamicEl('dbStatus', '테이블 스캔 중...', 'Scanning table...');
+
+                // Animate row scans
+                let rowIdx = 1;
+                const scanInterval = setInterval(() => {
+                    if (rowIdx > 3) {
+                        clearInterval(scanInterval);
+                        evaluateDatabaseResult(payload);
+                        return;
+                    }
+                    // Highlight scanning row
+                    document.getElementById(`dbRow-${rowIdx}`).className = 'db-row scanning';
+                    if (rowIdx > 1) {
+                        document.getElementById(`dbRow-${rowIdx - 1}`).className = 'db-row';
+                    }
+                    rowIdx++;
+                }, 400);
+
+            }, 1000);
+        }
+
+        function evaluateDatabaseResult(payload) {
+            const dbStatus = document.getElementById('dbStatus');
+            const browserStatus = document.getElementById('browserStatus');
+            
+            // Clear scanning classes
+            document.querySelectorAll('.db-row').forEach(row => row.className = 'db-row');
+
+            let matchedRows = [];
+            let flagUnlocked = false;
+
+            if (isDefenseOn) {
+                // Parameterized query: payload is treated as a literal id.
+                if (payload === 'admin') {
+                    matchedRows = [1];
+                } else if (payload === 'guest') {
+                    matchedRows = [2];
+                } else if (payload === 'alice') {
+                    matchedRows = [3];
+                }
+            } else {
+                // Vulnerable query: evaluate SQL injection logic
+                const normalized = payload.toLowerCase();
+                if (normalized.includes('or') && (normalized.includes('1=1') || normalized.includes("'1'='1") || normalized.includes('1') || normalized.includes('true'))) {
+                    matchedRows = [1, 2, 3];
+                    flagUnlocked = true;
+                } else if (normalized.includes('union') && normalized.includes('select')) {
+                    matchedRows = [1, 2, 3];
+                    flagUnlocked = true;
+                } else if (normalized.startsWith("admin")) {
+                    matchedRows = [1];
+                    if (normalized.includes("'")) {
+                        flagUnlocked = true; 
+                    }
+                } else if (normalized.startsWith("guest")) {
+                    matchedRows = [2];
+                } else if (normalized.startsWith("alice")) {
+                    matchedRows = [3];
+                }
+            }
+
+            // Highlight matched rows
+            matchedRows.forEach(idx => {
+                document.getElementById(`dbRow-${idx}`).className = isDefenseOn ? 'db-row safe-matching' : 'db-row matching';
+            });
+
+            updateDynamicEl('dbStatus', `조회 완료 (${matchedRows.length}개 행)`, `Scan finished (${matchedRows.length} rows)`);
+            dbStatus.style.color = '#10b981';
+
+            // Next node: Browser Output
+            setTimeout(() => {
+                document.getElementById('flowNodeDB').className = 'flow-node';
+                document.getElementById('flowNodeBrowser').className = 'flow-node active';
+                updateDynamicEl('browserStatus', '응답 수신됨', 'Response received');
+
+                const outputBody = document.getElementById('browserOutputBody');
+                
+                if (matchedRows.length === 0) {
+                    const koHTML = `<div style="color: #ef4444; font-weight: bold; font-size: 16px; margin-bottom: 8px;">❌ 로그인 실패</div>
+                                    <p style="color: #64748b;">입력한 자격 증명과 일치하는 계정이 없습니다. 쿼리 결과 0개 레코드 반환.</p>`;
+                    const enHTML = `<div style="color: #ef4444; font-weight: bold; font-size: 16px; margin-bottom: 8px;">❌ Login Failed</div>
+                                    <p style="color: #64748b;">No account matches the provided credentials. Query returned 0 records.</p>`;
+                    updateDynamicEl('browserOutputBody', koHTML, enHTML);
+                } else if (matchedRows.length === 1) {
+                    const rowId = matchedRows[0];
+                    const username = rowId === 1 ? 'admin' : (rowId === 2 ? 'guest' : 'alice');
+                    const role = rowId === 1 ? 'Administrator' : 'User';
+                    
+                    let extraKo = "", extraEn = "";
+                    if (rowId === 1 && !isDefenseOn && flagUnlocked) {
+                        extraKo = `<div style="background: #fef3c7; border: 1px dashed #d97706; padding: 10px; margin-top: 10px; border-radius: 6px; font-size: 12px; font-family: monospace;">
+                                     <strong>🏆 SQL Injection 인증 우회 성공!</strong><br>
+                                     Flag: <span style="color: #d97706; font-weight: bold;">wvs_flag{sqli_admin_bypass_success}</span>
+                                 </div>`;
+                        extraEn = `<div style="background: #fef3c7; border: 1px dashed #d97706; padding: 10px; margin-top: 10px; border-radius: 6px; font-size: 12px; font-family: monospace;">
+                                     <strong>🏆 SQL Injection Bypassed Auth!</strong><br>
+                                     Flag: <span style="color: #d97706; font-weight: bold;">wvs_flag{sqli_admin_bypass_success}</span>
+                                 </div>`;
+                    }
+
+                    const koHTML = `<div style="color: #22c55e; font-weight: bold; font-size: 16px; margin-bottom: 8px;">✅ 로그인 성공</div>
+                                    <p>환영합니다, <strong>${username}</strong>님! 정상적으로 로그인되었습니다.</p>
+                                    <p style="font-size: 13px; color: #64748b; margin-top: 5px;">권한: ${role}</p>
+                                    ${extraKo}`;
+                    const enHTML = `<div style="color: #22c55e; font-weight: bold; font-size: 16px; margin-bottom: 8px;">✅ Login Successful</div>
+                                    <p>Welcome, <strong>${username}</strong>! You have logged in successfully.</p>
+                                    <p style="font-size: 13px; color: #64748b; margin-top: 5px;">Role: ${role}</p>
+                                    ${extraEn}`;
+                    updateDynamicEl('browserOutputBody', koHTML, enHTML);
+                } else {
+                    let credentialLeakKo = "", credentialLeakEn = "";
+                    if (!isDefenseOn && payload.includes("union")) {
+                        credentialLeakKo = `<div style="background: #faf5ff; border: 1px dashed #7e22ce; padding: 12px; margin-top: 10px; border-radius: 6px; font-size: 12.5px;">
+                                             <strong style="color: #7e22ce;">🔓 UNION을 통한 민감 데이터 유출:</strong>
+                                             <ul style="margin-left: 15px; margin-top: 5px; font-family: monospace;">
+                                                 <li>admin : SuperP@ssw0rd!</li>
+                                                 <li>guest : guestpwd123</li>
+                                                 <li>alice : alicepass</li>
+                                             </ul>
+                                             <br>
+                                             Flag: <span style="color: #7e22ce; font-weight: bold;">wvs_flag{sqli_union_data_exfiltration}</span>
+                                         </div>`;
+                        credentialLeakEn = `<div style="background: #faf5ff; border: 1px dashed #7e22ce; padding: 12px; margin-top: 10px; border-radius: 6px; font-size: 12.5px;">
+                                             <strong style="color: #7e22ce;">🔓 Sensitive Data Leaked via UNION:</strong>
+                                             <ul style="margin-left: 15px; margin-top: 5px; font-family: monospace;">
+                                                 <li>admin : SuperP@ssw0rd!</li>
+                                                 <li>guest : guestpwd123</li>
+                                                 <li>alice : alicepass</li>
+                                             </ul>
+                                             <br>
+                                             Flag: <span style="color: #7e22ce; font-weight: bold;">wvs_flag{sqli_union_data_exfiltration}</span>
+                                         </div>`;
+                    } else if (!isDefenseOn) {
+                        credentialLeakKo = `<div style="background: #fee2e2; border: 1px dashed #ef4444; padding: 10px; margin-top: 10px; border-radius: 6px; font-size: 12.5px;">
+                                             <strong style="color: #b91c1c;">🚨 SQL Injection 참 조건 인증 우회!</strong><br>
+                                             쿼리가 모든 계정을 반환하여, 첫 번째 레코드인 <strong>admin</strong> 계정으로 로그인됩니다.<br>
+                                             Flag: <span style="color: #b91c1c; font-weight: bold;">wvs_flag{sqli_always_true_bypass}</span>
+                                         </div>`;
+                        credentialLeakEn = `<div style="background: #fee2e2; border: 1px dashed #ef4444; padding: 10px; margin-top: 10px; border-radius: 6px; font-size: 12.5px;">
+                                             <strong style="color: #b91c1c;">🚨 SQL Injection Always-True Auth Bypass!</strong><br>
+                                             Query returned all accounts. Logging in as first record: <strong>admin</strong>.<br>
+                                             Flag: <span style="color: #b91c1c; font-weight: bold;">wvs_flag{sqli_always_true_bypass}</span>
+                                         </div>`;
+                    }
+
+                    const koHTML = `<div style="color: #22c55e; font-weight: bold; font-size: 16px; margin-bottom: 8px;">✅ 로그인 성공 (다중 행 반환)</div>
+                                    <p>반환된 쿼리 결과의 첫 번째 레코드인 <strong>admin</strong> 계정으로 로그인 처리됩니다.</p>
+                                    ${credentialLeakKo}`;
+                    const enHTML = `<div style="color: #22c55e; font-weight: bold; font-size: 16px; margin-bottom: 8px;">✅ Login Successful (Multiple Rows)</div>
+                                    <p>Welcome, <strong>admin</strong>! (Defaulting to first record returned by SQL query)</p>
+                                    ${credentialLeakEn}`;
+                    updateDynamicEl('browserOutputBody', koHTML, enHTML);
+                }
+
+                if (flagUnlocked) {
+                    outputBody.style.animation = 'pulse 0.5s 2';
+                }
+            }, 1000);
+        }
+
         // 초기 언어 적용
         applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
@@ -1037,5 +1905,39 @@ def get_user_info(user_id):
     </div>
   </div>
 </div>
+
+    <!-- Presenter Mode Script -->
+    <script>
+        function togglePresenterMode() {
+            const isPresenter = document.body.classList.toggle('presenter-mode');
+            localStorage.setItem('wvs_presenter', isPresenter ? 'on' : 'off');
+            updatePresenterButton();
+        }
+        function updatePresenterButton() {
+            const btn = document.getElementById('btn-presenter');
+            if (!btn) return;
+            const isEn = localStorage.getItem('wvs_lang') === 'en';
+            if (document.body.classList.contains('presenter-mode')) {
+                btn.style.background = '#22c55e';
+                btn.style.color = '#fff';
+                btn.textContent = isEn ? '🎤 Presenter: ON' : '🎤 발표자 모드: 켜짐';
+                btn.setAttribute('data-en', '🎤 Presenter: ON');
+                btn.dataset.ko = '🎤 발표자 모드: 켜짐';
+            } else {
+                btn.style.background = '#eab308';
+                btn.style.color = '#000';
+                btn.textContent = isEn ? '🎤 Presenter Mode' : '🎤 발표자 모드';
+                btn.setAttribute('data-en', '🎤 Presenter Mode');
+                btn.dataset.ko = '🎤 발표자 모드';
+            }
+        }
+        // Run on load
+        (function() {
+            if (localStorage.getItem('wvs_presenter') === 'on') {
+                document.body.classList.add('presenter-mode');
+            }
+            window.addEventListener('DOMContentLoaded', updatePresenterButton);
+        })();
+    </script>
 </body>
 </html>

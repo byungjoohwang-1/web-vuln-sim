@@ -5,10 +5,14 @@ ID 중복은 자동 제거(파트 간 우연한 겹침 방지)."""
 from std_misracpp_p1 import RULES as _p1
 from std_misracpp_p2 import RULES as _p2
 from std_misracpp_p3 import RULES as _p3
+try:
+    from std_misracpp_manual import RULES as _pm  # PDF에 예제 없던 룰의 수기 보강
+except Exception:
+    _pm = []
 
 _seen = set()
 RULES = []
-for _r in _p1 + _p2 + _p3:
+for _r in _p1 + _p2 + _p3 + _pm:
     if _r['id'] not in _seen:
         _seen.add(_r['id'])
         RULES.append(_r)

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>취약한 암호화 알고리즘 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="취약한 암호화 알고리즘 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="취약한 암호화 알고리즘 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-weak-crypto.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="취약한 암호화(Weak/Broken Crypto) 모의 실습: ECB 모드의 패턴 누출(ECB 펭귄)과 MD5/SHA1의 충돌·고속 해싱 문제를 시연하고 AES-GCM·SHA-256·Argon2 방어와 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--mono)}
+    th,td{border:1px solid var(--border);padding:6px 8px;text-align:left}th{background:#0f172a;color:#7dd3fc}
+    .grid{display:grid;gap:3px;margin-top:8px}
+    .blk{width:100%;aspect-ratio:1/1;border-radius:3px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#0b1220;font-family:var(--mono)}
+    .legend{font-size:11.5px;color:var(--muted);margin-top:6px}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🧊 <span data-en="Weak / Broken Crypto Simulator">취약한 암호화 알고리즘 시뮬레이터</span>
+        <span class="kisa">KISA A-2 · <span data-en="Weak / Broken Crypto">취약한 암호화 알고리즘</span></span></h1>
+      <div class="sub" data-en="Broken algorithms (DES, RC4, MD5) and the ECB block mode leak structure. ECB encrypts identical plaintext blocks to identical ciphertext blocks — the famous 'ECB penguin'. Compare with AES-256-GCM and SHA-256 / Argon2.">
+        깨진 알고리즘(DES, RC4, MD5)과 ECB 블록 모드는 구조를 누출합니다. ECB는 같은 평문 블록을 같은 암호문 블록으로 변환합니다 — 유명한 'ECB 펭귄' 현상. AES-256-GCM·SHA-256·Argon2와 비교하세요.
+      </div>
+    </div>
+
+    <!-- 취약 데모: ECB -->
+    <div class="card vuln">
+      <h2>① <span data-en="ECB mode leaks plaintext patterns">ECB 모드는 평문 패턴을 누출한다</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="Type a blocky pattern. ECB splits it into fixed-size blocks and encrypts each <b>independently with the same key</b>, so equal plaintext blocks → equal ciphertext blocks. Repeated blocks get the same color: the image's structure survives encryption.">
+        반복 패턴을 입력하세요. ECB는 고정 크기 블록으로 쪼개 각 블록을 <b>같은 키로 독립</b> 암호화하므로, 같은 평문 블록은 같은 암호문 블록이 됩니다. 반복 블록은 같은 색으로 표시되어 이미지 구조가 암호화 후에도 남습니다.
+      </div>
+      <label data-en="Plaintext 'image' (each char = 1 block; spaces = background)">평문 '이미지' (문자 1개 = 블록 1개, 공백 = 배경)</label>
+      <textarea id="v_plain">  ####
+ #    #
+ # ## #
+ #    #
+  ####  </textarea>
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="runEcb()">▶ <span data-en="Encrypt with AES-ECB">AES-ECB로 암호화</span></button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="col"><div class="legend" data-en="Plaintext blocks">평문 블록</div><div class="grid" id="g_plain"></div></div>
+        <div class="col"><div class="legend" data-en="ECB ciphertext (structure leaks!)">ECB 암호문 (구조 누출!)</div><div class="grid" id="g_ecb"></div></div>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 취약 데모: 해시 -->
+    <div class="card vuln">
+      <h2>② <span data-en="MD5 / SHA-1: fast & collision-prone">MD5 / SHA-1: 고속·충돌 취약</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="MD5 and SHA-1 are broken: practical collisions exist (two different inputs → same digest) and they hash billions/sec, so a stolen MD5 password hash is brute-forced almost instantly. This mock shows a forced MD5 collision and a crack-rate estimate.">
+        MD5와 SHA-1은 깨졌습니다: 실용적 충돌(서로 다른 입력 → 같은 다이제스트)이 존재하고 초당 수십억 회 해싱되어, 유출된 MD5 비밀번호 해시는 거의 즉시 무차별 대입됩니다. 아래는 강제 충돌과 크랙 속도 추정입니다.
+      </div>
+      <label data-en="Password to hash">해싱할 비밀번호</label>
+      <input id="v_pw" value="P@ssw0rd!">
+      <div class="btns">
+        <button class="act run" onclick="runHash()">▶ <span data-en="Hash with MD5 (broken)">MD5로 해싱 (취약)</span></button>
+        <button class="act ghost" onclick="runCollision()">💥 <span data-en="Show MD5 collision">MD5 충돌 보기</span></button>
+      </div>
+      <div class="out" id="h_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>③ <span data-en="AES-256-GCM + SHA-256 / Argon2">AES-256-GCM + SHA-256 / Argon2</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="GCM mode uses a random IV/nonce and chains blocks, so identical plaintext blocks become different ciphertext — no pattern leaks — plus an auth tag detects tampering. For passwords, use a slow salted KDF (Argon2/bcrypt) so brute force becomes infeasible.">
+        GCM 모드는 임의 IV/nonce를 쓰고 블록을 연쇄시켜 같은 평문 블록도 다른 암호문이 됩니다 — 패턴 누출 없음 — 인증 태그로 변조도 탐지합니다. 비밀번호는 느린 salt KDF(Argon2/bcrypt)로 무차별 대입을 비현실적으로 만듭니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="runGcm()">▶ <span data-en="Re-encrypt with AES-GCM">AES-GCM으로 재암호화</span></button>
+        <button class="act fix" onclick="runKdf()">▶ <span data-en="Hash password with Argon2">Argon2로 비밀번호 해싱</span></button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="col"><div class="legend" data-en="AES-GCM ciphertext (no structure)">AES-GCM 암호문 (구조 없음)</div><div class="grid" id="g_gcm"></div></div>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>④ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// Java — ECB + MD5 (둘 다 취약)
+Cipher c = Cipher.getInstance("AES/ECB/PKCS5Padding");
+c.init(Cipher.ENCRYPT_MODE, key);
+byte[] ct = c.doFinal(plaintext);   // 패턴 누출
+
+MessageDigest md = MessageDigest.getInstance("MD5");
+byte[] h = md.digest(password.getBytes());  // 충돌·고속</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// Java — AES-GCM + Argon2
+byte[] iv = new byte[12];
+SecureRandom.getInstanceStrong().nextBytes(iv);
+Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+c.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, iv));
+byte[] ct = c.doFinal(plaintext);   // IV별 무패턴 + 인증태그
+
+// 비밀번호: 느린 salt KDF
+String h = Argon2Factory.create()
+            .hash(3, 65536, 4, password.toCharArray());</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> ban DES/3DES/RC4/MD5/SHA-1 and ECB mode; use AEAD (AES-GCM / ChaCha20-Poly1305) with a unique IV per message; hash passwords with Argon2id/bcrypt/scrypt + per-user salt; use SHA-256+ for integrity."><b>방어 핵심:</b> DES/3DES/RC4/MD5/SHA-1과 ECB 모드 금지 · 메시지별 고유 IV의 AEAD(AES-GCM / ChaCha20-Poly1305) 사용 · 비밀번호는 사용자별 salt + Argon2id/bcrypt/scrypt · 무결성에는 SHA-256 이상.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. 'Encryption' here is an in-page mock mapping for visualization; no real cryptographic primitives or attacks are executed.">
+      ⚠️ 교육용 시뮬레이션입니다. 여기의 '암호화'는 시각화를 위한 페이지 내부 mock 매핑이며 실제 암호 연산이나 공격은 수행하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var PRESETS = [
+  {label:'penguin block', v:"  ####  \n #    # \n # ## # \n #    # \n  ####  ", d:L('반복 윤곽 — ECB 펭귄','repeated outline — ECB penguin')},
+  {label:'striped', v:"########\n        \n########\n        \n########", d:L('줄무늬 — 동일 블록 다수','stripes — many identical blocks')},
+  {label:'logo', v:" AA  BB \nA  AB  B\nAAAABBBB\nA  AB  B\nA  AB  B", d:L('로고 텍스트','logo text')}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button'); b.textContent=p.label; b.title=p.d;
+    b.onclick=function(){document.getElementById('v_plain').value=p.v;};
+    box.appendChild(b);
+  });
+}
+
+// 32 distinct colors for blocks
+var PALETTE=['#1e293b','#ef4444','#f59e0b','#eab308','#84cc16','#22c55e','#10b981','#14b8a6','#06b6d4','#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#fb7185','#fdba74','#fde047','#bef264','#86efac','#67e8f9','#93c5fd','#c4b5fd','#f0abfc','#fca5a5','#fcd34d','#a7f3d0','#bae6fd','#ddd6fe','#fbcfe8'];
+function colorFor(token){
+  // deterministic hash → palette index (same plaintext block → same color)
+  var h=0; for(var i=0;i<token.length;i++){h=(h*131+token.charCodeAt(i))>>>0;}
+  return PALETTE[h % PALETTE.length];
+}
+function parseGrid(text){
+  var lines=text.replace(/\r/g,'').split('\n');
+  var w=0; lines.forEach(function(l){if(l.length>w)w=l.length;});
+  if(w<1)w=1;
+  return {lines:lines, w:w, h:lines.length};
+}
+function renderGrid(elId, cells, w){
+  var g=document.getElementById(elId);
+  g.style.gridTemplateColumns='repeat('+w+',1fr)';
+  g.innerHTML='';
+  cells.forEach(function(c){
+    var d=document.createElement('div'); d.className='blk';
+    d.style.background=c.color; d.title=c.title||''; d.textContent=c.label||'';
+    g.appendChild(d);
+  });
+}
+
+function ecbCells(){
+  var p=parseGrid(document.getElementById('v_plain').value);
+  var plainCells=[], ecbCells=[];
+  for(var r=0;r<p.h;r++){
+    for(var col=0;col<p.w;col++){
+      var ch=p.lines[r][col]||' ';
+      var pc = ch===' ' ? PALETTE[0] : '#7dd3fc';
+      plainCells.push({color:pc});
+      // ECB: each block independently → same char maps to same ciphertext color
+      var ec = ch===' ' ? colorFor('BG_BLOCK') : colorFor('CH_'+ch);
+      ecbCells.push({color:ec, title:'block "'+ch+'"'});
+    }
+  }
+  return {p:p, plainCells:plainCells, ecbCells:ecbCells};
+}
+
+function runEcb(){
+  var d=ecbCells();
+  renderGrid('g_plain', d.plainCells, d.p.w);
+  renderGrid('g_ecb', d.ecbCells, d.p.w);
+  // count repeated blocks
+  var counts={}; d.ecbCells.forEach(function(c){counts[c.color]=(counts[c.color]||0)+1;});
+  var dups=0; Object.keys(counts).forEach(function(k){if(counts[k]>1)dups+=counts[k];});
+  document.getElementById('v_out').innerHTML=
+    'Cipher.getInstance("AES/ECB/PKCS5Padding")\n'+
+    L('총 블록','total blocks')+': '+d.ecbCells.length+'\n'+
+    L('반복(동일) 블록','repeated identical blocks')+': '+dups+'\n\n'+
+    '<span class="deny">⚠ '+L('동일 평문 블록 → 동일 암호문 색. 오른쪽 격자에 원본 윤곽이 그대로 보입니다(패턴 누출).',
+      'identical plaintext blocks → identical ciphertext color. The original outline is still visible on the right (pattern leak).')+'</span>';
+}
+
+function runGcm(){
+  var p=parseGrid(document.getElementById('v_plain').value);
+  var cells=[];
+  for(var r=0;r<p.h;r++){
+    for(var col=0;col<p.w;col++){
+      // GCM: position-dependent keystream → pseudo-random per cell, no repeats
+      var h=(r*7919+col*104729+ (p.lines[r].charCodeAt(col)||32)*31)>>>0;
+      cells.push({color:PALETTE[1+(h % (PALETTE.length-1))]});
+    }
+  }
+  renderGrid('g_gcm', cells, p.w);
+  document.getElementById('s_out').innerHTML=
+    'Cipher.getInstance("AES/GCM/NoPadding") + random IV\n'+
+    'IV: 7f3a9c1e... (12 bytes, unique per message)\n'+
+    'auth tag: e91d4b...  ('+L('변조 탐지','tamper detection')+')\n\n'+
+    '<span class="ok">🛡 '+L('블록 연쇄 + IV로 같은 평문 블록도 서로 다른 암호문. 격자에서 구조가 사라졌습니다.',
+      'chaining + IV make identical plaintext blocks produce different ciphertext. The structure is gone.')+'</span>';
+}
+
+// mock fixed-length hex digest
+function mockHex(seed, len){
+  var s=''; var x=0; for(var i=0;i<seed.length;i++){x=(x*131+seed.charCodeAt(i))>>>0;}
+  for(var j=0;j<len;j++){ x=(x*1103515245+12345)>>>0; s+= '0123456789abcdef'[(x>>>(j%24))&15]; }
+  return s;
+}
+function runHash(){
+  var pw=document.getElementById('v_pw').value;
+  document.getElementById('h_out').innerHTML=
+    'MD5("'+escapeHtml(pw)+'")  = '+mockHex('md5'+pw,32)+'\n'+
+    'SHA-1("'+escapeHtml(pw)+'") = '+mockHex('sha1'+pw,40)+'\n\n'+
+    L('GPU 해시 속도','GPU hash rate')+': MD5 ≈ 100,000,000,000 H/s\n'+
+    L('8자 비밀번호 전수 탐색','brute-force 8-char password')+': ≈ '+L('수 분~수 시간','minutes to hours')+'\n\n'+
+    '<span class="deny">⚠ '+L('MD5/SHA-1은 너무 빨라 유출 시 비밀번호 해시가 사실상 평문에 가깝습니다.',
+      'MD5/SHA-1 are so fast that a leaked password hash is effectively near-plaintext.')+'</span>';
+}
+function runCollision(){
+  // illustrative: two distinct inputs mapped to same mock digest
+  var same=mockHex('COLLIDE',32);
+  document.getElementById('h_out').innerHTML=
+    L('서로 다른 두 입력','two different inputs')+':\n'+
+    '  A = 4f25677...{benign contract}\n'+
+    '  B = 4f25677...{malicious contract}\n\n'+
+    'MD5(A) = '+same+'\n'+
+    'MD5(B) = '+same+'  '+L('← 동일!','← identical!')+'\n\n'+
+    '<span class="deny">💥 '+L('실제로 MD5/SHA-1은 선택적 접두사 충돌이 입증되어 서명·인증서 위조가 가능합니다.',
+      'real chosen-prefix collisions for MD5/SHA-1 are proven, enabling forged signatures/certificates.')+'</span>';
+}
+function runKdf(){
+  var pw=document.getElementById('v_pw').value;
+  document.getElementById('s_out').innerHTML=
+    'argon2id$v=19$m=65536,t=3,p=4$'+mockHex('salt'+pw,22)+'$'+mockHex('argon'+pw,43)+'\n\n'+
+    L('해시 속도','hash rate')+': Argon2id ≈ 5~20 H/s ('+L('의도적으로 느림','intentionally slow')+')\n'+
+    L('사용자별 salt','per-user salt')+': '+L('레인보우 테이블 무력화','defeats rainbow tables')+'\n\n'+
+    '<span class="ok">🛡 '+L('느린 메모리-하드 KDF + salt로 무차별 대입이 비현실적으로 비싸집니다.',
+      'a slow, memory-hard KDF + salt makes brute force prohibitively expensive.')+'</span>';
+}
+
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets();
+</script>
+</body>
+</html>

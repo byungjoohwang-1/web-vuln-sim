@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNS 이름에 의존한 보안 결정 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="DNS 이름에 의존한 보안 결정 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="DNS 이름에 의존한 보안 결정 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-dns-decision.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="역DNS(PTR) 호스트명이나 한 번 해석한 호스트명을 신뢰해 인가를 결정하는 취약점 모의 실습: PTR 스푸핑과 DNS 리바인딩(TOCTOU) 공격, 그리고 토큰/mTLS·IP 검증 방어 비교.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🌐 <span data-en="Security Decision Based on a DNS Name">DNS 이름에 의존한 보안 결정</span>
+        <span class="kisa">KISA A-7 · <span data-en="Trusting DNS for Authorization">DNS lookup 기반 보안 결정</span></span></h1>
+      <div class="sub" data-en="A server authorizes a client by trusting a hostname: it accepts the connection if the reverse-DNS (PTR) of the client IP ends in &quot;.trusted.example&quot;, or it resolves a hostname once and trusts that IP. Both are attacker-controllable.">
+        서버가 호스트명을 신뢰해 클라이언트를 인가합니다. 클라이언트 IP의 역DNS(PTR)가 <code>.trusted.example</code>로 끝나면 받아 주거나, 호스트명을 한 번 해석한 IP를 신뢰합니다. 둘 다 공격자가 조작할 수 있습니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Authorize by reverse-DNS suffix / resolve-once">역DNS 접미사 / 1회 해석으로 인가</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="Pick an attack. <b>PTR spoofing</b>: the attacker controls the PTR record for their own IP and points it at &quot;x.trusted.example&quot;. <b>DNS rebinding (TOCTOU)</b>: the hostname resolves to an allowed IP at <i>check</i> time, then re-resolves to an internal IP at <i>use</i> time.">
+        공격을 고르세요. <b>PTR 스푸핑</b>: 공격자가 자기 IP의 PTR 레코드를 <code>x.trusted.example</code>로 지정합니다. <b>DNS 리바인딩(TOCTOU)</b>: 검사 시점엔 허용 IP로 해석되다가, 사용 시점엔 내부 IP로 재해석됩니다.
+      </div>
+
+      <label data-en="Attack scenario">공격 시나리오</label>
+      <select id="v_attack" onchange="syncFields()">
+        <option value="ptr" data-en="Reverse-DNS (PTR) trust — attacker spoofs PTR">역DNS(PTR) 신뢰 — PTR 스푸핑</option>
+        <option value="rebind" data-en="DNS rebinding (TOCTOU) — check IP vs use IP">DNS 리바인딩(TOCTOU) — 검사 IP vs 사용 IP</option>
+      </select>
+
+      <div class="row">
+        <div class="col">
+          <label data-en="Connecting client IP">접속 클라이언트 IP</label>
+          <input id="v_ip" value="198.51.100.7">
+          <label id="lbl_ptr" data-en="PTR record the attacker set for that IP">그 IP에 공격자가 설정한 PTR 레코드</label>
+          <input id="v_ptr" value="vpn1.trusted.example">
+        </div>
+        <div class="col">
+          <label id="lbl_host" data-en="Hostname (rebinding)">호스트명 (리바인딩)</label>
+          <input id="v_host" value="report.attacker.example">
+          <label id="lbl_check" data-en="Resolves to AT CHECK time">검사 시점 해석 결과</label>
+          <input id="v_checkip" value="203.0.113.50 (allowed)">
+          <label id="lbl_use" data-en="Re-resolves to AT USE time">사용 시점 재해석 결과</label>
+          <input id="v_useip" value="169.254.169.254 (cloud metadata)">
+        </div>
+      </div>
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Request /admin/metrics">/admin/metrics 요청</span></button>
+        <button class="act ghost" onclick="document.getElementById('v_out').textContent='';">🧹 <span data-en="Clear">지우기</span></button>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Authenticate cryptographically; validate the real IP">암호학적 인증 + 실제 IP 검증</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The fix never trusts a name. It requires a bearer token / mTLS client cert, checks the <b>actual connecting IP</b> against a numeric allow-list, blocks internal/link-local ranges, and pins the resolved IP for the whole connection (no second lookup).">
+        수정본은 이름을 절대 신뢰하지 않습니다. Bearer 토큰/mTLS 클라이언트 인증서를 요구하고, <b>실제 접속 IP</b>를 숫자 허용목록으로 검사하며, 내부/링크로컬 대역을 차단하고, 해석된 IP를 연결 내내 핀(재해석 금지)합니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Run hardened authorization">강화 인가 실행</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// trust the reverse-DNS of the client IP
+String ptr = InetAddress
+    .getByName(clientIp)
+    .getCanonicalHostName();        // attacker-set PTR
+if (ptr.endsWith(".trusted.example")) {
+    allowAdmin();                   // ⚠ spoofable
+}
+
+// or: resolve once, trust forever (rebinding)
+InetAddress ip = InetAddress.getByName(host); // check
+if (allowList.contains(ip)) {
+    // ...later, library re-resolves host...
+    httpClient.get("https://" + host + "/x"); // use
+}                                   // ⚠ TOCTOU</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// 1) authenticate, don't trust a name
+verifyMtlsClientCert(conn);         // or bearer token
+// 2) validate the ACTUAL connecting IP (numeric)
+InetAddress ip = conn.getRemoteAddr();
+if (isInternalOrLinkLocal(ip)) deny();   // 169.254/16,
+                                         // 10/8, 127/8...
+if (!IP_ALLOWLIST.contains(ip)) deny();
+// 3) pin the resolved IP for the whole request
+InetAddress pinned = resolveOnce(host);
+if (isInternalOrLinkLocal(pinned)) deny();
+httpClient.connectTo(pinned, host); // no re-lookup</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Why it matters:</b> DNS (forward and especially reverse/PTR) is controlled by whoever owns the zone — often the attacker for their own IP — and resolution can change between check and use (rebinding), so a name is never proof of identity or location. This underpins SSRF to <code>169.254.169.254</code> cloud-metadata. <b>Defense keys:</b> authenticate with tokens/mTLS, not names · authorize on the real connecting IP (numeric allow-list) · block internal/link-local/loopback ranges · resolve once and pin the IP · re-validate after resolution."><b>왜 위험한가:</b> DNS(특히 역방향/PTR)는 존을 소유한 자—자기 IP에 대해서는 흔히 공격자—가 제어하고, 검사와 사용 사이에 해석이 바뀔 수 있어(리바인딩) 이름은 신원·위치의 증거가 못 됩니다. 이는 <code>169.254.169.254</code> 클라우드 메타데이터로 가는 SSRF의 토대입니다. <b>방어 핵심:</b> 이름이 아니라 토큰/mTLS로 인증 · 실제 접속 IP(숫자 허용목록)로 인가 · 내부/링크로컬/루프백 대역 차단 · 1회 해석 후 IP 핀 · 해석 후 재검증.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. All DNS lookups, IPs and the server are in-page mocks; no real DNS query, network connection or metadata endpoint is contacted.">
+      ⚠️ 교육용 시뮬레이션입니다. 모든 DNS 조회·IP·서버는 페이지 내부 mock이며 실제 DNS 질의·네트워크 연결·메타데이터 엔드포인트에 접근하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var ALLOW_SUFFIX='.trusted.example';
+var IP_ALLOWLIST=['203.0.113.50'];   // numeric allow-list (secure side)
+
+var PRESETS=[
+  {label:'PTR spoof → admin', a:'ptr', set:function(){g('v_ip').value='198.51.100.7';g('v_ptr').value='vpn1.trusted.example';}},
+  {label:'rebind → metadata', a:'rebind', set:function(){g('v_host').value='report.attacker.example';g('v_checkip').value='203.0.113.50 (allowed)';g('v_useip').value='169.254.169.254 (cloud metadata)';}},
+  {label:'rebind → internal 10/8', a:'rebind', set:function(){g('v_host').value='cdn.attacker.example';g('v_checkip').value='203.0.113.50 (allowed)';g('v_useip').value='10.0.0.5 (internal db)';}},
+  {label:'honest client', a:'ptr', set:function(){g('v_ip').value='203.0.113.50';g('v_ptr').value='ops.trusted.example';}}
+];
+function g(id){return document.getElementById(id);}
+function buildPresets(){
+  var box=g('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button'); b.textContent=p.label;
+    b.onclick=function(){g('v_attack').value=p.a; p.set(); syncFields();};
+    box.appendChild(b);
+  });
+}
+function syncFields(){
+  var rebind = g('v_attack').value==='rebind';
+  // toggle visibility of the two field groups
+  ['v_host','v_checkip','v_useip','lbl_host','lbl_check','lbl_use'].forEach(function(id){g(id).style.display=rebind?'':'none';});
+  ['v_ip','v_ptr','lbl_ptr'].forEach(function(id){g(id).style.display=rebind?'none':'';});
+  g('v_ip').previousElementSibling.style.display=rebind?'none':'';
+}
+
+function ipOf(s){ var m=(s||'').match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/); return m?m[1]:s.trim(); }
+function isInternal(ip){
+  return /^10\./.test(ip)||/^127\./.test(ip)||/^169\.254\./.test(ip)||/^192\.168\./.test(ip)||
+         /^172\.(1[6-9]|2\d|3[01])\./.test(ip);
+}
+
+function runVuln(){
+  var out=g('v_out'); var lines=[];
+  if(g('v_attack').value==='ptr'){
+    var ip=g('v_ip').value.trim(), ptr=g('v_ptr').value.trim();
+    lines.push('--- mock server: trust reverse-DNS ---');
+    lines.push('client connects from '+escapeHtml(ip));
+    lines.push('ptr = getCanonicalHostName('+escapeHtml(ip)+')  // attacker controls this zone');
+    lines.push('   → "'+escapeHtml(ptr)+'"');
+    var ok = ptr.endsWith(ALLOW_SUFFIX);
+    lines.push('if ptr.endsWith("'+ALLOW_SUFFIX+'") → '+ok);
+    lines.push('');
+    if(ok && IP_ALLOWLIST.indexOf(ip)<0){
+      lines.push('HTTP/1.1 200 OK  (admin granted)');
+      lines.push('🚨 '+L('공격자가 자기 IP의 PTR을 신뢰 접미사로 지정해 인가를 통과했습니다. IP는 허용목록에 없습니다.',
+                          'attacker pointed their own IP\'s PTR at the trusted suffix and passed authorization. The IP is NOT on any allow-list.'));
+    } else if(ok){
+      lines.push('HTTP/1.1 200 OK  (admin granted)');
+      lines.push(L('이 IP는 실제 신뢰 클라이언트라 통과했습니다 (정상 케이스).','this is a genuine trusted client (legitimate case).'));
+    } else {
+      lines.push('HTTP/1.1 403 Forbidden  (suffix mismatch)');
+    }
+  } else {
+    var host=g('v_host').value.trim();
+    var cip=ipOf(g('v_checkip').value), uip=ipOf(g('v_useip').value);
+    lines.push('--- mock server: resolve-once, trust forever ---');
+    lines.push('[t0 CHECK] resolve('+escapeHtml(host)+') → '+escapeHtml(cip));
+    var passCheck = IP_ALLOWLIST.indexOf(cip)>=0;
+    lines.push('allowList.contains('+escapeHtml(cip)+') → '+passCheck+'  '+(passCheck?'(passes)':'(blocked)'));
+    lines.push('');
+    if(passCheck){
+      lines.push('[t1 USE]   library re-resolves '+escapeHtml(host)+' → '+escapeHtml(uip));
+      lines.push('GET https://'+escapeHtml(host)+'/admin/metrics  →  connects to '+escapeHtml(uip));
+      lines.push('');
+      if(isInternal(uip)){
+        lines.push('🚨 '+L('TOCTOU: 검사 때는 허용 IP였지만 사용 때 내부 IP로 재해석되어, 서버가 내부 자원/메타데이터로 SSRF 요청을 보냅니다.',
+                            'TOCTOU: allowed IP at check time, but re-resolved to an INTERNAL IP at use time — the server now makes an SSRF request to internal/metadata resources.'));
+        if(/169\.254\.169\.254/.test(uip)) lines.push('   '+L('→ 클라우드 메타데이터에서 임시 자격증명 탈취 가능.','→ cloud metadata can leak temporary credentials.'));
+      } else {
+        lines.push(L('재해석 결과도 외부 IP라 이번엔 피해가 없습니다.','re-resolved to an external IP this time — no harm here.'));
+      }
+    } else {
+      lines.push('HTTP/1.1 403 Forbidden  (check failed)');
+    }
+  }
+  out.textContent=lines.join('\n');
+}
+
+function runSecure(){
+  var out=g('s_out'); var lines=[]; var rebind=g('v_attack').value==='rebind';
+  lines.push('--- hardened authorization (no DNS trust) ---');
+  lines.push('1) verifyMtlsClientCert(conn) / require bearer token');
+  if(rebind){
+    var host=g('v_host').value.trim();
+    var pinned=ipOf(g('v_useip').value);   // pin reflects the real backend
+    lines.push('2) resolveOnce("'+escapeHtml(host)+'") → pin '+escapeHtml(pinned));
+    lines.push('3) isInternalOrLinkLocal('+escapeHtml(pinned)+') → '+isInternal(pinned));
+    lines.push('');
+    if(isInternal(pinned)){
+      lines.push('DENY  (403)');
+      lines.push('🛡 '+L('해석된 IP가 내부/링크로컬 대역이라 차단. 해석을 1회로 고정(핀)해 리바인딩 재해석을 제거.',
+                          'resolved IP is in an internal/link-local range → blocked. The IP is pinned (resolved once), eliminating rebinding re-resolution.'));
+    } else {
+      lines.push('connectTo(pinned, host)  // '+L('재조회 없음','no second lookup'));
+      lines.push('🛡 '+L('외부 IP라 허용하되, 검사와 사용에 동일한 핀 IP를 사용해 TOCTOU를 제거했습니다.',
+                          'external IP allowed, but the same pinned IP is used for check and use — TOCTOU removed.'));
+    }
+  } else {
+    var ip=g('v_ip').value.trim();
+    lines.push('2) clientIp = conn.getRemoteAddr() → '+escapeHtml(ip)+'  (name ignored)');
+    lines.push('3) isInternalOrLinkLocal('+escapeHtml(ip)+') → '+isInternal(ip));
+    var inList = IP_ALLOWLIST.indexOf(ip)>=0;
+    lines.push('4) IP_ALLOWLIST.contains('+escapeHtml(ip)+') → '+inList);
+    lines.push('');
+    if(inList && !isInternal(ip)){
+      lines.push('HTTP/1.1 200 OK  (admin granted)');
+      lines.push('🛡 '+L('PTR 값은 무시되었습니다. 실제 접속 IP가 숫자 허용목록에 있을 때만 인가됩니다.',
+                          'the PTR value is ignored. Authorization depends only on the actual connecting IP being on the numeric allow-list.'));
+    } else {
+      lines.push('HTTP/1.1 403 Forbidden');
+      lines.push('🛡 '+L('PTR이 ".trusted.example"로 끝나도 접속 IP가 허용목록에 없으면 거부됩니다.',
+                          'even with a ".trusted.example" PTR, the request is denied because the connecting IP is not allow-listed.'));
+    }
+  }
+  out.textContent=lines.join('\n');
+}
+
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets(); syncFields();
+</script>
+</body>
+</html>

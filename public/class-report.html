@@ -288,27 +288,36 @@ async function renderReport() {
     document.getElementById('sumAvgPractical').textContent = `${avgPracRate}%`;
 
     // Compute toughest concepts by counting occurrences of wrongs
-    // (Simulate statistics based on accumulated wrong counts across members)
-    const toughestList = [
-      { name: '입력 데이터 검증 및 표현', wrongs: Math.round(totalWrong * 0.45) + 3, note: 'SQL Injection 및 XSS 방지 필터 오해' },
-      { name: '보안 기능', wrongs: Math.round(totalWrong * 0.3) + 2, note: '하드코드된 비밀번호 및 암호화 키 관리 약함' },
-      { name: '에러 처리', wrongs: Math.round(totalWrong * 0.15) + 1, note: '상세 에러 로그 유출로 인한 인프라 파악' }
-    ];
-
-    document.getElementById('sumToughestCat').textContent = toughestList[0].name;
+    // 유형별 취약 Top 3 — 멤버 스냅샷의 wrongByCat(실데이터) 집계. 조작/시뮬레이션 제거.
+    const catAgg = {};
+    members.forEach(v => {
+      const wc = v.wrongByCat || {};
+      Object.keys(wc).forEach(k => { catAgg[k] = (catAgg[k] || 0) + (+wc[k] || 0); });
+    });
+    const toughestList = Object.keys(catAgg)
+      .map(name => ({ name, wrongs: catAgg[name] }))
+      .filter(t => t.wrongs > 0)
+      .sort((a, b) => b.wrongs - a.wrongs)
+      .slice(0, 3);
 
     const toughestBody = document.getElementById('toughestTableBody');
     toughestBody.innerHTML = '';
-    toughestList.forEach((t, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${i + 1}위</strong></td>
-        <td><strong>${t.name}</strong></td>
-        <td>${t.wrongs}회 검출</td>
-        <td>${t.note}</td>
-      `;
-      toughestBody.appendChild(tr);
-    });
+    if (!toughestList.length) {
+      document.getElementById('sumToughestCat').textContent = '데이터 없음';
+      toughestBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">유형별 오답 데이터가 아직 집계되지 않았습니다. 학생들이 학습·오답 복습을 진행하면 자동 집계됩니다.</td></tr>';
+    } else {
+      document.getElementById('sumToughestCat').textContent = toughestList[0].name;
+      toughestList.forEach((t, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${i + 1}위</strong></td>
+          <td><strong>${t.name}</strong></td>
+          <td>${t.wrongs}회</td>
+          <td>${i === 0 ? '집중 복습 권장 — 개념카드 + SRS 오답 우선' : '취약 유형 — 추가 실습 권장'}</td>
+        `;
+        toughestBody.appendChild(tr);
+      });
+    }
 
   } catch (e) {
     console.error('Error rendering class report:', e);

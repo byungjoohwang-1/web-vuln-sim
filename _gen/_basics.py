@@ -24,6 +24,9 @@ BASICS = [
     {'lang':'Java','topic':'외부 입력과 DB 접근','desc':'웹에서 외부 입력은 HttpServletRequest로 들어온다. DB 질의는 Statement(문자열 결합) 대신 PreparedStatement(파라미터 바인딩)로 작성한다.',
      'code':'String id = request.getParameter("id");          // 외부 입력(신뢰 불가)\nPreparedStatement ps = conn.prepareStatement(\n    "SELECT * FROM users WHERE id = ?");\nps.setString(1, id);                              // 안전한 바인딩\nps.executeQuery();',
      'sec':'외부 입력을 문자열로 SQL에 결합하면 "SQL 삽입"이다. PreparedStatement + setXxx 바인딩 구조가 정탐/오탐 판별의 1순위 단서다.'},
+    {'lang':'Java','topic':'멀티스레드와 동기화','desc':'Java는 Thread 클래스나 Runnable 인터페이스로 멀티스레드를 구현한다. 여러 스레드가 공유 자원에 동시 접근 시 데이터 일관성이 깨질 수 있어 synchronized나 Lock을 사용한다.',
+     'code':'public synchronized void withdraw(long amt) {\n    if (balance >= amt) {\n        balance -= amt;\n    }\n}',
+     'sec':'동기화가 누락된 공유 자원 접근은 "경쟁조건(TOCTOU)" 약점을 유발한다. 검사(balance >= amt)와 사용(balance -= amt) 사이의 원자성이 확보되는지 진단하는 것이 핵심이다.'},
 
     # ===================== C =====================
     {'lang':'C','topic':'변수와 자료형','desc':'C는 하드웨어에 가까운 언어로 자료형 크기가 메모리에 직접 대응한다(int, char, long, float). 초기화하지 않은 변수는 쓰레기 값을 가진다.',
@@ -64,4 +67,7 @@ BASICS = [
     {'lang':'Python','topic':'직렬화와 암호','desc':'객체 저장/복원(직렬화)에 pickle은 위험하고 json이 안전하다. 비밀번호는 평문/단순해시 대신 솔트+적응형 해시로 저장한다.',
      'code':'import json, bcrypt\nobj = json.loads(data)                 # pickle 대신 json\nhashed = bcrypt.hashpw(pw.encode(),\n                       bcrypt.gensalt())  # 솔트+적응형',
      'sec':'pickle.loads(외부데이터) → "신뢰할 수 없는 역직렬화", 솔트 없는 단순 해시 → "솔트 없이 일방향 해시"·"취약한 암호화". json·bcrypt 사용이 안전 단서다.'},
+    {'lang':'Python','topic':'웹 요청과 SSRF 방어','desc':'Python에서는 requests 라이브러리로 외부 API를 호출한다. 외부에서 입력받은 URL을 검증 없이 호출하면 내부망이 유출될 수 있다.',
+     'code':'import requests\nfrom urllib.parse import urlparse\n\nurl = request.args.get("url")\nhost = urlparse(url).hostname\nif host in ALLOWED_HOSTS:    # 외부 입력 URL 검증\n    requests.get(url)',
+     'sec':'검증되지 않은 외부 URL 요청은 "서버사이드 요청 위조(SSRF)" 또는 "오픈 리다이렉트" 약점이다. 화이트리스트 기반 IP/도메인 필터링 적용 여부가 오탐 판별의 열쇠다.'},
 ]

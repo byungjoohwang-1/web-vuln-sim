@@ -222,29 +222,62 @@ header .wrap { display:flex; justify-content:space-between; align-items:center; 
 </main>
 
 <script src="js/academy-data.js"></script>
+<script src="js/academy-data-ext.js"></script>
 <script type="module" src="auth-widget.js"></script>
 <script>
 let activeCategory = 'all';
 
-const SIM_LINKS = {
-  'SQL 삽입': 'sim-sql.html',
-  '크로스사이트 스크립트': 'sim-xss.html',
-  '경로 조작': 'sim-path.html',
-  '운영체제 명령어 삽입': 'sim-cmd.html',
-  'LDAP 삽입': 'sim-ldap.html',
-  'XML 외부 개체': 'sim-xxe.html',
-  '파일 업로드': 'sim-upload.html',
-  'CSRF': 'sim-csrf.html',
-  'HTTP 응답분할': 'sim-split.html',
-  '하드코드된 비밀번호': 'sim-hardedcode.html',
-  '부적절한 인가': 'sim-idor.html',
-  '취약한 암호화 알고리즘': 'sim-unencrypted_data.html',
-  '중요정보 평문저장': 'sim-unencrypted_data.html',
-  '오류 메시지': 'sim-error-msg.html',
-  '널 포인터 역참조': 'sim-code.html',
-  '정수 오버플로우': 'sim-int-overflow.html',
-  '경쟁조건': 'sim-racecondition.html',
-  '캡슐화': 'sim-encap.html'
+// CWE 기준 매핑(약점명 띄어쓰기 차이로 인한 매칭 누락 방지). 49개 약점 전수 연결.
+const SIM_BY_CWE = {
+  'CWE-89': 'sim-sql.html',
+  'CWE-94': 'sim-code.html',
+  'CWE-22': 'sim-path.html',
+  'CWE-79': 'sim-xss.html',
+  'CWE-78': 'sim-cmd.html',
+  'CWE-434': 'sim-upload.html',
+  'CWE-601': 'sim-open-redirect.html',
+  'CWE-611': 'sim-xxe.html',
+  'CWE-91': 'sim-xml-injection.html',
+  'CWE-90': 'sim-ldap.html',
+  'CWE-352': 'sim-csrf.html',
+  'CWE-918': 'sim-ssrf.html',
+  'CWE-113': 'sim-split.html',
+  'CWE-190': 'sim-int-overflow.html',
+  'CWE-807': 'sim-untrusted-decision.html',
+  'CWE-120': 'sim-bufferoverflow.html',
+  'CWE-134': 'sim-formatstring.html',
+  'CWE-306': 'sim-no-auth.html',
+  'CWE-285': 'sim-idor.html',
+  'CWE-732': 'sim-wrong-permission.html',
+  'CWE-327': 'sim-weak-crypto.html',
+  'CWE-311': 'sim-unencrypted_data.html',
+  'CWE-798': 'sim-hardedcode.html',
+  'CWE-326': 'sim-weak-keylength.html',
+  'CWE-330': 'sim-weak-random.html',
+  'CWE-521': 'sim-weak-password.html',
+  'CWE-347': 'sim-signature-verify.html',
+  'CWE-295': 'sim-cert-validation.html',
+  'CWE-539': 'sim-cookiebyunjo.html',
+  'CWE-615': 'sim-source-comments.html',
+  'CWE-759': 'sim-nosalt-hash.html',
+  'CWE-494': 'sim-code-integrity.html',
+  'CWE-307': 'sim-brute.html',
+  'CWE-367': 'sim-racecondition.html',
+  'CWE-835': 'sim-infinite-loop.html',
+  'CWE-209': 'sim-error-msg.html',
+  'CWE-391': 'sim-error-missing.html',
+  'CWE-755': 'sim-improper-exception.html',
+  'CWE-476': 'sim-nullpointer.html',
+  'CWE-404': 'sim-resource-leak.html',
+  'CWE-416': 'sim-use-after-free.html',
+  'CWE-457': 'sim-uninitialized.html',
+  'CWE-502': 'sim-deserialization.html',
+  'CWE-488': 'sim-session_hijacking.html',
+  'CWE-489': 'sim-debug-code.html',
+  'CWE-495': 'sim-private-array-return.html',
+  'CWE-496': 'sim-public-to-private.html',
+  'CWE-350': 'sim-dns-decision.html',
+  'CWE-676': 'sim-vulnerable-api.html'
 };
 
 function getData() {
@@ -261,8 +294,14 @@ function getCustomPracticalQuestions() {
 }
 
 function getSimForConcept(concept) {
-  const hit = Object.entries(SIM_LINKS).find(([key]) => concept.name.includes(key) || key.includes(concept.name));
-  return hit ? hit[1] : '';
+  // CWE 우선 매칭(정확). CWE 표기 차이를 흡수하기 위해 숫자만 비교하는 폴백 포함.
+  if (concept.cwe && SIM_BY_CWE[concept.cwe]) return SIM_BY_CWE[concept.cwe];
+  const num = (concept.cwe || '').match(/\d+/);
+  if (num) {
+    const key = 'CWE-' + num[0];
+    if (SIM_BY_CWE[key]) return SIM_BY_CWE[key];
+  }
+  return '';
 }
 
 function buildRows() {

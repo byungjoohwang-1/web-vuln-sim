@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부적절한 인증서 유효성 검증(MITM) 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="부적절한 인증서 유효성 검증(MITM) 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="부적절한 인증서 유효성 검증(MITM) 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-cert-validation.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="부적절한 인증서 유효성 검증(Improper Certificate Validation) 모의 실습: trust-all TrustManager·hostname 검증 비활성으로 만료/자가서명/호스트불일치 인증서를 수용해 MITM에 노출되는 과정과 정상 검증+핀닝 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .pipe{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin-top:10px}
+    .node{flex:1;min-width:120px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px;text-align:center;font-family:var(--mono);font-size:12px}
+    .node.cli{border-color:#38bdf8}.node.mitm{border-color:#ef4444}.node.srv{border-color:#22c55e}
+    .arrow{display:flex;align-items:center;color:#64748b;font-family:var(--mono)}
+    .ok{color:#86efac}.fail{color:#fca5a5}
+    .cert{font-family:var(--mono);font-size:12px;background:#05080f;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🔐 <span data-en="Improper Certificate Validation (MITM)">부적절한 인증서 유효성 검증 (MITM)</span>
+        <span class="kisa">KISA A-2 · <span data-en="Improper Certificate Validation">부적절한 인증서 유효성 검증</span></span></h1>
+      <div class="sub" data-en="A TLS client connects to api.bank.example. If it skips certificate validation (trust-all TrustManager, disabled hostname check, verify=False), a man-in-the-middle can present a bogus cert, terminate TLS, and read &quot;encrypted&quot; traffic in clear.">
+        TLS 클라이언트가 api.bank.example에 접속합니다. 인증서 검증을 생략하면(trust-all TrustManager, hostname 검증 비활성, verify=False) 중간자가 가짜 인증서를 제시해 TLS를 가로채고 "암호화된" 트래픽을 평문으로 읽을 수 있습니다.
+      </div>
+    </div>
+
+    <!-- 인증서 선택 -->
+    <div class="card">
+      <h2>0 · <span data-en="Server (MITM) presents this certificate">서버(중간자)가 제시하는 인증서</span></h2>
+      <label data-en="Pick the certificate defect the MITM presents">중간자가 제시할 인증서 결함 선택</label>
+      <div class="preset" id="presets"></div>
+      <label><input type="checkbox" id="mitm_on" checked style="width:auto;display:inline;margin-right:6px"> <span data-en="MITM proxy active on the network path">네트워크 경로에 MITM 프록시 활성</span></label>
+      <div class="cert" id="cert_view"></div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable client: trust-all / no hostname check">취약한 클라이언트: 전체 신뢰 / 호스트 검증 없음</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="This client installs a TrustManager that accepts every chain and disables hostname verification. It will complete the handshake with <b>any</b> certificate — including the MITM's forged one.">
+        이 클라이언트는 모든 체인을 수용하는 TrustManager를 설치하고 hostname 검증을 끕니다. <b>어떤</b> 인증서로도 — 중간자의 위조 인증서까지 — 핸드셰이크를 완료합니다.
+      </div>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Connect (vulnerable)">접속 (취약)</span></button>
+      </div>
+      <div class="pipe">
+        <div class="node cli">📱<br><span data-en="App">앱</span></div>
+        <div class="arrow">──▶</div>
+        <div class="node mitm" id="v_mitm">🕵️ MITM</div>
+        <div class="arrow">──▶</div>
+        <div class="node srv">🏦 api.bank</div>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Secure client: full validation + pinning">안전한 클라이언트: 완전 검증 + 핀닝</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The secure client validates the chain to a trusted CA, checks expiry, verifies the hostname matches the SAN, and (optionally) pins the expected public key. Any defect aborts the handshake with a specific error.">
+        안전한 클라이언트는 신뢰 CA까지 체인을 검증하고, 만료를 확인하며, hostname이 SAN과 일치하는지 검사하고, (선택적으로) 기대 공개키를 핀닝합니다. 결함이 있으면 구체적 오류로 핸드셰이크를 중단합니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Connect (secure)">접속 (안전)</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// Java — 모든 인증서 신뢰 (재앙)
+TrustManager[] trustAll = { new X509TrustManager(){
+  public void checkServerTrusted(X509Certificate[] c, String a){}
+  public void checkClientTrusted(X509Certificate[] c, String a){}
+  public X509Certificate[] getAcceptedIssuers(){return null;}
+}};
+ctx.init(null, trustAll, new SecureRandom());
+conn.setHostnameVerifier((host, sess) -> true); // 호스트 검증 무력화
+
+# Python — 검증 끄기
+requests.get(url, verify=False)   # 만료/자가서명/불일치 모두 통과</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>// Java — 기본 검증 + 호스트명 + 핀닝
+// 기본 TrustManager(시스템 CA) 사용, override 금지
+SSLContext ctx = SSLContext.getDefault();
+HttpsURLConnection.setDefaultHostnameVerifier(
+    HttpsURLConnection.getDefaultHostnameVerifier());
+// OkHttp 공개키 핀닝
+CertificatePinner pinner = new CertificatePinner.Builder()
+  .add("api.bank.example", "sha256/AAAA...expectedKey")
+  .build();
+
+# Python — 기본 검증(verify 생략 = True)
+requests.get(url)                  # CA체인+만료+호스트 검증</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> never disable validation in production; verify chain → expiry → hostname(SAN); keep the system trust store; for high-value APIs pin the server public key; fail closed with a clear error rather than silently continuing."><b>방어 핵심:</b> 운영에서 검증 비활성 금지 · 체인 → 만료 → hostname(SAN) 순서로 검증 · 시스템 신뢰 저장소 사용 · 고가치 API는 서버 공개키 핀닝 · 조용히 진행하지 말고 명확한 오류로 fail-closed.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. The TLS handshake, certificates, and MITM are an in-page mock; no real network connection or cryptography is performed.">
+      ⚠️ 교육용 시뮬레이션입니다. TLS 핸드셰이크·인증서·MITM은 페이지 내부 mock이며 실제 네트워크 연결이나 암호 연산은 수행하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var EXPECTED_HOST='api.bank.example';
+var EXPECTED_PIN='sha256/AAAAexpectedKey';
+
+// 인증서 결함 프리셋
+var CERTS={
+  valid:    {key:'valid',   subject:'CN=api.bank.example', issuer:"CN=DigiTrust CA", trusted:true,  expired:false, host:'api.bank.example', selfsigned:false, pin:'sha256/AAAAexpectedKey'},
+  expired:  {key:'expired', subject:'CN=api.bank.example', issuer:"CN=DigiTrust CA", trusted:true,  expired:true,  host:'api.bank.example', selfsigned:false, pin:'sha256/AAAAexpectedKey'},
+  selfsign: {key:'selfsign',subject:'CN=api.bank.example', issuer:'CN=api.bank.example', trusted:false, expired:false, host:'api.bank.example', selfsigned:true,  pin:'sha256/EVILattackerKey'},
+  hostmis:  {key:'hostmis', subject:'CN=evil-proxy.example', issuer:"CN=DigiTrust CA", trusted:true,  expired:false, host:'evil-proxy.example', selfsigned:false, pin:'sha256/EVILattackerKey'},
+  untrust:  {key:'untrust', subject:'CN=api.bank.example', issuer:'CN=Sketchy Reseller CA', trusted:false, expired:false, host:'api.bank.example', selfsigned:false, pin:'sha256/EVILattackerKey'}
+};
+var current='expired';
+
+var PRESETS=[
+  {label:L('만료됨','Expired'), k:'expired'},
+  {label:L('자가서명','Self-signed'), k:'selfsign'},
+  {label:L('호스트 불일치','Hostname mismatch'), k:'hostmis'},
+  {label:L('미신뢰 CA','Untrusted CA'), k:'untrust'},
+  {label:L('정상 인증서','Valid cert'), k:'valid'}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button'); b.textContent=p.label;
+    b.onclick=function(){ current=p.k; renderCert(); };
+    box.appendChild(b);
+  });
+}
+function renderCert(){
+  var c=CERTS[current];
+  var mitm=document.getElementById('mitm_on').checked;
+  document.getElementById('cert_view').innerHTML=
+    L('— 제시된 X.509 인증서 —','— presented X.509 certificate —')+'\n'+
+    'Subject : '+escapeHtml(c.subject)+'\n'+
+    'Issuer  : '+escapeHtml(c.issuer)+'\n'+
+    'SAN     : '+escapeHtml(c.host)+'\n'+
+    'NotAfter: '+(c.expired?L('2021-01-01 (만료)','2021-01-01 (EXPIRED)'):'2027-12-31')+'\n'+
+    'Pubkey  : '+escapeHtml(c.pin)+'\n'+
+    L('연결 경로','path')+' : '+(mitm?L('앱 → 🕵️MITM(가짜 인증서) → 은행','app → 🕵️MITM(forged cert) → bank'):L('앱 → 은행(직접)','app → bank (direct)'));
+}
+
+function runVuln(){
+  var c=CERTS[current];
+  var mitm=document.getElementById('mitm_on').checked;
+  document.getElementById('v_mitm').style.borderColor= mitm?'#ef4444':'#334155';
+  var lines=[];
+  lines.push('TLS ClientHello → '+EXPECTED_HOST);
+  lines.push(L('서버 인증서 수신: ','received cert: ')+c.subject);
+  lines.push('checkServerTrusted(): '+L('빈 구현 → 항상 통과','empty impl → always pass'));
+  lines.push('verify(hostname): true  // '+L('무력화됨','disabled'));
+  lines.push('→ '+L('핸드셰이크 완료 (TLS established)','handshake COMPLETE (TLS established)'));
+  lines.push('');
+  if(mitm){
+    lines.push('<span class="fail">💥 '+L('MITM이 세션을 종단했습니다. 앱은 MITM과 TLS를 맺고, MITM은 은행과 별도 TLS를 맺습니다.','MITM terminated the session. App↔MITM TLS, MITM↔bank TLS.')+'</span>');
+    lines.push('<span class="fail">'+L('가로챈 평문:','intercepted plaintext:')+'</span>');
+    lines.push('  POST /transfer  {to:"attacker", amount:"50000", pin:"4821"}');
+    lines.push('  Authorization: Bearer eyJ... ('+L('세션 토큰 탈취','session token stolen')+')');
+  }else{
+    lines.push('<span class="fail">⚠ '+L('이번엔 MITM이 없지만, 클라이언트는 어떤 가짜 인증서든 수용하도록 설정되어 언제든 공격에 노출됩니다.','No MITM this time, but the client accepts any forged cert and is exposed whenever one appears.')+'</span>');
+  }
+  document.getElementById('v_out').innerHTML=lines.join('\n');
+}
+
+function runSecure(){
+  var c=CERTS[current];
+  var mitm=document.getElementById('mitm_on').checked;
+  var lines=['TLS ClientHello → '+EXPECTED_HOST, L('서버 인증서 수신: ','received cert: ')+c.subject, ''];
+  var fail=null;
+  // 1) 체인 신뢰
+  if(!c.trusted) fail=c.selfsigned ? L('체인 검증 실패: 자가서명 인증서(신뢰 CA 없음)','chain validation failed: self-signed (no trusted CA)') : L('체인 검증 실패: 미신뢰 발급자','chain validation failed: untrusted issuer');
+  // 2) 만료
+  if(!fail && c.expired) fail=L('인증서 만료됨 (NotAfter 경과)','certificate expired (past NotAfter)');
+  // 3) 호스트
+  if(!fail && c.host!==EXPECTED_HOST) fail=L('호스트명 불일치: SAN='+c.host+' ≠ '+EXPECTED_HOST,'hostname mismatch: SAN='+c.host+' ≠ '+EXPECTED_HOST);
+  // 4) 핀닝
+  if(!fail && c.pin!==EXPECTED_PIN) fail=L('공개키 핀 불일치 (예상치 못한 키)','public-key pin mismatch (unexpected key)');
+
+  lines.push('checkServerTrusted(): '+L('시스템 CA로 체인 검증','validate chain against system CAs'));
+  lines.push('verifyHostname(SAN, "'+EXPECTED_HOST+'")');
+  lines.push('checkPin(expected)');
+  lines.push('');
+  if(fail){
+    lines.push('<span class="ok">🛡 SSLHandshakeException: '+escapeHtml(fail)+'</span>');
+    lines.push('<span class="ok">→ '+L('연결 중단 (fail-closed). MITM/위조 인증서 차단.','connection aborted (fail-closed). MITM / forged cert blocked.')+'</span>');
+  }else{
+    lines.push('<span class="ok">✅ '+L('정상 인증서 — 검증 통과, 안전한 채널 수립.','valid certificate — verified, secure channel established.')+'</span>');
+    if(mitm) lines.push('<span class="ok">'+L('(MITM이 있어도 가짜 인증서는 이 단계 전에 거부됩니다.)','(Even with a MITM, a forged cert is rejected before this point.)')+'</span>');
+  }
+  document.getElementById('s_out').innerHTML=lines.join('\n');
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('mitm_on').addEventListener('change', renderCert);
+});
+window.renderDynamic=function(){ buildPresets(); renderCert(); };
+buildPresets();
+renderCert();
+</script>
+</body>
+</html>

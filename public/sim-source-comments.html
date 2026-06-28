@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>주석문 내 시스템 주요정보 노출 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="주석문 내 시스템 주요정보 노출 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="주석문 내 시스템 주요정보 노출 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-source-comments.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="주석문 안에 포함된 시스템 주요 정보(Sensitive Info in Comments) 모의 실습: 클라이언트로 전송된 HTML/JS 주석에 남은 DB 자격증명·API 키·내부 관리 URL·개발자 TODO를 View Source로 추출하는 과정과 주석 제거·서버측 비밀관리 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:380px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .browser{background:#0f172a;border:1px solid #334155;border-radius:10px;overflow:hidden;margin-top:10px}
+    .browser .bar{display:flex;align-items:center;gap:8px;background:#1e293b;padding:7px 10px}
+    .browser .dot{width:10px;height:10px;border-radius:50%}
+    .browser .url{flex:1;background:#0b1220;border-radius:6px;padding:5px 10px;font-family:var(--mono);font-size:12px;color:#cbd5e1}
+    .browser .page{padding:16px;min-height:90px;font-size:13px;background:#fff;color:#1e293b}
+    .browser .page h3{margin-bottom:8px}.browser .page input{width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px;margin:4px 0;font-family:var(--mono)}
+    .leak{background:#3b1418;color:#fca5a5;border-radius:4px;padding:0 3px}
+    .cmt{color:#facc15}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>📝 <span data-en="Sensitive Info in Comments">주석문 내 시스템 주요정보 노출</span>
+        <span class="kisa">KISA A-2 · <span data-en="Sensitive Info in Comments">주석문 안에 포함된 주요정보</span></span></h1>
+      <div class="sub" data-en="The rendered page looks clean, but its HTML/JS source — fully visible to any visitor via &quot;View Source&quot; — contains comments left by developers leaking DB credentials, an API key, internal admin URLs, and a &quot;disable auth for testing&quot; TODO. Comments are NOT a secret store.">
+        화면에 렌더된 페이지는 깔끔해 보이지만, 누구나 "소스 보기"로 볼 수 있는 HTML/JS 소스에는 개발자가 남긴 주석이 DB 자격증명·API 키·내부 관리 URL·"테스트용 인증 비활성" TODO를 노출합니다. 주석은 비밀 저장소가 아닙니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Customer page (looks fine)">고객 페이지 (겉보기엔 정상)</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="This is what a victim sees. Now press <b>View Source</b> — the same thing any attacker does with Ctrl+U — to read the raw bytes the server actually sent.">
+        피해자가 보는 화면입니다. 이제 <b>소스 보기</b>를 누르세요 — 공격자가 Ctrl+U로 하는 것과 동일하며, 서버가 실제로 보낸 원시 바이트를 읽습니다.
+      </div>
+      <div class="browser">
+        <div class="bar"><span class="dot" style="background:#ef4444"></span><span class="dot" style="background:#f59e0b"></span><span class="dot" style="background:#22c55e"></span><span class="url">https://shop.example/account</span></div>
+        <div class="page">
+          <h3>My Account</h3>
+          <label style="color:#475569;font-size:12px">Email</label>
+          <input value="alice@shop.example" readonly>
+          <label style="color:#475569;font-size:12px">Password</label>
+          <input value="••••••••" type="password" readonly>
+          <button style="margin-top:8px;background:#0ea5e9;color:#fff;border:none;border-radius:6px;padding:8px 14px">Sign in</button>
+        </div>
+      </div>
+      <div class="btns">
+        <button class="act run" onclick="viewSource()">🔍 <span data-en="View Source (Ctrl+U)">소스 보기 (Ctrl+U)</span></button>
+        <button class="act ghost" onclick="grepSecrets()">🔑 <span data-en="Auto-extract secrets">비밀 자동 추출</span></button>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Hardened build: comments stripped, secrets server-side">강화된 빌드: 주석 제거, 비밀은 서버측</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="A production build strips all comments/dev TODOs and minifies the output. Secrets live only in server-side config or a secret manager and are never sent to the client. The same &quot;extract secrets&quot; scan now finds nothing.">
+        운영 빌드는 모든 주석/개발 TODO를 제거하고 출력을 minify합니다. 비밀은 서버측 설정이나 시크릿 매니저에만 존재하고 클라이언트로 전송되지 않습니다. 동일한 "비밀 추출" 스캔이 이제 아무것도 찾지 못합니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="viewClean()">🔍 <span data-en="View Source (production)">소스 보기 (운영)</span></button>
+        <button class="act ghost" onclick="grepClean()">🔑 <span data-en="Re-run secret scan">비밀 스캔 재실행</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure source">취약 vs 안전 소스</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>&lt;!-- TODO: remove before prod --&gt;
+&lt;!-- DB: mysql://root:Pa$$w0rd@10.0.0.5:3306/shop --&gt;
+&lt;!-- admin panel: /internal/admin?debug=1 --&gt;
+&lt;script&gt;
+  // FIXME: temp key, rotate later
+  const STRIPE_KEY = "sk_live_51HxQ...REDACTED";
+  // if(env==="test") skipAuth();  // 인증 우회 디버그
+&lt;/script&gt;</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>&lt;!-- (build step removed all comments) --&gt;
+&lt;script&gt;
+  // 비밀 없음. 서버 환경변수로만 사용
+  // 결제는 서버측 endpoint가 STRIPE_KEY 보관
+  fetch("/api/checkout", {method:"POST"});
+&lt;/script&gt;
+# 서버: .env / Secret Manager
+STRIPE_KEY=...        # 클라이언트로 절대 전송 안 함</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> strip comments &amp; sourcemaps in the production build; never put credentials/keys/internal URLs in client-delivered code; store secrets in env/secret manager; keep secrets server-side and call them via authenticated APIs; scan source with secret-detection (gitleaks/trufflehog) in CI."><b>방어 핵심:</b> 운영 빌드에서 주석·소스맵 제거 · 자격증명/키/내부 URL을 클라이언트 코드에 두지 말 것 · 비밀은 env/시크릿 매니저 보관 · 비밀은 서버측에 두고 인증된 API로 호출 · CI에서 secret-detection(gitleaks/trufflehog) 스캔.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. All &quot;secrets&quot; are fictional placeholders rendered in an in-page mock; no real source, keys, or systems are involved.">
+      ⚠️ 교육용 시뮬레이션입니다. 모든 "비밀"은 가상의 더미 값이며 페이지 내부 mock에서만 렌더됩니다. 실제 소스·키·시스템은 사용하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+// mock 서버가 클라이언트로 보낸 원시 소스 (취약)
+var RAW_LINES=[
+  '<!DOCTYPE html>',
+  '<html lang="en"><head>',
+  '  <meta charset="utf-8">',
+  '  <title>My Account - shop.example</title>',
+  '  <!-- TODO: remove debug comments before production deploy -->',
+  '  <!-- DB_DSN: mysql://root:Pa$$w0rd!@10.0.0.5:3306/shop_prod -->',
+  '  <!-- internal admin: https://shop.example/internal/admin?debug=1&bypass=1 -->',
+  '</head><body>',
+  '  <h1>My Account</h1>',
+  '  <form id="login" action="/login" method="post">',
+  '    <input name="email" value="alice@shop.example">',
+  '    <input name="password" type="password">',
+  '    <button>Sign in</button>',
+  '  </form>',
+  '  <script>',
+  '    // FIXME: temporary live key, rotate after launch',
+  '    const STRIPE_KEY = "sk_live_51HxQpL2eZvKf9aBcDeFgHiJk";',
+  '    const AWS_ACCESS = "AKIAIOSFODNN7EXAMPLE";',
+  '    // backdoor for QA: if (location.search.includes("test")) skipAuthCheck();',
+  '    // internal API base: http://10.0.0.9:8080/v1/admin',
+  '    initAccountPage();',
+  '  <\/script>',
+  '</body></html>'
+];
+
+// 비밀 추출 규칙 (mock secret scanner)
+var RULES=[
+  {re:/sk_live_[A-Za-z0-9]+/g,         name:L('Stripe 라이브 결제 키','Stripe live secret key')},
+  {re:/AKIA[A-Z0-9]{16}/g,             name:L('AWS Access Key ID','AWS Access Key ID')},
+  {re:/mysql:\/\/[^ ]+/g,              name:L('DB 접속 문자열(자격증명 포함)','DB connection string (with creds)')},
+  {re:/\/internal\/admin[^ ]*/g,       name:L('내부 관리자 패널 URL','internal admin panel URL')},
+  {re:/http:\/\/10\.0\.0\.\d+[^ ]*/g,  name:L('내부망 엔드포인트','internal network endpoint')},
+  {re:/skipAuthCheck|bypass=1|debug=1/g,name:L('인증 우회/디버그 백도어','auth-bypass / debug backdoor')}
+];
+
+function highlightSource(){
+  return RAW_LINES.map(function(l){
+    var e=escapeHtml(l);
+    // 주석 라인 강조
+    if(/^\s*&lt;!--/.test(e) || /^\s*\/\//.test(e.replace(/^\s*/,''))){
+      // 비밀 패턴은 leak 강조
+      RULES.forEach(function(r){ e=e.replace(r.re,function(m){return '<span class="leak">'+m+'</span>';}); });
+      return '<span class="cmt">'+e+'</span>';
+    }
+    RULES.forEach(function(r){ e=e.replace(r.re,function(m){return '<span class="leak">'+m+'</span>';}); });
+    return e;
+  }).join('\n');
+}
+
+function viewSource(){
+  document.getElementById('v_out').innerHTML=
+    L('view-source:https://shop.example/account  ('+RAW_LINES.length+' lines)','view-source:https://shop.example/account  ('+RAW_LINES.length+' lines)')+'\n'+
+    '────────────────────────────────────────\n'+
+    highlightSource();
+}
+
+function grepSecrets(){
+  var text=RAW_LINES.join('\n');
+  var found=[];
+  RULES.forEach(function(r){
+    var m=text.match(r.re);
+    if(m) m.forEach(function(hit){ found.push({name:r.name, hit:hit}); });
+  });
+  var out='$ secret-scan view-source(/account)\n────────────────────────\n';
+  if(found.length){
+    out+='<span class="leak">'+found.length+' '+L('건의 비밀 발견 💥','secrets found 💥')+'</span>\n\n';
+    found.forEach(function(f,i){ out+=(i+1)+'. ['+f.name+']\n   → '+escapeHtml(f.hit)+'\n'; });
+    out+='\n'+L('공격자는 이 정보로 DB 직접 접속·결제 키 도용·내부 관리자 페이지 접근이 가능합니다.','An attacker can hit the DB directly, abuse the payment key, and reach the internal admin panel.');
+  }else out+=L('비밀 없음','no secrets');
+  document.getElementById('v_out').innerHTML=out;
+}
+
+// 운영 빌드: 주석/비밀 제거 + minify
+var CLEAN='<!doctype html><html lang=en><head><meta charset=utf-8><title>My Account - shop.example</title></head><body><h1>My Account</h1><form action=/login method=post><input name=email><input name=password type=password><button>Sign in</button></form><script>initAccountPage();fetch("/api/checkout",{method:"POST"})<\/script></body></html>';
+
+function viewClean(){
+  document.getElementById('s_out').innerHTML=
+    L('view-source:https://shop.example/account  ('+L('운영 빌드, minified','production build, minified')+')','view-source:https://shop.example/account  (production build, minified)')+'\n'+
+    '────────────────────────────────────────\n'+
+    escapeHtml(CLEAN)+'\n\n'+
+    '<span class="ok-good" style="color:#86efac">'+L('주석·DB 문자열·키·내부 URL·백도어 모두 제거됨.','comments, DB string, keys, internal URLs, backdoor all removed.')+'</span>';
+}
+
+function grepClean(){
+  var found=0;
+  RULES.forEach(function(r){ var m=CLEAN.match(r.re); if(m) found+=m.length; });
+  document.getElementById('s_out').innerHTML=
+    '$ secret-scan view-source(/account)  // production\n────────────────────────\n'+
+    (found===0
+      ? '<span style="color:#86efac">🛡 0 '+L('비밀 발견 — 클라이언트에 노출된 비밀 없음. (비밀은 서버 .env/Secret Manager에만 존재)','secrets found — nothing exposed to the client. (secrets live only in server .env / Secret Manager)')+'</span>'
+      : '<span class="leak">'+found+' '+L('건 발견','found')+'</span>');
+}
+
+window.renderDynamic=function(){};
+</script>
+</body>
+</html>

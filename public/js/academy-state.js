@@ -39,14 +39,60 @@ const AcademyState = {
 
   setProgress(progress) {
     localStorage.setItem(STATE_KEYS.PROGRESS, JSON.stringify(progress));
-    // Publish XP and Level to leaderboard if sdaBoard is available
+    // 통합 XP/레벨/스트릭(아레나 + 아카데미)을 리더보드에 발행. streak 하드코딩 제거.
     if (window.sdaBoard && window.sdaBoard.getUser()) {
+      const a = this._readAcademy();
+      const xp = (progress.xp || 0) + a.xp;
       window.sdaBoard.publish({
-        xp: progress.xp || 0,
-        level: progress.level || 1,
-        streak: 1
+        xp: xp,
+        level: Math.floor(Math.sqrt(xp / 100)) + 1,
+        streak: a.streak || 1
       }).catch(err => console.error('Leaderboard sync error:', err));
     }
+  },
+
+  // ── 아카데미(SPA) 진도 브리지 ──────────────────────────────────────────
+  // secure-dev-academy.html 은 sda_learned / sda_gam / sda_wrong / sda_wrongStats 등
+  // 별도 키를 쓴다(아레나의 sda_student_progress 와 스키마가 다름). 아레나 화면(대시보드·
+  // 클래스·미션)이 아카데미 학습까지 함께 반영하도록 읽기 전용으로 병합한다.
+  _readAcademy() {
+    const j = (k, d) => { try { const v = JSON.parse(localStorage.getItem('sda_' + k)); return (v === null || v === undefined) ? d : v; } catch (e) { return d; } };
+    const learned = j('learned', {});
+    const gam = j('gam', {});
+    const wrong = j('wrong', []);
+    const wrongStats = j('wrongStats', {});
+    return {
+      concepts: (learned && typeof learned === 'object') ? Object.keys(learned).length : 0,
+      xp: (gam && +gam.xp) || 0,
+      streak: (gam && +gam.streak) || 0,
+      bestStreak: (gam && +gam.bestStreak) || 0,
+      wrongDue: Array.isArray(wrong) ? wrong.filter(w => (w.due || 0) <= Date.now()).length : 0,
+      wrongTotal: Array.isArray(wrong) ? wrong.length : 0,
+      wrongStats: (wrongStats && typeof wrongStats === 'object') ? wrongStats : {}
+    };
+  },
+
+  // 아레나 + 아카데미를 합친 표시용 통계(쓰기 없음 → 상태 오염/중복합산 방지).
+  getUnifiedStats() {
+    const p = this.getProgress();
+    const notes = this.getWrongNotes();
+    const a = this._readAcademy();
+    const arenaConcepts = Object.keys(p.completedConcepts || {}).length;
+    const arenaPractical = Object.keys(p.completedPractical || {}).length;
+    const arenaWrong = Object.values(notes).filter(n => !n.mastered).length;
+    const xp = (p.xp || 0) + a.xp; // 두 앱은 서로 다른 행위에 XP를 주므로 합산이 정확
+    const byCat = {};
+    Object.values(notes).forEach(n => { if (!n.mastered && n.category) byCat[n.category] = (byCat[n.category] || 0) + 1; });
+    Object.keys(a.wrongStats).forEach(k => { byCat[k] = (byCat[k] || 0) + (+a.wrongStats[k] || 0); });
+    return {
+      concepts: Math.max(arenaConcepts, a.concepts),
+      practical: arenaPractical, // 아카데미는 문항별 추적을 안 하므로 아레나 기준 유지
+      xp: xp,
+      level: Math.floor(Math.sqrt(xp / 100)) + 1,
+      streak: a.streak || 0,
+      wrong: arenaWrong + a.wrongTotal,
+      wrongByCat: byCat
+    };
   },
 
   getWrongNotes() {

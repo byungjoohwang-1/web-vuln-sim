@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>해제된 자원 사용(Use-After-Free) 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="해제된 자원 사용(Use-After-Free) 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="해제된 자원 사용(Use-After-Free) 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-use-after-free.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="Use-After-Free(UAF) 취약점 모의 실습: 해제된 힙 객체의 댕글링 포인터를 공격자가 재할당으로 가로채 vtable/함수포인터를 탈취하는 과정을 힙 셀로 시각화하고, p=NULL·스마트 포인터 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    /* heap visual */
+    .heaprow{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
+    .ptrcol{min-width:150px}
+    .ptr{font-family:var(--mono);font-size:12px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 10px;margin-bottom:8px}
+    .ptr .lbl{color:#7dd3fc}.ptr .val{color:#fbbf24}
+    .ptr.dangling{border-color:#7f1d1d;background:#3b1418}.ptr.dangling .val{color:#fca5a5}
+    .ptr.nulled{border-color:#14532d;background:#0f2a18}.ptr.nulled .val{color:#86efac}
+    .heap{flex:1;min-width:260px}
+    .heap .ttl{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px}
+    .cell{font-family:var(--mono);font-size:12px;border:1px solid #334155;border-radius:8px;padding:8px 10px;margin-bottom:6px;background:#0f172a;position:relative}
+    .cell .addr{color:#64748b;font-size:10.5px}
+    .cell .ct{margin-top:3px}
+    .cell.alloc{border-color:#0c4a6e}.cell.alloc .ct{color:#7dd3fc}
+    .cell.freed{border-color:#475569;background:#0b1220}.cell.freed .ct{color:#64748b}
+    .cell.evil{border-color:#7f1d1d;background:#3b1418}.cell.evil .ct{color:#fca5a5}
+    .badge{position:absolute;right:8px;top:8px;font-size:10px;font-weight:700;border-radius:5px;padding:1px 6px}
+    .badge.f{background:#1e293b;color:#94a3b8}.badge.e{background:#7f1d1d;color:#fecaca}.badge.a{background:#0c4a6e;color:#bae6fd}
+    .steps{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🧟 <span data-en="Use-After-Free Simulator">해제 후 사용(UAF) 시뮬레이터</span>
+        <span class="kisa">KISA A-5 · <span data-en="Use of Freed Resource (UAF)">해제된 자원 사용</span></span></h1>
+      <div class="sub" data-en="An object is freed but a pointer to it (now dangling) is still used. The attacker re-allocates a controlled object into the freed slot; when the victim dereferences the stale pointer it reads/executes attacker data — a classic vtable / function-pointer hijack.">
+        객체가 해제됐는데 그 객체를 가리키던 포인터(이제 댕글링)가 계속 사용됩니다. 공격자가 해제된 슬롯에 조작된 객체를 재할당하면, 피해자가 낡은 포인터를 역참조할 때 공격자 데이터를 읽거나 실행하게 됩니다 — 전형적인 vtable/함수포인터 탈취.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Step through the heap: free → reuse → dereference">힙 단계별 실행: 해제 → 재사용 → 역참조</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="A <b>Session</b> object holds a function pointer <code>onRender()</code>. Walk the steps and watch the same heap slot get freed, then grabbed by the attacker, while <code>p</code> keeps pointing at it.">
+        <b>Session</b> 객체가 함수 포인터 <code>onRender()</code>를 가집니다. 단계를 진행하며 같은 힙 슬롯이 해제된 뒤 공격자에게 점거되는 동안 <code>p</code>가 계속 그 슬롯을 가리키는 것을 보세요.
+      </div>
+      <div class="preset" id="presets"></div>
+      <div class="heaprow">
+        <div class="ptrcol">
+          <div class="ttl" style="font-family:var(--mono);font-size:11px;color:#94a3b8;margin-bottom:6px" data-en="Victim pointer">피해자 포인터</div>
+          <div class="ptr" id="ptr_p"><span class="lbl">Session* p</span><br>= <span class="val" id="ptr_pv">0x0</span></div>
+          <div class="ptr" id="ptr_q"><span class="lbl">char* q (attacker)</span><br>= <span class="val" id="ptr_qv">0x0</span></div>
+        </div>
+        <div class="heap">
+          <div class="ttl" data-en="Heap slot @ 0xA10">힙 슬롯 @ 0xA10</div>
+          <div class="cell" id="cell"><span class="badge" id="cell_badge"></span><span class="addr">0xA10</span><div class="ct" id="cell_ct" data-en="(unallocated)">(미할당)</div></div>
+        </div>
+      </div>
+      <div class="steps">
+        <button class="act run" id="b0" onclick="uafStep(0)">1) allocate</button>
+        <button class="act run" id="b1" onclick="uafStep(1)">2) free(p)</button>
+        <button class="act run" id="b2" onclick="uafStep(2)" data-en="3) attacker re-allocates">3) 공격자 재할당</button>
+        <button class="act run" id="b3" onclick="uafStep(3)" data-en="4) p-&gt;onRender()  ⚠">4) p-&gt;onRender()  ⚠</button>
+        <button class="act ghost" onclick="uafStep(-1)">↺ <span data-en="reset">초기화</span></button>
+      </div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Hardened: NULL after free + smart pointers">안전: 해제 후 NULL + 스마트 포인터</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="After <code>free(p)</code> we set <code>p = NULL</code>, so a later use crashes deterministically (NULL deref) instead of silently running attacker data. Better: <code>std::unique_ptr</code> makes the dangling use a compile-time / ownership error.">
+        <code>free(p)</code> 직후 <code>p = NULL</code>로 설정하면, 이후 사용은 공격자 데이터를 조용히 실행하는 대신 결정적으로(NULL 역참조) 크래시됩니다. 더 나은 방법: <code>std::unique_ptr</code>는 댕글링 사용 자체를 소유권/컴파일 단계에서 차단합니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Run secure free + use">안전한 해제+사용 실행</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE — C++</span>
+          <pre>Session* p = new Session();   // 0xA10
+delete p;                     // 슬롯 해제, p는 그대로 0xA10
+// ... 공격자가 같은 크기 버퍼 할당 → 0xA10 재사용 ...
+char* q = (char*) malloc(sizeof(Session));
+fill_with_payload(q);         // q->vptr = &amp;system
+
+p->onRender();   // ← 해제된 포인터 역참조
+                 //   = 공격자가 심은 함수 포인터 호출 → RCE</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE — C / C++</span>
+          <pre>// 1) 해제 후 즉시 무효화
+Session* p = new Session();
+delete p;
+p = nullptr;          // 이후 p->... 는 결정적 크래시
+if (p) p->onRender(); // NULL 가드로 안전
+
+// 2) 소유권을 타입으로 강제 (권장)
+auto p = std::make_unique&lt;Session&gt;();
+// p가 스코프를 벗어나면 자동 해제,
+// 댕글링/이중해제 자체가 발생하지 않음
+p->onRender();</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> set the pointer to NULL/nullptr right after free; prefer RAII smart pointers (<code>unique_ptr</code>/<code>shared_ptr</code>) so ownership and lifetime are enforced by the type system; never share raw owning pointers; enable hardened allocators / ASAN in CI to catch UAF early."><b>방어 핵심:</b> 해제 직후 포인터를 NULL/nullptr로 무효화 · RAII 스마트 포인터(<code>unique_ptr</code>/<code>shared_ptr</code>)로 소유권·수명을 타입으로 강제 · 소유 raw 포인터를 공유하지 말 것 · CI에서 강화 할당자/ASAN으로 UAF 조기 탐지.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. The heap, pointers and addresses are mock JS objects; no real memory is allocated, freed or dereferenced.">
+      ⚠️ 교육용 시뮬레이션입니다. 힙·포인터·주소는 모두 mock JS 객체이며 실제 메모리를 할당·해제·역참조하지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var ADDR='0xA10';
+var stage=-1;           // -1 none, 0 alloc, 1 free, 2 reuse, 3 deref
+var payload='system("calc.exe")';
+
+var PRESETS=[
+  {label:L('계산기 실행 (PoC)','launch calc (PoC)'), v:'system("calc.exe")'},
+  {label:L('역쉘 명령','reverse shell cmd'), v:'system("id; /bin/sh")'},
+  {label:L('vtable 덮어쓰기','overwrite vtable'), v:'vptr -> &attacker_gadget'}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.textContent=p.label;
+    b.onclick=function(){ payload=p.v; if(stage>=2) renderHeap(); renderOut(); };
+    box.appendChild(b);
+  });
+}
+
+function setBtns(){
+  document.getElementById('b0').disabled = stage>=0;
+  document.getElementById('b1').disabled = stage<0 || stage>=1;
+  document.getElementById('b2').disabled = stage<1 || stage>=2;
+  document.getElementById('b3').disabled = stage<2 || stage>=3;
+}
+
+function renderHeap(){
+  var cell=document.getElementById('cell');
+  var ct=document.getElementById('cell_ct');
+  var bd=document.getElementById('cell_badge');
+  var pP=document.getElementById('ptr_p'), pV=document.getElementById('ptr_pv');
+  var qP=document.getElementById('ptr_q'), qV=document.getElementById('ptr_qv');
+  pP.className='ptr'; qP.className='ptr'; pV.textContent='0x0'; qV.textContent='0x0';
+  if(stage<0){
+    cell.className='cell'; bd.textContent=''; ct.textContent=L('(미할당)','(unallocated)');
+  } else if(stage===0){
+    cell.className='cell alloc'; bd.className='badge a'; bd.textContent='ALLOC';
+    ct.innerHTML=L('Session { vptr → onRender, user:"alice" }','Session { vptr → onRender, user:"alice" }');
+    pV.textContent=ADDR;
+  } else if(stage===1){
+    cell.className='cell freed'; bd.className='badge f'; bd.textContent='FREED';
+    ct.innerHTML=L('(해제됨 — 내용은 아직 메모리에 잔존)','(freed — contents still linger in memory)');
+    pV.textContent=ADDR; pP.className='ptr dangling';  // dangling
+  } else if(stage>=2){
+    cell.className='cell evil'; bd.className='badge e'; bd.textContent='ATTACKER';
+    ct.innerHTML=L('공격자 객체 { vptr → '+escapeHtml(payload)+' }','attacker object { vptr → '+escapeHtml(payload)+' }');
+    pV.textContent=ADDR; pP.className='ptr dangling';
+    qV.textContent=ADDR; qP.className='ptr';            // attacker now owns slot
+  }
+}
+
+function renderOut(){
+  var out=document.getElementById('v_out'); out.style.color='';
+  if(stage<0){ out.textContent=L('단계 버튼을 눌러 진행하세요.','Press the step buttons to proceed.'); return; }
+  var lines=[];
+  lines.push('Session* p = new Session();   // p = '+ADDR);
+  if(stage>=1) lines.push('delete p;                     // '+L('슬롯 '+ADDR+' 해제, p는 여전히 '+ADDR+' (댕글링)','slot '+ADDR+' freed, p still '+ADDR+' (dangling)'));
+  if(stage>=2) lines.push('char* q = malloc(sizeof(Session)); // '+L('할당자가 같은 슬롯 '+ADDR+' 재사용','allocator reuses same slot '+ADDR)+'\nmemcpy(q, payload, ...);       // q->vptr = '+payload);
+  if(stage>=3){
+    lines.push('p->onRender();');
+    lines.push('');
+    lines.push('💥 '+L('p는 해제된 '+ADDR+'을 역참조 → 공격자가 심은 vptr 호출','p dereferences freed '+ADDR+' → calls attacker-planted vptr'));
+    lines.push('   executed: '+payload);
+    lines.push('   '+L('→ 임의 코드 실행(RCE). 피해자는 alice 세션을 그렸다고 믿음.','→ arbitrary code execution (RCE). Victim believed it rendered alice’s session.'));
+    out.style.color='#fca5a5';
+  }
+  out.textContent=lines.join('\n');
+}
+
+function uafStep(s){
+  if(s===-1){ stage=-1; }
+  else { stage=s; }
+  renderHeap(); renderOut(); setBtns();
+}
+
+function runSecure(){
+  var out=document.getElementById('s_out'); out.style.color='#86efac';
+  out.textContent=
+    'Session* p = new Session();   // p = '+ADDR+'\n'+
+    'delete p;\n'+
+    'p = nullptr;                  // '+L('해제 직후 무효화','invalidate right after free')+'\n'+
+    '... '+L('공격자가 '+ADDR+' 재할당 시도','attacker re-allocates '+ADDR)+' ...\n'+
+    'if (p) p->onRender();         // p == nullptr → '+L('호출 안 함','not called')+'\n\n'+
+    '🛡 '+L('댕글링 역참조가 발생하지 않음. 만약 가드 없이 p->...를 했다면 결정적 NULL 크래시로 안전하게 실패(공격자 코드 실행 X).',
+            'No dangling deref. Even an unguarded p->... would deterministically crash on NULL (no attacker code runs).')+'\n\n'+
+    '// '+L('권장: std::unique_ptr<Session> — 소유권/수명을 타입이 보장 → UAF 원천 차단',
+            'recommended: std::unique_ptr<Session> — type-enforced ownership/lifetime → UAF prevented by construction');
+}
+
+window.renderDynamic=function(){ buildPresets(); renderHeap(); renderOut(); setBtns(); };
+buildPresets(); uafStep(-1);
+</script>
+</body>
+</html>

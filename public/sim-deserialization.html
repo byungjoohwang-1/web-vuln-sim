@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>안전하지 않은 역직렬화 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="안전하지 않은 역직렬화 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="안전하지 않은 역직렬화 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-deserialization.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="신뢰할 수 없는 데이터의 역직렬화(Insecure Deserialization) 모의 실습: 공격자가 만든 직렬화 바이트가 역직렬화 중 가젯 체인을 실행해 RCE로 이어지는 과정을 시각화하고, JSON+스키마+허용목록 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:96px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:360px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    /* gadget chain visual */
+    .chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px}
+    .node{font-family:var(--mono);font-size:11.5px;border:1px solid #334155;border-radius:8px;padding:7px 10px;background:#0f172a;color:#cbd5e1;opacity:.35;transition:opacity .25s,border-color .25s}
+    .node.fire{opacity:1;border-color:#7f1d1d;background:#3b1418;color:#fca5a5}
+    .node.last.fire{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.3)}
+    .arrow{color:#475569;font-family:var(--mono)}
+    .fmtsel{display:flex;gap:8px;flex-wrap:wrap}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>📦 <span data-en="Insecure Deserialization Simulator">안전하지 않은 역직렬화 시뮬레이터</span>
+        <span class="kisa">KISA A-5 · <span data-en="Deserialization of Untrusted Data">신뢰할 수 없는 데이터의 역직렬화</span></span></h1>
+      <div class="sub" data-en="An endpoint deserializes attacker-controlled bytes. Native deserializers (Java ObjectInputStream, PHP unserialize, Python pickle) can instantiate arbitrary classes and trigger 'magic' methods on load — a gadget chain that ends in command execution (RCE).">
+        엔드포인트가 공격자가 조작한 바이트를 역직렬화합니다. 네이티브 역직렬화기(Java ObjectInputStream, PHP unserialize, Python pickle)는 임의 클래스를 생성하고 로드 시 '매직' 메서드를 호출할 수 있습니다 — 명령 실행(RCE)으로 끝나는 가젯 체인이 됩니다.
+      </div>
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable endpoint: POST /restore (native deserialize)">취약한 엔드포인트: POST /restore (네이티브 역직렬화)</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="note" data-en="The server base64-decodes the body and feeds it straight to a native deserializer. It reconstructs whatever <b>type</b> the bytes declare and runs constructor/<code>readObject</code>/<code>__wakeup</code>/<code>__reduce__</code> hooks — so a crafted object executes code while being 'loaded', before your app logic even sees it.">
+        서버는 본문을 base64 디코딩해 네이티브 역직렬화기에 그대로 넘깁니다. 바이트가 선언한 <b>타입</b>을 무엇이든 복원하며 생성자/<code>readObject</code>/<code>__wakeup</code>/<code>__reduce__</code> 훅을 실행합니다 — 따라서 조작된 객체는 앱 로직이 보기도 전에 '로드' 중에 코드를 실행합니다.
+      </div>
+      <div class="fmtsel">
+        <label style="margin:0">
+          <span data-en="Serialization format">직렬화 포맷</span>
+          <select id="fmt" onchange="onFmt()">
+            <option value="java">Java (ObjectInputStream)</option>
+            <option value="php">PHP (unserialize)</option>
+            <option value="pickle">Python (pickle)</option>
+          </select>
+        </label>
+      </div>
+      <div class="preset" id="presets"></div>
+      <label data-en="Serialized payload (base64-ish mock representation)">직렬화 페이로드 (base64 풍 mock 표현)</label>
+      <textarea id="blob"></textarea>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Deserialize (vulnerable)">역직렬화 (취약)</span></button>
+        <button class="act ghost" onclick="vReset()">↺ <span data-en="Clear">지우기</span></button>
+      </div>
+      <div class="chain" id="chain"></div>
+      <div class="out" id="v_out"></div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Hardened endpoint: JSON + schema + class allow-list">안전한 엔드포인트: JSON + 스키마 + 클래스 허용목록</span> <span class="tag good">SECURE</span></h2>
+      <div class="note" data-en="The fix never natively deserializes. It parses JSON (data only, no code/types), validates against a strict schema, and only maps to a small allow-list of expected classes. A gadget payload fails parsing or schema/allow-list checks — no object construction hooks fire.">
+        수정본은 네이티브 역직렬화를 절대 하지 않습니다. JSON(데이터만, 코드/타입 없음)을 파싱하고 엄격한 스키마로 검증한 뒤, 예상되는 소수의 클래스 허용목록으로만 매핑합니다. 가젯 페이로드는 파싱 또는 스키마/허용목록 검사에서 실패합니다 — 객체 생성 훅이 전혀 발화하지 않습니다.
+      </div>
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Parse with JSON + allow-list">JSON + 허용목록으로 처리</span></button>
+      </div>
+      <div class="out" id="s_out"></div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE — Java / Python</span>
+          <pre>// Java: 임의 객체 복원 + readObject 가젯
+ObjectInputStream ois =
+    new ObjectInputStream(req.getInputStream());
+Object o = ois.readObject();   // ← 여기서 가젯 실행
+
+# Python: pickle 은 __reduce__ 로 임의 호출
+import pickle
+data = base64.b64decode(body)
+obj = pickle.loads(data)       # ← os.system(...) 실행</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE — JSON + schema + allow-list</span>
+          <pre>// 데이터만 파싱 (코드/타입 복원 없음)
+JsonNode n = mapper.readTree(body);
+validateSchema(n, ORDER_SCHEMA);     // 엄격 검증
+if(!ALLOWED.contains(n.get("type").asText()))
+    throw new SecurityException("type not allowed");
+Order o = mapper.treeToValue(n, Order.class);
+
+# Python: json + 명시적 매핑
+d = json.loads(body)             # 데이터만
+assert set(d) &lt;= {"id","qty"}    # 허용 키만
+order = Order(id=int(d["id"]), qty=int(d["qty"]))</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Defense keys:</b> never natively deserialize untrusted input; use a data-only format (JSON) and build objects explicitly; enforce a strict schema and a class/field allow-list; sign or encrypt payloads you must round-trip; if native serialization is unavoidable, use look-ahead/ObjectInputFilter allow-lists and run with least privilege."><b>방어 핵심:</b> 신뢰할 수 없는 입력을 네이티브 역직렬화하지 말 것 · 데이터 전용 포맷(JSON)으로 받아 객체를 명시적으로 생성 · 엄격한 스키마와 클래스/필드 허용목록 강제 · 왕복이 필요한 페이로드는 서명/암호화 · 불가피하면 look-ahead/ObjectInputFilter 허용목록 + 최소 권한 실행.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. The serialized blobs, gadget chains and 'executed' commands are mock JS representations; no real deserializer runs and no command is executed.">
+      ⚠️ 교육용 시뮬레이션입니다. 직렬화 블롭·가젯 체인·'실행된' 명령은 모두 mock JS 표현이며 실제 역직렬화기나 명령 실행은 일어나지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+// mock serialized representations per format
+var BENIGN={
+  java:'rO0ABXNyAA9jb20uYXBwLk9yZGVy{type:"com.app.Order", id:42, qty:3}',
+  php:'O:5:"Order":2:{s:2:"id";i:42;s:3:"qty";i:3;}',
+  pickle:'\\x80\\x04\\x95...  (Order){"id":42,"qty":3}'
+};
+var GADGET={
+  java:'rO0ABXNyADJvcmcuYXBhY2hlLmNvbW1vbnMuY29sbGVjdGlvbnMuQ29tbWFuZHN7'
+      +'\n  type:"org.apache.commons.collections.InvokerTransformer",'
+      +'\n  chain:[ ConstantTransformer(Runtime), InvokerTransformer("exec","calc.exe") ],'
+      +'\n  trigger:"readObject" }',
+  php:'O:14:"Monolog\\\\Handler":1:{s:8:"callback";s:11:"system";'
+      +'\n  s:3:"cmd";s:8:"calc.exe"; trigger:"__wakeup/__destruct" }',
+  pickle:'\\x80\\x04 cposix\\nsystem\\n(S\'calc.exe\'\\ntR.'
+      +'\n  # __reduce__ -> (os.system, ("calc.exe",))'
+};
+var CMD={java:'calc.exe', php:'calc.exe', pickle:'calc.exe'};
+
+var CHAINS={
+  java:['readObject()','AnnotationInvocationHandler','InvokerTransformer','ConstantTransformer→Runtime','Runtime.exec("calc.exe")'],
+  php:['unserialize()','__wakeup()','Monolog\\Handler','call_user_func','system("calc.exe")'],
+  pickle:['pickle.loads()','__reduce__()','os.system','exec','os.system("calc.exe")']
+};
+
+var PRESETS=[
+  {k:'benign', label:L('정상 객체 (Order)','benign object (Order)')},
+  {k:'gadget', label:L('악성 가젯 체인 (RCE)','malicious gadget chain (RCE)')}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.textContent=p.label;
+    b.onclick=function(){ loadPreset(p.k); };
+    box.appendChild(b);
+  });
+}
+function fmt(){ return document.getElementById('fmt').value; }
+function loadPreset(k){
+  document.getElementById('blob').value = (k==='gadget'?GADGET:BENIGN)[fmt()];
+}
+function onFmt(){
+  // refresh blob to the matching format if it currently matches a known preset
+  var cur=document.getElementById('blob').value;
+  var isG = Object.keys(GADGET).some(function(f){return cur===GADGET[f];});
+  var isB = Object.keys(BENIGN).some(function(f){return cur===BENIGN[f];});
+  if(isG) loadPreset('gadget'); else if(isB||!cur) loadPreset('benign');
+}
+
+function isGadget(blob){
+  var b=blob.toLowerCase();
+  return /transformer|runtime|exec|system|__reduce__|__wakeup|callback|posix|calc\.exe|\bsh\b|\/bin\//.test(b);
+}
+function renderChain(active){
+  var box=document.getElementById('chain'); box.innerHTML='';
+  if(!active){ return; }
+  var steps=CHAINS[fmt()];
+  steps.forEach(function(s,i){
+    var n=document.createElement('span');
+    n.className='node'+(i===steps.length-1?' last':'');
+    n.textContent=s; n.setAttribute('data-i',i);
+    box.appendChild(n);
+    if(i<steps.length-1){ var a=document.createElement('span'); a.className='arrow'; a.textContent='→'; box.appendChild(a); }
+  });
+  // fire them sequentially
+  var nodes=box.querySelectorAll('.node'); var i=0;
+  (function tick(){
+    if(i<nodes.length){ nodes[i].classList.add('fire'); i++; setTimeout(tick,180); }
+  })();
+}
+
+function runVuln(){
+  var blob=document.getElementById('blob').value.trim();
+  var out=document.getElementById('v_out');
+  if(!blob){ out.style.color=''; out.textContent=L('페이로드를 입력하거나 프리셋을 누르세요.','Enter a payload or click a preset.'); renderChain(false); return; }
+  var gad=isGadget(blob);
+  var f=fmt();
+  if(gad){
+    renderChain(true);
+    out.style.color='#fca5a5';
+    out.textContent=
+      'POST /restore  ('+f+')\n'+
+      'decoded = base64Decode(body)\n'+
+      (f==='java'?'Object o = ois.readObject();':f==='php'?'$o = unserialize($data);':'obj = pickle.loads(data)')+'\n\n'+
+      L('역직렬화기가 페이로드가 선언한 타입을 복원하며 매직 훅을 호출:','deserializer reconstructs the declared type and invokes magic hooks:')+'\n'+
+      '  '+CHAINS[f].join('  →  ')+'\n\n'+
+      '💥 executed: '+CMD[f]+'\n'+
+      '   $ '+(isEn()?'id':'id')+'  →  uid=0(root) gid=0(root)\n'+
+      '   '+L('→ 원격 코드 실행(RCE). 앱이 객체를 사용하기도 전에 명령이 실행됨.',
+              '→ remote code execution (RCE). The command ran before the app ever used the object.');
+  }else{
+    renderChain(false);
+    out.style.color='';
+    out.textContent=
+      'POST /restore  ('+f+')\n'+
+      (f==='java'?'Object o = ois.readObject();':f==='php'?'$o = unserialize($data);':'obj = pickle.loads(data)')+'\n\n'+
+      '→ Order{ id:42, qty:3 }\n\n'+
+      L('이 입력은 정상 객체라 눈에 띄는 피해가 없습니다. 하지만 같은 코드가 가젯 페이로드도 그대로 복원한다는 점이 위험의 본질입니다 — 악성 프리셋으로 확인하세요.',
+        'This input is a benign object, so nothing visibly bad happens. The danger is that the SAME code would reconstruct a gadget payload too — try the malicious preset.');
+  }
+}
+function vReset(){ document.getElementById('blob').value=''; renderChain(false); document.getElementById('v_out').textContent=L('지움.','Cleared.'); document.getElementById('v_out').style.color=''; }
+
+function runSecure(){
+  var blob=document.getElementById('blob').value.trim();
+  var out=document.getElementById('s_out');
+  var f=fmt();
+  var gad=isGadget(blob);
+  var ALLOWED=['Order','Cart','Address'];
+  // secure handler ALWAYS treats input as JSON data; try to read id/qty only
+  var m=blob.match(/id["':\s]+(\d+)/i), q=blob.match(/qty["':\s]+(\d+)/i);
+  if(gad || !m || !q){
+    out.style.color='#86efac';
+    var reason = gad
+      ? L('스키마/허용목록 위반: 알 수 없는 타입·콜백·트랜스포머 필드 감지','schema/allow-list violation: unknown type / callback / transformer fields detected')
+      : L('JSON 스키마 불일치: 필수 필드(id, qty) 없음','JSON schema mismatch: required fields (id, qty) missing');
+    out.textContent=
+      'POST /restore  ('+f+' '+L('본문을 JSON으로 처리','body parsed as JSON')+')\n'+
+      'node = JSON.parse(body)            // '+L('데이터만, 타입/코드 복원 없음','data only, no type/code reconstruction')+'\n'+
+      'validateSchema(node, ORDER_SCHEMA)\n'+
+      'allow-list = ['+ALLOWED.join(', ')+']\n\n'+
+      '🛡 '+L('차단됨','blocked')+': '+reason+'\n'+
+      '   '+L('객체 생성 훅(readObject/__wakeup/__reduce__)이 전혀 호출되지 않음 → 가젯 실행 불가.',
+              'no construction hooks (readObject/__wakeup/__reduce__) ever ran → gadget cannot fire.')+'\n'+
+      '   '+L('명령 실행: 없음. 400 Bad Request 반환.','commands executed: none. Returns 400 Bad Request.');
+  }else{
+    out.style.color='#86efac';
+    out.textContent=
+      'POST /restore  ('+f+' → JSON)\n'+
+      'node = JSON.parse(body)\n'+
+      'validateSchema(node, ORDER_SCHEMA)   ✓\n'+
+      'Order o = new Order(id='+m[1]+', qty='+q[1]+')   // '+L('명시적 생성','explicit construction')+'\n\n'+
+      '🛡 '+L('데이터만 읽어 안전하게 객체를 구성했습니다. 임의 타입 복원도, 코드 실행도 없습니다.',
+              'Read data only and constructed the object safely. No arbitrary type reconstruction, no code execution.');
+  }
+}
+
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets();
+loadPreset('gadget');
+</script>
+</body>
+</html>

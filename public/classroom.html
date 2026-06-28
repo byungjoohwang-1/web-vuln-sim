@@ -264,11 +264,10 @@ function renderClassState() {
 
 async function syncProgressWithClass(classCode) {
   if (!currentUser) return;
-  const p = AcademyState.getProgress();
-  const notes = AcademyState.getWrongNotes();
-  const conceptsCount = Object.keys(p.completedConcepts || {}).length;
-  const practicalCount = Object.keys(p.completedPractical || {}).length;
-  const wrongCount = Object.values(notes).filter(n => !n.mastered).length;
+  const u = AcademyState.getUnifiedStats(); // 아레나 + 아카데미 통합
+  const conceptsCount = u.concepts;
+  const practicalCount = u.practical;
+  const wrongCount = u.wrong;
 
   try {
     const q = query(collection(db, 'classes'), where('joinCode', '==', classCode));
@@ -278,11 +277,12 @@ async function syncProgressWithClass(classCode) {
       const memberRef = doc(db, 'classes', classDoc.id, 'members', currentUser.uid);
       await setDoc(memberRef, {
         displayName: currentUser.displayName || currentUser.email || '익명 학생',
-        xp: p.xp || 0,
-        level: p.level || 1,
+        xp: u.xp || 0,
+        level: u.level || 1,
         conceptsCount: conceptsCount,
         practicalCount: practicalCount,
         wrongCount: wrongCount,
+        wrongByCat: u.wrongByCat || {}, // 유형별 오답(실데이터) → 클래스 리포트 분석용
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }

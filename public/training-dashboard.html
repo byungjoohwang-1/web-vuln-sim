@@ -505,6 +505,7 @@ header .wrap {
 </div>
 
 <script src="js/academy-data.js"></script>
+<script src="js/academy-data-ext.js"></script>
 <script src="js/academy-state.js"></script>
 <script type="module" src="auth-widget.js"></script>
 <script>
@@ -513,10 +514,11 @@ function renderDashboard() {
   const p = AcademyState.getProgress();
   const notes = AcademyState.getWrongNotes();
   const activeClass = AcademyState.getActiveClass();
+  const _u = AcademyState.getUnifiedStats(); // 아레나 + 아카데미 통합
 
-  // 1. Level & Greeting
-  document.getElementById('levelVal').textContent = p.level || 1;
-  document.getElementById('xpVal').textContent = `${p.xp || 0} XP`;
+  // 1. Level & Greeting (통합 XP/레벨)
+  document.getElementById('levelVal').textContent = _u.level || 1;
+  document.getElementById('xpVal').textContent = `${_u.xp || 0} XP`;
   
   // Try to load name from leaderboard bridge
   setTimeout(() => {
@@ -526,10 +528,10 @@ function renderDashboard() {
     }
   }, 1000);
 
-  // 2. Metrics
-  const conceptsCount = Object.keys(p.completedConcepts || {}).length;
-  const practicalCount = Object.keys(p.completedPractical || {}).length;
-  const wrongCount = Object.values(notes).filter(n => !n.mastered).length;
+  // 2. Metrics — 아카데미(SPA) 진도까지 통합 반영(통합 통계, 상단 _u 재사용)
+  const conceptsCount = _u.concepts;
+  const practicalCount = _u.practical;
+  const wrongCount = _u.wrong;
 
   document.getElementById('cntConcepts').textContent = `${conceptsCount} / 49`;
   document.getElementById('cntPractical').textContent = `${practicalCount} / 90`;

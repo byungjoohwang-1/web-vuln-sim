@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오류 상황 대응 부재(Missing Error Handling) 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="오류 상황 대응 부재(Missing Error Handling) 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="오류 상황 대응 부재(Missing Error Handling) 시뮬레이터 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-error-missing.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="반환값/오류코드 무시로 인한 오류 상황 대응 부재 취약점 모의 실습: 실패를 무시하고 잘못된 상태로 진행하는 코드와, 모든 반환을 검사하고 롤백·안전 중단하는 방어를 비교합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:820px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:280px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:90px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .preset button{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:999px;padding:5px 11px;font-size:11.5px;font-family:var(--mono)}
+    .preset button:hover{border-color:var(--accent);color:#fff}
+    pre,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:380px}
+    .out{margin-top:10px;min-height:60px}
+    .vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+    .tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#7dd3fc}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .chk{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0}
+    .chk label{display:flex;align-items:center;gap:6px;margin:0;color:#cbd5e1;font-family:var(--mono);font-size:12px;cursor:pointer}
+    .chk input{width:auto}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:19px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🚧 <span data-en="Missing Error Handling Simulator">오류 상황 대응 부재 시뮬레이터</span>
+        <span class="kisa">KISA A-4 · <span data-en="Missing Error Handling">오류 상황 대응 부재</span></span></h1>
+      <div class="sub" data-en="A money-transfer routine runs a sequence of steps — open log, allocate buffer, begin TX, debit, credit, commit. The vulnerable version ignores every return value, so when a step fails it keeps going on corrupt state: money debited but never credited.">
+        송금 루틴이 일련의 단계를 수행합니다 — 로그 열기, 버퍼 할당, 트랜잭션 시작, 출금, 입금, 커밋. 취약 버전은 모든 반환값을 무시해, 한 단계가 실패해도 잘못된 상태로 계속 진행합니다: 돈이 빠져나갔는데 입금은 안 됩니다.
+      </div>
+    </div>
+
+    <!-- 실패 주입 -->
+    <div class="card">
+      <h2>⚙ <span data-en="Inject a failure">실패 주입</span></h2>
+      <div class="note" data-en="Toggle which step fails, then run both versions with the same failure. Watch how the vulnerable version barrels on while the secure one detects, rolls back, and fails safe.">
+        어느 단계가 실패할지 선택한 뒤, 동일한 실패로 두 버전을 실행하세요. 취약 버전은 그대로 진행하고, 안전 버전은 감지·롤백·안전 중단하는 차이를 확인하세요.
+      </div>
+      <div class="chk" id="failChk">
+        <label><input type="checkbox" id="f_log"> <span data-en="open log file fails (disk full)">로그 파일 열기 실패(디스크 가득)</span></label>
+        <label><input type="checkbox" id="f_alloc"> <span data-en="malloc returns NULL (alloc fail)">malloc NULL 반환(할당 실패)</span></label>
+        <label><input type="checkbox" id="f_credit" checked> <span data-en="credit() fails (network down)">credit() 실패(네트워크 다운)</span></label>
+        <label><input type="checkbox" id="f_commit"> <span data-en="commit() fails">commit() 실패</span></label>
+      </div>
+      <div class="preset" id="presets"></div>
+      <label data-en="transfer amount">송금 금액</label>
+      <input id="amt" value="500000">
+    </div>
+
+    <!-- 취약 데모 -->
+    <div class="card vuln">
+      <h2>① <span data-en="Vulnerable: return values ignored">취약: 반환값 무시</span> <span class="tag bad">VULNERABLE</span></h2>
+      <div class="btns">
+        <button class="act run" onclick="runVuln()">▶ <span data-en="Run transfer (no checks)">송금 실행 (검사 없음)</span></button>
+      </div>
+      <div class="out" id="v_out" data-en="(no run yet)">(실행 전)</div>
+    </div>
+
+    <!-- 방어 비교 -->
+    <div class="card secure">
+      <h2>② <span data-en="Secure: every return checked, rollback on failure">안전: 모든 반환 검사 · 실패 시 롤백</span> <span class="tag good">SECURE</span></h2>
+      <div class="btns">
+        <button class="act fix" onclick="runSecure()">▶ <span data-en="Run transfer (checked)">송금 실행 (검사 적용)</span></button>
+      </div>
+      <div class="out" id="s_out" data-en="(no run yet)">(실행 전)</div>
+    </div>
+
+    <!-- 코드 비교 -->
+    <div class="card">
+      <h2>③ <span data-en="Vulnerable vs Secure code">취약 vs 안전 코드</span></h2>
+      <div class="row">
+        <div class="col">
+          <span class="tag bad">VULNERABLE</span>
+          <pre>// C / pseudo — 반환값을 아무도 안 본다
+FILE *f = fopen(path, "a");      // NULL 일 수 있음
+char *buf = malloc(size);        // NULL 일 수 있음
+fprintf(f, ...);                 // f==NULL 이면 크래시
+db_begin(tx);
+db_debit(tx, from, amount);      // 성공 가정
+db_credit(tx, to, amount);       // 네트워크 실패해도 무시
+db_commit(tx);                   // 실패해도 무시
+return OK;                        // 항상 성공이라 보고</pre>
+        </div>
+        <div class="col">
+          <span class="tag good">SECURE</span>
+          <pre>FILE *f = fopen(path, "a");
+if (!f) return ERR_LOG;                       // 검사
+char *buf = malloc(size);
+if (!buf){ fclose(f); return ERR_MEM; }       // 검사 + 정리
+if (db_begin(tx) != OK){ ... return ERR_TX; }
+if (db_debit(tx, from, amount) != OK){
+    db_rollback(tx); return ERR_DEBIT; }
+if (db_credit(tx, to, amount) != OK){
+    db_rollback(tx); return ERR_CREDIT; }     // 출금 원복
+if (db_commit(tx) != OK){
+    db_rollback(tx); return ERR_COMMIT; }
+return OK;                                     // 진짜 성공일 때만</pre>
+        </div>
+      </div>
+      <div class="note" data-en="<b>Why it's dangerous:</b> ignoring a return/error code means execution continues on invalid state — a NULL pointer is used, a buffer is half-written, or money leaves one account without reaching the other. The system <i>reports success</i> while data is corrupt. <b>Defense:</b> check every return value / catch every exception at the call site; on failure, clean up resources, roll back the transaction, and fail safe with a clear error — never silently continue."><b>위험한 이유:</b> 반환값/오류코드를 무시하면 잘못된 상태로 실행이 계속됩니다 — NULL 포인터를 쓰거나, 버퍼가 절반만 기록되거나, 한 계좌에서 돈이 빠졌는데 상대 계좌에 도착하지 않습니다. 데이터가 깨졌는데도 시스템은 <i>성공으로 보고</i>합니다. <b>방어:</b> 호출 지점마다 모든 반환값을 검사/예외를 처리하고, 실패 시 자원 정리·트랜잭션 롤백·명확한 오류로 안전하게 중단하세요. 절대 조용히 진행하지 마세요.</div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation only. The transfer pipeline, failures, and ledger are an in-page mock; no real files, memory, network, or database are touched.">
+      ⚠️ 교육용 시뮬레이션입니다. 송금 파이프라인·실패·원장은 페이지 내부 mock이며, 실제 파일·메모리·네트워크·데이터베이스를 건드리지 않습니다.
+    </div>
+  </div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+function fails(){
+  return {
+    log: document.getElementById('f_log').checked,
+    alloc: document.getElementById('f_alloc').checked,
+    credit: document.getElementById('f_credit').checked,
+    commit: document.getElementById('f_commit').checked
+  };
+}
+function amount(){ var n=parseInt((document.getElementById('amt').value||'').replace(/\D/g,''),10); return isNaN(n)?0:n; }
+
+var PRESETS=[
+  {label:L('네트워크 다운(입금 실패)','network down (credit)'), set:{log:0,alloc:0,credit:1,commit:0}},
+  {label:L('디스크 가득(로그)','disk full (log)'), set:{log:1,alloc:0,credit:0,commit:0}},
+  {label:L('메모리 부족','out of memory'), set:{log:0,alloc:1,credit:0,commit:0}},
+  {label:L('커밋 실패','commit fail'), set:{log:0,alloc:0,credit:0,commit:1}},
+  {label:L('정상(실패 없음)','all OK'), set:{log:0,alloc:0,credit:0,commit:0}}
+];
+function buildPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.textContent=p.label;
+    b.onclick=function(){
+      document.getElementById('f_log').checked=!!p.set.log;
+      document.getElementById('f_alloc').checked=!!p.set.alloc;
+      document.getElementById('f_credit').checked=!!p.set.credit;
+      document.getElementById('f_commit').checked=!!p.set.commit;
+    };
+    box.appendChild(b);
+  });
+}
+
+function line(txt, color){ return '<span style="color:'+(color||'#cbd5e1')+'">'+txt+'</span>'; }
+var GREEN='#86efac', RED='#fca5a5', GREY='#64748b', AMBER='#f59e0b';
+
+function runVuln(){
+  var f=fails(), amt=amount();
+  var out=document.getElementById('v_out');
+  var log=[]; var bal_from=1000000, bal_to=0;
+  log.push('transfer('+amt.toLocaleString('en-US')+')   '+L('// 반환값 검사 없음','// no return checks'));
+  // open log
+  log.push('f = fopen(audit.log)'+(f.log?'  → NULL ('+L('디스크 가득','disk full')+')':'  → ok'));
+  if(f.log){ log.push(line('fprintf(f, ...)   '+L('💥 NULL 역참조로 크래시... 하지만 코드는 이를 모름','💥 NULL deref crash... but the code never checked'), RED)); }
+  // alloc
+  log.push('buf = malloc(size)'+(f.alloc?'  → NULL ('+L('할당 실패','alloc fail')+')':'  → ok'));
+  if(f.alloc){ log.push(line('memcpy(buf, ...)  '+L('💥 NULL 버퍼에 기록 — 메모리 손상','💥 writing to NULL buffer — memory corruption'), RED)); }
+  // tx
+  log.push('db_begin(tx)      → ok');
+  bal_from-=amt;
+  log.push('db_debit(from, '+amt.toLocaleString('en-US')+')  → '+L('출금 처리','debited')+'   from='+bal_from.toLocaleString('en-US'));
+  // credit
+  if(f.credit){
+    log.push(line('db_credit(to, '+amt.toLocaleString('en-US')+') → FAIL ('+L('네트워크 다운','network down')+')   '+L('— 무시됨','— ignored'), RED));
+  } else {
+    bal_to+=amt;
+    log.push('db_credit(to, '+amt.toLocaleString('en-US')+') → ok    to='+bal_to.toLocaleString('en-US'));
+  }
+  // commit
+  if(f.commit){
+    log.push(line('db_commit(tx)     → FAIL   '+L('— 무시됨','— ignored'), RED));
+  } else {
+    log.push('db_commit(tx)     → ok');
+  }
+  log.push('return OK;        '+line(L('// 항상 성공으로 보고','// always reports success'), AMBER));
+  log.push('');
+  var corrupted = f.credit || f.commit || f.log || f.alloc;
+  if(corrupted){
+    log.push(line('🩸 '+L('결과: 출금만 되고 입금 안 됨 / 깨진 상태로 "성공" 응답.','RESULT: debited but not credited / "success" returned on corrupt state.'), RED));
+    log.push(line('   '+L('원장','ledger')+': from='+bal_from.toLocaleString('en-US')+'  to='+bal_to.toLocaleString('en-US')+'   ('+L('차액 소실','money lost')+' = '+(1000000-bal_from-bal_to).toLocaleString('en-US')+')', RED));
+  } else {
+    log.push(line('✓ '+L('이번엔 실패가 없어 우연히 정상 동작 (실패가 생기면 즉시 깨짐).','no failure this time, so it happened to work (it breaks the moment a step fails).'), GREEN));
+  }
+  out.innerHTML=log.join('\n');
+}
+
+function runSecure(){
+  var f=fails(), amt=amount();
+  var out=document.getElementById('s_out');
+  var log=[]; var bal_from=1000000, bal_to=0;
+  log.push('transfer('+amt.toLocaleString('en-US')+')   '+L('// 모든 반환 검사','// every return checked'));
+  // open log
+  log.push('f = fopen(audit.log)'+(f.log?'  → NULL':'  → ok'));
+  if(f.log){ log.push(line('if(!f) return ERR_LOG;   '+L('🛡 안전 중단','🛡 fail safe'), GREEN)); out.innerHTML=finish(log,'ERR_LOG',bal_from,bal_to); return; }
+  // alloc
+  log.push('buf = malloc(size)'+(f.alloc?'  → NULL':'  → ok'));
+  if(f.alloc){ log.push(line('if(!buf){ fclose(f); return ERR_MEM; }   '+L('🛡 정리 후 중단','🛡 cleanup + abort'), GREEN)); out.innerHTML=finish(log,'ERR_MEM',bal_from,bal_to); return; }
+  // begin
+  log.push('if(db_begin(tx)!=OK) ...   → ok');
+  // debit
+  bal_from-=amt;
+  log.push('if(db_debit(from)!=OK) rollback;   → ok   from='+bal_from.toLocaleString('en-US'));
+  // credit
+  if(f.credit){
+    bal_from+=amt; // rollback
+    log.push(line('db_credit(to) → FAIL   →  db_rollback(tx); return ERR_CREDIT;', GREEN));
+    log.push(line('   '+L('출금 원복','debit rolled back')+'   from='+bal_from.toLocaleString('en-US'), GREEN));
+    out.innerHTML=finish(log,'ERR_CREDIT',bal_from,bal_to); return;
+  }
+  bal_to+=amt;
+  log.push('if(db_credit(to)!=OK) rollback;    → ok   to='+bal_to.toLocaleString('en-US'));
+  // commit
+  if(f.commit){
+    bal_from+=amt; bal_to-=amt; // rollback
+    log.push(line('db_commit(tx) → FAIL   →  db_rollback(tx); return ERR_COMMIT;', GREEN));
+    log.push(line('   '+L('전체 트랜잭션 원복','whole TX rolled back')+'   from='+bal_from.toLocaleString('en-US')+'  to='+bal_to.toLocaleString('en-US'), GREEN));
+    out.innerHTML=finish(log,'ERR_COMMIT',bal_from,bal_to); return;
+  }
+  log.push('db_commit(tx) → ok');
+  out.innerHTML=finish(log,'OK',bal_from,bal_to);
+}
+
+function finish(log, code, from, to){
+  log.push('return '+code+';');
+  log.push('');
+  if(code==='OK'){
+    log.push(line('✅ '+L('정상 커밋. 원장 일관성 유지.','committed. ledger consistent.'), GREEN));
+  } else {
+    log.push(line('🛡 '+L('실패 감지 → 안전하게 중단/롤백. 호출자에게 명확한 오류('+code+') 반환.','failure detected → aborted/rolled back safely. clear error ('+code+') returned to caller.'), GREEN));
+  }
+  log.push(line('   '+L('원장','ledger')+': from='+from.toLocaleString('en-US')+'  to='+to.toLocaleString('en-US')+'   ('+L('총합 보존','total preserved')+' = '+(from+to).toLocaleString('en-US')+')', GREEN));
+  return log.join('\n');
+}
+
+window.renderDynamic=function(){ buildPresets(); };
+buildPresets();
+</script>
+</body>
+</html>
