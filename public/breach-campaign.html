@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>침투 스토리 모드 (브리치 캠페인) · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="침투 스토리 모드 (브리치 캠페인) · WEB-VULN-SIM">
+<meta property="og:description" content="기존 취약점 시뮬레이터를 정찰→침투→권한상승→탈취 킬체인 시나리오로 연결한 스토리 모드">
+<meta property="og:url" content="https://vuln-sim.web.app/breach-campaign.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="침투 스토리 모드: 기존 취약점 시뮬레이터를 정찰→침투→권한상승→탈취 킬체인으로 연결해 실전형 공격 시나리오를 체험합니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#f472b6; --accent2:#fb7185;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 80px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#f9a8d4;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar a:hover{color:#fff}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:24px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:860px}
+    .badge-kc{font-family:var(--mono);font-size:11px;font-weight:700;color:#3b0a22;background:linear-gradient(135deg,#f472b6,#fb7185);border-radius:6px;padding:2px 9px}
+
+    /* scenario picker cards */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin:16px 0}
+    .scard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;cursor:pointer;transition:.18s;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .scard::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(180deg,#f472b6,#fb7185)}
+    .scard:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 14px 38px rgba(244,114,182,.18)}
+    .scard.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(244,114,182,.35)}
+    .scard .ico{font-size:26px}
+    .scard h3{font-size:16px;color:#fff;margin:6px 0 4px}
+    .scard .desc{font-size:12.5px;color:var(--muted);min-height:34px}
+    .scard .meta{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+    .pill{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 8px;background:#0f172a;border:1px solid #334155;color:#cbd5e1}
+    .pbar{flex:1;height:7px;background:#0f172a;border:1px solid #334155;border-radius:999px;overflow:hidden}
+    .pbar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f472b6,#fb7185);transition:width .35s}
+    .done-chip{font-family:var(--mono);font-size:10.5px;font-weight:700;color:#86efac;background:var(--good-bg);border-radius:999px;padding:2px 8px;display:none}
+    .scard.full .done-chip{display:inline-block}
+
+    /* detail / timeline */
+    .detail{margin-top:8px}
+    .dhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 18px}
+    .dhead h2{font-size:18px;color:#fff}
+    .dhead .sub2{font-size:12.5px;color:var(--muted);width:100%}
+    .dhead .sp{margin-left:auto}
+    .bigbar{flex:1;min-width:160px;height:10px;background:#0f172a;border:1px solid #334155;border-radius:999px;overflow:hidden}
+    .bigbar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f472b6,#fb7185);transition:width .35s}
+    .cnt{font-family:var(--mono);font-size:13px;font-weight:700;color:#f9a8d4}
+
+    .banner{display:none;margin:14px 0;padding:14px 18px;border-radius:14px;background:linear-gradient(135deg,#0f2a18,#14361f);border:1px solid #166534;color:#86efac;font-weight:700;font-size:15px;align-items:center;gap:10px}
+    .banner.show{display:flex;animation:pop .4s ease}
+    @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+
+    .timeline{position:relative;margin:18px 0 0;padding-left:6px}
+    .timeline::before{content:"";position:absolute;left:23px;top:14px;bottom:14px;width:2px;background:linear-gradient(180deg,#f472b6,#fb7185,#818cf8)}
+    .step{position:relative;display:flex;gap:16px;padding:0 0 18px 0}
+    .step .node{position:relative;z-index:2;flex:0 0 auto;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--mono);font-size:15px;color:#3b0a22;background:linear-gradient(135deg,#f472b6,#fb7185);border:3px solid var(--bg);box-shadow:0 0 0 1px #334155}
+    .step.done .node{background:linear-gradient(135deg,#22c55e,#16a34a);color:#06210f;box-shadow:0 0 0 1px #166534,0 0 14px rgba(34,197,94,.4)}
+    .step .body{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:.18s;box-shadow:0 8px 22px rgba(0,0,0,.22)}
+    .step.done .body{border-color:#166534}
+    .step .body:hover{border-color:var(--accent)}
+    .step.done .body:hover{border-color:#22c55e}
+    .stage-badge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.3px;border-radius:6px;padding:3px 10px;color:#fff;margin-bottom:6px}
+    .st-recon{background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#07293b}
+    .st-exploit{background:linear-gradient(135deg,#f59e0b,#f97316);color:#3b1d00}
+    .st-privesc{background:linear-gradient(135deg,#a855f7,#7c3aed)}
+    .st-exfil{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    .st-persist{background:linear-gradient(135deg,#64748b,#475569)}
+    .step h4{font-size:15.5px;color:#fff;margin:2px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .cwe-tag{font-family:var(--mono);font-size:10.5px;font-weight:700;color:#f9a8d4;background:#3b1424;border:1px solid #6d2245;border-radius:6px;padding:1px 7px}
+    .step .goal{font-size:13px;color:#cbd5e1;margin-bottom:10px}
+    .step .acts{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{cursor:pointer;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:12.5px;font-family:var(--mono);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .btn.open{background:linear-gradient(135deg,#f472b6,#fb7185);color:#3b0a22}
+    .btn.open:hover{filter:brightness(1.08)}
+    .btn.toggle{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    .btn.toggle:hover{border-color:var(--accent);color:#fff}
+    .step.done .btn.toggle{background:var(--good-bg);color:#86efac;border-color:#166534}
+
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:14px}
+    .note b{color:#f9a8d4}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .toolbar button{cursor:pointer;background:#1e293b;border:1px solid #334155;color:#cbd5e1;border-radius:8px;padding:7px 13px;font-size:12px;font-family:var(--mono)}
+    .toolbar button:hover{border-color:var(--accent);color:#fff}
+    .disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:20px}.step .node{width:38px;height:38px;font-size:13px}.timeline::before{left:20px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <a href="training-dashboard.html"><span data-en="Dashboard">학습 대시보드</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🩸 <span data-en="Breach Campaign — Story Mode">침투 스토리 모드</span>
+        <span class="badge-kc"><span data-en="Kill-Chain">킬체인</span> · 정찰→침투→권한상승→탈취</span></h1>
+      <div class="sub" data-en="Chain the existing vulnerability simulators into realistic attacker kill-chains. Each scenario walks through reconnaissance, initial access, privilege escalation, and exfiltration — one simulator per stage. Pick a scenario, then complete each step.">
+        기존 취약점 시뮬레이터들을 실전형 공격 킬체인으로 엮은 스토리 모드입니다. 각 시나리오는 정찰 → 침투 → 권한상승 → 탈취 단계를 거치며, 단계마다 실제 시뮬레이터 한 개와 연결됩니다. 시나리오를 고르고 각 단계를 완료해 보세요.
+      </div>
+    </div>
+
+    <!-- scenario picker -->
+    <div class="grid" id="picker"></div>
+
+    <!-- selected scenario detail -->
+    <div class="detail" id="detail" style="display:none">
+      <div class="dhead">
+        <h2 id="d_title"></h2>
+        <span class="sp"></span>
+        <div class="bigbar"><i id="d_bar"></i></div>
+        <span class="cnt" id="d_cnt"></span>
+        <div class="sub2" id="d_sub"></div>
+      </div>
+      <div class="banner" id="d_banner">🏁 <span data-en="Scenario complete! Full kill-chain reproduced.">시나리오 완료! 킬체인 전 단계를 재현했습니다.</span></div>
+      <div class="timeline" id="d_steps"></div>
+      <div class="toolbar">
+        <button onclick="resetScenario()">↺ <span data-en="Reset this scenario">이 시나리오 초기화</span></button>
+        <button onclick="closeDetail()">✕ <span data-en="Back to scenarios">시나리오 목록으로</span></button>
+      </div>
+    </div>
+
+    <div class="note" data-en="<b>How completion works:</b> Clicking <b>Open simulator</b> opens the linked lab in a new tab and marks the step complete automatically. You can also toggle a step manually with <b>Done</b>. Progress is saved in your browser (localStorage) per scenario.">
+      <b>완료 처리 방식:</b> <b>시뮬레이터 열기</b>를 누르면 연결된 실습 페이지가 새 탭으로 열리고 해당 단계가 자동으로 완료 처리됩니다. <b>완료</b> 버튼으로 직접 토글할 수도 있습니다. 진행 상황은 시나리오별로 브라우저(localStorage)에 저장됩니다.
+    </div>
+
+    <div class="disc" data-en="⚠️ Educational simulation only. These scenarios chain in-browser teaching simulators — they do NOT attack any real system, host, or account. Use only on systems you are explicitly authorized to test.">
+      ⚠️ 교육용 시뮬레이션입니다. 본 시나리오는 브라우저 내 학습용 시뮬레이터를 연결한 것일 뿐, 실제 시스템·호스트·계정을 공격하지 않습니다. 명시적으로 허가받은 시스템에서만 보안 점검을 수행하세요.
+    </div>
+  </div>
+
+<script src="js/sim-map.js"></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded', applyLang);
+
+var MAP = window.SIM_BY_CWE || {};
+function simFor(cwe){ return MAP[cwe] || 'vuln-hub.html'; }
+
+// ---- stage metadata (label + css class) ----
+var STAGES = {
+  recon:   {cls:'st-recon',   ko:'정찰',   en:'Recon'},
+  exploit: {cls:'st-exploit', ko:'침투',   en:'Exploit'},
+  privesc: {cls:'st-privesc', ko:'권한상승', en:'PrivEsc'},
+  exfil:   {cls:'st-exfil',   ko:'탈취',   en:'Exfiltration'},
+  persist: {cls:'st-persist', ko:'지속',   en:'Persistence'}
+};
+
+// ---- 3 scenarios ----
+var SCENARIOS = [
+  {
+    id:'vuln-shop',
+    icon:'🛒',
+    title:{ko:'vuln-shop 침투',en:'vuln-shop Breach'},
+    desc:{ko:'전자상거래 사이트를 정찰부터 DB 탈취까지 단계적으로 공략합니다.',
+          en:'Walk an e-commerce site from recon all the way to database exfiltration.'},
+    steps:[
+      {stage:'recon', cwe:'CWE-615',
+        title:{ko:'소스 주석·robots.txt 정찰',en:'Source comments & robots.txt recon'},
+        goal:{ko:'공개된 페이지 소스의 HTML 주석과 robots.txt에서 관리 경로·테스트 계정·API 힌트 같은 민감 정보를 수집해 다음 공격의 발판을 만듭니다.',
+              en:'Harvest sensitive hints — admin paths, test accounts, API notes — from HTML comments and robots.txt to seed the next stage.'}},
+      {stage:'exploit', cwe:'CWE-89',
+        title:{ko:'로그인 폼 SQL 인젝션',en:'Login form SQL injection'},
+        goal:{ko:"정찰로 확인한 로그인 엔드포인트에 ' OR '1'='1 류 페이로드를 넣어 인증을 우회하고 첫 세션을 획득합니다.",
+              en:"Bypass authentication on the discovered login endpoint with an ' OR '1'='1 style payload to gain the first session."}},
+      {stage:'privesc', cwe:'CWE-285',
+        title:{ko:'IDOR로 타 사용자 권한 탈취',en:'IDOR — escalate to other users'},
+        goal:{ko:'주문/계정 조회 URL의 식별자(id)를 바꿔 권한 검사가 없는 다른 사용자·관리자 리소스에 접근해 권한을 확대합니다.',
+              en:'Tamper with the id parameter on order/account endpoints to reach other users and admin resources that lack authorization checks.'}},
+      {stage:'exfil', cwe:'CWE-798',
+        title:{ko:'하드코딩 키로 DB 직접 탈취',en:'Hardcoded key → direct DB exfiltration'},
+        goal:{ko:'소스에 박혀 있던 하드코딩 자격증명/DB 키를 이용해 데이터베이스에 직접 접속하고 회원·결제 데이터를 통째로 탈취합니다.',
+              en:'Use the hardcoded credentials/DB key found in source to connect directly to the database and exfiltrate customer and payment data.'}}
+    ]
+  },
+  {
+    id:'corp-portal',
+    icon:'🏢',
+    title:{ko:'사내 포털 장악',en:'Corporate Portal Takeover'},
+    desc:{ko:'약한 인증을 뚫고 세션을 가로채 관리 기능까지 장악합니다.',
+          en:'Crack weak auth, hijack a session, and seize admin functions.'},
+    steps:[
+      {stage:'recon', cwe:'CWE-521',
+        title:{ko:'약한 비밀번호 정책 분석',en:'Weak password policy analysis'},
+        goal:{ko:'비밀번호 정책이 짧고 단순한지 점검해 사전·추측 공격이 통할 후보 계정과 패턴을 파악합니다.',
+              en:'Assess how short/simple the password policy is to identify accounts and patterns vulnerable to dictionary/guessing attacks.'}},
+      {stage:'exploit', cwe:'CWE-307',
+        title:{ko:'브루트포스 로그인 돌파',en:'Brute-force login'},
+        goal:{ko:'로그인 시도 제한(레이트리밋)이 없는 점을 악용해 자동화 브루트포스로 직원 계정 자격증명을 탈취합니다.',
+              en:'Exploit the missing rate limit to brute-force and recover employee credentials via automation.'}},
+      {stage:'privesc', cwe:'CWE-488',
+        title:{ko:'세션 하이재킹',en:'Session hijacking'},
+        goal:{ko:'노출되거나 예측 가능한 세션 식별자를 가로채 관리자 세션으로 갈아타며 권한을 끌어올립니다.',
+              en:'Steal an exposed/predictable session identifier to ride an administrator session and escalate privileges.'}},
+      {stage:'exfil', cwe:'CWE-306',
+        title:{ko:'인증 없는 관리 기능 호출',en:'Unauthenticated admin function'},
+        goal:{ko:'인증 검사가 빠진 관리 API/페이지를 직접 호출해 사용자 목록·설정을 덤프하고 시스템을 통제합니다.',
+              en:'Invoke admin APIs/pages that skip authentication to dump user lists and settings and take control.'}},
+      {stage:'persist', cwe:'CWE-489',
+        title:{ko:'디버그 코드로 거점 확보',en:'Debug code → foothold'},
+        goal:{ko:'운영에 남은 디버그/백도어 코드를 통해 내부 정보를 추가로 노출시키고 지속적인 접근 거점을 확보합니다.',
+              en:'Use leftover debug/backdoor code in production to leak more internals and establish a persistent foothold.'}}
+    ]
+  },
+  {
+    id:'api-rce',
+    icon:'🛰️',
+    title:{ko:'API 서버 원격장악',en:'API Server Remote Takeover'},
+    desc:{ko:'외부 API 서버를 SSRF에서 RCE까지 연결해 원격 장악합니다.',
+          en:'Chain SSRF into RCE to remotely take over an exposed API server.'},
+    steps:[
+      {stage:'recon', cwe:'CWE-918',
+        title:{ko:'SSRF로 내부망 정찰',en:'SSRF — internal recon'},
+        goal:{ko:'서버가 검증 없이 외부 URL을 요청하는 기능을 악용해 내부 메타데이터·내부 서비스에 접근하며 내부망 지형을 파악합니다.',
+              en:'Abuse a server-side fetch with no URL validation to reach internal metadata and services and map the internal network.'}},
+      {stage:'exploit', cwe:'CWE-78',
+        title:{ko:'명령 삽입(Command Injection)',en:'Command injection'},
+        goal:{ko:'SSRF로 도달한 내부 엔드포인트의 OS 명령 처리 파라미터에 명령을 주입해 서버에서 임의 명령을 실행합니다.',
+              en:'Inject OS commands into a parameter on an internal endpoint reached via SSRF to run arbitrary commands on the server.'}},
+      {stage:'privesc', cwe:'CWE-502',
+        title:{ko:'역직렬화로 RCE 안정화',en:'Deserialization → stable RCE'},
+        goal:{ko:'신뢰할 수 없는 직렬화 데이터를 처리하는 지점에 가젯 체인을 넣어 안정적인 원격 코드 실행과 상위 권한을 확보합니다.',
+              en:'Feed a gadget chain into an unsafe deserialization sink to gain stable remote code execution and higher privileges.'}},
+      {stage:'exfil', cwe:'CWE-209',
+        title:{ko:'에러 메시지 정보 노출 활용',en:'Error message information leak'},
+        goal:{ko:'상세 에러·스택트레이스에서 경로·DB 쿼리·키 같은 민감 정보를 수집해 탈취 대상과 추가 침투 경로를 확정합니다.',
+              en:'Mine verbose errors/stack traces for paths, DB queries, and keys to confirm exfiltration targets and further pivots.'}}
+    ]
+  }
+];
+
+// ---- progress storage ----
+var SKEY='wvs_breach';
+function loadProg(){try{return JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){return {};}}
+function saveProg(p){try{localStorage.setItem(SKEY,JSON.stringify(p));}catch(e){}}
+function isDone(sid,idx){var p=loadProg();return !!(p[sid]&&p[sid][idx]);}
+function setDone(sid,idx,val){
+  var p=loadProg();
+  if(!p[sid])p[sid]={};
+  if(val)p[sid][idx]=true; else delete p[sid][idx];
+  saveProg(p);
+}
+function doneCount(s){var n=0;for(var i=0;i<s.steps.length;i++){if(isDone(s.id,i))n++;}return n;}
+
+var current=null;
+
+function tx(o){return o?L(o.ko,o.en):'';}
+
+// ---- picker rendering ----
+function renderPicker(){
+  var box=document.getElementById('picker'); box.innerHTML='';
+  SCENARIOS.forEach(function(s){
+    var dc=doneCount(s), tot=s.steps.length, full=dc>=tot;
+    var card=document.createElement('div');
+    card.className='scard'+(current&&current.id===s.id?' active':'')+(full?' full':'');
+    card.onclick=function(){selectScenario(s.id);};
+    var pct=Math.round(dc/tot*100);
+    card.innerHTML=
+      '<div class="ico">'+s.icon+'</div>'+
+      '<h3>'+escapeHtml(tx(s.title))+'</h3>'+
+      '<div class="desc">'+escapeHtml(tx(s.desc))+'</div>'+
+      '<div class="meta">'+
+        '<span class="pill">'+tot+' '+L('단계','steps')+'</span>'+
+        '<span class="done-chip">✓ '+L('완료','done')+'</span>'+
+        '<span class="pbar"><i style="width:'+pct+'%"></i></span>'+
+        '<span>'+dc+'/'+tot+'</span>'+
+      '</div>';
+    box.appendChild(card);
+  });
+}
+
+function selectScenario(id){
+  current=null;
+  for(var i=0;i<SCENARIOS.length;i++){if(SCENARIOS[i].id===id)current=SCENARIOS[i];}
+  if(!current)return;
+  renderPicker();
+  renderDetail();
+  var d=document.getElementById('detail'); d.style.display='block';
+  d.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function closeDetail(){
+  current=null;
+  document.getElementById('detail').style.display='none';
+  renderPicker();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetScenario(){
+  if(!current)return;
+  var p=loadProg(); delete p[current.id]; saveProg(p);
+  renderPicker(); renderDetail();
+}
+
+function renderDetail(){
+  if(!current)return;
+  document.getElementById('d_title').textContent=current.icon+' '+tx(current.title);
+  document.getElementById('d_sub').textContent=tx(current.desc);
+  var dc=doneCount(current), tot=current.steps.length;
+  document.getElementById('d_cnt').textContent=dc+'/'+tot;
+  document.getElementById('d_bar').style.width=Math.round(dc/tot*100)+'%';
+  document.getElementById('d_banner').classList.toggle('show',dc>=tot);
+
+  var box=document.getElementById('d_steps'); box.innerHTML='';
+  current.steps.forEach(function(st,idx){
+    var done=isDone(current.id,idx);
+    var stg=STAGES[st.stage]||STAGES.recon;
+    var sim=simFor(st.cwe);
+    var row=document.createElement('div');
+    row.className='step'+(done?' done':'');
+    row.innerHTML=
+      '<div class="node">'+(done?'✓':(idx+1))+'</div>'+
+      '<div class="body">'+
+        '<span class="stage-badge '+stg.cls+'">'+L(stg.ko,stg.en)+'</span>'+
+        '<h4>'+escapeHtml(tx(st.title))+' <span class="cwe-tag">'+st.cwe+'</span></h4>'+
+        '<div class="goal">'+escapeHtml(tx(st.goal))+'</div>'+
+        '<div class="acts">'+
+          '<a class="btn open" href="'+sim+'" target="_blank" rel="noopener" data-idx="'+idx+'">▶ '+L('시뮬레이터 열기','Open simulator')+'</a>'+
+          '<button class="btn toggle" data-idx="'+idx+'">'+(done?'✓ '+L('완료됨','Done'):'○ '+L('완료','Mark done'))+'</button>'+
+        '</div>'+
+      '</div>';
+    box.appendChild(row);
+  });
+
+  // wire handlers
+  box.querySelectorAll('a.open').forEach(function(a){
+    a.addEventListener('click',function(){
+      var idx=parseInt(this.getAttribute('data-idx'),10);
+      setDone(current.id,idx,true);
+      // re-render after the tab opens
+      setTimeout(function(){renderDetail();renderPicker();},120);
+    });
+  });
+  box.querySelectorAll('button.toggle').forEach(function(b){
+    b.addEventListener('click',function(){
+      var idx=parseInt(this.getAttribute('data-idx'),10);
+      setDone(current.id,idx,!isDone(current.id,idx));
+      renderDetail();renderPicker();
+    });
+  });
+}
+
+function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+window.renderDynamic=function(){ renderPicker(); if(current) renderDetail(); };
+renderPicker();
+</script>
+</body>
+</html>

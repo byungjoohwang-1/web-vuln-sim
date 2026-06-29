@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>PR 코드리뷰 게임 · Code Review Game</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+    --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+    --bad:#ef4444; --warn:#f59e0b; --ok:#22c55e; --mono:'JetBrains Mono','Consolas','D2Coding',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  a{color:var(--accent);text-decoration:none}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#0a101e;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30}
+  .topbar a{color:#cbd5e1;font-size:14px}.topbar .sp{flex:1}
+  .langbtn{background:#1e293b;border:1px solid var(--border);color:#cbd5e1;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:13px}
+  .wrap{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+  .hero h1{font-size:23px;margin:6px 0 4px}
+  .hero .sub{color:var(--muted);font-size:14px;max-width:880px}
+  .kisa{font-size:12px;background:#0c2333;color:#7dd3fc;border:1px solid #155e75;border-radius:999px;padding:3px 10px;margin-left:8px;vertical-align:middle}
+  .statbar{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 16px;min-width:120px}
+  .stat .n{font-size:20px;font-weight:700;color:#fff}.stat .l{font-size:12px;color:var(--muted)}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px;align-items:center}
+  .filters select{background:var(--panel2);border:1px solid var(--border);color:var(--ink);border-radius:7px;padding:7px 10px;font-size:13px}
+  .act{border:0;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .act.primary{background:var(--accent);color:#04243a}
+  .act.ghost{background:#1e293b;color:#cbd5e1}
+  .act.ok{background:var(--ok);color:#04240f}
+  /* PR card */
+  .pr{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .pr-head{padding:14px 16px;border-bottom:1px solid var(--border);background:#0c1426}
+  .pr-title{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pr-meta{font-size:12px;color:var(--muted);margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .badge{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--border);background:#0b1220;color:#cbd5e1}
+  .badge.open{background:#0d2a16;color:#86efac;border-color:#14532d}
+  .badge.lang{color:#fbbf24;border-color:#7c5e10}
+  .filebar{padding:7px 14px;background:#0a0f1c;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12.5px;color:#93c5fd;display:flex;gap:8px;align-items:center}
+  .hint{padding:9px 16px;background:#0f172a;border-bottom:1px solid var(--border);font-size:12.5px;color:#cbd5e1}
+  .code{font-family:var(--mono);font-size:13px;background:#0a0f1c}
+  .line{display:flex;cursor:pointer;border-left:3px solid transparent}
+  .line:hover{background:#0e1a30}
+  .line .ln{width:42px;text-align:right;padding:2px 10px 2px 0;color:#475569;user-select:none;flex-shrink:0}
+  .line .flag{width:22px;text-align:center;color:#64748b;user-select:none;flex-shrink:0}
+  .line .src{padding:2px 10px 2px 0;white-space:pre;overflow-x:auto;flex:1;color:#e2e8f0}
+  .line.flagged{background:#3a1d05;border-left-color:var(--warn)}
+  .line.flagged .flag{color:var(--warn)}
+  /* post-grade markers */
+  .line.hit{background:#06281a;border-left-color:var(--ok)}
+  .line.miss{background:#2a1015;border-left-color:var(--bad)}
+  .line.false{background:#241a05;border-left-color:var(--warn)}
+  .qbox{padding:14px 16px;border-top:1px solid var(--border)}
+  .qbox h4{margin:0 0 8px;font-size:14px}
+  .opt{display:block;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:6px;cursor:pointer;font-size:13px}
+  .opt:hover{border-color:var(--accent)}
+  .opt.sel{border-color:var(--accent);background:#0c2333}
+  .opt.correct{border-color:var(--ok);background:#06281a}
+  .opt.wrong{border-color:var(--bad);background:#2a1015}
+  .actions{padding:14px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .result{margin:0;padding:14px 16px;font-size:13.5px;display:none;border-top:1px solid var(--border)}
+  .result.show{display:block}
+  .result.pass{background:#052e16;color:#bbf7d0}.result.partial{background:#241a05;color:#fde68a}.result.fail{background:#2a1015;color:#fecaca}
+  .result h3{margin:0 0 6px;font-size:15px}
+  .result code{background:#1e293b;padding:1px 6px;border-radius:5px;font-family:var(--mono);color:#fde68a}
+  .solution{margin-top:10px}
+  .solution pre{background:#0a0f1c;border:1px solid #14532d;border-radius:9px;padding:13px;overflow:auto;font-family:var(--mono);font-size:12.5px;color:#bbf7d0;white-space:pre}
+  .empty{color:var(--muted);text-align:center;padding:70px 20px}
+  .disc{margin-top:22px;color:#64748b;font-size:12px;text-align:center}
+  body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0c2333;border:1px solid #155e75;color:#7dd3fc;padding:10px 18px;border-radius:9px;font-size:13px;z-index:60;opacity:0;transition:opacity .3s}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <a href="code-fix-lab.html"><span data-en="Code-Fix Lab">코드 수정 실습</span></a>
+    <a href="training-dashboard.html"><span data-en="Dashboard">학습 대시보드</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>🔍 <span data-en="PR Code-Review Game">PR 코드리뷰 게임</span>
+        <span class="kisa"><span data-en="Spot the vulnerable lines">취약 라인을 찾아라</span></span></h1>
+      <div class="sub" data-en="You're the security reviewer on this pull request. Click the lines you believe are vulnerable, identify the weakness, and submit your review. The engine scores your findings like a real code review.">
+        당신은 이 풀 리퀘스트의 보안 리뷰어입니다. 취약하다고 생각하는 라인을 클릭해 표시하고, 약점 유형을 고른 뒤 리뷰를 제출하세요. 엔진이 실제 코드리뷰처럼 당신의 지적을 채점합니다.
+      </div>
+    </div>
+
+    <div class="statbar">
+      <div class="stat"><div class="n" id="st-solved">0 / 0</div><div class="l" data-en="Reviews passed">통과한 리뷰</div></div>
+      <div class="stat"><div class="n" id="st-xp">0</div><div class="l" data-en="XP">경험치</div></div>
+      <div class="stat"><div class="n" id="st-level">Lv.1</div><div class="l" data-en="Level">레벨</div></div>
+      <div class="stat"><div class="n" id="st-rate">0%</div><div class="l" data-en="Completion">완료율</div></div>
+    </div>
+
+    <div class="filters">
+      <select id="f-lang"><option value="">🌐 전체 언어</option><option value="Java">Java</option><option value="Python">Python</option><option value="C">C</option></select>
+      <select id="f-cat"><option value="" data-en="All categories">전체 분류</option></select>
+      <select id="f-diff"><option value="" data-en="All levels">전체 난이도</option><option value="하">하</option><option value="중">중</option><option value="상">상</option></select>
+      <select id="f-status"><option value="" data-en="All">전체</option><option value="unsolved" data-en="Unsolved">미해결</option><option value="solved" data-en="Solved">해결됨</option></select>
+      <button class="act primary" onclick="nextPR()">🎲 <span data-en="Next PR">다음 PR</span></button>
+    </div>
+
+    <div id="stage">
+      <div class="pr"><div class="empty" data-en="Press “Next PR” to receive a pull request to review.">“다음 PR” 버튼을 눌러 리뷰할 풀 리퀘스트를 받으세요.</div></div>
+    </div>
+
+    <div class="disc" data-en="Educational simulation. Vulnerable-line detection is heuristic (derived from the reference fix); use it to train your review instinct.">
+      ⚠️ 교육용 시뮬레이션입니다. 취약 라인 판정은 모범 수정본에서 도출한 휴리스틱이며, 코드리뷰 감각 훈련용입니다.
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-data-ext.js"></script>
+<script src="js/sast-engine.js"></script>
+<script src="js/codefix-grader.js"></script>
+<script src="js/academy-state.js"></script>
+<script>
+/* ---------- i18n ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();document.body.classList.toggle('lang-en',en);
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.dataset.ko===undefined) el.dataset.ko=el.innerHTML;
+    el.innerHTML = en ? el.dataset.en : el.dataset.ko;
+  });
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();if(window.__cur)renderPR(window.__cur);}
+
+/* ---------- data + vulnerable-line derivation ---------- */
+var ALL = (window.ACADEMY_DATA&&window.ACADEMY_DATA.PRACTICAL||[]).filter(function(x){return x.isTruePositive&&x.safeCode&&x.code;});
+var DANGER = (window.CodeFixGrader&&window.CodeFixGrader.DANGER)||[];
+function tokFor(lang){var SE=window.sastEngine;return lang==='Python'?SE.tokenizePython:SE.tokenizeJava;}
+function vulnLinesOf(item){
+  var safeSet={};item.safeCode.split('\n').forEach(function(s){var t=s.trim();if(t)safeSet[t]=1;});
+  var lines=item.code.split('\n');
+  var out=[];
+  lines.forEach(function(ln,i){var t=ln.trim();if(t&&!safeSet[t])out.push(i);});
+  if(out.length===0){
+    // fallback: lines containing a danger token this exercise removed
+    var tok=tokFor(item.lang);var safeTokens={};tok(item.safeCode).forEach(function(t){safeTokens[t]=1;});
+    var vulnTokens={};tok(item.code).forEach(function(t){vulnTokens[t]=1;});
+    var dl=DANGER.filter(function(d){return vulnTokens[d]&&!safeTokens[d];});
+    lines.forEach(function(ln,i){var tk=tok(ln);for(var j=0;j<dl.length;j++){if(tk.indexOf(dl[j])>=0){out.push(i);break;}}});
+  }
+  return out;
+}
+// usable items: those with >=1 derivable vuln line
+var ITEMS = ALL.filter(function(x){return vulnLinesOf(x).length>0;});
+
+/* CWE label list for distractors */
+var CWE_LABELS={};ALL.forEach(function(x){if(!CWE_LABELS[x.cwe])CWE_LABELS[x.cwe]=x.weaknessName||x.cwe;});
+var CWE_KEYS=Object.keys(CWE_LABELS);
+
+/* ---------- progress ---------- */
+function loadProg(){try{return JSON.parse(localStorage.getItem('wvs_review')||'{}');}catch(e){return {};}}
+function saveProg(p){try{localStorage.setItem('wvs_review',JSON.stringify(p));}catch(e){}}
+var PROG=loadProg();PROG.passed=PROG.passed||{};
+var XP_BY_DIFF={'하':25,'중':35,'상':50};
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2600);}
+function hashNum(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return 100+(h%900);}
+function extFor(lang){return lang==='Python'?'py':lang==='C'?'c':'java';}
+function fileFor(item){var base=(item.weaknessName||item.cwe||'Module').replace(/[^A-Za-z0-9]+/g,'')||'Module';return 'src/'+base+'.'+extFor(item.lang);}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ---------- filters ---------- */
+function populateCats(){var cats=[];ITEMS.forEach(function(x){if(cats.indexOf(x.cat)<0)cats.push(x.cat);});var sel=document.getElementById('f-cat');cats.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
+function pool(){
+  var lang=document.getElementById('f-lang').value,cat=document.getElementById('f-cat').value,diff=document.getElementById('f-diff').value,st=document.getElementById('f-status').value;
+  return ITEMS.filter(function(x){
+    if(lang&&x.lang!==lang)return false;
+    if(cat&&x.cat!==cat)return false;
+    if(diff&&x.diff!==diff)return false;
+    if(st==='solved'&&!PROG.passed[x.id])return false;
+    if(st==='unsolved'&&PROG.passed[x.id])return false;
+    return true;
+  });
+}
+
+/* ---------- stats ---------- */
+function refreshStats(){
+  var solved=Object.keys(PROG.passed).filter(function(id){return ITEMS.some(function(x){return x.id===id;});}).length;
+  document.getElementById('st-solved').textContent=solved+' / '+ITEMS.length;
+  document.getElementById('st-rate').textContent=ITEMS.length?Math.round(solved/ITEMS.length*100)+'%':'0%';
+  var lvl=1,xp=0;try{if(window.AcademyState){var u=AcademyState.getUnifiedStats?AcademyState.getUnifiedStats():AcademyState.getProgress();xp=u.xp||0;lvl=u.level||1;}}catch(e){}
+  document.getElementById('st-xp').textContent=xp;document.getElementById('st-level').textContent='Lv.'+lvl;
+}
+
+/* ---------- render ---------- */
+function nextPR(){
+  var p=pool();
+  if(!p.length){document.getElementById('stage').innerHTML='<div class="pr"><div class="empty">'+L('조건에 맞는 PR이 없습니다. 필터를 바꿔보세요.','No PR matches the filter.')+'</div></div>';return;}
+  // prefer unsolved
+  var unsolved=p.filter(function(x){return !PROG.passed[x.id];});
+  var src=unsolved.length?unsolved:p;
+  var item=src[Math.floor(Math.random()*src.length)];
+  window.__cur=item;window.__flags={};window.__cwePick=null;window.__graded=false;
+  renderPR(item);
+}
+function renderPR(item){
+  var vlines=vulnLinesOf(item);window.__vlines=vlines;
+  var lines=item.code.split('\n');
+  var prn=hashNum(item.id);
+  // CWE options
+  var opts=[item.cwe];var others=shuffle(CWE_KEYS.filter(function(k){return k!==item.cwe;})).slice(0,3);
+  opts=shuffle(opts.concat(others));window.__cweOpts=opts;
+  var solved=PROG.passed[item.id];
+
+  var codeHtml='';
+  lines.forEach(function(ln,i){
+    var flagged=window.__flags[i]?' flagged':'';
+    codeHtml+='<div class="line'+flagged+'" data-i="'+i+'" onclick="toggleFlag('+i+')">'+
+      '<span class="ln">'+(i+1)+'</span>'+
+      '<span class="flag">'+(window.__flags[i]?'🚩':'')+'</span>'+
+      '<span class="src">'+(esc(ln)||' ')+'</span></div>';
+  });
+  var optHtml='';
+  opts.forEach(function(k){
+    optHtml+='<label class="opt" data-cwe="'+k+'" onclick="pickCwe(\''+k+'\')"><b>'+esc(k)+'</b> — '+esc(CWE_LABELS[k]||'')+'</label>';
+  });
+
+  document.getElementById('stage').innerHTML=
+    '<div class="pr">'+
+      '<div class="pr-head"><div class="pr-title">🔀 PR #'+prn+': '+esc(item.title)+
+        (solved?' <span class="badge open" style="background:#052e16;color:#86efac">'+L('✔ 리뷰 통과','✔ Reviewed')+'</span>':'')+'</div>'+
+        '<div class="pr-meta"><span class="badge open">OPEN</span>'+
+          '<span class="badge lang">'+item.lang+'</span>'+
+          '<span class="badge">'+esc(item.cat)+'</span>'+
+          '<span class="badge">'+L('난이도 ','Lv ')+item.diff+'</span>'+
+          '<span>+'+lines.length+' '+L('줄 변경','lines')+'</span></div></div>'+
+      '<div class="filebar">📄 '+esc(fileFor(item))+'</div>'+
+      '<div class="hint">🧐 '+L('아래 변경 코드에서 <b>취약하다고 판단되는 라인</b>을 모두 클릭해 표시(🚩)하세요.','Click every line you think is <b>vulnerable</b> to flag it (🚩).')+'</div>'+
+      '<div class="code" id="code">'+codeHtml+'</div>'+
+      '<div class="qbox"><h4>❓ '+L('이 PR의 핵심 보안 약점은 무엇입니까?','What is the core weakness in this PR?')+'</h4>'+optHtml+'</div>'+
+      '<div class="actions">'+
+        '<button class="act ok" onclick="submitReview()">📝 '+L('리뷰 제출','Submit review')+'</button>'+
+        '<button class="act ghost" onclick="nextPR()">⏭ '+L('다른 PR','Skip')+'</button>'+
+      '</div>'+
+      '<div class="result" id="result"></div>'+
+      '<div class="solution" id="solution"></div>'+
+    '</div>';
+}
+function toggleFlag(i){
+  if(window.__graded)return;
+  window.__flags[i]=!window.__flags[i];
+  var el=document.querySelector('.line[data-i="'+i+'"]');
+  if(el){el.classList.toggle('flagged',!!window.__flags[i]);el.querySelector('.flag').textContent=window.__flags[i]?'🚩':'';}
+}
+function pickCwe(k){
+  if(window.__graded)return;
+  window.__cwePick=k;
+  document.querySelectorAll('.opt').forEach(function(o){o.classList.toggle('sel',o.dataset.cwe===k);});
+}
+
+/* ---------- grading ---------- */
+function submitReview(){
+  var item=window.__cur;if(!item)return;
+  var vlines=window.__vlines||[];
+  var flagged=Object.keys(window.__flags).filter(function(k){return window.__flags[k];}).map(Number);
+  var hit=flagged.filter(function(i){return vlines.indexOf(i)>=0;});
+  var miss=vlines.filter(function(i){return flagged.indexOf(i)<0;});
+  var fp=flagged.filter(function(i){return vlines.indexOf(i)<0;});
+  var cweOk=window.__cwePick===item.cwe;
+  window.__graded=true;
+
+  // mark lines
+  document.querySelectorAll('.line').forEach(function(el){
+    var i=Number(el.dataset.i);el.style.cursor='default';
+    if(vlines.indexOf(i)>=0&&flagged.indexOf(i)>=0)el.classList.add('hit');
+    else if(vlines.indexOf(i)>=0)el.classList.add('miss');
+    else if(flagged.indexOf(i)>=0)el.classList.add('false');
+  });
+  // mark cwe options
+  document.querySelectorAll('.opt').forEach(function(o){
+    if(o.dataset.cwe===item.cwe)o.classList.add('correct');
+    else if(o.dataset.cwe===window.__cwePick)o.classList.add('wrong');
+  });
+
+  var foundAll=miss.length===0;
+  var lineScore = vlines.length? hit.length/vlines.length : 0;
+  var pass = foundAll && fp.length===0 && cweOk;
+  var partial = !pass && (hit.length>0 || cweOk);
+
+  var r=document.getElementById('result');
+  r.className='result show '+(pass?'pass':partial?'partial':'fail');
+  var head = pass? '✅ '+L('완벽한 리뷰!','Perfect review!')
+           : partial? '🟡 '+L('부분 정답','Partially correct')
+           : '❌ '+L('취약점을 놓쳤습니다','You missed the vulnerability');
+  var lis='';
+  lis+='<li>'+L('취약 라인 적발','Vulnerable lines found')+': <b>'+hit.length+'/'+vlines.length+'</b>'+(miss.length?' · '+L('놓친 라인','missed')+': '+miss.map(function(i){return '#'+(i+1);}).join(', '):'')+'</li>';
+  if(fp.length)lis+='<li>'+L('잘못 지적한 라인(오탐)','False flags')+': '+fp.map(function(i){return '#'+(i+1);}).join(', ')+'</li>';
+  lis+='<li>'+L('약점 유형','Weakness type')+': '+(cweOk?'✔ <code>'+esc(item.cwe)+'</code>':'✗ '+L('오답','wrong')+' (정답 <code>'+esc(item.cwe)+'</code>)')+'</li>';
+
+  var awarded='';
+  if(pass&&!PROG.passed[item.id]){
+    var xp=XP_BY_DIFF[item.diff]||25;PROG.passed[item.id]=true;saveProg(PROG);
+    try{if(window.AcademyState&&AcademyState.awardXp)AcademyState.awardXp(xp,L('코드리뷰 통과: ','Code review: ')+item.id);}catch(e){}
+    awarded='<div style="margin-top:6px">🎉 +'+xp+' XP</div>';toast(L('✨ 리뷰 통과! +'+xp+' XP','✨ Passed! +'+xp+' XP'));
+    refreshStats();
+  }
+  r.innerHTML='<h3>'+head+'</h3><ul>'+lis+'</ul>'+awarded;
+
+  var s=document.getElementById('solution');
+  s.innerHTML='<div style="font-size:12.5px;color:#cbd5e1;margin:4px 0 6px"><b>'+L('리뷰 코멘트','Review note')+':</b> '+esc(item.explanation||'')+'</div>'+
+    '<div style="font-size:12px;color:#86efac;margin-bottom:4px">'+L('✔ 안전한 수정본','✔ Reference fix')+'</div><pre>'+esc(item.safeCode)+'</pre>';
+}
+
+/* ---------- init ---------- */
+['f-lang','f-cat','f-diff','f-status'].forEach(function(id){document.getElementById(id).addEventListener('change',function(){});});
+document.addEventListener('DOMContentLoaded',function(){
+  applyLang();populateCats();refreshStats();nextPR();
+});
+</script>
+</body>
+</html>

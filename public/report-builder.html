@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>진단 보고서 빌더 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="진단 보고서 빌더 · WEB-VULN-SIM">
+<meta property="og:description" content="취약점 진단보고서 / 보완요청서를 작성하고 브라우저 인쇄로 PDF 출력하는 진단원용 보고서 빌더.">
+<meta property="og:url" content="https://vuln-sim.web.app/report-builder.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="KISA 보안약점 진단원용 진단 보고서 빌더: 취약점 진단보고서와 보완요청서를 폼으로 작성하고 브라우저 네이티브 인쇄(PDF)로 출력합니다. 49개 보안약점 데이터로 발견 취약점을 자동 채웁니다.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#34d399; --accent2:#38bdf8;
+      --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18;
+      --warn:#f59e0b; --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+    .wrap{max-width:1180px;margin:0 auto;padding:18px 16px 90px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#6ee7b7;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 6px}
+    .hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:880px}
+    .kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#064e3b;background:#6ee7b7;border-radius:6px;padding:2px 8px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{font-size:15px;color:#6ee7b7;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:240px}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+    textarea{min-height:74px;resize:vertical}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+    button.primary{background:var(--accent);color:#06281c}
+    button.blue{background:var(--accent2);color:#06283a}
+    button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+    button.danger{background:var(--bad);color:#fff}
+    .note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:10px}
+    .note b{color:#6ee7b7}
+    .disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+    .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+    .tab{cursor:pointer;background:#0f172a;border:1px solid #334155;color:#cbd5e1;border-radius:8px 8px 0 0;padding:9px 16px;font-size:13px;font-weight:700;font-family:var(--mono)}
+    .tab.active{background:var(--panel);border-bottom-color:var(--panel);color:#6ee7b7}
+    .pane{display:none}.pane.active{display:block}
+    .finding{background:var(--panel2);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin:12px 0;border-left:4px solid var(--accent2)}
+    .finding .fhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+    .finding .fnum{font-family:var(--mono);font-weight:800;color:#6ee7b7;font-size:14px}
+    .finding .fdel{margin-left:auto}
+    .mini{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:4px 9px;font-size:11.5px;font-family:var(--mono)}
+    .mini:hover{border-color:var(--accent)}
+    .mini.del:hover{border-color:var(--bad);color:#fca5a5}
+    .sevpill{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px}
+    .sev-H{background:#3b1418;color:#fca5a5}.sev-M{background:#3a2a0a;color:#fcd34d}.sev-L{background:#0f2a18;color:#86efac}
+    .summary{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+    .scard{flex:1;min-width:120px;background:var(--panel2);border:1px solid #334155;border-radius:10px;padding:12px;text-align:center}
+    .scard .n{font-size:26px;font-weight:800;font-family:var(--mono)}
+    .scard .t{font-size:12px;color:var(--muted);margin-top:2px}
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#064e3b;color:#d1fae5;border:1px solid #10b981;border-radius:10px;padding:10px 18px;font-size:13px;font-family:var(--mono);z-index:200;opacity:0;transition:opacity .25s;pointer-events:none}
+    .toast.show{opacity:1}
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+
+    /* ===== 미리보기(문서) 뷰 ===== */
+    #docview{display:none;background:#475569;padding:24px 8px 60px}
+    body.previewing #docview{display:block}
+    body.previewing .topbar,body.previewing .wrap{display:none}
+    .doc{background:#fff;color:#111;max-width:820px;margin:0 auto;padding:46px 52px;
+      box-shadow:0 12px 40px rgba(0,0,0,.5);font-family:'Malgun Gothic','Segoe UI',sans-serif;line-height:1.6}
+    .doc h1{font-size:26px;text-align:center;margin:6px 0 4px;color:#111}
+    .doc .dsub{text-align:center;color:#444;font-size:13px;margin-bottom:26px}
+    .doc h2{font-size:17px;color:#0b5;border-left:5px solid #10b981;padding-left:10px;margin:26px 0 10px;color:#065f46}
+    .doc h3{font-size:14px;margin:14px 0 6px;color:#111}
+    .doc p{font-size:13px;margin:4px 0;color:#222}
+    .doc table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px}
+    .doc th,.doc td{border:1px solid #999;padding:7px 9px;text-align:left;vertical-align:top;color:#111}
+    .doc th{background:#e6f4ee;font-weight:700;white-space:nowrap}
+    .doc .meta-t th{width:130px;background:#f1f5f9;text-align:left}
+    .doc .docchip{display:inline-block;font-weight:800;font-size:11px;border:1.5px solid #111;border-radius:4px;padding:1px 8px}
+    .chip-H{background:#fde2e2;color:#7f1d1d;border-color:#7f1d1d}
+    .chip-M{background:#fef3c7;color:#78350f;border-color:#78350f}
+    .chip-L{background:#dcfce7;color:#14532d;border-color:#14532d}
+    .doc .findblock{border:1px solid #bbb;border-radius:6px;padding:14px 16px;margin:12px 0;page-break-inside:avoid;break-inside:avoid}
+    .doc .findblock .ftitle{font-size:15px;font-weight:800;color:#111;margin-bottom:2px}
+    .doc .findblock .fmeta{font-size:11.5px;color:#555;margin-bottom:8px}
+    .doc .kv{font-size:12.5px;margin:6px 0;color:#111}
+    .doc .kv b{display:block;color:#065f46;font-size:12px;margin-bottom:1px}
+    .doc .kv .v{white-space:pre-wrap;color:#222}
+    .doc .titlepage{text-align:center;padding:40px 0 30px;border-bottom:2px solid #10b981;margin-bottom:18px}
+    .doc .titlepage .big{font-size:30px;font-weight:800;color:#065f46;margin:18px 0 6px}
+    .doc .titlepage .sysname{font-size:18px;color:#111;margin:10px 0}
+    .doc .titlepage .tmeta{font-size:13px;color:#444;margin-top:24px;line-height:1.9}
+    .doc h2,.doc .titlepage{page-break-after:avoid}
+    .doc table,.doc tr{page-break-inside:avoid}
+    .pvbar{position:sticky;top:0;z-index:60;background:#1e293b;display:flex;gap:10px;justify-content:center;padding:10px;flex-wrap:wrap}
+    .pvbar button{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+
+    @media print{
+      @page{size:A4;margin:16mm 14mm}
+      html,body{background:#fff!important}
+      .topbar,.wrap,.pvbar,.toast{display:none!important}
+      #docview{display:block!important;background:#fff!important;padding:0!important}
+      .doc{box-shadow:none!important;max-width:none!important;margin:0!important;padding:0!important}
+      .doc .findblock{page-break-inside:avoid}
+      .doc h2{page-break-after:avoid}
+      .pagebreak{page-break-before:always}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <a href="training-dashboard.html"><span data-en="Dashboard">학습 대시보드</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>📝 <span data-en="Assessment Report Builder">진단 보고서 빌더</span>
+        <span class="kisa">KISA · <span data-en="Security Weakness Assessor">보안약점 진단원</span></span></h1>
+      <div class="sub" data-en="Compose a vulnerability assessment report and a remediation request, then export to PDF via your browser's print dialog. Everything runs client-side; drafts are saved locally.">
+        취약점 진단보고서와 보완요청서를 폼으로 작성한 뒤 브라우저 인쇄(PDF) 기능으로 출력합니다. 모든 처리는 브라우저 안에서만 이루어지며 초안은 로컬에 자동 저장됩니다.
+      </div>
+    </div>
+
+    <!-- 전역 액션 -->
+    <div class="card">
+      <div class="btns">
+        <button class="act primary" onclick="openPreview()">👁 <span data-en="Preview">미리보기</span></button>
+        <button class="act blue" onclick="printReport()">🖨 <span data-en="Export PDF (Print)">PDF 출력(인쇄)</span></button>
+        <button class="act ghost" onclick="saveDraft(true)">💾 <span data-en="Save draft">임시저장</span></button>
+        <button class="act ghost" onclick="exportJson()">📥 <span data-en="Export JSON">JSON 내보내기</span></button>
+        <button class="act ghost" onclick="document.getElementById('jsonfile').click()">📤 <span data-en="Import JSON">JSON 가져오기</span></button>
+        <button class="act danger" onclick="resetReport()">🗑 <span data-en="New report (reset)">초기화(새 보고서)</span></button>
+        <input type="file" id="jsonfile" accept="application/json,.json" style="display:none" onchange="importJson(event)">
+      </div>
+      <div class="note" data-en="Tip: in the print dialog choose <b>“Save as PDF”</b> as the destination. Drafts auto-save to this browser; use Export JSON to keep multiple reports as files.">
+        팁: 인쇄 대화상자에서 대상(프린터)을 <b>“PDF로 저장”</b>으로 선택하세요. 초안은 이 브라우저에 자동 저장되며, 여러 보고서를 파일로 보관하려면 JSON 내보내기를 사용하세요.
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="meta" onclick="switchTab('meta')" data-en="① Overview / Meta">① 개요 · 메타</div>
+      <div class="tab" data-tab="findings" onclick="switchTab('findings')" data-en="② Findings">② 발견 취약점</div>
+      <div class="tab" data-tab="remedy" onclick="switchTab('remedy')" data-en="③ Remediation Request">③ 보완요청서</div>
+    </div>
+
+    <!-- ===== 탭 1: 메타/개요 ===== -->
+    <div class="pane active" id="pane-meta">
+      <div class="card">
+        <h2>📋 <span data-en="Report header (metadata)">보고서 헤더 (메타)</span></h2>
+        <div class="row">
+          <div class="col">
+            <label data-en="Target system name">진단 대상 시스템명</label>
+            <input id="m_system" placeholder="예: 통합 민원 포털">
+          </div>
+          <div class="col">
+            <label data-en="Document version">문서 버전</label>
+            <input id="m_version" placeholder="예: v1.0">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label data-en="Assessment org">진단 기관</label>
+            <input id="m_org" placeholder="예: ○○ 보안컨설팅">
+          </div>
+          <div class="col">
+            <label data-en="Assessor name">진단원명</label>
+            <input id="m_assessor" placeholder="예: 홍길동">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label data-en="Assessment start">진단 시작일</label>
+            <input id="m_start" type="date">
+          </div>
+          <div class="col">
+            <label data-en="Assessment end">진단 종료일</label>
+            <input id="m_end" type="date">
+          </div>
+          <div class="col">
+            <label data-en="Report date">보고서 작성일</label>
+            <input id="m_date" type="date">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🧭 <span data-en="Assessment overview">진단 개요 · 요약</span></h2>
+        <label data-en="Assessment scope">진단 범위</label>
+        <textarea id="m_scope" placeholder="예: 웹 애플리케이션 전체 화면, 인증/결제 모듈, 외부 연동 API"></textarea>
+        <label data-en="Assessment methods">진단 방법</label>
+        <div class="row" style="gap:18px;margin:4px 0 2px">
+          <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--ink)"><input type="checkbox" id="meth_sast" style="width:auto"> <span data-en="Static (SAST)">정적 분석 (SAST)</span></label>
+          <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--ink)"><input type="checkbox" id="meth_dast" style="width:auto"> <span data-en="Dynamic (DAST)">동적 분석 (DAST)</span></label>
+          <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--ink)"><input type="checkbox" id="meth_manual" style="width:auto"> <span data-en="Manual">수동 진단</span></label>
+        </div>
+        <label data-en="Overall opinion / executive summary">종합 의견</label>
+        <textarea id="m_opinion" placeholder="진단 결과에 대한 종합 의견을 작성합니다."></textarea>
+
+        <h2 style="margin-top:16px">📊 <span data-en="Severity summary (auto)">위험도 요약 (자동)</span></h2>
+        <div class="summary" id="summaryBox"></div>
+      </div>
+    </div>
+
+    <!-- ===== 탭 2: 발견 취약점 ===== -->
+    <div class="pane" id="pane-findings">
+      <div class="card">
+        <h2>🔎 <span data-en="Add finding">취약점 추가</span></h2>
+        <div class="row">
+          <div class="col" style="flex:2">
+            <label data-en="Prefill from KISA weakness catalog (49 items)">KISA 보안약점 목록에서 자동 채우기 (49개)</label>
+            <select id="conceptPick"></select>
+          </div>
+          <div class="col" style="display:flex;align-items:flex-end;gap:8px">
+            <button class="act primary" style="flex:1" onclick="addFromConcept()">＋ <span data-en="Add selected">선택 항목 추가</span></button>
+            <button class="act ghost" style="flex:1" onclick="addBlankFinding()">＋ <span data-en="Blank">빈 항목</span></button>
+          </div>
+        </div>
+        <div class="note" data-en="Picking a weakness prefills name, CWE, category, status, risk impact and remediation from the catalog — you can then edit everything.">
+          약점을 선택하면 취약점명·CWE·분류·현황·위험영향·조치방안이 표준 데이터로 자동 입력됩니다. 이후 자유롭게 수정할 수 있습니다.
+        </div>
+      </div>
+      <div id="findingsList"></div>
+    </div>
+
+    <!-- ===== 탭 3: 보완요청서 ===== -->
+    <div class="pane" id="pane-remedy">
+      <div class="card">
+        <h2>🛠 <span data-en="Remediation request">보완요청서</span></h2>
+        <div class="note" data-en="This concise table is derived from the findings above and is meant to hand to the developer team. Edit the request text, due date and owner per item.">
+          아래 표는 발견 취약점에서 자동 생성된 개발팀 전달용 요약입니다. 항목별 보완 요청 사항·조치 기한·담당을 수정할 수 있습니다.
+        </div>
+        <div class="row">
+          <div class="col">
+            <label data-en="Recipient (dev team)">수신 (개발/운영팀)</label>
+            <input id="r_to" placeholder="예: 포털개발팀">
+          </div>
+          <div class="col">
+            <label data-en="Requester">요청자</label>
+            <input id="r_from" placeholder="예: 보안진단팀">
+          </div>
+        </div>
+        <label data-en="Cover note">요청 개요</label>
+        <textarea id="r_note" placeholder="보완요청서 상단에 들어갈 안내문을 작성합니다."></textarea>
+      </div>
+      <div id="remedyList"></div>
+    </div>
+
+    <div class="disc" data-en="Educational tool. All data stays in your browser (localStorage) and is never uploaded. Export to PDF uses your browser's native print dialog.">
+      ⚠️ 교육용 도구입니다. 모든 데이터는 브라우저(localStorage)에만 저장되며 외부로 전송되지 않습니다. PDF 출력은 브라우저 기본 인쇄 기능을 사용합니다.
+    </div>
+  </div>
+
+  <!-- ===== 인쇄/미리보기 문서 뷰 ===== -->
+  <div id="docview">
+    <div class="pvbar">
+      <button class="primary" style="background:#34d399;color:#06281c" onclick="printReport()">🖨 <span data-en="Print / Save PDF">인쇄 · PDF 저장</span></button>
+      <button style="background:#1e293b;color:#cbd5e1;border:1px solid #334155" onclick="closePreview()">← <span data-en="Back to editor">편집으로</span></button>
+    </div>
+    <div class="doc" id="doc"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-data-ext.js"></script>
+<script>
+/* ---------- i18n ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* ---------- constants ---------- */
+var STORE_KEY='wvs_report_draft';
+var CATS=['입력검증','보안기능','시간상태','에러처리','코드오류','캡슐화','API오용'];
+var SEV=[['H','상'],['M','중'],['L','하']];
+function sevKo(s){return ({H:'상',M:'중',L:'하'})[s]||s;}
+function sevEn(s){return ({H:'High',M:'Medium',L:'Low'})[s]||s;}
+
+/* ---------- state ---------- */
+var report=blankReport();
+function blankReport(){
+  return {
+    meta:{system:'',version:'v1.0',org:'',assessor:'',start:'',end:'',date:'',
+          scope:'',methods:{sast:true,dast:false,manual:true},opinion:''},
+    remedy:{to:'',from:'',note:''},
+    findings:[]
+  };
+}
+function newFinding(seed){
+  seed=seed||{};
+  return {
+    id:'f'+Date.now()+Math.floor(Math.random()*1000),
+    name:seed.name||'', cwe:seed.cwe||'', cat:seed.cat||CATS[0], sev:seed.sev||'M',
+    location:'', status:seed.status||'', impact:seed.impact||'', remediation:seed.remediation||'',
+    due:'', request:seed.request||'', owner:''
+  };
+}
+
+/* ---------- persistence ---------- */
+var saveTimer=null;
+function saveDraft(announce){
+  try{localStorage.setItem(STORE_KEY, JSON.stringify(report));}catch(e){}
+  if(announce) toast(L('임시저장 완료','Draft saved'));
+}
+function debouncedSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(function(){saveDraft(false);},400); }
+function loadDraft(){
+  try{
+    var raw=localStorage.getItem(STORE_KEY);
+    if(raw){var d=JSON.parse(raw); if(d&&d.meta){ report=Object.assign(blankReport(),d);
+      report.meta=Object.assign(blankReport().meta, d.meta||{});
+      report.meta.methods=Object.assign({sast:true,dast:false,manual:true}, (d.meta&&d.meta.methods)||{});
+      report.remedy=Object.assign(blankReport().remedy, d.remedy||{});
+      report.findings=(d.findings||[]).map(function(f){return Object.assign(newFinding(),f);});
+    }}
+  }catch(e){}
+}
+
+/* ---------- form <-> state binding ---------- */
+function fillMetaForm(){
+  var m=report.meta;
+  set('m_system',m.system);set('m_version',m.version);set('m_org',m.org);
+  set('m_assessor',m.assessor);set('m_start',m.start);set('m_end',m.end);set('m_date',m.date);
+  set('m_scope',m.scope);set('m_opinion',m.opinion);
+  document.getElementById('meth_sast').checked=!!m.methods.sast;
+  document.getElementById('meth_dast').checked=!!m.methods.dast;
+  document.getElementById('meth_manual').checked=!!m.methods.manual;
+  set('r_to',report.remedy.to);set('r_from',report.remedy.from);set('r_note',report.remedy.note);
+}
+function set(id,v){var el=document.getElementById(id); if(el) el.value=v||'';}
+function readMetaForm(){
+  var m=report.meta;
+  m.system=val('m_system');m.version=val('m_version');m.org=val('m_org');
+  m.assessor=val('m_assessor');m.start=val('m_start');m.end=val('m_end');m.date=val('m_date');
+  m.scope=val('m_scope');m.opinion=val('m_opinion');
+  m.methods.sast=document.getElementById('meth_sast').checked;
+  m.methods.dast=document.getElementById('meth_dast').checked;
+  m.methods.manual=document.getElementById('meth_manual').checked;
+  report.remedy.to=val('r_to');report.remedy.from=val('r_from');report.remedy.note=val('r_note');
+}
+function val(id){var el=document.getElementById(id);return el?el.value:'';}
+
+/* ---------- tabs ---------- */
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-tab')===t);});
+  document.querySelectorAll('.pane').forEach(function(el){el.classList.toggle('active',el.id==='pane-'+t);});
+  if(t==='remedy') renderRemedy();
+  if(t==='meta') renderSummary();
+}
+
+/* ---------- concept dropdown ---------- */
+function conceptList(){
+  try{ return (window.ACADEMY_DATA&&window.ACADEMY_DATA.CONCEPTS)||[]; }catch(e){ return []; }
+}
+function buildConceptPicker(){
+  var sel=document.getElementById('conceptPick'); if(!sel) return;
+  var list=conceptList();
+  var html='<option value="-1">'+L('— 약점을 선택하세요 —','— select a weakness —')+'</option>';
+  list.forEach(function(c,i){
+    html+='<option value="'+i+'">['+esc(c.cat)+'] '+esc(c.name)+' · '+esc(c.cwe||'')+'</option>';
+  });
+  sel.innerHTML=html;
+}
+function addFromConcept(){
+  var sel=document.getElementById('conceptPick');
+  var i=parseInt(sel.value,10);
+  var list=conceptList();
+  if(isNaN(i)||i<0||!list[i]){ toast(L('먼저 약점을 선택하세요','Select a weakness first')); return; }
+  var c=list[i];
+  report.findings.push(newFinding({
+    name:c.name, cwe:c.cwe||'', cat:c.cat||CATS[0], sev:'M',
+    status:c.desc||'', impact:c.risk||'', remediation:c.safe||'', request:c.safe||''
+  }));
+  renderFindings(); renderSummary(); debouncedSave();
+  toast(L('취약점 추가됨: ','Added: ')+c.name);
+}
+function addBlankFinding(){ report.findings.push(newFinding()); renderFindings(); renderSummary(); debouncedSave(); }
+
+/* ---------- findings render ---------- */
+function renderFindings(){
+  var box=document.getElementById('findingsList'); box.innerHTML='';
+  if(!report.findings.length){
+    box.innerHTML='<div class="card" style="text-align:center;color:var(--muted)">'+L('아직 추가된 취약점이 없습니다. 위에서 추가하세요.','No findings yet. Add one above.')+'</div>';
+    return;
+  }
+  report.findings.forEach(function(f,idx){
+    var d=document.createElement('div'); d.className='finding';
+    var catOpts=CATS.map(function(c){return '<option'+(c===f.cat?' selected':'')+'>'+c+'</option>';}).join('');
+    var sevOpts=SEV.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===f.sev?' selected':'')+'>'+s[1]+'</option>';}).join('');
+    d.innerHTML=
+      '<div class="fhead">'
+        +'<span class="fnum">#'+(idx+1)+'</span>'
+        +'<span class="sevpill sev-'+f.sev+'">'+sevKo(f.sev)+'</span>'
+        +'<span style="color:#cbd5e1;font-weight:700">'+esc(f.name||L('(제목 없음)','(untitled)'))+'</span>'
+        +'<span class="fdel">'
+          +'<button class="mini" onclick="moveFinding('+idx+',-1)">↑</button> '
+          +'<button class="mini" onclick="moveFinding('+idx+',1)">↓</button> '
+          +'<button class="mini del" onclick="delFinding('+idx+')">🗑 '+L('삭제','Delete')+'</button>'
+        +'</span>'
+      +'</div>'
+      +'<div class="row">'
+        +'<div class="col" style="flex:2"><label>'+L('취약점명','Name')+'</label><input data-fi="'+idx+'" data-fk="name" value="'+esc(f.name)+'"></div>'
+        +'<div class="col"><label>CWE</label><input data-fi="'+idx+'" data-fk="cwe" value="'+esc(f.cwe)+'"></div>'
+      +'</div>'
+      +'<div class="row">'
+        +'<div class="col"><label>'+L('분류 (7대)','Category')+'</label><select data-fi="'+idx+'" data-fk="cat">'+catOpts+'</select></div>'
+        +'<div class="col"><label>'+L('위험도','Severity')+'</label><select data-fi="'+idx+'" data-fk="sev">'+sevOpts+'</select></div>'
+        +'<div class="col"><label>'+L('조치 기한','Due date')+'</label><input type="date" data-fi="'+idx+'" data-fk="due" value="'+esc(f.due)+'"></div>'
+      +'</div>'
+      +'<label>'+L('발견 위치 (파일/URL)','Location (file/URL)')+'</label><input data-fi="'+idx+'" data-fk="location" value="'+esc(f.location)+'">'
+      +'<label>'+L('현황 및 근거','Status & evidence')+'</label><textarea data-fi="'+idx+'" data-fk="status">'+esc(f.status)+'</textarea>'
+      +'<label>'+L('위험 영향','Risk impact')+'</label><textarea data-fi="'+idx+'" data-fk="impact">'+esc(f.impact)+'</textarea>'
+      +'<label>'+L('조치 방안 / 권고사항','Remediation / recommendation')+'</label><textarea data-fi="'+idx+'" data-fk="remediation">'+esc(f.remediation)+'</textarea>';
+    box.appendChild(d);
+  });
+  box.querySelectorAll('[data-fi]').forEach(function(el){
+    var ev=(el.tagName==='SELECT')?'change':'input';
+    el.addEventListener(ev,function(){
+      var i=+el.getAttribute('data-fi'), k=el.getAttribute('data-fk');
+      report.findings[i][k]=el.value;
+      if(k==='sev'||k==='name'){ renderFindings(); renderSummary(); }
+      debouncedSave();
+    });
+  });
+}
+function delFinding(i){ report.findings.splice(i,1); renderFindings(); renderSummary(); debouncedSave(); }
+function moveFinding(i,dir){
+  var j=i+dir; if(j<0||j>=report.findings.length) return;
+  var t=report.findings[i];report.findings[i]=report.findings[j];report.findings[j]=t;
+  renderFindings(); debouncedSave();
+}
+
+/* ---------- summary ---------- */
+function counts(){
+  var c={H:0,M:0,L:0};
+  report.findings.forEach(function(f){ if(c[f.sev]!=null) c[f.sev]++; });
+  return c;
+}
+function renderSummary(){
+  var box=document.getElementById('summaryBox'); if(!box) return;
+  var c=counts(), total=report.findings.length;
+  box.innerHTML=
+    scard(total, L('총 발견','Total'), '#6ee7b7')
+   +scard(c.H, L('위험도 상','High'), '#fca5a5')
+   +scard(c.M, L('위험도 중','Medium'), '#fcd34d')
+   +scard(c.L, L('위험도 하','Low'), '#86efac');
+}
+function scard(n,t,col){ return '<div class="scard"><div class="n" style="color:'+col+'">'+n+'</div><div class="t">'+t+'</div></div>'; }
+
+/* ---------- remedy render ---------- */
+function renderRemedy(){
+  var box=document.getElementById('remedyList'); box.innerHTML='';
+  if(!report.findings.length){
+    box.innerHTML='<div class="card" style="text-align:center;color:var(--muted)">'+L('발견 취약점이 없습니다. ② 탭에서 추가하면 자동 생성됩니다.','No findings. Add them in tab ② to populate this.')+'</div>';
+    return;
+  }
+  var card=document.createElement('div'); card.className='card';
+  var rows=report.findings.map(function(f,idx){
+    return '<div class="finding" style="border-left-color:var(--accent)">'
+      +'<div class="fhead"><span class="fnum">#'+(idx+1)+'</span>'
+        +'<span class="sevpill sev-'+f.sev+'">'+sevKo(f.sev)+'</span>'
+        +'<span style="color:#cbd5e1;font-weight:700">'+esc(f.name||L('(제목 없음)','(untitled)'))+'</span></div>'
+      +'<label>'+L('보완 요청 사항','Remediation request')+'</label>'
+      +'<textarea data-ri="'+idx+'" data-rk="request">'+esc(f.request||f.remediation||'')+'</textarea>'
+      +'<div class="row">'
+        +'<div class="col"><label>'+L('조치 기한','Due date')+'</label><input type="date" data-ri="'+idx+'" data-rk="due" value="'+esc(f.due)+'"></div>'
+        +'<div class="col"><label>'+L('담당','Owner')+'</label><input data-ri="'+idx+'" data-rk="owner" value="'+esc(f.owner)+'"></div>'
+      +'</div></div>';
+  }).join('');
+  card.innerHTML='<h2>📑 <span>'+L('항목별 보완 요청','Per-item requests')+'</span></h2>'+rows;
+  box.appendChild(card);
+  box.querySelectorAll('[data-ri]').forEach(function(el){
+    var ev=(el.type==='date')?'change':'input';
+    el.addEventListener(ev,function(){
+      var i=+el.getAttribute('data-ri'), k=el.getAttribute('data-rk');
+      report.findings[i][k]=el.value; debouncedSave();
+    });
+  });
+}
+
+/* ---------- preview / print document ---------- */
+function fmtMethods(){
+  var m=report.meta.methods, a=[];
+  if(m.sast) a.push(L('정적 분석(SAST)','Static (SAST)'));
+  if(m.dast) a.push(L('동적 분석(DAST)','Dynamic (DAST)'));
+  if(m.manual) a.push(L('수동 진단','Manual'));
+  return a.length?a.join(', '):'-';
+}
+function dash(s){ return (s&&(''+s).trim())?esc(s):'-'; }
+function nl(s){ return esc(s||'').replace(/\n/g,'<br>'); }
+
+function buildDoc(){
+  readMetaForm();
+  var m=report.meta, c=counts();
+  var methods=fmtMethods();
+  var titleL=L('취약점 진단보고서','Vulnerability Assessment Report');
+  var period=(m.start||'-')+' ~ '+(m.end||'-');
+
+  var html='';
+  /* 표지 */
+  html+='<div class="titlepage">'
+    +'<div style="font-size:13px;color:#065f46;font-weight:700;letter-spacing:2px">SECURITY ASSESSMENT</div>'
+    +'<div class="big">'+titleL+'</div>'
+    +'<div class="sysname">'+dash(m.system)+'</div>'
+    +'<div class="tmeta">'
+      +L('진단 기관','Org')+': '+dash(m.org)+' &nbsp;|&nbsp; '+L('진단원','Assessor')+': '+dash(m.assessor)+'<br>'
+      +L('진단 기간','Period')+': '+esc(period)+'<br>'
+      +L('작성일','Report date')+': '+dash(m.date)+' &nbsp;|&nbsp; '+L('문서 버전','Version')+': '+dash(m.version)
+    +'</div></div>';
+
+  /* 1. 진단 개요 */
+  html+='<h2>1. '+L('진단 개요','Assessment Overview')+'</h2>';
+  html+='<table class="meta-t">'
+    +tr(L('대상 시스템','Target system'),dash(m.system))
+    +tr(L('진단 범위','Scope'),nl(m.scope)||'-')
+    +tr(L('진단 방법','Methods'),methods)
+    +tr(L('진단 기간','Period'),esc(period))
+    +'</table>';
+
+  /* 2. 진단 결과 요약 */
+  html+='<h2>2. '+L('진단 결과 요약','Result Summary')+'</h2>';
+  html+='<table><tr>'
+    +'<th>'+L('총 발견','Total')+'</th><th>'+L('상','High')+'</th><th>'+L('중','Medium')+'</th><th>'+L('하','Low')+'</th></tr>'
+    +'<tr><td>'+report.findings.length+'</td>'
+    +'<td><span class="docchip chip-H">'+c.H+'</span></td>'
+    +'<td><span class="docchip chip-M">'+c.M+'</span></td>'
+    +'<td><span class="docchip chip-L">'+c.L+'</span></td></tr></table>';
+  if((m.opinion||'').trim()){
+    html+='<h3>'+L('종합 의견','Overall opinion')+'</h3><p>'+nl(m.opinion)+'</p>';
+  }
+  /* 발견 취약점 목록 표 */
+  if(report.findings.length){
+    html+='<h3>'+L('발견 취약점 목록','Findings list')+'</h3><table><tr>'
+      +'<th>'+L('번호','No')+'</th><th>'+L('취약점명','Name')+'</th><th>CWE</th><th>'+L('분류','Category')+'</th><th>'+L('위험도','Severity')+'</th></tr>';
+    report.findings.forEach(function(f,i){
+      html+='<tr><td>'+(i+1)+'</td><td>'+dash(f.name)+'</td><td>'+dash(f.cwe)+'</td><td>'+dash(f.cat)+'</td>'
+        +'<td><span class="docchip chip-'+f.sev+'">'+chipLabel(f.sev)+'</span></td></tr>';
+    });
+    html+='</table>';
+  }
+
+  /* 3. 발견 취약점 상세 */
+  html+='<div class="pagebreak"></div><h2>3. '+L('발견 취약점 상세','Detailed Findings')+'</h2>';
+  if(!report.findings.length){
+    html+='<p>'+L('발견된 취약점이 없습니다.','No findings recorded.')+'</p>';
+  } else {
+    report.findings.forEach(function(f,i){
+      html+='<div class="findblock">'
+        +'<div class="ftitle">#'+(i+1)+'. '+dash(f.name)
+          +' <span class="docchip chip-'+f.sev+'">'+chipLabel(f.sev)+'</span></div>'
+        +'<div class="fmeta">'+dash(f.cwe)+' · '+L('분류','Category')+': '+dash(f.cat)
+          +(f.location?(' · '+L('위치','Location')+': '+esc(f.location)):'')+'</div>'
+        +kv(L('현황 및 근거','Status & evidence'),f.status)
+        +kv(L('위험 영향','Risk impact'),f.impact)
+        +kv(L('조치 방안 / 권고사항','Remediation'),f.remediation)
+        +(f.due?kv(L('조치 기한','Due date'),f.due):'')
+      +'</div>';
+    });
+  }
+
+  /* 4. 보완요청서 */
+  html+='<div class="pagebreak"></div>';
+  html+='<div class="titlepage" style="border-bottom:2px solid #10b981;padding:26px 0 18px">'
+    +'<div style="font-size:12px;color:#065f46;font-weight:700;letter-spacing:2px">REMEDIATION REQUEST</div>'
+    +'<div class="big" style="font-size:24px">'+L('보완요청서','Remediation Request')+'</div></div>';
+  html+='<table class="meta-t">'
+    +tr(L('대상 시스템','System'),dash(m.system))
+    +tr(L('수신','To'),dash(report.remedy.to))
+    +tr(L('요청자','From'),dash(report.remedy.from))
+    +tr(L('작성일','Date'),dash(m.date))
+    +'</table>';
+  if((report.remedy.note||'').trim()){
+    html+='<p style="margin-top:10px">'+nl(report.remedy.note)+'</p>';
+  }
+  html+='<h3>'+L('보완 요청 항목','Requested items')+'</h3>';
+  if(!report.findings.length){
+    html+='<p>'+L('요청 항목이 없습니다.','No items.')+'</p>';
+  } else {
+    html+='<table><tr>'
+      +'<th>'+L('번호','No')+'</th><th>'+L('취약점명','Name')+'</th><th>'+L('위험도','Sev')+'</th>'
+      +'<th>'+L('보완 요청 사항','Request')+'</th><th>'+L('조치 기한','Due')+'</th><th>'+L('담당','Owner')+'</th></tr>';
+    report.findings.forEach(function(f,i){
+      html+='<tr><td>'+(i+1)+'</td><td>'+dash(f.name)+'</td>'
+        +'<td><span class="docchip chip-'+f.sev+'">'+chipLabel(f.sev)+'</span></td>'
+        +'<td style="white-space:pre-wrap">'+nl(f.request||f.remediation)+'</td>'
+        +'<td>'+dash(f.due)+'</td><td>'+dash(f.owner)+'</td></tr>';
+    });
+    html+='</table>';
+  }
+  html+='<p style="margin-top:26px;font-size:12px;color:#555;text-align:right">'
+    +dash(m.org)+' · '+dash(m.assessor)+'</p>';
+
+  document.getElementById('doc').innerHTML=html;
+}
+function chipLabel(s){ return isEn()?sevEn(s):sevKo(s); }
+function tr(k,v){ return '<tr><th>'+k+'</th><td>'+(v||'-')+'</td></tr>'; }
+function kv(k,v){ return '<div class="kv"><b>'+k+'</b><span class="v">'+(nl(v)||'-')+'</span></div>'; }
+
+function openPreview(){ readMetaForm(); saveDraft(false); buildDoc(); document.body.classList.add('previewing'); window.scrollTo(0,0); }
+function closePreview(){ document.body.classList.remove('previewing'); }
+function printReport(){ buildDoc(); document.body.classList.add('previewing'); setTimeout(function(){ window.print(); },80); }
+
+/* ---------- export / import / reset ---------- */
+function exportJson(){
+  readMetaForm();
+  var name=(report.meta.system||'report').replace(/[^\w가-힣\-]+/g,'_').slice(0,40)||'report';
+  var blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='진단보고서_'+name+'.json'; document.body.appendChild(a); a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);
+  toast(L('JSON 내보내기 완료','Exported JSON'));
+}
+function importJson(ev){
+  var file=ev.target.files&&ev.target.files[0]; if(!file) return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var d=JSON.parse(rd.result);
+      if(!d||!d.meta) throw new Error('bad');
+      report=Object.assign(blankReport(),d);
+      report.meta=Object.assign(blankReport().meta, d.meta||{});
+      report.meta.methods=Object.assign({sast:true,dast:false,manual:true},(d.meta&&d.meta.methods)||{});
+      report.remedy=Object.assign(blankReport().remedy, d.remedy||{});
+      report.findings=(d.findings||[]).map(function(f){return Object.assign(newFinding(),f);});
+      fillMetaForm(); renderFindings(); renderSummary(); renderRemedy(); saveDraft(false);
+      toast(L('가져오기 완료','Imported'));
+    }catch(e){ toast(L('JSON 형식 오류','Invalid JSON')); }
+    ev.target.value='';
+  };
+  rd.readAsText(file);
+}
+function resetReport(){
+  if(!confirm(L('현재 보고서를 모두 지우고 새로 시작할까요?','Clear current report and start fresh?'))) return;
+  report=blankReport();
+  fillMetaForm(); renderFindings(); renderSummary(); renderRemedy(); saveDraft(false);
+  toast(L('새 보고서','New report'));
+}
+
+/* ---------- util ---------- */
+function esc(s){return (s==null?'':''+s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastTimer=null;
+function toast(msg){
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},1800);
+}
+
+/* ---------- live form bind for meta/remedy ---------- */
+function bindMetaInputs(){
+  ['m_system','m_version','m_org','m_assessor','m_start','m_end','m_date','m_scope','m_opinion',
+   'r_to','r_from','r_note','meth_sast','meth_dast','meth_manual'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    var ev=(el.type==='checkbox'||el.type==='date')?'change':'input';
+    el.addEventListener(ev,function(){ readMetaForm(); debouncedSave(); });
+  });
+}
+
+window.renderDynamic=function(){ buildConceptPicker(); renderFindings(); renderSummary(); renderRemedy(); };
+
+document.addEventListener('DOMContentLoaded', function(){
+  loadDraft();
+  buildConceptPicker();
+  fillMetaForm();
+  bindMetaInputs();
+  renderFindings();
+  renderSummary();
+  applyLang();
+});
+</script>
+</body>
+</html>

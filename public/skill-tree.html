@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시각적 스킬 트리 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="시각적 스킬 트리 · WEB-VULN-SIM">
+<meta property="og:description" content="49개 KISA 보안약점을 카테고리별 스킬 트리로 학습하고 진행도를 추적합니다.">
+<meta property="og:url" content="https://vuln-sim.web.app/skill-tree.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+  <meta name="description" content="49개 KISA 보안약점을 게임형 스킬 트리로 시각화: 카테고리별 노드, 시뮬레이터·개념 연결, 잠김/진행/완료 진행도 추적과 전체 숙련도 시각화.">
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+      --ink:#e2e8f0; --muted:#94a3b8; --accent:#a78bfa; --accent2:#818cf8;
+      --bad:#ef4444; --good:#22c55e; --good-bg:#0f2a18; --warn:#f59e0b;
+      --mono:'JetBrains Mono','Consolas',monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;
+      background-image:radial-gradient(circle at 18% -10%, rgba(167,139,250,.10), transparent 45%),radial-gradient(circle at 90% 0%, rgba(129,140,248,.08), transparent 40%)}
+    .wrap{max-width:1320px;margin:0 auto;padding:18px 16px 90px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+    .topbar a{color:#c4b5fd;text-decoration:none;font-size:13px;font-family:var(--mono)}
+    .topbar a:hover{color:#fff}
+    .topbar .sp{margin-left:auto}
+    .langbtn{cursor:pointer;border:1px solid #4c3f7a;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+    .hero{padding:18px 4px 8px}
+    .hero h1{font-size:24px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:880px}
+
+    /* summary bar */
+    .summary{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;margin:16px 0 22px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+    .ring{position:relative;width:122px;height:122px;flex:0 0 auto}
+    .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+    .ring .pct{font-size:26px;font-weight:800;color:#fff;font-family:var(--mono);line-height:1}
+    .ring .cap{font-size:10.5px;color:var(--muted);margin-top:3px}
+    .sumcol{flex:1;min-width:240px}
+    .stats{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px}
+    .stat .n{font-size:22px;font-weight:800;color:#fff;font-family:var(--mono)}
+    .stat .k{font-size:11px;color:var(--muted)}
+    .lvlbar{height:9px;background:#05080f;border-radius:999px;overflow:hidden;border:1px solid var(--border);margin-top:4px}
+    .lvlbar>i{display:block;height:100%;background:linear-gradient(90deg,#a78bfa,#818cf8)}
+    .minicats{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+    .minicat{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;font-size:11px;min-width:96px}
+    .minicat .cn{color:#cbd5e1;font-weight:700;display:flex;justify-content:space-between;gap:6px}
+    .minicat .mb{height:6px;background:#05080f;border-radius:999px;overflow:hidden;margin-top:5px}
+    .minicat .mb>i{display:block;height:100%}
+
+    /* tree */
+    .tree{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:18px;align-items:start}
+    .branch{background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.22);position:relative}
+    .bhead{padding:14px 16px;color:#fff;display:flex;align-items:center;gap:12px;position:relative}
+    .bhead .ico{font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+    .bhead .bt{flex:1}
+    .bhead .bn{font-weight:800;font-size:15px}
+    .bhead .bc{font-size:11px;opacity:.92;font-family:var(--mono)}
+    .bhead .bring{flex:0 0 auto}
+    .nodes{padding:12px;display:flex;flex-direction:column;gap:10px;position:relative}
+    /* connector line down the branch */
+    .nodes::before{content:"";position:absolute;left:23px;top:6px;bottom:14px;width:2px;
+      background:linear-gradient(180deg,rgba(167,139,250,.45),rgba(167,139,250,.05));z-index:0}
+    .node{position:relative;z-index:1;display:flex;align-items:center;gap:11px;background:var(--panel2);border:1px solid var(--border);
+      border-radius:12px;padding:10px 12px 10px 11px;cursor:pointer;transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+    .node:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 8px 20px rgba(167,139,250,.18)}
+    .node .pip{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:800;border:2px solid #334155;background:#0b1220;color:#64748b}
+    .node .ntxt{flex:1;min-width:0}
+    .node .nname{font-size:13px;font-weight:700;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .node .ncwe{font-size:10px;font-family:var(--mono);color:#94a3b8;background:#0b1220;border:1px solid var(--border);border-radius:5px;padding:1px 6px;display:inline-block;margin-top:2px}
+    .node.done{border-color:#1f6f3f;background:linear-gradient(180deg,rgba(34,197,94,.10),var(--panel2))}
+    .node.done .pip{border-color:var(--good);background:var(--good-bg);color:#86efac}
+    .node.done .nname{color:#bbf7d0}
+    .node.rec{border-color:#7c5cff;box-shadow:0 0 0 1px rgba(167,139,250,.4),0 0 16px rgba(167,139,250,.28)}
+    .node.rec .pip{border-color:var(--accent);color:#c4b5fd}
+    .recbadge{font-size:9.5px;font-family:var(--mono);font-weight:800;color:#0b1220;background:var(--accent);border-radius:5px;padding:1px 6px;margin-left:6px}
+
+    /* modal */
+    .ov{position:fixed;inset:0;background:rgba(5,8,15,.74);backdrop-filter:blur(3px);z-index:100;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 14px}
+    .ov.show{display:flex}
+    .modal{background:var(--panel);border:1px solid var(--border);border-radius:18px;max-width:620px;width:100%;
+      box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden;animation:pop .15s ease}
+    @keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+    .mhead{padding:16px 18px;background:linear-gradient(135deg,#4c3f7a,#1e293b);display:flex;align-items:flex-start;gap:12px}
+    .mhead .mi{font-size:26px}
+    .mhead h3{font-size:17px;color:#fff;flex:1}
+    .mhead .mcwe{font-family:var(--mono);font-size:11px;color:#0b1220;background:#c4b5fd;border-radius:6px;padding:2px 8px;font-weight:800}
+    .mhead .x{cursor:pointer;color:#cbd5e1;background:none;border:none;font-size:22px;line-height:1}
+    .mbody{padding:16px 18px}
+    .mcat{font-size:11px;font-family:var(--mono);color:#c4b5fd;margin-bottom:10px}
+    .sect{margin-bottom:13px}
+    .sect h4{font-size:12px;color:var(--accent);font-family:var(--mono);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+    .sect p{font-size:13.5px;color:#cbd5e1}
+    .sect.risk h4{color:#fca5a5}.sect.safe h4{color:#86efac}
+    .mbtns{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+    .mbtns a,.mbtns button{cursor:pointer;border:none;border-radius:9px;padding:10px 15px;font-weight:700;font-size:13px;font-family:var(--mono);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .b-sim{background:var(--accent);color:#0b1220}
+    .b-con{background:#1e293b;color:#c4b5fd;border:1px solid #4c3f7a}
+    .b-done{background:var(--good);color:#06210f}
+    .b-done.undo{background:#3b1418;color:#fca5a5}
+    .b-sim[aria-disabled="true"]{opacity:.45;pointer-events:none}
+
+    body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+    @media(max-width:640px){.hero h1{font-size:20px}.summary{gap:16px}.ring{width:100px;height:100px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <a href="training-dashboard.html"><span data-en="Dashboard">학습 대시보드</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🌳 <span data-en="Visual Skill Tree">시각적 스킬 트리</span></h1>
+      <div class="sub" data-en="A game-like learning map of all 49 KISA security weaknesses, organized by category. Each node links to its simulator and concept, and your progress (locked / open / done) builds toward overall mastery.">
+        49개 KISA 보안약점을 카테고리별로 묶은 게임형 학습 지도입니다. 각 노드는 시뮬레이터와 개념으로 연결되며, 진행도(잠김 · 진행 · 완료)가 모여 전체 숙련도를 이룹니다.
+      </div>
+    </div>
+
+    <!-- summary -->
+    <div class="summary">
+      <div class="ring" id="masteryRing"></div>
+      <div class="sumcol">
+        <div class="stats">
+          <div class="stat"><div class="n" id="s_done">0</div><div class="k" data-en="Concepts done">완료한 개념</div></div>
+          <div class="stat"><div class="n" id="s_total">49</div><div class="k" data-en="Total weaknesses">전체 약점</div></div>
+          <div class="stat"><div class="n" id="s_level">1</div><div class="k" data-en="Level">레벨</div></div>
+          <div class="stat"><div class="n" id="s_xp">0</div><div class="k">XP</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);display:flex;justify-content:space-between">
+          <span data-en="Level progress">레벨 진행도</span><span id="s_xpnext"></span>
+        </div>
+        <div class="lvlbar"><i id="s_xpbar" style="width:0%"></i></div>
+        <div class="minicats" id="minicats"></div>
+      </div>
+    </div>
+
+    <div class="tree" id="tree"></div>
+  </div>
+
+  <!-- detail modal -->
+  <div class="ov" id="ov" onclick="if(event.target===this)closeModal()">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="mhead">
+        <span class="mi" id="m_ico">🧩</span>
+        <h3 id="m_name"></h3>
+        <span class="mcwe" id="m_cwe"></span>
+        <button class="x" onclick="closeModal()" aria-label="close">✕</button>
+      </div>
+      <div class="mbody">
+        <div class="mcat" id="m_cat"></div>
+        <div class="sect"><h4>📘 <span data-en="What it is">약점 설명</span></h4><p id="m_desc"></p></div>
+        <div class="sect risk"><h4>⚠ <span data-en="Risk">위험</span></h4><p id="m_risk"></p></div>
+        <div class="sect safe"><h4>🛡 <span data-en="Defense">대응 방안</span></h4><p id="m_safe"></p></div>
+        <div class="mbtns">
+          <a class="b-sim" id="m_sim" target="_blank" rel="noopener">🧪 <span data-en="Simulator">시뮬레이터</span></a>
+          <a class="b-con" id="m_con" href="content-map.html" target="_blank" rel="noopener">📖 <span data-en="Learn concept">개념 학습</span></a>
+          <button class="b-done" id="m_done" onclick="toggleDone()"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/academy-data.js"></script>
+  <script src="js/academy-data-ext.js"></script>
+  <script src="js/sim-map.js"></script>
+  <script src="js/academy-state.js"></script>
+  <script>
+  function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+  function L(ko,en){return isEn()?en:ko;}
+  function applyLang(){
+    var en=isEn();
+    document.documentElement.lang=en?'en':'ko';
+    document.querySelectorAll('[data-en]').forEach(function(el){
+      if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+      el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+    });
+    document.body.classList.toggle('lang-en', en);
+    if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+  }
+  function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+  document.addEventListener('DOMContentLoaded', applyLang);
+
+  // ---- data ----
+  var CONCEPTS = (window.ACADEMY_DATA && window.ACADEMY_DATA.CONCEPTS) || [];
+  var SIMS = window.SIM_BY_CWE || {};
+  var CAT_ORDER = ['입력검증','보안기능','시간상태','에러처리','코드오류','캡슐화','API오용'];
+  var CAT_META = {
+    '입력검증': {ico:'🛂', en:'Input Validation', g:'linear-gradient(135deg,#7c3aed,#4c1d95)'},
+    '보안기능': {ico:'🔐', en:'Security Features', g:'linear-gradient(135deg,#2563eb,#1e3a8a)'},
+    '시간상태': {ico:'⏱️', en:'Time & State', g:'linear-gradient(135deg,#0891b2,#155e63)'},
+    '에러처리': {ico:'🚨', en:'Error Handling', g:'linear-gradient(135deg,#d97706,#7c2d12)'},
+    '코드오류': {ico:'🐞', en:'Code Errors', g:'linear-gradient(135deg,#db2777,#831843)'},
+    '캡슐화':   {ico:'📦', en:'Encapsulation', g:'linear-gradient(135deg,#059669,#064e3b)'},
+    'API오용':  {ico:'🧩', en:'API Misuse', g:'linear-gradient(135deg,#e11d48,#4c0519)'}
+  };
+  var STKEY = 'wvs_skilltree';
+
+  function readMyDone(){ try{ return JSON.parse(localStorage.getItem(STKEY)) || {}; }catch(e){ return {}; } }
+  function writeMyDone(o){ try{ localStorage.setItem(STKEY, JSON.stringify(o)); }catch(e){} }
+  function externalDone(){
+    try{ if(window.AcademyState){ return (window.AcademyState.getProgress().completedConcepts)||{}; } }catch(e){}
+    return {};
+  }
+  // a concept is "done" if recorded here OR completed elsewhere in the academy
+  var EXT = externalDone();
+  function isDone(cwe){ if(readMyDone()[cwe]) return true; return !!EXT[cwe]; }
+
+  function escapeHtml(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  // group concepts by category preserving source order
+  function grouped(){
+    var g={}; CAT_ORDER.forEach(function(c){g[c]=[];});
+    CONCEPTS.forEach(function(c){ if(!g[c.cat]) g[c.cat]=[]; g[c.cat].push(c); });
+    return g;
+  }
+
+  // SVG progress ring helper
+  function ring(pct, size, stroke, color){
+    var r=(size-stroke)/2, c=2*Math.PI*r, off=c*(1-pct/100);
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'
+      +'<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#05080f" stroke-width="'+stroke+'"/>'
+      +'<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+stroke
+      +'" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)
+      +'" transform="rotate(-90 '+size/2+' '+size/2+')"/></svg>';
+  }
+
+  function catColor(pct){ return pct>=100?'#22c55e':(pct>0?'#a78bfa':'#475569'); }
+
+  function renderTree(){
+    var g=grouped(), host=document.getElementById('tree'); host.innerHTML='';
+    CAT_ORDER.forEach(function(cat){
+      var items=g[cat]||[]; if(!items.length) return;
+      var meta=CAT_META[cat]||{ico:'🧩',en:cat,g:'linear-gradient(135deg,#475569,#1e293b)'};
+      var doneN=items.filter(function(it){return isDone(it.cwe);}).length;
+      var pct=Math.round(doneN/items.length*100);
+      var recDone=false; // mark first uncompleted node as recommended
+      var nodesHtml=items.map(function(it){
+        var d=isDone(it.cwe), rec=false;
+        if(!d && !recDone){ rec=true; recDone=true; }
+        var cls='node'+(d?' done':'')+(rec?' rec':'');
+        var pip=d?'✓':(rec?'★':'');
+        return '<div class="'+cls+'" onclick="openModal(\''+it.cwe+'\')">'
+          +'<span class="pip">'+pip+'</span>'
+          +'<span class="ntxt"><span class="nname">'+escapeHtml(it.name)
+            +(rec?'<span class="recbadge">'+L('추천','NEXT')+'</span>':'')+'</span>'
+            +'<span class="ncwe">'+escapeHtml(it.cwe)+'</span></span></div>';
+      }).join('');
+      var br=document.createElement('div'); br.className='branch';
+      br.innerHTML=
+        '<div class="bhead" style="background:'+meta.g+'">'
+          +'<span class="ico">'+meta.ico+'</span>'
+          +'<span class="bt"><span class="bn">'+(isEn()?meta.en:cat)+'</span>'
+            +'<span class="bc">'+doneN+' / '+items.length+' '+L('완료','done')+'</span></span>'
+          +'<span class="bring">'+ring(pct,42,5,'#ffffff')
+            +'<span style="position:relative;display:block;margin-top:-30px;text-align:center;font-size:11px;font-weight:800;font-family:var(--mono);color:#fff">'+pct+'%</span></span>'
+        +'</div>'
+        +'<div class="nodes">'+nodesHtml+'</div>';
+      host.appendChild(br);
+    });
+  }
+
+  function renderSummary(){
+    var done=CONCEPTS.filter(function(c){return isDone(c.cwe);}).length;
+    var total=CONCEPTS.length||49;
+    var pct=Math.round(done/total*100);
+    document.getElementById('masteryRing').innerHTML =
+      ring(pct,122,11,'#a78bfa')
+      +'<span class="lbl"><span class="pct">'+pct+'%</span><span class="cap">'+L('전체 숙련도','Mastery')+'</span></span>';
+    document.getElementById('s_done').textContent=done;
+    document.getElementById('s_total').textContent=total;
+
+    var stats={level:1,xp:0};
+    try{ if(window.AcademyState) stats=window.AcademyState.getUnifiedStats()||stats; }catch(e){}
+    document.getElementById('s_level').textContent=stats.level||1;
+    document.getElementById('s_xp').textContent=stats.xp||0;
+    // xp-into-level: level n needs (n-1)^2*100 xp; level n+1 needs n^2*100
+    var lv=stats.level||1, xp=stats.xp||0;
+    var base=(lv-1)*(lv-1)*100, next=lv*lv*100;
+    var into=Math.max(0,Math.min(100, next>base?Math.round((xp-base)/(next-base)*100):0));
+    document.getElementById('s_xpbar').style.width=into+'%';
+    document.getElementById('s_xpnext').textContent=(xp)+' / '+next+' XP';
+
+    var g=grouped(), mc=document.getElementById('minicats'); mc.innerHTML='';
+    CAT_ORDER.forEach(function(cat){
+      var items=g[cat]||[]; if(!items.length) return;
+      var meta=CAT_META[cat]||{en:cat};
+      var dn=items.filter(function(it){return isDone(it.cwe);}).length;
+      var p=Math.round(dn/items.length*100);
+      var el=document.createElement('div'); el.className='minicat';
+      el.innerHTML='<div class="cn"><span>'+(isEn()?meta.en:cat)+'</span><span style="color:#94a3b8">'+dn+'/'+items.length+'</span></div>'
+        +'<div class="mb"><i style="width:'+p+'%;background:'+catColor(p)+'"></i></div>';
+      mc.appendChild(el);
+    });
+  }
+
+  // ---- modal ----
+  var curCwe=null;
+  function findConcept(cwe){ for(var i=0;i<CONCEPTS.length;i++){ if(CONCEPTS[i].cwe===cwe) return CONCEPTS[i]; } return null; }
+  function openModal(cwe){
+    var c=findConcept(cwe); if(!c) return; curCwe=cwe;
+    var meta=CAT_META[c.cat]||{ico:'🧩',en:c.cat};
+    document.getElementById('m_ico').textContent=meta.ico;
+    document.getElementById('m_name').textContent=c.name;
+    document.getElementById('m_cwe').textContent=c.cwe;
+    document.getElementById('m_cat').textContent=(isEn()?meta.en:c.cat)+' · KISA';
+    document.getElementById('m_desc').textContent=c.desc||'';
+    document.getElementById('m_risk').textContent=c.risk||'';
+    document.getElementById('m_safe').textContent=c.safe||'';
+    var sim=SIMS[cwe], simBtn=document.getElementById('m_sim');
+    if(sim){ simBtn.href=sim; simBtn.setAttribute('aria-disabled','false'); simBtn.title=sim; }
+    else { simBtn.removeAttribute('href'); simBtn.setAttribute('aria-disabled','true'); simBtn.title=L('연결된 시뮬레이터 없음','no simulator'); }
+    document.getElementById('m_con').href='content-map.html';
+    refreshDoneBtn();
+    document.getElementById('ov').classList.add('show');
+  }
+  function refreshDoneBtn(){
+    var btn=document.getElementById('m_done'); var mine=!!readMyDone()[curCwe];
+    if(mine){ btn.className='b-done undo'; btn.innerHTML='↺ '+L('완료 표시 해제','Unmark done'); }
+    else if(EXT[curCwe]){ btn.className='b-done'; btn.innerHTML='✓ '+L('이미 완료됨','Already done'); }
+    else { btn.className='b-done'; btn.innerHTML='✓ '+L('학습 완료 표시','Mark as done'); }
+  }
+  function toggleDone(){
+    if(!curCwe) return;
+    var m=readMyDone();
+    if(m[curCwe]) delete m[curCwe]; else m[curCwe]=true;
+    writeMyDone(m);
+    refreshDoneBtn(); renderTree(); renderSummary();
+  }
+  function closeModal(){ document.getElementById('ov').classList.remove('show'); curCwe=null; }
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+
+  window.openModal=openModal; window.toggleDone=toggleDone; window.closeModal=closeModal;
+  window.renderDynamic=function(){ renderTree(); renderSummary(); };
+
+  // initial render
+  renderTree(); renderSummary();
+  </script>
+</body>
+</html>
