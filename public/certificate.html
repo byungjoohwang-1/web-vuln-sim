@@ -333,7 +333,7 @@ body {
     margin: 0 !important;
     min-height: auto !important;
   }
-  .control-panel, #backToDashboardBtn, .developer-helper-btn {
+  .control-panel, #backToDashboardBtn, .developer-helper-btn, .verify-panel {
     display: none !important;
   }
   .cert-container {
@@ -420,6 +420,21 @@ body {
   </div>
 </div>
 
+<!-- Verifiable credential panel (screen only, not printed) -->
+<div class="verify-panel" id="verifyPanel" style="display:none;max-width:760px;margin:18px auto 0;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:18px 20px;color:#e2e8f0;font-family:'Malgun Gothic',sans-serif">
+  <h3 style="margin:0 0 6px;font-size:16px">🔐 검증 가능한 수료증</h3>
+  <p style="margin:0 0 12px;font-size:13px;color:#94a3b8">아래 검증 링크로 누구나 이 수료증의 위·변조 여부를 확인할 수 있습니다. Google 로그인 후 <b>온라인 등록</b>하면 진위(발급 사실)까지 검증됩니다.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input id="verifyUrl" readonly style="flex:1;min-width:240px;background:#0b1220;border:1px solid #1e293b;color:#7dd3fc;border-radius:8px;padding:9px 11px;font-family:monospace;font-size:12px">
+    <button class="btn" onclick="copyVerify()" style="white-space:nowrap">🔗 링크 복사</button>
+    <a id="verifyOpen" href="#" target="_blank" rel="noopener" class="btn secondary" style="white-space:nowrap">↗ 검증 페이지 열기</a>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <button class="btn" onclick="registerOnline()" style="background:#34d399;color:#053a2a">☁ 온라인 등록(진위 검증)</button>
+    <span id="regStatus" style="font-size:13px;color:#cbd5e1"></span>
+  </div>
+</div>
+
 <!-- Lock / Criteria Not Met Screen -->
 <div class="not-unlocked-panel" id="lockPanel" style="display: none;">
   <div style="font-size: 56px; margin-bottom: 16px;">🔒</div>
@@ -446,8 +461,9 @@ body {
 </div>
 
 <script src="js/academy-state.js"></script>
+<script type="module" src="auth-widget.js"></script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -459,7 +475,8 @@ const firebaseConfig = {
   appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
 };
 
-const app = initializeApp(firebaseConfig);
+// auth-widget.js 가 먼저 기본 앱을 초기화하므로 중복 초기화를 방지한다.
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 onAuthStateChanged(auth, user => {
@@ -546,27 +563,76 @@ function setupCertificateData(progress, conceptsCount, practicalCount) {
   regenerateHash(currentName);
 }
 
-function regenerateHash(name) {
+// ===== 검증 가능한 수료증: 실제 SHA-256 + 자가검증 URL + 온라인 등록 =====
+let CURRENT_CERT = null;
+const CERT_HASH_PREFIX = 'SDA-CERT-v1';
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function certCanonical(c) {
+  // 안정적인 필드 순서 — verify.html 과 반드시 동일해야 한다.
+  return [CERT_HASH_PREFIX, c.name, c.certId, c.date, c.level, c.xp, c.concepts, c.practical].join('|');
+}
+function b64urlEncode(obj) {
+  const json = JSON.stringify(obj);
+  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function regenerateHash(name) {
   const p = AcademyState.getProgress();
-  const certNo = document.getElementById('certNoVal').textContent;
-  const dateStr = document.getElementById('certDateVal').textContent;
-  
-  // Custom simple client-side hash function to mimic SHA-256 HMAC for front-end demonstration
-  const rawString = `${name}_${certNo}_${dateStr}_${p.xp}_${Object.keys(p.completedConcepts).length}`;
-  let hashVal = 0;
-  for (let i = 0; i < rawString.length; i++) {
-    hashVal = (hashVal << 5) - hashVal + rawString.charCodeAt(i);
-    hashVal |= 0; // Convert to 32bit integer
+  const cert = {
+    v: 1,
+    name: (name || '학습자').trim(),
+    certId: document.getElementById('certNoVal').textContent,
+    date: document.getElementById('certDateVal').textContent,
+    level: p.level || 1,
+    xp: p.xp || 0,
+    concepts: Object.keys(p.completedConcepts || {}).length,
+    practical: Object.keys(p.completedPractical || {}).length
+  };
+  const hash = await sha256Hex(certCanonical(cert));
+  cert.hash = hash;
+  CURRENT_CERT = cert;
+
+  document.getElementById('cryptoVerificationBlock').textContent = 'SHA-256: ' + hash;
+
+  const url = location.origin + '/verify.html?id=' + encodeURIComponent(cert.certId) +
+    '&d=' + b64urlEncode(cert) + '&h=' + hash;
+  cert.url = url;
+  const panel = document.getElementById('verifyPanel');
+  if (panel) {
+    panel.style.display = 'block';
+    document.getElementById('verifyUrl').value = url;
+    document.getElementById('verifyOpen').href = url;
+    const st = document.getElementById('regStatus'); if (st) st.textContent = '';
   }
-  
-  const hashHex = Array.from(new Uint8Array(new Int32Array([hashVal]).buffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase();
-  
-  // Make it look like a full 64-char SHA256 string
-  const fullVerificationHash = `SDA_SECURE_HMAC_${hashHex}_FF42_${(hashVal * 99).toString(16).toUpperCase().substring(0, 8)}_2026_VALID`;
-  document.getElementById('cryptoVerificationBlock').textContent = `VERIFICATION HASH: ${fullVerificationHash}`;
+}
+
+function copyVerify() {
+  const el = document.getElementById('verifyUrl');
+  el.select();
+  if (navigator.clipboard) navigator.clipboard.writeText(el.value).catch(() => {});
+  else { try { document.execCommand('copy'); } catch (e) {} }
+  const st = document.getElementById('regStatus');
+  if (st) st.textContent = '🔗 검증 URL이 복사되었습니다.';
+}
+
+async function registerOnline() {
+  const st = document.getElementById('regStatus');
+  if (!CURRENT_CERT) return;
+  if (!window.sdaBoard || !window.sdaBoard.getUser()) {
+    st.innerHTML = '⚠ 온라인 등록은 Google 로그인이 필요합니다. (우측 상단 로그인)';
+    return;
+  }
+  st.textContent = '등록 중...';
+  try {
+    await window.sdaBoard.registerCert(CURRENT_CERT);
+    st.innerHTML = '✅ 온라인 등록 완료 — 검증 페이지에서 <b>진위 확인됨</b>으로 표시됩니다.';
+  } catch (e) {
+    st.innerHTML = '❌ 등록 실패: ' + ((e && e.message) || e);
+  }
 }
 
 window.forceUnlockForDev = function() {

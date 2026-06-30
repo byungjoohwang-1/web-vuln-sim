@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>수료증 검증 · Certificate Verification</title>
+<style>
+  :root{--bg:#0b1220;--panel:#111a2e;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh}
+  a{color:var(--accent);text-decoration:none}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#0a101e;border-bottom:1px solid var(--border)}
+  .topbar a{color:#cbd5e1;font-size:14px}.topbar .sp{flex:1}
+  .wrap{max-width:680px;margin:0 auto;padding:28px 16px 60px}
+  h1{font-size:22px;margin:6px 0 18px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
+  .verdict{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:14px;margin-bottom:16px}
+  .verdict .ic{font-size:40px}
+  .verdict h2{margin:0;font-size:19px}.verdict p{margin:3px 0 0;font-size:13.5px;opacity:.9}
+  .v-ok{background:#052e16;border:1px solid #14532d;color:#bbf7d0}
+  .v-warn{background:#241a05;border:1px solid #5b4708;color:#fde68a}
+  .v-bad{background:#2a1015;border:1px solid #5b1a22;color:#fecaca}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:6px}
+  .grid .k{font-size:12px;color:var(--muted)}.grid .val{font-size:15px;font-weight:600;color:#fff}
+  .name{font-size:26px;font-weight:800;letter-spacing:3px;color:#fff;text-align:center;margin:6px 0 14px}
+  .hash{font-family:monospace;font-size:11.5px;color:#7dd3fc;word-break:break-all;background:#0b1220;border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-top:10px}
+  .badge{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--border);background:#0b1220;color:#cbd5e1;margin-right:6px}
+  .badge.online{background:#052e16;color:#86efac;border-color:#14532d}
+  .muted{color:var(--muted);font-size:13px}
+  .disc{margin-top:18px;color:#64748b;font-size:12px;line-height:1.7}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 홈</a>
+    <a href="vuln-hub.html">취약점 학습 허브</a>
+    <span class="sp"></span>
+    <a href="certificate.html">내 수료증 발급 →</a>
+  </div>
+  <div class="wrap">
+    <h1>🔐 수료증 검증 <span class="muted" style="font-size:14px">Certificate Verification</span></h1>
+    <div id="result"><div class="card"><div class="muted">검증 중...</div></div></div>
+    <div class="disc">
+      이 페이지는 SecureDev Academy 수료증의 <b>무결성</b>(위·변조 여부)을 브라우저에서 SHA-256으로 직접 재계산해 확인하고,
+      발급자가 <b>온라인 등록</b>한 경우 발급 사실(<b>진위</b>)까지 대조합니다.<br>
+      ⚠️ 본 수료증은 비영리 교육용 학습 이수 증명이며, KISA의 공식 자격(보안약점 진단원)을 대체하지 않습니다.
+    </div>
+  </div>
+
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBaRXs5HJ1ABFcshaTpqNj-uFuq2H9ZOcw",
+  authDomain: "vuln-sim.firebaseapp.com",
+  projectId: "vuln-sim",
+  storageBucket: "vuln-sim.firebasestorage.app",
+  messagingSenderId: "493267417608",
+  appId: "1:493267417608:web:a76ea57fcd71185ae86fbd"
+};
+
+const CERT_HASH_PREFIX = 'SDA-CERT-v1';
+function certCanonical(c){
+  // certificate.html 의 certCanonical 과 반드시 동일한 순서/접두.
+  return [CERT_HASH_PREFIX, c.name, c.certId, c.date, c.level, c.xp, c.concepts, c.practical].join('|');
+}
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function b64urlDecode(s){
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return decodeURIComponent(escape(atob(s)));
+}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function render(verdict, cls, title, sub, cert, onlineBadge){
+  const out = document.getElementById('result');
+  let html = '<div class="verdict '+cls+'"><div class="ic">'+verdict+'</div><div><h2>'+title+'</h2><p>'+sub+'</p></div></div>';
+  if (cert){
+    html += '<div class="card">'+
+      '<div class="name">'+esc((cert.name||'').split('').join(' '))+'</div>'+
+      (onlineBadge?'<div style="text-align:center;margin-bottom:12px">'+onlineBadge+'</div>':'')+
+      '<div class="grid">'+
+        '<div><div class="k">수료번호 / Cert No.</div><div class="val">'+esc(cert.certId)+'</div></div>'+
+        '<div><div class="k">이수일자 / Date</div><div class="val">'+esc(cert.date)+'</div></div>'+
+        '<div><div class="k">레벨 / Level</div><div class="val">Lv.'+esc(cert.level)+'</div></div>'+
+        '<div><div class="k">경험치 / XP</div><div class="val">'+esc(cert.xp)+'</div></div>'+
+        '<div><div class="k">이수 개념 / Concepts</div><div class="val">'+esc(cert.concepts)+'</div></div>'+
+        '<div><div class="k">실습 통과 / Practicals</div><div class="val">'+esc(cert.practical)+'</div></div>'+
+      '</div>'+
+      '<div class="hash">SHA-256: '+esc(cert.hash||'')+'</div>'+
+    '</div>';
+  }
+  out.innerHTML = html;
+}
+
+(async function(){
+  const q = new URLSearchParams(location.search);
+  const id = q.get('id'); const d = q.get('d'); const h = q.get('h');
+
+  if (!d || !h){
+    // No payload — try online lookup by id only.
+    if (id){
+      const rec = await fetchCert(id);
+      if (rec){ render('✅','v-ok','진위 확인됨 (온라인 등록)','이 수료번호는 발급자가 온라인 등록한 정식 수료증입니다.', rec, '<span class="badge online">☁ 온라인 등록됨</span>'); return; }
+    }
+    render('❓','v-warn','검증 정보 부족','검증에 필요한 데이터가 없습니다. 수료증의 정식 검증 링크로 다시 시도하세요.', null);
+    return;
+  }
+
+  let cert;
+  try { cert = JSON.parse(b64urlDecode(d)); }
+  catch(e){ render('⚠️','v-bad','검증 실패','검증 링크가 손상되었습니다(데이터 해독 불가).', null); return; }
+
+  // Integrity: recompute SHA-256 over the canonical payload.
+  const recomputed = await sha256Hex(certCanonical(cert));
+  const integrityOk = (recomputed === h) && (recomputed === (cert.hash||h));
+
+  if (!integrityOk){
+    render('❌','v-bad','위·변조 감지','이 검증 링크의 내용이 발급 당시와 일치하지 않습니다. 신뢰할 수 없는 수료증입니다.',
+      Object.assign({}, cert, {hash: recomputed}), '<span class="badge" style="background:#2a1015;color:#fca5a5;border-color:#5b1a22">✗ 해시 불일치</span>');
+    return;
+  }
+
+  // Authenticity: cross-check the online registry (best-effort).
+  let onlineBadge = '<span class="badge">🔒 무결성 확인됨 (오프라인)</span>';
+  let title = '무결성 확인됨';
+  let sub = '이 수료증의 내용은 발급 당시와 동일합니다(위·변조 없음). 발급 사실까지 확인하려면 온라인 등록이 필요합니다.';
+  let cls = 'v-warn', ic = '🔒';
+  try {
+    const rec = await fetchCert(id || cert.certId);
+    if (rec && rec.hash === h){
+      onlineBadge = '<span class="badge online">☁ 온라인 등록됨 · 진위 확인</span>';
+      title = '진위 확인됨'; cls = 'v-ok'; ic = '✅';
+      sub = '이 수료증은 발급자가 온라인 등록한 정식 수료증이며, 내용도 위·변조되지 않았습니다.';
+    } else if (rec && rec.hash !== h){
+      onlineBadge = '<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 등록본과 불일치</span>';
+      title = '주의: 등록본과 다름'; cls = 'v-warn'; ic = '⚠️';
+      sub = '동일 수료번호의 온라인 등록본과 내용이 다릅니다. 최신 발급 링크인지 확인하세요.';
+    }
+  } catch(e){ /* 미등록/오프라인 — 무결성만 표시 */ }
+
+  render(ic, cls, title, sub, cert, onlineBadge);
+
+  async function _noop(){}
+})();
+
+async function fetchCert(id){
+  try{
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const snap = await getDoc(doc(db, 'certificates', String(id)));
+    return snap.exists() ? snap.data() : null;
+  }catch(e){ return null; }
+}
+window.fetchCert = fetchCert;
+</script>
+</body>
+</html>

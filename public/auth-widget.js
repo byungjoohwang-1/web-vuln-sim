@@ -136,6 +136,30 @@ window.sdaBoard = {
     const rows = [];
     snap.forEach(d => { const v = d.data(); rows.push({ uid: d.id, name: v.name || '익명', xp: v.xp || 0, level: v.level || 1, streak: v.streak || 0, me: d.id === me }); });
     return rows;
+  },
+  // 수료증 온라인 등록(진위 검증용). certificates/{certId} 는 불변(create-only).
+  async registerCert(cert){
+    if (!currentUser) throw new Error('not-logged-in');
+    if (!cert || !cert.certId) throw new Error('bad-cert');
+    await setDoc(doc(db, 'certificates', String(cert.certId)), {
+      uid: currentUser.uid,
+      name: String(cert.name || '').slice(0, 40),
+      certId: String(cert.certId),
+      date: String(cert.date || ''),
+      level: (+cert.level) || 1,
+      xp: (+cert.xp) || 0,
+      concepts: (+cert.concepts) || 0,
+      practical: (+cert.practical) || 0,
+      hash: String(cert.hash || ''),
+      createdAt: serverTimestamp()
+    });
+    return true;
+  },
+  // 공개 단건 조회(로그인 불필요). verify 페이지에서 사용.
+  async fetchCert(certId){
+    if (!certId) return null;
+    const snap = await getDoc(doc(db, 'certificates', String(certId)));
+    return snap.exists() ? snap.data() : null;
   }
 };
 
