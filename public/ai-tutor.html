@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>AI 보안 튜터 · AI Security Tutor</title>
+<style>
+  :root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#f59e0b;--accent2:#38bdf8;--ok:#22c55e;--bad:#ef4444;--mono:'JetBrains Mono','Consolas',monospace}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  a{color:var(--accent2);text-decoration:none}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#0a101e;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30}
+  .topbar a{color:#cbd5e1;font-size:14px}.topbar .sp{flex:1}
+  .langbtn{background:#1e293b;border:1px solid var(--border);color:#cbd5e1;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:13px}
+  .wrap{max-width:880px;margin:0 auto;padding:16px 14px 40px}
+  .hero h1{font-size:21px;margin:6px 0 4px}
+  .hero .sub{color:var(--muted);font-size:13.5px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin:14px 0}
+  label{font-size:12.5px;color:var(--muted);display:block;margin:8px 0 4px}
+  input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--ink);border-radius:8px;padding:9px 11px;font-size:13.5px;font-family:inherit}
+  textarea{resize:vertical;font-family:var(--mono);font-size:12.5px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}
+  .act{border:0;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .act.primary{background:var(--accent);color:#3a2a04}
+  .act.ghost{background:#1e293b;color:#cbd5e1}
+  .note{font-size:12px;color:var(--muted);background:#0f172a;border-left:3px solid var(--accent);border-radius:8px;padding:9px 11px;margin-top:8px}
+  .privacy{font-size:11.5px;color:#86efac;background:#06281a;border:1px solid #14532d;border-radius:8px;padding:8px 11px;margin-top:8px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0}
+  .chip{background:var(--panel2);border:1px solid var(--border);border-radius:999px;padding:5px 11px;font-size:12px;cursor:pointer;color:#cbd5e1}
+  .chip:hover{border-color:var(--accent)}
+  #chat{display:flex;flex-direction:column;gap:12px;min-height:200px;max-height:60vh;overflow:auto;padding:4px}
+  .msg{max-width:90%;padding:11px 14px;border-radius:12px;font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+  .msg.user{align-self:flex-end;background:#0c2333;border:1px solid #155e75;color:#e2e8f0}
+  .msg.bot{align-self:flex-start;background:#10182b;border:1px solid var(--border);color:#e2e8f0}
+  .msg.bot code{background:#0b1220;padding:1px 5px;border-radius:4px;font-family:var(--mono);color:#fde68a}
+  .msg.bot pre{background:#0a0f1c;border:1px solid var(--border);border-radius:8px;padding:11px;overflow:auto;font-family:var(--mono);font-size:12px}
+  .msg.err{align-self:center;background:#2a1015;border:1px solid #5b1a22;color:#fecaca;font-size:13px}
+  .composer{display:flex;gap:8px;margin-top:12px}
+  .composer textarea{flex:1;min-height:46px;max-height:160px}
+  .typing{align-self:flex-start;color:var(--muted);font-size:13px;padding:6px 10px}
+  .disc{margin-top:18px;color:#64748b;font-size:11.5px;text-align:center;line-height:1.7}
+  body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <a href="code-fix-lab.html"><span data-en="Code-Fix Lab">코드 수정 실습</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>🤖 <span data-en="AI Security Tutor">AI 보안 튜터</span></h1>
+      <div class="sub" data-en="A Socratic secure-coding tutor powered by your own Claude API key — explains weaknesses, reviews your code, and guides you with hints. Java/Python focused.">
+        당신의 Claude API 키로 작동하는 소크라테스식 시큐어코딩 튜터 — 약점 개념 설명, 코드 리뷰, 힌트 유도를 제공합니다. Java/Python 중심.
+      </div>
+    </div>
+
+    <!-- Setup -->
+    <div class="card" id="setupCard">
+      <h3 style="margin:0 0 4px;font-size:15px">🔑 <span data-en="Connect your API key">API 키 연결</span></h3>
+      <div class="row">
+        <div style="flex:2">
+          <label data-en="Anthropic API key (sk-ant-...)">Anthropic API 키 (sk-ant-...)</label>
+          <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+        </div>
+        <div>
+          <label data-en="Model">모델</label>
+          <input id="model" type="text" value="claude-sonnet-4-6" list="models">
+          <datalist id="models">
+            <option value="claude-sonnet-4-6"></option>
+            <option value="claude-opus-4-8"></option>
+            <option value="claude-haiku-4-5"></option>
+          </datalist>
+        </div>
+      </div>
+      <div class="privacy" data-en="🔒 Your key is stored only in this browser (localStorage) and sent directly to api.anthropic.com. It never touches our servers (this is a static, serverless site).">
+        🔒 키는 이 브라우저(localStorage)에만 저장되고 api.anthropic.com으로 직접 전송됩니다. 우리 서버를 절대 경유하지 않습니다(정적·서버리스 사이트).
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="act primary" style="flex:0 0 auto" onclick="saveKey()">💾 <span data-en="Save &amp; start">저장하고 시작</span></button>
+        <button class="act ghost" style="flex:0 0 auto" onclick="clearKey()">🗑 <span data-en="Forget key">키 삭제</span></button>
+        <span id="keyStatus" style="flex:1;font-size:12.5px;color:var(--muted);align-self:center"></span>
+      </div>
+      <div class="note" data-en="Don't have a key? Create one at console.anthropic.com → API Keys. Usage is billed to your own account; this tutor uses small requests to keep cost low.">
+        키가 없나요? console.anthropic.com → API Keys에서 발급하세요. 사용량은 본인 계정으로 과금되며, 본 튜터는 비용을 낮추기 위해 짧은 요청을 사용합니다.
+      </div>
+    </div>
+
+    <!-- Tutor -->
+    <div class="card hidden" id="tutorCard">
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:2">
+          <label data-en="Topic context (optional) — loads a weakness for focused help">주제 컨텍스트(선택) — 특정 약점을 불러와 집중 학습</label>
+          <select id="topic"><option value="" data-en="Free chat (no specific topic)">자유 대화(특정 주제 없음)</option></select>
+        </div>
+        <button class="act ghost" style="flex:0 0 auto" onclick="newChat()">🧹 <span data-en="New chat">새 대화</span></button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="chat"></div>
+      <div class="composer">
+        <textarea id="input" placeholder="질문을 입력하세요... (Shift+Enter 줄바꿈)" onkeydown="onKey(event)"></textarea>
+        <button class="act primary" id="sendBtn" onclick="send()">▶</button>
+      </div>
+    </div>
+
+    <div class="disc" data-en="Educational tool. AI responses can be wrong — always verify against the official KISA guide and authoritative sources. Your API key and conversations stay in your browser.">
+      ⚠️ 교육용 도구입니다. AI 응답은 틀릴 수 있으니 KISA 공식 가이드·신뢰 출처로 항상 검증하세요. API 키와 대화는 브라우저에만 보관됩니다.
+    </div>
+  </div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/academy-data-ext.js"></script>
+<script>
+/* ---------- i18n ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.body.classList.toggle('lang-en',en);document.querySelectorAll('[data-en]').forEach(function(el){if(el.dataset.ko===undefined)el.dataset.ko=el.innerHTML;el.innerHTML=en?el.dataset.en:el.dataset.ko;});}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* ---------- state ---------- */
+var CONCEPTS=(window.ACADEMY_DATA&&window.ACADEMY_DATA.CONCEPTS)||[];
+var history=[]; // {role, content}
+var sending=false;
+
+function getKey(){try{return localStorage.getItem('wvs_ai_key')||'';}catch(e){return '';}}
+function getModel(){try{return localStorage.getItem('wvs_ai_model')||'claude-sonnet-4-6';}catch(e){return 'claude-sonnet-4-6';}}
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* very small, safe markdown: code fences, inline code, bold */
+function mdToHtml(t){
+  t=esc(t);
+  t=t.replace(/```([\s\S]*?)```/g,function(m,c){return '<pre>'+c.replace(/^\n/,'')+'</pre>';});
+  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  return t;
+}
+
+/* ---------- setup ---------- */
+function saveKey(){
+  var k=document.getElementById('apiKey').value.trim();
+  var m=document.getElementById('model').value.trim()||'claude-sonnet-4-6';
+  if(!k){document.getElementById('keyStatus').textContent=L('키를 입력하세요.','Enter a key.');return;}
+  try{localStorage.setItem('wvs_ai_key',k);localStorage.setItem('wvs_ai_model',m);}catch(e){}
+  showTutor();
+}
+function clearKey(){try{localStorage.removeItem('wvs_ai_key');}catch(e){}document.getElementById('apiKey').value='';document.getElementById('keyStatus').textContent=L('키가 삭제되었습니다.','Key cleared.');document.getElementById('tutorCard').classList.add('hidden');}
+function showTutor(){
+  document.getElementById('tutorCard').classList.remove('hidden');
+  document.getElementById('keyStatus').innerHTML='✅ '+L('연결됨','Connected')+' · '+esc(getModel());
+  if(!history.length) greet();
+}
+
+/* ---------- topic + chips ---------- */
+function populateTopics(){
+  var sel=document.getElementById('topic');
+  CONCEPTS.forEach(function(c){var o=document.createElement('option');o.value=c.cwe;o.textContent='['+c.cwe+'] '+c.name+' ('+c.cat+')';sel.appendChild(o);});
+  sel.addEventListener('change',renderChips);
+}
+function currentConcept(){var cwe=document.getElementById('topic').value;return CONCEPTS.find(function(c){return c.cwe===cwe;})||null;}
+function renderChips(){
+  var box=document.getElementById('chips');var c=currentConcept();
+  var chips;
+  if(c){chips=[
+    L('이 약점을 쉽게 설명해줘','Explain this weakness simply'),
+    L('취약한 코드 예시와 안전한 수정본을 보여줘','Show a vulnerable example and its fix'),
+    L('진단 시 어떤 패턴을 봐야 해?','What patterns should I look for when diagnosing?'),
+    L('이 약점에 대한 연습 문제를 내줘','Quiz me on this weakness')
+  ];}else{chips=[
+    L('내 코드를 리뷰해줘 (아래에 붙여넣기)','Review my code (paste below)'),
+    L('SQL 삽입과 XSS의 차이는?','Difference between SQL injection and XSS?'),
+    L('시큐어코딩 핵심 원칙을 알려줘','Key secure-coding principles?')
+  ];}
+  box.innerHTML='';
+  chips.forEach(function(t){var d=document.createElement('span');d.className='chip';d.textContent=t;d.onclick=function(){document.getElementById('input').value=t;document.getElementById('input').focus();};box.appendChild(d);});
+}
+
+/* ---------- chat ---------- */
+function addMsg(role,text){
+  var el=document.createElement('div');el.className='msg '+role;
+  el.innerHTML=role==='bot'?mdToHtml(text):esc(text);
+  document.getElementById('chat').appendChild(el);scrollChat();return el;
+}
+function scrollChat(){var c=document.getElementById('chat');c.scrollTop=c.scrollHeight;}
+function newChat(){history=[];document.getElementById('chat').innerHTML='';greet();}
+function greet(){
+  addMsg('bot',L('안녕하세요! 저는 보안약점 진단원 학습을 돕는 AI 튜터예요. 위에서 주제를 고르거나, 코드를 붙여넣고 “리뷰해줘”라고 해보세요. 정답을 바로 알려주기보다 힌트로 함께 풀어갑니다.',
+    'Hi! I am your secure-coding tutor. Pick a topic above, or paste code and ask me to review it. I guide with hints rather than handing you answers.'));
+}
+
+function systemPrompt(){
+  var c=currentConcept();
+  var base=L(
+    '당신은 KISA 소프트웨어 보안약점 진단원 교육을 돕는 전문 시큐어코딩 튜터입니다. 한국어로 답하세요. 학습자가 스스로 깨닫도록 소크라테스식으로 힌트를 주되, 명시적으로 정답을 요청하면 정확히 알려줍니다. Java와 Python 예시를 우선합니다. 코드 블록은 마크다운 ```로 감싸세요. 보안적으로 위험한 공격 도구나 실제 악용 페이로드 제작은 거부하고 방어 관점으로 안내합니다. 간결하게.',
+    'You are an expert secure-coding tutor for the KISA security-weakness assessor curriculum. Use Socratic hints so the learner reasons it out, but give the exact answer when explicitly asked. Prefer Java and Python. Wrap code in markdown ``` blocks. Refuse to build real-world attack tooling/exploit payloads; steer to defensive guidance. Be concise.');
+  if(c){
+    base+='\n\n'+L('현재 학습 주제','Current topic')+': ['+c.cwe+'] '+c.name+' ('+c.cat+')'+
+      '\n'+L('개념','Concept')+': '+c.desc+
+      '\n'+L('위험','Risk')+': '+c.risk+
+      '\n'+L('안전한 처리','Safe handling')+': '+c.safe+
+      '\n'+L('진단 포인트','Diagnosis')+': '+c.diag;
+  }
+  return base;
+}
+
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+
+async function send(){
+  if(sending)return;
+  var inp=document.getElementById('input');var text=inp.value.trim();
+  if(!text)return;
+  var key=getKey();
+  if(!key){addMsg('err',L('API 키가 없습니다. 위에서 키를 저장하세요.','No API key. Save your key above.'));return;}
+  inp.value='';addMsg('user',text);
+  history.push({role:'user',content:text});
+  // bound history to last 12 turns to control cost
+  if(history.length>12)history=history.slice(history.length-12);
+
+  sending=true;document.getElementById('sendBtn').disabled=true;
+  var typing=document.createElement('div');typing.className='typing';typing.textContent=L('튜터가 입력 중…','Tutor is typing…');
+  document.getElementById('chat').appendChild(typing);scrollChat();
+
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:getModel(),
+        max_tokens:1400,
+        system:systemPrompt(),
+        messages:history.map(function(m){return {role:m.role,content:m.content};})
+      })
+    });
+    typing.remove();
+    if(!res.ok){
+      var errText=await res.text();
+      var hint='';
+      if(res.status===401)hint=L(' — 키가 올바른지 확인하세요.',' — check your key.');
+      else if(res.status===429)hint=L(' — 사용량 한도/속도 제한입니다.',' — rate/usage limit.');
+      else if(res.status===400&&/model/.test(errText))hint=L(' — 모델 이름을 확인하세요.',' — check the model name.');
+      addMsg('err','⚠ '+L('오류','Error')+' '+res.status+hint);
+      sending=false;document.getElementById('sendBtn').disabled=false;return;
+    }
+    var data=await res.json();
+    var out=(data.content&&data.content.map(function(b){return b.text||'';}).join('').trim())||L('(빈 응답)','(empty)');
+    history.push({role:'assistant',content:out});
+    addMsg('bot',out);
+  }catch(e){
+    typing.remove();
+    addMsg('err','⚠ '+L('네트워크/CORS 오류: ','Network/CORS error: ')+((e&&e.message)||e));
+  }
+  sending=false;document.getElementById('sendBtn').disabled=false;
+}
+
+/* ---------- init ---------- */
+document.addEventListener('DOMContentLoaded',function(){
+  applyLang();populateTopics();renderChips();
+  var k=getKey();
+  if(k){document.getElementById('apiKey').value=k;document.getElementById('model').value=getModel();showTutor();}
+});
+</script>
+</body>
+</html>
