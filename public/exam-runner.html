@@ -929,6 +929,52 @@ function buildOfficialMockQuestions(packId) {
   return theorySet.concat(practicalSet);
 }
 
+// ===== 약점 집중(CWE 적응형) 출제 =====
+// 사용자의 카테고리별 오답 빈도(wrongByCat)를 가중치로 삼아, 약한 분류의 문항을
+// 더 자주 뽑는다. 약점 데이터가 없으면 균등 랜덤으로 자연 폴백한다.
+function getWeakByCat() {
+  try {
+    if (window.AcademyState && AcademyState.getUnifiedStats) {
+      const u = AcademyState.getUnifiedStats();
+      if (u && u.wrongByCat && Object.keys(u.wrongByCat).length) return u.wrongByCat;
+    }
+  } catch (e) {}
+  try {
+    const ws = JSON.parse(localStorage.getItem('sda_wrongStats') || '{}');
+    return ws && typeof ws === 'object' ? ws : {};
+  } catch (e) { return {}; }
+}
+
+function buildAdaptiveQuestions() {
+  const data = window.ACADEMY_DATA || {};
+  const quiz = (data.QUIZ || []).map((q, i) => normalizeTheoryQuestion(q, i, 'QZ'));
+  const theory = (data.THEORY || []).map((q, i) => normalizeTheoryQuestion(q, i, 'TH'));
+  const mcPool = quiz.concat(theory.filter(q => q.type === 'MC'));
+  const practical = getAllPracticeQuestions().map(q => Object.assign({ kind: 'prac' }, q));
+
+  const weak = getWeakByCat();
+  let maxW = 1;
+  Object.keys(weak).forEach(c => { if ((+weak[c] || 0) > maxW) maxW = +weak[c]; });
+  const catOf = q => q.cat || q.category || '';
+  const weight = q => 1 + 3 * ((+weak[catOf(q)] || 0) / maxW); // 약점 분류 최대 4배
+
+  function weightedSample(pool, n) {
+    const arr = pool.slice(); const out = [];
+    while (out.length < n && arr.length) {
+      let total = 0; for (let i = 0; i < arr.length; i++) total += weight(arr[i]);
+      let r = Math.random() * total, idx = arr.length - 1, acc = 0;
+      for (let i = 0; i < arr.length; i++) { acc += weight(arr[i]); if (r <= acc) { idx = i; break; } }
+      out.push(arr.splice(idx, 1)[0]);
+    }
+    return out;
+  }
+
+  const theorySet = weightedSample(mcPool, Math.min(20, mcPool.length));
+  const pracSet = weightedSample(practical, Math.min(10, practical.length));
+  window.__adaptiveWeak = Object.keys(weak).sort((a, b) => (+weak[b] || 0) - (+weak[a] || 0)).slice(0, 3);
+  return theorySet.concat(pracSet);
+}
+
 function getPackPracticeQuestions(packId) {
   const allPrac = getAllPracticeQuestions();
   if (packId === 'pack_custom') return getCustomPracticalQuestions();
@@ -951,6 +997,8 @@ initExam = function() {
   } else if (packParam && packParam.startsWith('pack_full_mock')) {
     questions = buildOfficialMockQuestions(packParam);
     setupTimer();
+  } else if (packParam === 'pack_adaptive') {
+    questions = buildAdaptiveQuestions();
   } else if (packParam) {
     questions = getPackPracticeQuestions(packParam).map(q => Object.assign({ kind: 'prac' }, q));
   }

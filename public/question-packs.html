@@ -302,6 +302,16 @@ header .wrap {
 // Static metadata for our recommended packages
 const PACKS = [
   {
+    id: 'pack_adaptive',
+    title: '🎯 약점 집중 (CWE 적응형)',
+    desc: '내 오답 기록을 분석해 가장 약한 분류의 문항을 더 자주 출제하는 개인 맞춤 세트입니다. 이론·객관식 20 + 코드 실습 10문항.',
+    category: 'prac',
+    level: '맞춤',
+    type: 'ADAPTIVE',
+    filterKeys: [],
+    ids: []
+  },
+  {
     id: 'pack_intro',
     title: '🐣 입문 샘플 문제팩',
     desc: '코드 진단 실습에 대한 기본기를 다지는 5가지 간단한 취약/안전 코드 판별 문제입니다.',
@@ -407,6 +417,19 @@ function filterPacks(category) {
   renderPacks(category);
 }
 
+function getWeakCatsPreview() {
+  let weak = {};
+  try {
+    if (window.AcademyState && AcademyState.getUnifiedStats) {
+      const u = AcademyState.getUnifiedStats();
+      if (u && u.wrongByCat) weak = u.wrongByCat;
+    }
+    if (!Object.keys(weak).length) weak = JSON.parse(localStorage.getItem('sda_wrongStats') || '{}');
+  } catch (e) { weak = {}; }
+  const top = Object.keys(weak).filter(k => (+weak[k] || 0) > 0).sort((a, b) => (+weak[b] || 0) - (+weak[a] || 0)).slice(0, 2);
+  return top.join(', ');
+}
+
 function renderPacks(filterCat = 'all') {
   const p = AcademyState.getProgress();
   const grid = document.getElementById('packsGrid');
@@ -415,6 +438,28 @@ function renderPacks(filterCat = 'all') {
   const filtered = getVisiblePacks().filter(pack => filterCat === 'all' || pack.category === filterCat);
 
   filtered.forEach(pack => {
+    // 적응형(약점 집중) 팩은 동적 출제라 고정 진도가 없어 전용 카드로 렌더링한다.
+    if (pack.type === 'ADAPTIVE') {
+      const weak = getWeakCatsPreview();
+      const card = document.createElement('div');
+      card.className = 'pack-card';
+      card.style.border = '1px solid rgba(52,211,153,.45)';
+      card.innerHTML = `
+        <span class="pack-tag" style="background:rgba(52,211,153,.15);color:#34d399">ADAPTIVE</span>
+        <h3>${pack.title}</h3>
+        <p>${pack.desc}</p>
+        <div class="pack-meta">
+          <div>유형: <strong>개인 맞춤</strong></div>
+          <div>구성: <strong>30문항</strong></div>
+        </div>
+        <div class="prog-lbl"><span>현재 집중 분류</span><span>${weak || '데이터 수집 중'}</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:100%;background:linear-gradient(90deg,#34d399,#38bdf8)"></div></div>
+        <button class="pack-btn" style="background:#34d399;color:#053a2a"
+                onclick="startPack('${pack.id}', '${pack.type}')">🎯 약점 집중 시작</button>
+      `;
+      grid.appendChild(card);
+      return;
+    }
     const totalCount = pack.type === 'MOCK' ? 45 : pack.ids.length; // 2026 guide: theory 30 + practical 15
     let completed = 0;
 
