@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>보안 사건으로 배우는 약점 · Security Incidents</title>
+<style>
+  :root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#fb7185;--accent2:#38bdf8;--mono:'JetBrains Mono','Consolas',monospace}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  a{color:var(--accent2);text-decoration:none}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#0a101e;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30}
+  .topbar a{color:#cbd5e1;font-size:14px}.topbar .sp{flex:1}
+  .langbtn{background:#1e293b;border:1px solid var(--border);color:#cbd5e1;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:13px}
+  .wrap{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+  .hero h1{font-size:23px;margin:6px 0 4px}
+  .hero .sub{color:var(--muted);font-size:14px;max-width:880px}
+  .today{background:linear-gradient(135deg,#2a0f17,#1a1230);border:1px solid #5b1a2a;border-radius:14px;padding:18px 20px;margin:16px 0}
+  .today .tag{font-size:12px;color:#fda4af;font-weight:700;letter-spacing:1px}
+  .today h2{margin:4px 0 6px;font-size:20px;color:#fff}
+  .today .impact{font-size:13.5px;color:#fecdd3;margin-bottom:8px}
+  .today .lesson{font-size:13.5px;color:#e2e8f0;background:#0f172a;border-left:3px solid var(--accent);border-radius:8px;padding:10px 12px;margin:10px 0}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;align-items:center}
+  .filters select,.filters input{background:var(--panel2);border:1px solid var(--border);color:var(--ink);border-radius:7px;padding:7px 10px;font-size:13px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .inc{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 15px;display:flex;flex-direction:column}
+  .inc .yr{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700}
+  .inc h3{margin:3px 0 4px;font-size:15.5px;color:#fff}
+  .inc .cve{font-family:var(--mono);font-size:11px;color:#94a3b8}
+  .inc .imp{font-size:12.5px;color:#cbd5e1;margin:8px 0}
+  .inc .badges{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+  .badge{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--border);background:#0b1220;color:#cbd5e1}
+  .badge.cwe{color:#fda4af;border-color:#5b1a2a}
+  .inc .links{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto}
+  .inc .links a{font-size:12px;background:#1e293b;border-radius:7px;padding:6px 10px;color:#cbd5e1}
+  .inc .links a:hover{background:#26344d}
+  .inc .links a.sim{background:#0c2333;color:#7dd3fc}
+  .disc{margin-top:22px;color:#64748b;font-size:12px;text-align:center;line-height:1.7}
+  body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+    <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+    <a href="skill-tree.html"><span data-en="Skill Tree">스킬 트리</span></a>
+    <span class="sp"></span>
+    <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>📰 <span data-en="Learn Weaknesses from Real Incidents">보안 사건으로 배우는 약점</span></h1>
+      <div class="sub" data-en="Famous real-world breaches mapped to the 49 KISA weaknesses. Each case links to its simulator, concept and fix exercise — turn abstract CWEs into memorable lessons.">
+        유명한 실제 침해사고를 KISA 49개 보안약점에 연결했습니다. 각 사례는 해당 시뮬레이터·개념·수정 실습으로 이어져, 추상적 약점을 기억에 남는 교훈으로 바꿉니다.
+      </div>
+    </div>
+
+    <div class="today" id="today"></div>
+
+    <div class="filters">
+      <select id="f-cat"><option value="" data-en="All categories">전체 분류</option></select>
+      <select id="f-decade"><option value="" data-en="All years">전체 연도</option><option value="2020">2020년대</option><option value="2010">2010년대</option><option value="2000">2000년대</option></select>
+      <input id="f-search" type="text" placeholder="검색 (사건/CVE/CWE)" style="flex:1;min-width:160px">
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="disc" data-en="Educational summaries of historical, publicly-documented incidents — simplified for learning, not incident reports. CWE mapping is pedagogical. Verify details against authoritative sources (NVD, vendor advisories).">
+      ⚠️ 공개적으로 문서화된 과거 사건의 교육용 요약입니다(사고 보고서 아님). CWE 매핑은 학습 목적이며, 정확한 내용은 권위 있는 출처(NVD, 벤더 권고문)로 확인하세요.
+    </div>
+  </div>
+
+<script src="js/academy-data.js"></script>
+<script src="js/sim-map.js"></script>
+<script>
+/* ---------- i18n ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.body.classList.toggle('lang-en',en);document.querySelectorAll('[data-en]').forEach(function(el){if(el.dataset.ko===undefined)el.dataset.ko=el.innerHTML;el.innerHTML=en?el.dataset.en:el.dataset.ko;});render();}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* ---------- data: curated real incidents → portal CWE ---------- */
+var INC=[
+ {y:2021,name:'Log4Shell',en:'Log4Shell',cve:'CVE-2021-44228',cwe:'CWE-94',
+  imp:'전 세계 수백만 서버. 로그 문자열의 JNDI 조회가 원격 코드 실행으로 이어짐.',
+  impEn:'Millions of servers. A JNDI lookup inside a logged string led to remote code execution.',
+  lesson:'외부 입력이 동적으로 해석·실행되지 않도록 차단하고, 라이브러리 기능을 최소화한다.',
+  lessonEn:'Never let external input be dynamically interpreted/executed; minimize library features.'},
+ {y:2017,name:'Equifax 대규모 유출',en:'Equifax breach',cve:'CVE-2017-5638',cwe:'CWE-94',
+  imp:'약 1.47억 명 개인정보. 미패치 Apache Struts의 OGNL 주입 RCE.',
+  impEn:'~147M records. OGNL injection RCE in an unpatched Apache Struts.',
+  lesson:'입력검증 결함 + 패치 지연의 결합이 치명적. 의존성 취약점 관리가 핵심.',
+  lessonEn:'Input-validation flaw + patch lag is lethal. Dependency patching is critical.'},
+ {y:2014,name:'Heartbleed',en:'Heartbleed',cve:'CVE-2014-0160',cwe:'CWE-120',
+  imp:'OpenSSL TLS heartbeat의 경계 검사 누락으로 서버 메모리(키·세션) 과다 읽기.',
+  impEn:'Missing bounds check in OpenSSL TLS heartbeat over-read server memory (keys, sessions).',
+  lesson:'길이 값을 신뢰하지 말고 버퍼 경계를 항상 검증한다.',
+  lessonEn:'Never trust a length field; always validate buffer bounds.'},
+ {y:2014,name:'Shellshock',en:'Shellshock',cve:'CVE-2014-6271',cwe:'CWE-78',
+  imp:'Bash 환경변수 파싱 결함으로 원격 명령 주입. 웹 CGI 통해 대량 악용.',
+  impEn:'Bash env-var parsing flaw allowed remote command injection, mass-exploited via CGI.',
+  lesson:'외부 입력을 셸로 전달하지 말고, 인자 배열·화이트리스트를 사용한다.',
+  lessonEn:'Do not pass external input to a shell; use argument arrays and allow-lists.'},
+ {y:2019,name:'Capital One 유출',en:'Capital One breach',cve:'SSRF',cwe:'CWE-918',
+  imp:'약 1억 건. WAF의 SSRF로 AWS 메타데이터의 임시 자격증명 탈취 후 S3 접근.',
+  impEn:'~100M records. SSRF in a WAF stole AWS metadata credentials, then read S3.',
+  lesson:'서버측 요청 대상에 허용목록을 적용하고 메타데이터 접근을 차단한다.',
+  lessonEn:'Allow-list server-side request targets and block metadata endpoints.'},
+ {y:2014,name:'Apple "goto fail"',en:'Apple "goto fail"',cve:'CVE-2014-1266',cwe:'CWE-295',
+  imp:'중복된 goto 한 줄로 TLS 인증서 서명 검증을 건너뜀 → 중간자 공격 가능.',
+  impEn:'A duplicated goto skipped TLS signature verification, enabling MITM.',
+  lesson:'인증서 검증 경로를 명확히 하고, 분기·단일문장 누락을 정적분석으로 잡는다.',
+  lessonEn:'Make cert-validation paths explicit; catch missing braces via static analysis.'},
+ {y:2016,name:'Dirty COW',en:'Dirty COW',cve:'CVE-2016-5195',cwe:'CWE-367',
+  imp:'리눅스 copy-on-write의 경쟁 조건(TOCTOU)으로 로컬 권한상승.',
+  impEn:'A race (TOCTOU) in Linux copy-on-write allowed local privilege escalation.',
+  lesson:'검사와 사용 사이의 시점 차를 없애고 원자적 연산을 사용한다.',
+  lessonEn:'Eliminate the check-to-use time gap; use atomic operations.'},
+ {y:2008,name:'Debian OpenSSL 약한 난수',en:'Debian OpenSSL weak RNG',cve:'CVE-2008-0166',cwe:'CWE-330',
+  imp:'엔트로피 소스를 제거한 패치 실수로 생성 키가 소수의 예측 가능한 값으로 축소.',
+  impEn:'A patch removed entropy, shrinking generated keys to a few predictable values.',
+  lesson:'보안 난수는 검증된 CSPRNG를 쓰고 엔트로피를 임의로 손대지 않는다.',
+  lessonEn:'Use a vetted CSPRNG for security randomness; never tamper with entropy.'},
+ {y:2017,name:'WannaCry / EternalBlue',en:'WannaCry / EternalBlue',cve:'CVE-2017-0144',cwe:'CWE-120',
+  imp:'SMBv1 버퍼 오버플로를 악용한 자기전파 랜섬웨어 웜.',
+  impEn:'A self-propagating ransomware worm exploiting an SMBv1 buffer overflow.',
+  lesson:'메모리 안전 결함은 웜으로 번질 수 있다. 경계 검사와 패치가 필수.',
+  lessonEn:'Memory-safety flaws can become worms. Bounds checks and patching are essential.'},
+ {y:2019,name:'BlueKeep',en:'BlueKeep',cve:'CVE-2019-0708',cwe:'CWE-416',
+  imp:'RDP의 use-after-free로 인증 전 원격 코드 실행 가능.',
+  impEn:'A use-after-free in RDP enabled pre-auth remote code execution.',
+  lesson:'해제된 객체를 재사용하지 않도록 수명 관리와 포인터 무효화를 철저히 한다.',
+  lessonEn:'Manage object lifetimes and null out pointers to avoid use-after-free.'},
+ {y:2021,name:'Apache 경로 우회',en:'Apache path traversal',cve:'CVE-2021-41773',cwe:'CWE-22',
+  imp:'경로 정규화 결함으로 디렉터리 외부 파일 노출·일부 환경 RCE.',
+  impEn:'A path-normalization flaw exposed files outside the root, with RCE in some setups.',
+  lesson:'경로를 정규화한 뒤 기준 디렉터리 포함 여부를 화이트리스트로 검증한다.',
+  lessonEn:'Normalize paths, then verify they stay within an allow-listed base directory.'},
+ {y:2022,name:'Spring4Shell',en:'Spring4Shell',cve:'CVE-2022-22965',cwe:'CWE-94',
+  imp:'데이터 바인딩으로 클래스로더 속성을 조작해 RCE.',
+  impEn:'Data binding manipulated classloader properties to achieve RCE.',
+  lesson:'바인딩 대상 속성을 제한하고 위험한 프로퍼티 접근을 차단한다.',
+  lessonEn:'Restrict bindable properties and block access to dangerous ones.'},
+ {y:2018,name:'Drupalgeddon2',en:'Drupalgeddon2',cve:'CVE-2018-7600',cwe:'CWE-94',
+  imp:'폼 API의 입력검증 결함으로 비인증 원격 코드 실행.',
+  impEn:'A form-API input-validation flaw allowed unauthenticated RCE.',
+  lesson:'프레임워크 입력 경로도 신뢰 경계로 보고 엄격히 검증한다.',
+  lessonEn:'Treat framework input paths as a trust boundary and validate strictly.'},
+ {y:2005,name:'Samy 웜 (MySpace)',en:'Samy worm (MySpace)',cve:'XSS',cwe:'CWE-79',
+  imp:'저장형 XSS로 자기전파, 약 하루 만에 100만 친구 추가.',
+  impEn:'A stored XSS self-propagated to ~1M friends in about a day.',
+  lesson:'출력 시 컨텍스트별 인코딩을 적용하고 위험한 HTML을 정제한다.',
+  lessonEn:'Apply context-aware output encoding and sanitize dangerous HTML.'},
+ {y:2008,name:'Heartland 결제 유출',en:'Heartland breach',cve:'SQLi',cwe:'CWE-89',
+  imp:'SQL 삽입을 시작점으로 약 1.3억 건의 카드 데이터 유출.',
+  impEn:'SQL injection was the entry point for ~130M card records stolen.',
+  lesson:'파라미터화 쿼리(PreparedStatement)로 명령과 데이터를 분리한다.',
+  lessonEn:'Separate code from data with parameterized queries (PreparedStatement).'},
+ {y:2015,name:'Java 역직렬화 RCE',en:'Java deserialization RCE',cve:'CWE-502',cwe:'CWE-502',
+  imp:'Apache Commons Collections 가젯으로 다수 미들웨어에서 객체 역직렬화 RCE.',
+  impEn:'Commons Collections gadgets enabled object-deserialization RCE across middleware.',
+  lesson:'신뢰할 수 없는 데이터를 역직렬화하지 말고 허용 클래스만 처리한다.',
+  lessonEn:'Never deserialize untrusted data; allow-list permitted classes.'},
+ {y:2016,name:'Mirai 봇넷',en:'Mirai botnet',cve:'CWE-798',cwe:'CWE-798',
+  imp:'IoT 기기의 기본/하드코딩 자격증명을 스캔·장악해 대규모 DDoS.',
+  impEn:'Scanned and hijacked IoT default/hardcoded credentials for massive DDoS.',
+  lesson:'자격증명을 코드/펌웨어에 박지 말고 강제 초기 변경·비밀 저장소를 쓴다.',
+  lessonEn:'Never embed credentials; force initial change and use secret stores.'},
+ {y:2000,name:'wu-ftpd 포맷스트링',en:'wu-ftpd format string',cve:'CVE-2000-0573',cwe:'CWE-134',
+  imp:'사용자 입력이 포맷 문자열로 전달되어 메모리 변조·코드 실행.',
+  impEn:'User input used as a format string allowed memory corruption and code execution.',
+  lesson:'printf류에 사용자 입력을 포맷 인자로 넘기지 말고 고정 포맷을 쓴다.',
+  lessonEn:'Never pass user input as the format argument; use a fixed format string.'},
+ {y:2014,name:'POODLE',en:'POODLE',cve:'CVE-2014-3566',cwe:'CWE-327',
+  imp:'SSLv3로의 다운그레이드 + 약한 CBC 패딩으로 암호문 일부 복호화.',
+  impEn:'Downgrade to SSLv3 with weak CBC padding allowed partial plaintext recovery.',
+  lesson:'취약한 프로토콜/알고리즘을 비활성화하고 안전한 기본값을 강제한다.',
+  lessonEn:'Disable weak protocols/algorithms and enforce safe defaults.'},
+ {y:2012,name:'LinkedIn 비밀번호 유출',en:'LinkedIn password leak',cve:'CWE-759',cwe:'CWE-759',
+  imp:'솔트 없는 SHA-1로 저장된 650만+ 해시가 유출 후 대량 크래킹.',
+  impEn:'6.5M+ unsalted SHA-1 hashes leaked and were cracked en masse.',
+  lesson:'비밀번호는 솔트 + 느린 해시(bcrypt/Argon2/PBKDF2)로 저장한다.',
+  lessonEn:'Store passwords with salt + a slow hash (bcrypt/Argon2/PBKDF2).'}
+];
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+var CONCEPTS=(window.ACADEMY_DATA&&window.ACADEMY_DATA.CONCEPTS)||[];
+function conceptOf(cwe){return CONCEPTS.find(function(c){return c.cwe===cwe;})||null;}
+function nm(it){return isEn()?it.en:it.name;}
+function impOf(it){return isEn()?it.impEn:it.imp;}
+function lessonOf(it){return isEn()?it.lessonEn:it.lesson;}
+
+function linksFor(it){
+  var sim=(window.SIM_BY_CWE||{})[it.cwe];
+  var html='';
+  if(sim)html+='<a class="sim" href="'+sim+'" target="_blank" rel="noopener">🧪 '+L('시뮬레이터','Simulator')+'</a>';
+  html+='<a href="content-map.html" target="_blank" rel="noopener">📖 '+L('개념','Concept')+'</a>';
+  html+='<a href="code-fix-lab.html" target="_blank" rel="noopener">🛠️ '+L('수정 실습','Fix')+'</a>';
+  return html;
+}
+
+/* ---------- today ---------- */
+function todayIndex(){
+  var d=new Date();
+  var doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+  return doy%INC.length;
+}
+function renderToday(){
+  var it=INC[todayIndex()];var c=conceptOf(it.cwe);
+  document.getElementById('today').innerHTML=
+    '<div class="tag">📌 '+L('오늘의 보안 사건','TODAY\'S INCIDENT')+' · '+it.y+'</div>'+
+    '<h2>'+esc(nm(it))+' <span style="font-family:var(--mono);font-size:13px;color:#fda4af">'+esc(it.cve)+'</span></h2>'+
+    '<div class="impact">'+esc(impOf(it))+'</div>'+
+    '<div class="badges" style="display:flex;gap:6px;flex-wrap:wrap"><span class="badge cwe">'+esc(it.cwe)+(c?' · '+esc(c.name):'')+'</span>'+(c?'<span class="badge">'+esc(c.cat)+'</span>':'')+'</div>'+
+    '<div class="lesson">💡 '+esc(lessonOf(it))+'</div>'+
+    '<div class="inc"><div class="links" style="margin-top:0">'+linksFor(it)+'</div></div>';
+}
+
+/* ---------- grid ---------- */
+function populateCats(){
+  var cats=[];INC.forEach(function(it){var c=conceptOf(it.cwe);if(c&&cats.indexOf(c.cat)<0)cats.push(c.cat);});
+  var sel=document.getElementById('f-cat');cats.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+}
+function render(){
+  var cat=document.getElementById('f-cat').value;
+  var dec=document.getElementById('f-decade').value;
+  var q=(document.getElementById('f-search').value||'').toLowerCase();
+  var rows=INC.filter(function(it){
+    var c=conceptOf(it.cwe);
+    if(cat&&(!c||c.cat!==cat))return false;
+    if(dec&&Math.floor(it.y/10)*10!==+dec)return false;
+    if(q){var hay=(it.name+' '+it.en+' '+it.cve+' '+it.cwe).toLowerCase();if(hay.indexOf(q)<0)return false;}
+    return true;
+  }).sort(function(a,b){return b.y-a.y;});
+  var box=document.getElementById('grid');box.innerHTML='';
+  rows.forEach(function(it){
+    var c=conceptOf(it.cwe);
+    var el=document.createElement('div');el.className='inc';
+    el.innerHTML='<div class="yr">'+it.y+'</div><h3>'+esc(nm(it))+'</h3>'+
+      '<div class="cve">'+esc(it.cve)+'</div>'+
+      '<div class="imp">'+esc(impOf(it))+'</div>'+
+      '<div class="badges"><span class="badge cwe">'+esc(it.cwe)+'</span>'+(c?'<span class="badge">'+esc(c.name)+'</span>':'')+'</div>'+
+      '<div class="links">'+linksFor(it)+'</div>';
+    box.appendChild(el);
+  });
+  renderToday();
+}
+
+/* ---------- init ---------- */
+['f-cat','f-decade'].forEach(function(id){document.getElementById(id).addEventListener('change',render);});
+document.getElementById('f-search').addEventListener('input',render);
+document.addEventListener('DOMContentLoaded',function(){applyLang();populateCats();render();});
+</script>
+</body>
+</html>
