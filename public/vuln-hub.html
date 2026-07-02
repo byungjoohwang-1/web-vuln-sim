@@ -189,16 +189,31 @@
 
         /* 통계 카드 */
         .stat-card {
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 16px;
+            padding: 1.35rem 1rem;
             text-align: center;
-            transition: transform 0.3s;
+            transition: transform .25s ease, box-shadow .25s ease;
             height: 100%;
+            min-height: 152px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.14);
         }
-        
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-card h2 { font-size: 2.5rem; font-weight: 700; margin: 0.5rem 0; }
-        .stat-card p { margin: 0; color: rgba(255,255,255,0.8); font-size: 0.9rem; }
+        .stat-card::before {
+            content: "";
+            position: absolute; inset: 0;
+            background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.28), transparent 60%);
+            pointer-events: none;
+        }
+        .stat-card > * { position: relative; z-index: 1; }
+        .stat-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 16px 34px rgba(0,0,0,0.38); }
+        .stat-card i { opacity: 0.92; margin-bottom: 0.3rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }
+        .stat-card h2 { font-size: 2.7rem; font-weight: 800; margin: 0.3rem 0 0.1rem; line-height: 1; letter-spacing: -1.5px; }
+        .stat-card p { margin: 0; color: rgba(255,255,255,0.92); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
 
         /* 변경 이력 */
         .history-list { list-style: none; padding-left: 0; }
@@ -1822,62 +1837,64 @@
 
             <!-- 통계 카드 (자동 업데이트됨) -->
             <div class="row g-4 mb-4" id="stats-container">
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-danger bg-gradient text-white shadow">
                         <i class="fa-solid fa-bug fa-2x"></i>
                         <h2 id="count-sim">0</h2>
                         <p>Web Vulns</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-primary bg-gradient text-white shadow">
                         <i class="fa-solid fa-book fa-2x"></i>
                         <h2 id="count-guide">0</h2>
                         <p>Guidelines</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-warning bg-gradient text-white shadow">
                         <i class="fa-solid fa-code fa-2x"></i>
                         <h2 id="count-input">0</h2>
                         <p>Input Validation</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-info bg-gradient text-white shadow">
                         <i class="fa-solid fa-shield fa-2x"></i>
                         <h2 id="count-security">0</h2>
                         <p>Security Features</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-secondary bg-gradient text-white shadow">
                         <i class="fa-brands fa-linux fa-2x"></i>
                         <h2 id="count-unix">0</h2>
                         <p>UNIX Config</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-success bg-gradient text-white shadow">
                         <i class="fa-solid fa-database fa-2x"></i>
                         <h2 id="count-db">0</h2>
                         <p>DB Security</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-gradient text-white shadow" style="background-color:#003876;">
                         <i class="fa-solid fa-building-columns fa-2x"></i>
                         <h2 id="count-fin">0</h2>
                         <p data-en="Electronic Financial Security">전자금융 보안</p>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div class="col-6 col-md-4 col-xl-3">
                     <div class="stat-card bg-gradient text-white shadow" style="background-color:#0078d4;">
                         <i class="fa-brands fa-windows fa-2x"></i>
                         <h2 id="count-win">0</h2>
                         <p data-en="Windows Server">Windows 서버</p>
                     </div>
                 </div>
+            </div>
+            <!-- 통계 카드 행 닫힘 -->
 
             <!-- 빠른 시작 -->
             <div class="row g-4 mb-4">
