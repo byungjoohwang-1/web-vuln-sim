@@ -81,7 +81,7 @@
 /* ---------- i18n ---------- */
 function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
 function L(ko,en){return isEn()?en:ko;}
-function applyLang(){var en=isEn();document.body.classList.toggle('lang-en',en);document.querySelectorAll('[data-en]').forEach(function(el){if(el.dataset.ko===undefined)el.dataset.ko=el.innerHTML;el.innerHTML=en?el.dataset.en:el.dataset.ko;});render();}
+function applyLang(){var en=isEn();document.body.classList.toggle('lang-en',en);document.querySelectorAll('[data-en]').forEach(function(el){if(el.dataset.ko===undefined)el.dataset.ko=el.innerHTML;el.innerHTML=en?el.dataset.en:el.dataset.ko;});var s=document.getElementById('f-search');if(s){s.placeholder=en?'Search (incident / CVE / CWE)':'검색 (사건/CVE/CWE)';}render();}
 function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
 
 /* ---------- data: curated real incidents → portal CWE ---------- */

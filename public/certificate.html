@@ -481,8 +481,9 @@ const auth = getAuth(app);
 
 onAuthStateChanged(auth, user => {
   if (user) {
-    document.getElementById('studentNameInput').value = user.displayName || user.email.split('@')[0];
-    updateName(user.displayName || user.email.split('@')[0]);
+    const nm = user.displayName || (user.email || '').split('@')[0] || '학습자';
+    document.getElementById('studentNameInput').value = nm;
+    updateName(nm);
   }
 });
 </script>
