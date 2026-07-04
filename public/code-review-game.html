@@ -104,9 +104,9 @@
     </div>
 
     <div class="filters">
-      <select id="f-lang"><option value="">🌐 전체 언어</option><option value="Java">Java</option><option value="Python">Python</option><option value="C">C</option></select>
+      <select id="f-lang"><option value="" data-en="🌐 All languages">🌐 전체 언어</option><option value="Java">Java</option><option value="Python">Python</option><option value="C">C</option></select>
       <select id="f-cat"><option value="" data-en="All categories">전체 분류</option></select>
-      <select id="f-diff"><option value="" data-en="All levels">전체 난이도</option><option value="하">하</option><option value="중">중</option><option value="상">상</option></select>
+      <select id="f-diff"><option value="" data-en="All levels">전체 난이도</option><option value="하" data-en="Easy">하</option><option value="중" data-en="Medium">중</option><option value="상" data-en="Hard">상</option></select>
       <select id="f-status"><option value="" data-en="All">전체</option><option value="unsolved" data-en="Unsolved">미해결</option><option value="solved" data-en="Solved">해결됨</option></select>
       <button class="act primary" onclick="nextPR()">🎲 <span data-en="Next PR">다음 PR</span></button>
     </div>
@@ -136,6 +136,7 @@ function applyLang(){
     if(el.dataset.ko===undefined) el.dataset.ko=el.innerHTML;
     el.innerHTML = en ? el.dataset.en : el.dataset.ko;
   });
+  var sb=document.getElementById('f-search');if(sb){sb.placeholder=en?'Search (title / CWE)':'검색 (제목/CWE)';}
 }
 function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();if(window.__cur)renderPR(window.__cur);}
 
