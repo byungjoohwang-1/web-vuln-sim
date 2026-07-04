@@ -1,7 +1,8 @@
 // 공통 Google 로그인 + 학습 진도 클라우드 동기화 위젯 (전 페이지 공통, Firebase 무료/Spark)
 // Firebase Auth(Google) + Firestore(users/{uid}.store = localStorage 스냅샷). Cloud Functions 미사용(무과금).
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+         signOut, onAuthStateChanged,
          setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp,
          collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -47,9 +48,18 @@ const _set = localStorage.setItem.bind(localStorage);
 const _rem = localStorage.removeItem.bind(localStorage);
 const _clr = localStorage.clear.bind(localStorage);
 
+// 동기화 대상은 앱 진도/설정 키(sda_/sdq_/wvs_)로 한정한다.
+// Firebase 인증 내부 키(firebase:authUser…)를 동기화하면 원격의 오래된 값이
+// 세션을 덮어써 로그인이 깨지고, wvs_ai_key(개인 API 키)는 절대 업로드하면 안 된다.
+const SYNC_PREFIXES = ['sda_', 'sdq_', 'wvs_'];
+const SYNC_DENY = new Set(['wvs_ai_key']);
+function shouldSync(k){
+  if (!k || SYNC_DENY.has(k)) return false;
+  return SYNC_PREFIXES.some(p => k.indexOf(p) === 0);
+}
 function collectStore(){
   const o = {};
-  for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); o[k] = localStorage.getItem(k); }
+  for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (shouldSync(k)) o[k] = localStorage.getItem(k); }
   return o;
 }
 function setStatus(t){ const s = document.getElementById('authSync'); if (s) s.textContent = t; }
@@ -57,11 +67,13 @@ function setStatus(t){ const s = document.getElementById('authSync'); if (s) s.t
 async function pushNow(){
   if (!currentUser) return;
   try {
+    // 비-merge 쓰기로 문서를 통째로 재작성 → 과거에 잘못 올라간 firebase 인증 키·
+    // API 키 등 stale 필드를 원격에서 정리(purge)한다.
     await setDoc(doc(db, 'users', currentUser.uid), {
       store: collectStore(),
       email: currentUser.email || '', name: currentUser.displayName || '',
       updatedAt: serverTimestamp()
-    }, { merge: true });
+    });
     setStatus('동기화됨 ✓');
   } catch (e){ console.error('[sync push]', e); setStatus('동기화 보류'); }
 }
@@ -79,7 +91,8 @@ async function onLogin(user){
     let changed = false;
     if (snap.exists() && snap.data().store){
       const remote = snap.data().store;
-      for (const k in remote){ if (localStorage.getItem(k) !== remote[k]){ _set(k, remote[k]); changed = true; } }
+      // 앱 키만 적용한다(firebase 인증 키/민감 키는 원격에 남아 있어도 무시).
+      for (const k in remote){ if (shouldSync(k) && localStorage.getItem(k) !== remote[k]){ _set(k, remote[k]); changed = true; } }
     }
     await pushNow();
     if (changed) setTimeout(() => location.reload(), 400); // 동기화된 진도로 화면 갱신
@@ -104,14 +117,23 @@ function render(){
     document.getElementById('awIn').onclick = doLogin;
   }
 }
+function isMobile(){ return /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent || ''); }
+
 async function doLogin(){
-  try { await signInWithPopup(auth, provider); }
-  catch (e){
-    console.error('[login]', e);
+  // 모바일은 팝업이 차단·미지원인 경우가 많아 리다이렉트 방식을 우선한다.
+  try {
+    if (isMobile()) { await signInWithRedirect(auth, provider); return; }
+    await signInWithPopup(auth, provider);
+  } catch (e){
     if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+    // 팝업 차단/환경 미지원 → 리다이렉트로 폴백
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment'){
+      try { await signInWithRedirect(auth, provider); return; } catch (e2){ e = e2; }
+    }
+    console.error('[login]', e);
     let msg = '로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.';
     if (e.code === 'auth/operation-not-allowed') msg = 'Google 로그인이 아직 활성화되지 않았습니다. (관리자: Firebase 콘솔 → Authentication에서 Google 제공업체를 켜주세요)';
-    else if (e.code === 'auth/unauthorized-domain') msg = '허용되지 않은 도메인에서의 로그인입니다.';
+    else if (e.code === 'auth/unauthorized-domain') msg = '허용되지 않은 도메인에서의 로그인입니다. (관리자: Firebase 콘솔 → Authentication → 승인된 도메인에 현재 도메인을 추가하세요)';
     alert(msg);
   }
 }
@@ -164,5 +186,12 @@ window.sdaBoard = {
 };
 
 setPersistence(auth, browserLocalPersistence).catch(() => {});
+// 리다이렉트 로그인 복귀 처리(에러 표면화). 성공 시 onAuthStateChanged가 이어서 처리한다.
+getRedirectResult(auth).catch(e => {
+  if (e && e.code && e.code !== 'auth/no-auth-event'){
+    console.error('[redirect]', e);
+    if (e.code === 'auth/unauthorized-domain') alert('허용되지 않은 도메인에서의 로그인입니다. (관리자: 승인된 도메인 확인)');
+  }
+});
 onAuthStateChanged(auth, u => u ? onLogin(u) : onLogout());
 render();
