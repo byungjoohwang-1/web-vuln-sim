@@ -1,5 +1,7 @@
 // Auto-generated extended question bank (객관식/주관식 대량 추가) — Java/Python 중심
-// 4개 카테고리 배치(입력검증/보안기능/코드결함/법령·개념·진단·설계) 병합 + 중복 제거
+// 8개 파트 병합(입력검증/보안기능/코드결함/시간상태/에러처리/캡슐화/API오용/법령·개념·진단·설계) + 중복 제거
+
+// ===== partA =====
 window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
 window.__QBANK.QUIZ.push(
   { c:"입력검증", q:"다음 Java 코드의 보안약점으로 가장 적절한 것은?", o:["SQL 삽입","경로 조작","XSS","정수 오버플로우"], a:0, e:"사용자 입력 id를 문자열 연결로 SQL 쿼리에 삽입하므로 SQL 삽입에 취약하다. PreparedStatement와 파라미터 바인딩(?)을 사용해야 한다.", code:`String sql = "SELECT * FROM users WHERE id = '" + request.getParameter("id") + "'";\nStatement stmt = conn.createStatement();\nResultSet rs = stmt.executeQuery(sql);` },
@@ -124,6 +126,7 @@ window.__QBANK.THEORY.push(
   { type:"MC", cat:"입력검증", q:"다음 중 입력검증 관점에서 '보안기능 결정에 사용되는 부적절한 입력값' 약점의 핵심 원인은?", o:["권한/가격 등 보안 결정을 변조 가능한 클라이언트 입력에 의존","로그 미흡","암호화 미적용","세션 타임아웃 과다"], a:0, e:"보안에 영향을 주는 결정을 hidden 필드/파라미터/쿠키 등 변조 가능한 입력으로 내리는 것이 원인으로, 서버측 신뢰 데이터로 결정해야 한다." }
 );
 
+// ===== partB =====
 window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
 window.__QBANK.QUIZ.push(
   { c:"보안기능", q:"다음 중 '적절한 인증 없이 중요기능 허용' 약점(CWE-306)에 해당하는 상황으로 가장 적절한 것은?", o:["관리자 페이지 접근 시 세션 인증을 검사한다","계좌 이체 API가 로그인 여부를 확인하지 않고 호출 가능하다","비밀번호를 bcrypt로 해시한다","TLS로 통신 구간을 암호화한다"], a:1, e:"중요기능(이체, 관리자 기능 등)을 인증 검사 없이 호출할 수 있으면 CWE-306(Missing Authentication for Critical Function)에 해당한다." },
@@ -231,6 +234,7 @@ window.__QBANK.THEORY.push(
   { type:"MC", cat:"보안기능", q:"ECC에서 RSA-2048과 유사한 보안강도를 위한 최소 권장 키 길이는?", o:["128비트","160비트","224~256비트","2048비트"], a:2, e:"ECC 224~256비트가 RSA-2048~3072 수준의 강도를 제공한다. 일반적으로 256비트 이상을 권장한다." }
 );
 
+// ===== partC =====
 window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
 
 window.__QBANK.QUIZ.push(
@@ -727,6 +731,7 @@ window.__QBANK.THEORY.push(
   { type:"MC", cat:"API오용", q:"다음 중 보안용 난수로 적절한 것은?", o:["java.util.Random","System.currentTimeMillis()","SecureRandom / secrets 모듈","Math.random()"], a:2, e:"암호학적으로 안전한 SecureRandom(Java), secrets(Python)을 사용해야 한다." }
 );
 
+// ===== partD =====
 window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
 
 window.__QBANK.QUIZ.push(
@@ -818,11 +823,1648 @@ window.__QBANK.THEORY.push(
   { type:"MC", cat:"설계", q:"무차별 대입(brute force) 공격에 대응하기 위한 설계기준 항목은?", o:["인증 수행 제한","중요정보 전송","XML 조회 검증","파일 다운로드 검증"], a:0, e:"'인증 수행 제한' 항목은 인증 시도 횟수 제한·계정 잠금 등을 규정한다." }
 );
 
+// ===== partE_time =====
+window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
+window.__QBANK.QUIZ.push(
+  {
+    c: "시간상태",
+    q: "다음 Java 코드에서 발생하는 대표적인 시간 및 상태 관련 보안약점은 무엇인가?",
+    o: [
+      "경쟁 조건(Race Condition, CWE-362)",
+      "SQL 삽입(CWE-89)",
+      "부적절한 인증(CWE-287)",
+      "경로 조작(CWE-22)"
+    ],
+    a: 0,
+    e: "count++ 는 읽기-증가-쓰기의 비원자적 연산이므로 여러 스레드가 동시에 접근하면 갱신이 유실된다. 이는 CWE-362 동시 실행에서의 부적절한 자원 접근(Race Condition)에 해당한다. AtomicInteger나 synchronized로 원자성을 보장해야 한다.",
+    code: `public class Counter {
+    private int count = 0;
+    // 여러 스레드가 동시에 호출
+    public void increment() {
+        count++; // 비원자적: read-modify-write
+    }
+}`
+  },
+  {
+    c: "시간상태",
+    q: "TOCTOU(Time-of-Check to Time-of-Use) 취약점을 가장 정확하게 설명한 것은?",
+    o: [
+      "조건을 검사한 시점과 그 자원을 실제로 사용하는 시점 사이에 자원 상태가 바뀔 수 있는 결함",
+      "사용자 입력을 검증하지 않고 SQL에 연결하는 결함",
+      "암호 키를 하드코딩하는 결함",
+      "세션 쿠키에 Secure 속성을 누락하는 결함"
+    ],
+    a: 0,
+    e: "TOCTOU(CWE-367)는 검사 시점(예: 파일 존재/권한 확인)과 사용 시점(예: 파일 열기) 사이의 시간차를 이용해 공격자가 대상 자원을 교체(심볼릭 링크 등)할 수 있는 경쟁 조건 결함이다.",
+    code: `# 취약: 검사와 사용 사이에 파일이 바뀔 수 있음
+import os
+if os.access("/tmp/data", os.W_OK):  # TIME OF CHECK
+    with open("/tmp/data", "w") as f:  # TIME OF USE
+        f.write("payload")`
+  },
+  {
+    c: "시간상태",
+    q: "다음 파이썬 파일 처리 코드의 TOCTOU 문제를 안전하게 해결하는 방법으로 가장 적절한 것은?",
+    o: [
+      "os.access()로 먼저 검사한 뒤 open() 한다",
+      "os.path.exists()로 존재 여부를 여러 번 반복 확인한다",
+      "검사를 생략하고 open()의 예외를 처리하거나 O_CREAT|O_EXCL 등 원자적 연산을 사용한다",
+      "파일 권한을 0777로 설정한 뒤 처리한다"
+    ],
+    a: 2,
+    e: "TOCTOU(CWE-367)는 검사와 사용을 분리하면 항상 경쟁 창이 생긴다. os.access() 선검사는 오히려 안티패턴이다. 검사를 생략하고 open()을 바로 수행하며 예외를 처리하거나, os.open(path, O_CREAT|O_EXCL) 처럼 검사와 생성을 하나의 원자적 연산으로 묶는 것이 올바른 해결책이다."
+  },
+  {
+    c: "시간상태",
+    q: "다음 Java double-checked locking 코드에서 field에 volatile을 붙이지 않으면 발생할 수 있는 문제는?",
+    o: [
+      "다른 스레드가 완전히 초기화되지 않은 객체 참조를 볼 수 있다",
+      "컴파일 오류가 발생한다",
+      "락이 절대 해제되지 않는다",
+      "GC가 즉시 객체를 회수한다"
+    ],
+    a: 0,
+    e: "volatile이 없으면 객체 생성(메모리 할당, 생성자 실행, 참조 대입)의 명령어 재정렬로 인해 다른 스레드가 참조는 non-null이지만 생성자가 끝나지 않은 객체를 관찰할 수 있다. 이것이 CWE-609 Double-Checked Locking 결함이며, 필드를 volatile로 선언해야 한다.",
+    code: `class Singleton {
+    private static Singleton instance; // volatile 필요
+    static Singleton get() {
+        if (instance == null) {
+            synchronized (Singleton.class) {
+                if (instance == null)
+                    instance = new Singleton();
+            }
+        }
+        return instance;
+    }
+}`
+  },
+  {
+    c: "시간상태",
+    q: "웹 애플리케이션에서 세션 고정(Session Fixation, CWE-384)을 방지하는 가장 확실한 방법은?",
+    o: [
+      "로그인 성공 직후 세션 ID를 새로 발급(재생성)한다",
+      "세션 타임아웃을 24시간으로 늘린다",
+      "세션 ID를 URL 파라미터로 전달한다",
+      "로그인 폼에 CAPTCHA를 추가한다"
+    ],
+    a: 0,
+    e: "세션 고정(CWE-384)은 공격자가 미리 만든 세션 ID를 피해자에게 사용하게 한 뒤, 인증 후 그 세션을 탈취하는 공격이다. 핵심 방어는 인증(로그인) 성공 시점에 세션 ID를 무효화하고 새로 발급하는 것이다(예: HttpServletRequest.changeSessionId()).",
+    code: `// 방어: 로그인 성공 후 세션 재생성
+request.getSession().invalidate();
+HttpSession newSession = request.getSession(true);
+newSession.setAttribute("user", user);`
+  },
+  {
+    c: "시간상태",
+    q: "여러 스레드가 공유하는 java.util.HashMap을 동기화 없이 put/get 하면 발생할 수 있는 문제로 가장 거리가 먼 것은?",
+    o: [
+      "무한 루프(특정 JDK 버전에서 리사이즈 중 링크 순환)",
+      "데이터 손실 및 일관성 붕괴",
+      "컴파일 시점 에러로 즉시 실패",
+      "예측 불가능한 결과(비결정적 동작)"
+    ],
+    a: 2,
+    e: "HashMap은 스레드 안전하지 않아 동시 접근 시 데이터 유실, 일관성 붕괴, 비결정적 결과가 발생하며, 구버전 JDK에서는 리사이즈 중 링크 순환으로 무한 루프(CPU 100%)도 발생했다. 그러나 컴파일 에러는 발생하지 않는다. 해결책은 ConcurrentHashMap 사용이다.",
+    code: `// 취약: 여러 스레드가 공유
+Map<String,Integer> map = new HashMap<>();
+// 스레드1, 스레드2가 동시에
+map.put(k, map.getOrDefault(k,0)+1);`
+  },
+  {
+    c: "시간상태",
+    q: "다음 중 데드락(교착 상태, CWE-833)을 유발하는 전형적인 상황은?",
+    o: [
+      "두 스레드가 서로 다른 순서로 두 개의 락을 획득하려 한다",
+      "모든 스레드가 항상 동일한 순서로 락을 획득한다",
+      "락을 사용하지 않고 불변 객체만 공유한다",
+      "단일 스레드에서 재진입 가능한 락을 사용한다"
+    ],
+    a: 0,
+    e: "데드락(CWE-833)은 스레드 A가 락1을 잡고 락2를 기다리고, 스레드 B가 락2를 잡고 락1을 기다릴 때처럼 순환 대기가 형성될 때 발생한다. 모든 스레드가 항상 같은 순서로 락을 획득하도록 강제하면 순환 대기가 제거되어 데드락이 예방된다.",
+    code: `// 데드락 위험: 락 획득 순서가 반대
+// 스레드A: synchronized(lockA){ synchronized(lockB){...} }
+// 스레드B: synchronized(lockB){ synchronized(lockA){...} }`
+  },
+  {
+    c: "시간상태",
+    q: "Java에서 여러 스레드가 난수를 안전하고 효율적으로 생성하려 할 때 가장 적절한 것은?",
+    o: [
+      "하나의 java.util.Random 인스턴스를 모든 스레드가 공유한다",
+      "ThreadLocalRandom.current().nextInt() 를 사용한다",
+      "각 호출마다 new Random() 을 생성한다",
+      "System.currentTimeMillis()를 시드로 매번 새 Random을 만든다"
+    ],
+    a: 1,
+    e: "단일 java.util.Random을 공유하면 내부 seed의 CAS 경합으로 성능이 저하되고, new Random()을 매번 만들면 유사한 시드로 예측 가능한 값이 나올 수 있다. ThreadLocalRandom은 스레드별 독립 상태를 유지해 경합 없이 안전하다.",
+    code: `import java.util.concurrent.ThreadLocalRandom;
+int r = ThreadLocalRandom.current().nextInt(100);`
+  },
+  {
+    c: "시간상태",
+    q: "check-then-act(검사 후 행동) 패턴이 원자성 위반을 일으키는 이유로 옳은 것은?",
+    o: [
+      "검사와 행동이 별개의 연산이라 그 사이에 다른 스레드가 상태를 바꿀 수 있기 때문",
+      "검사 연산 자체가 CPU를 과도하게 사용하기 때문",
+      "행동 연산이 항상 예외를 던지기 때문",
+      "검사와 행동이 같은 명령어로 컴파일되기 때문"
+    ],
+    a: 0,
+    e: "if(map.containsKey(k)) map.put(k,v) 처럼 검사와 행동이 분리되면, 두 연산 사이의 창에서 다른 스레드가 상태를 변경할 수 있다. 이는 CWE-362 경쟁 조건의 대표 패턴이다. putIfAbsent 같은 원자적 복합 연산을 사용해야 한다."
+  },
+  {
+    c: "시간상태",
+    q: "다음 Java 코드를 스레드 안전하게 만드는 가장 올바른 수정은?",
+    o: [
+      "map.putIfAbsent(key, value) 같은 원자적 연산으로 대체한다",
+      "map 변수를 static으로 바꾼다",
+      "get과 put 사이에 Thread.sleep(1)을 넣는다",
+      "value를 final로 선언한다"
+    ],
+    a: 0,
+    e: "containsKey 검사와 put 행동 사이에 경쟁 창이 있어 두 스레드가 모두 put을 수행할 수 있다(CWE-362). ConcurrentHashMap의 putIfAbsent 또는 computeIfAbsent 같은 단일 원자적 연산으로 검사와 행동을 병합해야 한다.",
+    code: `ConcurrentHashMap<String,Object> map = ...;
+// 취약
+if (!map.containsKey(k)) {
+    map.put(k, create());
+}`
+  },
+  {
+    c: "시간상태",
+    q: "부적절한 잠금(Improper Locking, CWE-667)의 예로 가장 적절한 것은?",
+    o: [
+      "공유 자원의 일부 접근 경로에만 락을 걸고 다른 경로는 락 없이 접근한다",
+      "모든 공유 자원 접근에 동일한 락을 일관되게 사용한다",
+      "락 없이 불변(immutable) 객체를 읽는다",
+      "지역 변수를 synchronized 블록 안에서만 사용한다"
+    ],
+    a: 0,
+    e: "동일 공유 자원을 어떤 곳에서는 락을 걸고 어떤 곳에서는 락 없이 접근하면 동기화가 깨진다(CWE-667). 공유 상태에 대한 모든 접근 경로에 대해 일관된 잠금 규율을 적용해야 한다."
+  },
+  {
+    c: "시간상태",
+    q: "다음 Python 코드에서 threading.Lock을 with 문 없이 acquire()만 하고 예외가 발생하면 생기는 문제는?",
+    o: [
+      "예외 경로에서 release가 호출되지 않아 락이 영구 점유되어 다른 스레드가 무한 대기(데드락)한다",
+      "GIL이 자동으로 락을 해제해 준다",
+      "락이 자동으로 재진입되어 문제가 없다",
+      "인터프리터가 즉시 종료된다"
+    ],
+    a: 0,
+    e: "acquire() 후 임계 구역에서 예외가 발생하면 release()에 도달하지 못해 락이 해제되지 않고, 이후 acquire를 시도하는 스레드가 영원히 대기한다(CWE-667/CWE-833). with lock: 구문이나 try/finally로 반드시 해제를 보장해야 한다.",
+    code: `lock.acquire()
+do_work()   # 예외 시 아래 release 미도달
+lock.release()
+# 올바름: with lock: do_work()`
+  },
+  {
+    c: "시간상태",
+    q: "무한 루프로 인한 자원 고갈(CWE-835)을 유발할 수 있는 코드로 가장 적절한 것은?",
+    o: [
+      "종료 조건이 외부 입력에 의존하지만 그 값이 절대 갱신되지 않는 while 루프",
+      "고정된 배열 길이만큼 도는 for 루프",
+      "명확한 카운터 상한을 가진 반복문",
+      "예외 발생 시 break로 빠져나오는 루프"
+    ],
+    a: 0,
+    e: "루프 종료 조건이 결코 참(또는 거짓)이 될 수 없으면 무한 루프가 되어 CPU/스레드/메모리가 고갈된다(CWE-835). 특히 종료 플래그가 다른 스레드에서 갱신되지만 volatile이 아니어서 가시성이 없거나, 갱신 코드에 도달하지 못하는 경우가 흔하다."
+  },
+  {
+    c: "시간상태",
+    q: "다음 중 스레드 간 데이터 누출(민감 정보의 부적절한 노출, CWE-488)과 가장 관련 있는 상황은?",
+    o: [
+      "요청별 사용자 데이터를 정적(static) 필드나 재사용되는 스레드의 ThreadLocal에 저장하고 초기화하지 않아 다른 요청에서 노출된다",
+      "지역 변수를 메서드 내에서만 사용한다",
+      "불변 객체를 여러 스레드가 읽기만 한다",
+      "요청마다 새 객체를 생성해 반환한다"
+    ],
+    a: 0,
+    e: "서블릿/스레드풀 환경에서 사용자별 데이터를 인스턴스의 정적 필드에 저장하거나, 재사용되는 스레드의 ThreadLocal을 요청 종료 시 remove()하지 않으면 다음 요청(다른 사용자)에서 이전 데이터가 노출될 수 있다(CWE-488). 요청 스코프 데이터는 반드시 요청 종료 시 정리해야 한다."
+  },
+  {
+    c: "시간상태",
+    q: "재진입 불가능(non-reentrant) 함수를 신호 처리기(signal handler) 안에서 호출할 때의 위험(CWE-364)은?",
+    o: [
+      "핸들러가 메인 흐름의 비원자적 연산을 중간에 가로채 공유 상태를 손상시키거나 교착/미정의 동작을 유발한다",
+      "신호가 항상 무시된다",
+      "핸들러가 컴파일되지 않는다",
+      "신호 처리가 자동으로 원자적이 된다"
+    ],
+    a: 0,
+    e: "신호는 언제든 비동기적으로 실행 흐름을 가로챌 수 있다. malloc이나 비동기-신호-안전하지 않은 함수를 핸들러에서 호출하면, 메인 코드가 그 함수 중간에 있을 때 재진입되어 힙 손상 등 미정의 동작이 발생한다(CWE-364, 신호 처리 중 경쟁 조건). 핸들러에서는 async-signal-safe 함수만 사용해야 한다."
+  },
+  {
+    c: "시간상태",
+    q: "다음 중 불변(immutable) 객체를 사용하는 것이 동시성 관점에서 안전한 근본 이유는?",
+    o: [
+      "생성 후 상태가 변하지 않으므로 여러 스레드가 동기화 없이 안전하게 공유·읽기 할 수 있다",
+      "불변 객체는 GC 대상이 되지 않는다",
+      "불변 객체는 항상 싱글턴이다",
+      "불변 객체는 자동으로 암호화된다"
+    ],
+    a: 0,
+    e: "불변 객체는 생성 시점 이후 상태 변경이 없어 경쟁 조건이나 원자성 위반이 원천적으로 발생하지 않는다. 따라서 락 없이도 안전하게 공유·공개될 수 있다(단, 안전한 초기화 공개가 보장되어야 함). Java의 final 필드와 String이 대표적이다."
+  },
+  {
+    c: "시간상태",
+    q: "Python의 GIL(Global Interpreter Lock)에 대한 설명으로 옳은 것은?",
+    o: [
+      "GIL이 있어도 여러 바이트코드로 나뉘는 복합 연산(예: x += 1)은 스레드 경쟁 조건에 취약하다",
+      "GIL 덕분에 모든 연산이 원자적이므로 락이 전혀 필요 없다",
+      "GIL은 멀티프로세싱에도 프로세스 간 공유 메모리를 자동 보호한다",
+      "GIL은 CPU 바운드 작업을 여러 코어에서 진정 병렬로 실행시킨다"
+    ],
+    a: 0,
+    e: "GIL은 한 번에 하나의 스레드만 바이트코드를 실행하게 하지만, x += 1 같은 연산은 LOAD/ADD/STORE 여러 바이트코드로 나뉘고 그 사이에 스레드가 전환될 수 있어 경쟁 조건이 발생한다(CWE-362). 따라서 공유 상태 갱신에는 여전히 threading.Lock이 필요하다."
+  },
+  {
+    c: "시간상태",
+    q: "다음 Java 코드에서 스레드 안전성을 보장하려면 어떤 조치가 가장 적절한가?",
+    o: [
+      "balance 접근을 synchronized로 감싸거나 AtomicLong을 사용한다",
+      "balance를 static으로 선언한다",
+      "withdraw 메서드를 private으로 바꾼다",
+      "amount를 final로 선언한다"
+    ],
+    a: 0,
+    e: "잔액 검사(check)와 차감(act)이 분리되어 있고 balance 갱신이 비원자적이라, 여러 스레드가 동시에 출금하면 초과 인출(오버드로우)이 발생할 수 있다(CWE-362 경쟁 조건). 검사와 갱신을 하나의 임계 구역(synchronized)으로 묶거나 원자 타입/락으로 보호해야 한다.",
+    code: `class Account {
+    private long balance;
+    void withdraw(long amount) {
+        if (balance >= amount)   // check
+            balance -= amount;   // act (비원자적)
+    }
+}`
+  }
+);
+window.__QBANK.THEORY.push(
+  {
+    type: "OX",
+    cat: "시간상태",
+    q: "TOCTOU(검사 시점과 사용 시점의 차이, CWE-367)는 검사와 사용을 하나의 원자적 연산으로 결합하면 완화할 수 있다.",
+    a: true,
+    e: "맞다. TOCTOU의 근본 원인은 검사와 사용 사이의 시간 창이므로, 두 연산을 원자적으로 결합(예: open의 O_CREAT|O_EXCL, 파일 디스크립터 기반 접근)하면 경쟁 창이 사라진다."
+  },
+  {
+    type: "OX",
+    cat: "시간상태",
+    q: "Java에서 double-checked locking을 사용할 때 대상 필드에 volatile을 붙이지 않아도 항상 안전하다.",
+    a: false,
+    e: "틀리다. volatile이 없으면 객체 생성 과정의 명령어 재정렬로 다른 스레드가 초기화되지 않은 객체를 볼 수 있다(CWE-609). 필드를 volatile로 선언해야 안전하다."
+  },
+  {
+    type: "OX",
+    cat: "시간상태",
+    q: "로그인 성공 후에도 기존 세션 ID를 그대로 유지하면 세션 고정(CWE-384) 공격에 노출될 수 있다.",
+    a: true,
+    e: "맞다. 인증 전후로 세션 ID가 동일하면, 공격자가 사전에 심어둔 세션 ID를 피해자가 인증에 사용하게 되어 세션을 탈취당한다. 로그인 시 세션 ID를 재발급해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "시간상태",
+    q: "Python의 GIL이 존재하므로 여러 스레드가 공유 정수를 x += 1 로 증가시켜도 경쟁 조건이 발생하지 않는다.",
+    a: false,
+    e: "틀리다. x += 1은 여러 바이트코드로 나뉘고 그 사이 스레드 전환이 가능해 갱신 유실이 발생한다(CWE-362). 공유 상태 갱신에는 threading.Lock이 필요하다."
+  },
+  {
+    type: "OX",
+    cat: "시간상태",
+    q: "두 스레드가 항상 동일한 순서로 여러 락을 획득하도록 강제하면 순환 대기가 제거되어 데드락(CWE-833)을 예방할 수 있다.",
+    a: true,
+    e: "맞다. 데드락 발생 조건 중 순환 대기(circular wait)를 깨는 대표적 기법이 락 획득 순서를 전역적으로 일관되게 정하는 것이다."
+  },
+  {
+    type: "OX",
+    cat: "시간상태",
+    q: "불변(immutable) 객체는 상태가 변하지 않으므로 여러 스레드가 락 없이 안전하게 공유하여 읽을 수 있다.",
+    a: true,
+    e: "맞다. 불변 객체는 생성 후 상태 변경이 없어 경쟁 조건이 원천적으로 발생하지 않는다(안전한 초기화 공개 전제). 이 때문에 락 없이 공유 가능하다."
+  },
+  {
+    type: "OX",
+    cat: "시간상태",
+    q: "스레드풀 환경에서 ThreadLocal에 요청별 사용자 데이터를 저장한 뒤 요청 종료 시 remove()하지 않아도 다음 요청에 영향이 없다.",
+    a: false,
+    e: "틀리다. 스레드가 재사용되므로 remove()하지 않으면 이전 요청의 데이터가 다음 요청(다른 사용자)에 남아 정보 노출/오염이 발생한다(CWE-488). 요청 종료 시 반드시 remove()해야 한다."
+  },
+  {
+    type: "MC",
+    cat: "시간상태",
+    q: "다음 중 '검사 후 사용'(TOCTOU)에 해당하는 CWE 번호는?",
+    o: ["CWE-89", "CWE-367", "CWE-79", "CWE-22"],
+    a: 1,
+    e: "CWE-367은 Time-of-check Time-of-use(TOCTOU) 경쟁 조건이다. CWE-89는 SQL 삽입, CWE-79는 XSS, CWE-22는 경로 조작이다."
+  },
+  {
+    type: "MC",
+    cat: "시간상태",
+    q: "여러 스레드가 안전하게 정수 카운터를 증가시키기 위한 Java 클래스로 가장 적절한 것은?",
+    o: ["java.util.ArrayList", "java.util.concurrent.atomic.AtomicInteger", "java.lang.StringBuilder", "java.util.HashMap"],
+    a: 1,
+    e: "AtomicInteger의 incrementAndGet()은 CAS 기반의 원자적 연산으로 락 없이 스레드 안전하게 카운터를 증가시킨다. StringBuilder와 HashMap은 스레드 안전하지 않다."
+  },
+  {
+    type: "MC",
+    cat: "시간상태",
+    q: "Double-Checked Locking 결함에 해당하는 CWE는?",
+    o: ["CWE-362", "CWE-609", "CWE-384", "CWE-835"],
+    a: 1,
+    e: "CWE-609가 Double-Checked Locking 결함이다. CWE-362는 일반 경쟁 조건, CWE-384는 세션 고정, CWE-835는 무한 루프(도달 불가 종료 조건)이다."
+  },
+  {
+    type: "MC",
+    cat: "시간상태",
+    q: "다음 중 Python에서 임계 구역을 예외 안전하게 보호하는 올바른 방법은?",
+    o: [
+      "lock.acquire() 후 별도 release 호출 없이 그냥 둔다",
+      "with lock: 블록 안에서 임계 구역을 실행한다",
+      "GIL을 신뢰하고 락을 아예 사용하지 않는다",
+      "time.sleep()으로 스레드 전환을 지연시킨다"
+    ],
+    a: 1,
+    e: "with lock: 구문은 컨텍스트 매니저가 정상/예외 경로 모두에서 release를 보장한다. acquire만 하고 release를 명시적으로 관리하면 예외 시 락이 해제되지 않아 데드락 위험이 있다."
+  },
+  {
+    type: "MC",
+    cat: "시간상태",
+    q: "무한 루프로 인한 자원 고갈에 해당하는 CWE는?",
+    o: ["CWE-835", "CWE-367", "CWE-488", "CWE-364"],
+    a: 0,
+    e: "CWE-835는 Loop with Unreachable Exit Condition(무한 루프)이다. CWE-367은 TOCTOU, CWE-488은 데이터 요소의 잘못된 스레드 간 노출, CWE-364는 신호 처리기 경쟁 조건이다."
+  },
+  {
+    type: "SHORT",
+    cat: "시간상태",
+    q: "여러 스레드가 공유 자원에 동시에 접근하여 실행 순서에 따라 결과가 달라지는(비결정적) 시간 및 상태 보안약점을 4글자 한글로 무엇이라 하는가?",
+    a: "경쟁조건",
+    answers: ["경쟁 조건", "레이스컨디션", "레이스 컨디션", "race condition", "Race Condition", "경쟁상태", "경쟁 상태"],
+    e: "경쟁 조건(Race Condition, CWE-362)은 둘 이상의 스레드가 공유 자원에 동시 접근할 때 실행 타이밍에 따라 결과가 달라지는 결함이다. 동기화(락)나 원자적 연산으로 해결한다."
+  },
+  {
+    type: "SHORT",
+    cat: "시간상태",
+    q: "Java에서 스레드 안전한 해시 맵 구현으로, put/get이 내부적으로 동기화되어 있는 java.util.concurrent 패키지의 클래스 이름은?",
+    a: "ConcurrentHashMap",
+    answers: ["concurrenthashmap", "java.util.concurrent.ConcurrentHashMap"],
+    e: "ConcurrentHashMap은 세분화된 락킹(또는 CAS)으로 동시 접근을 안전하게 처리한다. HashMap을 여러 스레드가 동기화 없이 공유하면 데이터 손상과 무한 루프가 발생할 수 있어 이 클래스로 대체한다."
+  },
+  {
+    type: "SHORT",
+    cat: "시간상태",
+    q: "로그인(인증) 성공 시 기존 세션 식별자를 폐기하고 새 식별자를 발급하는 것이 핵심 방어책인 공격의 이름은? (한글 또는 영문)",
+    a: "세션 고정",
+    answers: ["세션고정", "session fixation", "Session Fixation", "세션 고정 공격"],
+    e: "세션 고정(Session Fixation, CWE-384)은 공격자가 고정한 세션 ID를 피해자가 인증에 사용하게 만드는 공격이다. 인증 성공 시 세션 재생성으로 방어한다."
+  },
+  {
+    type: "SHORT",
+    cat: "시간상태",
+    q: "Java에서 필드에 이 키워드를 붙이면 한 스레드의 쓰기가 다른 스레드에 즉시 보이는 가시성이 보장되며, double-checked locking 필드에도 필요하다. 이 키워드는?",
+    a: "volatile",
+    answers: ["Volatile", "volatile 키워드"],
+    e: "volatile은 변수의 읽기/쓰기가 메인 메모리를 거치게 하여 가시성을 보장하고, 관련 명령어 재정렬을 제한한다. double-checked locking(CWE-609)에서 초기화되지 않은 객체 노출을 막기 위해 필수적이다."
+  },
+  {
+    type: "SHORT",
+    cat: "시간상태",
+    q: "둘 이상의 스레드가 서로가 점유한 락을 순환적으로 기다리며 모두 진행하지 못하는 상태를 가리키는 4글자 한글 용어는?",
+    a: "교착상태",
+    answers: ["교착 상태", "데드락", "deadlock", "Deadlock"],
+    e: "교착 상태(Deadlock, CWE-833)는 순환 대기가 형성되어 관련 스레드가 모두 무한 대기하는 상태다. 락 획득 순서 일관화, 타임아웃(tryLock) 등으로 예방한다."
+  }
+);
+
+// ===== partE_err =====
+window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
+window.__QBANK.QUIZ.push(
+  {
+    c: "에러처리",
+    q: "다음 Java 코드의 보안약점으로 가장 적절한 것은?",
+    o: [
+      "오류 메시지를 통한 정보 노출(CWE-209)",
+      "확인되지 않은 오류 조건(CWE-391)",
+      "부적절한 자원 해제(CWE-460)",
+      "반환값 미확인(CWE-252)"
+    ],
+    a: 0,
+    e: "예외의 e.getMessage() 또는 스택트레이스를 사용자 응답에 그대로 반환하면 내부 경로·SQL·라이브러리 버전 등 민감정보가 노출된다. 이는 CWE-209(오류 메시지를 통한 정보 노출)에 해당한다. 상세 정보는 서버 로그에만 남기고 사용자에게는 일반화된 메시지를 반환해야 한다.",
+    code: `try {
+    user = repository.find(userId);
+} catch (SQLException e) {
+    response.getWriter().write("오류: " + e.getMessage());
+}`
+  },
+  {
+    c: "에러처리",
+    q: "예외를 catch한 뒤 아무런 조치도 하지 않는 아래 코드의 약점은?",
+    o: [
+      "처리되지 않은 예외(CWE-248)",
+      "예외처리 후 적절한 조치 없음 / 빈 catch(CWE-390)",
+      "오류 메시지 정보 노출(CWE-209)",
+      "부적절한 반환값 확인(CWE-253)"
+    ],
+    a: 1,
+    e: "catch 블록을 비워두면(빈 catch) 오류가 조용히 무시되어 프로그램이 잘못된 상태로 계속 실행된다. 이는 CWE-390(오류 조건을 감지했으나 조치하지 않음)에 해당한다. 최소한 로깅하거나 적절히 복구/전파해야 한다.",
+    code: `try {
+    transfer(amount);
+} catch (Exception e) {
+    // 아무것도 하지 않음
+}`
+  },
+  {
+    c: "에러처리",
+    q: "e.printStackTrace()를 운영 환경 웹 애플리케이션에서 사용할 때의 주된 문제는?",
+    o: [
+      "성능이 크게 저하된다",
+      "스택트레이스가 표준 출력/에러로 나가 노출되거나 내부 구조 정보를 흘릴 수 있다(CWE-209)",
+      "예외가 다시 던져진다",
+      "컴파일 경고가 발생한다"
+    ],
+    a: 1,
+    e: "printStackTrace()는 스택트레이스를 표준 에러 스트림으로 출력하며, 이 출력이 사용자에게 노출되거나 로그를 통해 클래스명·경로·프레임워크 정보를 흘려 CWE-209로 이어질 수 있다. 통제된 로거를 사용해 서버 측에만 기록해야 한다.",
+    code: `try {
+    process(request);
+} catch (Exception e) {
+    e.printStackTrace();
+}`
+  },
+  {
+    c: "에러처리",
+    q: "다음 Python 코드에서 나타나는 보안약점은?",
+    o: [
+      "확인되지 않은 오류 조건(CWE-391)",
+      "예외처리 후 적절한 조치 없음(CWE-390)",
+      "부적절한 정리(CWE-460)",
+      "반환값 부적절 확인(CWE-253)"
+    ],
+    a: 1,
+    e: "except: pass는 발생한 모든 예외(bare except)를 무시하고 아무 조치도 하지 않는다. 오류가 은폐되어 잘못된 상태로 실행이 계속되므로 CWE-390에 해당한다. 또한 bare except는 KeyboardInterrupt/SystemExit까지 삼킨다는 부가 문제도 있다.",
+    code: `try:
+    balance = get_balance(account)
+except:
+    pass`
+  },
+  {
+    c: "에러처리",
+    q: "C/Java에서 함수의 반환값을 확인하지 않아 실패를 성공으로 오인하는 약점의 CWE는?",
+    o: [
+      "CWE-209",
+      "CWE-252 (반환값 미확인)",
+      "CWE-390",
+      "CWE-460"
+    ],
+    a: 1,
+    e: "malloc, file open, 인증 함수 등이 실패를 반환값으로 알리는데 이를 확인하지 않으면 NULL 역참조·권한 우회 등이 발생한다. 이는 CWE-252(Unchecked Return Value)에 해당한다.",
+    code: `File f = new File(path);
+f.delete(); // boolean 반환값을 무시 -> 삭제 실패를 감지 못함`
+  },
+  {
+    c: "에러처리",
+    q: "아래 Java 코드에서 파일 스트림 해제와 관련한 가장 안전한 접근은?",
+    o: [
+      "정상 경로 끝에서만 close()를 호출한다",
+      "finally 블록 또는 try-with-resources로 항상 close()가 호출되도록 한다",
+      "close()를 호출하지 않고 GC에 맡긴다",
+      "catch 블록에서만 close()를 호출한다"
+    ],
+    a: 1,
+    e: "예외가 발생하면 정상 경로의 close()는 실행되지 않아 자원 누수가 생긴다(CWE-460 부적절한 정리 / CWE-404 자원 미해제). finally 블록이나 try-with-resources를 사용해 예외 여부와 무관하게 자원이 해제되도록 보장해야 한다.",
+    code: `InputStream in = new FileInputStream(path);
+process(in);
+in.close(); // process()에서 예외 시 실행 안 됨`
+  },
+  {
+    c: "에러처리",
+    q: "Exception 또는 Throwable을 광범위하게 catch하는 것이 위험한 이유로 가장 적절한 것은?",
+    o: [
+      "컴파일 속도가 느려진다",
+      "의도치 않은 예외(예: NPE, OutOfMemoryError)까지 삼켜 진짜 결함을 은폐한다",
+      "checked 예외를 던질 수 없게 된다",
+      "finally 블록이 실행되지 않는다"
+    ],
+    a: 1,
+    e: "catch(Exception) 또는 catch(Throwable)은 예상한 특정 예외뿐 아니라 프로그래밍 오류(NullPointerException)나 심각한 오류(Error)까지 잡아 은폐한다. 이는 CWE-396(광범위한 catch)·CWE-397과 관련되며, 필요한 예외만 구체적으로 잡아야 한다.",
+    code: `try {
+    doWork();
+} catch (Throwable t) {
+    log.warn("무시");
+}`
+  },
+  {
+    c: "에러처리",
+    q: "다음 코드에서 fail-safe(안전한 기본값) 원칙을 위반한 부분은?",
+    o: [
+      "예외 발생 시 권한을 true(허용)로 기본 설정한 것",
+      "예외를 로깅한 것",
+      "함수가 boolean을 반환한 것",
+      "try 블록에서 DB를 조회한 것"
+    ],
+    a: 0,
+    e: "인증/인가 검사에서 예외가 발생하면 접근을 거부(fail-secure)해야 한다. 예외 시 true를 반환하면 오류 상황이 곧 권한 우회로 이어진다. 안전한 기본값은 '거부'이며 이는 CWE-636(안전하지 않은 기본 동작)/CWE-703과 관련된다.",
+    code: `boolean isAllowed(User u) {
+    try {
+        return acl.check(u);
+    } catch (Exception e) {
+        return true; // 오류 시 허용
+    }
+}`
+  },
+  {
+    c: "에러처리",
+    q: "'처리되지 않은 예외(CWE-248)'의 대표적 위험은?",
+    o: [
+      "스레드/프로세스가 비정상 종료되거나 서버가 기본 오류 페이지로 스택트레이스를 노출한다",
+      "반환값이 항상 0이 된다",
+      "메모리 사용량이 감소한다",
+      "예외가 자동으로 재시도된다"
+    ],
+    a: 0,
+    e: "잡히지 않은(uncaught) 예외는 스레드/프로세스를 중단시키거나, 웹 컨테이너가 기본 오류 페이지에 스택트레이스를 출력하게 만들어 가용성 저하와 정보 노출(CWE-209 연계)을 유발한다. 이것이 CWE-248(처리되지 않은 예외)이다.",
+    code: ""
+  },
+  {
+    c: "에러처리",
+    q: "다음 Python 코드에서 로깅과 노출을 올바르게 분리한 방식은?",
+    o: [
+      "예외 상세를 사용자에게 반환하고 로그는 남기지 않는다",
+      "상세는 logging으로 서버에만 남기고 사용자에게는 일반 메시지를 반환한다",
+      "print(e)로 콘솔에 출력한다",
+      "예외를 그대로 다시 raise해 사용자 응답으로 보낸다"
+    ],
+    a: 1,
+    e: "민감정보 노출(CWE-209)을 막으려면 예외의 상세 내용은 logging을 통해 서버 로그에만 남기고, 사용자에게는 식별자(요청 ID) 정도만 포함한 일반화된 메시지를 반환해야 한다.",
+    code: `try:
+    result = do_work()
+except Exception:
+    logging.exception("작업 실패")
+    return "요청을 처리할 수 없습니다.", 500`
+  },
+  {
+    c: "에러처리",
+    q: "C에서 시스템 호출 후 errno를 확인하지 않고 사용하는 것과 관련된 약점은?",
+    o: [
+      "반환값/오류 표시자(errno)를 확인하지 않음(CWE-252/CWE-391)",
+      "오류 메시지 노출(CWE-209)",
+      "광범위 catch(CWE-396)",
+      "부적절한 정리(CWE-460)"
+    ],
+    a: 0,
+    e: "많은 C 라이브러리 함수는 실패를 반환값과 errno로 알린다. 반환값이나 errno를 확인하지 않으면 실패를 감지하지 못해(CWE-252/CWE-391) 잘못된 데이터로 진행한다. errno는 성공 시 초기화되지 않으므로 반환값이 실패를 표시할 때에만 참조해야 한다.",
+    code: ""
+  },
+  {
+    c: "에러처리",
+    q: "다음 코드에서 finally 블록의 부적절한 사용으로 발생하는 문제는?",
+    o: [
+      "finally에서 return이 try/catch의 예외와 반환을 덮어써 오류가 은폐된다",
+      "finally는 항상 실행되지 않는다",
+      "finally에서 예외를 던질 수 없다",
+      "finally는 catch보다 먼저 실행된다"
+    ],
+    a: 0,
+    e: "finally 블록의 return이나 새 예외는 try/catch에서 발생·전파되던 예외를 삼켜 오류를 은폐한다. 이는 CWE-584(finally 내 return)와 CWE-703(예외 조건의 부적절한 처리)과 관련된다. finally에서는 정리만 수행하고 제어 흐름을 바꾸지 않아야 한다.",
+    code: `try {
+    return compute();
+} finally {
+    return -1; // compute()의 예외/결과를 덮어씀
+}`
+  },
+  {
+    c: "에러처리",
+    q: "웹 애플리케이션의 운영 배포 시 스택트레이스 노출을 막는 가장 적절한 조치는?",
+    o: [
+      "디버그 모드를 끄고 커스텀 오류 페이지로 일반 메시지만 노출한다",
+      "모든 예외를 catch(Exception)로 잡아 무시한다",
+      "스택트레이스를 HTML 주석으로 숨겨 응답에 포함한다",
+      "예외 메시지를 그대로 사용자에게 보여준다"
+    ],
+    a: 0,
+    e: "운영 환경에서는 프레임워크의 debug 모드를 비활성화하고, 통일된 커스텀 오류 페이지(예: 500 페이지)로 일반화된 메시지만 노출해야 한다. HTML 주석에 숨기는 것은 소스만 보면 드러나므로 여전히 CWE-209 노출이다.",
+    code: ""
+  },
+  {
+    c: "에러처리",
+    q: "다음 Java 코드에서 반환값을 '부적절하게' 확인한 사례(CWE-253)는?",
+    o: [
+      "실패 시 음수를 반환하는 함수를 == -1로만 비교하고 그 외 오류 코드는 무시",
+      "예외를 로깅한 것",
+      "try-with-resources를 사용한 것",
+      "일반 메시지를 반환한 것"
+    ],
+    a: 0,
+    e: "CWE-253은 반환값을 확인은 하되 잘못된 방식으로 비교하는 경우다. 여러 오류 코드(예: 음수 전체가 실패)를 == -1 하나로만 검사하면 다른 실패값을 성공으로 오인한다. 성공/실패 판정 조건을 명세대로 정확히 검사해야 한다.",
+    code: `int rc = native.read(buf);
+if (rc == -1) { handleError(); }
+// -2, -3 등 다른 실패 코드는 성공으로 처리됨`
+  },
+  {
+    c: "에러처리",
+    q: "예외 발생 시 자원 정리를 제대로 하지 못하는 약점(CWE-460)을 방지하는 방법으로 옳지 않은 것은?",
+    o: [
+      "Java의 try-with-resources 사용",
+      "Python의 with 문(context manager) 사용",
+      "예외를 빈 catch로 잡아 흐름을 계속 진행",
+      "finally에서 획득한 자원을 역순으로 해제"
+    ],
+    a: 2,
+    e: "빈 catch로 예외를 삼키면 오류가 은폐될 뿐 자원 정리와는 무관하며 오히려 상태를 악화시킨다(CWE-390). 자원 정리는 try-with-resources, with 문, finally 블록으로 예외 여부와 무관하게 보장해야 한다(CWE-460 예방).",
+    code: ""
+  },
+  {
+    c: "에러처리",
+    q: "다음 중 CWE-703(예외적 조건의 부적절한 검사·처리)의 개념을 가장 잘 설명한 것은?",
+    o: [
+      "프로그램이 예외적/비정상 조건을 감지하지 못하거나 잘못 처리하는 상위 개념의 약점",
+      "SQL 인젝션의 한 형태",
+      "암호 알고리즘의 취약점",
+      "세션 고정 공격"
+    ],
+    a: 0,
+    e: "CWE-703은 예외적 조건(오류, 실패, 예상치 못한 입력 등)을 적절히 검사·처리하지 못하는 문제를 포괄하는 상위 카테고리다. CWE-248, CWE-252, CWE-390, CWE-391 등이 그 하위에 속한다.",
+    code: ""
+  },
+  {
+    c: "에러처리",
+    q: "다음 Python bare except의 부가적 위험으로 옳은 것은?",
+    o: [
+      "SystemExit, KeyboardInterrupt까지 잡아 정상 종료/중단을 방해한다",
+      "구문 오류가 발생한다",
+      "예외가 두 번 발생한다",
+      "로깅이 자동으로 활성화된다"
+    ],
+    a: 0,
+    e: "bare except(except:)는 BaseException을 상속하는 SystemExit, KeyboardInterrupt까지 포착해 Ctrl+C나 정상 종료를 방해할 수 있다. 필요한 예외만 잡거나 최소한 except Exception:을 사용해야 한다. 무시하면 CWE-390으로도 이어진다.",
+    code: `try:
+    run()
+except:   # KeyboardInterrupt까지 삼킴
+    pass`
+  },
+  {
+    c: "에러처리",
+    q: "여러 예외 유형을 하나의 catch(Exception)로 처리할 때 권장되는 개선 방향은?",
+    o: [
+      "발생 가능한 예외 유형별로 구체적으로 catch하고 각기 적절히 처리한다",
+      "catch(Throwable)로 범위를 더 넓힌다",
+      "예외를 모두 무시한다",
+      "printStackTrace로 사용자에게 출력한다"
+    ],
+    a: 0,
+    e: "광범위 catch는 서로 다른 오류를 동일하게 처리해 복구 로직과 로깅을 부정확하게 만든다(CWE-396). 예상되는 예외를 유형별로 구체적으로 잡아 상황에 맞게 복구·전파·로깅해야 한다.",
+    code: ""
+  }
+);
+window.__QBANK.THEORY.push(
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "예외의 e.getMessage()나 스택트레이스를 사용자 응답에 그대로 반환하면 CWE-209(오류 메시지를 통한 정보 노출)에 해당한다.",
+    a: true,
+    e: "내부 경로, SQL 구문, 프레임워크/버전 정보 등이 노출되어 공격자에게 정찰 정보를 제공하므로 CWE-209에 해당한다. 사용자에게는 일반화된 메시지만 반환해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "빈 catch 블록(catch(Exception e){})은 오류를 무시하므로 안전한 방어적 코딩 기법이다.",
+    a: false,
+    e: "빈 catch는 오류를 은폐하여 프로그램이 잘못된 상태로 계속 실행되게 만든다. 이는 CWE-390(오류 조건 감지 후 조치 없음) 약점이며 방어적 코딩이 아니다."
+  },
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "인증/인가 검사 중 예외가 발생하면 접근을 '거부'하는 것이 안전한 기본값(fail-secure)이다.",
+    a: true,
+    e: "예외 상황에서 접근을 허용(fail-open)하면 오류가 곧 권한 우회로 이어진다. 안전한 기본값은 거부이며, 이를 어기면 CWE-636/CWE-703 관련 약점이 된다."
+  },
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "Python의 bare except(except:)는 SystemExit와 KeyboardInterrupt까지 포착할 수 있다.",
+    a: true,
+    e: "bare except는 BaseException 계열까지 잡으므로 Ctrl+C(KeyboardInterrupt)와 정상 종료(SystemExit)를 방해할 수 있다. except Exception: 또는 구체적 예외 사용이 권장된다."
+  },
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "finally 블록에서 return을 사용하면 try/catch에서 전파되던 예외가 은폐될 수 있다.",
+    a: true,
+    e: "finally의 return은 try/catch에서 던져지던 예외나 반환값을 덮어써 오류를 은폐한다(CWE-584/CWE-703). finally에서는 정리만 하고 제어 흐름을 바꾸지 말아야 한다."
+  },
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "잡히지 않은 예외(uncaught exception)는 웹 서버가 기본 오류 페이지로 스택트레이스를 노출하게 만들 수 있다.",
+    a: true,
+    e: "처리되지 않은 예외(CWE-248)는 컨테이너의 기본 오류 처리로 넘어가 스택트레이스를 노출(CWE-209 연계)하거나 스레드를 중단시킬 수 있다."
+  },
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "catch(Throwable)는 catch(Exception)보다 안전하므로 항상 권장된다.",
+    a: false,
+    e: "Throwable은 Error(OutOfMemoryError 등)까지 포함해 복구 불가능한 심각한 오류까지 삼킨다. 광범위 catch는 오히려 CWE-396 약점이며 권장되지 않는다. 필요한 예외만 구체적으로 잡아야 한다."
+  },
+  {
+    type: "SHORT",
+    cat: "에러처리",
+    q: "오류 메시지나 스택트레이스로 내부 민감정보가 노출되는 보안약점의 CWE 번호를 쓰시오. (예: CWE-000)",
+    a: "CWE-209",
+    answers: ["CWE-209", "209", "cwe-209"],
+    e: "CWE-209는 오류 메시지를 통한 정보 노출(Information Exposure Through an Error Message)이다."
+  },
+  {
+    type: "SHORT",
+    cat: "에러처리",
+    q: "예외를 잡은 후 아무런 조치(로깅/복구/전파)도 하지 않는, 빈 catch로 대표되는 보안약점의 CWE 번호를 쓰시오.",
+    a: "CWE-390",
+    answers: ["CWE-390", "390", "cwe-390"],
+    e: "CWE-390은 오류 조건을 감지했으나 조치하지 않음(Detection of Error Condition Without Action)이다. 빈 catch, except: pass가 대표 예다."
+  },
+  {
+    type: "SHORT",
+    cat: "에러처리",
+    q: "함수의 반환값을 확인하지 않아 실패를 성공으로 오인하는 보안약점의 CWE 번호를 쓰시오.",
+    a: "CWE-252",
+    answers: ["CWE-252", "252", "cwe-252"],
+    e: "CWE-252는 반환값 미확인(Unchecked Return Value)이다. malloc/파일열기/인증 함수 등의 실패 반환을 무시하면 발생한다."
+  },
+  {
+    type: "SHORT",
+    cat: "에러처리",
+    q: "Java에서 예외 여부와 무관하게 자원(파일, 소켓 등)을 자동으로 닫아 주는 구문 이름을 쓰시오.",
+    a: "try-with-resources",
+    answers: ["try-with-resources", "try with resources", "트라이 위드 리소스", "try(자원)"],
+    e: "try-with-resources는 AutoCloseable 자원을 선언하면 블록 종료 시 예외 여부와 무관하게 close()를 호출해 CWE-460/CWE-404를 예방한다."
+  },
+  {
+    type: "SHORT",
+    cat: "에러처리",
+    q: "예외적/비정상 조건의 부적절한 검사·처리를 포괄하는 상위 CWE 카테고리 번호를 쓰시오.",
+    a: "CWE-703",
+    answers: ["CWE-703", "703", "cwe-703"],
+    e: "CWE-703은 예외적 조건의 부적절한 검사 또는 처리(Improper Check or Handling of Exceptional Conditions)로, CWE-248/252/390/391 등의 상위 카테고리다."
+  },
+  {
+    type: "MC",
+    cat: "에러처리",
+    q: "다음 중 '처리되지 않은 예외'를 가리키는 CWE는?",
+    o: ["CWE-209", "CWE-248", "CWE-252", "CWE-390"],
+    a: 1,
+    e: "CWE-248은 처리되지 않은 예외(Uncaught Exception)로, 잡히지 않은 예외가 프로세스 중단이나 스택트레이스 노출을 유발한다."
+  },
+  {
+    type: "MC",
+    cat: "에러처리",
+    q: "Python에서 예외 상세를 노출하지 않으면서 서버 측에 기록하기 위한 가장 적절한 방법은?",
+    o: [
+      "print(e)로 콘솔에 출력",
+      "logging.exception()으로 로그에 남기고 사용자에게는 일반 메시지 반환",
+      "예외를 사용자 응답 본문에 그대로 반환",
+      "except: pass로 무시"
+    ],
+    a: 1,
+    e: "logging.exception()은 스택트레이스를 서버 로그에만 기록한다. 사용자에게는 일반화된 메시지만 반환해야 CWE-209 노출을 막는다."
+  },
+  {
+    type: "MC",
+    cat: "에러처리",
+    q: "반환값을 확인은 하지만 성공/실패 판정 조건을 잘못 비교해 일부 실패를 성공으로 처리하는 약점의 CWE는?",
+    o: ["CWE-252", "CWE-253", "CWE-391", "CWE-460"],
+    a: 1,
+    e: "CWE-253은 반환값의 부적절한 확인(Incorrect Check of Function Return Value)이다. 실패 코드 전체를 검사하지 않고 특정 값 하나로만 비교하는 경우가 해당된다."
+  },
+  {
+    type: "MC",
+    cat: "에러처리",
+    q: "다음 중 광범위한 예외 포착(catch(Exception)/catch(Throwable)) 남용의 문제로 옳지 않은 것은?",
+    o: [
+      "프로그래밍 오류(NPE)까지 삼켜 결함이 은폐된다",
+      "서로 다른 오류를 동일하게 처리해 복구 로직이 부정확해진다",
+      "Error 등 복구 불가능한 심각한 오류까지 잡을 수 있다",
+      "checked 예외를 컴파일 시점에 강제로 처리하게 만들어 안전해진다"
+    ],
+    a: 3,
+    e: "광범위 catch는 결함 은폐, 부정확한 복구, 심각한 오류 포착 등의 문제를 낳는다(CWE-396). 컴파일 안전성을 높이는 것과는 무관하며 오히려 구체적 예외 처리를 회피하게 만든다."
+  },
+  {
+    type: "OX",
+    cat: "에러처리",
+    q: "C에서 errno는 함수가 성공한 경우에도 이전 값이 남아 있을 수 있으므로, 반환값이 실패를 표시할 때에만 참조해야 한다.",
+    a: true,
+    e: "errno는 성공 시 0으로 초기화되지 않는다. 따라서 함수의 반환값이 실패를 나타낼 때에만 errno를 확인해야 하며, 그렇지 않으면 오탐이 생긴다(CWE-391 관련)."
+  }
+);
+
+// ===== partE_encap =====
+window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
+window.__QBANK.QUIZ.push(
+  {
+    c: "캡슐화",
+    q: "다음 Java getter의 보안약점으로 가장 적절한 것은?",
+    o: [
+      "private 배열의 참조를 그대로 반환하여 외부에서 내부 상태를 변경할 수 있다 (CWE-495)",
+      "배열 크기가 초기화되지 않아 NullPointerException이 발생한다",
+      "getter는 반드시 void를 반환해야 한다",
+      "배열 대신 List를 사용하지 않아 성능이 저하된다"
+    ],
+    a: 0,
+    e: "getter가 private 배열 필드의 참조를 그대로 반환하면 호출자가 반환된 배열을 수정해 내부 상태를 바꿀 수 있다. 이는 CWE-495(Private Array-Typed Field Returned From a Public Method)에 해당한다. Arrays.copyOf() 등으로 방어적 복사본을 반환해야 한다.",
+    code: "public class Account {\n    private int[] balances;\n    public int[] getBalances() {\n        return balances; // 내부 배열 참조 그대로 노출\n    }\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "CWE-495(private 배열을 참조로 반환)를 올바르게 제거한 코드는?",
+    o: [
+      "return balances.clone();",
+      "return balances;",
+      "return null;",
+      "balances = null; return balances;"
+    ],
+    a: 0,
+    e: "clone() 또는 Arrays.copyOf()로 방어적 복사본을 반환하면 외부에서 원본 내부 배열을 수정할 수 없어 CWE-495를 제거한다. 원본 참조를 그대로 반환하거나 null을 반환하는 것은 올바른 해결이 아니다.",
+    code: "public int[] getBalances() {\n    return balances.clone(); // 방어적 복사\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "다음 setter 코드의 보안약점으로 가장 적절한 것은?",
+    o: [
+      "외부에서 받은 public 배열 참조를 private 필드에 그대로 대입한다 (CWE-496)",
+      "setter는 반환값이 있어야 한다",
+      "배열은 setter로 설정할 수 없다",
+      "final 필드는 setter가 없어도 된다"
+    ],
+    a: 0,
+    e: "외부에서 전달된 배열 참조를 private 필드에 그대로 대입하면 호출자가 그 배열을 계속 참조하며 나중에 내부 상태를 변경할 수 있다. 이는 CWE-496(Public Data Assigned to Private Array-Typed Field)이다. 방어적 복사 후 대입해야 한다.",
+    code: "public void setData(int[] input) {\n    this.data = input; // 외부 참조를 그대로 대입\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "CWE-496(public 데이터를 private 배열에 대입)의 안전한 처리 방법은?",
+    o: [
+      "this.data = input.clone(); 또는 Arrays.copyOf로 복사 후 대입",
+      "this.data = input; 으로 즉시 대입",
+      "입력을 static 필드에 저장",
+      "input을 그대로 반환"
+    ],
+    a: 0,
+    e: "외부 입력 배열을 clone()이나 Arrays.copyOf()로 복사한 뒤 대입하면 호출자가 원본 배열을 수정해도 내부 상태에 영향을 주지 않아 CWE-496을 방지한다.",
+    code: "public void setData(int[] input) {\n    this.data = (input == null) ? null : input.clone();\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "가변 객체(Date, 배열, 컬렉션)를 필드로 가진 클래스에서 방어적 복사를 적용해야 하는 지점은?",
+    o: [
+      "생성자/setter로 받을 때와 getter로 반환할 때 모두",
+      "생성자에서 받을 때만",
+      "getter로 반환할 때만",
+      "toString() 호출 시에만"
+    ],
+    a: 0,
+    e: "가변 객체는 입력 시점(생성자/setter)과 출력 시점(getter) 모두에서 방어적 복사를 해야 한다. 한쪽만 복사하면 나머지 경로로 내부 상태가 노출/변조될 수 있다.",
+    code: "public final class Period {\n    private final Date start;\n    public Period(Date start) { this.start = new Date(start.getTime()); }\n    public Date getStart() { return new Date(start.getTime()); }\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "java.util.Date를 그대로 필드에 저장하고 getter가 원본을 반환할 때의 문제는?",
+    o: [
+      "Date는 가변 객체라 호출자가 setTime()으로 내부 상태를 변경할 수 있다",
+      "Date는 불변이라 문제가 없다",
+      "Date는 직렬화가 불가능하다",
+      "Date는 getter로 반환할 수 없다"
+    ],
+    a: 0,
+    e: "java.util.Date는 setTime() 등으로 값이 바뀌는 가변 객체다. 원본을 노출하면 캡슐화가 깨진다. 방어적 복사(new Date(...))를 하거나 불변인 java.time.Instant/LocalDate 등을 사용해야 한다.",
+    code: "public Date getExpiry() {\n    return this.expiry; // 가변 Date 원본 노출\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "다음 중 신뢰 경계 위반(CWE-501)에 해당하는 상황은?",
+    o: [
+      "검증되지 않은 외부 입력을 신뢰 데이터(예: 세션)와 검증 없이 섞어 저장한다",
+      "private 필드에 getter를 두었다",
+      "final 상수를 public으로 선언했다",
+      "로컬 변수를 초기화했다"
+    ],
+    a: 0,
+    e: "CWE-501(Trust Boundary Violation)은 신뢰할 수 없는 데이터와 신뢰할 수 있는 데이터를 명확한 검증/분리 없이 같은 경계 안에서 혼합할 때 발생한다. 예를 들어 검증 없이 사용자 입력을 세션 객체에 직접 저장하면 이후 코드가 이를 신뢰해 오용될 수 있다.",
+    code: "// 검증 없이 외부 입력을 세션에 저장\nsession.setAttribute(\"userRole\", request.getParameter(\"role\"));"
+  },
+  {
+    c: "캡슐화",
+    q: "예외 스택트레이스나 경로/버전 정보를 사용자에게 그대로 노출하는 약점의 CWE는?",
+    o: [
+      "CWE-497 (민감한 시스템 정보의 비인가 노출)",
+      "CWE-89 (SQL Injection)",
+      "CWE-22 (경로 조작)",
+      "CWE-79 (XSS)"
+    ],
+    a: 0,
+    e: "내부 파일 경로, 서버 버전, 스택트레이스, 환경변수 등 시스템 정보를 외부 사용자에게 노출하면 CWE-497(Exposure of Sensitive System Information to an Unauthorized Control Sphere)에 해당한다. 공격자가 후속 공격 정보를 얻을 수 있으므로 일반화된 오류 메시지를 사용해야 한다.",
+    code: "catch (Exception e) {\n    response.getWriter().println(e.toString()); // 내부 정보 노출\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "운영 배포본에 다음 코드가 남아 있을 때의 약점(CWE-489)은?",
+    o: [
+      "디버그 코드 잔존으로 인증 우회 등 의도치 않은 진입점이 생긴다",
+      "성능이 향상된다",
+      "코드 가독성만 낮아질 뿐 보안과 무관하다",
+      "컴파일 오류가 발생한다"
+    ],
+    a: 0,
+    e: "개발용 백도어/디버그 코드가 운영 환경에 남으면 CWE-489(Active Debug Code)로, 인증 우회나 민감 정보 노출 같은 심각한 취약점이 된다. 배포 전 반드시 제거해야 한다.",
+    code: "if (\"debug\".equals(request.getParameter(\"mode\"))) {\n    login(user, true); // 비밀번호 검사 없이 로그인\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "Java 클래스에서 public 가변 필드를 직접 노출할 때의 문제(불충분한 캡슐화, CWE-485)는?",
+    o: [
+      "외부에서 필드를 직접 읽고 쓸 수 있어 불변식과 접근 제어가 깨진다",
+      "필드 접근 속도가 느려진다",
+      "필드가 자동으로 final이 된다",
+      "가비지 컬렉션이 동작하지 않는다"
+    ],
+    a: 0,
+    e: "필드를 public으로 두면 검증/불변식 없이 외부에서 임의로 변경할 수 있어 캡슐화가 무너진다. 이는 불충분한 캡슐화(CWE-485/CWE-766 등)와 연관된다. 필드는 private으로 두고 접근자를 통해 검증된 접근만 허용해야 한다.",
+    code: "public class Config {\n    public int maxUsers; // 외부에서 직접 변경 가능\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "불변(immutable) 클래스를 올바르게 설계한 것은?",
+    o: [
+      "final class, 모든 필드 private final, setter 없음, 가변 필드는 방어적 복사",
+      "모든 필드를 public으로 선언",
+      "setter를 제공하되 내부에서만 호출",
+      "필드를 static으로 선언"
+    ],
+    a: 0,
+    e: "불변 클래스는 class를 final로, 모든 필드를 private final로 두고, setter를 제공하지 않으며, 가변 참조 필드는 생성자에서 방어적 복사하고 getter에서도 복사본을 반환해야 한다.",
+    code: "public final class Money {\n    private final long amount;\n    public Money(long amount) { this.amount = amount; }\n    public long getAmount() { return amount; }\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "여러 스레드/인스턴스가 공유하는 static 가변 필드의 위험으로 가장 적절한 것은?",
+    o: [
+      "모든 인스턴스가 상태를 공유하여 의도치 않은 데이터 노출·경쟁 조건이 발생한다",
+      "static 필드는 스레드 안전이 보장된다",
+      "static 필드는 GC 대상이 아니라 성능이 향상된다",
+      "static 필드는 캡슐화 문제와 무관하다"
+    ],
+    a: 0,
+    e: "static 가변 필드는 클래스 단위로 공유되므로 한 사용자/요청의 데이터가 다른 요청에 노출되거나 경쟁 조건이 발생할 수 있다. 사용자별 상태는 인스턴스 필드로 두고 static 가변 상태는 피하거나 동기화/불변화해야 한다.",
+    code: "public class UserContext {\n    static String currentUser; // 모든 요청이 공유 -> 데이터 혼선\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "다음 Python 함수의 결함으로 가장 적절한 것은?",
+    o: [
+      "mutable default argument로 인해 호출 간 리스트가 공유되어 상태가 누적된다",
+      "함수는 리스트를 인자로 받을 수 없다",
+      "append는 새 리스트를 반환한다",
+      "기본 인자는 매 호출마다 새로 생성된다"
+    ],
+    a: 0,
+    e: "Python의 기본 인자는 함수 정의 시 한 번만 평가되므로, 가변 기본값([])을 쓰면 여러 호출이 같은 리스트를 공유해 상태가 누적된다. 기본값을 None으로 두고 함수 내부에서 새 리스트를 생성해야 한다.",
+    code: "def add_item(item, bucket=[]):\n    bucket.append(item)\n    return bucket  # 호출마다 같은 리스트 재사용"
+  },
+  {
+    c: "캡슐화",
+    q: "Python에서 이름 맹글링(__attr)에 대한 올바른 설명은?",
+    o: [
+      "접근을 어렵게 만들 뿐 완전한 접근 제한(보안 경계)이 아니며 _Class__attr로 접근 가능하다",
+      "완전한 private을 보장해 외부에서 절대 접근할 수 없다",
+      "컴파일 시 필드를 암호화한다",
+      "성능 최적화를 위한 기능이다"
+    ],
+    a: 0,
+    e: "Python의 이중 밑줄 접두사(__)는 name mangling으로 하위 클래스와의 이름 충돌을 줄이기 위한 관례일 뿐, _ClassName__attr 형태로 여전히 접근 가능하다. 보안 경계로 신뢰해서는 안 된다.",
+    code: "class A:\n    def __init__(self):\n        self.__secret = 1\na = A()\nprint(a._A__secret)  # 접근 가능"
+  },
+  {
+    c: "캡슐화",
+    q: "Python에서 불변 값 객체를 만들 때 가장 적절한 방법은?",
+    o: [
+      "@dataclass(frozen=True) 를 사용해 필드 재할당을 막는다",
+      "일반 클래스에 __del__을 정의한다",
+      "모든 속성을 전역 변수로 선언한다",
+      "필드 이름 앞에 __만 붙이면 불변이 된다"
+    ],
+    a: 0,
+    e: "@dataclass(frozen=True)는 인스턴스 속성 재할당 시 FrozenInstanceError를 발생시켜 불변 값 객체를 만든다. name mangling(__)은 불변성과 무관하다.",
+    code: "from dataclasses import dataclass\n@dataclass(frozen=True)\nclass Point:\n    x: int\n    y: int"
+  },
+  {
+    c: "캡슐화",
+    q: "getter가 내부 List를 그대로 반환하는 것을 안전하게 만드는 방법으로 가장 적절한 것은?",
+    o: [
+      "Collections.unmodifiableList(list) 또는 새 리스트 복사본을 반환한다",
+      "list.clear() 후 반환한다",
+      "list를 그대로 반환하되 final로 선언한다",
+      "getter를 public에서 protected로만 바꾼다"
+    ],
+    a: 0,
+    e: "내부 컬렉션 원본을 반환하면 호출자가 add/remove로 내부 상태를 바꿀 수 있다. Collections.unmodifiableList로 감싸 읽기 전용 뷰를 주거나 방어적 복사본(new ArrayList<>(list))을 반환해야 한다. 필드를 final로 선언해도 컬렉션 내용 변경은 막지 못한다.",
+    code: "public List<String> getRoles() {\n    return Collections.unmodifiableList(roles);\n}"
+  },
+  {
+    c: "캡슐화",
+    q: "가변 객체를 필드로 보관하는 클래스에서 방어적 복사를 '입력 시점'에만 하고 getter에서 원본을 반환하면?",
+    o: [
+      "getter로 얻은 원본을 외부에서 변경해 여전히 내부 상태를 훼손할 수 있다",
+      "완전히 안전해진다",
+      "입력 검증까지 자동으로 수행된다",
+      "컴파일 오류가 발생한다"
+    ],
+    a: 0,
+    e: "입력 시점에만 복사하고 출력(getter)에서 원본을 반환하면 노출 경로가 남는다. 캡슐화를 온전히 지키려면 입력과 출력 양쪽 모두에서 방어적 복사가 필요하다.",
+    code: "public Date getStart() { return start; } // 출력 경로에서 원본 노출"
+  },
+  {
+    c: "캡슐화",
+    q: "시스템 정보 노출(CWE-497)을 줄이기 위한 가장 적절한 예외 처리 방식은?",
+    o: [
+      "사용자에게는 일반화된 오류 메시지를, 상세 스택트레이스는 서버 내부 로그에만 기록한다",
+      "예외 전문을 화면에 그대로 출력한다",
+      "예외를 무시하고 아무 로그도 남기지 않는다",
+      "예외 메시지에 DB 접속 정보를 포함해 출력한다"
+    ],
+    a: 0,
+    e: "상세 오류(스택트레이스, 경로, 버전)는 서버 로그에만 남기고, 사용자에게는 식별 코드 정도의 일반화된 메시지를 보여야 CWE-497(민감 시스템 정보 노출)을 방지한다."
+  }
+);
+window.__QBANK.THEORY.push(
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "getter가 private 배열 필드의 참조를 그대로 반환하면 CWE-495에 해당한다.",
+    a: true,
+    e: "public 메서드가 private 배열 참조를 그대로 반환하면 외부에서 내부 배열을 수정할 수 있어 CWE-495(Private Array-Typed Field Returned From a Public Method)이다. clone()/Arrays.copyOf로 복사본을 반환해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "외부에서 받은 배열을 clone() 없이 private 필드에 그대로 대입하는 것은 안전하다.",
+    a: false,
+    e: "외부 입력 배열 참조를 그대로 대입하면 호출자가 그 배열을 나중에 수정해 내부 상태를 바꿀 수 있다. CWE-496에 해당하며 방어적 복사가 필요하다."
+  },
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "java.util.Date는 불변 객체이므로 getter에서 원본을 반환해도 캡슐화가 깨지지 않는다.",
+    a: false,
+    e: "java.util.Date는 setTime() 등으로 값이 바뀌는 가변 객체다. 원본을 반환하면 내부 상태가 노출·변조될 수 있으므로 방어적 복사나 java.time의 불변 타입을 사용해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "운영 배포본에 남아 있는 디버그/백도어 코드는 CWE-489(Active Debug Code)에 해당한다.",
+    a: true,
+    e: "개발 편의를 위한 디버그 코드가 운영에 남으면 인증 우회 등 심각한 취약점이 되며 CWE-489로 분류된다. 배포 전 제거해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "Python에서 속성 이름 앞에 __를 붙이면 외부에서 절대 접근할 수 없는 완전한 private이 된다.",
+    a: false,
+    e: "이중 밑줄은 name mangling(_ClassName__attr) 관례일 뿐이며 여전히 접근 가능하다. 보안 경계로 신뢰하면 안 된다."
+  },
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "가변 객체를 필드로 가질 때 방어적 복사는 입력(생성자/setter)과 출력(getter) 양쪽 모두에서 필요하다.",
+    a: true,
+    e: "한쪽만 복사하면 나머지 경로로 내부 상태가 노출·변조될 수 있다. 온전한 캡슐화를 위해 입력과 출력 양쪽에서 방어적 복사를 해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "사용자별 상태를 static 가변 필드에 저장하면 다른 요청에 데이터가 노출될 수 있다.",
+    a: true,
+    e: "static 필드는 클래스 단위로 공유되므로 한 요청의 데이터가 다른 요청에서 보이거나 경쟁 조건이 발생할 수 있다. 사용자별 상태는 인스턴스 범위로 관리해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "캡슐화",
+    q: "Collections.unmodifiableList로 감싸 반환하면 호출자가 반환된 리스트에 add/remove로 원소를 추가·삭제할 수 없다.",
+    a: true,
+    e: "unmodifiableList는 읽기 전용 뷰를 제공하여 구조적 변경(add/remove) 시 UnsupportedOperationException을 던진다. 다만 원소 자체가 가변이면 원소 내부 상태 변경은 별도 문제로 남는다."
+  },
+  {
+    type: "MC",
+    cat: "캡슐화",
+    q: "다음 중 신뢰 경계 위반(CWE-501)의 대표 사례는?",
+    o: [
+      "검증되지 않은 외부 입력을 세션 등 신뢰 저장소에 검증 없이 저장",
+      "final 상수를 사용",
+      "private 필드에 getter/setter 사용",
+      "지역 변수를 초기화"
+    ],
+    a: 0,
+    e: "신뢰할 수 없는 데이터를 신뢰 경계(세션 등) 안으로 검증 없이 들여오면 이후 코드가 이를 신뢰해 오용된다. 이것이 CWE-501이다."
+  },
+  {
+    type: "MC",
+    cat: "캡슐화",
+    q: "private 배열을 참조로 반환하는 CWE-495를 제거하는 가장 적절한 방법은?",
+    o: [
+      "Arrays.copyOf() 또는 clone()으로 복사본을 반환",
+      "배열을 null로 초기화",
+      "필드를 public으로 변경",
+      "getter를 제거하고 필드를 직접 노출"
+    ],
+    a: 0,
+    e: "방어적 복사본을 반환하면 외부에서 원본 내부 배열을 수정할 수 없어 CWE-495를 제거한다. 필드를 public으로 노출하는 것은 오히려 캡슐화를 더 악화시킨다."
+  },
+  {
+    type: "MC",
+    cat: "캡슐화",
+    q: "Python에서 mutable default argument 문제를 피하는 올바른 패턴은?",
+    o: [
+      "기본값을 None으로 두고 함수 내부에서 새 객체를 생성",
+      "기본값으로 빈 리스트 []를 사용",
+      "전역 리스트를 기본값으로 사용",
+      "기본값을 tuple 대신 list로 강제"
+    ],
+    a: 0,
+    e: "기본 인자는 정의 시 한 번만 평가되므로 가변 기본값은 호출 간 공유된다. 기본값을 None으로 두고 함수 내부에서 `if x is None: x = []`처럼 새로 생성해야 한다."
+  },
+  {
+    type: "MC",
+    cat: "캡슐화",
+    q: "Java 불변 클래스 설계에서 필수가 아닌 것은?",
+    o: [
+      "모든 필드를 static으로 선언",
+      "class를 final로 선언",
+      "모든 필드를 private final로 선언",
+      "가변 참조 필드는 방어적 복사"
+    ],
+    a: 0,
+    e: "불변 클래스는 final class, private final 필드, setter 부재, 가변 참조의 방어적 복사가 핵심이다. 필드를 static으로 선언하는 것은 불변성과 무관하며 오히려 공유 상태 문제를 유발할 수 있다."
+  },
+  {
+    type: "MC",
+    cat: "캡슐화",
+    q: "예외 처리에서 CWE-497(시스템 정보 노출)을 방지하는 방식은?",
+    o: [
+      "상세 스택트레이스는 서버 로그에만 남기고 사용자에겐 일반 메시지 제공",
+      "예외 전문을 응답 본문에 출력",
+      "예외 메시지에 DB 접속 문자열 포함",
+      "내부 파일 경로를 화면에 표시"
+    ],
+    a: 0,
+    e: "민감한 시스템 정보(스택트레이스, 경로, 버전)는 사용자에게 노출하지 않고 서버 로그로만 관리해야 CWE-497을 방지한다."
+  },
+  {
+    type: "SHORT",
+    cat: "캡슐화",
+    q: "public 메서드가 private 배열 필드의 참조를 그대로 반환하는 보안약점의 CWE 번호는? (숫자만)",
+    a: "495",
+    answers: ["495", "CWE-495", "cwe-495"],
+    e: "CWE-495(Private Array-Typed Field Returned From a Public Method). 방어적 복사본을 반환해 해결한다."
+  },
+  {
+    type: "SHORT",
+    cat: "캡슐화",
+    q: "외부의 public 데이터(배열)를 검증/복사 없이 private 배열 필드에 그대로 대입하는 약점의 CWE 번호는? (숫자만)",
+    a: "496",
+    answers: ["496", "CWE-496", "cwe-496"],
+    e: "CWE-496(Public Data Assigned to Private Array-Typed Field). 입력 배열을 clone()/copyOf로 복사한 뒤 대입해 해결한다."
+  },
+  {
+    type: "SHORT",
+    cat: "캡슐화",
+    q: "가변 객체를 필드에 저장하거나 반환할 때 원본 대신 복사본을 만들어 내부 상태 노출을 막는 기법을 무엇이라 하는가?",
+    a: "방어적 복사",
+    answers: ["방어적 복사", "defensive copy", "defensive copying", "방어적복사"],
+    e: "방어적 복사(defensive copy)는 입력·출력 경로에서 가변 객체의 복사본을 사용해 외부가 내부 상태를 변경하지 못하게 하는 캡슐화 기법이다."
+  },
+  {
+    type: "SHORT",
+    cat: "캡슐화",
+    q: "Python에서 속성명 앞의 이중 밑줄(__)이 유발하는, _ClassName__attr 형태로 이름을 바꾸는 메커니즘의 명칭은?",
+    a: "name mangling",
+    answers: ["name mangling", "네임 맹글링", "이름 맹글링", "namemangling"],
+    e: "name mangling(이름 맹글링)은 __ 접두사 속성을 _ClassName__attr로 변환하는 Python의 메커니즘으로, 완전한 접근 제한이 아니라 이름 충돌 방지용 관례다."
+  },
+  {
+    type: "SHORT",
+    cat: "캡슐화",
+    q: "운영 환경에 남아 있는 디버그/백도어 코드로 인한 보안약점의 CWE 번호는? (숫자만)",
+    a: "489",
+    answers: ["489", "CWE-489", "cwe-489"],
+    e: "CWE-489(Active Debug Code). 배포 전 디버그 코드를 제거해야 인증 우회 등의 취약점을 방지한다."
+  }
+);
+
+// ===== partE_api =====
+window.__QBANK = window.__QBANK || { QUIZ: [], THEORY: [] };
+window.__QBANK.QUIZ.push(
+  {
+    c: "API오용",
+    q: "다음 C 코드에서 발생하는 대표적인 보안약점과 그에 해당하는 CWE로 가장 적절한 것은?",
+    o: [
+      "위험한 함수 gets() 사용으로 인한 버퍼 오버플로우 (CWE-242)",
+      "사용되지 않는 변수 (CWE-563)",
+      "널 포인터 역참조 (CWE-476)",
+      "정수 오버플로우 (CWE-190)"
+    ],
+    a: 0,
+    e: "gets()는 입력 길이를 제한하지 않아 버퍼 경계를 넘어 쓰기가 발생하는 본질적으로 위험한 함수이며, C11에서 삭제되었다. '본질적으로 위험한 함수 사용'은 CWE-242(Use of Inherently Dangerous Function)에 해당한다. 대안으로 fgets()를 사용하고 버퍼 크기를 명시해야 한다.",
+    code: `char buf[16];\ngets(buf);        // 위험: 길이 제한 없음\nprintf(\"%s\\n\", buf);`
+  },
+  {
+    c: "API오용",
+    q: "strcpy(dst, src) 대신 안전하게 문자열을 복사하기 위해 권장되는 방식으로 가장 적절한 것은?",
+    o: [
+      "strncpy 등 크기 제한 함수를 쓰고 널 종료를 보장한다",
+      "strcpy를 두 번 호출한다",
+      "src의 길이를 무시하고 그대로 복사한다",
+      "memcpy로 항상 dst 전체 크기만큼 복사한다"
+    ],
+    a: 0,
+    e: "strcpy는 대상 버퍼 크기를 검사하지 않아 버퍼 오버플로우(CWE-120)를 유발한다. strncpy나 snprintf처럼 크기를 제한하는 함수를 쓰되, strncpy는 널 종료를 보장하지 않으므로 마지막 바이트에 명시적으로 '\\0'을 넣어야 한다. memcpy로 dst 전체를 복사하면 src보다 길 때 잘못된 데이터를 읽을 수 있다.",
+    code: `char dst[16];\nstrncpy(dst, src, sizeof(dst) - 1);\ndst[sizeof(dst) - 1] = '\\0';`
+  },
+  {
+    c: "API오용",
+    q: "sprintf(buf, \"%s\", user_input) 형태의 코드가 위험한 이유로 가장 정확한 것은?",
+    o: [
+      "출력 길이를 제한하지 않아 buf 경계를 넘는 쓰기가 가능하다 (CWE-676)",
+      "sprintf는 항상 널 문자를 붙이지 않기 때문이다",
+      "sprintf는 표준 함수가 아니기 때문이다",
+      "정수 인자만 처리할 수 있기 때문이다"
+    ],
+    a: 0,
+    e: "sprintf는 대상 버퍼 크기를 인자로 받지 않아 입력이 길면 오버플로우가 발생한다. 위험한 함수 사용(CWE-676) 및 버퍼 오버플로우(CWE-120)에 해당한다. 대안으로 크기를 지정하는 snprintf(buf, sizeof(buf), ...)를 사용한다.",
+    code: `char buf[32];\nsnprintf(buf, sizeof(buf), \"%s\", user_input);  // 안전`
+  },
+  {
+    c: "API오용",
+    q: "scanf(\"%s\", buf) 사용의 문제점과 올바른 대안으로 가장 적절한 것은?",
+    o: [
+      "너비 지정 없는 %s는 오버플로우 위험 → %31s처럼 최대 폭을 지정",
+      "scanf는 정수만 읽으므로 %d로 바꾼다",
+      "scanf 대신 gets를 쓴다",
+      "buf를 static으로 선언하면 안전해진다"
+    ],
+    a: 0,
+    e: "scanf의 %s는 최대 입력 폭을 지정하지 않으면 임의 길이 입력으로 버퍼 오버플로우를 일으킨다(CWE-676/CWE-120). 버퍼가 32바이트면 \"%31s\"처럼 폭을 지정하거나 fgets를 사용해야 한다. gets는 더 위험하므로 절대 대안이 될 수 없다.",
+    code: `char buf[32];\nscanf(\"%31s\", buf);   // 최대 폭 지정`
+  },
+  {
+    c: "API오용",
+    q: "이미 표준에서 폐기(deprecated)되었거나 안전한 대체가 존재함에도 옛 함수를 계속 사용하는 약점의 CWE는?",
+    o: [
+      "CWE-477 (Use of Obsolete Function)",
+      "CWE-89 (SQL Injection)",
+      "CWE-22 (Path Traversal)",
+      "CWE-798 (Hard-coded Credentials)"
+    ],
+    a: 0,
+    e: "폐기되었거나 지원이 종료된(obsolete/deprecated) 함수를 계속 사용하는 것은 CWE-477에 해당한다. 예: Java의 Thread.stop(), Runtime.exec(String) 일부 오버로드, C의 gethostbyname() 등. 대체 API로 전환해야 한다.",
+    code: `// Java 예: 폐기된 API 사용\nnew Date().getYear();   // deprecated → Calendar/LocalDate 사용`
+  },
+  {
+    c: "API오용",
+    q: "DNS 조회 결과(호스트 이름)를 신뢰해 접근 제어를 결정하는 코드의 보안약점으로 가장 적절한 것은?",
+    o: [
+      "DNS 이름에 의존한 보안 결정 (CWE-350)",
+      "안전하지 않은 난수 (CWE-330)",
+      "부적절한 인증 (CWE-287)",
+      "경쟁 조건 (CWE-362)"
+    ],
+    a: 0,
+    e: "역방향 DNS(PTR) 조회로 얻은 호스트 이름은 공격자가 자신의 DNS 서버로 위조할 수 있어 신뢰할 수 없다. 이름 기반으로 인증/인가를 결정하면 CWE-350(Reliance on Reverse DNS Resolution for a Security-Sensitive Action)에 해당한다. IP 화이트리스트나 상호 TLS 등 검증 가능한 신원을 사용해야 한다.",
+    code: `String host = addr.getCanonicalHostName();\nif (host.endsWith(\".trusted.com\")) grantAccess();  // 위조 가능`
+  },
+  {
+    c: "API오용",
+    q: "다음 Java 코드의 문제점으로 가장 정확한 것은?",
+    o: [
+      "== 는 참조 동일성을 비교하므로 문자열 내용 비교에는 equals()를 써야 한다",
+      "== 는 컴파일 오류를 일으킨다",
+      "== 는 대소문자를 무시하므로 안전하다",
+      "문제가 없으며 == 가 내용을 비교한다"
+    ],
+    a: 0,
+    e: "Java에서 == 는 객체 참조(주소)가 같은지를 비교한다. 문자열 리터럴 풀이나 캐시로 우연히 true가 될 수 있으나, 일반적으로 내용 비교에는 equals()를 써야 한다. 인증 토큰/비밀번호 비교를 ==로 하면 항상 실패하거나 우회될 수 있다(CWE-597).",
+    code: `String pw = request.getParameter(\"pw\");\nif (pw == \"secret\") { ... }        // 잘못: equals() 사용해야 함\nif (\"secret\".equals(pw)) { ... }   // 올바름 (NPE 방지 위해 리터럴 먼저)`
+  },
+  {
+    c: "API오용",
+    q: "Java에서 equals()를 재정의할 때 반드시 함께 지켜야 하는 계약(contract)으로 가장 적절한 것은?",
+    o: [
+      "equals()가 같다고 판정한 두 객체는 hashCode()도 같아야 한다",
+      "equals()를 재정의하면 toString()도 반드시 재정의해야 한다",
+      "hashCode()는 항상 0을 반환해야 한다",
+      "equals()는 반드시 final로 선언해야 한다"
+    ],
+    a: 0,
+    e: "Object.equals/hashCode 계약상 equals()로 같은 두 객체는 동일한 hashCode()를 반환해야 한다. 이를 어기면 HashMap/HashSet에서 키를 찾지 못하는 논리 오류가 발생한다(CWE-581: Object Model Violation). equals만 재정의하고 hashCode를 빼먹는 것이 대표적 오용이다.",
+    code: `@Override public boolean equals(Object o) { ... }\n@Override public int hashCode() { return Objects.hash(field1, field2); }`
+  },
+  {
+    c: "API오용",
+    q: "보안 토큰, 세션 ID, 비밀번호 초기화 값 등을 생성할 때 java.util.Random을 쓰면 안 되는 이유로 가장 정확한 것은?",
+    o: [
+      "예측 가능한 PRNG라서 다음 값을 유추당할 수 있으므로 SecureRandom을 써야 한다",
+      "java.util.Random은 음수를 반환하지 못하기 때문이다",
+      "java.util.Random은 스레드 안전하지 않아서만 문제이다",
+      "java.util.Random은 실수를 생성할 수 없기 때문이다"
+    ],
+    a: 0,
+    e: "java.util.Random은 48비트 선형 합동 생성기로, 소량의 출력만 관찰하면 시드/내부 상태를 복원해 이후 값을 예측할 수 있다. 보안 목적의 난수는 암호학적으로 안전한 java.security.SecureRandom을 사용해야 한다. 예측 가능한 난수 사용은 CWE-330/CWE-338에 해당한다.",
+    code: `// 취약: new Random().nextInt()\nSecureRandom rnd = new SecureRandom();\nbyte[] token = new byte[32];\nrnd.nextBytes(token);`
+  },
+  {
+    c: "API오용",
+    q: "라이브러리/공용 컴포넌트 코드 내부에서 System.exit()를 호출하는 것이 위험한 이유로 가장 적절한 것은?",
+    o: [
+      "호출한 애플리케이션 전체 JVM을 강제 종료시켜 가용성을 해친다 (CWE-382)",
+      "System.exit()는 컴파일되지 않기 때문이다",
+      "System.exit()는 예외를 던져 로그가 남지 않기 때문이다",
+      "System.exit()는 메모리 누수를 일으키기 때문이다"
+    ],
+    a: 0,
+    e: "라이브러리 내부에서 System.exit()를 호출하면 이를 사용하는 애플리케이션 서버/컨테이너 전체가 종료되어 다른 정상 요청까지 중단된다. 라이브러리는 예외를 던져 호출자가 처리하도록 해야 한다. CWE-382(J2EE Bad Practices: Use of System.exit())에 해당한다.",
+    code: `if (error) throw new IllegalStateException(\"...\");  // exit 대신 예외 전파`
+  },
+  {
+    c: "API오용",
+    q: "Java에서 finalize() 메서드 오용에 대한 설명으로 가장 정확하지 않은(잘못된) 것은?",
+    o: [
+      "finalize()는 GC 시점에 반드시 즉시 호출되므로 자원 해제를 신뢰할 수 있다",
+      "finalize()는 호출 시점이 불확실해 자원 해제 용도로 부적절하다",
+      "finalize()에서 예외가 발생하면 무시되어 객체가 불완전 상태가 될 수 있다",
+      "자원 해제는 try-with-resources나 명시적 close()가 권장된다"
+    ],
+    a: 0,
+    e: "finalize()는 GC 시점에 실행되며 언제 호출될지, 심지어 호출될지조차 보장되지 않는다. 자원 해제를 finalize에 의존하는 것은 CWE-586(Explicit Call to Finalize) 등 나쁜 관례이다. 명시적 close()나 try-with-resources를 사용해야 한다. 보기 1은 사실과 반대이므로 '잘못된 설명'이다.",
+    code: `try (InputStream in = new FileInputStream(f)) {\n    // 자동 close, finalize 의존 X\n}`
+  },
+  {
+    c: "API오용",
+    q: "파일을 새 바이트로 인코딩할 때 new String(bytes) 또는 str.getBytes()를 문자셋 인자 없이 호출하면 생기는 문제는?",
+    o: [
+      "플랫폼 기본 문자셋에 의존해 환경마다 다른 결과/깨짐이 발생한다 (CWE-176/CWE-172)",
+      "항상 UTF-16으로 고정되어 안전하다",
+      "컴파일 오류가 발생한다",
+      "성능만 저하될 뿐 결과는 동일하다"
+    ],
+    a: 0,
+    e: "문자셋을 명시하지 않으면 JVM이 실행되는 플랫폼의 기본 인코딩을 사용하므로, 개발/운영 환경이 다르면 문자 깨짐이나 부적절한 인코딩 처리(CWE-176) 및 검증 우회가 발생할 수 있다. 항상 StandardCharsets.UTF_8 등 명시적 문자셋을 지정해야 한다.",
+    code: `byte[] b = str.getBytes(StandardCharsets.UTF_8);\nString s = new String(b, StandardCharsets.UTF_8);`
+  },
+  {
+    c: "API오용",
+    q: "SimpleDateFormat 인스턴스를 static 필드로 두고 여러 스레드가 공유해 format/parse를 호출할 때의 문제는?",
+    o: [
+      "스레드 비안전이라 값이 섞이거나 예외가 발생한다 → 지역 변수화 또는 DateTimeFormatter 사용",
+      "SimpleDateFormat은 불변이라 아무 문제 없다",
+      "static이면 자동으로 동기화되어 안전하다",
+      "parse만 문제이고 format은 안전하다"
+    ],
+    a: 0,
+    e: "SimpleDateFormat은 내부 Calendar 상태를 공유하는 가변 객체로 스레드 안전하지 않다. 공유하면 잘못된 날짜, NumberFormatException 등이 발생한다. 스레드마다 새로 생성하거나 ThreadLocal, 혹은 불변인 java.time.format.DateTimeFormatter를 사용해야 한다.",
+    code: `// 안전: 불변 DateTimeFormatter\nstatic final DateTimeFormatter F = DateTimeFormatter.ofPattern(\"yyyy-MM-dd\");`
+  },
+  {
+    c: "API오용",
+    q: "Runtime.getRuntime().exec()를 사용할 때 다음 중 명령어 주입 위험을 줄이는 가장 올바른 방법은?",
+    o: [
+      "문자열 대신 문자열 배열(String[])로 인자를 분리해 전달한다",
+      "exec에 전달할 문자열을 그대로 사용자 입력과 이어붙인다",
+      "shell을 통해 실행하도록 sh -c 로 감싼다",
+      "exec 대신 System.out.println으로 출력한다"
+    ],
+    a: 0,
+    e: "exec(String) 오버로드는 공백 기준으로 토큰을 나누므로 사용자 입력을 이어붙이면 인자 조작/주입에 취약하다. 프로그램과 각 인자를 String[] 배열로 명시하면 셸 해석을 거치지 않아 안전성이 높아진다(CWE-78 완화). sh -c로 감싸는 것은 오히려 셸 주입 위험을 키운다.",
+    code: `String[] cmd = {\"/usr/bin/convert\", userFile, \"out.png\"};\nRuntime.getRuntime().exec(cmd);   // 배열로 분리`
+  },
+  {
+    c: "API오용",
+    q: "다음 Python 코드에서 -O(최적화) 플래그로 실행하면 발생하는 문제는?",
+    o: [
+      "assert 문이 제거되어 권한 검증이 통째로 사라진다 (CWE-617)",
+      "assert 는 항상 실행되므로 문제 없다",
+      "assert 는 성능만 개선한다",
+      "assert 는 예외를 로그로만 남긴다"
+    ],
+    a: 0,
+    e: "python -O 로 실행하면 __debug__가 False가 되어 모든 assert 문이 컴파일 단계에서 제거된다. 보안 검증(권한 체크 등)을 assert로 구현하면 최적화 모드에서 검증이 사라져 우회된다. 보안 검증은 명시적 if/raise로 해야 한다. CWE-617(Reachable Assertion) 관련 오용이다.",
+    code: `# 취약\nassert user.is_admin, \"forbidden\"\n# 올바름\nif not user.is_admin:\n    raise PermissionError(\"forbidden\")`
+  },
+  {
+    c: "API오용",
+    q: "신뢰할 수 없는 외부 입력을 pickle.loads()로 역직렬화할 때의 위험으로 가장 정확한 것은?",
+    o: [
+      "역직렬화 과정에서 임의 코드 실행이 가능하다 (CWE-502)",
+      "pickle은 JSON보다 느릴 뿐 안전하다",
+      "pickle은 정수만 저장하므로 안전하다",
+      "pickle은 자동으로 서명을 검증한다"
+    ],
+    a: 0,
+    e: "pickle은 역직렬화 시 __reduce__ 등을 통해 임의 객체 생성과 코드 실행을 허용한다. 신뢰할 수 없는 데이터를 pickle.loads로 처리하면 원격 코드 실행으로 이어질 수 있다(CWE-502: Deserialization of Untrusted Data). 외부 데이터는 json 등 안전한 포맷을 쓰거나 서명/검증을 적용해야 한다.",
+    code: `import pickle\nobj = pickle.loads(untrusted_bytes)  # 위험: RCE 가능`
+  },
+  {
+    c: "API오용",
+    q: "Python에서 사용자 입력을 os.system() 또는 subprocess(..., shell=True)로 실행할 때의 주된 위험과 완화책은?",
+    o: [
+      "셸 메타문자로 명령어 주입 가능 → shell=False에 인자 리스트 사용 (CWE-78)",
+      "os.system은 항상 안전하므로 그대로 사용",
+      "shell=True가 오히려 주입을 막아준다",
+      "eval로 감싸면 안전해진다"
+    ],
+    a: 0,
+    e: "shell=True나 os.system은 문자열을 셸이 해석하므로 ;, |, `` 등 메타문자로 명령어 주입(CWE-78)이 가능하다. subprocess.run([\"cmd\", arg])처럼 shell=False(기본)로 인자를 리스트로 전달하면 셸 해석을 우회해 안전하다.",
+    code: `import subprocess\n# 취약: subprocess.run(f\"ls {d}\", shell=True)\nsubprocess.run([\"ls\", d], shell=False)   # 안전`
+  },
+  {
+    c: "API오용",
+    q: "Python에서 사용자 입력을 eval()에 넘겨 계산하는 코드의 대안으로 가장 적절한 것은?",
+    o: [
+      "숫자 파싱은 ast.literal_eval 또는 명시적 파서를 사용한다",
+      "eval을 exec으로 바꾼다",
+      "eval 앞뒤에 공백을 제거한다",
+      "eval 결과를 str로 변환한다"
+    ],
+    a: 0,
+    e: "eval()은 임의 파이썬 표현식을 실행하므로 입력이 신뢰되지 않으면 코드 실행(CWE-95: Code Injection)에 취약하다. 리터럴만 안전하게 해석하려면 ast.literal_eval()을 쓰고, 수식 계산이 필요하면 제한된 파서를 구현해야 한다. exec은 더 위험하므로 대안이 아니다.",
+    code: `import ast\nvalue = ast.literal_eval(user_input)  # 리터럴만 허용`
+  },
+  {
+    c: "API오용",
+    q: "리플렉션(Reflection)을 사용해 사용자 입력으로 클래스명을 받아 인스턴스화(Class.forName(input).newInstance())하는 코드의 위험은?",
+    o: [
+      "임의 클래스 로딩으로 의도치 않은 코드 실행이 가능하다 (CWE-470)",
+      "리플렉션은 컴파일 오류만 유발한다",
+      "리플렉션은 성능만 저하시킨다",
+      "리플렉션은 항상 private 필드 접근을 막아 안전하다"
+    ],
+    a: 0,
+    e: "외부 입력으로 클래스 이름을 지정해 리플렉션으로 로딩/생성하면 공격자가 위험한 클래스를 인스턴스화하거나 의도치 않은 동작을 유발할 수 있다. CWE-470(Unsafe Reflection). 허용 클래스 화이트리스트로 제한해야 한다.",
+    code: `Set<String> allow = Set.of(\"com.app.SafeA\", \"com.app.SafeB\");\nif (!allow.contains(name)) throw new SecurityException();`
+  }
+);
+window.__QBANK.THEORY.push(
+  {
+    type: "OX",
+    cat: "API오용",
+    q: "C 함수 gets()는 입력 길이를 제한하지 않아 버퍼 오버플로우를 유발하며 C11 표준에서 삭제되었다.",
+    a: true,
+    e: "gets()는 대상 버퍼 크기를 알 수 없어 임의 길이 입력으로 오버플로우를 일으키는 대표적 위험 함수(CWE-242)이며, C11에서 표준에서 제거되었다. fgets()로 대체해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "API오용",
+    q: "Java에서 두 문자열의 내용을 비교할 때 == 연산자를 사용하는 것이 equals()보다 항상 안전하다.",
+    a: false,
+    e: "== 는 참조(주소) 동일성을 비교하므로 내용이 같아도 false가 될 수 있다. 문자열 내용 비교에는 equals()를 사용해야 한다(CWE-597). == 사용은 오히려 논리 오류와 인증 우회를 부를 수 있다."
+  },
+  {
+    type: "OX",
+    cat: "API오용",
+    q: "보안 토큰이나 세션 식별자 생성에는 java.util.Random 대신 java.security.SecureRandom을 사용해야 한다.",
+    a: true,
+    e: "java.util.Random은 예측 가능한 PRNG라 출력 일부만으로 이후 값을 유추할 수 있다. 보안 목적 난수는 암호학적으로 안전한 SecureRandom을 써야 한다(CWE-330/338)."
+  },
+  {
+    type: "OX",
+    cat: "API오용",
+    q: "SimpleDateFormat 인스턴스는 스레드 안전하므로 static 필드로 여러 스레드가 공유해도 문제가 없다.",
+    a: false,
+    e: "SimpleDateFormat은 가변 내부 상태를 가져 스레드 안전하지 않다. 공유 시 값이 섞이거나 예외가 발생한다. 스레드별 생성, ThreadLocal, 또는 불변인 DateTimeFormatter를 사용해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "API오용",
+    q: "Python에서 보안 권한 검증을 assert 문으로 작성하면 -O 최적화 실행 시 검증이 제거되어 우회될 수 있다.",
+    a: true,
+    e: "python -O 실행 시 __debug__가 False가 되어 모든 assert가 제거된다. 보안 검증을 assert로 하면 최적화 모드에서 통째로 사라지므로, 명시적 if/raise를 사용해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "API오용",
+    q: "라이브러리 내부에서 System.exit()를 호출하는 것은 권장되는 예외 처리 방식이다.",
+    a: false,
+    e: "라이브러리에서 System.exit()를 호출하면 이를 사용하는 애플리케이션 전체 JVM이 종료되어 가용성을 해친다(CWE-382). 라이브러리는 예외를 던져 호출자가 처리하게 해야 한다."
+  },
+  {
+    type: "OX",
+    cat: "API오용",
+    q: "역방향 DNS 조회로 얻은 호스트 이름은 위조가 어렵기 때문에 접근 제어 결정에 신뢰해도 된다.",
+    a: false,
+    e: "역방향 DNS(PTR) 레코드는 공격자가 자신의 DNS 서버로 위조할 수 있어 신뢰할 수 없다. 이름 기반 보안 결정은 CWE-350에 해당하며, 검증 가능한 신원(mTLS 등)이나 IP 검증을 함께 써야 한다."
+  },
+  {
+    type: "MC",
+    cat: "API오용",
+    q: "다음 중 '본질적으로 위험한 함수 사용(CWE-242)' 또는 '위험한 함수'로 흔히 지목되는 C 함수가 아닌 것은?",
+    o: ["gets", "strcpy", "sprintf", "snprintf"],
+    a: 3,
+    e: "gets, strcpy, sprintf, strcat, scanf(%s) 등은 크기 검사가 없어 위험 함수로 분류된다. 반면 snprintf는 대상 버퍼 크기를 인자로 받아 경계를 지키므로 안전한 대체 함수이다."
+  },
+  {
+    type: "MC",
+    cat: "API오용",
+    q: "Java에서 equals()만 재정의하고 hashCode()를 재정의하지 않았을 때 발생하는 대표적 문제는?",
+    o: [
+      "HashMap/HashSet에서 논리적으로 같은 키를 찾지 못한다",
+      "컴파일이 실패한다",
+      "GC가 동작하지 않는다",
+      "toString이 null을 반환한다"
+    ],
+    a: 0,
+    e: "equals/hashCode 계약상 같다고 판정된 객체는 같은 hashCode를 반환해야 한다. hashCode를 빼먹으면 해시 기반 컬렉션에서 키 조회가 실패한다(CWE-581)."
+  },
+  {
+    type: "MC",
+    cat: "API오용",
+    q: "다음 중 신뢰할 수 없는 데이터를 처리할 때 가장 위험한(임의 코드 실행 가능) Python API는?",
+    o: ["pickle.loads", "json.loads", "int()", "str.strip()"],
+    a: 0,
+    e: "pickle.loads는 역직렬화 과정에서 임의 객체 생성과 코드 실행을 허용해 RCE로 이어질 수 있다(CWE-502). json.loads는 데이터만 파싱하며 코드 실행을 하지 않는다."
+  },
+  {
+    type: "MC",
+    cat: "API오용",
+    q: "subprocess로 외부 명령을 안전하게 실행하기 위한 가장 올바른 호출 형태는?",
+    o: [
+      "subprocess.run([\"ls\", path], shell=False)",
+      "subprocess.run(f\"ls {path}\", shell=True)",
+      "os.system(\"ls \" + path)",
+      "eval(\"ls \" + path)"
+    ],
+    a: 0,
+    e: "인자를 리스트로 전달하고 shell=False(기본)로 실행하면 셸 메타문자 해석을 우회해 명령어 주입(CWE-78)을 막는다. shell=True나 os.system, eval은 문자열을 셸/인터프리터가 해석해 주입에 취약하다."
+  },
+  {
+    type: "MC",
+    cat: "API오용",
+    q: "외부 입력으로 클래스명을 받아 Class.forName(input).getDeclaredConstructor().newInstance()로 객체를 만드는 코드의 CWE로 가장 적절한 것은?",
+    o: [
+      "CWE-470 (Unsafe Reflection)",
+      "CWE-79 (XSS)",
+      "CWE-352 (CSRF)",
+      "CWE-200 (Information Exposure)"
+    ],
+    a: 0,
+    e: "신뢰할 수 없는 입력으로 클래스를 로딩/인스턴스화하는 리플렉션 오용은 CWE-470에 해당한다. 허용 클래스 화이트리스트로 제한해야 한다."
+  },
+  {
+    type: "MC",
+    cat: "API오용",
+    q: "폐기(deprecated)되었거나 지원이 종료된 함수를 계속 사용하는 보안약점의 CWE는?",
+    o: ["CWE-477", "CWE-89", "CWE-611", "CWE-434"],
+    a: 0,
+    e: "폐기/사용 금지된(obsolete) 함수 사용은 CWE-477(Use of Obsolete Function)이다. CWE-89는 SQL 인젝션, CWE-611은 XXE, CWE-434는 위험한 파일 업로드이다."
+  },
+  {
+    type: "SHORT",
+    cat: "API오용",
+    q: "Java에서 보안 목적의 예측 불가능한 난수를 생성하기 위해 java.util.Random 대신 사용해야 하는 클래스 이름은? (클래스명)",
+    a: "SecureRandom",
+    answers: ["SecureRandom", "java.security.SecureRandom"],
+    e: "java.security.SecureRandom은 암호학적으로 안전한 난수 생성기로, 토큰/세션ID/키 생성 등 보안 목적에 사용해야 한다(CWE-330)."
+  },
+  {
+    type: "SHORT",
+    cat: "API오용",
+    q: "C에서 strcpy나 sprintf처럼 대상 버퍼 크기를 검사하지 않아 오버플로우를 유발하는 함수를 대체하기 위해 '크기를 인자로 받는' 대표 함수 하나를 쓰시오. (예: 문자열 포맷용)",
+    a: "snprintf",
+    answers: ["snprintf", "strncpy", "strlcpy", "fgets"],
+    e: "snprintf(및 strncpy, strlcpy, fgets 등)는 대상 크기를 지정해 경계를 넘지 않도록 한다. strncpy 사용 시에는 널 종료를 별도로 보장해야 한다."
+  },
+  {
+    type: "SHORT",
+    cat: "API오용",
+    q: "Java의 new String(bytes)나 getBytes()에서 문자셋을 명시하지 않으면 무엇에 의존하게 되어 환경마다 다른 결과가 나오는가? (핵심 용어)",
+    a: "플랫폼 기본 문자셋",
+    answers: ["플랫폼 기본 문자셋", "기본 문자셋", "기본 인코딩", "플랫폼 기본 인코딩", "default charset"],
+    e: "문자셋을 지정하지 않으면 JVM 실행 환경의 플랫폼 기본 문자셋(default charset)을 사용해 환경마다 인코딩 결과가 달라진다. StandardCharsets.UTF_8 등을 명시해야 한다(CWE-176)."
+  },
+  {
+    type: "SHORT",
+    cat: "API오용",
+    q: "Python에서 사용자 입력 문자열을 안전하게 리터럴(숫자/리스트 등)로만 평가하기 위해 eval() 대신 사용해야 하는 표준 라이브러리 함수는? (모듈.함수 형태)",
+    a: "ast.literal_eval",
+    answers: ["ast.literal_eval", "literal_eval"],
+    e: "ast.literal_eval은 파이썬 리터럴 구조만 안전하게 평가하며 임의 코드 실행을 허용하지 않아 eval()의 코드 인젝션 위험(CWE-95)을 피한다."
+  },
+  {
+    type: "SHORT",
+    cat: "API오용",
+    q: "Java에서 자원 해제를 finalize()에 의존하는 대신, close() 호출을 자동화하기 위해 Java 7부터 제공하는 문법(구문) 이름은?",
+    a: "try-with-resources",
+    answers: ["try-with-resources", "try with resources", "트라이 위드 리소스"],
+    e: "try-with-resources는 AutoCloseable 자원을 블록 종료 시 자동으로 close() 한다. GC 시점이 불확실한 finalize() 의존(CWE-586)을 피할 수 있다."
+  }
+);
+
 
 (function(){
   var D = window.ACADEMY_DATA, Q = window.__QBANK;
   if(!D || !Q){ return; }
-  var norm = function(s){ return (s||"").replace(/s+/g," ").trim(); };
+  var norm = function(s){ return (s||"").replace(/\s+/g," ").trim(); };
   var seenQ = {}; D.QUIZ.forEach(function(x){ seenQ[norm(x.q)] = 1; });
   var addQ = 0;
   (Q.QUIZ||[]).forEach(function(x){ var k=norm(x.q); if(!seenQ[k]){ seenQ[k]=1; D.QUIZ.push(x); addQ++; } });

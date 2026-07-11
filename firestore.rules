@@ -24,6 +24,25 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid;
       allow update, delete: if false;
     }
+    // PvP 퀴즈 대전 방: 로그인자만 단건 조회(방 코드로 참가), 목록 열람 차단.
+    // 방장은 본인 uid로 생성, 방장 또는 (본인을 guest로 설정하는)참가자만 갱신.
+    // 각 플레이어는 players/{uid} 하위 문서에 본인 점수만 기록(상대 점수 위조 불가).
+    match /matches/{code} {
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create: if request.auth != null
+        && request.resource.data.host == request.auth.uid;
+      allow update: if request.auth != null
+        && (resource.data.host == request.auth.uid
+          || request.auth.uid == request.resource.data.guest);
+      allow delete: if request.auth != null && resource.data.host == request.auth.uid;
+
+      match /players/{uid} {
+        allow read: if request.auth != null;
+        allow create, update: if request.auth != null && request.auth.uid == uid;
+        allow delete: if false;
+      }
+    }
     // 무료 공개형 강의실: 로그인한 강사는 클래스를 만들고, 학생은 참여 코드로 조회 후 본인 진행률만 갱신한다.
     match /classes/{classId} {
       allow read: if request.auth != null;

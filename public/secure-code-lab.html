@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Secure Code Lab · 브라우저 실습</title>
+<style>
+  :root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#22d3ee;--accent2:#38bdf8;--ok:#34d399;--bad:#fb7185;--mono:'JetBrains Mono','Consolas',monospace}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  a{color:var(--accent2);text-decoration:none}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#0a101e;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:40}
+  .topbar a{color:#cbd5e1;font-size:14px}.topbar .sp{flex:1}
+  .topbar .dl{background:#0e2a30;border:1px solid #164e56;color:#7fe9f5;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700}
+  .langbtn{background:#1e293b;border:1px solid var(--border);color:#cbd5e1;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:13px}
+  .wrap{max-width:1280px;margin:0 auto;padding:16px}
+  .hero{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+  .hero h1{font-size:20px;margin:0}
+  .hero .tag{color:var(--muted);font-size:13px}
+  .tabs{display:flex;gap:6px;margin:10px 0 14px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:#cbd5e1;border-radius:9px;padding:8px 15px;cursor:pointer;font-size:14px;font-weight:600}
+  .tab.on{background:var(--accent);color:#04222a;border-color:var(--accent)}
+  /* browse layout */
+  .app{display:grid;grid-template-columns:290px 1fr;gap:14px}
+  .side{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;max-height:78vh;overflow:auto;position:sticky;top:64px}
+  .search{width:100%;background:#0b1220;border:1px solid var(--border);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px}
+  .cath{font-size:12px;color:#93c5fd;margin:10px 4px 4px;font-weight:700}
+  .li{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;cursor:pointer;font-size:13px;color:#cbd5e1}
+  .li:hover{background:#0f2436}
+  .li.on{background:#0e3a44;color:#a5f3fc}
+  .li .cwe{font-family:var(--mono);font-size:10.5px;color:#7dd3fc;flex-shrink:0}
+  .li .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lang{font-size:9.5px;font-weight:800;border-radius:4px;padding:1px 4px;flex-shrink:0}
+  .lang-java{background:#3b2f10;color:#fbbf24}.lang-c{background:#12324a;color:#67e8f9}
+  /* detail */
+  .detail{min-width:0}
+  .dhead{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .dhead h2{margin:0 0 6px;font-size:18px}
+  .dmeta{display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
+  .pill{background:#0b1220;border:1px solid var(--border);border-radius:999px;padding:2px 9px;color:#cbd5e1;font-family:var(--mono)}
+  .sev-h{color:#fca5a5;background:#3b1518}.sev-m{color:#fcd34d;background:#3a2f12}.sev-l{color:#93c5fd;background:#122238}
+  .panes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pane{background:var(--panel2);border:1px solid var(--border);border-radius:11px;overflow:hidden;min-width:0}
+  .pane header{display:flex;align-items:center;gap:8px;padding:9px 12px;font-weight:700;font-size:13.5px;border-bottom:1px solid var(--border)}
+  .pane.bad header{background:#2a1015;color:#fecdd3}
+  .pane.good header{background:#0c2a20;color:#bbf7d0}
+  .pane header .stat{margin-left:auto;font-size:11.5px;font-weight:700;font-family:var(--mono)}
+  .code{overflow:auto;max-height:60vh;font-family:var(--mono);font-size:12px}
+  .cl{display:flex;white-space:pre}
+  .cl .ln{flex-shrink:0;width:38px;text-align:right;padding:0 8px;color:#475569;user-select:none;border-right:1px solid #1e293b}
+  .cl .lc{padding:0 10px;color:#cbd5e1}
+  .cl.hl{background:rgba(251,113,133,.14)}
+  .cl.hl .ln{color:#fb7185;font-weight:700}
+  .cl.hl .lc{color:#fecdd3}
+  .findings{padding:9px 12px;border-top:1px solid var(--border);font-size:12.5px}
+  .fitem{display:flex;gap:8px;align-items:center;padding:4px 0;cursor:pointer}
+  .fitem:hover{color:#fff}
+  .fbadge{font-family:var(--mono);font-size:10.5px;border-radius:4px;padding:1px 6px;font-weight:800}
+  .clean{color:var(--ok);font-weight:700}
+  details.readme{margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:6px 14px}
+  details.readme summary{cursor:pointer;font-weight:700;padding:8px 0;font-size:14px}
+  .md h3{font-size:15px;color:#93c5fd;margin:14px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px}
+  .md pre{background:#060b16;border:1px solid var(--border);border-radius:8px;padding:10px;overflow-x:auto;font-family:var(--mono);font-size:12px;color:#a7f3d0}
+  .md p{color:#cbd5e1;font-size:13.5px;margin:6px 0}.md li{color:#cbd5e1;font-size:13.5px}
+  .md code{background:#0b1220;border:1px solid var(--border);border-radius:4px;padding:0 4px;font-family:var(--mono);font-size:12px;color:#7dd3fc}
+  /* scan mode */
+  .scanbox{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px}
+  .scanbox textarea{width:100%;min-height:280px;background:#060b16;border:1px solid var(--border);color:#e2e8f0;border-radius:9px;padding:12px;font-family:var(--mono);font-size:12.5px;resize:vertical}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+  select,.btn{background:#0b1220;border:1px solid var(--border);color:var(--ink);border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer}
+  .btn.go{background:var(--accent);color:#04222a;font-weight:800;border-color:var(--accent)}
+  .hidden{display:none}
+  .note{background:#1a1206;border:1px solid #4a3410;border-radius:9px;padding:10px 13px;font-size:12.5px;color:#fcd9a8;margin:12px 0}
+  @media(max-width:860px){
+    .app{grid-template-columns:1fr}
+    .side{position:static;max-height:none;order:2}
+    .panes{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/vuln-hub.html">← 허브</a>
+  <a href="/index.html">홈</a>
+  <span class="sp"></span>
+  <a class="dl" href="/downloads/secure-code-lab.zip" download>⬇ <span data-en="Download ZIP">ZIP</span></a>
+  <button class="langbtn" id="langBtn" onclick="toggleLang()">EN</button>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🛡️ Secure Code Lab</h1>
+    <span class="tag" data-en="49 KISA weaknesses · vulnerable vs secure code · run the Bug Finder right here, no install">KISA 보안약점 49종 · 취약↔안전 코드 · 버그 파인더를 설치 없이 브라우저에서 바로 실행</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tabBrowse" onclick="setMode('browse')" data-en="Browse examples">예제 둘러보기</button>
+    <button class="tab" id="tabScan" onclick="setMode('scan')" data-en="Scan my code">내 코드 스캔</button>
+  </div>
+
+  <!-- BROWSE -->
+  <div id="browse" class="app">
+    <aside class="side">
+      <input class="search" id="search" placeholder="검색 (약점/CWE)" oninput="renderList()">
+      <div id="list"></div>
+    </aside>
+    <section class="detail" id="detail"><div style="color:var(--muted);padding:30px">불러오는 중…</div></section>
+  </div>
+
+  <!-- SCAN -->
+  <div id="scan" class="hidden">
+    <div class="scanbox">
+      <div class="row">
+        <b data-en="Paste your Java/C code — the same Bug Finder runs in your browser">내 Java/C 코드를 붙여넣으면 동일한 버그 파인더가 브라우저에서 실행됩니다</b>
+      </div>
+      <textarea id="userCode" placeholder="여기에 코드를 붙여넣으세요..."></textarea>
+      <div class="row">
+        <select id="userLang"><option value="java">Java</option><option value="c">C</option></select>
+        <button class="btn go" onclick="scanUser()" data-en="▶ Run Bug Finder">▶ 버그 파인더 실행</button>
+        <span id="scanMeta" style="color:var(--muted);font-size:13px"></span>
+      </div>
+      <div id="scanOut"></div>
+      <div class="note" data-en="⚠ Lightweight pattern analyzer for learning — tuned for these examples, not a replacement for commercial SAST (Semgrep/CodeQL/SonarQube/Fortify).">⚠ 학습용 경량 패턴 분석기입니다. 교육 예제에 맞춰 조정돼 있으며 상용 SAST(Semgrep·CodeQL·SonarQube·Fortify)를 대체하지 않습니다.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var EXAMPLES=[], RULES=[], CUR=null;
+
+// ---------- Bug Finder (browser port — identical logic to bugfinder.py) ----------
+function compileRules(rs){
+  return rs.map(function(r){
+    var o={cwe:r.cwe,ko:r.ko,cat:r.cat,lang:r.lang,sev:r.sev};
+    try{o.d=new RegExp(r.danger);}catch(e){o.d=null;}
+    o.s=r.sanitizer?(function(){try{return new RegExp(r.sanitizer);}catch(e){return null;}})():null;
+    return o;
+  });
+}
+function scan(code,lang){
+  var out=[];
+  for(var i=0;i<RULES.length;i++){var r=RULES[i];
+    if(r.lang!==lang||!r.d) continue;
+    var m=r.d.exec(code); if(!m) continue;
+    if(r.s&&r.s.test(code)) continue;
+    var line=code.slice(0,m.index).split('\n').length;
+    out.push({cwe:r.cwe,ko:r.ko,sev:r.sev,line:line});
+  }
+  out.sort(function(a,b){return a.line-b.line;});
+  return out;
+}
+
+// ---------- rendering ----------
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+var SEVC={High:'sev-h',Medium:'sev-m',Low:'sev-l'};
+function sevLabel(s){return s==='High'?'High':s==='Medium'?'Med':'Low';}
+
+function renderCode(code,findings,elId){
+  var hl={}; findings.forEach(function(f){hl[f.line]=1;});
+  var lines=code.split('\n'), h='';
+  for(var i=0;i<lines.length;i++){
+    var n=i+1;
+    h+='<div class="cl'+(hl[n]?' hl':'')+'" id="'+elId+'-L'+n+'"><span class="ln">'+n+'</span><span class="lc">'+(esc(lines[i])||' ')+'</span></div>';
+  }
+  return h;
+}
+function findingsHtml(findings,paneId){
+  if(!findings.length) return '<div class="findings"><span class="clean">✔ 탐지된 약점 없음</span></div>';
+  var h='<div class="findings">';
+  findings.forEach(function(f){
+    h+='<div class="fitem" onclick="jump(\''+paneId+'\','+f.line+')"><span class="fbadge '+SEVC[f.sev]+'">'+sevLabel(f.sev)+'</span><b>'+f.cwe+'</b> · L'+f.line+' · '+f.ko+'</div>';
+  });
+  return h+'</div>';
+}
+function jump(paneId,line){
+  var el=document.getElementById(paneId+'-L'+line);
+  if(el){el.scrollIntoView({block:'center'});el.style.transition='background .1s';el.style.background='rgba(251,113,133,.4)';setTimeout(function(){el.style.background='';},700);}
+}
+
+function mdToHtml(md){
+  var lines=md.split('\n'), h='', inCode=false, inList=false;
+  function closeList(){if(inList){h+='</ul>';inList=false;}}
+  for(var i=0;i<lines.length;i++){
+    var l=lines[i];
+    if(l.indexOf('```')===0){ if(inCode){h+='</pre>';inCode=false;}else{closeList();h+='<pre>';inCode=true;} continue; }
+    if(inCode){h+=esc(l)+'\n';continue;}
+    var t=l.trim();
+    if(t.indexOf('## ')===0){closeList();h+='<h3>'+esc(t.slice(3))+'</h3>';}
+    else if(t.indexOf('# ')===0){closeList();h+='<h3>'+esc(t.slice(2))+'</h3>';}
+    else if(t.indexOf('- ')===0){if(!inList){h+='<ul>';inList=true;}h+='<li>'+inline(t.slice(2))+'</li>';}
+    else if(t===''){closeList();}
+    else {closeList();h+='<p>'+inline(t)+'</p>';}
+  }
+  if(inCode){h+='</pre>';}
+  closeList();
+  return h;
+}
+function inline(s){return esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}
+
+function showDetail(ex){
+  CUR=ex;
+  var vf=scan(ex.vulnerable,ex.lang), sf=scan(ex.secure,ex.lang);
+  var d=document.getElementById('detail');
+  d.innerHTML=
+    '<div class="dhead"><h2>'+esc(ex.ko)+'</h2><div class="dmeta">'+
+      '<span class="pill">'+ex.cwe+'</span>'+
+      '<span class="pill">KISA '+ex.num+'</span>'+
+      '<span class="pill '+SEVC[ex.sev]+'">'+ex.sev+'</span>'+
+      '<span class="pill">'+ex.lang.toUpperCase()+'</span>'+
+      '<span class="pill">'+esc(ex.cat)+'</span>'+
+    '</div></div>'+
+    '<div class="panes">'+
+      '<div class="pane bad"><header>⚠ <span data-en="Vulnerable">취약 코드</span> (Vulnerable.'+(ex.lang==='c'?'c':'java')+')<span class="stat">'+vf.length+' <span data-en="found">건 탐지</span></span></header>'+
+        '<div class="code">'+renderCode(ex.vulnerable,vf,'v')+'</div>'+findingsHtml(vf,'v')+'</div>'+
+      '<div class="pane good"><header>✅ <span data-en="Secure">안전 코드</span> (Secure.'+(ex.lang==='c'?'c':'java')+')<span class="stat">'+(sf.length?sf.length+' 건':'clean')+'</span></header>'+
+        '<div class="code">'+renderCode(ex.secure,sf,'s')+'</div>'+findingsHtml(sf,'s')+'</div>'+
+    '</div>'+
+    '<details class="readme"><summary>📖 <span data-en="Explanation (concept · attack · fix)">설명 (개념·공격·조치)</span></summary><div class="md">'+mdToHtml(ex.readme||'')+'</div></details>';
+  applyLang();
+  // mark active in list
+  document.querySelectorAll('.li').forEach(function(el){el.classList.toggle('on',el.dataset.cwe===ex.cwe);});
+}
+
+function renderList(){
+  var q=(document.getElementById('search').value||'').toLowerCase();
+  var cats={},order=[];
+  EXAMPLES.forEach(function(e){
+    if(q && (e.ko+' '+e.cwe+' '+e.cat).toLowerCase().indexOf(q)<0) return;
+    if(!cats[e.cat]){cats[e.cat]=[];order.push(e.cat);}
+    cats[e.cat].push(e);
+  });
+  var h='';
+  order.forEach(function(c){
+    h+='<div class="cath">'+esc(c)+'</div>';
+    cats[c].forEach(function(e){
+      h+='<div class="li'+(CUR&&CUR.cwe===e.cwe?' on':'')+'" data-cwe="'+e.cwe+'" onclick="pick(\''+e.cwe+'\')">'+
+         '<span class="lang lang-'+e.lang+'">'+e.lang.toUpperCase()+'</span>'+
+         '<span class="cwe">'+e.cwe+'</span><span class="nm">'+esc(e.ko)+'</span></div>';
+    });
+  });
+  document.getElementById('list').innerHTML=h||'<div style="color:var(--muted);padding:12px">결과 없음</div>';
+}
+function pick(cwe){var e=EXAMPLES.find(function(x){return x.cwe===cwe;});if(e)showDetail(e);
+  if(window.innerWidth<=860)document.getElementById('detail').scrollIntoView({behavior:'smooth'});}
+
+function setMode(m){
+  document.getElementById('browse').classList.toggle('hidden',m!=='browse');
+  document.getElementById('scan').classList.toggle('hidden',m!=='scan');
+  document.getElementById('tabBrowse').classList.toggle('on',m==='browse');
+  document.getElementById('tabScan').classList.toggle('on',m==='scan');
+}
+function scanUser(){
+  var code=document.getElementById('userCode').value, lang=document.getElementById('userLang').value;
+  var f=scan(code,lang);
+  document.getElementById('scanMeta').textContent=code?(f.length+' 건 탐지 · '+code.split('\n').length+' 줄'):'';
+  var o=document.getElementById('scanOut');
+  if(!code){o.innerHTML='';return;}
+  o.innerHTML='<div class="pane '+(f.length?'bad':'good')+'" style="margin-top:12px"><header>'+(f.length?'⚠ '+f.length+' 건 탐지':'✅ 탐지된 약점 없음')+'</header>'+
+    '<div class="code">'+renderCode(code,f,'u')+'</div>'+findingsHtml(f,'u')+'</div>';
+}
+
+// ---------- i18n ----------
+var _en=localStorage.getItem('wvs_lang')==='en';
+function applyLang(){
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.dataset.ko===undefined)el.dataset.ko=el.innerHTML;
+    el.innerHTML=_en?el.dataset.en:el.dataset.ko;
+  });
+  document.getElementById('langBtn').textContent=_en?'한국어':'EN';
+}
+function toggleLang(){_en=!_en;localStorage.setItem('wvs_lang',_en?'en':'ko');applyLang();}
+
+// ---------- boot ----------
+Promise.all([
+  fetch('/data/scl-rules.json').then(function(r){return r.json();}),
+  fetch('/data/scl-examples.json').then(function(r){return r.json();})
+]).then(function(res){
+  RULES=compileRules(res[0]); EXAMPLES=res[1];
+  renderList();
+  showDetail(EXAMPLES[0]);
+  applyLang();
+}).catch(function(e){
+  document.getElementById('detail').innerHTML='<div style="color:var(--bad);padding:30px">데이터를 불러오지 못했습니다. 새로고침 해주세요.</div>';
+});
+</script>
+</body>
+</html>
