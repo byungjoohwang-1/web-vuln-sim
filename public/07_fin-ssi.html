@@ -163,7 +163,9 @@ ssiEngine.disableSsi(); // Options -Includes
 String safe = StringEscapeUtils.escapeHtml4(req.getBody());
 if (safe.contains("#exec") || safe.contains("#include"))
     throw new SecurityException("SSI 지시자 차단");
-String page = "<html><body>" + safe + "</body></html>";`;
+String page = "<html><body>" + safe + "<script src="/js/progress.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
+</body></html>";`;
 const CHECKS = [[`disableSsi`], [`escapeHtml4`, `escapeHtml`]];
 let isAttackOn = false;
 

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실전 XSS — 브라우저에서 진짜 실행 (샌드박스 iframe) · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="실전 XSS — 브라우저에서 진짜 실행 (샌드박스 iframe) · WEB-VULN-SIM">
+<meta property="og:description" content="실전 XSS — 브라우저에서 진짜 실행 (샌드박스 iframe) · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-xss-live.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="mock이 아닙니다. 샌드박스 iframe 안의 진짜 취약 앱에 당신의 페이로드가 실제로 실행되어 세션을 탈취합니다 — 그리고 이스케이프/새니타이즈로 막히는 것까지.">
+<style>
+:root{
+  --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+  --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+  --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18; --warn:#f59e0b;
+  --mono:'JetBrains Mono','Consolas',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:840px}
+.badge-real{font-family:var(--mono);font-size:11px;font-weight:800;color:#052e16;background:#4ade80;border-radius:6px;padding:3px 9px;letter-spacing:.4px}
+.kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:6px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.card .cap{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+.row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:260px}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+input,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+textarea{min-height:64px;resize:vertical}
+button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 15px;font-weight:700;font-size:13px;font-family:var(--mono)}
+button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}
+button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155;cursor:pointer;border-radius:8px;padding:8px 12px;font-family:var(--mono);font-size:12px}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.sqlbox,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:300px;margin-top:8px}
+.out .ok{color:#86efac}.out .err{color:#fca5a5}.out .hl{color:#fde047}
+iframe.app{width:100%;height:150px;border:1px solid #334155;border-radius:8px;background:#05080f;margin-top:8px}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+.tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:12px 14px;font-size:13px;color:#cbd5e1;margin-top:12px}
+.status{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--warn)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+.dot.on{background:var(--good)}.dot.err{background:var(--bad)}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+pre.code{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;overflow:auto}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="sim-sql-live.html"><span data-en="Live SQLi">라이브 SQLi</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🩸 <span data-en="Live XSS — real execution in your browser">실전 XSS — 브라우저에서 진짜 실행</span>
+      <span class="badge-real">REAL EXECUTION · sandboxed iframe</span>
+      <span class="kisa">CWE-79 · KISA XSS</span></h1>
+    <div class="sub" data-en="This is not a mock. A real vulnerable app runs inside a sandboxed iframe. Your payload actually executes JavaScript there and steals the session token — then escaping/sanitizing stops the exact same payload.">
+      이건 mock이 아닙니다. 샌드박스 iframe 안에서 <b>진짜 취약 앱</b>이 돌아갑니다. 당신의 페이로드가 그 안에서 <b>실제로 자바스크립트를 실행</b>해 세션 토큰을 탈취합니다 — 그리고 이스케이프/새니타이즈로 똑같은 페이로드가 막히는 것까지 확인합니다.</div>
+    <div style="margin-top:10px"><span class="status"><span class="dot" id="dot"></span><span id="statusText" data-en="Loading the vulnerable app…">취약 앱 로딩 중…</span></span></div>
+  </div>
+
+  <!-- 대상 앱 -->
+  <div class="card">
+    <h2>💬 <span data-en="Target app — a comment board (sandboxed)">대상 앱 — 댓글 게시판 (샌드박스)</span></h2>
+    <div class="cap" data-en="A real page with a session token in memory. Your comment is rendered here. This is what the attacker runs code against.">메모리에 세션 토큰을 가진 진짜 페이지입니다. 당신의 댓글이 여기 렌더링됩니다 — 공격자가 코드를 실행시키는 대상.</div>
+    <iframe id="app" class="app" sandbox="allow-scripts" title="vulnerable app"></iframe>
+    <div class="cap" style="margin-top:8px" data-en="Exfiltration monitor (messages the payload sends out):">유출 모니터 (페이로드가 밖으로 보낸 메시지):</div>
+    <div class="out" id="beacon">—</div>
+  </div>
+
+  <!-- 취약 렌더 -->
+  <div class="card vuln">
+    <h2>⚠️ <span data-en="Vulnerable render (innerHTML)">취약한 렌더링 (innerHTML)</span> <span class="tag bad">VULNERABLE</span></h2>
+    <div class="cap" data-en="The app inserts your comment with innerHTML, so markup runs as code.">앱이 댓글을 innerHTML로 삽입해, 마크업이 코드로 실행됩니다.</div>
+    <label data-en="Your comment / payload">댓글 / 페이로드</label>
+    <textarea id="vin" spellcheck="false">&lt;img src=x onerror="alert('XSS! '+SESSION)"&gt;</textarea>
+    <div class="presets">
+      <button class="ghost" onclick="setV(\"안녕하세요, 좋은 글이네요!\")" data-en="✔ Normal comment">✔ 정상 댓글</button>
+      <button class="ghost" onclick='setV("&lt;img src=x onerror=\"alert(\x27XSS! \x27+SESSION)\"&gt;")'>💉 img onerror</button>
+      <button class="ghost" onclick='setV("&lt;img src=x onerror=\"parent.postMessage(\x27STOLEN \x27+SESSION,\x27*\x27)\"&gt;")'>💉 세션 탈취</button>
+    </div>
+    <button class="act run" onclick="renderVuln()" id="btnV" disabled>▶ <span data-en="Post comment (real render)">댓글 게시 (실제 렌더)</span></button>
+    <div class="cap" style="margin:12px 0 0" data-en="Sink executed:">실행된 싱크:</div>
+    <div class="sqlbox" id="vSink">out.innerHTML = comment</div>
+    <div class="out" id="vOut" data-en="Result appears here.">결과가 여기 표시됩니다.</div>
+  </div>
+
+  <!-- 안전 렌더 -->
+  <div class="card secure">
+    <h2>✅ <span data-en="Secure render (textContent + sanitize)">안전한 렌더링 (textContent + 새니타이즈)</span> <span class="tag good">SECURE</span></h2>
+    <div class="cap" data-en="Same app, same payload — but output is escaped, so markup becomes visible text, not code.">같은 앱·같은 페이로드지만, 출력을 이스케이프해서 마크업이 코드가 아닌 텍스트로 보입니다.</div>
+    <label data-en="Your comment / payload">댓글 / 페이로드</label>
+    <textarea id="sin" spellcheck="false">&lt;img src=x onerror="alert('XSS! '+SESSION)"&gt;</textarea>
+    <button class="act fix" onclick="renderSafe()" id="btnS" disabled>▶ <span data-en="Post comment (escaped)">댓글 게시 (이스케이프)</span></button>
+    <div class="cap" style="margin:12px 0 0" data-en="Sink executed:">실행된 싱크:</div>
+    <div class="sqlbox" id="sSink">out.textContent = comment</div>
+    <div class="out" id="sOut" data-en="Result appears here.">결과가 여기 표시됩니다.</div>
+  </div>
+
+  <div class="note">
+    <b data-en="Why it works / how to fix">왜 뚫리고, 어떻게 막나</b><br>
+    <span data-en="innerHTML parses your string as HTML, so &lt;img onerror&gt; / &lt;svg onload&gt; run attacker JavaScript in the victim's session (cookie/token theft, actions as the user). Fixes: render untrusted data with textContent, escape on output, and add a Content-Security-Policy so injected inline scripts can't run.">
+    innerHTML은 문자열을 HTML로 파싱하므로 <code>&lt;img onerror&gt;</code>·<code>&lt;svg onload&gt;</code>가 피해자 세션에서 공격자 JS를 실행합니다(쿠키·토큰 탈취, 사용자 대행 액션). 방어: 신뢰할 수 없는 데이터는 <code>textContent</code>로 렌더하고 출력 시 이스케이프하며, CSP로 주입된 인라인 스크립트 실행 자체를 차단합니다.</span>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <div class="col"><div class="tag bad" style="margin-bottom:6px">VULNERABLE</div>
+<pre class="code">// JS — innerHTML (취약)
+out.innerHTML = comment;   // 마크업이 코드로 실행</pre></div>
+    <div class="col"><div class="tag good" style="margin-bottom:6px">SECURE</div>
+<pre class="code">// JS — textContent (안전)
+out.textContent = comment; // 항상 문자열로만 표시
+// + CSP: script-src 'self'</pre></div>
+  </div>
+
+  <div class="disc" data-en="Educational simulation. The vulnerable app runs in a sandboxed iframe on your device; the payload cannot access this page, other sites, or the network. Nothing leaves your browser.">
+    ⚠️ 교육용 시뮬레이션입니다. 취약 앱은 당신 기기의 샌드박스 iframe에서만 동작하며, 페이로드는 이 페이지·다른 사이트·네트워크에 접근할 수 없습니다. 어떤 데이터도 브라우저를 벗어나지 않습니다.</div>
+</div>
+
+<script>
+/* i18n */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn(); document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* 취약 앱(iframe) — 실제 실행 대상 */
+var SESSION='sess_9f3a1c_admin';
+var APP_SRC =
+ '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:monospace;color:#cbd5e1;background:#05080f;margin:0;padding:10px;font-size:12.5px}#out{border-top:1px dashed #334155;margin-top:8px;padding-top:8px;min-height:24px}</style></head><body>'
+ +'<div>🏦 SecureBank — 댓글 <span style="color:#64748b">(세션 활성)</span></div><div id="out"><span style="color:#64748b">아직 댓글이 없습니다.</span></div>'
+ +'<scr'+'ipt>'
+ +'window.SESSION='+JSON.stringify(SESSION)+';'
+ +'window.alert=function(m){parent.postMessage({xss:"alert",data:String(m)},"*");};'
+ +'window.addEventListener("message",function(e){var d=e.data||{};'
+ +'if("render" in d){document.getElementById("out").innerHTML=d.render;parent.postMessage({rendered:document.getElementById("out").innerHTML},"*");}'
+ +'else if("renderSafe" in d){document.getElementById("out").textContent=d.renderSafe;parent.postMessage({renderedSafe:document.getElementById("out").innerHTML},"*");}'
+ +'});'
+ +'parent.postMessage({ready:1},"*");'
+ +'</scr'+'ipt></body></html>';
+
+var iframe, ready=false, beaconLog=[];
+function post(msg){ if(iframe&&iframe.contentWindow) iframe.contentWindow.postMessage(msg,'*'); }
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function setStatus(t,cls){document.getElementById('statusText').textContent=t;document.getElementById('dot').className='dot'+(cls?(' '+cls):'');}
+
+function renderVuln(){
+  var payload=document.getElementById('vin').value;
+  document.getElementById('vOut').innerHTML=L('전송됨 → iframe이 innerHTML로 렌더. 실행되면 아래 "유출 모니터"에 증거가 찍힙니다.','Sent → iframe renders via innerHTML. If it executes, evidence appears in the Exfiltration monitor below.');
+  post({render:payload});
+}
+function renderSafe(){
+  var payload=document.getElementById('sin').value;
+  post({renderSafe:payload});
+  document.getElementById('sOut').innerHTML='<span class="ok">🛡️ '+L('이스케이프되어 코드가 실행되지 않았습니다. 페이로드는 그냥 텍스트로 표시됩니다.','Escaped — no code executed. The payload is shown as plain text.')+'</span>';
+}
+function setV(s){document.getElementById('vin').value=s;}
+
+function logExec(tag,data){
+  beaconLog.unshift(L('🔓 XSS 실행됨','XSS EXECUTED')+' ['+tag+']'+(data?(' → '+data):''));
+  document.getElementById('beacon').innerHTML='<span class="hl">'+beaconLog.map(esc).join('\n')+'</span>';
+  document.getElementById('vOut').innerHTML='<span class="err">🔓 '+L('공격 성공 — iframe 안에서 당신의 JS가 실행되어 세션 토큰이 유출되었습니다.','Success — your JS ran inside the iframe and the session token was exfiltrated.')+'</span>';
+}
+window.addEventListener('message',function(e){
+  if(typeof e.data==='string'){ logExec('postMessage', e.data); return; }
+  var d=e.data||{};
+  if(d.ready){ ready=true; enable(); setStatus(L('취약 앱 준비 완료 — 페이로드가 진짜로 실행됩니다.','Vulnerable app ready — payloads truly execute.'),'on'); return; }
+  if(d.xss){ logExec(d.xss, d.data); }
+  if(d.rendered!==undefined){ document.getElementById('vSink').textContent='out.innerHTML = '+JSON.stringify(document.getElementById('vin').value); }
+  if(d.renderedSafe!==undefined){ document.getElementById('sSink').textContent='out.textContent = '+JSON.stringify(document.getElementById('sin').value)+'   →  '+L('렌더된 HTML','rendered HTML')+': '+d.renderedSafe; }
+});
+
+function enable(){ document.getElementById('btnV').disabled=false; document.getElementById('btnS').disabled=false; }
+function boot(){
+  applyLang();
+  iframe=document.getElementById('app');
+  iframe.srcdoc=APP_SRC;
+  setTimeout(function(){ if(!ready){ setStatus(L('앱 로드 지연 — 다시 시도하려면 새로고침.','App load delayed — refresh to retry.'),'err'); } },2500);
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/progress.js" defer></script>
+</body>
+</html>

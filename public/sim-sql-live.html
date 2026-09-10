@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실전 SQL 인젝션 — 브라우저에서 진짜 실행 (WASM SQLite) · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="실전 SQL 인젝션 — 브라우저에서 진짜 실행 (WASM SQLite) · WEB-VULN-SIM">
+<meta property="og:description" content="실전 SQL 인젝션 — 브라우저에서 진짜 실행 (WASM SQLite) · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-sql-live.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="mock이 아닙니다. 실제 SQLite가 WebAssembly로 브라우저에서 당신의 입력을 SQL로 실행합니다 — 진짜 인증 우회·UNION 추출과 파라미터 바인딩 방어를 직접 체험.">
+<style>
+:root{
+  --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+  --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+  --bad:#ef4444; --bad-bg:#3b1418; --good:#22c55e; --good-bg:#0f2a18; --warn:#f59e0b;
+  --mono:'JetBrains Mono','Consolas',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;text-decoration:none;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:840px}
+.badge-real{font-family:var(--mono);font-size:11px;font-weight:800;color:#052e16;background:#4ade80;border-radius:6px;padding:3px 9px;letter-spacing:.4px}
+.kisa{font-family:var(--mono);font-size:11px;font-weight:700;color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:2px 8px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:6px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.card .cap{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.vuln{border-left:4px solid var(--bad)}.secure{border-left:4px solid var(--good)}
+.row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:260px}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+input{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 15px;font-weight:700;font-size:13px;font-family:var(--mono)}
+button.run{background:var(--bad);color:#fff}button.fix{background:var(--good);color:#06210f}
+button.ghost{background:#1e293b;color:#cbd5e1;border:1px solid #334155;cursor:pointer;border-radius:8px;padding:8px 12px;font-family:var(--mono);font-size:12px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.sqlbox,.out{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:320px;margin-top:8px}
+.sqlbox .k{color:#c084fc}.sqlbox .s{color:#fca5a5}.sqlbox .p{color:#67e8f9}
+.out .ok{color:#86efac}.out .err{color:#fca5a5}.out .hl{color:#fde047}
+table{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--mono);margin-top:8px}
+th,td{border:1px solid var(--border);padding:5px 8px;text-align:left}th{background:#0f172a;color:#7dd3fc}
+td.secret{color:#fca5a5}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+.tag.bad{background:var(--bad-bg);color:#fca5a5}.tag.good{background:var(--good-bg);color:#86efac}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:12px 14px;font-size:13px;color:#cbd5e1;margin-top:12px}
+.status{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--warn)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--warn);animation:pulse 1s infinite}
+.dot.on{background:var(--good);animation:none}.dot.err{background:var(--bad);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+pre.code{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;overflow:auto}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="sim-sql.html"><span data-en="Classic (mock) ver.">기존(mock) 버전</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🧨 <span data-en="Live SQL Injection — real execution in your browser">실전 SQL 인젝션 — 브라우저에서 진짜 실행</span>
+      <span class="badge-real">REAL ENGINE · sql.js (SQLite WASM)</span>
+      <span class="kisa">CWE-89 · KISA SQL 삽입</span></h1>
+    <div class="sub" data-en="This is not a mock. A real SQLite database, compiled to WebAssembly, runs entirely in your browser and executes your input as SQL. Bypass a login for real, dump credentials with UNION, then see parameter binding stop the exact same payload.">
+      이건 mock이 아닙니다. <b>실제 SQLite</b>가 WebAssembly로 컴파일되어 브라우저 안에서 돌고, 당신의 입력을 그대로 SQL로 실행합니다. 진짜로 로그인을 우회하고 UNION으로 계정을 덤프해 본 뒤, 똑같은 페이로드가 파라미터 바인딩에서 막히는 걸 확인하세요.</div>
+    <div style="margin-top:10px"><span class="status"><span class="dot" id="dot"></span><span id="statusText" data-en="Booting the WebAssembly SQLite engine…">WebAssembly SQLite 엔진 부팅 중…</span></span></div>
+  </div>
+
+  <!-- DB 상태 -->
+  <div class="card">
+    <h2>🗄️ <span data-en="Live database (users table)">실제 데이터베이스 (users 테이블)</span></h2>
+    <div class="cap" data-en="These rows actually live in the in-browser SQLite DB. This is what an attacker is after.">이 행들은 브라우저 내 SQLite DB에 실제로 존재합니다 — 공격자가 노리는 대상입니다.</div>
+    <div id="dbTable"></div>
+    <div style="margin-top:10px"><button class="ghost" onclick="resetDB()" id="btnReset" disabled>↻ <span data-en="Reset DB">DB 초기화</span></button></div>
+  </div>
+
+  <!-- 취약 로그인 -->
+  <div class="card vuln">
+    <h2>⚠️ <span data-en="Vulnerable login (string-concatenated SQL)">취약한 로그인 (문자열 결합 SQL)</span> <span class="tag bad">VULNERABLE</span></h2>
+    <div class="cap" data-en="The query is built by concatenating your input. Try a normal login, then an injection.">쿼리를 입력값 문자열 결합으로 만듭니다. 정상 로그인 후, 인젝션을 시도해 보세요.</div>
+    <div class="row">
+      <div class="col"><label data-en="Username">아이디</label><input id="vu" value="alice" spellcheck="false"></div>
+      <div class="col"><label data-en="Password">비밀번호</label><input id="vp" value="wonderland" spellcheck="false"></div>
+    </div>
+    <div class="presets">
+      <button class="ghost" onclick="setV('alice','wonderland')" data-en="✔ Normal login">✔ 정상 로그인</button>
+      <button class="ghost" onclick="setV(\"' OR '1'='1' --\",'')">💉 ' OR '1'='1' --</button>
+      <button class="ghost" onclick="setV(\"admin' --\",'')">💉 admin' --</button>
+    </div>
+    <button class="act run" onclick="vulnLogin()" id="btnVLogin" disabled>▶ <span data-en="Attempt login (real SQL)">로그인 시도 (실제 SQL)</span></button>
+    <div class="cap" style="margin:12px 0 0" data-en="Actual SQL executed:">실제 실행되는 SQL:</div>
+    <div class="sqlbox" id="vSql">—</div>
+    <div class="out" id="vOut" data-en="Result appears here.">결과가 여기 표시됩니다.</div>
+  </div>
+
+  <!-- 취약 검색 (UNION) -->
+  <div class="card vuln">
+    <h2>🔎 <span data-en="Vulnerable search → UNION credential dump">취약한 검색 → UNION 계정 덤프</span> <span class="tag bad">VULNERABLE</span></h2>
+    <div class="cap" data-en="A product search using LIKE. A UNION payload pulls the users table into the results.">LIKE로 상품을 검색합니다. UNION 페이로드로 users 테이블을 결과에 끌어옵니다.</div>
+    <label data-en="Search keyword">검색어</label><input id="sq" value="mouse" spellcheck="false">
+    <div class="presets">
+      <button class="ghost" onclick="setS('mouse')" data-en="✔ Normal search">✔ 정상 검색</button>
+      <button class="ghost" onclick="setS(\"x' UNION SELECT username||':'||password, role FROM users --\")">💉 UNION dump</button>
+    </div>
+    <button class="act run" onclick="vulnSearch()" id="btnVSearch" disabled>▶ <span data-en="Search (real SQL)">검색 (실제 SQL)</span></button>
+    <div class="cap" style="margin:12px 0 0" data-en="Actual SQL executed:">실제 실행되는 SQL:</div>
+    <div class="sqlbox" id="sSql">—</div>
+    <div class="out" id="sOut" data-en="Result appears here.">결과가 여기 표시됩니다.</div>
+  </div>
+
+  <!-- 안전 -->
+  <div class="card secure">
+    <h2>✅ <span data-en="Secure login (parameter binding)">안전한 로그인 (파라미터 바인딩)</span> <span class="tag good">SECURE</span></h2>
+    <div class="cap" data-en="Same engine, same payload — but the input is bound as a parameter, never parsed as SQL.">같은 엔진·같은 페이로드지만, 입력을 파라미터로 바인딩해 SQL로 해석되지 않습니다.</div>
+    <div class="row">
+      <div class="col"><label data-en="Username">아이디</label><input id="su" value="' OR '1'='1' --" spellcheck="false"></div>
+      <div class="col"><label data-en="Password">비밀번호</label><input id="sp" value="" spellcheck="false"></div>
+    </div>
+    <button class="act fix" onclick="secureLogin()" id="btnSLogin" disabled>▶ <span data-en="Attempt login (prepared statement)">로그인 시도 (Prepared Statement)</span></button>
+    <div class="cap" style="margin:12px 0 0" data-en="Prepared statement + bound values:">Prepared Statement + 바인딩 값:</div>
+    <div class="sqlbox" id="secSql">—</div>
+    <div class="out" id="secOut" data-en="Result appears here.">결과가 여기 표시됩니다.</div>
+  </div>
+
+  <div class="note">
+    <b data-en="Why it works / how to fix">왜 뚫리고, 어떻게 막나</b><br>
+    <span data-en="Concatenation merges untrusted input into the SQL text, so <code>' OR '1'='1' --</code> changes the query's logic (the <code>--</code> comments out the password check). Parameter binding sends the query and the data on separate channels — the driver never treats input as SQL, so the same payload becomes a harmless literal string that matches no user.">
+    문자열 결합은 신뢰할 수 없는 입력을 SQL 본문에 섞습니다. 그래서 <code>' OR '1'='1' --</code> 가 쿼리의 논리를 바꿔버리고(<code>--</code> 가 비밀번호 검사를 주석 처리), 인증이 우회됩니다. 파라미터 바인딩은 쿼리와 데이터를 <b>분리된 채널</b>로 보내 드라이버가 입력을 SQL로 해석하지 않으므로, 같은 페이로드가 그냥 문자열 리터럴이 되어 어떤 사용자와도 일치하지 않습니다.</span>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <div class="col"><div class="tag bad" style="margin-bottom:6px">VULNERABLE</div>
+<pre class="code">// Java — 문자열 결합 (취약)
+String q = "SELECT * FROM users WHERE "
+  + "username='" + user + "' AND "
+  + "password='" + pass + "'";
+stmt.executeQuery(q);   // 입력이 SQL로 실행됨</pre></div>
+    <div class="col"><div class="tag good" style="margin-bottom:6px">SECURE</div>
+<pre class="code">// Java — PreparedStatement (안전)
+String q = "SELECT * FROM users WHERE "
+  + "username=? AND password=?";
+PreparedStatement ps = con.prepareStatement(q);
+ps.setString(1, user); ps.setString(2, pass);
+ps.executeQuery();      // 입력은 데이터로만 처리</pre></div>
+  </div>
+
+  <div class="disc" data-en="Educational simulation. The SQLite engine runs locally in your browser (sql.js / WebAssembly); no real server or network is involved, and no data leaves your device.">
+    ⚠️ 교육용 시뮬레이션입니다. SQLite 엔진은 브라우저 안(sql.js / WebAssembly)에서만 로컬로 동작하며, 실제 서버·네트워크는 관여하지 않고 데이터가 기기를 벗어나지 않습니다.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js" crossorigin="anonymous"></script>
+<script>
+/* ---------- i18n (자기완결) ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn(); document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* ---------- 실제 SQLite (sql.js / WASM) ---------- */
+var db=null, SQLg=null;
+var SEED='CREATE TABLE users(id INTEGER, username TEXT, password TEXT, role TEXT, secret TEXT);'
+ +"INSERT INTO users VALUES"
+ +"(1,'alice','wonderland','user','—'),"
+ +"(2,'bob','builder123','user','—'),"
+ +"(3,'admin','S3cr3t!Adm1n','admin','flag{sql_injection_bypass}');";
+
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function hlSql(s){ // 아주 단순한 SQL 하이라이트
+  return esc(s)
+    .replace(/\b(SELECT|FROM|WHERE|AND|OR|UNION|INSERT|INTO|VALUES|CREATE|TABLE|LIKE|NULL)\b/gi,'<span class="k">$1</span>')
+    .replace(/(--.*)$/gm,'<span class="p">$1</span>')
+    .replace(/('(?:[^']|'')*')/g,'<span class="s">$1</span>');
+}
+function setStatus(text, cls){ document.getElementById('statusText').textContent=text; var d=document.getElementById('dot'); d.className='dot'+(cls?(' '+cls):''); }
+
+function renderTable(){
+  var res=db.exec('SELECT id, username, password, role, secret FROM users');
+  var box=document.getElementById('dbTable');
+  if(!res.length){ box.innerHTML='<div class="out">'+L('(빈 테이블)','(empty)')+'</div>'; return; }
+  var c=res[0].columns, v=res[0].values;
+  var h='<table><tr>'+c.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr>';
+  v.forEach(function(r){ h+='<tr>'+r.map(function(cell,i){ var cls=(c[i]==='password'||c[i]==='secret')?' class="secret"':''; return '<td'+cls+'>'+esc(cell)+'</td>'; }).join('')+'</tr>'; });
+  box.innerHTML=h+'</table>';
+}
+function buildDB(){ if(db) db.close(); db=new SQLg.Database(); db.run(SEED); renderTable(); }
+function resetDB(){ buildDB(); ['vOut','sOut','secOut'].forEach(function(id){var e=document.getElementById(id); e.textContent=L('결과가 여기 표시됩니다.','Result appears here.');}); ['vSql','sSql','secSql'].forEach(function(id){document.getElementById(id).textContent='—';}); }
+
+function rowsToTable(res){
+  if(!res.length) return '<span class="ok">'+L('0개 행 반환','0 rows returned')+'</span>';
+  var c=res[0].columns, v=res[0].values;
+  var h='<table><tr>'+c.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr>';
+  v.forEach(function(r){ h+='<tr>'+r.map(function(cell){return '<td>'+esc(cell)+'</td>';}).join('')+'</tr>'; });
+  return h+'</table>';
+}
+
+/* 취약 로그인: 문자열 결합 → 실제 실행 */
+function vulnLogin(){
+  var u=document.getElementById('vu').value, p=document.getElementById('vp').value;
+  var sql="SELECT id, username, role, secret FROM users WHERE username = '"+u+"' AND password = '"+p+"'";
+  document.getElementById('vSql').innerHTML=hlSql(sql);
+  var out=document.getElementById('vOut');
+  try{
+    var res=db.exec(sql);
+    var rows = res.length? res[0].values : [];
+    if(!rows.length){ out.innerHTML='<span class="err">✗ '+L('로그인 실패 — 일치하는 계정 없음 (0행)','Login failed — no matching account (0 rows)')+'</span>'; return; }
+    // 우회 판정: 반환된 계정의 실제 password가 입력 p와 다르면 인증 우회
+    var cols=res[0].columns;
+    var bypass = rows.some(function(r){ /* secret col은 password 아님 */ return true; }) && !isLegit(u,p);
+    var first=res[0].values[0];
+    var uname=first[cols.indexOf('username')], role=first[cols.indexOf('role')];
+    var head = bypass
+      ? '<span class="hl">🔓 '+L('인증 우회 성공','Authentication bypass')+'</span> — '+L('비밀번호 없이 로그인됨','logged in without a valid password')+'<br>'
+      : '<span class="ok">🔑 '+L('로그인 성공','Login success')+'</span><br>';
+    var who = L('로그인 계정','Logged in as')+': <b>'+esc(uname)+'</b> (role='+esc(role)+')  ·  '+L('반환 행','rows')+': '+rows.length;
+    if(rows.length>1) who += '  →  <span class="hl">'+L('WHERE 우회로 전체 계정 노출','WHERE bypassed — all accounts exposed')+'</span>';
+    out.innerHTML=head+who+rowsToTable(res);
+  }catch(e){
+    out.innerHTML='<span class="err">⚠ SQL ERROR: '+esc(e.message)+'</span>\n'+L('(에러 기반 인젝션의 단서가 되기도 합니다)','(error-based injection can leak schema this way)');
+  }
+}
+function isLegit(u,p){ // 정직한 자격증명인지 (우회 표시용)
+  try{ var r=db.exec("SELECT 1 FROM users WHERE username='"+u.replace(/'/g,"''")+"' AND password='"+p.replace(/'/g,"''")+"'"); return r.length>0; }catch(e){ return false; }
+}
+
+/* 취약 검색: UNION */
+function vulnSearch(){
+  var q=document.getElementById('sq').value;
+  var sql="SELECT name, price FROM products WHERE name LIKE '%"+q+"%'";
+  document.getElementById('sSql').innerHTML=hlSql(sql);
+  var out=document.getElementById('sOut');
+  try{
+    var res=db.exec(sql);
+    var n = res.length? res[0].values.length : 0;
+    var leaked = /union/i.test(q) && n>0;
+    var head = leaked ? '<span class="hl">🩸 '+L('UNION 주입 — users 테이블이 상품 결과로 유출됨','UNION injection — users table leaked into product results')+'</span><br>' : '<span class="ok">✔ '+L('검색 결과','Search results')+'</span><br>';
+    out.innerHTML=head+rowsToTable(res);
+  }catch(e){ out.innerHTML='<span class="err">⚠ SQL ERROR: '+esc(e.message)+'</span>'; }
+}
+
+/* 안전: prepared statement */
+function secureLogin(){
+  var u=document.getElementById('su').value, p=document.getElementById('sp').value;
+  var q="SELECT id, username, role, secret FROM users WHERE username = :u AND password = :p";
+  document.getElementById('secSql').innerHTML=hlSql(q)+'\n\n'+L('바인딩','bind')+': :u = '+esc(JSON.stringify(u))+'   :p = '+esc(JSON.stringify(p));
+  var out=document.getElementById('secOut');
+  try{
+    var stmt=db.prepare(q); stmt.bind({':u':u, ':p':p});
+    var rows=[]; while(stmt.step()) rows.push(stmt.getAsObject()); stmt.free();
+    if(!rows.length){ out.innerHTML='<span class="ok">🛡️ '+L('차단됨 — 0개 행. 입력이 데이터로 처리되어 SQL로 해석되지 않았습니다.','Blocked — 0 rows. Input was treated as data, never parsed as SQL.')+'</span>'; return; }
+    var c=Object.keys(rows[0]);
+    var h='<span class="ok">'+L('로그인 성공(정상 자격증명)','Login success (valid credentials)')+'</span><table><tr>'+c.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr>';
+    rows.forEach(function(r){ h+='<tr>'+c.map(function(k){return '<td>'+esc(r[k])+'</td>';}).join('')+'</tr>'; });
+    out.innerHTML=h+'</table>';
+  }catch(e){ out.innerHTML='<span class="err">⚠ '+esc(e.message)+'</span>'; }
+}
+
+/* 프리셋 */
+function setV(u,p){document.getElementById('vu').value=u;document.getElementById('vp').value=p;}
+function setS(q){document.getElementById('sq').value=q;}
+
+/* 부팅 */
+function enableAll(on){ ['btnReset','btnVLogin','btnVSearch','btnSLogin'].forEach(function(id){document.getElementById(id).disabled=!on;}); }
+function boot(){
+  applyLang();
+  if(typeof initSqlJs!=='function'){ setStatus(L('엔진 로드 실패 — 네트워크(CDN)를 확인하세요.','Engine failed to load — check network (CDN).'),'err'); return; }
+  initSqlJs({ locateFile:function(f){ return 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/'+f; } })
+    .then(function(SQL){
+      SQLg=SQL;
+      // 상품 테이블도 준비(UNION 데모용, users와 컬럼 수 맞춤: 2열)
+      buildDB();
+      db.run("CREATE TABLE products(name TEXT, price TEXT); INSERT INTO products VALUES('wireless mouse','$19'),('mechanical keyboard','$79'),('4k monitor','$299');");
+      enableAll(true);
+      setStatus(L('실제 SQLite 엔진 준비 완료 — 아래에서 진짜로 실행됩니다.','Real SQLite engine ready — everything below truly executes.'),'on');
+    })
+    .catch(function(e){ setStatus(L('엔진 초기화 오류: ','Engine init error: ')+e.message,'err'); });
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/progress.js" defer></script>
+</body>
+</html>

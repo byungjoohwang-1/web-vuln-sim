@@ -173,6 +173,14 @@ window.sdaBoard = {
       concepts: (+cert.concepts) || 0,
       practical: (+cert.practical) || 0,
       hash: String(cert.hash || ''),
+      // F4 스킬 자격(skill-assess.html) 전용 필드 — 기존 수료증은 기본값으로 기록됨
+      type: String(cert.t || ''),
+      score: (+cert.score) || 0,
+      pct: (+cert.pct) || 0,
+      tier: (+cert.tier) || 0,
+      axes: String(cert.axes || '').slice(0, 120),
+      dur: (+cert.dur) || 0,
+      flags: (+cert.flags) || 0,
       createdAt: serverTimestamp()
     });
     return true;

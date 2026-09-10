@@ -8,6 +8,14 @@
 <script src="/js/pwa.js" defer></script>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>수료증 검증 · Certificate Verification</title>
+<meta name="description" content="수료증 검증 · Certificate Verification · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="수료증 검증 · Certificate Verification">
+<meta property="og:description" content="수료증 검증 · Certificate Verification · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/verify.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
 <style>
   :root{--bg:#0b1220;--panel:#111a2e;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b}
   *{box-sizing:border-box}
@@ -69,6 +77,45 @@ function certCanonical(c){
   // certificate.html 의 certCanonical 과 반드시 동일한 순서/접두.
   return [CERT_HASH_PREFIX, c.name, c.certId, c.date, c.level, c.xp, c.concepts, c.practical].join('|');
 }
+// ── F4 스킬 자격(skill-assess.html 발급) — 필드·순서 동일하게 유지 ──
+const SKILL_HASH_PREFIX = 'WVS-ASSESS-v1';
+const AXLBL = {inj:'인젝션',xss:'XSS·출력',auth:'인증·세션',authz:'접근통제',cry:'암호화',rob:'안정성',cfg:'구성·보호',ai:'AI 보안'};
+const TIERS = ['입문','발전','숙련','전문가'];
+function isSkill(c){ return c && (c.t === 'WVS-SKILL' || String(c.certId||'').indexOf('WVS-SKILL-') === 0); }
+function skillCanonical(c){
+  return [SKILL_HASH_PREFIX, c.name, c.certId, c.date, c.score, c.pct, c.tier, c.axes, c.dur, c.flags].join('|');
+}
+function canonicalOf(c){ return isSkill(c) ? skillCanonical(c) : certCanonical(c); }
+function renderSkill(verdict, cls, title, sub, cred, onlineBadge){
+  const out = document.getElementById('result');
+  let html = '<div class="verdict '+cls+'"><div class="ic">'+verdict+'</div><div><h2>'+title+'</h2><p>'+sub+'</p></div></div>';
+  if (cred){
+    const m = Math.floor((+cred.dur||0)/60), s = (+cred.dur||0)%60;
+    const flags = (+cred.flags||0);
+    const tier = TIERS[Math.max(0,Math.min(3,+cred.tier||0))];
+    const axes = String(cred.axes||'').split(',').filter(Boolean).map(p => {
+      const i = p.indexOf(':');
+      const k = i > 0 ? p.slice(0, i) : p;
+      return '<span class="badge">'+esc(AXLBL[k]||k)+' '+(i > 0 ? (parseInt(p.slice(i+1),10)||0) : '')+'</span>';
+    }).join(' ');
+    html += '<div class="card">'+
+      '<div class="name">'+esc((cred.name||'').split('').join(' '))+'</div>'+
+      (onlineBadge?'<div style="text-align:center;margin-bottom:12px">'+onlineBadge+'</div>':'')+
+      '<div class="grid">'+
+        '<div><div class="k">자격번호 / Skill ID</div><div class="val">'+esc(cred.certId)+'</div></div>'+
+        '<div><div class="k">발급일자 / Date</div><div class="val">'+esc(cred.date)+'</div></div>'+
+        '<div><div class="k">종합 점수 / Score</div><div class="val">'+esc(cred.score)+' / 100</div></div>'+
+        '<div><div class="k">추정 백분위 / Percentile</div><div class="val">P'+esc(cred.pct)+'</div></div>'+
+        '<div><div class="k">등급 / Tier</div><div class="val">'+esc(tier)+'</div></div>'+
+        '<div><div class="k">소요 / Duration</div><div class="val">'+m+'분 '+s+'초</div></div>'+
+      '</div>'+
+      '<div style="margin-top:12px"><div class="k" style="font-size:12px;color:#94a3b8;margin-bottom:6px">8축 역량 점수 / Axis scores</div>'+axes+'</div>'+
+      '<div style="margin-top:8px;font-size:12px;color:'+(flags?'#fde68a':'#86efac')+'">'+(flags?('⚠ 시험 중 탭 전환 '+flags+'회 기록됨'):'✓ 무결성 플래그 없음')+'</div>'+
+      '<div class="hash">SHA-256: '+esc(cred.hash||'')+'</div>'+
+    '</div>';
+  }
+  out.innerHTML = html;
+}
 async function sha256Hex(str){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -79,6 +126,30 @@ function b64urlDecode(s){
   return decodeURIComponent(escape(atob(s)));
 }
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// 온라인 등록 대조(진위) — 미등록/오프라인이면 무결성만 표시하는 기본 결과 반환
+async function checkOnline(id, cert, h){
+  const skill = isSkill(cert);
+  const noun = skill ? '자격' : '수료증';
+  let r = {
+    ic:'🔒', cls:'v-warn', title:'무결성 확인됨',
+    sub:'이 '+noun+'의 내용은 발급 당시와 동일합니다(위·변조 없음). 발급 사실까지 확인하려면 온라인 등록이 필요합니다.',
+    onlineBadge:'<span class="badge">🔒 무결성 확인됨 (오프라인)</span>'
+  };
+  let rec = null;
+  try { rec = await fetchCert(id || cert.certId); } catch(e){ return r; }
+  if (!rec) return r;
+  if (rec.hash === h){
+    r = { ic:'✅', cls:'v-ok', title:'진위 확인됨',
+      sub:'이 '+noun+'은 발급자가 온라인 등록한 정식 '+noun+'이며, 내용도 위·변조되지 않았습니다.',
+      onlineBadge:'<span class="badge online">☁ 온라인 등록됨 · 진위 확인</span>' };
+  } else {
+    r = { ic:'⚠️', cls:'v-warn', title:'주의: 등록본과 다름',
+      sub:'동일 번호의 온라인 등록본과 내용이 다릅니다. 최신 발급 링크인지 확인하세요.',
+      onlineBadge:'<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 등록본과 불일치</span>' };
+  }
+  return r;
+}
 
 function render(verdict, cls, title, sub, cert, onlineBadge){
   const out = document.getElementById('result');
@@ -109,9 +180,13 @@ function render(verdict, cls, title, sub, cert, onlineBadge){
     // No payload — try online lookup by id only.
     if (id){
       const rec = await fetchCert(id);
-      if (rec){ render('✅','v-ok','진위 확인됨 (온라인 등록)','이 수료번호는 발급자가 온라인 등록한 정식 수료증입니다.', rec, '<span class="badge online">☁ 온라인 등록됨</span>'); return; }
+      if (rec){
+        if (String(rec.t||'') === 'WVS-SKILL') renderSkill('✅','v-ok','진위 확인됨 (온라인 등록)','이 자격번호는 발급자가 온라인 등록한 스킬 자격입니다.', rec, '<span class="badge online">☁ 온라인 등록됨</span>');
+        else render('✅','v-ok','진위 확인됨 (온라인 등록)','이 수료번호는 발급자가 온라인 등록한 정식 수료증입니다.', rec, '<span class="badge online">☁ 온라인 등록됨</span>');
+        return;
+      }
     }
-    render('❓','v-warn','검증 정보 부족','검증에 필요한 데이터가 없습니다. 수료증의 정식 검증 링크로 다시 시도하세요.', null);
+    render('❓','v-warn','검증 정보 부족','검증에 필요한 데이터가 없습니다. 수료증/자격의 정식 검증 링크로 다시 시도하세요.', null);
     return;
   }
 
@@ -119,35 +194,23 @@ function render(verdict, cls, title, sub, cert, onlineBadge){
   try { cert = JSON.parse(b64urlDecode(d)); }
   catch(e){ render('⚠️','v-bad','검증 실패','검증 링크가 손상되었습니다(데이터 해독 불가).', null); return; }
 
-  // Integrity: recompute SHA-256 over the canonical payload.
-  const recomputed = await sha256Hex(certCanonical(cert));
+  // Integrity: recompute SHA-256 over the canonical payload (credential type aware).
+  const recomputed = await sha256Hex(canonicalOf(cert));
   const integrityOk = (recomputed === h) && (recomputed === (cert.hash||h));
 
   if (!integrityOk){
-    render('❌','v-bad','위·변조 감지','이 검증 링크의 내용이 발급 당시와 일치하지 않습니다. 신뢰할 수 없는 수료증입니다.',
-      Object.assign({}, cert, {hash: recomputed}), '<span class="badge" style="background:#2a1015;color:#fca5a5;border-color:#5b1a22">✗ 해시 불일치</span>');
+    const tampered = { ...cert, hash: recomputed };
+    const badge = '<span class="badge" style="background:#2a1015;color:#fca5a5;border-color:#5b1a22">✗ 해시 불일치</span>';
+    if (isSkill(cert)) renderSkill('❌','v-bad','위·변조 감지','이 검증 링크의 내용이 발급 당시와 일치하지 않습니다. 신뢰할 수 없는 자격입니다.', tampered, badge);
+    else render('❌','v-bad','위·변조 감지','이 검증 링크의 내용이 발급 당시와 일치하지 않습니다. 신뢰할 수 없는 수료증입니다.', tampered, badge);
     return;
   }
 
   // Authenticity: cross-check the online registry (best-effort).
-  let onlineBadge = '<span class="badge">🔒 무결성 확인됨 (오프라인)</span>';
-  let title = '무결성 확인됨';
-  let sub = '이 수료증의 내용은 발급 당시와 동일합니다(위·변조 없음). 발급 사실까지 확인하려면 온라인 등록이 필요합니다.';
-  let cls = 'v-warn', ic = '🔒';
-  try {
-    const rec = await fetchCert(id || cert.certId);
-    if (rec && rec.hash === h){
-      onlineBadge = '<span class="badge online">☁ 온라인 등록됨 · 진위 확인</span>';
-      title = '진위 확인됨'; cls = 'v-ok'; ic = '✅';
-      sub = '이 수료증은 발급자가 온라인 등록한 정식 수료증이며, 내용도 위·변조되지 않았습니다.';
-    } else if (rec && rec.hash !== h){
-      onlineBadge = '<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 등록본과 불일치</span>';
-      title = '주의: 등록본과 다름'; cls = 'v-warn'; ic = '⚠️';
-      sub = '동일 수료번호의 온라인 등록본과 내용이 다릅니다. 최신 발급 링크인지 확인하세요.';
-    }
-  } catch(e){ /* 미등록/오프라인 — 무결성만 표시 */ }
+  const v = await checkOnline(id, cert, h);
 
-  render(ic, cls, title, sub, cert, onlineBadge);
+  if (isSkill(cert)) renderSkill(v.ic, v.cls, v.title, v.sub, cert, v.onlineBadge);
+  else render(v.ic, v.cls, v.title, v.sub, cert, v.onlineBadge);
 
   async function _noop(){}
 })();

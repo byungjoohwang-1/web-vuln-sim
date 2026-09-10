@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 코드 채점·소크라테스 튜터 (BYO-key) · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="AI 코드 채점·소크라테스 튜터 (BYO-key) · WEB-VULN-SIM">
+<meta property="og:description" content="AI 코드 채점·소크라테스 튜터 (BYO-key) · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/ai-grader.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="고정 룰이 아닌 자유서술 LLM 채점. 당신이 고친 코드를 AI가 이해하고 취약점 해결 여부를 평가하며, 정답을 주지 않는 소크라테스식 힌트를 제공합니다. 키는 브라우저에만 저장.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:820px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:14px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono)}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+input,select,textarea{width:100%;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px}
+textarea{min-height:150px;resize:vertical}
+.rowf{display:flex;gap:10px;flex-wrap:wrap}.rowf>*{flex:1;min-width:200px}
+button.act{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;font-family:var(--mono)}
+button.grade{background:var(--accent);color:#04222e}button.hint{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+button.save{background:var(--good);color:#06210f}
+button:disabled{opacity:.5;cursor:not-allowed}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#0c2a3a;color:#7dd3fc}
+pre.code{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;overflow:auto}
+.hidden{display:none}
+.verdict{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.vbadge{font-family:var(--mono);font-weight:800;font-size:14px;border-radius:8px;padding:6px 14px}
+.vpass{background:#0f2a18;color:#86efac;border:1px solid #14532d}
+.vpartial{background:#3a2a09;color:#fde047;border:1px solid #a16207}
+.vfail{background:#3b1418;color:#fca5a5;border:1px solid #7f1d1d}
+.bar{height:9px;border-radius:99px;background:#1e293b;overflow:hidden;flex:1;min-width:120px}
+.bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e)}
+.res h3{font-size:13px;color:#7dd3fc;font-family:var(--mono);margin:12px 0 4px}
+.res ul{margin:0 0 0 18px;font-size:13px}
+.res p{font-size:13.5px;color:#cbd5e1}
+.privacy{font-size:12px;color:#64748b;margin-top:8px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #334155;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="ai-tutor.html"><span data-en="AI Tutor (chat)">AI 튜터(챗)</span></a>
+  <a href="labs-live.html"><span data-en="Live Labs">라이브 랩</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🤖 <span data-en="AI Code Grader & Socratic Tutor">AI 코드 채점·소크라테스 튜터</span></h1>
+    <div class="sub" data-en="Beyond fixed-rule grading: a real LLM reads YOUR fix, judges whether it actually removes the vulnerability, and gives Socratic hints without handing you the answer. Bring your own Anthropic key — it stays in your browser.">
+      고정 룰 채점을 넘어섭니다: 실제 LLM이 <b>당신이 고친 코드를 읽고</b> 취약점을 실제로 제거했는지 평가하고, 정답을 바로 주지 않는 <b>소크라테스식 힌트</b>를 줍니다. Anthropic 키를 직접 넣으세요 — 키는 브라우저에만 저장됩니다.</div>
+  </div>
+
+  <!-- 키 설정 -->
+  <div class="card" id="keyCard">
+    <h2>🔑 <span data-en="API key (stored in your browser only)">API 키 (브라우저에만 저장)</span></h2>
+    <div class="rowf">
+      <div style="flex:2"><label data-en="Anthropic API key (sk-ant-...)">Anthropic API 키 (sk-ant-...)</label><input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off"></div>
+      <div><label data-en="Model">모델</label>
+        <input id="model" type="text" value="claude-sonnet-5" list="models">
+        <datalist id="models">
+          <option value="claude-sonnet-5"></option>
+          <option value="claude-haiku-4-5"></option>
+          <option value="claude-opus-4-8"></option>
+          <option value="claude-sonnet-4-6"></option>
+        </datalist>
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="act save" onclick="saveKey()"><span data-en="Save">저장</span></button>
+      <button class="act hint" onclick="clearKey()"><span data-en="Clear key">키 삭제</span></button>
+      <span id="keyStatus" style="align-self:center;font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div class="privacy" data-en="🔒 Your key is stored only in this browser (localStorage) and sent directly to api.anthropic.com. It never touches our servers (this is a static, serverless site). Shared with the AI Tutor page.">🔒 키는 이 브라우저(localStorage)에만 저장되고 api.anthropic.com으로 직접 전송됩니다. 우리 서버를 절대 경유하지 않습니다(정적·서버리스). AI 튜터 페이지와 키를 공유합니다.</div>
+  </div>
+
+  <!-- 문제 -->
+  <div class="card">
+    <h2>🎯 <span data-en="Challenge">과제</span></h2>
+    <label data-en="Pick a challenge (or choose Custom to paste your own)">과제 선택 (또는 '직접 입력'으로 붙여넣기)</label>
+    <select id="chSel" onchange="loadCh()"></select>
+    <div style="margin-top:10px"><span class="tag" id="chCwe">—</span> <span id="chTitle" style="font-weight:700"></span></div>
+    <div style="font-size:13px;color:var(--muted);margin:8px 0 4px" id="chTask"></div>
+    <div id="vulnWrap"><label data-en="Vulnerable code (fix this)">취약 코드 (이걸 고치세요)</label><pre class="code" id="chCode"></pre></div>
+  </div>
+
+  <!-- 답안 -->
+  <div class="card">
+    <h2>✍️ <span data-en="Your fix / answer">당신의 수정 코드 / 답안</span></h2>
+    <textarea id="answer" spellcheck="false" placeholder="여기에 안전하게 고친 코드를 작성하세요…"></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="act grade" id="btnGrade" onclick="grade()">🤖 <span data-en="AI grade">AI 채점</span></button>
+      <button class="act hint" id="btnHint" onclick="grade(true)">💡 <span data-en="Hint only (Socratic)">힌트만 (소크라테스)</span></button>
+    </div>
+    <div id="result" class="res hidden"></div>
+  </div>
+
+  <div class="disc" data-en="AI-assisted grading is a study aid and can make mistakes — verify against the secure-coding guides. Your key and code are sent directly to Anthropic; nothing is stored on our servers.">
+    ⚠️ AI 채점은 학습 보조 도구이며 틀릴 수 있습니다 — 시큐어코딩 가이드로 교차 확인하세요. 키와 코드는 Anthropic으로 직접 전송되며, 우리 서버에는 아무것도 저장되지 않습니다.</div>
+</div>
+
+<script>
+/* i18n */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+/* key (ai-tutor와 공유) */
+function getKey(){try{return localStorage.getItem('wvs_ai_key')||'';}catch(e){return '';}}
+function getModel(){try{return localStorage.getItem('wvs_ai_model')||document.getElementById('model').value.trim()||'claude-sonnet-5';}catch(e){return 'claude-sonnet-5';}}
+function saveKey(){
+  var k=document.getElementById('apiKey').value.trim(), m=document.getElementById('model').value.trim()||'claude-sonnet-5';
+  if(!k){document.getElementById('keyStatus').textContent=L('키를 입력하세요.','Enter a key.');return;}
+  try{localStorage.setItem('wvs_ai_key',k);localStorage.setItem('wvs_ai_model',m);}catch(e){}
+  document.getElementById('keyStatus').textContent=L('저장됨 ✓','Saved ✓');
+}
+function clearKey(){try{localStorage.removeItem('wvs_ai_key');}catch(e){}document.getElementById('apiKey').value='';document.getElementById('keyStatus').textContent=L('삭제됨.','Cleared.');}
+
+/* challenges */
+var CH=[
+ {id:'sqli',cwe:'CWE-89',title:'SQL 인젝션 (Java)',lang:'java',
+  task:'문자열 결합으로 만든 로그인 쿼리를 안전하게 고치세요.',
+  code:'String q = "SELECT * FROM users WHERE user=\x27" + user + "\x27 AND pass=\x27" + pass + "\x27";\nResultSet rs = stmt.executeQuery(q);'},
+ {id:'xss',cwe:'CWE-79',title:'저장형 XSS (JavaScript)',lang:'javascript',
+  task:'사용자 댓글을 화면에 표시하는 코드를 XSS 없이 고치세요.',
+  code:'const el = document.getElementById("comments");\nel.innerHTML = userComment;  // 사용자 입력'},
+ {id:'cmd',cwe:'CWE-78',title:'명령어 삽입 (Python)',lang:'python',
+  task:'호스트로 ping 하는 코드를 명령어 삽입 없이 고치세요.',
+  code:'import os\nhost = request.args.get("host")\nos.system("ping -c 1 " + host)'},
+ {id:'path',cwe:'CWE-22',title:'경로 순회 (Java)',lang:'java',
+  task:'사용자가 지정한 파일을 읽는 코드를 경로 순회 없이 고치세요.',
+  code:'String name = request.getParameter("file");\nFile f = new File("/var/www/files/" + name);\nreturn Files.readAllBytes(f.toPath());'},
+ {id:'crypto',cwe:'CWE-327',title:'취약한 해시 (Java)',lang:'java',
+  task:'비밀번호 저장 방식을 안전한 알고리즘으로 고치세요.',
+  code:'MessageDigest md = MessageDigest.getInstance("MD5");\nbyte[] hash = md.digest(password.getBytes());\n// DB에 hash 저장'},
+ {id:'custom',cwe:'CUSTOM',title:'직접 입력',lang:'',
+  task:'취약 코드와 과제를 직접 정의하고, 아래에 수정 코드를 작성하세요.',
+  code:'// 여기에 원본 취약 코드를 붙여넣거나, 답안 영역에 설명과 함께 작성하세요.'}
+];
+function loadCh(){
+  var c=CH[document.getElementById('chSel').value];
+  document.getElementById('chCwe').textContent=c.cwe;
+  document.getElementById('chTitle').textContent=c.title;
+  document.getElementById('chTask').textContent=c.task;
+  document.getElementById('chCode').textContent=c.code;
+  var custom=c.id==='custom';
+  document.getElementById('chCode').setAttribute('contenteditable',custom?'true':'false');
+  document.getElementById('chCode').style.outline=custom?'1px dashed #334155':'none';
+}
+
+/* Anthropic 호출 (ai-tutor.html 패턴) */
+async function callClaude(system,user,maxTokens){
+  var key=getKey();
+  if(!key){ throw {ui:L('먼저 API 키를 저장하세요.','Save your API key first.')}; }
+  var res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:getModel(),max_tokens:maxTokens||1200,temperature:0,system:system,messages:[{role:'user',content:user}]})
+  });
+  if(!res.ok){
+    var t=await res.text(); var hint='';
+    if(res.status===401)hint=L(' — 키를 확인하세요.',' — check your key.');
+    else if(res.status===429)hint=L(' — 사용량/속도 제한.',' — rate/usage limit.');
+    else if(res.status===400&&/model/.test(t))hint=L(' — 모델 이름 확인.',' — check model name.');
+    throw {ui:L('오류 ','Error ')+res.status+hint};
+  }
+  var data=await res.json();
+  return (data.content&&data.content.map(function(b){return b.text||'';}).join('').trim())||'';
+}
+function parseJson(s){
+  var m=s.match(/\{[\s\S]*\}/); if(!m) return null;
+  try{return JSON.parse(m[0]);}catch(e){return null;}
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+
+var busy=false;
+async function grade(hintOnly){
+  if(busy) return;
+  var c=CH[document.getElementById('chSel').value];
+  var ans=document.getElementById('answer').value.trim();
+  var code=document.getElementById('chCode').textContent;
+  var out=document.getElementById('result');
+  out.classList.remove('hidden');
+  if(!ans){ out.innerHTML='<p style="color:#fca5a5">'+L('먼저 수정 코드/답안을 작성하세요.','Write your fix/answer first.')+'</p>'; return; }
+  busy=true; document.getElementById('btnGrade').disabled=true; document.getElementById('btnHint').disabled=true;
+  out.innerHTML='<span class="spin"></span> '+L('AI가 검토 중…','AI is reviewing…');
+  try{
+    var result;
+    if(hintOnly){
+      var sysH=L('너는 소크라테스식 보안 코딩 튜터다. 정답 코드를 직접 주지 말고, 학생이 스스로 취약점을 발견하고 고치도록 유도하는 짧은 힌트 1~2개만 제시하라. 반드시 JSON 하나만 출력: {"hint":"..."} (한국어).',
+                'You are a Socratic secure-coding tutor. Do NOT give the answer; give only 1-2 short guiding hints. Output exactly one JSON: {"hint":"..."}.');
+      var userH='[취약점] '+c.cwe+' — '+c.title+'\n[원본 코드]\n'+code+'\n[과제] '+c.task+'\n[학생의 현재 시도]\n'+ans+'\n\nJSON만 출력.';
+      var raw=await callClaude(sysH,userH,500);
+      var j=parseJson(raw)||{hint:raw};
+      out.innerHTML='<h3>💡 '+L('힌트','Hint')+'</h3><p>'+esc(j.hint)+'</p>';
+    } else {
+      var sys=L('너는 엄격하지만 교육적인 시큐어 코딩 채점관이다. 학생이 제출한 수정 코드/답안이 주어진 취약점을 실제로 제거했는지 판단하라(예: 파라미터 바인딩·출력 이스케이프·화이트리스트·안전 API·강한 해시 등). 반드시 유효한 JSON 하나만 출력하고 다른 텍스트는 금지. 스키마: {"verdict":"pass|partial|fail","score":0-100,"secure":true|false,"remaining_issues":["..."],"explanation":"...","reference":"..."}. explanation·remaining_issues·reference 는 한국어.',
+                'You are a strict but educational secure-code grader. Judge whether the student\x27s fix actually removes the vulnerability. Output exactly one valid JSON, no other text. Schema: {"verdict":"pass|partial|fail","score":0-100,"secure":true|false,"remaining_issues":["..."],"explanation":"...","reference":"..."}.');
+      var user='[취약점] '+c.cwe+' — '+c.title+'\n[원본 취약 코드]\n'+code+'\n[과제] '+c.task+'\n[학생 제출]\n'+ans+'\n\n위 스키마 JSON만 출력.';
+      var raw2=await callClaude(sys,user,1200);
+      var r=parseJson(raw2);
+      if(!r){ out.innerHTML='<h3>'+L('AI 응답','AI response')+'</h3><pre class="code">'+esc(raw2)+'</pre>'; }
+      else { renderResult(r); result=r; }
+    }
+  }catch(e){
+    out.innerHTML='<p style="color:#fca5a5">⚠ '+esc((e&&e.ui)||(e&&e.message)||e)+'</p>';
+  }
+  busy=false; document.getElementById('btnGrade').disabled=false; document.getElementById('btnHint').disabled=false;
+}
+function renderResult(r){
+  var v=(r.verdict||'').toLowerCase();
+  var cls=v==='pass'?'vpass':v==='partial'?'vpartial':'vfail';
+  var label=v==='pass'?L('통과','PASS'):v==='partial'?L('부분 통과','PARTIAL'):L('미흡','FAIL');
+  var score=Math.max(0,Math.min(100,parseInt(r.score,10)||0));
+  var h='<div class="verdict"><span class="vbadge '+cls+'">'+ (v==='pass'?'✅ ':v==='partial'?'⚠️ ':'❌ ') +label+'</span>'
+    +'<div class="bar"><i style="width:'+score+'%"></i></div><b style="font-family:var(--mono)">'+score+'</b>'
+    +'<span class="tag">'+(r.secure?L('안전','secure'):L('취약 잔존','still vulnerable'))+'</span></div>';
+  if(r.explanation){ h+='<h3>🧠 '+L('평가','Assessment')+'</h3><p>'+esc(r.explanation)+'</p>'; }
+  if(r.remaining_issues&&r.remaining_issues.length){ h+='<h3>🔧 '+L('남은 문제','Remaining issues')+'</h3><ul>'+r.remaining_issues.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'; }
+  if(r.reference){ h+='<h3>📚 '+L('참고','Reference')+'</h3><p>'+esc(r.reference)+'</p>'; }
+  document.getElementById('result').innerHTML=h;
+  // 통과 시 진도 기록(있으면)
+  try{ if(v==='pass'&&window.WVSProgress){ window.WVSProgress.complete(score,'ai-grader.html'); } }catch(e){}
+}
+
+/* init */
+function boot(){
+  var sel=document.getElementById('chSel');
+  sel.innerHTML=CH.map(function(c,i){return '<option value="'+i+'">'+esc(c.title)+' ('+c.cwe+')</option>';}).join('');
+  loadCh();
+  var k=getKey(); if(k){ document.getElementById('keyStatus').textContent=L('저장된 키 사용 중 ✓','Using saved key ✓'); }
+  var m; try{m=localStorage.getItem('wvs_ai_model');}catch(e){} if(m) document.getElementById('model').value=m;
+  applyLang();
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/progress.js" defer></script>
+</body>
+</html>

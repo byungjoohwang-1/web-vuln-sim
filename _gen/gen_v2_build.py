@@ -15,6 +15,7 @@ PAIRS = {
     'cloud': ('specs_cloud', 'specs_cloud_dyn'),
     'ics': ('specs_ics', 'specs_ics_dyn'),
     'design': ('specs_design', 'specs_design_dyn'),
+    'ai': ('specs_ai', 'specs_ai_dyn'),
 }
 
 

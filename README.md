@@ -1,7 +1,7 @@
 -----
 
 # 📚 WEB-VULN-SIM: 웹 취약점 시뮬레이터 (v0.5)
-Link https://vuln-sim-test.web.app/
+Link https://vuln-sim.web.app/
 Notice: This similator with secure coding is for education only. If you have any questions, please feel free to contact me to jackhwang0210@gmail.com
 Copyright 2025 Jack Hwang. This program is complied with Apache License 2.0.
 ## 🇰🇷 한국어 버전
@@ -58,7 +58,7 @@ V0.6 주요 기능 추가(2026-06-20)
   * **Frontend**: HTML5, CSS (Bootstrap 5), JavaScript
   * **Backend**: Firebase Cloud Functions (Node.js)
   * **Hosting**: Firebase Hosting
-  * **Online Demo**: [https://vuln-sim-test.web.app/](https://vuln-sim-test.web.app/)
+  * **Online Demo**: [https://vuln-sim.web.app/](https://vuln-sim.web.app/)
 
 -----
 
@@ -176,7 +176,7 @@ firebase deploy
   * **Frontend**: HTML5, CSS (Bootstrap 5), JavaScript
   * **Backend**: Firebase Cloud Functions (Node.js)
   * **Hosting**: Firebase Hosting
-  * **Online Demo**: [https://vuln-sim-test.web.app/](https://vuln-sim-test.web.app/)
+  * **Online Demo**: [https://vuln-sim.web.app/](https://vuln-sim.web.app/)
 
 -----
 

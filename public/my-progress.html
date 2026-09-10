@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내 학습 현황 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="내 학습 현황 · WEB-VULN-SIM">
+<meta property="og:description" content="내 학습 현황 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/my-progress.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="사이트 전체 학습 진도·마스터리를 한눈에 — 카테고리·CWE별 숙련도, 이어서 학습 추천, XP·레벨·연속 학습일.">
+<style>
+:root{
+  --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
+  --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+  --bad:#ef4444; --good:#22c55e; --warn:#f59e0b;
+  --gA:#34d399; --gB:#60a5fa; --gC:#fbbf24; --gD:#22d3ee;
+  --mono:'JetBrains Mono','Consolas',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 16px 90px}
+.hero h1{font-size:24px;color:#fff;display:flex;align-items:center;gap:10px}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;margin:16px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px 16px;text-align:center}
+.stat .n{font-size:26px;font-weight:800;font-family:var(--mono);color:#fff}
+.stat .l{font-size:11.5px;color:var(--muted);margin-top:4px;letter-spacing:.3px}
+.stat .n small{font-size:14px;color:var(--muted);font-weight:600}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+.overall{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.ring{--p:0;--c:var(--accent);width:120px;height:120px;border-radius:50%;flex-shrink:0;
+  background:conic-gradient(var(--c) calc(var(--p)*1%), #1e293b 0);display:grid;place-items:center}
+.ring::before{content:'';position:absolute;width:92px;height:92px;border-radius:50%;background:var(--panel)}
+.ring b{position:relative;font-family:var(--mono);font-size:24px;color:#fff}
+.ring span{position:relative;font-size:11px;color:var(--muted);display:block;text-align:center}
+.overall .meta{flex:1;min-width:240px}
+.overall .meta h2{font-size:16px;color:#7dd3fc;font-family:var(--mono);margin-bottom:6px}
+.bar{height:9px;border-radius:99px;background:#1e293b;overflow:hidden;margin:7px 0}
+.bar>i{display:block;height:100%;border-radius:99px}
+.cont{display:flex;gap:14px;align-items:center;background:linear-gradient(90deg,#0e2a3a,#0f172a);border:1px solid #164e63;border-radius:14px;padding:16px 18px}
+.cont .ic{font-size:30px}
+.cont .t{flex:1;min-width:0}
+.cont .t .k{font-size:11.5px;color:#67e8f9;font-family:var(--mono);letter-spacing:.5px}
+.cont .t .v{font-size:17px;color:#fff;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cont .t .c{font-size:12px;color:var(--muted);margin-top:2px}
+.cont .go{background:var(--accent);color:#04222e;border-radius:10px;padding:10px 16px;font-weight:800;font-size:13px;white-space:nowrap}
+h2.sec{font-size:15px;color:#7dd3fc;font-family:var(--mono);margin:26px 4px 4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:12px}
+.cat{background:var(--panel);border:1px solid var(--border);border-left-width:4px;border-radius:12px;padding:14px 15px;transition:.15s;cursor:pointer}
+.cat:hover{transform:translateY(-2px);border-color:#334155}
+.cat .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.cat .name{font-size:13.5px;font-weight:700;color:#e2e8f0}
+.cat .pct{font-family:var(--mono);font-size:13px;font-weight:800}
+.cat .cnt{font-size:11.5px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.cwe-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.cwe{font-family:var(--mono);font-size:12px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--panel2);display:flex;gap:8px;align-items:center}
+.cwe b{color:#fff}.cwe .m{color:var(--muted)}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1;margin-top:14px}
+.empty{color:var(--muted);font-size:13px;padding:8px 2px}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>📊 <span data-en="My Learning Progress">내 학습 현황</span></h1>
+    <div class="sub" data-en="Your mastery across the entire site — by category and CWE, with a recommended next step.">사이트 전체 학습을 한눈에 — 카테고리·CWE별 숙련도와 다음 학습 추천까지.</div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="card">
+    <div class="overall">
+      <div class="ring" id="ring" style="position:relative"><b id="ringPct">0%</b></div>
+      <div class="meta">
+        <h2 data-en="Overall mastery">전체 마스터리</h2>
+        <div id="ovText" class="empty"></div>
+        <div class="bar"><i id="barDone" style="background:linear-gradient(90deg,#22c55e,#4ade80);width:0"></i></div>
+        <div class="bar"><i id="barSeen" style="background:linear-gradient(90deg,#38bdf8,#818cf8);width:0"></i></div>
+        <div style="font-size:11.5px;color:var(--muted);font-family:var(--mono)">
+          <span style="color:#4ade80">■</span> <span data-en="Completed">완료</span>
+          &nbsp;&nbsp;<span style="color:#818cf8">■</span> <span data-en="Explored">탐색</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a id="contLink" href="#" style="display:block"><div class="cont" id="cont" style="display:none">
+    <div class="ic">▶️</div>
+    <div class="t">
+      <div class="k" data-en="CONTINUE LEARNING">이어서 학습</div>
+      <div class="v" id="contTitle"></div>
+      <div class="c" id="contCat"></div>
+    </div>
+    <div class="go" data-en="Start">시작하기</div>
+  </div></a>
+
+  <h2 class="sec" data-en="Mastery by category">카테고리별 마스터리</h2>
+  <div class="grid" id="cats"></div>
+
+  <h2 class="sec" data-en="CWE mastery (weakest first)">CWE 숙련도 (약한 순)</h2>
+  <div class="cwe-wrap" id="cwes"><div class="empty" data-en="Complete CWE-mapped simulators to see this.">CWE 매핑 시뮬레이터를 완료하면 표시됩니다.</div></div>
+
+  <h2 class="sec" data-en="Skill radar (adaptive assessment)">스킬 레이더 (적응형 평가)</h2>
+  <div id="skillBox"></div>
+
+  <div class="note" id="loginNote" data-en="Progress is saved on this device. Sign in with Google to sync across devices.">진도는 이 기기에 저장됩니다. Google 로그인 시 기기 간 동기화됩니다. <a href="login.html" style="color:#7dd3fc">로그인 →</a></div>
+
+  <div class="disc" data-en="Mastery is computed from your local progress across 360+ learning pages. Educational use only.">사이트 전 학습 페이지(360+) 진도를 바탕으로 계산됩니다 · 교육용.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script src="/js/skill-radar.js"></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.getAttribute('data-ko')===null) el.setAttribute('data-ko', el.innerHTML);
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-ko');
+  });
+  document.body.classList.toggle('lang-en', en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+var CATALOG=null;
+function groupColor(g){return {A:'var(--gA)',B:'var(--gB)',C:'var(--gC)',D:'var(--gD)'}[g]||'var(--accent)';}
+function prog(){try{return (window.WVSProgress?window.WVSProgress.get():JSON.parse(localStorage.getItem('wvs_progress')||'{}'))||{};}catch(e){return {};}}
+function summ(){try{return window.WVSProgress?window.WVSProgress.summary():{visited:0,completed:0,xp:0,level:1,streak:0};}catch(e){return {visited:0,completed:0,xp:0,level:1,streak:0};}}
+
+function renderDynamic(){
+  if(!CATALOG) return;
+  var items=CATALOG.items, P=prog(), it=P.items||{};
+  var total=items.length, done=0, seen=0;
+  var byCat={}, byCwe={};
+  items.forEach(function(x){
+    var st=it[x.id]||{}; var c=!!st.c, v=!!st.v;
+    if(c) done++; if(v) seen++;
+    var k=x.cat; (byCat[k]=byCat[k]||{cat:k,group:x.group,total:0,done:0,seen:0,next:null});
+    byCat[k].total++; if(c)byCat[k].done++; if(v)byCat[k].seen++;
+    if(!c && !byCat[k].next) byCat[k].next=x; // 카테고리 첫 미완료
+    if(x.cwe){ (byCwe[x.cwe]=byCwe[x.cwe]||{cwe:x.cwe,total:0,done:0}); byCwe[x.cwe].total++; if(c)byCwe[x.cwe].done++; }
+  });
+
+  // ── 상단 스탯 ──
+  var s=summ();
+  var pct= total? Math.round(done/total*100):0;
+  document.getElementById('stats').innerHTML=[
+    ['⭐','Lv.'+s.level, L('레벨','Level')],
+    ['✨', (s.xp||0).toLocaleString(), 'XP'],
+    ['✅', done+'<small>/'+total+'</small>', L('완료','Completed')],
+    ['🧭', seen+'<small>/'+total+'</small>', L('탐색','Explored')],
+    ['🔥', (s.streak||0)+L('일','d'), L('연속 학습','Streak')]
+  ].map(function(a){return '<div class="stat"><div class="n">'+a[0]+' '+a[1]+'</div><div class="l">'+a[2]+'</div></div>';}).join('');
+
+  // ── 전체 링/바 ──
+  var ring=document.getElementById('ring');
+  ring.style.setProperty('--p',pct); ring.style.setProperty('--c', pct>=67?'var(--good)':pct>=34?'var(--accent)':'var(--warn)');
+  document.getElementById('ringPct').textContent=pct+'%';
+  document.getElementById('ovText').innerHTML=L('완료 <b>'+done+'</b> · 탐색 <b>'+seen+'</b> · 전체 <b>'+total+'</b> 항목','Completed <b>'+done+'</b> · Explored <b>'+seen+'</b> of <b>'+total+'</b>');
+  document.getElementById('ovText').classList.remove('empty');
+  document.getElementById('barDone').style.width=pct+'%';
+  document.getElementById('barSeen').style.width=(total?Math.round(seen/total*100):0)+'%';
+
+  // ── 이어서 학습 추천: 진행중(방문·미완료) 최신 → 없으면 약한 카테고리 첫 미완료 ──
+  var rec=null, recTs=-1;
+  items.forEach(function(x){var st=it[x.id]||{}; if(st.v&&!st.c&&st.v>recTs){recTs=st.v;rec=x;}});
+  if(!rec){
+    var weak=Object.values(byCat).filter(function(c){return c.next;}).sort(function(a,b){return (a.done/a.total)-(b.done/b.total);})[0];
+    rec=weak?weak.next:items[0];
+  }
+  if(rec){
+    document.getElementById('cont').style.display='flex';
+    document.getElementById('contLink').setAttribute('href',rec.id);
+    document.getElementById('contTitle').textContent=(rec.code?rec.code+' · ':'')+rec.title;
+    document.getElementById('contCat').textContent=rec.cat;
+  }
+
+  // ── 카테고리 그리드 (완료율 낮은 순) ──
+  var cats=Object.values(byCat).sort(function(a,b){return (a.done/a.total)-(b.done/b.total);});
+  document.getElementById('cats').innerHTML=cats.map(function(c){
+    var p=Math.round(c.done/c.total*100), col=groupColor(c.group);
+    var href=c.next?c.next.id:'vuln-hub.html';
+    return '<a href="'+href+'"><div class="cat" style="border-left-color:'+col+'">'
+      +'<div class="top"><span class="name">'+esc(c.cat)+'</span><span class="pct" style="color:'+col+'">'+p+'%</span></div>'
+      +'<div class="bar" style="margin:9px 0 6px"><i style="width:'+p+'%;background:'+col+'"></i></div>'
+      +'<div class="cnt">'+c.done+' / '+c.total+' '+L('완료','done')+(c.seen>c.done?' · '+(c.seen-c.done)+L(' 진행중',' in progress'):'')+'</div>'
+      +'</div></a>';
+  }).join('');
+
+  // ── CWE 숙련도 (약한 순, 상위 24) ──
+  var cwes=Object.values(byCwe).sort(function(a,b){return (a.done/a.total)-(b.done/b.total)||b.total-a.total;});
+  var box=document.getElementById('cwes');
+  if(cwes.length){
+    box.innerHTML=cwes.slice(0,24).map(function(w){
+      var p=Math.round(w.done/w.total*100), col=p>=100?'var(--good)':p>0?'var(--warn)':'var(--bad)';
+      return '<span class="cwe"><b>'+w.cwe+'</b><span class="m" style="color:'+col+'">'+w.done+'/'+w.total+'</span></span>';
+    }).join('');
+  }
+
+  renderSkillCard();
+}
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+
+/* ── 스킬 레이더(적응형 평가) 임베드 — skill-assess.html 결과 요약 ── */
+var SKILL_TIERS=[{ko:'입문',en:'Beginner',c:'#94a3b8',bg:'#1e293b'},{ko:'발전',en:'Developing',c:'#38bdf8',bg:'#0c2333'},{ko:'숙련',en:'Proficient',c:'#22c55e',bg:'#0f2a18'},{ko:'전문가',en:'Expert',c:'#f59e0b',bg:'#3a2a09'}];
+var SKILL_AXES=[{id:'inj',ko:'인젝션',en:'Injection',ref:65},{id:'xss',ko:'XSS·출력',en:'XSS/Output',ref:62},{id:'auth',ko:'인증·세션',en:'Auth&Session',ref:68},{id:'authz',ko:'접근통제',en:'Access Ctrl',ref:65},{id:'cry',ko:'암호화',en:'Crypto',ref:60},{id:'rob',ko:'안정성',en:'Robustness',ref:58},{id:'cfg',ko:'구성·보호',en:'Config&Data',ref:64},{id:'ai',ko:'AI 보안',en:'AI Security',ref:50}];
+function skillEntry(){
+  var s;try{s=JSON.parse(localStorage.getItem('wvs_skill_assess'))||{};}catch(e){return null;}
+  var h=s.history||[]; if(!h.length) return null;
+  return h.reduce(function(a,b){return (!a||b.score>=a.score)?b:a;},null); // 최고 기록
+}
+function renderSkillCard(){
+  var box=document.getElementById('skillBox'); if(!box) return;
+  var e=skillEntry();
+  if(!e){
+    box.innerHTML='<a href="skill-assess.html"><div class="cont">'
+      +'<div class="ic">🎯</div>'
+      +'<div class="t"><div class="k">'+L('SKILL RADAR','SKILL RADAR')+'</div>'
+      +'<div class="v">'+L('적응형 역량 평가 받기','Take the adaptive assessment')+'</div>'
+      +'<div class="c">'+L('24문항 · 8축 · 스킬 레이더 · 검증 자격 — 약 8분','24 items · 8 axes · skill radar · verifiable credential — ~8 min')+'</div></div>'
+      +'<div class="go">'+L('시작','Start')+'</div></div></a>';
+    return;
+  }
+  var t=SKILL_TIERS[Math.max(0,Math.min(3,e.tier||0))];
+  var m={}; String(e.axes||'').split(',').forEach(function(p){var i=p.indexOf(':');if(i>0)m[p.slice(0,i)]=parseInt(p.slice(i+1),10)||0;});
+  box.innerHTML='<div class="card"><div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">'
+    +'<div id="miniRadar" style="flex:0 0 300px;max-width:100%"></div>'
+    +'<div style="flex:1;min-width:230px">'
+    +'<div style="font-size:11.5px;color:#67e8f9;font-family:var(--mono);letter-spacing:.5px">🏆 '+L('최고 기록','BEST')+' · '+e.date+'</div>'
+    +'<div style="font-size:34px;font-weight:800;font-family:var(--mono);color:'+t.c+';line-height:1.15">'+e.score+'<small style="font-size:14px;color:var(--muted);font-weight:600"> / 100</small></div>'
+    +'<span class="tier" style="font-family:var(--mono);font-weight:800;font-size:13px;border-radius:8px;padding:4px 12px;color:'+t.c+';background:'+t.c+'22;border:1px solid '+t.c+'55">'+(isEn()?t.en:t.ko)+'</span>'
+    +'<span style="font-size:13.5px;color:#cbd5e1;margin-left:8px">P'+e.pct+' · '+L('8축 레이더','8-axis radar')+'</span>'
+    +'<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'
+    +'<a href="skill-assess.html" style="background:var(--accent);color:#04222e;border-radius:10px;padding:9px 15px;font-weight:800;font-size:12.5px">🔁 '+L('다시 응시','Retake')+'</a>'
+    +'<a href="skill-assess.html?mode=result" style="background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:10px;padding:9px 15px;font-weight:700;font-size:12.5px">📋 '+L('지난 결과','Last result')+'</a>'
+    +'</div></div></div></div>';
+  if(window.WVSRadar){
+    window.WVSRadar.mount(document.getElementById('miniRadar'),{
+      axes:SKILL_AXES.map(function(a){return {label:isEn()?a.en:a.ko,val:m[a.id]||0,ref:a.ref};}),
+      size:300,color:'#38bdf8'
+    });
+  }
+}
+window.renderDynamic=renderDynamic;
+
+function boot(){
+  fetch('js/progress-catalog.json').then(function(r){return r.json();}).then(function(d){
+    CATALOG=d; applyLang();
+  }).catch(function(e){
+    document.getElementById('ovText').textContent=L('카탈로그를 불러오지 못했습니다.','Failed to load catalog.');
+    applyLang();
+  });
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>무한 문제 생성기 — 절차적 취약점 챌린지 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="무한 문제 생성기 — 절차적 취약점 챌린지 · WEB-VULN-SIM">
+<meta property="og:description" content="무한 문제 생성기 — 절차적 취약점 챌린지 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/lab-generator.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="매번 새로 생성되어 답을 외울 수 없는 절차적 취약점 챌린지. 랜덤화된 코드·시나리오로 무한 연습 — 상용의 유한 콘텐츠를 넘어서는 무한 생성 + 오늘의 CVE.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:920px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:820px}
+.cve{display:flex;gap:12px;align-items:center;background:linear-gradient(90deg,#0e2a3a,#0f172a);border:1px solid #164e63;border-radius:12px;padding:12px 15px;margin:14px 0}
+.cve .k{font-family:var(--mono);font-size:10.5px;color:#67e8f9;letter-spacing:.5px}
+.cve .t{font-weight:700;font-size:14px;color:#fff}
+.cve a.go{margin-left:auto;background:var(--accent);color:#04222e;border-radius:20px;padding:7px 14px;font-weight:800;font-size:12px;white-space:nowrap}
+.scorebar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.chip{font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 13px}
+.chip b{color:#fff;font-size:14px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.qhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.tag{font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:#0c2a3a;color:#7dd3fc}
+.scenario{font-size:13.5px;color:#cbd5e1}
+pre.code{background:#05080f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;overflow:auto;margin:10px 0}
+.q{font-weight:700;font-size:14.5px;margin:10px 0 6px}
+.opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:10px;padding:11px 13px;margin:7px 0;cursor:pointer;font-size:13.5px;font-family:inherit;transition:.12s}
+.opt:hover{border-color:#475569}
+.opt.correct{border-color:var(--good);background:#0f2a18}
+.opt.wrong{border-color:var(--bad);background:#3b1418}
+.opt:disabled{cursor:default}
+.explain{margin-top:10px;background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13px;color:#cbd5e1}
+button.act{cursor:pointer;border:none;border-radius:8px;padding:11px 18px;font-weight:800;font-size:14px;font-family:var(--mono);background:var(--accent);color:#04222e;margin-top:12px}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="labs-live.html"><span data-en="Live Labs">라이브 랩</span></a>
+  <a href="my-progress.html"><span data-en="My Progress">내 학습 현황</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>♾️ <span data-en="Infinite Challenge Generator">무한 문제 생성기</span></h1>
+    <div class="sub" data-en="Every challenge is procedurally generated with randomized code and scenarios — you cannot memorize answers. Endless fresh practice, fully in your browser.">
+      모든 문제가 랜덤화된 코드·시나리오로 <b>절차적으로 생성</b>됩니다 — 답을 외울 수 없습니다. 무한히 새로운 연습, 100% 브라우저에서.</div>
+  </div>
+
+  <div class="cve" id="cve">
+    <div>
+      <div class="k">📅 <span data-en="TODAY'S WEAKNESS">오늘의 약점</span></div>
+      <div class="t" id="cveTitle">—</div>
+    </div>
+    <a class="go" id="cveGo" href="#" data-en="Practice →">실습 →</a>
+  </div>
+
+  <div class="scorebar">
+    <span class="chip"><span data-en="Solved">푼 문제</span> <b id="scDone">0</b></span>
+    <span class="chip"><span data-en="Correct">정답</span> <b id="scRight">0</b></span>
+    <span class="chip"><span data-en="Streak">연속</span> <b id="scStreak">0</b>🔥</span>
+    <span class="chip"><span data-en="Accuracy">정확도</span> <b id="scAcc">—</b></span>
+  </div>
+
+  <div class="card" id="qCard"></div>
+  <div style="text-align:center"><button class="act" onclick="newQ()">🎲 <span data-en="New challenge">새 문제 생성</span></button></div>
+
+  <div class="disc" data-en="Procedurally generated educational content. Combinations are effectively unlimited; explanations follow secure-coding guides. Runs entirely in your browser.">
+    ⚠️ 절차적으로 생성되는 교육 콘텐츠입니다. 조합은 사실상 무제한이며, 해설은 시큐어코딩 가이드를 따릅니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en); renderCve();}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+
+/* ---- 절차적 생성기: 각 함수는 랜덤 인스턴스 반환 ---- */
+var GENS=[
+ function(){ var t=pick(['users','accounts','orders','members']), c=pick(['email','username','user_id','login']);
+   return {cwe:'CWE-89',title:L('SQL 인젝션','SQL Injection'),
+     code:'String q = "SELECT * FROM '+t+' WHERE '+c+" = '\" + input + \"'\";\nResultSet rs = stmt.executeQuery(q);",
+     q:L('이 코드를 안전하게 만드는 가장 올바른 방법은?','What is the correct way to make this safe?'),
+     opts:[{t:L('PreparedStatement에 ? 플레이스홀더로 파라미터 바인딩','Use PreparedStatement with ? parameter binding'),ok:1},
+       {t:L("작은따옴표를 두 개('')로 치환하는 이스케이프만 수행","Only escape single quotes by doubling them"),ok:0},
+       {t:L("입력에서 'OR', '--' 문자열을 블랙리스트로 제거","Blacklist-remove 'OR','--' from input"),ok:0},
+       {t:L('쿼리 문자열을 대문자로 변환','Uppercase the query string'),ok:0}],
+     ex:L('신뢰할 수 없는 입력을 SQL 본문에 넣지 말고 파라미터로 바인딩해야 근본적으로 막힙니다. 블랙리스트/이스케이프는 우회됩니다.','Bind untrusted input as a parameter; blacklists/manual escaping are bypassable.')};},
+
+ function(){ var ctx=pick([L('HTML 본문','HTML body'),L('HTML 속성값','HTML attribute'),L('페이지 제목','page title')]);
+   return {cwe:'CWE-79',title:L('크로스사이트 스크립팅(XSS)','XSS'),
+     code:'const el = document.getElementById("view");\nel.innerHTML = userInput;  // '+ctx,
+     q:L('사용자 입력을 '+ctx+'에 표시할 때 XSS를 막는 방법은?','How do you prevent XSS when showing user input in the '+ctx+'?'),
+     opts:[{t:L('출력 맥락에 맞게 이스케이프 후 표시(예: textContent 사용)','Escape for the output context (e.g., use textContent)'),ok:1},
+       {t:L('innerHTML을 그대로 쓰되 <script> 태그만 제거','Keep innerHTML but strip only <script> tags'),ok:0},
+       {t:L('입력 길이를 20자로 제한','Limit input to 20 characters'),ok:0},
+       {t:L('URL 인코딩만 적용','Apply URL encoding only'),ok:0}],
+     ex:L('innerHTML은 마크업을 코드로 실행합니다. textContent나 맥락별 인코딩을 써야 합니다. <script> 제거는 onerror 등으로 우회됩니다.','innerHTML executes markup; use textContent/context-aware encoding. Stripping <script> is bypassed via onerror etc.')};},
+
+ function(){ var h=pick(['host','target','ip','domain']);
+   return {cwe:'CWE-78',title:L('OS 명령어 삽입','OS Command Injection'),
+     code:'import os\n'+h+' = request.args.get("'+h+'")\nos.system("ping -c 1 " + '+h+')',
+     q:L('명령어 삽입을 막는 올바른 방법은?','What correctly prevents command injection?'),
+     opts:[{t:L('shell 없이 인자 배열로 실행(subprocess.run([...], shell=False))','Run without a shell, args as a list (shell=False)'),ok:1},
+       {t:L('입력에서 세미콜론(;)만 제거','Remove only semicolons from input'),ok:0},
+       {t:L('os.system 대신 os.popen 사용','Use os.popen instead of os.system'),ok:0},
+       {t:L('입력을 큰따옴표로 감싸기','Wrap input in double quotes'),ok:0}],
+     ex:L('셸을 거치지 않고 인자를 배열로 전달하면 메타문자가 해석되지 않습니다. 문자 제거/따옴표는 우회됩니다.','Passing args as a list without a shell avoids metacharacter interpretation; filtering/quoting is bypassable.')};},
+
+ function(){ var d=pick(['/var/www/files/','/app/uploads/','/data/docs/']);
+   return {cwe:'CWE-22',title:L('경로 순회','Path Traversal'),
+     code:'String name = req.getParameter("file");\nFile f = new File("'+d+'" + name);\nreturn Files.readAllBytes(f.toPath());',
+     q:L('경로 순회를 막는 가장 안전한 방법은?','Safest way to prevent path traversal?'),
+     opts:[{t:L("정규화(canonical) 후 허용 디렉터리 하위인지 검증 + 파일명 화이트리스트","Canonicalize, verify it stays under the base dir, whitelist names"),ok:1},
+       {t:L('"../" 문자열만 제거','Strip only "../" sequences'),ok:0},
+       {t:L('입력을 소문자로 변환','Lowercase the input'),ok:0},
+       {t:L('확장자만 검사','Check the extension only'),ok:0}],
+     ex:L('정규화 후 기준 경로 하위 여부를 검증해야 합니다. "../" 제거는 인코딩·중첩으로 우회됩니다.','Canonicalize then verify containment; stripping "../" is bypassed via encoding/nesting.')};},
+
+ function(){ var a=pick(['MD5','SHA-1','DES']);
+   return {cwe:'CWE-327',title:L('취약한 암호/해시','Weak Crypto'),
+     code:'MessageDigest md = MessageDigest.getInstance("'+a+'");\nbyte[] h = md.digest(password.getBytes()); // 비밀번호 저장',
+     q:L(a+' 로 비밀번호를 저장 중입니다. 올바른 개선은?','Passwords are stored with '+a+'. Correct fix?'),
+     opts:[{t:L('bcrypt/scrypt/Argon2 같은 느린 솔트 해시 사용','Use a slow salted hash (bcrypt/scrypt/Argon2)'),ok:1},
+       {t:L(a+' 를 두 번 적용','Apply '+a+' twice'),ok:0},
+       {t:L('SHA-256으로 한 번만 해시','Hash once with SHA-256'),ok:0},
+       {t:L('해시 결과를 Base64로 인코딩','Base64-encode the hash'),ok:0}],
+     ex:L('비밀번호는 솔트+느린 KDF(bcrypt/Argon2)로 저장해야 합니다. 일반 해시는 빠른 무차별 대입에 취약합니다.','Store passwords with a salted slow KDF; fast hashes are brute-forceable.')};},
+
+ function(){ var r=pick(['/api/orders/','/account/','/invoice/']), p=pick(['id','no','uid']);
+   return {cwe:'CWE-639',title:L('접근통제 미흡(IDOR)','Broken Access Control (IDOR)'),
+     code:'@GetMapping("'+r+'{'+p+'}")\nAccount get(@PathVariable Long '+p+'){\n  return repo.findById('+p+'); // 소유자 검증 없음\n}',
+     q:L('IDOR을 막는 올바른 방법은?','Correct way to prevent IDOR?'),
+     opts:[{t:L('현재 인증 주체의 소유/권한을 서버에서 검증','Verify ownership/authorization for the current principal on the server'),ok:1},
+       {t:L('ID를 예측 불가한 난수로 변경','Change IDs to unguessable random values'),ok:0},
+       {t:L('ID를 Base64로 인코딩','Base64-encode the ID'),ok:0},
+       {t:L('클라이언트에서 버튼 숨기기','Hide the button on the client'),ok:0}],
+     ex:L('객체 참조마다 서버에서 인가를 검증해야 합니다. 난수 ID·인코딩·UI 숨김은 접근통제가 아닙니다.','Enforce per-object authorization server-side; random IDs/encoding/UI hiding are not access control.')};},
+
+ function(){ var s=pick(['AWS_SECRET','DB_PASSWORD','API_TOKEN']);
+   return {cwe:'CWE-798',title:L('하드코딩된 비밀정보','Hardcoded Secret'),
+     code:'String '+s.toLowerCase()+' = "'+pick(['A1b2C3d4E5','s3cr3t-'+Math.floor(Math.random()*9000+1000),'tok_'+Math.random().toString(36).slice(2,10)])+'"; // 소스에 하드코딩',
+     q:L('올바른 개선은?','Correct fix?'),
+     opts:[{t:L('비밀정보를 환경변수/시크릿 매니저로 외부화하고 소스에서 제거','Externalize to env/secret manager; remove from source'),ok:1},
+       {t:L('Base64로 인코딩해서 소스에 저장','Base64-encode and keep it in source'),ok:0},
+       {t:L('변수명을 알기 어렵게 변경','Rename the variable obscurely'),ok:0},
+       {t:L('주석 처리','Comment it out'),ok:0}],
+     ex:L('비밀은 코드에서 분리해 시크릿 매니저/환경변수로 관리하고, 노출된 값은 폐기·교체해야 합니다. 인코딩·난독화는 비밀 보호가 아닙니다.','Keep secrets out of code (secret manager/env) and rotate exposed ones; encoding/obfuscation is not protection.')};}
+];
+
+/* 오늘의 CVE/약점 (로컬 큐레이션, 날짜 시드 로테이션) */
+var CVES=[
+ {k:'CWE-89',t:{ko:'SQL 인젝션 — 파라미터 바인딩',en:'SQL Injection — parameter binding'},sim:'sim-sql-live.html'},
+ {k:'CWE-79',t:{ko:'XSS — 출력 인코딩',en:'XSS — output encoding'},sim:'sim-xss-live.html'},
+ {k:'CWE-78',t:{ko:'명령어 삽입 — 셸 미사용',en:'Command Injection — no shell'},sim:'sim-cmd.html'},
+ {k:'CWE-22',t:{ko:'경로 순회 — 정규화·검증',en:'Path Traversal — canonicalize'},sim:'sim-path.html'},
+ {k:'CWE-502',t:{ko:'안전하지 않은 역직렬화',en:'Insecure Deserialization'},sim:'sim-deserialization.html'},
+ {k:'CWE-918',t:{ko:'SSRF — 목적지 검증',en:'SSRF — destination allowlist'},sim:'sim-ssrf.html'},
+ {k:'CWE-327',t:{ko:'취약한 암호 — 강한 KDF',en:'Weak Crypto — strong KDF'},sim:'sim-weak-crypto.html'},
+ {k:'CWE-434',t:{ko:'위험한 파일 업로드',en:'Dangerous File Upload'},sim:'sim-upload.html'},
+ {k:'CWE-611',t:{ko:'XXE — 외부 실체 차단',en:'XXE — disable external entities'},sim:'sim-xxe.html'},
+ {k:'CWE-352',t:{ko:'CSRF — 토큰 검증',en:'CSRF — token validation'},sim:'sim-csrf.html'}
+];
+function renderCve(){
+  var day=Math.floor(Date.now()/864e5); var c=CVES[day%CVES.length];
+  document.getElementById('cveTitle').textContent=c.k+' · '+(isEn()?c.t.en:c.t.ko);
+  document.getElementById('cveGo').setAttribute('href',c.sim);
+}
+
+/* 상태 */
+var cur=null, answered=false;
+var S={done:0,right:0,streak:0};
+function saveS(){try{localStorage.setItem('wvs_gen_stats',JSON.stringify(S));}catch(e){}}
+function loadS(){try{var v=JSON.parse(localStorage.getItem('wvs_gen_stats'));if(v)S=v;}catch(e){}}
+function renderScore(){
+  document.getElementById('scDone').textContent=S.done;
+  document.getElementById('scRight').textContent=S.right;
+  document.getElementById('scStreak').textContent=S.streak;
+  document.getElementById('scAcc').textContent=S.done?Math.round(S.right/S.done*100)+'%':'—';
+}
+
+function newQ(){
+  cur=pick(GENS)(); answered=false;
+  // 보기 셔플
+  var opts=cur.opts.map(function(o){return o;});
+  for(var i=opts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=opts[i];opts[i]=opts[j];opts[j]=tmp;}
+  cur._opts=opts;
+  var h='<div class="qhead"><span class="tag">'+cur.cwe+'</span><b>'+esc(cur.title)+'</b></div>'
+    +'<pre class="code">'+esc(cur.code)+'</pre>'
+    +'<div class="q">'+esc(cur.q)+'</div>';
+  opts.forEach(function(o,i){ h+='<button class="opt" data-i="'+i+'" onclick="answer('+i+')">'+esc(o.t)+'</button>'; });
+  h+='<div class="explain hidden" id="ex"></div>';
+  document.getElementById('qCard').innerHTML=h;
+}
+function answer(i){
+  if(answered) return; answered=true;
+  var o=cur._opts[i], correctIdx=cur._opts.findIndex(function(x){return x.ok;});
+  var btns=document.querySelectorAll('#qCard .opt');
+  btns.forEach(function(b,bi){ b.disabled=true; if(bi===correctIdx)b.classList.add('correct'); if(bi===i&&!o.ok)b.classList.add('wrong'); });
+  S.done++; if(o.ok){S.right++;S.streak++;}else{S.streak=0;} saveS(); renderScore();
+  var ex=document.getElementById('ex'); ex.classList.remove('hidden');
+  ex.innerHTML=(o.ok?'<b style="color:#86efac">✅ '+L('정답','Correct')+'</b> ':'<b style="color:#fca5a5">❌ '+L('오답','Incorrect')+'</b> ')+esc(cur.ex);
+  try{ if(window.WVSProgress){ window.WVSProgress.markVisited('lab-generator.html'); if(S.right>=10) window.WVSProgress.complete(Math.round(S.right/S.done*100),'lab-generator.html'); } }catch(e){}
+}
+
+loadS(); renderScore(); applyLang(); newQ();
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/progress.js" defer></script>
+</body>
+</html>
