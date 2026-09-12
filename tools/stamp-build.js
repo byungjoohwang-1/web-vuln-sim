@@ -14,7 +14,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const crypto = require('crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -83,12 +83,25 @@ function main() {
 
   const pages = fs.readdirSync(PUBLIC).filter((f) => f.endsWith('.html')).length;
 
-  let commit = 'nogit';
-  try {
-    commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim();
-  } catch (e) { /* git 없이도 동작 */ }
-
-  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + commit;
+  /* 스탬프는 '배포될 내용'의 해시로 만든다.
+     커밋 해시를 쓰면 stamp → commit → 해시 변화 → 다시 drift 가 되어 게이트가 영원히 실패한다.
+     내용 해시는 실제로 파일이 바뀔 때만 달라지므로 캐시 무효화 목적에도 정확히 맞는다.
+     자기 자신(sw.js/build-meta.json)은 제외해야 고정점이 생긴다. */
+  const SELF = new Set(['sw.js', path.join('js', 'build-meta.json')]);
+  const h = crypto.createHash('sha256');
+  const walk = (dir, rel) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)) {
+      const r = rel ? path.join(rel, e.name) : e.name;
+      if (SELF.has(r)) continue;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p, r);
+      else { h.update(r); h.update(fs.readFileSync(p)); }
+    }
+  };
+  walk(PUBLIC, '');
+  /* 날짜를 붙이면 내용이 그대로여도 다음 날 drift 로 잡히므로 순수 내용 해시만 쓴다.
+     사람이 볼 생성 시각은 build-meta.json 의 generatedAt 에 남는다. */
+  const stamp = 'wvs-' + h.digest('hex').slice(0, 12);
   const meta = {
     buildId: stamp,
     generatedAt: new Date().toISOString(),
