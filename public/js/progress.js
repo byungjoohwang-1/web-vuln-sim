@@ -52,7 +52,9 @@
   }
   // 학습 항목(칩 노출 대상) 판별 — 넘버드 콘텐츠 + sim 실습
   var LEARNABLE = /^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai|14_auto)/;
-  function isLearnable(id) { return LEARNABLE.test(id) || /^sim-/.test(id); }
+  // 실습 도구(랩·아레나·출제기)도 동일한 진도·XP 체계에 포함한다.
+  var TOOLS = /^(vulnlab|redteam|quiz-forge)\.html$/;
+  function isLearnable(id) { return LEARNABLE.test(id) || /^sim-/.test(id) || TOOLS.test(id); }
 
   var API = {
     get: function () { return normalize(load()); },

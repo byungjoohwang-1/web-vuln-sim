@@ -65,7 +65,7 @@
     <span class="sp"></span>
     <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
   </div>
-  <div class="wrap">
+  <div class="wrap" role="main">
     <div class="hero">
       <h1>📝 <span data-en="Sensitive Info in Comments">주석문 내 시스템 주요정보 노출</span>
         <span class="kisa">KISA A-2 · <span data-en="Sensitive Info in Comments">주석문 안에 포함된 주요정보</span></span></h1>
@@ -173,7 +173,7 @@ var RAW_LINES=[
   '  <!-- DB_DSN: mysql://root:Pa$$w0rd!@10.0.0.5:3306/shop_prod -->',
   '  <!-- internal admin: https://shop.example/internal/admin?debug=1&bypass=1 -->',
   '</head><body>',
-  '  <h1>My Account</h1>',
+  '  <h2>My Account</h2>',
   '  <form id="login" action="/login" method="post">',
   '    <input name="email" value="alice@shop.example">',
   '    <input name="password" type="password">',
@@ -239,7 +239,7 @@ function grepSecrets(){
 }
 
 // 운영 빌드: 주석/비밀 제거 + minify
-var CLEAN='<!doctype html><html lang=en><head><meta charset=utf-8><title>My Account - shop.example</title></head><body><h1>My Account</h1><form action=/login method=post><input name=email><input name=password type=password><button>Sign in</button></form><script>initAccountPage();fetch("/api/checkout",{method:"POST"})<\/script></body></html>';
+var CLEAN='<!doctype html><html lang=en><head><meta charset=utf-8><title>My Account - shop.example</title></head><body><h2>My Account</h2><form action=/login method=post><input name=email><input name=password type=password><button>Sign in</button></form><script>initAccountPage();fetch("/api/checkout",{method:"POST"})<\/script></body></html>';
 
 function viewClean(){
   document.getElementById('s_out').innerHTML=

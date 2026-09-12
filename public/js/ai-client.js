@@ -14,7 +14,16 @@
   var PROXY_TIMEOUT = 25000;
   var probeCache = { v: null, ts: 0 };
 
-  function byoKey() { try { return localStorage.getItem('wvs_ai_key') || ''; } catch (e) { return ''; } }
+  /* 키 보관 위치.
+     이 사이트는 XSS 시뮬레이터를 직접 호스팅하므로, 같은 출처에서 스크립트가 실행되면
+     localStorage 의 키를 읽어갈 수 있다. 그래서 기본은 탭을 닫으면 사라지는
+     sessionStorage 이고, 사용자가 명시적으로 고를 때만 localStorage 에 남긴다.
+     읽을 때는 두 곳을 모두 본다(기존 사용자의 저장분 호환). */
+  function readKey(store) {
+    try { return (window[store] && window[store].getItem('wvs_ai_key')) || ''; } catch (e) { return ''; }
+  }
+  function byoKey() { return readKey('sessionStorage') || readKey('localStorage'); }
+  function keyScope() { return readKey('sessionStorage') ? 'session' : (readKey('localStorage') ? 'persistent' : 'none'); }
   /** Z.ai(GLM) 키 형식: <id>.<secret> */
   function isZaiKey(k) { return /^[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{4,}$/.test(k || ''); }
   function byoModel() {
@@ -131,11 +140,24 @@
       return p ? 'proxy' : 'demo';
     },
     hasByo: function () { return !!byoKey(); },
-    saveByo: function (key, model) {
+    /** 키가 어디에 있는지: 'session'(탭 종료 시 소멸) | 'persistent' | 'none' */
+    keyScope: keyScope,
+    /**
+     * @param {string} key
+     * @param {string} [model]
+     * @param {boolean} [persist=false] true 면 localStorage 에 남긴다(브라우저 재시작 후에도 유지).
+     *        기본값 false = sessionStorage. XSS 노출 창을 탭 수명으로 줄이기 위함.
+     */
+    saveByo: function (key, model, persist) {
       try {
-        if (key) localStorage.setItem('wvs_ai_key', key); else localStorage.removeItem('wvs_ai_key');
+        localStorage.removeItem('wvs_ai_key');
+        sessionStorage.removeItem('wvs_ai_key');
+        if (key) (persist ? localStorage : sessionStorage).setItem('wvs_ai_key', key);
         if (model) localStorage.setItem('wvs_ai_model', model);
       } catch (e) { /* 프라이빗 모드 등 */ }
+    },
+    clearByo: function () {
+      try { localStorage.removeItem('wvs_ai_key'); sessionStorage.removeItem('wvs_ai_key'); } catch (e) {}
     },
     extractJson: extractJson
   };

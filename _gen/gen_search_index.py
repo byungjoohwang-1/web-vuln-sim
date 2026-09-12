@@ -74,6 +74,13 @@ TOOL_ALIAS = {
                                     '처리방침 작성 점검 기재사항 privacy policy 라벨링 쿠키 행태정보 국외이전 위탁 보유기간 생성형 ai 부록'),
     'pseudonym-lab.html': ('가명처리 실습실 · k-익명성·재식별',
                            '가명처리 가명정보 k익명성 l다양성 재식별 연결공격 linkage 마스킹 범주화 라운딩 해시 토큰화 잡음 총계처리 순열 pseudonymization'),
+    'privacy-policy.html': ('WEB-VULN-SIM 개인정보 처리방침', '처리방침 개인정보 privacy policy 수집항목 국외이전 보유기간 보호책임자 이용약관'),
+    'privacy-quiz.html': ('개인정보 법령 Q&A · 질의응답 99건',
+                          '질의응답 모음집 법령해석 사례 조문 퀴즈 카드 오답 정의 영상정보 가명정보 공공서비스 민간사업자 민감 고유식별 위수탁 privacy qa quiz'),
+    'privacy-scope-check.html': ('개인정보 영향평가 대상·적용범위 판단기',
+                                 '영향평가 대상 판단 적용범위 5만 50만 100만 공공기관 공공시스템 안전성확보조치 10만명 암호키 재해재난 과태료 scope'),
+    'privacy-breach-drill.html': ('개인정보 유출 72시간 대응 훈련',
+                                  '유출 통지 신고 72시간 제34조 대응 훈련 인시던트 모의훈련 1천명 민감정보 외부 불법접근 breach drill incident'),
 }
 
 SITE_SUFFIX = re.compile(r'\s*[|·—–-]\s*(WEB-VULN-SIM|Web Security Simulator)[^<]{0,60}$', re.I)

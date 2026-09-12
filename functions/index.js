@@ -20,6 +20,10 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const DAILY_LIMIT = 12;
+/* IP당 제한만으로는 청구서를 막지 못한다(IP는 얼마든지 늘어난다).
+   전체 호출에 하루 상한을 두어 최악의 경우 비용을 유한하게 만든다.
+   상한에 닿으면 프록시는 조용히 거절하고 클라이언트는 BYO 키/데모 계층으로 폴백한다. */
+const GLOBAL_DAILY_LIMIT = 1500;
 const MAX_TOKENS_CAP = 800;
 const MAX_MESSAGES = 14;
 const MAX_CHAR_PER_MSG = 4000;
@@ -86,6 +90,33 @@ async function rateLimit(ip) {
     memCounter.set(id, cur);
     logger.warn("rate-limit firestore fallback", { error: String(e) });
     return cur > DAILY_LIMIT ? { ok: false, reason: "rate" } : { ok: true, n: cur };
+  }
+}
+
+/**
+ * 사이트 전체 일일 호출 상한. IP 단위 제한을 우회하는 분산 남용으로부터
+ * 비용을 보호한다. Firestore 를 못 쓰면 인스턴스 로컬 카운터로라도 센다.
+ */
+async function globalBudget() {
+  const day = new Date().toISOString().slice(0, 10);
+  const ref = db.collection("rl").doc(`_global:${day}`);
+  try {
+    const n = await db.runTransaction((tx) =>
+      tx.get(ref).then((snap) => {
+        const cur = snap.exists ? (snap.data().n || 0) : 0;
+        if (cur + 1 > GLOBAL_DAILY_LIMIT) throw new Error("BUDGET");
+        tx.set(ref, { n: cur + 1, day, ts: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        return cur + 1;
+      }),
+    );
+    return { ok: true, n };
+  } catch (e) {
+    if (e && e.message === "BUDGET") return { ok: false };
+    const k = `_g:${day}`;
+    const cur = (memCounter.get(k) || 0) + 1;
+    memCounter.set(k, cur);
+    logger.warn("global-budget firestore fallback", { error: String(e) });
+    return { ok: cur <= GLOBAL_DAILY_LIMIT, n: cur };
   }
 }
 
@@ -227,6 +258,17 @@ exports.aiProxy = onRequest({ memory: "256MiB", timeoutSeconds: 60, cors: true }
       ok: false,
       error: "오늘의 무료 체험 횟수를 모두 사용했습니다. 내 API 키를 등록하면 계속 이용할 수 있어요.",
       limit: DAILY_LIMIT,
+    });
+  }
+
+  /* 사이트 전체 상한 — 분산 남용으로 비용이 무한정 늘어나지 않게 한다. */
+  const budget = await globalBudget();
+  if (!budget.ok) {
+    logger.warn("global daily budget exhausted", { limit: GLOBAL_DAILY_LIMIT });
+    return res.status(429).json({
+      ok: false,
+      error: "오늘 사이트 전체 무료 체험 한도에 도달했습니다. 내 API 키를 등록하면 바로 이용할 수 있어요.",
+      scope: "global",
     });
   }
 

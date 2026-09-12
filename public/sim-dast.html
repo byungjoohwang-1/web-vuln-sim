@@ -175,7 +175,7 @@ function mockServer(req){
 
   if(path==='/' ){
     return R(200,'OK',
-      '<html><head><title>vuln-shop</title></head><body>\n'+
+      '<html role="main"><head><title>vuln-shop</title></head><body>\n'+
       '<h1>Welcome to vuln-shop</h1>\n<ul>\n'+
       '  <li><a hr'+'ef="/search?q=phone">Search</a></li>\n'+
       '  <li><a hr'+'ef="/product?id=1">Products</a></li>\n'+
@@ -285,14 +285,14 @@ function mockServer(req){
 
   if(path==='/admin'){
     // broken access control: no auth required
-    return R(200,'OK','<html><body><h1>ADMIN PANEL</h1>\nusers: '+DB.users.length+', revenue: $4.2M\n[no authentication required]</body></html>');
+    return R(200,'OK','<html><body><h2>ADMIN PANEL</h2>\nusers: '+DB.users.length+', revenue: $4.2M\n[no authentication required]</body></html>');
   }
 
   if(path==='/robots.txt') return R(200,'OK','User-agent: *\nDisallow: /admin\nDisallow: /backup.sql',{'Content-Type':'text/plain'});
   if(path==='/.git/config') return R(200,'OK','[core]\n  repositoryformatversion = 0\n[remote "origin"]\n  url = git@github.com:vuln-shop/app.git',{'Content-Type':'text/plain'});
   if(path==='/backup.sql') return R(200,'OK','-- MySQL dump\nINSERT INTO users VALUES (1,\'admin\',\'S3cr3t!Admin\');',{'Content-Type':'text/plain'});
 
-  return R(404,'Not Found','<html><body><h1>404 Not Found</h1></body></html>');
+  return R(404,'Not Found','<html><body><h2>404 Not Found</h2></body></html>');
 }
 
 function parseQuery(s){

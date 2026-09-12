@@ -251,6 +251,7 @@ body.soc a{color:var(--acc)}
 </style>
 </head>
 <body class="soc">
+<script src="/js/progress.js" defer></script>
 <script src="/js/pwa.js" defer></script>
 <header class="soc-top">
   <a class="logo" href="vuln-hub.html"><span class="mk">⛨</span><span>WEB-VULN-SIM<small>ATTACK LAB · 취약점 실습장</small></span></a>
@@ -542,7 +543,7 @@ function navHtml(){
  return h;
 }
 function appShell(title,inner,extraHead){
- return '<div class="navbar">'+navHtml()+'</div><div class="wrap"><div class="card"><h1>'+title+'</h1>'+inner+'</div>'+
+ return '<div class="navbar">'+navHtml()+'</div><div class="wrap"><div class="card"><h2>'+title+'</h2>'+inner+'</div>'+
  '<p class="muted">BugPay Mall 가상 타깃 — 웹 취약점 실습장(교육용 시뮬레이션)</p></div>'+(extraHead||'');
 }
 function jsonShell(path,data,note){
@@ -1869,7 +1870,8 @@ function renderProgress(){
 function grantFlag(id,how){
  var lab=labById(id);
  var first=!S.solved[id];
- if(first){S.solved[id]={how:how,ts:Date.now()};save();}
+ if(first){S.solved[id]={how:how,ts:Date.now()};save();
+   try{window.WVSProgress&&window.WVSProgress.complete(undefined,'vulnlab.html');}catch(e){}}
  renderMissions();renderProgress();
  if(curLabId===id){renderLabHead(lab);renderSolve();}
  toast(first?('🏆 미션 달성! '+lab.title):('이미 달성한 미션입니다 — '+lab.title),first?'ok':'');

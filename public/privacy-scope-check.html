@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 영향평가 대상·안전조치 적용범위 판단기 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 영향평가 대상·안전조치 적용범위 판단기 · WEB-VULN-SIM">
+<meta property="og:description" content="몇 개 질문으로 영향평가 의무 대상 여부와 추가 적용 조문을 판정">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-scope-check.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="개인정보 영향평가 수행 안내서(2025.10) 기준 — 기관 유형과 개인정보파일 규모를 입력하면 영향평가 의무 대상 여부(5만·50만·100만 조건), 10만명 이상 공공기관 추가 의무(암호키 관리·재해재난 대비), 공공시스템 특례(제15~17조) 적용 여부를 판정하고 영향평가 자가진단의 필수 항목을 연결합니다.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:860px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:12px;font-family:var(--mono)}
+.qrow{border:1px solid var(--border);border-radius:11px;background:var(--panel2);padding:12px 14px;margin:9px 0}
+.qrow>.t{font-size:14px;font-weight:600;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.qrow>.t .n{font-family:var(--mono);font-size:11px;font-weight:800;color:#a5b4fc;background:#1e1b4b;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.hint{font-size:12px;color:var(--muted);margin-top:5px}
+.hint b{color:#cbd5e1}
+.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.opt{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.opt.on{background:var(--accent);color:#04222e;border-color:transparent}
+.opt.on.no{background:#334155;color:#e2e8f0}
+input[type=number]{width:170px;background:#0b1220;border:1px solid #334155;color:var(--ink);border-radius:8px;padding:7px 10px;font-family:var(--mono);font-size:13px;margin-top:8px}
+.disabled{opacity:.45;pointer-events:none}
+/* 결과 */
+.verdict{border-radius:14px;padding:18px 20px;margin:14px 0;border:1px solid var(--border)}
+.verdict.yes{background:linear-gradient(135deg,#3b1418,#1a1020);border-color:#7f1d1d}
+.verdict.no{background:linear-gradient(135deg,#0f2a18,#0b1220);border-color:#14532d}
+.verdict.maybe{background:linear-gradient(135deg,#3a2a09,#1a1608);border-color:#78350f}
+.verdict h3{font-size:19px;color:#fff;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.verdict p{font-size:13.5px;color:#cbd5e1;margin-top:8px}
+.reasons{list-style:none;margin-top:10px}
+.reasons li{font-size:13px;padding:6px 10px 6px 26px;position:relative;border-radius:8px;margin-bottom:5px;background:rgba(0,0,0,.25)}
+.reasons li::before{position:absolute;left:9px;content:'▸';color:#94a3b8}
+.reasons li.hit::before{content:'✔';color:#fca5a5}
+.reasons li.hit{color:#fecaca}
+.duty{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent2);border-radius:10px;padding:11px 13px;margin:8px 0;font-size:13px}
+.duty b{color:#c7d2fe;font-family:var(--mono);font-size:12px}
+.duty .arts{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.art{font-family:var(--mono);font-size:11.5px;background:#0b1220;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:#a5b4fc}
+.codes{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.code{font-family:var(--mono);font-size:11.5px;background:#0c2a3a;color:#7dd3fc;border-radius:6px;padding:3px 8px}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="pia-assessment.html"><span data-en="PIA Self-Check">영향평가 자가진단</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap" role="main">
+  <div class="hero">
+    <h1>🧭 <span data-en="Scope Checker — PIA duty &amp; extra security obligations">영향평가 대상·안전조치 적용범위 판단기</span></h1>
+    <div class="sub" data-en="Implementers ask this before anything else: “does this even apply to us?” Answer a few questions about your organization and the personal-data file, and this tells you whether a privacy impact assessment is mandatory, which additional articles of the security-measures standard apply, and which items of the self-assessment you must not mark N/A.">
+      실무에서 가장 먼저 나오는 질문 — <b>“우리가 대상이긴 한가?”</b>에 답합니다. 기관 유형과 개인정보파일 규모를 입력하면 <b>영향평가 의무 대상 여부</b>, 추가로 적용되는 <b>안전성 확보조치 기준 조문</b>, 그리고 자가진단에서 <b>해당없음으로 두면 안 되는 항목</b>을 알려줍니다.</div>
+    <div class="src">📕 기준: 개인정보 영향평가 수행 안내서(2025.10.) · 「개인정보 보호법」 제33조 · 「개인정보의 안전성 확보조치 기준」 — 교육용 재구성</div>
+  </div>
+
+  <div class="card">
+    <h2>📝 <span data-en="Questions">판단 질문</span></h2>
+    <div id="qs"></div>
+    <div class="acts">
+      <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="disc" data-en="Educational self-check based on the public guide. The legal definition of a “public system” is set by the security-measures standard, so this tool asks you rather than guessing it. Final determination of PIA scope rests with the organization and, where applicable, the Personal Information Protection Commission.">
+    ⚠️ 공개 안내서 기반 <b>교육용 자가판단</b>입니다. 「공공시스템」의 법적 정의는 「개인정보의 안전성 확보조치 기준」이 정하므로, 이 도구는 추정하지 않고 <b>직접 묻습니다</b>. 최종적인 대상 판단 책임은 해당 기관에 있습니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var SKEY='wvs_privacy_scope';
+var A={};   // 답변
+function load(){try{A=JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){A={};}}
+function save(){try{localStorage.setItem(SKEY,JSON.stringify(A));}catch(e){}}
+
+/* 질문 정의. dep: 이 질문이 활성화되는 조건 */
+var QS=[
+ {id:'org', t:'우리 기관은 「개인정보 보호법」상 <b>공공기관</b>입니까?', tEn:'Is your organization a <b>public institution</b> under the Act?',
+  hint:'국회·법원·헌법재판소·중앙선관위의 행정사무 처리기관, 중앙행정기관 및 소속기관, 지방자치단체, 국가인권위원회, 공수처, 「공공기관의 운영에 관한 법률」 제4조 공공기관, 지방공사·지방공단, 특별법에 따른 특수법인, 각급 학교',
+  hintEn:'Central/local government bodies, public corporations under the Public Institutions Act, local public enterprises, special corporations established by special act, and schools.',
+  opts:[['y','예'],['n','아니오']]},
+
+ {id:'sens', t:'대상 개인정보파일이 <b>민감정보 또는 고유식별정보</b>를 처리합니까?', tEn:'Does the personal-data file process <b>sensitive or unique identifying information</b>?',
+  hint:'민감정보: 사상·신념, 노조·정당 가입, 정치적 견해, 건강, 성생활, 유전정보, 범죄경력, 식별 목적 생체인식정보, 인종·민족 / 고유식별정보: 주민등록번호·여권번호·운전면허번호·외국인등록번호',
+  hintEn:'Sensitive data (health, beliefs, biometrics for identification…) or unique IDs (resident registration, passport, driver’s licence, alien registration number).',
+  opts:[['y','예'],['n','아니오']], dep:function(){return A.org==='y';}},
+
+ {id:'sensN', t:'그 파일의 <b>정보주체 수</b>는 몇 명입니까?', tEn:'How many <b>data subjects</b> are in that file?',
+  hint:'5만 명 이상이면 영향평가 의무 대상입니다(5만명 조건).', hintEn:'50,000 or more triggers the PIA duty.',
+  num:true, dep:function(){return A.org==='y'&&A.sens==='y';}},
+
+ {id:'link', t:'대상 개인정보파일을 기관 내부 또는 외부의 <b>다른 개인정보파일과 연계</b>합니까?', tEn:'Will the file be <b>linked with another personal-data file</b> (internal or external)?',
+  hint:'연계 결과 정보주체 수가 50만 명 이상이면 영향평가 의무 대상입니다(50만명 조건).',
+  hintEn:'If the linked result reaches 500,000 data subjects, the PIA duty applies.',
+  opts:[['y','예'],['n','아니오']], dep:function(){return A.org==='y';}},
+
+ {id:'linkN', t:'<b>연계 결과</b>의 정보주체 수는 몇 명입니까?', tEn:'How many data subjects result from the <b>linkage</b>?',
+  num:true, dep:function(){return A.org==='y'&&A.link==='y';}},
+
+ {id:'totalN', t:'대상 개인정보파일이 포함하는 <b>전체 정보주체 수</b>는 몇 명입니까?', tEn:'How many data subjects does the file contain in <b>total</b>?',
+  hint:'100만 명 이상이면 영향평가 의무 대상입니다(100만명 조건).', hintEn:'1,000,000 or more triggers the PIA duty.',
+  num:true, dep:function(){return A.org==='y';}},
+
+ {id:'changed', t:'이미 영향평가를 실시한 시스템의 <b>개인정보파일 운용체계를 변경</b>하려는 경우입니까?', tEn:'Are you <b>changing the operating structure</b> of a file that already went through a PIA?',
+  hint:'시행령 제35조 — 변경된 부분에 대해서는 영향평가를 다시 실시해야 합니다.',
+  hintEn:'Enforcement Decree art. 35 — the changed part must be re-assessed.',
+  opts:[['y','예'],['n','아니오']], dep:function(){return A.org==='y';}},
+
+ {id:'hold', t:'기관이 보유한 <b>전체 개인정보 보유량</b>이 10만 명 이상입니까?', tEn:'Does the organization hold personal data on <b>100,000+ people in total</b>?',
+  hint:'영향평가 대상 파일만이 아니라 <b>기관 전체 보유량</b> 기준입니다. 10만 명 이상 공공기관은 암호키 관리·재해재난 대비 조치가 추가 적용됩니다.',
+  hintEn:'Counted across the whole organization, not just the assessed file.',
+  opts:[['y','예'],['n','아니오']], dep:function(){return A.org==='y';}},
+
+ {id:'pubsys', t:'대상 시스템이 「개인정보의 안전성 확보조치 기준」상 <b>공공시스템</b>에 해당합니까?', tEn:'Is the target system a <b>“public system”</b> under the security-measures standard?',
+  hint:'해당 여부는 고시가 정합니다. 모르면 「모름」을 선택하세요 — 확인 필요 항목으로 안내합니다.',
+  hintEn:'Defined by the standard itself; choose “unsure” to flag it for confirmation.',
+  opts:[['y','예'],['n','아니오'],['?','모름']], dep:function(){return A.org==='y';}}
+];
+
+function render(){
+  var host=document.getElementById('qs');
+  host.innerHTML=QS.map(function(q,i){
+    var active=!q.dep||q.dep();
+    var body;
+    if(q.num){
+      body='<input type="number" min="0" step="1" placeholder="'+L('명 수 입력','number of people')+'" value="'+(A[q.id]!=null?esc(A[q.id]):'')+'" oninput="setNum(\''+q.id+'\',this.value)">';
+    }else{
+      body='<div class="opts">'+q.opts.map(function(o){
+        var on=A[q.id]===o[0];
+        return '<button class="opt'+(on?' on'+(o[0]==='n'?' no':''):'')+'" onclick="setOpt(\''+q.id+'\',\''+o[0]+'\')">'+
+          L(o[1], o[0]==='y'?'Yes':o[0]==='n'?'No':'Unsure')+'</button>';
+      }).join('')+'</div>';
+    }
+    return '<div class="qrow'+(active?'':' disabled')+'">'+
+      '<div class="t"><span class="n">Q'+(i+1)+'</span><span>'+L(q.t,q.tEn||q.t)+'</span></div>'+
+      (q.hint?'<div class="hint">'+L(q.hint,q.hintEn||q.hint)+'</div>':'')+
+      body+'</div>';
+  }).join('');
+  applyLang(); renderResult();
+}
+function setOpt(id,v){ if(A[id]===v) delete A[id]; else A[id]=v; save(); render(); }
+function setNum(id,v){ if(v==='') delete A[id]; else A[id]=Math.max(0,parseInt(v,10)||0); save(); renderResult(); }
+function resetAll(){ A={}; save(); render(); }
+
+function n(id){ return typeof A[id]==='number'?A[id]:null; }
+
+function renderResult(){
+  var host=document.getElementById('result');
+  if(!A.org){ host.innerHTML='<div class="note">'+L('Q1부터 답해 주세요.','Start with Q1.')+'</div>'; return; }
+
+  if(A.org==='n'){
+    host.innerHTML='<div class="verdict no"><h3>🟢 '+L('법정 영향평가 <b>의무 대상 아님</b>','Not subject to the <b>mandatory</b> PIA')+'</h3>'+
+      '<p>'+L('「개인정보 보호법」 제33조의 영향평가 의무는 <b>공공기관</b>에 적용됩니다. 민간 개인정보처리자는 법정 의무 대상이 아닙니다.',
+              'The statutory PIA duty (Act art. 33) applies to <b>public institutions</b>. Private controllers are not subject to it.')+'</p>'+
+      '<p>'+L('다만 안내서는 <b>대량의 개인정보나 민감한 개인정보를 처리하는 기관</b>은 유출·오남용으로 인한 사회적 피해를 막기 위해 영향평가를 <b>자율적으로 수행할 수 있다</b>고 안내합니다. 신규 서비스 설계 단계(Privacy by Design)에서 자가진단으로 활용하는 것을 권합니다.',
+              'The guide still recommends a voluntary assessment for organizations handling large volumes or sensitive data.')+'</p>'+
+      '<div class="acts"><a class="btn pri" href="pia-assessment.html">'+L('자가진단으로 점검하기 →','Run the self-assessment →')+'</a>'+
+      '<a class="btn" href="privacy-policy-builder.html">'+L('처리방침 점검하기','Check your policy')+'</a></div></div>'+
+      dutyCommon();
+    return;
+  }
+
+  // 공공기관 — 조건별 판정
+  var c5  = A.sens==='y' && n('sensN')!=null && n('sensN')>=50000;
+  var c50 = A.link==='y' && n('linkN')!=null && n('linkN')>=500000;
+  var c100= n('totalN')!=null && n('totalN')>=1000000;
+  var cch = A.changed==='y';
+  var hit = c5||c50||c100||cch;
+
+  // 아직 숫자를 안 넣어 판정 보류인 조건이 있는가
+  var pending = (A.sens==='y'&&n('sensN')==null) || (A.link==='y'&&n('linkN')==null) || (n('totalN')==null);
+
+  var cls = hit?'yes':(pending?'maybe':'no');
+  var title = hit
+    ? '🔴 '+L('영향평가 <b>의무 대상</b>입니다','<b>Mandatory</b> PIA applies')
+    : pending ? '🟡 '+L('판정 보류 — 정보주체 수를 입력하세요','Pending — enter the number of data subjects')
+              : '🟢 '+L('현재 입력 기준 <b>의무 대상 아님</b>','Not mandatory under the current inputs');
+
+  var reasons=[
+    [c5,  L('<b>5만명 조건</b> — 5만 명 이상 정보주체의 민감정보 또는 고유식별정보 처리','<b>50k condition</b> — sensitive/unique-ID data on 50,000+ subjects')],
+    [c50, L('<b>50만명 조건</b> — 다른 개인정보파일과 연계, 연계 결과 정보주체 50만 명 이상','<b>500k condition</b> — linkage resulting in 500,000+ subjects')],
+    [c100,L('<b>100만명 조건</b> — 100만 명 이상의 정보주체를 포함','<b>1M condition</b> — 1,000,000+ subjects')],
+    [cch, L('<b>변경 시</b> — 영향평가를 실시한 개인정보파일의 운용체계 변경(변경된 부분)','<b>On change</b> — modifying an already-assessed file’s operating structure')]
+  ];
+
+  var html='<div class="verdict '+cls+'"><h3>'+title+'</h3>';
+  html+='<ul class="reasons">'+reasons.map(function(r){
+    return '<li class="'+(r[0]?'hit':'')+'">'+r[1]+'</li>';
+  }).join('')+'</ul>';
+  if(hit){
+    html+='<p>'+L('영향평가를 하지 않거나 그 결과를 개인정보보호위원회에 제출하지 않으면 「개인정보 보호법」 제75조제2항제16호에 따라 <b>3천만원 이하의 과태료</b>가 부과될 수 있습니다(2024.3.15. 시행).',
+                  'Failing to perform the assessment or submit its result can draw an administrative fine of up to KRW 30 million (Act art. 75(2)16, in force 2024-03-15).')+'</p>';
+  }else if(!pending){
+    html+='<p>'+L('현시점 기준으로는 대상이 아니더라도, <b>1년 이내에 기준 이상이 될 가능성</b>이 있다면 안내서는 영향평가 수행을 권고합니다.',
+                  'Even if not currently in scope, the guide recommends an assessment where the thresholds are likely to be met within a year.')+'</p>';
+  }
+  html+='<div class="acts"><a class="btn pri" href="pia-assessment.html">'+L('121개 항목 자가진단 시작 →','Start the 121-item self-assessment →')+'</a></div></div>';
+
+  // 추가 적용 의무
+  html+='<div class="card"><h2>📌 '+L('추가로 적용되는 의무','Additional obligations')+'</h2>';
+  if(A.hold==='y'){
+    html+='<div class="duty"><b>'+L('10만 명 이상 보유 공공기관','Public institution holding 100,000+')+'</b><br>'+
+      L('「개인정보의 안전성 확보조치 기준」의 다음 조문이 추가로 적용됩니다.','The following articles of the security-measures standard additionally apply.')+
+      '<div class="arts"><span class="art">제7조제6항 '+L('암호키 관리','key management')+'</span><span class="art">제11조 '+L('재해·재난 대비 안전조치','disaster preparedness')+'</span></div>'+
+      '<div class="codes"><span class="code">PIA 4.3.3</span><span class="code">PIA 4.9.1</span><span class="code">PIA 4.9.2</span><span class="code">PIA 4.9.3</span></div></div>';
+  }
+  if(A.pubsys==='y'){
+    html+='<div class="duty"><b>'+L('공공시스템운영기관 특례','Public-system operator')+'</b><br>'+
+      L('공공시스템에 해당하면 다음 조문이 추가 적용되며, 자가진단에서 아래 항목을 <b>해당없음으로 두면 안 됩니다</b>.',
+        'These articles apply, and the items below must not be marked N/A in the self-assessment.')+
+      '<div class="arts"><span class="art">제15조 '+L('내부 관리계획','internal plan')+'</span><span class="art">제16조 '+L('접근 권한 관리','access rights')+'</span><span class="art">제17조 '+L('접속기록 보관·점검','access logs')+'</span></div>'+
+      '<div class="codes"><span class="code">PIA 2.4.1</span><span class="code">PIA 4.1.2</span><span class="code">PIA 4.1.12</span><span class="code">PIA 4.1.13</span><span class="code">PIA 4.4.3</span><span class="code">PIA 4.4.4</span></div></div>';
+  }else if(A.pubsys==='?'){
+    html+='<div class="duty" style="border-left-color:var(--warn)"><b>'+L('확인 필요 — 공공시스템 해당 여부','To confirm — public-system status')+'</b><br>'+
+      L('해당 여부에 따라 접근권한·접속기록 관련 <b>6개 평가항목</b>의 필수 여부가 달라집니다. 「개인정보의 안전성 확보조치 기준」의 공공시스템 정의를 확인하신 뒤 다시 판정하세요.',
+        'Six evaluation items switch between mandatory and N/A depending on this. Check the definition in the standard, then re-run.')+
+      '<div class="codes"><span class="code">PIA 2.4.1</span><span class="code">PIA 4.1.2</span><span class="code">PIA 4.1.12</span><span class="code">PIA 4.1.13</span><span class="code">PIA 4.4.3</span><span class="code">PIA 4.4.4</span></div></div>';
+  }
+  if(A.hold!=='y' && A.pubsys==='n'){
+    html+='<div class="duty">'+L('추가 적용되는 특례 의무가 없습니다. 기본 안전성 확보조치 기준을 따르면 됩니다.','No special obligations apply; follow the baseline security-measures standard.')+'</div>';
+  }
+  html+='</div>'+dutyCommon();
+  host.innerHTML=html; applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-scope-check.html'); }catch(e){}
+}
+
+function dutyCommon(){
+  return '<div class="note">'+
+    L('어느 경우든 <b>처리방침 공개(제30조)·안전성 확보조치(제29조)·정보주체 권리보장(제35~37조)·유출 통지(제34조)</b>는 개인정보처리자 모두에게 적용됩니다.',
+      'Regardless of PIA scope, every controller must publish a privacy policy (art. 30), secure the data (art. 29), honour data-subject rights (arts. 35–37) and notify breaches (art. 34).')+
+    ' <a href="privacy-policy-builder.html" style="color:#7dd3fc">'+L('처리방침 점검','Policy check')+'</a> · '+
+    '<a href="privacy-breach-drill.html" style="color:#7dd3fc">'+L('유출 대응 훈련','Breach drill')+'</a></div>';
+}
+
+document.addEventListener('DOMContentLoaded',function(){ load(); applyLang(); render(); });
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

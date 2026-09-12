@@ -65,7 +65,7 @@
     <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
   </div>
 
-  <div class="wrap">
+  <div class="wrap" role="main">
     <div class="hero">
       <h1>🤖 <span data-en="AI Security Tutor">AI 보안 튜터</span></h1>
       <div class="sub" data-en="A Socratic secure-coding tutor powered by your own Claude API key — explains weaknesses, reviews your code, and guides you with hints. Java/Python focused.">
@@ -91,8 +91,9 @@
           </datalist>
         </div>
       </div>
-      <div class="privacy" data-en="🔒 Your key is stored only in this browser (localStorage) and sent directly to api.anthropic.com. It never touches our servers (this is a static, serverless site).">
-        🔒 키는 이 브라우저(localStorage)에만 저장되고 api.anthropic.com으로 직접 전송됩니다. 우리 서버를 절대 경유하지 않습니다(정적·서버리스 사이트).
+      <div class="privacy" data-en="🔒 Your key is kept in this tab only (cleared when you close it) and sent directly to api.anthropic.com — it never touches our servers (static, serverless site). Note: this site also hosts XSS practice pages, so use a least-privilege key and revoke it when you are done.">
+        🔒 키는 <b>이 탭에만</b> 보관되고(탭을 닫으면 삭제) api.anthropic.com으로 직접 전송됩니다. 우리 서버를 절대 경유하지 않습니다(정적·서버리스 사이트).
+        다만 이 사이트는 XSS 실습 페이지를 함께 제공하므로, <b>권한을 최소화한 전용 키</b>를 쓰고 실습이 끝나면 폐기하세요.
       </div>
       <div class="row" style="margin-top:10px">
         <button class="act primary" style="flex:0 0 auto" onclick="saveKey()">💾 <span data-en="Save &amp; start">저장하고 시작</span></button>
@@ -140,7 +141,7 @@ var CONCEPTS=(window.ACADEMY_DATA&&window.ACADEMY_DATA.CONCEPTS)||[];
 var history=[]; // {role, content}
 var sending=false;
 
-function getKey(){try{return localStorage.getItem('wvs_ai_key')||'';}catch(e){return '';}}
+function getKey(){try{return (sessionStorage.getItem('wvs_ai_key')||localStorage.getItem('wvs_ai_key')||'');}catch(e){return '';}}
 function getModel(){try{return localStorage.getItem('wvs_ai_model')||'claude-sonnet-4-6';}catch(e){return 'claude-sonnet-4-6';}}
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -159,10 +160,11 @@ function saveKey(){
   var k=document.getElementById('apiKey').value.trim();
   var m=document.getElementById('model').value.trim()||'claude-sonnet-4-6';
   if(!k){document.getElementById('keyStatus').textContent=L('키를 입력하세요.','Enter a key.');return;}
-  try{localStorage.setItem('wvs_ai_key',k);localStorage.setItem('wvs_ai_model',m);}catch(e){}
+  /* 키는 이 탭에만 둔다(XSS 실습 페이지를 같은 출처에서 제공하므로 노출 창을 줄인다). 모델 선택은 남겨도 무해. */
+  try{sessionStorage.setItem('wvs_ai_key',k);localStorage.removeItem('wvs_ai_key');localStorage.setItem('wvs_ai_model',m);}catch(e){}
   showTutor();
 }
-function clearKey(){try{localStorage.removeItem('wvs_ai_key');}catch(e){}document.getElementById('apiKey').value='';document.getElementById('keyStatus').textContent=L('키가 삭제되었습니다.','Key cleared.');document.getElementById('tutorCard').classList.add('hidden');}
+function clearKey(){try{localStorage.removeItem('wvs_ai_key'); sessionStorage.removeItem('wvs_ai_key');}catch(e){}document.getElementById('apiKey').value='';document.getElementById('keyStatus').textContent=L('키가 삭제되었습니다.','Key cleared.');document.getElementById('tutorCard').classList.add('hidden');}
 function showTutor(){
   document.getElementById('tutorCard').classList.remove('hidden');
   document.getElementById('keyStatus').innerHTML='✅ '+L('연결됨','Connected')+' · '+esc(getModel());

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 유출 72시간 대응 훈련 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 유출 72시간 대응 훈련 · WEB-VULN-SIM">
+<meta property="og:description" content="유출 인지부터 통지·신고까지 72시간 안에 결정하는 인시던트 대응 훈련">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-breach-drill.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 제34조 기반 유출 대응 훈련 — 인지 시점부터 72시간 카운트다운 아래에서 초기 대응, 신고 의무 판정(1천명·민감정보·외부 불법접근), 법정 5개 통지 항목, 통지 방법을 결정하고 결과를 채점합니다. 3개 시나리오·모의훈련 리포트. 100% 브라우저.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:880px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .sp{margin-left:auto}
+/* 시나리오 선택 */
+.scen{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:12px}
+.sc{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent2);border-radius:12px;padding:14px 16px;cursor:pointer;transition:.15s}
+.sc:hover{background:#18233c;border-left-color:#818cf8}
+.sc .ic{font-size:24px}
+.sc h3{font-size:15px;color:#fff;margin:6px 0 5px}
+.sc p{font-size:12.5px;color:var(--muted)}
+.sc .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;background:#1e1b4b;color:#c7d2fe}
+/* 타이머 */
+.clock{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:linear-gradient(90deg,#3b1418,#1a1020);border:1px solid #7f1d1d;border-radius:14px;padding:14px 18px;margin:14px 0}
+.clock.safe{background:linear-gradient(90deg,#0f2a18,#0b1220);border-color:#14532d}
+.clock .big{font-family:var(--mono);font-size:30px;font-weight:800;color:#fff;line-height:1}
+.clock .lab{font-size:11px;color:var(--muted)}
+.clock .track{flex:1;min-width:170px;height:9px;border-radius:99px;background:rgba(0,0,0,.4);overflow:hidden}
+.clock .track>i{display:block;height:100%;background:var(--bad);transition:width .3s}
+.clock.safe .track>i{background:var(--good)}
+/* 단계 */
+.step .q{font-size:15.5px;font-weight:700;color:#fff;line-height:1.6}
+.step .ctx{font-size:13px;color:#cbd5e1;background:#0b1220;border-left:3px solid var(--accent);border-radius:8px;padding:10px 12px;margin:9px 0}
+.opts{display:grid;gap:8px;margin-top:10px}
+.opt{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid #334155;border-radius:10px;padding:11px 13px;cursor:pointer;font-size:13.5px;transition:.15s;text-align:left;color:var(--ink);font-family:inherit;width:100%}
+.opt:hover:not(:disabled){background:#18233c;border-color:#4338ca}
+.opt .k{font-family:var(--mono);font-size:11px;font-weight:800;color:#a5b4fc;background:#1e1b4b;border-radius:5px;padding:3px 7px;flex-shrink:0}
+.opt .cost{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0;white-space:nowrap}
+.opt.good{background:#0f2a18;border-color:#14532d}
+.opt.bad{background:#3b1418;border-color:#7f1d1d}
+.opt.mid{background:#3a2a09;border-color:#78350f}
+.opt:disabled{cursor:default}
+/* 체크박스 단계 */
+.checks{display:grid;gap:7px;margin-top:10px}
+.chk{display:flex;gap:10px;align-items:center;background:var(--panel2);border:1px solid #334155;border-radius:10px;padding:10px 12px;cursor:pointer;font-size:13.5px}
+.chk.on{background:#0c2030;border-color:#0ea5e9}
+.chk.req-miss{border-color:#7f1d1d;background:#2a1013}
+.chk input{width:17px;height:17px;flex-shrink:0}
+.chk .why{font-size:11.5px;color:var(--muted);display:block}
+.feed{margin-top:12px;border-top:1px dashed #334155;padding-top:11px;font-size:13px}
+.feed h4{font-size:11.5px;font-family:var(--mono);margin:8px 0 3px}
+.feed .ok{color:#86efac}.feed .no{color:#fca5a5}.feed .warn{color:#fde047}
+.feed p{color:#cbd5e1;margin:3px 0}
+.law{font-family:var(--mono);font-size:11.5px;background:#0b1220;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:#a5b4fc;display:inline-block;margin-top:6px}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+/* 로그 */
+.log{list-style:none;font-family:var(--mono);font-size:12px}
+.log li{padding:5px 0 5px 74px;position:relative;color:#cbd5e1;border-bottom:1px dashed #1e293b}
+.log li .t{position:absolute;left:0;color:#7dd3fc;font-weight:700}
+.log li.bad{color:#fca5a5}.log li.good{color:#86efac}.log li.warn{color:#fde047}
+/* 결과 */
+.score{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.ring{--p:0;--c:var(--good);width:104px;height:104px;border-radius:50%;position:relative;flex-shrink:0;background:conic-gradient(var(--c) calc(var(--p)*1%), #1e293b 0);display:grid;place-items:center}
+.ring::before{content:'';position:absolute;width:78px;height:78px;border-radius:50%;background:var(--panel)}
+.ring .in{position:relative;text-align:center}
+.ring b{font-family:var(--mono);font-size:23px;color:#fff;display:block;line-height:1}
+.ring span{font-size:10px;color:var(--muted)}
+.findings{list-style:none;flex:1;min-width:250px}
+.findings li{font-size:12.5px;padding:7px 10px 7px 28px;position:relative;border-radius:8px;margin-bottom:6px;background:var(--panel2);border:1px solid var(--border)}
+.findings li::before{position:absolute;left:9px;top:7px}
+.findings li.f-ok{border-left:3px solid var(--good)}.findings li.f-ok::before{content:'✔';color:#86efac}
+.findings li.f-bad{border-left:3px solid var(--bad)}.findings li.f-bad::before{content:'✖';color:#fca5a5}
+.findings li.f-warn{border-left:3px solid var(--warn)}.findings li.f-warn::before{content:'!';color:#fde047;font-weight:800}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="15_privacy-pv25.html"><span data-en="Breach notification sim">유출 통지 시뮬</span></a>
+  <a href="pia-assessment.html"><span data-en="PIA Self-Check">영향평가 자가진단</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap" role="main">
+  <div class="hero">
+    <h1>🚨 <span data-en="Breach Response Drill — 72 hours">개인정보 유출 72시간 대응 훈련</span></h1>
+    <div class="sub" data-en="The clock starts the moment you become aware of a breach. Every decision costs hours. Decide what to contain first, whether this one is reportable, what must go in the notice, and how to deliver it — then see whether you made the 72-hour deadline and what you left out.">
+      유출을 <b>인지한 순간</b>부터 시계가 돕니다. 모든 결정에는 시간이 듭니다. 무엇부터 차단할지, 이 사건이 <b>신고 대상</b>인지, 통지문에 무엇을 반드시 넣어야 하는지, 어떻게 전달할지를 결정한 뒤 — 72시간을 지켰는지, 무엇을 빠뜨렸는지 확인합니다.</div>
+    <div class="src">📕 기준: 「개인정보 보호법」 제34조(유출 등의 통지·신고) · 개인정보 영향평가 수행 안내서 1.3.2 — 교육용 재구성</div>
+  </div>
+
+  <div id="view"></div>
+
+  <div class="disc" data-en="Educational drill with fictional scenarios. The 72-hour deadline, the five mandatory notice elements and the reporting thresholds follow the public guide, but a real incident must be judged against the current statute and, where needed, legal advice. Runs entirely in your browser.">
+    ⚠️ 가상의 시나리오로 진행하는 <b>교육용 훈련</b>입니다. 72시간 기한·법정 5개 통지 항목·신고 요건은 공개 안내서를 따르지만, 실제 사고는 <b>최신 법령과 필요한 경우 법률 자문</b>으로 판단해야 합니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+/* ---------- i18n ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* ---------- 시나리오 ----------
+   report: 신고 요건 해당 여부와 그 근거(법 제34조제3항·시행령)         */
+var SCEN=[
+ {id:'web', ic:'🕷️', name:'웹 취약점을 통한 회원DB 조회', nameEn:'Member DB read via web vulnerability',
+  desc:'심야 배치 로그에서 비정상적인 대량 조회 쿼리가 발견됐습니다. 확인 결과 외부 IP가 홈페이지 취약점을 이용해 회원 테이블을 조회했습니다.',
+  descEn:'A batch log shows abnormal mass queries; an external IP exploited a web vulnerability to read the member table.',
+  n:42000, items:'이름, 이메일, 휴대전화번호, 암호화된 비밀번호',
+  itemsEn:'name, e-mail, mobile number, hashed password',
+  sensitive:false, unique:false, external:true, contactable:true,
+  tags:['4.2만 명','외부 불법접근','연락처 보유']},
+ {id:'usb', ic:'💾', name:'직원의 민감정보 USB 분실', nameEn:'Employee lost a USB with health data',
+  desc:'보건관리 담당 직원이 건강검진 결과를 USB에 복사해 퇴근하다 분실했다고 신고했습니다. 암호화는 적용되지 않았습니다.',
+  descEn:'A staff member copied health-checkup results to an unencrypted USB and lost it on the way home.',
+  n:3200, items:'이름, 사번, 건강검진 결과(민감정보)',
+  itemsEn:'name, employee ID, health-checkup results (sensitive data)',
+  sensitive:true, unique:false, external:false, contactable:true,
+  tags:['3,200명','민감정보','내부 과실']},
+ {id:'vendor', ic:'📦', name:'수탁사 설정 오류로 인터넷 노출', nameEn:'Processor misconfiguration exposed data',
+  desc:'고객상담을 위탁한 수탁사가 클라우드 스토리지 권한을 공개로 잘못 설정해, 상담 이력 파일이 검색엔진에 색인됐습니다.',
+  descEn:'An outsourced call-centre set a cloud bucket to public; consultation files got indexed by search engines.',
+  n:800, items:'이름, 연락처, 상담 내용',
+  itemsEn:'name, contact, consultation notes',
+  sensitive:false, unique:false, external:false, contactable:false,
+  tags:['800명','고유식별·민감 없음','연락처 일부 불명']}
+];
+
+function mustReport(s){ return s.n>=1000 || s.sensitive || s.unique || s.external; }
+function reportReasons(s){
+  var r=[];
+  if(s.n>=1000) r.push(L('1천 명 이상의 개인정보가 유출됨','1,000+ data subjects affected'));
+  if(s.sensitive) r.push(L('민감정보가 유출됨','sensitive data involved'));
+  if(s.unique) r.push(L('고유식별정보가 유출됨','unique identifying information involved'));
+  if(s.external) r.push(L('외부로부터의 불법적인 접근에 의해 유출됨','breach caused by unlawful external access'));
+  return r;
+}
+
+/* ---------- 단계 ---------- */
+/* 각 선택지: [키, 문구, 소요시간(h), 판정(good|mid|bad), 해설, 근거] */
+function steps(s){
+  return [
+  {id:'contain',
+   q:L('유출 정황을 확인했습니다. <b>가장 먼저</b> 무엇을 하시겠습니까?','You have confirmed a breach. What do you do <b>first</b>?'),
+   ctx:L('현재 경과: 0시간. 통지 기한은 인지 시점부터 72시간입니다.','Elapsed: 0h. The notice deadline is 72 hours from awareness.'),
+   opts:[
+    ['wait', L('원인이 완전히 규명될 때까지 대응을 보류한다','Hold everything until the cause is fully identified'), 40,'bad',
+      L('가장 흔한 실패입니다. 원인 규명은 통지·신고 기한을 멈추지 않습니다. 규명을 기다리는 동안 피해가 확산되고 72시간이 소진됩니다.','The most common failure. Investigating does not pause the clock; harm spreads while the 72 hours burn.'),
+      '법 제34조'],
+    ['block', L('접속경로 차단·시스템 일시정지 등 확산 방지 조치를 하고 증적을 보존한다','Cut off the access path, suspend the system, preserve evidence'), 4,'good',
+      L('정확합니다. 안내서는 접속경로 차단, 시스템 일시정지, 암호 변경 등 <b>임시 대응조치</b>를 먼저 하도록 안내합니다. 증적 보존은 이후 원인 분석과 신고의 근거가 됩니다.','Correct — the guide lists blocking the access path, suspending the system and changing credentials as immediate measures.'),
+      'PIA 1.3.2 · 법 제34조제1항'],
+    ['pr', L('홍보팀에 먼저 알려 언론 대응 문구부터 준비한다','Brief PR first and prepare a press line'), 14,'bad',
+      L('대외 메시지는 필요하지만 <b>우선순위가 아닙니다</b>. 확산 방지와 증적 보존이 먼저이며, 그 사이 피해가 계속 커집니다.','Messaging matters, but containment and evidence come first.'),
+      'PIA 1.3.2']
+   ]},
+
+  {id:'scope',
+   q:L('확산을 막았습니다. 다음으로 무엇을 확정해야 합니까?','Contained. What must you establish next?'),
+   ctx:L('통지·신고 판단에 필요한 사실관계를 먼저 확정해야 합니다.','You need the facts that drive the notification and reporting decision.'),
+   opts:[
+    ['scope', L('유출된 <b>항목·시점·경위·정보주체 수</b>를 산정한다','Determine the <b>items, time, cause and number of subjects</b>'), 8,'good',
+      L('맞습니다. 이 네 가지가 통지문 필수 항목이자 신고 의무 판정의 기준(1천 명·민감/고유식별정보·외부 불법접근)이 됩니다.','These four drive both the notice content and the reporting thresholds.'),
+      '법 제34조제1항·제3항'],
+    ['blame', L('누구의 과실인지 내부 책임 소재부터 규명한다','Establish internal fault first'), 16,'bad',
+      L('책임 규명은 사후 과제입니다. 지금 필요한 것은 <b>피해 범위</b>이며, 책임 조사에 시간을 쓰면 기한을 놓칩니다.','Attribution is a post-incident task; scoping the harm is what the deadline needs.'),
+      '법 제34조'],
+    ['restore', L('서비스 정상화를 최우선으로 복구부터 완료한다','Fully restore service before anything else'), 20,'mid',
+      L('복구는 중요하지만 통지·신고와 <b>병행</b>해야 합니다. 복구를 마칠 때까지 통지를 미루면 기한을 넘기기 쉽습니다.','Recovery matters but must run in parallel; serialising it risks the deadline.'),
+      '법 제34조제1항']
+   ]},
+
+  {id:'report',
+   q:L('이 사건은 개인정보보호위원회(또는 KISA)에 <b>신고해야 하는 사건</b>입니까?','Is this incident <b>reportable</b> to the Commission (or KISA)?'),
+   ctx:function(sc){return L('유출 규모 '+sc.n.toLocaleString()+'명 · 항목: '+sc.items+' · 원인: '+(sc.external?'외부 불법접근':'내부 과실/설정 오류'),
+     'Scale '+sc.n.toLocaleString()+' · items: '+sc.itemsEn+' · cause: '+(sc.external?'unlawful external access':'internal error'));},
+   opts:[
+    ['yes', L('신고 대상이다','Yes — reportable'), 2, function(sc){return mustReport(sc)?'good':'bad';},
+      function(sc){ return mustReport(sc)
+        ? L('맞습니다. 신고 요건: '+reportReasons(sc).join(' / ')+'. 72시간 이내에 개인정보보호위원회 또는 한국인터넷진흥원에 신고해야 합니다.','Correct. Triggers: '+reportReasons(sc).join(' / ')+'.')
+        : L('이 사건은 세 가지 신고 요건(1천 명 이상 / 민감·고유식별정보 / 외부 불법적 접근) 중 어느 것도 충족하지 않습니다. 다만 <b>정보주체 통지 의무는 그대로 있습니다</b>.','None of the three reporting triggers is met — but the duty to notify data subjects still applies.'); },
+      '법 제34조제3항'],
+    ['no', L('신고 대상이 아니다 (통지만 하면 된다)','No — notify subjects only'), 2, function(sc){return mustReport(sc)?'bad':'good';},
+      function(sc){ return mustReport(sc)
+        ? L('신고 대상입니다. 요건: '+reportReasons(sc).join(' / ')+'. 신고를 누락하면 통지를 했더라도 별도의 위반이 됩니다.','It is reportable ('+reportReasons(sc).join(' / ')+'); omitting the report is a separate violation.')
+        : L('맞습니다. 세 요건 중 어느 것도 충족하지 않아 신고 의무는 없습니다. <b>통지 의무는 규모와 무관하게 적용</b>된다는 점을 기억하세요.','Correct — no reporting trigger. Remember the notice duty applies regardless of scale.'); },
+      '법 제34조제3항']
+   ]},
+
+  {id:'content', kind:'check',
+   q:L('정보주체에게 보낼 <b>통지문</b>에 포함할 항목을 모두 고르세요.','Select everything that must go into the <b>notice</b> to data subjects.'),
+   ctx:L('법 제34조제1항은 통지 시 반드시 알려야 할 사항을 정하고 있습니다. 빠뜨리면 통지를 해도 요건 미충족입니다.','Article 34(1) fixes the mandatory content; omissions make the notice non-compliant.'),
+   checks:[
+    ['items', L('유출된 개인정보의 <b>항목</b>','The <b>categories</b> of data leaked'), true],
+    ['when',  L('유출된 <b>시점과 경위</b>','<b>When</b> it happened and <b>how</b>'), true],
+    ['mitig', L('피해를 최소화하기 위해 <b>정보주체가 할 수 있는 방법</b>','What the <b>data subject can do</b> to minimise harm'), true],
+    ['resp',  L('개인정보처리자의 <b>대응조치 및 피해 구제절차</b>','The controller’s <b>response and remedy procedure</b>'), true],
+    ['desk',  L('피해 신고를 접수할 <b>담당부서 및 연락처</b>','The <b>department and contact</b> for reporting damage'), true],
+    ['blamer',L('유출을 일으킨 <b>담당 직원의 실명</b>','The <b>name of the employee</b> who caused it'), false],
+    ['promo', L('사과의 뜻으로 제공하는 <b>할인 쿠폰 안내</b>','A <b>discount coupon</b> as an apology'), false]
+   ],
+   cost:6, law:'법 제34조제1항'},
+
+  {id:'deliver',
+   q:L('통지를 <b>어떻게</b> 전달하시겠습니까?','<b>How</b> will you deliver the notice?'),
+   ctx:function(sc){ return sc.contactable
+     ? L('정보주체 대다수의 연락처(이메일·휴대전화)를 보유하고 있습니다.','You hold contact details for most data subjects.')
+     : L('상당수 정보주체의 연락처를 확보하지 못했습니다.','You do not have contact details for a significant share of the subjects.'); },
+   opts:[
+    ['direct', L('서면·전자우편·문자 등으로 <b>개별 통지</b>한다','<b>Individually notify</b> by letter, e-mail or SMS'), 6, function(sc){return sc.contactable?'good':'mid';},
+      function(sc){ return sc.contactable
+        ? L('정확합니다. 연락처를 아는 경우 개별 통지가 원칙입니다.','Correct — individual notice is the rule when contacts are known.')
+        : L('연락처를 아는 정보주체에게는 개별 통지가 맞습니다. 다만 <b>연락처를 알 수 없는 정보주체</b>에 대해서는 홈페이지 게시로 갈음해야 하며, 이 선택만으로는 그들에게 통지가 닿지 않습니다.','Right for those you can reach — but for the rest you must substitute a website posting.'); },
+      '법 제34조제1항'],
+    ['web', L('홈페이지에 <b>30일 이상 게시</b>하는 것으로 갈음한다','Substitute a <b>30-day website posting</b>'), 4, function(sc){return sc.contactable?'bad':'good';},
+      function(sc){ return sc.contactable
+        ? L('연락처를 알고 있다면 게시로 갈음할 수 없습니다. 갈음은 <b>정당한 사유</b>(연락처를 알 수 없는 경우 등)가 있을 때만 허용됩니다.','You cannot substitute a posting when you do have the contacts; substitution needs a justified reason.')
+        : L('맞습니다. 연락처를 알 수 없는 등 정당한 사유가 있으면 정보주체가 쉽게 알 수 있도록 <b>30일 이상 게시</b>하는 것으로 통지를 갈음할 수 있습니다.','Correct — with a justified reason you may post it for 30 days or more.'); },
+      '법 제34조제1항 단서'],
+    ['later', L('원인 분석 보고서를 완성한 뒤 한 번에 통지한다','Wait for the full root-cause report, then notify once'), 45,'bad',
+      L('통지는 <b>정당한 사유가 없는 한 72시간 이내</b>입니다. 완결된 보고서를 기다리는 것은 통지를 미룰 사유가 되지 않습니다.','Notice is due within 72 hours absent a justified reason; waiting for a complete report is not one.'),
+      '법 제34조제1항']
+   ]},
+
+  {id:'after',
+   q:L('통지·신고를 마쳤습니다. 마지막으로 무엇을 하시겠습니까?','Notice and report done. What is the last step?'),
+   opts:[
+    ['prevent', L('유출 원인을 제거하고 <b>재발방지 대책</b>을 수립·시행한다','Remove the cause and implement <b>recurrence-prevention</b> measures'), 10,'good',
+      L('맞습니다. 임시 조치에서 끝내지 않고 유사사고 방지대책까지 포함해야 대응절차가 완결됩니다. 모의훈련을 연 1회 이상 실시할 것도 권고됩니다.','Correct — the procedure is complete only with preventive measures; annual drills are recommended.'),
+      'PIA 1.3.2'],
+    ['close', L('사건을 종결 처리하고 관련 로그를 정리(삭제)한다','Close the case and clean up (delete) the logs'), 3,'bad',
+      L('증적 삭제는 <b>절대 금지</b>입니다. 조사·분쟁 대응의 근거가 사라지고, 그 자체가 추가 책임이 됩니다.','Never delete evidence — it destroys the basis for investigation and creates further liability.'),
+      'PIA 1.3.2'],
+    ['insure',L('보험 청구 절차만 진행한다','Only file the insurance claim'), 5,'mid',
+      L('보상은 필요하지만 <b>재발방지 대책</b>이 빠지면 같은 사고가 반복됩니다.','Compensation is fine, but without preventive measures the same incident recurs.'),
+      'PIA 1.3.2']
+   ]}
+  ];
+}
+
+/* ---------- 상태 ---------- */
+var S=null;   // {scen, i, hours, picks:{}, checks:{}, log:[], done}
+var SKEY='wvs_breach_drill';
+
+function start(id){
+  var sc=SCEN.filter(function(x){return x.id===id;})[0];
+  S={scen:sc, i:0, hours:0, picks:{}, checks:{}, log:[], done:false, feedback:null};
+  render();
+}
+function reset(){ S=null; render(); }
+
+function fmt(h){ return (h<10?'0':'')+h+':00'; }
+function pushLog(txt,cls){ S.log.push({t:fmt(S.hours), txt:txt, cls:cls||''}); }
+
+function resolve(v,sc){ return typeof v==='function'?v(sc):v; }
+
+function choose(key){
+  var st=steps(S.scen)[S.i];
+  var o=st.opts.filter(function(x){return x[0]===key;})[0];
+  if(!o) return;
+  var verdict=resolve(o[3],S.scen);
+  var why=resolve(o[4],S.scen);
+  S.picks[st.id]={key:key,verdict:verdict};
+  S.hours+=o[2];
+  pushLog(L(o[1].replace(/<[^>]+>/g,''),o[1].replace(/<[^>]+>/g,''))+' (+'+o[2]+'h)',
+          verdict==='good'?'good':verdict==='bad'?'bad':'warn');
+  S.feedback={verdict:verdict, why:why, law:o[5]};
+  render();
+}
+function toggleCheck(k){
+  S.checks[k]=!S.checks[k];
+  render(true);
+}
+function submitChecks(){
+  var st=steps(S.scen)[S.i];
+  var miss=st.checks.filter(function(c){return c[2]&&!S.checks[c[0]];});
+  var extra=st.checks.filter(function(c){return !c[2]&&S.checks[c[0]];});
+  S.hours+=st.cost;
+  var verdict = (miss.length===0&&extra.length===0)?'good':(miss.length===0?'mid':'bad');
+  S.picks[st.id]={key:'checks',verdict:verdict,miss:miss.map(function(c){return c[0];}),extra:extra.map(function(c){return c[0];})};
+  pushLog(L('통지문 작성','Drafted the notice')+' (+'+st.cost+'h)', verdict==='good'?'good':verdict==='bad'?'bad':'warn');
+  S.feedback={verdict:verdict, law:st.law,
+    why: (miss.length? L('<b>누락된 법정 항목 '+miss.length+'개</b>: ','<b>'+miss.length+' mandatory item(s) missing</b>: ')+miss.map(function(c){return c[1].replace(/<[^>]+>/g,'');}).join(' / ')+'<br>' : L('법정 5개 항목을 모두 포함했습니다.','All five mandatory elements included.')+'<br>')
+        + (extra.length? L('<b>불필요·부적절한 포함</b>: ','<b>Inappropriate inclusions</b>: ')+extra.map(function(c){return c[1].replace(/<[^>]+>/g,'');}).join(' / ')
+             +L(' — 통지문은 법정 항목을 정확히 전달하는 문서입니다. 담당자 실명 공개는 또 다른 개인정보 문제를 만들고, 보상 홍보는 통지의 목적이 아닙니다.',' — the notice is not a place for staff names or promotions.') : '')};
+  render();
+}
+function next(){
+  S.feedback=null;
+  if(S.i>=steps(S.scen).length-1){ S.done=true; }
+  else S.i++;
+  render();
+}
+
+/* ---------- 채점 ---------- */
+function grade(){
+  var sc=S.scen, st=steps(sc), pts=0, max=0, f=[];
+  st.forEach(function(s){
+    max+=2;
+    var p=S.picks[s.id];
+    if(!p) return;
+    pts += p.verdict==='good'?2:p.verdict==='mid'?1:0;
+  });
+  // 기한
+  var onTime = S.hours<=72;
+  f.push([onTime?'f-ok':'f-bad',
+    onTime ? L('<b>통지 기한 준수</b> — 총 '+S.hours+'시간 경과 (72시간 이내)','<b>Deadline met</b> — '+S.hours+'h elapsed (within 72)')
+           : L('<b>72시간 초과</b> — 총 '+S.hours+'시간 경과. 정당한 사유 없는 지연은 그 자체가 법 위반입니다.','<b>Deadline missed</b> — '+S.hours+'h elapsed; unjustified delay is itself a violation.')]);
+  // 기한 준수는 3점 배점(아래 max 에 이미 반영). 초과하면 그 3점을 얻지 못한다.
+  if(onTime) pts+=3;
+
+  // 신고 판정
+  var rp=S.picks.report;
+  var need=mustReport(sc);
+  if(rp){
+    var right=(rp.key==='yes')===need;
+    f.push([right?'f-ok':'f-bad', right
+      ? L('<b>신고 의무 판정 정확</b> — '+(need?'신고 대상('+reportReasons(sc).join(', ')+')':'신고 요건 미해당')
+          ,'<b>Reporting call correct</b>')
+      : L('<b>신고 의무 판정 오류</b> — 이 사건은 '+(need?'신고 대상입니다('+reportReasons(sc).join(', ')+').':'신고 요건에 해당하지 않습니다.')
+          ,'<b>Reporting call wrong</b>')]);
+  }
+  // 통지문
+  var cp=S.picks.content;
+  if(cp){
+    if(cp.miss&&cp.miss.length) f.push(['f-bad',L('통지문에서 법정 항목 '+cp.miss.length+'개가 누락됐습니다.','The notice omitted '+cp.miss.length+' mandatory element(s).')]);
+    else f.push(['f-ok',L('통지문에 법정 5개 항목을 모두 포함했습니다.','The notice contained all five mandatory elements.')]);
+    if(cp.extra&&cp.extra.length) f.push(['f-warn',L('통지문에 넣지 말아야 할 내용이 포함됐습니다.','The notice included content that does not belong.')]);
+  }
+  // 초기 대응
+  var cn=S.picks.contain;
+  if(cn) f.push([cn.verdict==='good'?'f-ok':'f-bad', cn.verdict==='good'
+    ? L('초기 확산 방지·증적 보존을 우선했습니다.','You prioritised containment and evidence preservation.')
+    : L('초기 대응 우선순위가 잘못돼 시간과 피해가 커졌습니다.','Mis-ordered initial response cost time and widened the harm.')]);
+
+  var rate=Math.round(pts/(max+3)*100);
+  return {pts:pts, max:max+3, rate:Math.max(0,Math.min(100,rate)), f:f, onTime:onTime};
+}
+
+/* ---------- 렌더 ---------- */
+function render(keepScroll){
+  var host=document.getElementById('view');
+  if(!S){ renderPick(host); applyLang(); return; }
+  if(S.done){ renderResult(host); applyLang(); return; }
+  renderStep(host); applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-breach-drill.html'); }catch(e){}
+}
+
+function renderPick(host){
+  host.innerHTML='<div class="card"><h2>🎬 '+L('시나리오 선택','Choose a scenario')+'</h2>'+
+    '<div class="note">'+L('세 시나리오는 <b>신고 의무 판정이 서로 다릅니다</b>. 규모·정보 유형·원인이 어떻게 결론을 바꾸는지 비교해 보세요.',
+      'The three scenarios differ in whether they are reportable — compare how scale, data type and cause change the answer.')+'</div>'+
+    '<div class="scen">'+SCEN.map(function(s){
+      return '<div class="sc" onclick="start(\''+s.id+'\')">'+
+        '<div class="ic">'+s.ic+'</div><h3>'+esc(L(s.name,s.nameEn))+'</h3>'+
+        '<p>'+esc(L(s.desc,s.descEn))+'</p>'+
+        '<div class="tags">'+s.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div></div>';
+    }).join('')+'</div></div>';
+}
+
+function clockHtml(){
+  var over=S.hours>72;
+  var pct=Math.min(100,Math.round(S.hours/72*100));
+  return '<div class="clock'+(over?'':' safe')+'">'+
+    '<div><div class="big">'+S.hours+'h</div><div class="lab">'+L('인지 후 경과','elapsed')+'</div></div>'+
+    '<div class="track"><i style="width:'+pct+'%"></i></div>'+
+    '<div style="text-align:right"><div class="big" style="font-size:19px;color:'+(over?'#fca5a5':'#86efac')+'">'+
+      (over?L('기한 초과','OVERDUE'):(72-S.hours)+'h '+L('남음','left'))+'</div>'+
+      '<div class="lab">'+L('통지 기한 72시간','72-hour deadline')+'</div></div></div>';
+}
+
+function renderStep(host){
+  var st=steps(S.scen)[S.i], sc=S.scen;
+  var answered=!!S.picks[st.id];
+  var body;
+  if(st.kind==='check'){
+    body='<div class="checks">'+st.checks.map(function(c){
+      var on=!!S.checks[c[0]];
+      var missCls = answered && c[2] && !on ? ' req-miss' : '';
+      return '<label class="chk'+(on?' on':'')+missCls+'">'+
+        '<input type="checkbox" '+(on?'checked':'')+' '+(answered?'disabled':'')+' onchange="toggleCheck(\''+c[0]+'\')">'+
+        '<span>'+c[1]+(answered?'<span class="why">'+(c[2]?L('법정 필수 항목','mandatory'):L('법정 항목 아님','not required'))+'</span>':'')+'</span></label>';
+    }).join('')+'</div>'+
+    (answered?'':'<div class="acts"><button class="btn pri" onclick="submitChecks()">'+L('통지문 확정','Finalise the notice')+'</button></div>');
+  }else{
+    var KEYS='ABCD';
+    body='<div class="opts">'+st.opts.map(function(o,i){
+      var cls='';
+      if(answered){
+        var v=resolve(o[3],sc);
+        if(S.picks[st.id].key===o[0]) cls=' '+(v==='good'?'good':v==='bad'?'bad':'mid');
+      }
+      return '<button class="opt'+cls+'" '+(answered?'disabled':'')+' onclick="choose(\''+o[0]+'\')">'+
+        '<span class="k">'+KEYS[i]+'</span><span>'+o[1]+'</span><span class="cost">+'+o[2]+'h</span></button>';
+    }).join('')+'</div>';
+  }
+  var fb='';
+  if(S.feedback){
+    var v=S.feedback.verdict;
+    fb='<div class="feed"><h4 class="'+(v==='good'?'ok':v==='bad'?'no':'warn')+'">'+
+      (v==='good'?'✔ '+L('적절','Good'):v==='bad'?'✖ '+L('부적절','Poor'):'! '+L('보완 필요','Needs work'))+'</h4>'+
+      '<p>'+S.feedback.why+'</p>'+
+      (S.feedback.law?'<span class="law">'+esc(S.feedback.law)+'</span>':'')+
+      '<div class="acts"><button class="btn pri" onclick="next()">'+
+        (S.i>=steps(sc).length-1?L('결과 보기 →','See result →'):L('다음 단계 →','Next →'))+'</button></div></div>';
+  }
+  host.innerHTML=clockHtml()+
+    '<div class="card step"><h2>'+sc.ic+' '+esc(L(sc.name,sc.nameEn))+'<span class="sp"></span>'+
+      '<span style="font-family:var(--mono);font-size:11.5px;color:var(--muted)">STEP '+(S.i+1)+' / '+steps(sc).length+'</span></h2>'+
+      '<div class="q">'+st.q+'</div>'+
+      (st.ctx?'<div class="ctx">'+resolve(st.ctx,sc)+'</div>':'')+
+      body+fb+'</div>'+ logHtml();
+}
+
+function logHtml(){
+  if(!S.log.length) return '';
+  return '<div class="card"><h2>🧾 '+L('대응 타임라인','Response timeline')+'</h2><ul class="log">'+
+    S.log.map(function(l){return '<li class="'+l.cls+'"><span class="t">T+'+l.t+'</span>'+esc(l.txt)+'</li>';}).join('')+'</ul></div>';
+}
+
+function renderResult(host){
+  var g=grade(), sc=S.scen;
+  var color=g.rate>=80?'var(--good)':g.rate>=50?'var(--accent)':'var(--bad)';
+  host.innerHTML=clockHtml()+
+    '<div class="card"><h2>🏁 '+L('훈련 결과','Drill result')+' — '+esc(L(sc.name,sc.nameEn))+'</h2>'+
+    '<div class="score"><div class="ring" style="--p:'+g.rate+';--c:'+color+'"><div class="in"><b>'+g.rate+'%</b><span>'+L('대응 점수','response')+'</span></div></div>'+
+    '<ul class="findings">'+g.f.map(function(x){return '<li class="'+x[0]+'">'+x[1]+'</li>';}).join('')+'</ul></div>'+
+    '<div class="note">'+L('안내서는 침해사고 <b>모의훈련을 연 1회 이상</b> 실시할 것을 권고합니다(권고사항). 다른 시나리오는 신고 의무 판정이 다르니 세 가지를 모두 돌려 보세요.',
+      'The guide recommends running a breach drill at least once a year. The other scenarios resolve differently — try all three.')+'</div>'+
+    '<div class="acts"><button class="btn pri" onclick="reset()">'+L('다른 시나리오 →','Another scenario →')+'</button>'+
+    '<button class="btn" onclick="start(\''+sc.id+'\')">'+L('다시 하기','Retry')+'</button>'+
+    '<a class="btn" href="15_privacy-pv25.html">'+L('유출 통지 시뮬 보기','Breach notification sim')+'</a></div></div>'+
+    logHtml();
+  try{ if(window.WVSProgress) window.WVSProgress.complete(g.rate,'privacy-breach-drill.html'); }catch(e){}
+}
+
+document.addEventListener('DOMContentLoaded',function(){ applyLang(); render(); });
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

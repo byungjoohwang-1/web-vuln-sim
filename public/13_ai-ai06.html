@@ -94,8 +94,8 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="topbar"><a href="index.html">&larr; cd /index</a></div>
+<div class="container" role="main">
+  <div class="topbar" role="navigation"><a href="index.html">&larr; cd /index</a></div>
   <div class="header">
     <div class="code-badge">AI-06</div>
     <h1>📤 불안전한 출력 처리</h1>
@@ -127,7 +127,7 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
     </div>
     <div class="section" id="aiLabSection">
       <h2>🤖 AI 코치에게 물어보기 <span style="font-size:12px;background:#ede9ff;color:#4c3d8f;padding:3px 10px;border-radius:12px;">BYO 키 하이브리드</span></h2>
-      <p style="color:#555;margin-bottom:14px;line-height:1.6;">API 키 없이도 <b>데모 AI</b>(오프라인 사전 정의 답변)가 바로 답합니다. <b>Claude API 키</b>를 저장하면 이 페이지 주제(AI-06)에 대해 <b>실제 LLM</b>에게 자유롭게 질문할 수 있어요. 키는 이 브라우저(localStorage)에만 저장되며 사이트 서버로 전송되지 않습니다.</p>
+      <p style="color:#555;margin-bottom:14px;line-height:1.6;">API 키 없이도 <b>데모 AI</b>(오프라인 사전 정의 답변)가 바로 답합니다. <b>Claude API 키</b>를 저장하면 이 페이지 주제(AI-06)에 대해 <b>실제 LLM</b>에게 자유롭게 질문할 수 있어요. 키는 <b>이 탭에만</b> 보관되고(탭을 닫으면 삭제) 사이트 서버로 전송되지 않습니다. 이 사이트는 XSS 실습 페이지를 함께 제공하므로, 권한을 최소화한 전용 키를 쓰고 실습 후에는 폐기하세요.</p>
       <div class="ai-lab">
         <div class="ai-status" id="aiStatus"></div>
         <div class="ai-setup">
@@ -255,23 +255,23 @@ const AI_MOCK={attack:`[데모 AI · 사전 정의 답변]
 - [ ] 다운스트림 전달 전 구조 검증 존재
 
 로그 시그니처·SIEM 룰 등 심화 탐지 질문은 키를 저장해 실제 Claude에게 해보세요.`};
-function _aiKey(){ return localStorage.getItem('wvs_ai_key')||''; }
+function _aiKey(){ return (sessionStorage.getItem('wvs_ai_key')||localStorage.getItem('wvs_ai_key')||''); }
 function initAI(){
   const st=document.getElementById('aiStatus'); if(!st) return;
   document.getElementById('aiModelSelect').value=localStorage.getItem('wvs_ai_model')||'claude-sonnet-4-6';
-  if(_aiKey()){ st.textContent='✓ API 키 저장됨 — 실제 Claude 모드 (키는 이 브라우저에만 보관)';
+  if(_aiKey()){ st.textContent='✓ API 키 저장됨 — 실제 Claude 모드 (이 탭에만 보관 · 탭을 닫으면 삭제)';
     document.getElementById('aiKeyInput').placeholder='새 키로 교체하려면 입력'; }
   else { st.textContent='🤖 데모 AI 모드 — 키 없이 바로 사용 가능'; }
 }
 function saveAIKey(){
   const v=document.getElementById('aiKeyInput').value.trim();
   if(!v){ alert('API 키를 입력해 주세요. 키 없이는 데모 AI로 계속 실습할 수 있습니다.'); return; }
-  localStorage.setItem('wvs_ai_key',v);
+  sessionStorage.setItem('wvs_ai_key',v); localStorage.removeItem('wvs_ai_key');
   localStorage.setItem('wvs_ai_model',document.getElementById('aiModelSelect').value);
   document.getElementById('aiKeyInput').value='';
   initAI();
 }
-function clearAIKey(){ localStorage.removeItem('wvs_ai_key'); document.getElementById('aiKeyInput').value=''; initAI(); }
+function clearAIKey(){ localStorage.removeItem('wvs_ai_key'); sessionStorage.removeItem('wvs_ai_key'); document.getElementById('aiKeyInput').value=''; initAI(); }
 const AI_PRESETS={
   attack:'이 페이지 주제의 공격이 실제로 어떻게 작동하는지 3단계로 설명하고, 각 단계에서 공격자가 노리는 것을 알려줘.',
   defense:'이 취약점에 대한 실무 방어 체크리스트를 우선순위와 함께 알려줘.',

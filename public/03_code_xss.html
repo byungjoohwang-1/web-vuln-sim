@@ -444,7 +444,7 @@
 <body>
 <a href="vuln-hub.html" data-en="← Main" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
 <div class="langbar"><button id="lang-ko" onclick="setLang('ko')">한국어</button><button id="lang-en" onclick="setLang('en')">EN</button><button id="btn-presenter" onclick="togglePresenterMode()" style="background:#eab308;color:#000;margin-left:5px;border:none;padding:5px 11px;border-radius:6px;font:600 12px/1 'Malgun Gothic',sans-serif;cursor:pointer;" data-en="🎤 Presenter Mode">🎤 발표자 모드</button></div>
-    <div class="container">
+    <div class="container" role="main">
         <div class="header">
             <h1 data-en="🌐 Cross-Site Scripting (XSS) - Practice Simulator">🌐 크로스 사이트 스크립트 (XSS) - 실습 시뮬레이터</h1>
             <p>CWE-79: Improper Neutralization of Input During Web Page Generation ('XSS')</p>
@@ -608,7 +608,7 @@ def hello():
     name = request.args.get('name', '')
     # [취약한 코드] 사용자 입력을 그대로 HTML에 포함하여 반환
     # name에 <script>alert(1)</script> 입력 시 실행됨
-    return '<h1>Hello, %s</h1>' % name</textarea>
+    return '<h2>Hello, %s</h2>' % name</textarea>
                     </div>
 
                     <div class="control-panel">
@@ -627,7 +627,7 @@ def hello():
                             <p data-en="Use the escape function from the Markupsafe library to convert special characters. (In Flask, it is applied automatically when using `render_template`.)">Markupsafe 라이브러리의 escape 함수를 사용하여 특수문자를 변환합니다. (Flask에서는 `render_template` 사용 시 자동 적용됨)</p>
                             <div class="hint-code">
 from markupsafe import escape
-return '<h1>Hello, %s</h1>' % escape(name)
+return '<h2>Hello, %s</h2>' % escape(name)
                             </div>
                         </div>
                     </div>
@@ -958,7 +958,7 @@ def hello():
     name = request.args.get('name', '')
     # [취약한 코드] 사용자 입력을 그대로 HTML에 포함하여 반환
     # name에 <script>alert(1)<\/script> 입력 시 실행됨
-    return '<h1>Hello, %s</h1>' % name`;
+    return '<h2>Hello, %s</h2>' % name`;
             document.getElementById('codeEditorPython').value = initial;
             document.getElementById('codeDisplayPython').textContent = initial;
             if(window.Prism) Prism.highlightElement(document.getElementById('codeDisplayPython'));
@@ -1098,9 +1098,7 @@ def hello():
                         frame.setAttribute('sandbox', '');
                         frame.setAttribute('title', 'rendered comment (sandboxed preview)');
                         frame.style.cssText = 'width:100%;height:46px;border:1px dashed #f87171;border-radius:4px;background:#fff;vertical-align:middle;margin-top:4px;';
-                        frame.srcdoc = '<!DOCTYPE html><html><body style="margin:5px;font:13px/1.45 monospace;color:#111;">' + comment + '<script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-</body></html>';
+                        frame.srcdoc = '<!DOCTYPE html><html><body style="margin:5px;font:13px/1.45 monospace;color:#111;">' + comment + '</body></html>';
                         commentEl.appendChild(frame);
                     }
 

@@ -136,7 +136,7 @@ a{color:var(--acc)}
 <body>
 <header class="rt-top">
   <a href="vuln-hub.html" class="rt-back">← 허브</a>
-  <div class="rt-brand">🦹 레드팀 아레나<small>AI 공격 에이전트 vs 당신 — 공격 체인을 막아라</small></div>
+  <h1 class="rt-brand" style="font-size:inherit;font-weight:inherit;margin:0;">🦹 레드팀 아레나<small>AI 공격 에이전트 vs 당신 — 공격 체인을 막아라</small></h1>
   <div class="pill demo" id="aiStatus"><span class="dot"></span><span id="aiStatusTxt">AI 확인 중…</span></div>
 </header>
 
@@ -496,6 +496,8 @@ a{color:var(--acc)}
   /* ── 종료 요약 ── */
   function endGame(win) {
     S.over = true; setStartBtn('게임 종료', true);
+    /* 침입 체인을 끝까지 막아냈을 때만 통합 진도에 완료로 기록한다. */
+    if (win) { try { window.WVSProgress && window.WVSProgress.complete(undefined, 'redteam.html'); } catch (e) {} }
     var rate = S.rounds ? Math.round(S.defended / S.rounds * 100) : 0;
     var grade = rate >= 90 ? 'S' : rate >= 70 ? 'A' : rate >= 50 ? 'B' : 'C';
     var w = weakCats(S.domain);
