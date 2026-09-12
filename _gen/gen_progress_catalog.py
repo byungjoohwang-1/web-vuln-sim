@@ -23,6 +23,8 @@ PREFIX = [
     ('11_cloud', ('인프라 · 클라우드', 'B')),
     ('12_ics', ('인프라 · ICS/제어', 'B')),
     ('13_ai', ('AI·미래보안', 'D')),
+    ('14_auto', ('자동차 보안', 'E')),
+    ('15_privacy', ('개인정보보호', 'F')),
 ]
 TITLE_RE = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
 CODE_RE = re.compile(r'^([A-Z]{1,4}-\d{1,3})\s*[:：]\s*(.+)$')

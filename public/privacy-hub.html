@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보보호 학습 허브 — 영향평가·처리방침·가명정보·AI 프라이버시 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보보호 학습 허브 · WEB-VULN-SIM">
+<meta property="og:description" content="개인정보 영향평가 자가진단 121항목 · 처리방침 작성기 24항목 · 가명처리 실습실 · 시뮬레이터 34종">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-hub.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 학습 허브 — 개인정보 영향평가(PIA) 121개 평가항목 자가진단, 처리방침 24개 기재사항 작성·점검기, 가명처리 실습실(k-익명성·재식별 공격), 개인정보보호 시뮬레이터 34종(수집·제공·안전조치·정보주체 권리·영상정보·가명정보·AI 프라이버시·공공 AX).">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1200px;margin:0 auto;padding:22px 16px 80px}
+/* hero */
+.hero{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#0f172a 100%);border:1px solid #3730a3;border-radius:18px;padding:26px 26px 22px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.hero .kick{font-family:var(--mono);font-size:11.5px;letter-spacing:1.4px;color:#c7d2fe;font-weight:800}
+.hero h1{font-size:28px;color:#fff;margin-top:8px;line-height:1.25}
+.hero h1 span{color:#a5b4fc}
+.hero p{color:#cbd5e1;font-size:14px;margin-top:10px;max-width:800px}
+.hmeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hmeta b{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:5px 12px;font-family:var(--mono);font-size:12px;font-weight:700;color:#e0e7ff}
+/* 도구 카드 */
+.sec-h{display:flex;align-items:baseline;gap:10px;margin:26px 0 10px;flex-wrap:wrap}
+.sec-h h2{font-size:18px;color:#fff}
+.sec-h .tag{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(288px,1fr));gap:14px}
+.tool{display:block;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent2);border-radius:14px;padding:18px 20px;transition:.18s;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.tool:hover{transform:translateY(-3px);border-left-color:#818cf8;background:#141d33}
+.tool .ic{font-size:26px}
+.tool h3{font-size:16px;color:#fff;margin:8px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;background:#312e81;color:#c7d2fe}
+.tool p{font-size:13px;color:var(--muted)}
+.tool ul{margin:9px 0 0 16px;font-size:12.5px;color:#cbd5e1}
+.tool li{margin:2px 0}
+.tool .go{display:inline-block;margin-top:11px;font-family:var(--mono);font-size:12px;font-weight:800;color:#0c4a6e;background:#7dd3fc;border-radius:7px;padding:5px 11px}
+/* 시뮬 그룹 */
+.grp{background:var(--panel);border:1px solid var(--border);border-radius:14px;margin:12px 0;overflow:hidden}
+.grp>h3{font-size:14px;color:#e2e8f0;padding:12px 16px;background:linear-gradient(90deg,#1e1b4b,#28344b);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.grp>h3 .n{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.grp .body{padding:8px 12px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:7px}
+.it{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:13px;transition:.15s}
+.it:hover{background:#18233c;border-color:#4338ca}
+.it .c{font-family:var(--mono);font-size:10.5px;font-weight:800;color:#a5b4fc;background:#1e1b4b;border-radius:5px;padding:2px 6px;flex-shrink:0}
+.it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 출처 */
+.srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:9px}
+.sr{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12.5px}
+.sr b{display:block;color:#7dd3fc;font-size:12.5px}
+.sr span{color:var(--muted);font-size:11.5px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin-top:14px}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="my-progress.html"><span data-en="My Progress">내 학습 현황</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kick">TRACK 05 · PRIVACY PROTECTION</div>
+    <h1 data-en="Privacy compliance you actually <span>do</span>, not just read about">읽고 끝나지 않는 <span>개인정보보호</span> — 직접 해 보는 컴플라이언스</h1>
+    <p data-en="The Personal Information Protection Act is usually taught as text. Here you run the real artifacts: score your system against all 121 privacy-impact-assessment items, draft and lint a privacy policy across its 24 required sections, and pseudonymize a dataset until a linkage attack actually fails.">
+      개인정보보호는 보통 조문으로만 배웁니다. 여기서는 실제 산출물을 직접 만들어 봅니다 — <b>영향평가 121개 항목</b>으로 우리 시스템을 채점하고, <b>처리방침 24개 기재사항</b>을 작성·점검하고, 연결공격이 실제로 실패할 때까지 데이터를 <b>가명처리</b>해 봅니다.</p>
+    <div class="hmeta">
+      <b>📋 PIA 121항목</b><b>📄 처리방침 24항목</b><b>🧪 가명처리 랩</b><b>🔏 시뮬레이터 34종</b><b>🤖 AI 프라이버시</b><b>🏛️ 공공 AX</b>
+    </div>
+  </div>
+
+  <!-- 인터랙티브 도구 -->
+  <div class="sec-h"><h2 data-en="Interactive tools">인터랙티브 도구</h2><span class="tag">/ do-it-yourself</span></div>
+  <div class="tools">
+    <a class="tool" href="pia-assessment.html">
+      <div class="ic">📋</div>
+      <h3><span data-en="PIA Self-Assessment">개인정보 영향평가 자가진단</span> <span class="pill">121</span></h3>
+      <p data-en="Score your system against every evaluation item of Korea’s privacy impact assessment.">개인정보 영향평가의 <b>모든 평가항목</b>으로 우리 시스템을 점검합니다.</p>
+      <ul>
+        <li data-en="이행 / 부분이행 / 미이행 / N/A — compliance computed live">이행·부분이행·미이행·해당없음 → 이행률 자동 산출</li>
+        <li data-en="Key check points · indicator commentary · statutes per item">항목별 주요 점검사항 · 지표 해설 · 관련 법령</li>
+        <li data-en="Exports an improvement-task report">개선과제 리포트 내보내기</li>
+        <li data-en="Includes the new AI section (5.7, 10 items)">신설 인공지능(5.7) 10개 항목 포함</li>
+      </ul>
+      <span class="go" data-en="Start self-check →">자가진단 시작 →</span>
+    </a>
+    <a class="tool" href="privacy-policy-builder.html">
+      <div class="ic">📄</div>
+      <h3><span data-en="Privacy Policy Builder">개인정보 처리방침 작성·점검기</span> <span class="pill">24</span></h3>
+      <p data-en="Draft a policy section by section, then let the linter catch what real policies get wrong.">기재사항을 하나씩 채우고, 실제 처리방침의 흔한 결함을 자동으로 잡아냅니다.</p>
+      <ul>
+        <li data-en="Required / conditional / optional classification per section">필수 · 조건부 · 자율 항목 구분과 템플릿</li>
+        <li data-en="Catches vague “등”, missing retention basis, contactless processors">‘~등’ 모호 표현·근거 없는 보유기간·연락처 누락 탐지</li>
+        <li data-en="Generative-AI appendix (new in 2026)">생성형 AI 서비스 부록(2026 신설)</li>
+        <li data-en="Exports TXT / HTML draft">TXT · HTML 초안 내보내기</li>
+      </ul>
+      <span class="go" data-en="Open builder →">작성기 열기 →</span>
+    </a>
+    <a class="tool" href="pseudonym-lab.html">
+      <div class="ic">🧪</div>
+      <h3><span data-en="Pseudonymization Lab">가명처리 실습실</span> <span class="pill">LAB</span></h3>
+      <p data-en="Apply real techniques column by column and watch re-identification risk move.">열 단위로 실제 기법을 적용하며 재식별 위험이 어떻게 변하는지 봅니다.</p>
+      <ul>
+        <li data-en="Suppression · masking · generalization · rounding · hash · noise · aggregation">삭제·마스킹·범주화·라운딩·해시·잡음·총계처리·순열</li>
+        <li data-en="k-anonymity · l-diversity · unique records computed live">k-익명성 · l-다양성 · 특이정보 실시간 산출</li>
+        <li data-en="Background-knowledge linkage attack simulator">배경지식 기반 연결공격(재식별) 시뮬레이터</li>
+        <li data-en="Shows why masking alone is not pseudonymization">“마스킹만 하면 가명처리”라는 오해를 직접 반증</li>
+      </ul>
+      <span class="go" data-en="Enter the lab →">실습실 입장 →</span>
+    </a>
+  </div>
+
+  <!-- 시뮬레이터 -->
+  <div class="sec-h"><h2 data-en="Privacy simulators (34)">개인정보보호 시뮬레이터 34종</h2><span class="tag">/ 15_privacy-pvXX</span></div>
+  <div class="note" data-en="Each simulator contrasts a <b>vulnerable</b> and a <b>secure</b> state of the same situation, then gives the remediation steps and a check list tied to the statute.">
+    각 시뮬레이터는 같은 상황의 <b>취약한 상태</b>와 <b>안전한 상태</b>를 나란히 비교하고, 조치 방법과 법령 근거를 연결한 점검 체크리스트를 제공합니다.</div>
+  <div id="sims"></div>
+
+  <!-- 출처 -->
+  <div class="sec-h"><h2 data-en="Source guides">근거 자료</h2><span class="tag">/ 개인정보보호위원회 공개 안내서</span></div>
+  <div class="srcs">
+    <div class="sr"><b>개인정보 영향평가 수행 안내서 (2025.10.)</b><span>평가영역 5개 · 평가항목 121개 (인공지능 분야 5.7 신설)</span></div>
+    <div class="sr"><b>개인정보 처리방침 작성지침 (2026.4.)</b><span>기재사항 24개 · 라벨링 · 생성형 AI 부록 신설</span></div>
+    <div class="sr"><b>가명정보 처리 가이드라인 (2026.3.)</b><span>가명처리 5단계 절차 · 기술·기법 분류 · 위험도 판단</span></div>
+    <div class="sr"><b>개인정보 처리 통합 안내서 (2025.7.)</b><span>수집·이용부터 파기까지 처리 단계별 준수사항</span></div>
+    <div class="sr"><b>개인정보 질의응답 모음집 (2025.12.)</b><span>정의·영상정보·수집·제공·위탁 등 해석 사례</span></div>
+    <div class="sr"><b>AI 프라이버시 리스크 관리 모델 (2024.12.)</b><span>리스크 식별·경감·관리체계 · LLM 경감기술</span></div>
+    <div class="sr"><b>공공 AX 프라이버시 보호 안내서 (2026.7.)</b><span>공공 AI 전환 단계별·유형별 프라이버시 검토</span></div>
+    <div class="sr"><b>개인정보 보호법 · 시행령 · 안전성 확보조치 기준</b><span>제15·16·17·18·21~26·28의2~8·29·34·35~38·37의2조 등</span></div>
+  </div>
+
+  <div class="disc" data-en="Educational reconstruction of publicly released guidance from the Personal Information Protection Commission and KISA. It does not replace a statutory privacy impact assessment, legal advice, or a controller’s own compliance review. All tools run entirely in your browser.">
+    ⚠️ 개인정보보호위원회·KISA가 공개한 안내서를 교육 목적으로 재구성한 콘텐츠입니다. 법정 영향평가·법률 자문·개인정보처리자의 자체 준수 점검을 대체하지 않습니다. 모든 도구는 브라우저에서만 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);
+  if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var GROUPS=[
+ ['📥','A. 수집·이용의 적법성','A. Lawful collection & use',[
+   ['PV-01','적법근거 없는 수집','Collection without a legal basis'],
+   ['PV-02','최소수집 원칙 위반','Excessive collection'],
+   ['PV-03','민감정보 별도 동의 누락','Sensitive data: no separate consent'],
+   ['PV-04','고유식별정보·주민번호 제한','Unique IDs & resident reg. numbers'],
+   ['PV-05','14세 미만 법정대리인 동의','Children under 14: guardian consent'],
+   ['PV-06','동의 다크패턴','Consent dark patterns']]],
+ ['🤝','B. 제공·위탁·국외이전','B. Provision, outsourcing, transfer',[
+   ['PV-07','목적 외 이용·제공','Use beyond the original purpose'],
+   ['PV-08','제3자 제공 요건','Third-party provision requirements'],
+   ['PV-09','처리위탁 관리·감독','Outsourcing supervision'],
+   ['PV-10','국외 이전 요건','Cross-border transfer'],
+   ['PV-11','추가적 이용·제공 기준','Criteria for additional use']]],
+ ['⏳','C. 보유·파기','C. Retention & destruction',[
+   ['PV-12','보유기간 초과 보관','Retention beyond the period'],
+   ['PV-13','파기 미흡 (복구 가능)','Recoverable “deletion”']]],
+ ['🔐','D. 안전성 확보조치','D. Security measures',[
+   ['PV-14','접근권한 과다·미회수','Excessive / stale privileges'],
+   ['PV-15','접근통제 미흡','Weak access control'],
+   ['PV-16','개인정보 암호화 미적용','No encryption'],
+   ['PV-17','접속기록 미보관·미점검','Missing / unreviewed access logs'],
+   ['PV-18','악성프로그램·취약점 조치','Malware & patching'],
+   ['PV-19','화면·출력물·다운로드 통제','Screen masking, printing, export'],
+   ['PV-20','개발환경 실데이터 사용','Real data in dev/test'],
+   ['PV-21','물리적 보호구역·재해복구','Physical zones & disaster recovery']]],
+ ['🙋','E. 정보주체의 권리','E. Rights of data subjects',[
+   ['PV-22','열람·정정·삭제 요구 거부','Refusing access/correction/erasure'],
+   ['PV-23','이용·제공 내역 통지','Usage & provision notice'],
+   ['PV-24','자동화된 결정 설명·거부권','Automated decisions: explain & refuse'],
+   ['PV-25','유출 통지·신고 지연','Late breach notification']]],
+ ['📹','F. 영상·생체·위치','F. Video, biometric, location',[
+   ['PV-26','고정형 영상정보처리기기','Fixed CCTV'],
+   ['PV-27','이동형 영상기기 촬영 표시','Mobile cameras: recording notice'],
+   ['PV-28','생체인식·위치정보 보호','Biometric & location data']]],
+ ['🧬','G. 가명정보','G. Pseudonymized data',[
+   ['PV-29','부적정 가명처리·재식별','Inadequate pseudonymization'],
+   ['PV-30','추가정보 미분리·결합 위반','Additional info & combination rules']]],
+ ['🤖','H. AI 프라이버시','H. AI privacy',[
+   ['PV-31','AI 학습데이터 적법근거','Training-data legal basis'],
+   ['PV-32','생성형 AI 프롬프트 유출','Prompt leakage in generative AI'],
+   ['PV-33','AI 가치망 데이터흐름','AI value-chain data flows'],
+   ['PV-34','공공 AX 프라이버시 검토','Public-sector AX privacy review']]]
+];
+
+function renderDynamic(){
+  document.getElementById('sims').innerHTML=GROUPS.map(function(g){
+    var body=g[3].map(function(it){
+      var f='15_privacy-'+it[0].toLowerCase().replace('-','')+'.html';
+      return '<a class="it" href="'+f+'"><span class="c">'+it[0]+'</span><span class="t">'+esc(L(it[1],it[2]))+'</span></a>';
+    }).join('');
+    return '<div class="grp"><h3><span>'+g[0]+'</span><span>'+esc(L(g[1],g[2]))+'</span>'+
+      '<span class="n">'+g[3].length+L('개',' items')+'</span></h3><div class="body">'+body+'</div></div>';
+  }).join('');
+}
+window.renderDynamic=renderDynamic;
+document.addEventListener('DOMContentLoaded',function(){
+  applyLang(); renderDynamic();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-hub.html'); }catch(e){}
+});
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전자금융기반시설 보안 점검 학습 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="전자금융기반시설 보안 점검 학습 · WEB-VULN-SIM">
+<meta property="og:description" content="전자금융기반시설 보안 점검 학습 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/fin-eval.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="금융 인프라 12개 영역(관리체계·가상화·클라우드·서버·WAS·DB·네트워크·보안장비·컨테이너·앱) 보안 점검항목을 위험도별로 학습하고 자가진단하는 교육용 도구. 항목마다 왜 위험한지·어떻게 점검하는지·어떻게 조치하는지 제공.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--na:#64748b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:900px}
+.srcnote{margin-top:10px;background:#0f172a;border-left:4px solid var(--warn);border-radius:8px;padding:10px 13px;font-size:12px;color:#cbd5e1}
+/* 대시보드 */
+.dash{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin:16px 0}
+.ring{--p:0;--c:var(--good);width:104px;height:104px;border-radius:50%;position:relative;flex-shrink:0;background:conic-gradient(var(--c) calc(var(--p)*1%), #1e293b 0);display:grid;place-items:center}
+.ring::before{content:'';position:absolute;width:78px;height:78px;border-radius:50%;background:var(--panel)}
+.ring .in{position:relative;text-align:center}
+.ring b{font-family:var(--mono);font-size:22px;color:#fff;display:block;line-height:1}
+.ring span{font-size:10px;color:var(--muted)}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:260px}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:92px}
+.kpi .n{font-family:var(--mono);font-size:19px;font-weight:800}
+.kpi .l{font-size:11px;color:var(--muted);margin-top:2px}
+.kpi.good .n{color:var(--good)}.kpi.bad .n{color:var(--bad)}.kpi.na .n{color:var(--na)}.kpi.tot .n{color:#fff}
+/* 컨트롤 */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+select,input[type=search]{background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit}
+input[type=search]{min-width:190px;flex:1}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+label.ck{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+/* 도메인 탭 */
+.doms{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.dom{cursor:pointer;border:1px solid var(--border);background:var(--panel2);color:#cbd5e1;border-radius:999px;padding:7px 13px;font-size:12.5px;display:flex;gap:6px;align-items:center}
+.dom.on{background:var(--accent);color:#04222e;border-color:transparent;font-weight:800}
+.dom small{font-family:var(--mono);opacity:.8}
+/* 섹션·항목 */
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;margin:12px 0;overflow:hidden}
+.sec>h2{font-size:14px;color:#e2e8f0;padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(90deg,#172033,#28344b);flex-wrap:wrap}
+.sec>h2 .cnt{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.sec>h2 .mini{width:62px;height:7px;border-radius:99px;background:#1e293b;overflow:hidden}
+.sec>h2 .mini>i{display:block;height:100%;background:var(--good)}
+.sec .body{padding:6px 12px 12px}
+.item{border:1px solid var(--border);border-radius:11px;padding:11px 13px;margin:8px 0;background:var(--panel2)}
+.item .top{display:flex;gap:9px;align-items:flex-start;flex-wrap:wrap}
+.code{font-family:var(--mono);font-size:11px;font-weight:800;color:#7dd3fc;background:#0c2a3a;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.risk{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.r5{background:#3b1418;color:#fca5a5}.r4{background:#3a2409;color:#fdba74}.r3{background:#3a3409;color:#fde047}
+.r2{background:#0c2a3a;color:#7dd3fc}.r1{background:#1e293b;color:#94a3b8}
+.tt{font-size:13.5px;font-weight:700;flex:1;min-width:200px}
+.states{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.st{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;font-family:var(--mono)}
+.st.on.g{background:#0f2a18;color:#86efac;border-color:#14532d}
+.st.on.v{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.st.on.n{background:#1e293b;color:#cbd5e1;border-color:#475569}
+.item.isv{border-left:3px solid var(--bad)}.item.isg{border-left:3px solid var(--good)}.item.isn{border-left:3px solid var(--na)}
+.toggle{font-size:11.5px;color:#7dd3fc;cursor:pointer;font-family:var(--mono);margin-top:8px;display:inline-block}
+.det{margin-top:9px;font-size:12.5px;color:#cbd5e1;border-top:1px dashed #334155;padding-top:9px;display:none}
+.item.open .det{display:block}
+.det h4{font-size:11.5px;color:#7dd3fc;font-family:var(--mono);margin:8px 0 3px}
+.det p{margin:2px 0}
+.reftag{display:inline-block;margin-top:6px;font-size:11px;color:#c4b5fd;background:#1a1030;border-radius:6px;padding:2px 8px;font-family:var(--mono)}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+.empty{color:var(--muted);font-size:13px;padding:16px;text-align:center}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid #334155;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 홈</a>
+  <a href="vuln-hub.html">취약점 학습 허브</a>
+  <a href="mp-assessment.html">관리·물리 자가진단</a>
+  <a href="my-progress.html">내 학습 현황</a>
+  <span class="sp"></span>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🏦 <span>전자금융기반시설 보안 점검 학습</span></h1>
+    <div class="sub">금융 인프라 전 영역(관리체계·가상화·클라우드·서버·WAS·DB·네트워크·보안장비·컨테이너·앱)의 보안 점검 주제를 <b>위험도별</b>로 학습하고, 항목마다 <b>양호/취약/해당없음</b>을 표시해 이행률과 취약 영역을 확인합니다.</div>
+    <div class="srcnote" id="srcNote">불러오는 중…</div>
+  </div>
+
+  <div class="dash">
+    <div class="ring" id="ring"><div class="in"><b id="ringPct">0%</b><span>이행률</span></div></div>
+    <div class="kpis">
+      <div class="kpi tot"><div class="n" id="kTot">0</div><div class="l">표시 항목</div></div>
+      <div class="kpi good"><div class="n" id="kGood">0</div><div class="l">양호</div></div>
+      <div class="kpi bad"><div class="n" id="kVuln">0</div><div class="l">취약</div></div>
+      <div class="kpi na"><div class="n" id="kNa">0</div><div class="l">해당없음</div></div>
+      <div class="kpi"><div class="n" id="kChk">0</div><div class="l">점검완료</div></div>
+      <div class="kpi bad"><div class="n" id="kCrit">0</div><div class="l">고위험 취약</div></div>
+    </div>
+  </div>
+
+  <div class="doms" id="doms"></div>
+
+  <div class="controls">
+    <select id="selRisk">
+      <option value="0">위험도 전체</option>
+      <option value="5">5 · 치명</option>
+      <option value="4">4 · 높음</option>
+      <option value="3">3 · 보통</option>
+      <option value="2">2 · 낮음</option>
+      <option value="1">1 · 정보</option>
+    </select>
+    <label class="ck"><input type="checkbox" id="onlyVuln"> 취약만</label>
+    <label class="ck"><input type="checkbox" id="onlyUn"> 미점검만</label>
+    <input type="search" id="q" placeholder="검색 (제목·설명·근거·코드)…">
+    <button class="btn" onclick="exportReport()">📄 리포트</button>
+    <button class="btn dgr" onclick="resetAll()">↺ 초기화</button>
+  </div>
+
+  <div class="note">이행률 = 양호 ÷ (양호 + 취약). 해당없음은 계산에서 제외합니다. 학습용 자가점검이며 공식 평가를 대체하지 않습니다.</div>
+
+  <div id="list"><div class="empty"><span class="spin"></span> 점검항목 불러오는 중…</div></div>
+
+  <div class="disc">⚠️ 교육 목적의 자체 재작성 콘텐츠입니다. 전부 브라우저에서 동작하며 응답은 기기를 벗어나지 않습니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+var DATA=null, ITEMS=[], DOMS=[], STATE={}, F={dom:'all',risk:0,onlyVuln:false,onlyUn:false,q:''};
+var SKEY='wvs_fin_eval';
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function loadState(){try{STATE=JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){STATE={};}}
+function saveState(){try{localStorage.setItem(SKEY,JSON.stringify(STATE));}catch(e){}}
+
+function stats(list){
+  var g=0,v=0,n=0,crit=0;
+  list.forEach(function(it){var s=STATE[it.id];
+    if(s==='g')g++;else if(s==='v'){v++;if(it.r>=4)crit++;}else if(s==='n')n++;});
+  return {g:g,v:v,n:n,crit:crit,chk:g+v+n,total:list.length,rate:(g+v)?Math.round(g/(g+v)*100):0};
+}
+function visible(){
+  return ITEMS.filter(function(it){
+    if(F.dom!=='all' && it.d!==F.dom) return false;
+    if(F.risk && it.r!==F.risk) return false;
+    var s=STATE[it.id];
+    if(F.onlyVuln && s!=='v') return false;
+    if(F.onlyUn && s) return false;
+    if(F.q){
+      var h=(it.id+' '+it.t+' '+it.why+' '+it.how+' '+it.fix+' '+(it.ref||'')+' '+(it.area||'')).toLowerCase();
+      if(h.indexOf(F.q.toLowerCase())<0) return false;
+    }
+    return true;
+  });
+}
+function renderDash(){
+  var s=stats(visible());
+  $('kTot').textContent=s.total; $('kGood').textContent=s.g; $('kVuln').textContent=s.v;
+  $('kNa').textContent=s.n; $('kChk').textContent=s.chk+' / '+s.total; $('kCrit').textContent=s.crit;
+  var r=$('ring'); r.style.setProperty('--p',s.rate);
+  r.style.setProperty('--c', s.rate>=80?'var(--good)':s.rate>=50?'var(--accent)':s.v?'var(--bad)':'var(--warn)');
+  $('ringPct').textContent=s.rate+'%';
+  try{ if(window.WVSProgress){ window.WVSProgress.markVisited('fin-eval.html');
+    var all=stats(ITEMS); if(all.chk>=all.total&&all.total>0) window.WVSProgress.complete(all.rate,'fin-eval.html'); } }catch(e){}
+}
+function renderDoms(){
+  var total=ITEMS.length;
+  var html='<span class="dom'+(F.dom==='all'?' on':'')+'" data-k="all">전체 <small>'+total+'</small></span>';
+  html+=DOMS.filter(function(d){return d.count>0;}).map(function(d){
+    return '<span class="dom'+(F.dom===d.k?' on':'')+'" data-k="'+d.k+'">'+d.icon+' '+esc(d.name)+' <small>'+d.count+'</small></span>';
+  }).join('');
+  $('doms').innerHTML=html;
+  $('doms').querySelectorAll('.dom').forEach(function(el){
+    el.addEventListener('click',function(){F.dom=el.getAttribute('data-k');renderDoms();render();renderDash();});
+  });
+}
+function itemHtml(it){
+  var s=STATE[it.id]||'';
+  var cls=s==='v'?'isv':s==='g'?'isg':s==='n'?'isn':'';
+  return '<div class="item '+cls+'" data-id="'+it.id+'">'
+    +'<div class="top"><span class="code">'+it.id+'</span>'
+    +'<span class="risk r'+it.r+'">R'+it.r+'</span>'
+    +'<span class="tt">'+esc(it.t)+'</span>'
+    +'<span class="states">'
+      +'<span class="st g'+(s==='g'?' on':'')+'" data-v="g">양호</span>'
+      +'<span class="st v'+(s==='v'?' on':'')+'" data-v="v">취약</span>'
+      +'<span class="st n'+(s==='n'?' on':'')+'" data-v="n">해당없음</span>'
+    +'</span></div>'
+    +'<span class="toggle">▸ 상세 (위험·점검·조치)</span>'
+    +'<div class="det">'
+      +'<h4>왜 중요한가</h4><p>'+esc(it.why)+'</p>'
+      +'<h4>어떻게 점검하는가</h4><p>'+esc(it.how)+'</p>'
+      +'<h4>조치 방안</h4><p>'+esc(it.fix)+'</p>'
+      +(it.ref?'<span class="reftag">근거 '+esc(it.ref)+'</span>':'')
+    +'</div></div>';
+}
+function render(){
+  var vis=visible(), host=$('list');
+  if(!vis.length){ host.innerHTML='<div class="empty">조건에 맞는 항목이 없습니다.</div>'; return; }
+  var groups=[], map={};
+  vis.forEach(function(it){
+    var key=it.d+'|'+(it.area||'기타');
+    if(!map[key]){map[key]={key:key,d:it.d,area:it.area||'기타',items:[]};groups.push(map[key]);}
+    map[key].items.push(it);
+  });
+  var dn={}; DOMS.forEach(function(d){dn[d.k]=d;});
+  host.innerHTML=groups.map(function(g){
+    var st=stats(g.items), d=dn[g.d]||{icon:'',name:g.d};
+    return '<div class="sec" data-k="'+esc(g.key)+'"><h2>'
+      +'<span>'+d.icon+' '+esc(d.name)+' › '+esc(g.area)+'</span>'
+      +'<span class="cnt">'+st.g+'✓ · '+st.v+'⚠ · '+st.total+'개</span>'
+      +'<span class="mini"><i style="width:'+st.rate+'%;background:'+(st.rate>=80?'var(--good)':st.rate>=50?'var(--accent)':'var(--warn)')+'"></i></span>'
+      +'</h2><div class="body">'+g.items.map(itemHtml).join('')+'</div></div>';
+  }).join('');
+}
+/* 이벤트 위임 */
+document.addEventListener('click',function(e){
+  var st=e.target.closest('.st');
+  if(st){
+    var box=st.closest('.item'), id=box.getAttribute('data-id'), v=st.getAttribute('data-v');
+    if(STATE[id]===v) delete STATE[id]; else STATE[id]=v;
+    saveState();
+    var cur=STATE[id]||'';
+    box.className='item'+(cur==='v'?' isv':cur==='g'?' isg':cur==='n'?' isn':'')+(box.classList.contains('open')?' open':'');
+    box.querySelectorAll('.st').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-v')===cur);});
+    renderDash();
+    if(F.onlyVuln||F.onlyUn) render();
+    else { var sec=box.closest('.sec'); if(sec) updateSec(sec); }
+    return;
+  }
+  var tg=e.target.closest('.toggle');
+  if(tg){ var it=tg.closest('.item'); it.classList.toggle('open');
+    tg.firstChild.textContent=it.classList.contains('open')?'▾ ':'▸ '; return; }
+  var h2=e.target.closest('.sec>h2');
+  if(h2){ var b=h2.nextElementSibling; b.style.display=b.style.display==='none'?'':'none'; }
+});
+function updateSec(sec){
+  var ids={}; sec.querySelectorAll('.item').forEach(function(x){ids[x.getAttribute('data-id')]=1;});
+  var st=stats(ITEMS.filter(function(i){return ids[i.id];}));
+  var c=sec.querySelector('.cnt'); if(c)c.textContent=st.g+'✓ · '+st.v+'⚠ · '+st.total+'개';
+  var m=sec.querySelector('.mini>i'); if(m){m.style.width=st.rate+'%';
+    m.style.background=st.rate>=80?'var(--good)':st.rate>=50?'var(--accent)':'var(--warn)';}
+}
+function exportReport(){
+  var s=stats(ITEMS), lines=[];
+  lines.push('전자금융기반시설 보안 점검 자가진단 결과');
+  lines.push('생성: '+new Date().toLocaleString('ko-KR'));
+  lines.push('전체 '+s.total+' · 양호 '+s.g+' · 취약 '+s.v+' · 해당없음 '+s.n+' · 이행률 '+s.rate+'% · 고위험 취약 '+s.crit);
+  lines.push('');
+  var dn={}; DOMS.forEach(function(d){dn[d.k]=d.name;});
+  var v=ITEMS.filter(function(i){return STATE[i.id]==='v';}).sort(function(a,b){return b.r-a.r;});
+  lines.push('■ 취약 항목 ('+v.length+') — 위험도 높은 순');
+  if(!v.length) lines.push('  (없음)');
+  v.forEach(function(i){
+    lines.push('- [R'+i.r+'] '+i.id+' '+(dn[i.d]||i.d)+' › '+(i.area||'')+' : '+i.t);
+    lines.push('    조치: '+i.fix);
+    if(i.ref) lines.push('    근거: '+i.ref);
+  });
+  var u=ITEMS.filter(function(i){return !STATE[i.id];});
+  lines.push(''); lines.push('■ 미점검 ('+u.length+'): '+u.map(function(i){return i.id;}).join(', '));
+  var blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='전자금융_점검결과_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+function resetAll(){
+  if(!confirm('모든 점검 결과를 초기화할까요? (이 기기 저장분만 삭제)'))return;
+  STATE={};saveState();render();renderDash();
+}
+function bind(){
+  $('selRisk').addEventListener('change',function(){F.risk=parseInt(this.value,10)||0;render();renderDash();});
+  $('onlyVuln').addEventListener('change',function(){F.onlyVuln=this.checked;render();renderDash();});
+  $('onlyUn').addEventListener('change',function(){F.onlyUn=this.checked;render();renderDash();});
+  var t; $('q').addEventListener('input',function(){var v=this.value;clearTimeout(t);
+    t=setTimeout(function(){F.q=v.trim();render();renderDash();},180);});
+}
+loadState(); bind();
+fetch('js/fin-eval-items.json').then(function(r){return r.json();}).then(function(d){
+  DATA=d; ITEMS=d.items||[]; DOMS=d.domains||[];
+  $('srcNote').innerHTML='📘 '+esc(d.notice||'')+' <b>현재 '+ITEMS.length+'개 항목</b>';
+  renderDoms(); render(); renderDash();
+}).catch(function(e){
+  $('list').innerHTML='<div class="empty">데이터를 불러오지 못했습니다. ('+esc(e&&e.message||e)+')</div>';
+});
+</script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+
+/* ── 4. 가상 앱 페이지 셸 ── */
+var APP_CSS='body{font-family:system-ui,\'Malgun Gothic\',sans-serif;background:#f6f7f9;color:#1f2937;margin:0}'+
+'.navbar{background:#1e293b;color:#fff;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}'+
+'.navbar b{font-weight:800;font-size:15px;margin-right:8px}.navbar a{color:#cbd5e1;text-decoration:none;font-size:13px}'+
+'.wrap{max-width:860px;margin:18px auto;padding:0 16px}'+
+'.card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 18px;margin-bottom:14px}'+
+'input[type=text],input[type=password],textarea{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box}'+
+'button,.btn{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;font-family:inherit}'+
+'.btn2{background:#6b7280}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #e5e7eb;padding:7px 9px;text-align:left;font-size:13px}'+
+'pre{background:#0f172a;color:#a5f3fc;padding:12px;border-radius:8px;overflow:auto;font-size:12px;white-space:pre-wrap;word-break:break-all}'+
+'.muted{color:#6b7280;font-size:12px}h1{font-size:20px;margin:0 0 6px}h2{font-size:16px;margin:0 0 8px}'+
+'.rev{border-bottom:1px dashed #e5e7eb;padding:9px 0}.ok{color:#059669}.err{color:#dc2626}'+
+'.price{font-size:18px;font-weight:800;color:#111827}';
+function navHtml(){
+ var links=[['홈','/'],['검색','/search'],['상품·리뷰','/product?id=1'],['환영','/welcome?name=guest'],
+ ['URL미리보기','/preview?url=http://shop.example.com/'],['다운로드','/download?file=manual.pdf'],['ping','/ping?host=8.8.8.8'],
+ ['업로드','/upload'],['로그인','/login'],['내 프로필','/profile'],['관리자','/admin'],['내 계좌','/api/accounts?id=1001']];
+ var h='<b>BugPay Mall</b>';
+ for(var i=0;i<links.length;i++)h+='<a href="'+links[i][1]+'">'+links[i][0]+'</a>';
+ return h;
+}
+function appShell(title,inner,extraHead){
+ return '<div class="navbar">'+navHtml()+'</div><div class="wrap"><div class="card"><h1>'+title+'</h1>'+inner+'</div>'+
+ '<p class="muted">BugPay Mall 가상 타깃 — 웹 취약점 실습장(교육용 시뮬레이션)</p></div>'+(extraHead||'');
+}
+function jsonShell(path,data,note){
+ var body='<div class="navbar">'+navHtml()+'</div><div class="wrap"><div class="card"><h2>API 응답 — '+path+'</h2><pre>'+H(JSON.stringify(data,null,2))+'</pre>'+
+ (note?'<p class="muted">'+note+'</p>':'')+'</div></div>';
+ return body;
+}
+function formHtml(action,fields,btn){
+ var h='<form action="'+action+'" method="post">';
+ fields.forEach(function(f){
+   h+='<p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">'+f.label+'</label>';
+   if(f.type==='textarea')h+='<textarea name="'+f.name+'" rows="4" placeholder="'+(f.ph||'')+'"></textarea>';
+   else h+='<input type="'+(f.type||'text')+'" name="'+f.name+'" value="'+(f.v||'')+'" placeholder="'+(f.ph||'')+'">';
+   h+='</p>';
+ });
+ return h+'<button type="submit">'+(btn||'전송')+'</button></form>';
+}
+
+/* ── 5. 시뮬레이터 라우팅 ── */
+var REQLOG=[];var failLogins=0;
+function handle(method,path,q,body){
+ var R={status:200,reason:'OK',hdrs:{'Server':'BugPay-WS/2.4.6 (Debian)','X-Powered-By':'PHP/7.4.3',
+   'Set-Cookie':'sid='+STATE.sid+'; Path=/'},html:'',notes:[],lab:null,ctype:'text/html; charset=utf-8'};
+ function note(s,cls){R.notes.push({s:s,c:cls||''});}
+ function win(lab,how){R.win={lab:lab,how:how};}
+ body=body||{};
+ var key=path+(path.indexOf('?')>=0?'&':'?');
+
+ /* ── 홈 ── */
+ if(path==='/'||path==='/index.html'){
+   R.html=appShell('🛒 BugPay Mall에 오신 것을 환영합니다',
+    '<p>가상 쇼핑몰·결제 시스템입니다. 상단 메뉴의 기능들을 이용해 보세요.</p>'+
+    '<ul style="font-size:14px;line-height:2">'+
+    '<li>상품 검색·주문, 리뷰 작성</li><li>고객 지원 봇(상단 탭 🤖)</li><li>결제·계좌 API (교육용)</li></ul>');
+ }
+ /* ── 검색: 반사형 XSS + SQLi UNION ── */
+ else if(path==='/search'){
+   var qq=q.get('q')||'';
+   var sql="SELECT id,name,price,desc FROM products WHERE name LIKE '%"+qq+"%'";
+   if(/union[\s\S]{0,40}select/i.test(qq)&&!isP('sqli-union')){
+     note('쿼리 조립: '+sql,'bad');
+     note('UNION SELECT 감지 — 두 번째 SELECT 결과가 그대로 응답에 붙음','bad');
+     var rows='<tr><th>uid</th><th>pwd(hash)</th><th>email</th><th>secret</th></tr>';
+     USERS.forEach(function(u){rows+='<tr><td>'+u.uid+'</td><td>'+u.pwd+'</td><td>'+u.email+'</td><td>'+u.secret+'</td></tr>';});
+     R.html=appShell('검색 결과',
+      '<p>검색어: <b>'+qq+'</b></p><table>'+rows+'</table><p class="muted">총 3개 행 — products가 아닌 users 테이블이 조회되었습니다</p>');
+     win('sqli-union',"UNION SELECT로 users 테이블 전체 노출 — secret 컬럼의 플래그 확인");
+   }else{
+     note('쿼리 조립: '+(isP('sqli-union')?sql.replace(qq,'? (파라미터 바인딩)'):sql));
+     var echo=isP('xss-reflected')?H(qq):qq;
+     var hits=PRODUCTS.filter(function(p){return p.name.indexOf(qq)>=0;});
+     var list=hits.length?'<ul>'+hits.map(function(p){return '<li>'+p.name+' — <span class="price">'+p.price+'원</span></li>';}).join('')+'</ul>':'<p>검색 결과가 없습니다.</p>';
+     R.html=appShell('검색 결과','<form action="/search" method="get"><p><input type="text" name="q" value="'+echo+'" placeholder="상품명"></p><button>검색</button></form><p>검색어: <b>'+echo+'</b></p>'+list);
+     if(isP('xss-reflected'))note('출력 이스케이프 적용 — 반사된 값은 HTML 엔티티로 인코딩됨','good');
+   }
+   R.lab='xss-reflected';
+ }
+ /* ── 로그인: SQLi 인증 우회 + 계정 열거 + 기본 크리덴셜 + 잠금 부재 ── */
+ else if(path==='/login'&&method==='GET'){
+   R.html=appShell('로그인',formHtml('/login',[{name:'uid',label:'아이디',ph:'guest'},{name:'pwd',type:'password',label:'비밀번호',ph:'guest1234'}],'로그인'));
+ }
+ else if(path==='/login'&&method==='POST'){
+   var uid=body.uid||'',pwd=body.pwd||'';
+   var sql="SELECT * FROM users WHERE uid='"+uid+"' AND pwd='"+pwd+"'";
+   if(isP('sqli-auth')){note('준비된 쿼리: SELECT * FROM users WHERE uid=? AND pwd=? (파라미터 바인딩)','good');
+     var u=USERS.filter(function(x){return x.uid===uid&&x.pwd===pwd;})[0];
+     if(u){R.html=appShell('로그인 성공','<p class="ok">✔ '+H(u.name)+'('+u.uid+') 님 환영합니다</p>');STATE.loginUid=u.uid;}
+     else{failLogins++;R.html=appShell('로그인 실패','<p class="err">아이디 또는 비밀번호가 올바르지 않습니다.</p>');}
+   }else{
+     note('쿼리 조립: '+sql, /['"]/.test(uid)?'bad':'');
+     var taut=/['"]/.test(uid)&&((/\b(or|and)\b/i.test(uid)&&/=/.test(uid))||/(--|#|\/\*)/.test(uid));
+     var known=USERS.filter(function(x){return x.uid===uid;})[0];
+     if(taut){
+       note("WHERE 절이 항상 참이 됨 — 첫 행(admin)으로 로그인 성공",'bad');
+       STATE.loginUid='admin';
+       R.html=appShell('로그인 성공','<p class="ok">✔ 관리자(admin) 님 환영합니다</p><pre>FLAG{auth-bypass-via-tautology}</pre><p class="muted">인증 우회로 관리자 세션 획득</p>');
+       win('sqli-auth',"' OR '1'='1 형태의 항진식으로 인증 우회 — 관리자 세션 획득");
+     }else if(/['"]/.test(uid)){
+       note('SQL 구문 오류 발생 — 상세 오류가 응답에 노출됨(오류 메시지 정보노출)','warn');
+       R.status=500;R.reason='Internal Server Error';
+       R.html=appShell('오류','<pre>MySQLSyntaxErrorException: You have an error in your SQL syntax near \''+H(uid)+'\' at line 1\n  at com.bugpay.auth.Login.doPost(Login.java:47)\n  at org.apache.catalina.core.ApplicationFilterChain...</pre>');
+     }else if(uid==='admin'&&(pwd==='admin'||pwd==='admin123')){
+       note('기본/추측 가능한 크리덴셜로 관리자 로그인 성공','bad');
+       R.html=appShell('로그인 성공','<p class="ok">✔ 관리자(admin) 님 환영합니다</p><p class="muted">비밀번호가 admin123이라니…</p>');
+       win('diag-defaultcred','관리자 기본 크리덴셜(admin/admin123) 로그인 성공');
+     }else if(known&&known.pwd===pwd){
+       R.html=appShell('로그인 성공','<p class="ok">✔ '+H(known.name)+'('+known.uid+') 님 환영합니다</p>');STATE.loginUid=known.uid;
+     }else{
+       failLogins++;
+       note('로그인 실패 '+failLogins+'회 — '+(isP('diag-ratelimit')?'5회 초과로 계정이 잠겼습니다':'잠금 없음, 계속 시도 가능'));
+       if(!isP('diag-ratelimit')&&failLogins>=8){note('반복 인증 시도 제한 부재 — 무차별 대입 계속 가능','bad');win('diag-ratelimit','로그인 실패 8회에도 잠금 없음 — 무차별 대입 가능');}
+       var msg=known?'비밀번호가 올바르지 않습니다.':'존재하지 않는 아이디입니다.';
+       note('실패 메시지: '+msg+(known?' ← 아이디 존재 여부가 노출됨(계정 열거)':''),'warn');
+       R.html=appShell('로그인 실패','<p class="err">'+msg+'</p><p><a href="/login">다시 시도</a></p>');
+     }
+   }
+ }

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리·물리 취약점 자가진단 — 주요정보통신기반시설 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="관리·물리 취약점 자가진단 — 주요정보통신기반시설 · WEB-VULN-SIM">
+<meta property="og:description" content="관리·물리 취약점 자가진단 — 주요정보통신기반시설 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/mp-assessment.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="KISA '주요정보통신기반시설 관리·물리적 취약점 분석·평가 방법 안내서(2026)' 기반 136개 점검항목 인터랙티브 자가진단 — 양호/취약/해당없음 체크로 이행률·취약분야 자동 산출, 관계법규(공통·공공·금융·ICT)·확인대상 제공. 100% 브라우저.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--na:#64748b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13px;margin-top:8px;max-width:880px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+/* 대시보드 */
+.dash{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin:16px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.ring{--p:0;--c:var(--good);width:104px;height:104px;border-radius:50%;position:relative;flex-shrink:0;background:conic-gradient(var(--c) calc(var(--p)*1%), #1e293b 0);display:grid;place-items:center}
+.ring::before{content:'';position:absolute;width:78px;height:78px;border-radius:50%;background:var(--panel)}
+.ring .in{position:relative;text-align:center}
+.ring b{font-family:var(--mono);font-size:22px;color:#fff;display:block;line-height:1}
+.ring span{font-size:10px;color:var(--muted)}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:260px}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:96px}
+.kpi .n{font-family:var(--mono);font-size:20px;font-weight:800}
+.kpi .l{font-size:11px;color:var(--muted);margin-top:2px}
+.kpi.good .n{color:var(--good)}.kpi.bad .n{color:var(--bad)}.kpi.na .n{color:var(--na)}.kpi.tot .n{color:#fff}
+/* 컨트롤 */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0 4px}
+.seg{display:inline-flex;border:1px solid #334155;border-radius:10px;overflow:hidden}
+.seg button{background:var(--panel2);color:#cbd5e1;border:none;padding:8px 13px;font-size:12.5px;font-family:var(--mono);cursor:pointer}
+.seg button.on{background:var(--accent);color:#04222e;font-weight:800}
+select,input[type=search]{background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit}
+input[type=search]{min-width:180px;flex:1}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+/* 섹션 */
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;margin:12px 0;overflow:hidden}
+.sec>h2{font-size:14px;color:#e2e8f0;padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(90deg,#172033,#28344b);flex-wrap:wrap}
+.sec>h2 .dom{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px}
+.dom.m{background:#1e2a52;color:#93c5fd}.dom.p{background:#3a2a09;color:#fde047}
+.sec>h2 .pilln{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.sec>h2 .mini{width:64px;height:7px;border-radius:99px;background:#1e293b;overflow:hidden}
+.sec>h2 .mini>i{display:block;height:100%;background:var(--good)}
+.sec .body{padding:6px 12px 12px}
+.item{border:1px solid var(--border);border-radius:11px;padding:11px 13px;margin:8px 0;background:var(--panel2)}
+.item .top{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.code{font-family:var(--mono);font-size:11px;font-weight:800;color:#7dd3fc;background:#0c2a3a;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.req{font-size:13.5px;font-weight:600;flex:1;min-width:200px}
+.states{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.st{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;font-family:var(--mono)}
+.st.on.g{background:#0f2a18;color:#86efac;border-color:#14532d}
+.st.on.v{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.st.on.n{background:#1e293b;color:#cbd5e1;border-color:#475569}
+.item.isv{border-left:3px solid var(--bad)}
+.item.isg{border-left:3px solid var(--good)}
+.item.isn{border-left:3px solid var(--na)}
+.det{margin-top:10px;font-size:12.5px;color:#cbd5e1;border-top:1px dashed #334155;padding-top:9px;display:none}
+.item.open .det{display:block}
+.toggle{font-size:11.5px;color:#7dd3fc;cursor:pointer;font-family:var(--mono);margin-top:8px;display:inline-block}
+.det h4{font-size:11.5px;color:#7dd3fc;font-family:var(--mono);margin:9px 0 3px}
+.det p{margin:2px 0;white-space:pre-line}
+.laws{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;margin-top:3px}
+.law{background:#0b1220;border:1px solid var(--border);border-radius:8px;padding:7px 9px}
+.law b{color:#c4b5fd;font-size:11px;font-family:var(--mono)}
+.law span{display:block;font-size:11.5px;color:#94a3b8;margin-top:2px}
+.ev{margin:3px 0 0 2px;list-style:none}
+.ev li{font-size:12px;color:#cbd5e1;padding:2px 0 2px 18px;position:relative}
+.ev li::before{content:'☐';position:absolute;left:0;color:#64748b}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:14px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+.empty{color:var(--muted);font-size:13px;padding:16px;text-align:center}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid #334155;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="my-progress.html"><span data-en="My Progress">내 학습 현황</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🏛️ <span data-en="Management & Physical Vulnerability Self-Assessment">관리·물리 취약점 자가진단</span></h1>
+    <div class="sub" data-en="An interactive self-assessment for the management &amp; physical domains of the Korean critical-infrastructure (ICI) vulnerability analysis framework — the complement to the technical checks. Mark each item 양호(good) / 취약(vulnerable) / 해당없음(N/A); implementation rate and weak areas are computed live. Related laws (by entity type) and evidence-to-review are shown per item. Everything is saved in your browser.">
+      주요정보통신기반시설 취약점 분석·평가의 <b>관리적·물리적</b> 분야(기술적 점검의 나머지 두 축)를 인터랙티브로 자가진단합니다. 항목마다 <b>양호 / 취약 / 해당없음</b>을 표시하면 이행률·취약분야가 자동 산출되고, 항목별 <b>관계법규(주체별)·확인대상</b>을 제공합니다. 모든 결과는 브라우저에 저장됩니다.</div>
+    <div class="src" id="srcLine">📕 출처: KISA 주요정보통신기반시설 관리·물리적 취약점 분석·평가 방법 안내서(2026) · 136개 점검항목</div>
+  </div>
+
+  <div class="dash">
+    <div class="ring" id="ring"><div class="in"><b id="ringPct">0%</b><span data-en="compliance">이행률</span></div></div>
+    <div class="kpis">
+      <div class="kpi tot"><div class="n" id="kTot">0</div><div class="l" data-en="Total items">전체 항목</div></div>
+      <div class="kpi good"><div class="n" id="kGood">0</div><div class="l" data-en="Good (양호)">양호</div></div>
+      <div class="kpi bad"><div class="n" id="kVuln">0</div><div class="l" data-en="Vulnerable (취약)">취약</div></div>
+      <div class="kpi na"><div class="n" id="kNa">0</div><div class="l" data-en="N/A (해당없음)">해당없음</div></div>
+      <div class="kpi"><div class="n" id="kChecked">0</div><div class="l" data-en="Checked">점검완료</div></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="seg" id="segDomain">
+      <button data-v="all" class="on" data-en="All">전체</button>
+      <button data-v="관리적" data-en="Management">관리적</button>
+      <button data-v="물리적" data-en="Physical">물리적</button>
+    </div>
+    <select id="selEntity" title="관계법규 주체">
+      <option value="공통" data-en="Common">공통</option>
+      <option value="공공기관" data-en="Public agency">공공기관</option>
+      <option value="금융회사" data-en="Financial">금융회사</option>
+      <option value="ICT기업" data-en="ICT company">ICT기업</option>
+    </select>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><input type="checkbox" id="onlyVuln"> <span data-en="Vulnerable only">취약만</span></label>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><input type="checkbox" id="onlyUn"> <span data-en="Unchecked only">미점검만</span></label>
+    <input type="search" id="q" placeholder="검색 (요건·확인대상·코드)…">
+    <button class="btn" onclick="exportReport()">📄 <span data-en="Export report">리포트</span></button>
+    <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+  </div>
+
+  <div class="note" data-en="ℹ️ Implementation rate = 양호 ÷ (양호 + 취약); N/A items are excluded. This is an educational self-check based on the public KISA guide and does not replace an official assessment by a qualified assessor.">
+    ℹ️ 이행률 = 양호 ÷ (양호 + 취약), 해당없음은 제외하고 계산합니다. 본 도구는 공개된 KISA 안내서 기반 교육용 자가점검으로, 자격을 갖춘 진단원의 공식 취약점 분석·평가를 대체하지 않습니다.</div>
+
+  <div id="list"><div class="empty"><span class="spin"></span> <span data-en="Loading checklist…">점검항목 불러오는 중…</span></div></div>
+
+  <div class="disc" data-en="Content extracted from the KISA guide (2026). Item text is Korean (regulatory source). Runs entirely in your browser; answers never leave your device.">
+    ⚠️ KISA 안내서(2026)에서 추출한 내용입니다. 항목 본문은 규정 원문(국문)입니다. 전부 브라우저에서 동작하며 응답은 기기를 벗어나지 않습니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+/* i18n */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var DATA=null, ITEMS=[], STATE={}, FILT={domain:'all',entity:'공통',onlyVuln:false,onlyUn:false,q:''};
+var SKEY='wvs_mp_assess';
+function loadState(){try{STATE=JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){STATE={};}}
+function saveState(){try{localStorage.setItem(SKEY,JSON.stringify(STATE));}catch(e){}}
+
+/* 섹션 순서(도메인→섹션번호) */
+function sectionKey(it){return it.domain+'|'+('0'+it.section_no).slice(-2)+'|'+it.section;}
+
+function computeStats(items){
+  var g=0,v=0,n=0;
+  items.forEach(function(it){var s=STATE[it.code];if(s==='g')g++;else if(s==='v')v++;else if(s==='n')n++;});
+  var checked=g+v+n, rate=(g+v)?Math.round(g/(g+v)*100):0;
+  return {g:g,v:v,n:n,checked:checked,total:items.length,rate:rate};
+}
+function renderDash(){
+  var s=computeStats(ITEMS);
+  document.getElementById('kTot').textContent=s.total;
+  document.getElementById('kGood').textContent=s.g;
+  document.getElementById('kVuln').textContent=s.v;
+  document.getElementById('kNa').textContent=s.n;
+  document.getElementById('kChecked').textContent=s.checked+' / '+s.total;
+  var ring=document.getElementById('ring');
+  ring.style.setProperty('--p',s.rate);
+  ring.style.setProperty('--c', s.rate>=80?'var(--good)':s.rate>=50?'var(--accent)':s.v?'var(--bad)':'var(--warn)');
+  document.getElementById('ringPct').textContent=s.rate+'%';
+  // 진도 연동: 전 항목 점검 완료 시 complete
+  try{ if(window.WVSProgress){ window.WVSProgress.markVisited('mp-assessment.html'); if(s.checked>=s.total && s.total>0) window.WVSProgress.complete(s.rate,'mp-assessment.html'); } }catch(e){}
+}
+
+function matchFilter(it){
+  if(FILT.domain!=='all' && it.domain!==FILT.domain) return false;
+  var st=STATE[it.code];
+  if(FILT.onlyVuln && st!=='v') return false;
+  if(FILT.onlyUn && st) return false;
+  if(FILT.q){
+    var q=FILT.q.toLowerCase();
+    var hay=(it.code+' '+it.requirement+' '+(it.evidence||[]).join(' ')+' '+it.section+' '+(it.detail||'')).toLowerCase();
+    if(hay.indexOf(q)<0) return false;
+  }
+  return true;
+}
+
+function render(){
+  var host=document.getElementById('list');
+  var vis=ITEMS.filter(matchFilter);
+  if(!vis.length){ host.innerHTML='<div class="empty" data-en="No items match the filters.">조건에 맞는 항목이 없습니다.</div>'; applyLang(); return; }
+  // 섹션 그룹핑(순서 유지)
+  var groups=[], gmap={};
+  vis.forEach(function(it){
+    var k=sectionKey(it);
+    if(!gmap[k]){gmap[k]={key:k,domain:it.domain,section:it.section,section_no:it.section_no,items:[]};gmap[k]._order=groups.length;groups.push(gmap[k]);}
+    gmap[k].items.push(it);
+  });
+  var html=groups.map(function(g){
+    var st=computeStats(g.items);
+    var domCls=g.domain==='물리적'?'p':'m';
+    var body=g.items.map(itemHtml).join('');
+    return '<div class="sec" data-k="'+esc(g.key)+'">'+
+      '<h2 onclick="toggleSec(this)"><span class="dom '+domCls+'">'+g.domain+'</span>'+
+      '<span>'+g.section_no+'. '+esc(g.section)+'</span>'+
+      '<span class="pilln">'+st.g+'✓ · '+st.v+'⚠ · '+st.total+L('개','')+'</span>'+
+      '<span class="mini"><i style="width:'+st.rate+'%;background:'+(st.rate>=80?'var(--good)':st.rate>=50?'var(--accent)':'var(--warn)')+'"></i></span>'+
+      '</h2><div class="body">'+body+'</div></div>';
+  }).join('');
+  host.innerHTML=html;
+  applyLang();
+}
+
+function itemHtml(it){
+  var st=STATE[it.code]||'';
+  var cls=st==='v'?'isv':st==='g'?'isg':st==='n'?'isn':'';
+  var laws=it.laws||{};
+  var ent=FILT.entity;
+  // 선택 주체 법규 우선, 공통 항상 표시
+  var lawOrder=['공통','공공기관','금융회사','ICT기업'];
+  var lawHtml=lawOrder.filter(function(k){return laws[k] && (k==='공통'||k===ent);}).map(function(k){
+    return '<div class="law"><b>'+k+'</b><span>'+esc(laws[k])+'</span></div>';
+  }).join('');
+  if(!lawHtml && Object.keys(laws).length){
+    lawHtml=lawOrder.filter(function(k){return laws[k];}).map(function(k){return '<div class="law"><b>'+k+'</b><span>'+esc(laws[k])+'</span></div>';}).join('');
+  }
+  var ev=(it.evidence||[]).map(function(e){return '<li>'+esc(e)+'</li>';}).join('');
+  return '<div class="item '+cls+'" data-code="'+it.code+'">'+
+    '<div class="top">'+
+      '<span class="code">'+it.code+'</span>'+
+      '<span class="req">'+esc(it.requirement)+'</span>'+
+      '<span class="states">'+
+        '<span class="st g'+(st==='g'?' on':'')+'" onclick="setState(\''+it.code+'\',\'g\')" data-en="Good">양호</span>'+
+        '<span class="st v'+(st==='v'?' on':'')+'" onclick="setState(\''+it.code+'\',\'v\')" data-en="Vuln">취약</span>'+
+        '<span class="st n'+(st==='n'?' on':'')+'" onclick="setState(\''+it.code+'\',\'n\')" data-en="N/A">해당없음</span>'+
+      '</span>'+
+    '</div>'+
+    '<span class="toggle" onclick="toggleItem(this)">▸ <span data-en="Details (description · laws · evidence)">상세 (설명·관계법규·확인대상)</span></span>'+
+    '<div class="det">'+
+      (it.detail?'<h4 data-en="Description">세부 설명</h4><p>'+esc(it.detail)+'</p>':'')+
+      (it.consider?'<h4 data-en="Considerations">고려 사항</h4><p>'+esc(it.consider)+'</p>':'')+
+      (lawHtml?'<h4 data-en="Related laws">관계 법규</h4><div class="laws">'+lawHtml+'</div>':'')+
+      (ev?'<h4 data-en="Evidence to review">확인 대상(예시)</h4><ul class="ev">'+ev+'</ul>':'')+
+    '</div>'+
+  '</div>';
+}
+
+function setState(code,val){
+  if(STATE[code]===val) delete STATE[code]; else STATE[code]=val; // 재클릭 시 해제(미점검)
+  saveState();
+  // 항목 DOM만 갱신
+  var el=document.querySelector('.item[data-code="'+code+'"]');
+  if(el){
+    var st=STATE[code]||'';
+    el.className='item'+(st==='v'?' isv':st==='g'?' isg':st==='n'?' isn':'')+(el.classList.contains('open')?' open':'');
+    el.querySelectorAll('.st').forEach(function(b){b.classList.remove('on');});
+    if(st){var m={g:'.g',v:'.v',n:'.n'};var b=el.querySelector('.st'+m[st]);if(b)b.classList.add('on');}
+  }
+  renderDash();
+  updateSectionHead(code);
+  // 필터가 상태 의존적이면(취약만/미점검만) 재렌더
+  if(FILT.onlyVuln||FILT.onlyUn){ render(); }
+}
+function updateSectionHead(code){
+  var it=ITEMS.find(function(x){return x.code===code;}); if(!it)return;
+  var secEl=document.querySelector('.sec[data-k="'+CSS.escape(sectionKey(it))+'"]'); if(!secEl)return;
+  var codes={}; secEl.querySelectorAll('.item').forEach(function(x){codes[x.getAttribute('data-code')]=1;});
+  var its=ITEMS.filter(function(x){return codes[x.code];});
+  var st=computeStats(its);
+  var pill=secEl.querySelector('.pilln'); if(pill)pill.textContent=st.g+'✓ · '+st.v+'⚠ · '+st.total+L('개','');
+  var mini=secEl.querySelector('.mini>i'); if(mini){mini.style.width=st.rate+'%';mini.style.background=st.rate>=80?'var(--good)':st.rate>=50?'var(--accent)':'var(--warn)';}
+}
+function toggleItem(t){t.parentNode.classList.toggle('open');t.firstChild.textContent=t.parentNode.classList.contains('open')?'▾ ':'▸ ';}
+function toggleSec(h){var b=h.nextElementSibling;b.style.display=b.style.display==='none'?'':'none';}
+
+function exportReport(){
+  var s=computeStats(ITEMS);
+  var lines=[];
+  lines.push('주요정보통신기반시설 관리·물리 취약점 자가진단 결과');
+  lines.push('생성: '+new Date().toLocaleString('ko-KR'));
+  lines.push('전체 '+s.total+' · 양호 '+s.g+' · 취약 '+s.v+' · 해당없음 '+s.n+' · 이행률 '+s.rate+'%');
+  lines.push('');
+  var vulns=ITEMS.filter(function(it){return STATE[it.code]==='v';});
+  lines.push('■ 취약 항목 ('+vulns.length+')');
+  if(!vulns.length) lines.push('  (없음)');
+  vulns.forEach(function(it){
+    lines.push('- ['+it.code+'] '+it.domain+' > '+it.section+' : '+it.requirement);
+    if(it.evidence&&it.evidence.length) lines.push('    확인대상: '+it.evidence.join(' / '));
+  });
+  lines.push('');
+  var unchk=ITEMS.filter(function(it){return !STATE[it.code];});
+  lines.push('■ 미점검 항목 ('+unchk.length+'): '+unchk.map(function(i){return i.code;}).join(', '));
+  var blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='관리물리_자가진단_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+function resetAll(){
+  if(!confirm(L('모든 점검 결과를 초기화할까요? (이 기기 저장분만 삭제)','Reset all check results on this device?')))return;
+  STATE={};saveState();render();renderDash();
+}
+
+/* 컨트롤 배선 */
+function bindControls(){
+  document.getElementById('segDomain').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return;
+    this.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on'); FILT.domain=b.getAttribute('data-v'); render();
+  });
+  document.getElementById('selEntity').addEventListener('change',function(){FILT.entity=this.value;render();});
+  document.getElementById('onlyVuln').addEventListener('change',function(){FILT.onlyVuln=this.checked;render();});
+  document.getElementById('onlyUn').addEventListener('change',function(){FILT.onlyUn=this.checked;render();});
+  var qt;
+  document.getElementById('q').addEventListener('input',function(){var v=this.value;clearTimeout(qt);qt=setTimeout(function(){FILT.q=v.trim();render();},180);});
+}
+
+function boot(){
+  loadState(); bindControls(); applyLang();
+  fetch('js/kisa-mp-items.json').then(function(r){return r.json();}).then(function(d){
+    DATA=d; ITEMS=d.items||[];
+    // 정렬: 도메인(관리적→물리적) → 섹션번호 → 코드번호
+    ITEMS.sort(function(a,b){
+      var da=a.domain==='관리적'?0:1, db=b.domain==='관리적'?0:1;
+      if(da!==db)return da-db;
+      if(a.section_no!==b.section_no)return a.section_no-b.section_no;
+      return (parseInt(a.code.split('-')[1],10)||0)-(parseInt(b.code.split('-')[1],10)||0);
+    });
+    document.getElementById('srcLine').textContent='📕 '+L('출처','Source')+': '+(d.source||'KISA')+' · '+ITEMS.length+L('개 점검항목','items');
+    render(); renderDash();
+  }).catch(function(e){
+    document.getElementById('list').innerHTML='<div class="empty">'+L('점검항목 데이터를 불러오지 못했습니다.','Failed to load checklist data.')+' ('+esc(e&&e.message||e)+')</div>';
+  });
+}
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+</body>
+</html>

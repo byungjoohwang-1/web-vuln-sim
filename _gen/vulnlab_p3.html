@@ -1,0 +1,119 @@
+<script src="/js/ai-client.js"></script>
+<script>
+(function(){
+'use strict';
+/* ═══════════════════════════════════════════════════════════
+   WEB-VULN-SIM 웹 취약점 실습장 — 가상 타깃 "BugPay Mall" 시뮬레이터
+   모든 네트워크·파일·DB·결제는 순수 JS 가상 자산 (외부 I/O 없음)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 1. 진행도 저장 ── */
+var KEY='wvs_vulnlab';
+var S={solved:{},hints:{},patched:{}};
+try{var _s=JSON.parse(localStorage.getItem(KEY));if(_s&&typeof _s==='object')S=Object.assign(S,_s);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function isP(id){return !!S.patched[id];}
+function isS(id){return !!S.solved[id];}
+function solvedCount(){return Object.keys(S.solved).length;}
+
+/* ── 2. 가상 자산 ── */
+var VFS={
+ '/etc/passwd':'root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nguest:x:1001:1001:Guest:/home/guest:/bin/sh\nubuntu:x:1000:1000:Ubuntu User:/home/ubuntu:/bin/bash',
+ '/etc/hosts':'127.0.0.1 localhost\n10.0.0.10 admin.internal\n10.0.0.20 db.internal',
+ '/home/ubuntu/flag.txt':'FLAG{cmd-injection-rce}',
+ '/home/ubuntu/.bash_history':'cat /etc/passwd\nping -c 1 8.8.8.8\nsudo -l',
+ '/var/www/manual.pdf':'%PDF-1.4 (가상 PDF — BugPay Mall 사용자 매뉴얼)\n%%EOF',
+ '/var/www/report_2026_q2.pdf':'%PDF-1.4 (가상 PDF — 2026 2분기 결산 리포트)\n%%EOF',
+ '/var/backups/dbdump.sql':'-- BugPay 가상 DB 덤프 (교육용)\n-- users 테이블 일부\nINSERT INTO users VALUES (1,\'admin\',\'$2y$10$kX9...\',\'admin@bugpay.example\');\n-- FLAG{path-traversal-db-dump}',
+ '/backup/dump.sql':'-- 결제 DB 백업 (외부 노출 금지)\n-- FLAG{fin-file-exposure-backup}',
+ '/var/www/index.bak':'<?php\n// BugPay Mall index.bak — 배포 잔여 백업 파일\n$db_pass = "bugpay_2026!prod";\n$api_key  = "BKPAY-LIVE-9f3e2a";\ninclude \'lib/init.php\';\n'
+};
+var VDIR={'/':['bin','etc','home','var','tmp'],'/home':['ubuntu','guest'],'/var':['www','backups','log'],'/var/www':['index.html','manual.pdf','report_2026_q2.pdf'],'/var/backups':['dbdump.sql'],'/etc':['passwd','hosts']};
+var USERS=[
+ {uid:'admin', pwd:'$2y$10$aV3ryS3cretH4sh', name:'관리자', role:'admin', email:'admin@bugpay.example', secret:'FLAG{sqli-union-exfil-secret}'},
+ {uid:'guest', pwd:'guest1234', name:'게스트', role:'user', email:'guest@bugpay.example', secret:'-'},
+ {uid:'shop01', pwd:'$2y$10$sh0pUs3rH4sh', name:'김구매', role:'user', email:'shop01@bugpay.example', secret:'-'}
+];
+var PRODUCTS=[
+ {id:1,name:'노트북 스탠드',price:29000,desc:'알루미늄 접이식 스탠드'},
+ {id:2,name:'기계식 키보드',price:89000,desc:'청축 텐키리스'},
+ {id:3,name:'무선 마우스',price:21000,desc:'정전식 슬림'}
+];
+var REVIEWS=[{author:'행복한구매자',content:'배송 빠르고 튼튼해요! 추천합니다.'},{author:'쇼핑러버',content:'가격 대비 만족스러운 품질이에요.'}];
+var ACCOUNTS=[
+ {id:1001,no:'1002-***-***-77',owner:'victim',name:'피해자',balance:5000000},
+ {id:1002,no:'1002-***-***-88',owner:'attacker',name:'공격자',balance:12000}
+];
+var STATE={
+ sid:'sess-guest-0001', loginUid:null, email:'victim@bugpay.example',
+ uploads:[], reviewsPoisoned:false, transfers:[], authCode:null, authPhone:null,
+ resetTokens:{}, refunds:{}, bot:{pi:0,jb:0,pii:0,leak:0}
+};
+
+/* ── 3. 유틸 ── */
+function H(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');}
+function long2ip(n){return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.');}
+var DNS_ALIAS={'localhost':'127.0.0.1','metadata.internal':'169.254.169.254','admin.internal':'10.0.0.10','db.internal':'10.0.0.20'};
+function normalizeHost(raw){
+ var h=String(raw||'').trim().toLowerCase();
+ var at=h.lastIndexOf('@'); if(at>=0)h=h.slice(at+1);           /* userinfo@ 우회 */
+ h=h.replace(/:\d+$/,'');                                        /* 포트 제거 */
+ if(/^\[.+\]$/.test(h)){h=h.slice(1,-1);if(/^[:0f]*(:ffff:7f00:1)?$/.test(h.replace(/0/g,'0'))||h==='::1')return '127.0.0.1';return h;}
+ if(DNS_ALIAS[h])h=DNS_ALIAS[h];
+ if(/^0x[0-9a-f]+$/.test(h)){var v=parseInt(h,16);if(v>=0&&v<=4294967295)return long2ip(v>>>0);}
+ if(/^\d{5,10}$/.test(h)){var d=parseInt(h,10);if(d<=4294967295)return long2ip(d);}
+ if(h.indexOf('.')>0){
+   var parts=h.split('.');
+   if(parts.length<=4){
+     var expanded=[];var ok=true;
+     for(var i=0;i<parts.length;i++){
+       var p=parts[i];var n;
+       if(/^0x[0-9a-f]+$/i.test(p))n=parseInt(p,16);
+       else if(/^0[0-7]+$/.test(p)&&p.length>1)n=parseInt(p,8);
+       else if(/^\d+$/.test(p))n=parseInt(p,10);
+       else{n=null;break;}
+       if(n==null||n>255&&parts.length>1&&i<parts.length-1){ok=false;break;}
+       expanded.push(n);
+     }
+     if(ok&&expanded.length===4&&expanded.every(function(x){return x>=0&&x<=255;}))return expanded.join('.');
+     if(ok&&expanded.length<4){while(expanded.length<4)expanded.splice(expanded.length-1,0,0);if(expanded.every(function(x){return x>=0&&x<=255;}))return expanded.join('.');}
+   }
+ }
+ return h;
+}
+function resolvePath(base,rel){
+ var p=String(rel||'').replace(/\\/g,'/');
+ if(p.charAt(0)==='/')p=p.slice(1);
+ var parts=(base+'/'+p).split('/');var out=[];
+ for(var i=0;i<parts.length;i++){
+   var seg=parts[i];
+   if(seg===''||seg==='.')continue;
+   if(seg==='..'){out.pop();continue;}
+   out.push(seg);
+ }
+ return '/'+out.join('/');
+}
+function vshell(cmdline){
+ var c=String(cmdline||'').trim();if(!c)return '';
+ var sp=c.split(/\s+/);var bin=sp[0];var arg=sp.slice(1).join(' ');
+ function fs(p){p=p.replace(/\/$/,'');if(VFS.hasOwnProperty(p))return VFS[p];return null;}
+ var out=[];
+ if(bin==='ping'){
+   var host=arg.replace(/^-c\s+\d+\s+/,'').replace(/-\w+\s+\S+\s+/,'');
+   if(!host)return 'ping: usage error';
+   out.push('PING '+host+' (가상) 56(84) bytes of data.','64 bytes from '+host+': icmp_seq=1 ttl=63 time=0.42 ms','64 bytes from '+host+': icmp_seq=2 ttl=63 time=0.38 ms','','--- '+host+' ping statistics ---','2 packets transmitted, 2 received, 0% packet loss');
+ }else if(bin==='cat'){
+   var f=fs(arg.replace(/^["']|["']$/g,''));
+   out.push(f!=null?f:('cat: '+arg+': No such file or directory'));
+ }else if(bin==='ls'){
+   var d=arg.replace(/^-[a-zA-Z]+\s*/,'').replace(/\/$/,'');d=d||'/';
+   if(VDIR[d])out.push(VDIR[d].join('  '));
+   else if(fs(d)!=null)out.push(d.split('/').pop());
+   else out.push('ls: cannot access \''+d+'\': No such file or directory');
+ }else if(bin==='id'){out.push('uid=33(www-data) gid=33(www-data) groups=33(www-data)');
+ }else if(bin==='whoami'){out.push('www-data');
+ }else if(bin==='pwd'){out.push('/var/www');
+ }else if(bin==='wget'||bin==='curl'){out.push(bin+': 가상 시뮬레이션 — 외부망 차단됨 (교육 목적)');
+ }else{out.push('sh: 1: '+bin+': not found (가상 셸)');}
+ return out.join('\n');
+}

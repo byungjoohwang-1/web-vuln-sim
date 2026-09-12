@@ -344,10 +344,18 @@
     const style = document.createElement('style');
     style.id = 'wvs-bilingual-style';
     style.textContent = `
-      .wvs-langbar{position:fixed;top:12px;right:12px;z-index:100000;display:flex;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px)}
+      .wvs-langbar{position:fixed;top:12px;right:12px;z-index:100000;display:flex;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px);transition:opacity .18s ease}
       .wvs-langbar button,.langbar button{border:0;padding:6px 11px;border-radius:7px;font:700 12px/1 'Malgun Gothic',Arial,sans-serif;cursor:pointer}
       .wvs-langbar button{background:transparent;color:#cbd5e1}
       .wvs-langbar button.on,.langbar button.on{background:#2563eb!important;color:#fff!important}
+      /* 고정 배치라 스크롤한 본문 위에 계속 떠서 글자를 가린다(예: AI 페이지의 상태 줄).
+         맨 위를 벗어나면 흐려지고 클릭을 통과시키며, 마우스/키보드로 다가오면 즉시 복구한다. */
+      .wvs-langbar.wvs-dim{opacity:.28;pointer-events:none}
+      /* 버튼만 클릭을 받으므로 여백은 아래 본문으로 통과되고, 버튼에 hover 하면
+         조상인 바에도 :hover 가 걸려 다시 선명해진다. */
+      .wvs-langbar.wvs-dim button{pointer-events:auto}
+      .wvs-langbar.wvs-dim:hover,.wvs-langbar.wvs-dim:focus-within{opacity:1}
+      @media (prefers-reduced-motion:reduce){.wvs-langbar{transition:none}}
     `;
     document.head.appendChild(style);
   }
@@ -370,6 +378,23 @@
       `<button type="button" data-wvs-lang="${code}" onclick="window.WVS_BILINGUAL.setLang('${code}')">${label}</button>`
     ).join('');
     document.body.appendChild(bar);
+    bindDim(bar);
+  }
+
+  /* 맨 위에서 벗어나면 언어 바를 흐리게 해 본문을 가리지 않도록 한다. */
+  function bindDim(bar) {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      bar.classList.toggle('wvs-dim', y > 60);
+    };
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    }, { passive: true });
+    update();
   }
 
   window.WVS_BILINGUAL = { setLang: applyLang };

@@ -1,397 +1,218 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
-<script src="/js/pwa.js" defer></script><link rel="preconnect" href="https://cdnjs.cloudflare.com"><link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D-25/26 감사 및 패치 관리 - DB 보안 시뮬레이터</title>
-<meta name="description" content="D-25/26 감사 및 패치 관리 - DB 보안 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D-25~26: 감사 로그 관리·보안 패치 적용 | 교육 시뮬레이터</title>
+<meta name="description" content="D-25~26: 감사 로그 관리·보안 패치 적용 | 교육 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
-<meta property="og:title" content="D-25/26 감사 및 패치 관리 - DB 보안 시뮬레이터">
-<meta property="og:description" content="D-25/26 감사 및 패치 관리 - DB 보안 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="D-25~26: 감사 로그 관리·보안 패치 적용 | 교육 시뮬레이터">
+<meta property="og:description" content="D-25~26: 감사 로그 관리·보안 패치 적용 | 교육 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
 <meta property="og:url" content="https://vuln-sim.web.app/06_db-d25-d26.html">
 <meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
 <meta name="twitter:card" content="summary">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: #eef2f5; padding: 20px; }
-        .container-fluid { max-width: 1600px; }
-        
-        /* Header */
-        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-bottom: 5px solid #00aaaa; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
-        
-        /* Layout */
-        .content-row { display: flex; gap: 20px; height: calc(100vh - 140px); }
-        /* 모바일/태블릿 반응형: 3분할 → 세로 스택 */
-        @media (max-width: 860px) {
-            body { padding: 12px; }
-            .header { flex-direction: column; gap: 10px; text-align: center; }
-            .content-row { flex-direction: column; height: auto; }
-            .sidebar, .guide-panel, .main-panel { width: 100% !important; }
-            .sidebar, .guide-panel { max-height: 340px; }
-            .main-panel .terminal-container { min-height: 360px; }
-            .db-tabs { flex-wrap: wrap; }
-        }
-        .sidebar { width: 300px; background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; }
-        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; }
-        .guide-panel { width: 420px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-y: auto; border-left: 4px solid #0d6efd; }
-
-        /* Menu Items */
-        .menu-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-weight: 600; color: #555; display: flex; align-items: center; }
-        .menu-item:hover { background: #f8f9fa; border-color: #dee2e6; }
-        .menu-item.active { background: #e3f2fd; color: #0d6efd; border-color: #0d6efd; }
-        .menu-item i { width: 25px; text-align: center; margin-right: 10px; }
-        .badge-risk { font-size: 0.7em; padding: 4px 8px; border-radius: 6px; margin-left: auto; background: #dc3545; color: white; }
-
-        /* DB Tabs */
-        .db-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .db-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; background: #e9ecef; color: #6c757d; }
-        .db-tab.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .db-tab i { margin-right: 8px; }
-
-        /* Terminal */
-        .terminal-container { background: #1e1e1e; border-radius: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .terminal-header { background: #2d2d2d; padding: 8px 15px; color: #aaa; font-size: 0.85em; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
-        .terminal-body { flex: 1; padding: 15px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.95rem; line-height: 1.5; color: #f1f1f1; }
-        
-        .term-line { margin-bottom: 5px; word-break: break-all; }
-        .prompt-oracle { color: #00ff00; font-weight: bold; }
-        .prompt-mysql { color: #ffa500; font-weight: bold; }
-        .vuln { color: #ff5555; font-weight: bold; }
-        .secure { color: #50fa7b; font-weight: bold; }
-        .cmd { color: #f1fa8c; }
-        .info { color: #8be9fd; }
-        .comment { color: #6272a4; font-style: italic; }
-
-        /* Guide Styles */
-        .guide-title { font-size: 1.1rem; font-weight: 800; color: #2c3e50; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
-        .guide-section { margin-bottom: 20px; }
-        .guide-label { font-size: 0.85rem; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-bottom: 8px; display: block; }
-        .code-block { background: #f8f9fa; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid #e9ecef; color: #d63384; word-break: break-all; white-space: pre-wrap; }
-        
-        .btn-fix { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #198754 0%, #157347 100%); color: white; font-weight: bold; margin-top: auto; transition: 0.3s; }
-        .btn-fix:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); }
-        .btn-fix:disabled { background: #6c757d; cursor: not-allowed; transform: none; box-shadow: none; }
-        
-        .reset-btn { background: #6c757d; border: none; color: white; padding: 5px 15px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
-    </style>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#16162a; --text:#2c3e50; --muted:#7f8c8d; --border:#e6e6ef; }
+body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:40px 20px; color:var(--text); }
+.container { max-width:1200px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,.3); overflow:hidden; }
+.topbar { background:#0f0f1e; padding:10px 24px; }
+.topbar a { color:#9aa6ff; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:38px 40px; text-align:center; }
+.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:12px; letter-spacing:1px; }
+.header h1 { font-size:30px; margin-bottom:8px; }
+.header p { opacity:.9; font-size:15px; }
+.sev { display:inline-block; margin-top:12px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.sev-상 { background:var(--danger); } .sev-중 { background:var(--warning); } .sev-하 { background:var(--success); }
+.body { padding:34px 40px; }
+.section { margin-bottom:28px; }
+.section h2 { font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }
+.easy { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }
+.easy .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }
+.easy b { color:#c0392b; }
+/* 직접 해보기 */
+.lab { border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }
+.lab-toolbar { background:#1c1c33; padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.state-switch { display:flex; background:#0d0d1c; border-radius:10px; padding:4px; gap:4px; }
+.state-switch button { border:none; background:transparent; color:#9aa6c0; font-family:'Lora',serif; font-weight:700; font-size:14px; padding:9px 16px; border-radius:8px; cursor:pointer; transition:.2s; }
+.state-switch button.on.vuln { background:var(--danger); color:white; }
+.state-switch button.on.secure { background:var(--success); color:white; }
+.run-btn { margin-left:auto; background:var(--primary); color:white; border:none; padding:11px 22px; border-radius:10px; font-family:'Lora',serif; font-weight:700; font-size:15px; cursor:pointer; transition:.2s; box-shadow:0 4px 12px rgba(102,126,234,.4); }
+.run-btn:hover { transform:translateY(-1px); }
+.run-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.state-hint { color:#cfd3e6; font-size:13px; }
+.hackterm { background:#0a0a14; min-height:230px; padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.85; color:#d4d4d4; white-space:pre-wrap; }
+.hackterm .role { color:#ff7b7b; font-weight:700; } .hackterm .sys { color:#7aa2ff; }
+.cur { display:inline-block; width:9px; height:16px; background:#7CFC00; vertical-align:-3px; animation:blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.outcome { display:none; padding:16px 20px; font-size:15px; font-weight:700; align-items:center; gap:12px; }
+.outcome.breach { display:flex; background:#2a0e0e; color:#ff9b9b; border-top:2px solid var(--danger); }
+.outcome.blocked { display:flex; background:#0e2a14; color:#9bffb0; border-top:2px solid var(--success); }
+.outcome .big { font-size:30px; }
+.outcome small { display:block; font-weight:400; opacity:.85; margin-top:3px; }
+.prompt { color:#27c93f; } .cmt { color:#6a9955; } .bad { color:#ff6b6b; } .good { color:#73d13d; } .warn { color:#ffd166; }
+.cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.cmp .card { border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.cmp .ct { padding:9px 14px; font-weight:700; font-size:13px; color:white; font-family:'JetBrains Mono',monospace; }
+.cmp .ct.v { background:var(--danger); } .cmp .ct.s { background:var(--success); }
+.cmp .cb { background:var(--dark); padding:14px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#d4d4d4; white-space:pre-wrap; min-height:120px; }
+.fix-steps { counter-reset:step; list-style:none; }
+.fix-steps li { position:relative; padding:14px 16px 14px 52px; margin-bottom:12px; background:#f7f8ff; border-radius:10px; line-height:1.6; }
+.fix-steps li::before { counter-increment:step; content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
+.fix-steps code, .inline-code { font-family:'JetBrains Mono',monospace; background:#1a1a2e; color:#9cdcfe; padding:2px 7px; border-radius:5px; font-size:13px; }
+.checklist { list-style:none; }
+.checklist li { padding:12px 16px; margin-bottom:10px; background:#fafbff; border:1px solid var(--border); border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:.2s; }
+.checklist li:hover { background:#f0f2ff; }
+.checklist li.done { background:#f1f8f1; border-color:#c8e6c9; }
+.checklist .box { width:22px; height:22px; border:2px solid var(--primary); border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; }
+.checklist li.done .box { background:var(--success); border-color:var(--success); }
+.kref { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }
+/* AI 코치 (BYO 키 하이브리드) */
+.ai-lab { border:2px solid #4c3d8f; border-radius:14px; padding:18px 20px; background:linear-gradient(135deg,#f8f7ff,#f0edff); }
+.ai-setup { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.ai-setup input[type=password] { flex:1; min-width:200px; padding:10px 12px; border:1px solid #cfc7f0; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.ai-setup select { padding:10px; border:1px solid #cfc7f0; border-radius:8px; font-size:13px; background:white; }
+.ai-btn { background:#5a4db0; color:white; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; }
+.ai-btn.ghost { background:white; color:#5a4db0; border:1px solid #5a4db0; }
+.ai-status { font-size:12.5px; color:#5a4db0; margin-bottom:10px; font-weight:700; }
+.ai-quick { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.chip { background:#ede9ff; border:1px solid #cfc7f0; color:#4c3d8f; border-radius:20px; padding:8px 14px; font-size:13px; cursor:pointer; transition:.15s; font-family:'Lora',serif; }
+.chip:hover { background:#ddd6ff; }
+#aiQuestion { width:100%; min-height:64px; padding:12px; border:1px solid #cfc7f0; border-radius:10px; font-family:'Lora',serif; font-size:14px; resize:vertical; margin-bottom:10px; }
+.ask-btn { background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; padding:11px 22px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; }
+.ai-answer { margin-top:14px; }
+.ai-demo-tag, .ai-live-tag { display:inline-block; font-size:12px; font-weight:700; padding:4px 10px; border-radius:14px; margin-bottom:8px; }
+.ai-demo-tag { background:#fff3d6; color:#9a6b00; }
+.ai-live-tag { background:#dcfce7; color:#166534; }
+.ai-text { background:white; border:1px solid #e6e2fa; border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.7; white-space:pre-wrap; }
+.ai-err { background:#fdeaea; color:#a12622; border:1px solid #f5c6c6; border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; }
+.ai-loading { color:#5a4db0; font-weight:700; font-size:14px; padding:10px; }
+.footer { text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+@media (max-width:740px) { .cmp { grid-template-columns:1fr; } .run-btn { margin-left:0; } }
+</style>
 </head>
 <body>
-<a href="vuln-hub.html" style="position:fixed;top:12px;left:12px;z-index:99999;background:rgba(20,20,30,.72);color:#fff;text-decoration:none;padding:7px 13px;border-radius:8px;font:600 13px/1 'Malgun Gothic',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)">← 메인</a>
+<div class="container">
+  <div class="topbar"><a href="index.html">&larr; cd /index</a></div>
+  <div class="header">
+    <div class="code-badge">D-25~26</div>
+    <h1>🛠️ 감사 로그 관리·보안 패치 적용</h1>
+    <p>데이터베이스 보안</p>
+    <span class="sev sev-상">위험도: 상</span>
+  </div>
+  <div class="body">
 
-<div class="container-fluid">
-    <div class="header">
-        <div>
-            <span class="badge bg-warning text-dark mb-1">KISA 주요정보통신기반시설 가이드 (상)</span>
-            <h1>🗄️ 감사 및 패치 관리 (D-25 ~ D-26)</h1>
-        </div>
-        <button class="reset-btn" onclick="resetAll()">🔄 전체 초기화</button>
+    <div class="section">
+      <div class="easy"><span class="tag">💡 쉽게 말하면</span><br><b>CCTV 없는 매장에 리콜 안 받은 낡은 금고</b>를 둔 상황입니다. 도둑이 드는데 녹화가 없으면 누가 언제 왔는지 알 수 없고(CCTV=감사 로그), 금고 제조사가 배포한 보강 부품을 안 끼우면 알려진 비밀번호로 열립니다(리콜=보안 패치).</div>
     </div>
 
-    <div class="content-row">
-        <!-- Sidebar Menu -->
-        <div class="sidebar">
-            <h6 class="text-muted fw-bold ps-2 mb-3">점검 항목</h6>
-            <div class="menu-item active" onclick="loadItem('d25', this)">
-                <i class="fa-solid fa-eye"></i> D-25 감사 로그(Audit)
-                <span class="badge-risk">상</span>
-            </div>
-            <div class="menu-item" onclick="loadItem('d26', this)">
-                <i class="fa-solid fa-screwdriver-wrench"></i> D-26 최신 보안 패치
-                <span class="badge-risk">상</span>
-            </div>
+    <div class="section">
+      <h2>🎯 직접 해보기 — 공격을 실행해 보세요</h2>
+      <p style="color:#555; margin-bottom:14px; line-height:1.6;">아래에서 시스템 상태를 <b style="color:#c0392b">취약</b> 또는 <b style="color:#2e7d32">안전(조치 적용)</b>으로 바꾼 뒤 <b>공격 실행</b>을 눌러, 같은 공격이 어떻게 다르게 끝나는지 직접 확인하세요.</p>
+      <div class="lab">
+        <div class="lab-toolbar">
+          <div class="state-switch">
+            <button id="btnVuln" class="on vuln" onclick="setState('vuln')">⚠️ 취약한 설정</button>
+            <button id="btnSecure" class="secure" onclick="setState('secure')">🛡️ 보안 조치 적용</button>
+          </div>
+          <span class="state-hint" id="stateHint">현재: 취약한 설정 — 공격이 통할까요?</span>
+          <button class="run-btn" id="runBtn" onclick="runAttack()">▶ 공격 실행</button>
         </div>
-
-        <!-- Main Terminal Panel -->
-        <div class="main-panel">
-            <div class="db-tabs">
-                <button class="db-tab active" id="tab-oracle" onclick="setDB(event, 'oracle')"><i class="fa-solid fa-database"></i> Oracle Database</button>
-                <button class="db-tab" id="tab-mysql" onclick="setDB(event, 'mysql')"><i class="fa-solid fa-server"></i> MySQL / MariaDB</button>
-            </div>
-
-            <div class="terminal-container">
-                <div class="terminal-header">
-                    <span id="term-title">Oracle SQL*Plus - Connected as SYSDBA</span>
-                    <span id="term-status" class="text-warning">● Ready</span>
-                </div>
-                <div class="terminal-body" id="terminal">
-                    <!-- Dynamic Content -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Guide Panel -->
-        <div class="guide-panel">
-            <div class="guide-title" id="guide-title">D-25 감사 로그 활성화</div>
-            
-            <div class="guide-section">
-                <span class="guide-label">🔍 점검 내용</span>
-                <p class="small text-muted" id="guide-desc">
-                    데이터베이스의 주요 작업 이력을 기록하는 감사(Audit) 기능 활성화 여부를 점검합니다.
-                </p>
-            </div>
-
-            <div class="guide-section">
-                <span class="guide-label">⚠️ 보안 위협</span>
-                <p class="small text-muted" id="guide-risk">
-                    침해사고 발생 시 원인 규명 및 책임 추적이 불가능하며, 비정상 행위를 탐지할 수 없습니다.
-                </p>
-            </div>
-
-            <div class="guide-section">
-                <span class="guide-label">🔧 조치 방법 (KISA)</span>
-                <div id="guide-fix" class="code-block">
-SQL> ALTER SYSTEM SET AUDIT_TRAIL=DB SCOPE=SPFILE;
-SQL> SHUTDOWN IMMEDIATE;
-SQL> STARTUP;
-                </div>
-            </div>
-
-            <button id="btn-fix" class="btn-fix" onclick="runFix()">🛡️ 조치 실행 (Auto Fix)</button>
-        </div>
+        <div class="hackterm" id="hackTerm"><span class="cmt"># 공격자가 알려진 미패치 취약점으로 침입하고 흔적을 남기지 않는다</span>
+<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span></div>
+        <div class="outcome" id="outcome"></div>
+      </div>
     </div>
+
+    <div class="section">
+      <h2>📋 설정 비교 (왜 막혔나?)</h2>
+      <div class="cmp">
+        <div class="card"><div class="ct v">✗ 취약한 설정</div><div class="cb"><span class="cmt">-- 감사 기능·버전 확인</span>
+<span class="prompt">SQL&gt; </span>
+SHOW PARAMETER audit_trail
+<span class="bad">audit_trail  FALSE (감사 비활성)</span>
+<span class="bad">BANNER: 19.3.0.0  (최신 RU 미적용 — 2년 경과)</span>
+<span class="warn">→ 침해 추적 불가 + 알려진 취약점 방치 (취약)</span></div></div>
+        <div class="card"><div class="ct s">✓ 안전한 설정</div><div class="cb"><span class="cmt">-- 감사 활성화·패치 적용</span>
+<span class="prompt">SQL&gt; </span>
+ALTER SYSTEM SET audit_trail=DB,EXTENDED SCOPE=SPFILE;
+<span class="good">&gt;&gt; 권한 변경·로그인 실패 감사 기록 시작</span>
+<span class="good">&gt;&gt; 최신 Release Update 적용 완료 (분기 CPU 주기)</span>
+<span class="good">→ 추적 가능 + 알려진 구멍 제거 (양호)</span></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔧 조치 방법</h2>
+      <ol class="fix-steps"><li><code>audit_trail</code>을 활성화하고 로그인·권한 변경·민감 테이블 접근을 감사합니다.</li><li>분기별 CPU/RU 패치를 변경관리 절차에 따라 적용합니다.</li><li>감사 로그는 별도 저장소로 이관·보관하여 변조를 방지합니다.</li></ol>
+    </div>
+
+    <div class="section">
+      <h2>✅ 점검 체크리스트</h2>
+      <ul class="checklist" id="checklist"><li><span class="box"></span><span>감사 기능이 활성화되어 있는가</span></li><li><span class="box"></span><span>감사 로그가 안전하게 보관되는가</span></li><li><span class="box"></span><span>최신 보안 패치가 적용되어 있는가</span></li></ul>
+      <div class="kref">점검기준: 데이터베이스 &gt; 감사 로그·패치 관리</div>
+    </div>
+  </div>
+  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
 </div>
-
 <script>
-    // === Data Definition ===
-    const data = {
-        d25: {
-            title: "D-25 감사 로그(Audit) 활성화",
-            desc: "데이터베이스의 주요 작업 이력을 기록하는 감사(Audit) 기능 활성화 여부를 점검합니다.",
-            risk: "감사 로그가 비활성화된 경우, 침해사고 발생 시 원인 규명 및 책임 추적이 불가능합니다.",
-            oracle: {
-                check: "SHOW PARAMETER audit_trail;",
-                vuln: `NAME         TYPE        VALUE
------------  ----------  -----
-audit_trail  string      NONE  <-- [취약]`,
-                fixDesc: "init.ora 또는 SPFILE에서 AUDIT_TRAIL 파라미터를 DB 또는 OS로 설정",
-                fixScript: [
-                    "ALTER SYSTEM SET AUDIT_TRAIL=DB SCOPE=SPFILE;",
-                    "-- Need Restart to apply",
-                    "SHUTDOWN IMMEDIATE;",
-                    "STARTUP;"
-                ],
-                secure: `NAME         TYPE        VALUE
------------  ----------  -----
-audit_trail  string      DB`
-            },
-            mysql: {
-                check: "SHOW VARIABLES LIKE 'general_log%';",
-                vuln: `Variable_name     Value
-----------------  -----
-general_log       OFF   <-- [취약]
-general_log_file  /var/lib/mysql/db.log`,
-                fixDesc: "my.cnf 파일에 general_log = 1 설정 또는 명령어로 활성화",
-                fixScript: [
-                    "SET GLOBAL general_log = ON;"
-                ],
-                secure: `Variable_name     Value
-----------------  -----
-general_log       ON`
-            }
-        },
-        d26: {
-            title: "D-26 최신 보안 패치 적용",
-            desc: "데이터베이스 관리 시스템에 대한 최신 보안 패치 및 벤더 권고 패치가 적용되어 있는지 점검합니다.",
-            risk: "최신 패치가 적용되지 않은 경우, 알려진 취약점(CVE)을 이용한 공격에 노출될 수 있습니다.",
-            oracle: {
-                check: "opatch lsinventory",
-                vuln: `Oracle Interim Patch Installer version 12.2.0.1.21
-...
-Lsinventory Output file location : /u01/app/oracle/cfgtoollogs/opatch/lsinv.txt
---------------------------------------------------------------------------------
-No interim patches installed  <-- [취약] 패치 내역 없음`,
-                fixDesc: "오라클 기술지원 사이트(MOS)를 통해 최신 CPU(Critical Patch Update) 또는 PSU(Patch Set Update)를 다운로드하여 적용",
-                fixScript: [
-                    "-- [Simulated] Downloading Patch 35320081...",
-                    "opatch apply",
-                    "Patch 35320081 successfully applied."
-                ],
-                secure: `Patch  35320081     : applied on Mon Jan 19 10:00:00 KST 2026
-Unique Patch ID:  24011935
-Patch description:  "Database Release Update : 19.22.0.0.240116 (35320081)"`
-            },
-            mysql: {
-                check: "SELECT VERSION();",
-                vuln: `+-----------+
-| VERSION() |
-+-----------+
-| 5.7.20    | <-- [취약] EOL(End of Life) 버전 또는 구버전
-+-----------+`,
-                fixDesc: "MySQL 최신 버전으로 업그레이드 (yum update mysql-server 등)",
-                fixScript: [
-                    "-- [Simulated] yum update mysql-server",
-                    "Stopping mysqld: [  OK  ]",
-                    "Starting mysqld: [  OK  ]"
-                ],
-                secure: `+-----------+
-| VERSION() |
-+-----------+
-| 8.0.36    |
-+-----------+`
-            }
-        }
-    };
+const ATTACK = { vuln: [[`cmt`, `# 2년 전 공개된 DB 취약점(CVE) 악용`], [`prompt`, `attacker$ ./db-exploit --target 10.0.0.5 --cve 2024-XXXX`], [``, `audit_trail = NONE — 모든 작업 미기록`], [`bad`, `&gt;&gt; 패치 미적용 취약점으로 침입 성공`], [`bad`, `&gt;&gt; 감사 로그 없음 — 침입 사실 자체를 추적 불가`]], secure: [[`cmt`, `# 동일한 익스플로잇 시도`], [`prompt`, `attacker$ ./db-exploit --target 10.0.0.5 --cve 2024-XXXX`], [`good`, `&gt;&gt; 최신 RU 적용으로 취약점 이미 패치됨`], [`good`, `&gt;&gt; 시도조차 AUDIT 로그에 기록·원격 보관됨`]] };
+const OUTCOME = { vuln: {emoji: `🔓`, title: `공격 성공 — 흔적 없는 침입`, desc: `미패치 취약점이 문을 열어주고 감사 부재가 흔적을 지워줍니다.`}, secure: {emoji: `🛡️`, title: `공격 차단 — 기록·보강 완료`, desc: `정기 패치로 알려진 구멍이 막히고 감사 로그로 모든 시도가 남습니다.`} };
+let state = 'vuln', running = false, timer = null;
 
-    let currentItem = 'd25';
-    let currentDB = 'oracle';
-    let isFixed = { 
-        d25_oracle: false, d25_mysql: false,
-        d26_oracle: false, d26_mysql: false 
-    };
-
-    function init() {
-        // Safe DOM Load
-        setTimeout(() => {
-            const firstItem = document.querySelector('.menu-item');
-            if(firstItem) loadItem('d25', firstItem);
-        }, 100);
+function setState(s){
+  if(running) return;
+  state = s;
+  document.getElementById('btnVuln').classList.toggle('on', s==='vuln');
+  document.getElementById('btnSecure').classList.toggle('on', s==='secure');
+  document.getElementById('stateHint').textContent = (s==='vuln')
+    ? '현재: 취약한 설정 — 공격이 통할까요?' : '현재: 보안 조치 적용 — 공격을 막을 수 있을까요?';
+  resetTerm();
+}
+function resetTerm(){
+  document.getElementById('outcome').className = 'outcome';
+  document.getElementById('hackTerm').innerHTML =
+    '<span class="cmt"># 공격자가 알려진 미패치 취약점으로 침입하고 흔적을 남기지 않는다</span>\n<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span>';
+}
+function runAttack(){
+  if(running) return;
+  running = true;
+  const term = document.getElementById('hackTerm');
+  const out = document.getElementById('outcome');
+  out.className = 'outcome';
+  term.innerHTML = '';
+  document.getElementById('runBtn').disabled = true;
+  const lines = ATTACK[state];
+  let i = 0;
+  function step(){
+    if(i < lines.length){
+      const [cls, text] = lines[i];
+      const span = cls ? `<span class="${cls}">${text}</span>` : text;
+      term.innerHTML += (i? '\n':'') + span + ' <span class="cur"></span>';
+      term.innerHTML = term.innerHTML.replace(/ <span class="cur"><\/span>(?=[\s\S]*<span class="cur">)/,'');
+      i++;
+      timer = setTimeout(step, 620);
+    } else {
+      term.innerHTML = term.innerHTML.replace(/ ?<span class="cur"><\/span>/g,'');
+      const o = OUTCOME[state];
+      out.className = 'outcome ' + (state==='vuln' ? 'breach':'blocked');
+      out.innerHTML = `<span class="big">${o.emoji}</span><div><div>${o.title}</div><small>${o.desc}</small></div>`;
+      document.getElementById('runBtn').disabled = false;
+      running = false;
     }
+  }
+  step();
+}
+document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{
+  li.classList.toggle('done');
+  li.querySelector('.box').textContent = li.classList.contains('done')?'✓':'';
+}));
 
-    function loadItem(id, el) {
-        currentItem = id;
-        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-        if(el) el.classList.add('active');
-        
-        // Reset DB tab to currentDB but re-render UI
-        setDB(null, currentDB);
-    }
-
-    function setDB(event, db) {
-        currentDB = db;
-        
-        document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('active'));
-        const activeTab = document.getElementById('tab-' + db);
-        if (activeTab) activeTab.classList.add('active');
-        
-        const titleEl = document.getElementById('term-title');
-        // D-26 is OS level command for Oracle (opatch)
-        if (currentItem === 'd26' && db === 'oracle') {
-             if(titleEl) titleEl.innerText = 'oracle@db-server:~$ (OS Terminal)';
-        } else {
-             if(titleEl) titleEl.innerText = db === 'oracle' ? 'Oracle SQL*Plus' : 'MySQL Monitor';
-        }
-
-        updateUI();
-        
-        const term = document.getElementById('terminal');
-        if(term) term.innerHTML = '';
-        setTimeout(runCheck, 300);
-    }
-
-    function updateUI() {
-        const d = data[currentItem];
-        const dbData = d[currentDB];
-        const stateKey = `${currentItem}_${currentDB}`;
-        const fixed = isFixed[stateKey];
-        
-        document.getElementById('guide-title').innerText = d.title;
-        document.getElementById('guide-desc').innerText = d.desc;
-        document.getElementById('guide-risk').innerText = d.risk;
-        document.getElementById('guide-fix').innerText = dbData.fixDesc;
-        
-        const btn = document.getElementById('btn-fix');
-        btn.disabled = fixed;
-        btn.innerText = fixed ? "✅ 조치 완료 (Secured)" : "🛡️ 조치 실행 (Auto Fix)";
-    }
-
-    function log(msg, type='output') {
-        const term = document.getElementById('terminal');
-        if(!term) return null;
-        
-        let prompt = currentDB === 'oracle' ? 'SQL>' : 'mysql>';
-        // Exception for OS commands
-        if (currentItem === 'd26' && currentDB === 'oracle') prompt = 'oracle@db:~$';
-        
-        const pClass = currentDB === 'oracle' ? 'prompt-oracle' : 'prompt-mysql';
-        
-        const div = document.createElement('div');
-        div.className = 'term-line';
-        
-        if(type==='cmd') {
-            div.innerHTML = `<span class="${pClass}">${prompt}</span> <span class="cmd">${msg}</span>`;
-        } else if(type==='vuln') {
-            div.className += ' vuln';
-            div.style.whiteSpace = 'pre';
-            div.innerText = msg;
-        } else if(type==='secure') {
-            div.className += ' secure';
-            div.style.whiteSpace = 'pre';
-            div.innerText = msg;
-        } else {
-            div.style.whiteSpace = 'pre';
-            div.innerText = msg;
-        }
-        
-        term.appendChild(div);
-        term.scrollTop = term.scrollHeight;
-        return div;
-    }
-
-    function runCheck() {
-        const dbData = data[currentItem][currentDB];
-        const fixed = isFixed[`${currentItem}_${currentDB}`];
-        
-        log(dbData.check, 'cmd');
-        
-        setTimeout(() => {
-            if(fixed) {
-                log(dbData.secure, 'secure');
-                log("[System] Status: Secure", 'secure');
-            } else {
-                log(dbData.vuln, 'vuln');
-                log("[System] Status: Vulnerable", 'vuln');
-            }
-            
-            // Add prompt
-            const line = log("", 'cmd');
-            if(line) line.querySelector('.cmd').innerText = '_';
-        }, 500);
-    }
-
-    function runFix() {
-        const dbData = data[currentItem][currentDB];
-        const term = document.getElementById('terminal');
-        // Remove cursor
-        if(term.lastElementChild) {
-            const cmdSpan = term.lastElementChild.querySelector('.cmd');
-            if(cmdSpan && cmdSpan.innerText === '_') cmdSpan.innerText = '';
-        }
-
-        let delay = 0;
-        dbData.fixScript.forEach(cmd => {
-            setTimeout(() => {
-                log(cmd, 'cmd');
-                if(cmd.includes('SHUTDOWN') || cmd.includes('STARTUP') || cmd.includes('Stopping')) {
-                    setTimeout(() => log("Instance state changed.", 'info'), 300);
-                }
-            }, delay);
-            delay += 800;
-        });
-
-        setTimeout(() => {
-            log(`[System] Vulnerability Patched.`, 'secure');
-            isFixed[`${currentItem}_${currentDB}`] = true;
-            updateUI();
-            setTimeout(runCheck, 1000);
-        }, delay + 500);
-    }
-
-    function resetAll() {
-        isFixed = { d25_oracle:false, d25_mysql:false, d26_oracle:false, d26_mysql:false };
-        const term = document.getElementById('terminal');
-        if(term) term.innerHTML = '<div class="term-line info">System reset complete.</div>';
-        updateUI();
-        setTimeout(runCheck, 500);
-    }
-
-    init();
 </script>
 <script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/progress.js" defer></script>
 <script src="/js/vuln-anim.js" defer></script>
 </body>

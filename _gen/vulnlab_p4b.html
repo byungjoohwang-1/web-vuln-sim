@@ -1,0 +1,123 @@
+
+ /* ── 상품: 저장형 XSS(리뷰 렌더) ── */
+ else if(path==='/product'){
+   var pid=parseInt(q.get('id')||'1',10);
+   var pr=PRODUCTS.filter(function(p){return p.id===pid;})[0]||PRODUCTS[0];
+   var victim=q.get('victim')==='1';
+   var rh='';
+   REVIEWS.forEach(function(rv){
+     var c=isP('xss-stored')?H(rv.content):rv.content;
+     rh+='<div class="rev"><b>'+H(rv.author)+'</b> <span class="muted">'+(victim?'(다른 사용자 세션에서 렌더링)':'')+'</span><div>'+c+'</div></div>';
+   });
+   R.lab='xss-stored';
+   note('리뷰 출력: '+(isP('xss-stored')?'이스케이프 적용(안전)':'저장된 값 그대로 HTML 삽입(취약)'),isP('xss-stored')?'good':'bad');
+   R.html=appShell(pr.name,
+    '<p class="price">'+pr.price+'원</p><p>'+pr.desc+'</p><h2>리뷰 ('+REVIEWS.length+')</h2>'+rh+
+    '<h2>리뷰 작성</h2>'+formHtml('/review',[{name:'content',type:'textarea',label:'리뷰 내용',ph:'솔직한 후기를 남겨주세요'}],'등록')+
+    '<p><a href="/product?id=1&victim=1">👁 다른 사용자(피해자)로 이 페이지 보기</a></p>');
+ }
+ else if(path==='/review'&&method==='POST'){
+   var rc=body.content||'';
+   REVIEWS.push({author:'new_user',content:rc});
+   note('리뷰 저장: 필터링 없이 그대로 저장됨('+rc.length+'자)',isP('xss-stored')?'good':'bad');
+   if(/\[\[|\{\{|system:|시스템:|ignore previous|이전 지시/i.test(rc)){STATE.reviewsPoisoned=true;note('리뷰에 지시문 패턴 포함 — 지원 봇(RAG)이 이 리뷰를 참조하면 지시를 따르게 됨','warn');win('ai-poison','봇이 참조할 데이터(리뷰)에 지시문 저장 — RAG 오염');}
+   R.html=appShell('등록 완료','<p class="ok">✔ 리뷰가 등록되었습니다.</p><p><a href="/product?id=1">상품 페이지에서 확인</a> · <a href="/product?id=1&victim=1">피해자 뷰</a></p>');
+ }
+ /* ── 환영: DOM XSS ── */
+ else if(path==='/welcome'){
+   R.lab='xss-dom';
+   note('클라이언트 스크립트: URL 파라미터(name)를 innerHTML로 삽입 — '+(isP('xss-dom')?'textContent 사용(안전)':'검증 없음(취약)'),isP('xss-dom')?'good':'bad');
+   var wq=q.get('name')||'';
+   if(isP('xss-dom')){
+     R.html=appShell('환영','<h2>안녕하세요, <span id="nm">guest</span> 님!</h2><p class="muted">접속한 URL의 name 파라미터로 인사말을 만듭니다 (패치: textCategory)</p>'+
+     '<scr'+'ipt>var n=new URLSearchParams(window.__sim.qs).get("name")||"guest";document.getElementById("nm").textContent=n;<\/scr'+'ipt>');
+   }else{
+     R.html=appShell('환영','<h2>안녕하세요, <span id="nm">guest</span> 님!</h2><p class="muted">접속한 URL의 name 파라미터로 인사말을 만듭니다 — 주소창에서 ?name=... 을 바꿔보세요</p>'+
+     '<scr'+'ipt>var n=new URLSearchParams(window.__sim.qs).get("name")||"guest";document.getElementById("nm").innerHTML=n;/* 취약점: 미검증 innerHTML */<\/scr'+'ipt>');
+   }
+ }
+ /* ── URL 미리보기: SSRF 2종 ── */
+ else if(path==='/preview'){
+   var url=(q.get('url')||'').trim();
+   R.lab='ssrf-basic';
+   if(isP('ssrf-basic')||isP('ssrf-bypass')){
+     var ahost=(url.match(/^https?:\/\/([^\/]+)/)||[,''])[1];
+     var okHost=/^(shop\.example\.com|cdn\.example\.com)$/.test(normalizeHost(ahost));
+     note('화이트리스트 검사: '+ahost+' → '+(okHost?'허용':'차단'),okHost?'good':'bad');
+     if(!okHost){R.status=403;R.reason='Forbidden';R.html=appShell('차단','<p class="err">허용되지 않은 호스트입니다 (화이트리스트).</p>');}
+     else{R.html=appShell('미리보기','<p>외부 사이트 미리보기: '+H(url)+'</p><p class="muted">정상 콘텐츠가 요약되어 표시됩니다.</p>');}
+   }else{
+     var rawBlock=/169\.254\.169\.254|metadata\.internal/i.test(url);
+     note('블랙리스트(문자열) 검사: '+(rawBlock?'차단됨':'통과'),rawBlock?'bad':'');
+     if(rawBlock){R.status=403;R.reason='Forbidden';R.html=appShell('차단','<p class="err">차단된 주소입니다 (블랙리스트).</p>');note('문자열 필터는 표기를 바꾸면 우회될 수 있음 — 진단가이드 p.280 오탐 코드 참고','warn');}
+     else{
+       var scheme=(url.match(/^([a-z]+):\/\//i)||[,''])[1];
+       var host=(url.match(/^[a-z]+:\/\/([^\/]+)/i)||[,''])[1]||'';
+       var nh=normalizeHost(host);
+       note('요청 대상 정규화: '+host+' → '+nh);
+       if(scheme==='file'){
+         var fp=resolvePath('/',url.replace(/^file:\/\//,''));
+         note('file:// 스킴 처리 — 서버 내 파일 직접 열람 시도: '+fp,'bad');
+         R.html=appShell('미리보기','<pre>'+H(VFS[fp]||'(파일 없음)')+'</pre>');
+       }else if(nh==='10.0.0.10'||nh==='admin.internal'){
+         note('내부망 관리자 콘솔(admin.internal/10.0.0.10)에 접속 성공 — 외부 차단 회피','bad');
+         R.html=appShell('미리보기','<h2>BugPay 관리자 콘솔 (내부 전용)</h2><pre>FLAG{ssrf-internal-admin}</pre><p class="muted">사용자 목록 · 결제 승인 대기 3건 · DB 상태 OK</p>');
+         win('ssrf-basic','SSRF로 내부 전용 admin 콘솔 접근 — 플래그 획득');
+       }else if(nh==='169.254.169.254'){
+         note('클라우드 메타데이터 서비스 도달 — 크리덴셜 노출','bad');
+         R.html=appShell('미리보기','<pre>'+H('{\n  "iam": "arn:aws:iam::123456789012:role/bugpay-prod",\n  "access-key": "AKIAIOSFODNN7EXAMPLE",\n  "secret": "FLAG{ssrf-metadata-bypass}"\n}')+'</pre>');
+         win('ssrf-bypass','표기 우회로 블랙리스트를 회피해 메타데이터 크리덴셜 탈취');
+       }else if(/^(shop\.example\.com|cdn\.example\.com)$/.test(nh)){
+         R.html=appShell('미리보기','<p>외부 사이트 미리보기: '+H(url)+'</p><p class="muted">정상 콘텐츠</p>');
+       }else{
+         note('가상 DNS에 등록되지 않은 호스트 — 연결 실패','warn');
+         R.html=appShell('미리보기','<p class="err">연결 실패: 호스트를 찾을 수 없습니다 (가상 네트워크)</p><p class="muted">내부망 후보: admin.internal(10.0.0.10) · metadata.internal(169.254.169.254) · file:///etc/passwd</p>');
+       }
+     }
+   }
+   if(R.html===''){R.html=appShell('URL 미리보기',formHtml('/preview',[{name:'url',label:'미리볼 URL',v:'http://shop.example.com/'}],'미리보기').replace('method="post"','method="get"'));}
+   else if(!R.html){R.html='';}
+   if(path==='/preview'&&method==='GET'&&!q.get('url')){R.html=appShell('URL 미리보기','<form action="/preview" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">미리볼 URL</label><input type="text" name="url" value="http://shop.example.com/"></p><button>미리보기</button></form>');R.notes=[];note('링크 미리보기 기능 — 사용자가 지정한 URL을 서버가 대신 요청합니다.');}
+ }
+ /* ── 다운로드: 경로 조작 ── */
+ else if(path==='/download'){
+   var fn=q.get('file')||'manual.pdf';
+   var target=resolvePath('/var/www',fn);
+   note('경로 계산: /var/www + '+fn+' → '+target);
+   if(isP('path-traversal')&&!/^\/var\/www\//.test(target)){
+     note('realpath 검사 — 허용 디렉터리 벗어남, 차단','good');
+     R.status=403;R.reason='Forbidden';R.html=appShell('차단','<p class="err">허용되지 않은 경로입니다.</p>');
+   }else if(VFS[target]!=null){
+     var outside=!/^\/var\/www\//.test(target);
+     if(outside)note('기준 디렉터리 밖 파일 접근 성공 — 시스템 파일 노출','bad');
+     R.ctype=/\.pdf$/i.test(target)?'application/pdf':'text/plain; charset=utf-8';
+     R.html=appShell('다운로드: '+target,'<pre>'+H(VFS[target])+'</pre>');
+     if(outside)win('path-traversal','../ 시퀀스로 웹 루트 탈출 — '+target+' 파일 열람');
+   }else{
+     R.status=404;R.reason='Not Found';
+     R.html=appShell('다운로드','<p class="err">파일을 찾을 수 없습니다: '+H(fn)+'</p><p class="muted">제공 파일: manual.pdf · report_2026_q2.pdf — 시스템 파일은 /etc/passwd, /var/backups/dbdump.sql 등</p>');
+   }
+ }
+ /* ── ping: 명령어 삽입 ── */
+ else if(path==='/ping'){
+   var host=q.get('host')||'';
+   var cmdline='ping -c 2 '+host;
+   note('서버 코드 실행: '+cmdline,/[;&|`$]/.test(host)?'bad':'');
+   if(isP('cmd-injection')){
+     if(!/^[A-Za-z0-9.:\-]+$/.test(host)){note('escapeshellarg/화이트리스트 — 특수문자 차단','good');R.html=appShell('ping','<p class="err">허용되지 않는 입력입니다.</p>');}
+     else{R.html=appShell('ping','<pre>'+vshell(cmdline)+'</pre>');}
+   }else if(/[;&|`$]/.test(host)){
+     var segs=host.split(/;|&&|\|\||\||`|\$\(/).filter(function(s){return s&&/\S/.test(s);});
+     var outs=[];
+     segs.forEach(function(sg){var line=sg.replace(/^[\s)]+/,'');if(!/^ping\b/.test(line)&&line.indexOf('ping')!==0)outs.push('$ '+H(line)+'\n'+vshell(line));});
+     note('셸 메타문자 감지 — 세그먼트 '+segs.length+'개가 셸에서 실행됨','bad');
+     if(/cat|ls/.test(host)&&/flag|home|ubuntu/i.test(host)){
+       note('flag.txt 읽기 시도 감지','bad');
+       win('cmd-injection','셸 메타문자로 임의 명령 실행 — /home/ubuntu/flag.txt 획득');
+     }
+     R.html=appShell('ping','<pre>'+vshell(cmdline)+'\n\n'+outs.join('\n')+'</pre>');
+   }else{
+     R.html=appShell('ping 유틸리티','<form action="/ping" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">Ping 대상 호스트</label><input type="text" name="host" value="8.8.8.8"></p><button>Ping</button></form><hr><pre>'+(host?vshell(cmdline):'')+'</pre>');
+     if(!host){R.notes=[];note('서버가 ping 명령을 직접 실행하는 유틸리티 — host 파라미터를 주목하세요.');}
+   }
+ }

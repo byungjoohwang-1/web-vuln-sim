@@ -1,0 +1,150 @@
+<body class="soc">
+<script src="/js/pwa.js" defer></script>
+<header class="soc-top">
+  <a class="logo" href="vuln-hub.html"><span class="mk">⛨</span><span>WEB-VULN-SIM<small>ATTACK LAB · 취약점 실습장</small></span></a>
+  <nav>
+    <a href="vuln-hub.html">홈</a>
+    <a href="redteam.html">레드팀 아레나</a>
+    <a href="vulnlab.html" class="on">취약점 실습장</a>
+    <a href="quiz-forge.html">AI 문제 포지</a>
+    <a href="vuln-hub.html#catalog">카탈로그</a>
+    <a href="my-progress.html">내 기록</a>
+  </nav>
+  <button type="button" class="kbtn" id="palBtn">🔍 검색 <kbd>Ctrl K</kbd></button>
+</header>
+
+<main>
+  <section class="lab-hero">
+    <div class="h-in">
+      <div>
+        <div class="h-badge">🧪 CLICK-TO-HACK — 진단가이드(2021)·기반시설 상세가이드(2026)·금융보안 가이드 기반</div>
+        <h1>일부러 취약하게 만든 가상 웹앱, <span class="accent">직접 공격하고 직접 막아라</span></h1>
+        <p>가상 쇼핑몰·결제시스템 <b style="color:#e2e8f0">BugPay Mall</b>에는 웹·금융·AI 보안 취약점이 가득 심어져 있습니다.
+           미니 브라우저에서 앱을 조작하고, Repeater에서 HTTP 요청을 변조해 보내고, 서버 코드 탭에서 취약·패치를 전환하며 방어를 비교하세요.
+           막히면 <b style="color:#c4b5fd">AI 코치</b>에게 물어보세요.</p>
+      </div>
+      <div class="p-wrap">
+        <div class="p-ring">
+          <svg width="86" height="86" viewBox="0 0 86 86">
+            <circle cx="43" cy="43" r="37" fill="none" stroke="#1e293b" stroke-width="7"></circle>
+            <circle id="pArc" cx="43" cy="43" r="37" fill="none" stroke="#4ade80" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="232.5" stroke-dashoffset="232.5" style="transition:stroke-dashoffset .5s"></circle>
+          </svg>
+          <div class="n"><div><span id="pDone">0</span><span id="pTotal">/51</span><small>MISSIONS</small></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="notice">
+    <span class="ic">🛡️</span>
+    <div><b>안전한 시뮬레이션 안내</b> — 이 실습장의 모든 공격은 브라우저 안의 가상 타깃(순수 JS 시뮬레이터)에서만 실행됩니다.
+    네트워크·파일시스템·DB·결제는 전부 가상 자산이며, XSS 페이로드도 <b>격리된 샌드박스 iframe</b> 안에서만 동작합니다.
+    실제 시스템과 Firebase에는 어떤 영향도 없고, 실제 공격에 쓸 수 있는 코드는 제공하지 않습니다. 공개 가이드(KISA·행안부·금융보안원) 개념의 교육용 재구성입니다.</div>
+  </div>
+
+  <div class="lab-cols">
+    <aside class="missions">
+      <h2>🎯 공격 미션 <span id="mCount" style="color:#4ade80;font-size:.72rem"></span></h2>
+      <div id="missionList"></div>
+    </aside>
+
+    <section class="work">
+      <div class="lab-head" id="labHead"></div>
+      <div class="tabs">
+        <button type="button" class="tab on" data-tab="app">🖥️ 타깃 앱</button>
+        <button type="button" class="tab" data-tab="req">📡 Repeater</button>
+        <button type="button" class="tab" data-tab="code">🥊 서버 코드 · 패치</button>
+        <button type="button" class="tab" data-tab="ai">🤖 지원 봇</button>
+      </div>
+
+      <div class="pane on" id="pane-app">
+        <div class="browser">
+          <div class="bbar">
+            <span class="dots"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#4ade80"></i></span>
+            <input type="text" id="addrBar" spellcheck="false" placeholder="/search?q=laptop 처럼 경로를 직접 입력할 수도 있습니다">
+            <button type="button" class="go" id="addrGo">이동</button>
+          </div>
+          <iframe id="simFrame" sandbox="allow-scripts" title="가상 타깃 앱"></iframe>
+        </div>
+        <div class="acts" id="labActs"></div>
+        <div class="diagbar" id="diagBar">
+          <div class="dq" id="diagQ"></div>
+          <div class="dbtns">
+            <button type="button" class="good" data-verdict="safe">✅ 양호</button>
+            <button type="button" class="bad" data-verdict="vuln">☠ 취약</button>
+          </div>
+          <div class="dresult" id="diagResult"></div>
+        </div>
+        <div class="simnotes">
+          <h4>🔍 시뮬레이터 판정 · 서버 로그</h4>
+          <ul id="simNotes"><li class="warn">요청을 보내면 여기에 가상 서버의 내부 처리(쿼리·경로 계산·필터 판정·셸 명령)가 표시됩니다.</li></ul>
+        </div>
+        <div class="plog">
+          <h4>☰ Proxy History — 앱 조작 기록 (클릭하면 Repeater로 이동)</h4>
+          <ul id="plogList"><li class="empty">아직 요청이 없습니다. 주소창 이동 버튼이나 앱 안의 링크·폼을 사용해 보세요.</li></ul>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-req">
+        <div class="rep-grid">
+          <div class="rep-box">
+            <h4>→ Request (편집 가능 · GET/POST/OPTIONS 지원)</h4>
+            <textarea id="reqText" spellcheck="false"></textarea>
+            <button type="button" class="rep-send" id="repSend">⚡ Send</button>
+          </div>
+          <div class="rep-box">
+            <h4>← Response (헤더 포함)</h4>
+            <textarea id="resText" spellcheck="false" readonly></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-code">
+        <div class="codebar">
+          <div class="sw" id="patchSw" role="switch" aria-checked="false" tabindex="0"></div>
+          <span class="swlab" id="patchLab">현재 <b class="vuln">취약 버전</b> — 스위치를 켜면 패치가 적용됩니다</span>
+          <span class="hint">패치는 미션별로 적용됩니다. 켠 상태에서 같은 공격을 다시 시도해 보세요.</span>
+        </div>
+        <div class="codegrid">
+          <div class="codecard vuln"><header>☠ 취약한 코드 (현재 서버)</header><pre id="codeVuln"></pre></div>
+          <div class="codecard safe"><header>✅ 안전한 코드 (패치 후)</header><pre id="codeSafe"></pre></div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-ai">
+        <div class="chatwrap">
+          <div class="chathead">
+            <div class="botav">🤖</div>
+            <div><b>BugPay 지원 봇</b><small id="botSub">고객 응대 · 주문 조회 · FAQ — 내부 시스템 접근 금지</small></div>
+          </div>
+          <div class="chatlog" id="chatLog"></div>
+          <div class="chatin">
+            <input type="text" id="chatInp" placeholder="봇에게 메시지를 보내세요 — 예: 주문 조회해줘" autocomplete="off">
+            <button type="button" id="chatSend">전송</button>
+          </div>
+          <div class="chatctx" id="chatCtx"></div>
+        </div>
+      </div>
+
+      <div class="hintzone">
+        <div class="hintrow">
+          <button type="button" id="hintBtn">💡 힌트 보기</button>
+          <button type="button" id="aiCoachBtn">🤖 AI 코치에게 질문</button>
+          <button type="button" id="resetBtn" style="margin-left:auto">↺ 미션 초기화</button>
+        </div>
+        <div class="hints" id="hintList"></div>
+        <div class="solvebox" id="solveBox"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="soc-foot">
+  <div class="f-logo">⛨ WEB-<span>VULN-SIM</span> — 교육용 보안 훈련 플랫폼</div>
+  <p>공개 가이드(소프트웨어 보안약점 진단가이드 2021 · 주요정보통신기반시설 취약점 가이드 · 전자금융 보안가이드) 개념의 교육용 재구성 — 실제로 작동하는 공격 코드·페이로드는 제공하지 않습니다.<br>
+     Apache License 2.0 · 문의 jackhwang0210@gmail.com</p>
+  <div class="f-kbd">어디서든 <kbd>Ctrl</kbd> <kbd>K</kbd> 로 전체 사이트 검색</div>
+</footer>
+
+<div id="toast"></div>

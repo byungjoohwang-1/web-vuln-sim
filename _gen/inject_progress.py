@@ -9,7 +9,7 @@ import re
 
 PUB = os.path.join(os.path.dirname(__file__), '..', 'public')
 TAG = '<script src="/js/progress.js" defer></script>'
-LEARNABLE = re.compile(r'^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai)')
+LEARNABLE = re.compile(r'^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai|14_auto|15_privacy)')
 BODY_RE = re.compile(r'</body>', re.IGNORECASE)
 
 

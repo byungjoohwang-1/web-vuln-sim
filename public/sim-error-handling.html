@@ -136,7 +136,7 @@
 
         <div class="list-group list-group-flush mt-2">
             
-            <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
+            <div role="button" tabindex="0" class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
                 <span><i class="fa-solid fa-bug text-danger me-2"></i> 1. Simulator (10 Attacks)</span>
                 <i class="fa-solid fa-chevron-down fa-xs"></i>
             </div>
@@ -156,7 +156,7 @@
                 <a href="sim-code.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-code-branch"></i> Code Injection</a>
             </div>
 
-            <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
+            <div role="button" tabindex="0" class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
                 <span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span>
                 <i class="fa-solid fa-chevron-down fa-xs"></i>
             </div>
@@ -338,6 +338,96 @@ except Exception as e:
                     </div>
                 </div>
             </div>
+<!-- WVS-QUIZ-BOOST:v1 -->
+<style>
+.wvsq-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:26px 28px;margin:40px 0 24px;box-shadow:0 2px 8px rgba(15,23,42,.06)}
+.wvsq-title{font-size:1.3rem;font-weight:800;margin:0 0 6px;color:#1e293b}
+.wvsq-sub{color:#64748b;font-size:.92rem;margin:0 0 16px}
+.wvsq-item{border:1px solid #e2e8f0;border-radius:10px;padding:15px 18px;margin:13px 0}
+.wvsq-q{font-weight:700;margin:0 0 10px;line-height:1.65;color:#0f172a}
+.wvsq-btn{min-width:64px;padding:7px 20px;border-radius:8px;border:2px solid #cbd5e1;background:#fff;font-weight:800;font-size:1rem;cursor:pointer;transition:all .15s}
+.wvsq-btn:hover:not(:disabled){border-color:#4c3d8f;background:#f5f3ff}
+.wvsq-btn:disabled{cursor:default;opacity:.5}
+.wvsq-btn.wvsq-hit{border-color:#16a34a;background:#dcfce7;opacity:1}
+.wvsq-btn.wvsq-miss{border-color:#dc2626;background:#fee2e2;opacity:1}
+.wvsq-fb{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:.9rem;line-height:1.7;display:none;color:#334155}
+.wvsq-fb.ok{display:block;background:#f0fdf4;border:1px solid #bbf7d0}
+.wvsq-fb.no{display:block;background:#fef2f2;border:1px solid #fecaca}
+.wvsq-fb b{display:block;margin-bottom:3px}
+.wvsq-score{margin-top:16px;padding:14px 18px;border-radius:10px;background:#f5f3ff;border:1px solid #ddd6fe;font-weight:700;color:#4c3d8f;display:none}
+.wvsq-retry{margin-top:12px;padding:8px 22px;border-radius:8px;border:0;background:#4c3d8f;color:#fff;font-weight:700;cursor:pointer;display:none}
+.wvsq-retry:hover{background:#3d3073}
+</style>
+<div class="wvsq-card" id="wvsqBox">
+  <h2 class="wvsq-title">🎯 핵심 개념 O/X 퀴즈</h2>
+  <p class="wvsq-sub">이 페이지의 보안 개념을 4문항으로 점검해 보세요. O/X를 고르면 즉시 해설이 표시됩니다. · 진행 <span id="wvsqProg">0 / 4</span></p>
+  <div id="wvsqList"></div>
+  <div class="wvsq-score" id="wvsqScore"></div>
+  <button class="wvsq-retry" id="wvsqRetry" type="button">🔄 다시 풀기</button>
+</div>
+<script>
+(function () {
+  var QS = [{"q": "예외 발생 시 스택 트레이스(e.printStackTrace() 출력)를 사용자 화면에 그대로 보여주면 내부 경로·클래스명·라이브러리 버전이 공격자의 정찰 재료가 된다.", "a": true, "why": "\"오류 메시지를 통한 정보노출\" 약점입니다. 상세 정보는 서버 로그로, 사용자에게는 \"일시적 오류가 발생했습니다\" 수준의 일반화된 메시지를 보여야 합니다."}, {"q": "catch(Exception e) {} 처럼 catch 블록을 비워 두면 예외가 조용히 무시되어, 장애·공격의 원인 추적이 어려워지는 보안 약점이 된다.", "a": true, "why": "\"오류 상황 대응 부재\"입니다. 무시된 예외는 데이터 불일치·자원 누수로 이어지고, 침입 흔적이 로그에 남지 않게 만듭니다."}, {"q": "에러 메시지는 상세할수록 사용자에게 도움이 되므로, 실패한 SQL 쿼리 문장도 그대로 응답에 포함해서 보여주는 것이 좋다.", "a": false, "why": "쿼리·테이블 구조 노출은 SQL 인젝션의 재료가 됩니다. 상세한 원인은 로그에 기록하고, 응답은 요청 ID가 포함된 일반 메시지로 제한합니다."}, {"q": "데이터베이스 연결·파일 핸들 같은 자원은 finally 블록이나 try-with-resources로 반드시 해제해야, 누적된 자원 고갈이 서비스 거부로 이어지는 것을 막을 수 있다.", "a": true, "why": "해제되지 않은 자원은 누적되어 결국 전체 서비스가 거부되는 결과를 낳습니다. try-with-resources(또는 finally의 close)로 해제를 보장하세요."}];
+  var list = document.getElementById('wvsqList');
+  var prog = document.getElementById('wvsqProg');
+  var score = document.getElementById('wvsqScore');
+  var retry = document.getElementById('wvsqRetry');
+  var done = 0, right = 0;
+
+  window.wvsqInit = function () {
+    done = 0; right = 0;
+    list.innerHTML = '';
+    score.style.display = 'none';
+    retry.style.display = 'none';
+    prog.textContent = '0 / ' + QS.length;
+    QS.forEach(function (item, i) {
+      var box = document.createElement('div');
+      box.className = 'wvsq-item';
+      var q = document.createElement('p');
+      q.className = 'wvsq-q';
+      q.textContent = 'Q' + (i + 1) + '. ' + item.q;
+      var btnO = document.createElement('button');
+      btnO.type = 'button'; btnO.className = 'wvsq-btn'; btnO.textContent = 'O';
+      var btnX = document.createElement('button');
+      btnX.type = 'button'; btnX.className = 'wvsq-btn'; btnX.textContent = 'X';
+      btnX.style.marginLeft = '6px';
+      var fb = document.createElement('div');
+      fb.className = 'wvsq-fb';
+      function pick(val) {
+        var correct = val === item.a;
+        var picked = val ? btnO : btnX;
+        var correctBtn = item.a ? btnO : btnX;
+        btnO.disabled = true; btnX.disabled = true;
+        correctBtn.classList.add('wvsq-hit');
+        if (!correct) picked.classList.add('wvsq-miss');
+        fb.className = 'wvsq-fb ' + (correct ? 'ok' : 'no');
+        var head = document.createElement('b');
+        head.textContent = correct ? '⭕ 정답입니다!' : '❌ 아쉽습니다. 정답은 ' + (item.a ? 'O' : 'X') + '.';
+        var why = document.createElement('span');
+        why.textContent = item.why;
+        fb.appendChild(head); fb.appendChild(why);
+        done++; if (correct) right++;
+        prog.textContent = done + ' / ' + QS.length;
+        if (done === QS.length) {
+          var msg = right === QS.length ? '🏆 만점! 이 주제의 핵심을 완벽히 잡으셨습니다.'
+            : right >= QS.length - 1 ? '👍 아주 좋습니다! 한 문항만 다시 복습해 보세요.'
+            : '📖 해설을 다시 읽고 "다시 풀기"로 확인해 보세요.';
+          score.textContent = '결과: ' + QS.length + '문항 중 ' + right + '문항 정답 — ' + msg;
+          score.style.display = 'block';
+          retry.style.display = 'inline-block';
+        }
+      }
+      btnO.addEventListener('click', function () { pick(true); });
+      btnX.addEventListener('click', function () { pick(false); });
+      box.appendChild(q); box.appendChild(btnO); box.appendChild(btnX); box.appendChild(fb);
+      list.appendChild(box);
+    });
+  };
+  window.wvsqInit();
+})();
+</script>
+<!-- /WVS-QUIZ-BOOST -->
+
 
         </div>
     </div>
@@ -356,5 +446,6 @@ except Exception as e:
 
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
 </body>
 </html>

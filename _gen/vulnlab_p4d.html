@@ -1,0 +1,150 @@
+
+ /* ── 금융: 계좌·주문 IDOR ── */
+ else if(path==='/api/accounts'){
+   var aid=parseInt(q.get('id')||'1001',10);
+   var acc=ACCOUNTS.filter(function(a){return a.id===aid;})[0];
+   note('소유자 검증: '+(isP('fin-idor-account')?'요청자(victim)와 계좌 소유자 일치 확인':'없음 — id만으로 조회'),isP('fin-idor-account')?'good':'bad');
+   if(isP('fin-idor-account')&&acc&&acc.owner!=='victim'){
+     R.status=403;R.html=jsonShell('/api/accounts',{error:'forbidden'},{});
+   }else if(acc){
+     if(acc.owner!=='victim')note('타인 계좌 조회 성공 — IDOR(안전하지 않은 직접 객체 참조)','bad');
+     if(isP('fin-excessive')){
+       note('개인정보 최소화(마스킹) 적용 — 전체 계좌번호·실명 미노출','good');
+       R.html=jsonShell('/api/accounts',{id:acc.id,accountNo:String(acc.accountNo||acc.id).replace(/^(\d+)\d{4}$/,'$1****'),owner:acc.owner[0]+'**',balance:acc.balance});
+     }else{
+       note('응답에 전체 계좌번호·실명·잔액 포함 — 목적 대비 과다 노출','warn');
+       R.html=jsonShell('/api/accounts',acc);
+     }
+     if(acc.owner!=='victim')win('fin-idor-account','id 파라미터 변경으로 타인 계좌·잔액 열람');
+   }else{R.status=404;R.html=jsonShell('/api/accounts',{error:'not found'},{});}
+ }
+ else if(path==='/api/orders'){
+   var ou=q.get('user')||'victim';
+   note('주문 조회 필터: user='+ou);
+   if(isP('fin-idor-order')&&ou!=='victim'){R.status=403;R.html=jsonShell('/api/orders',{error:'forbidden'},{});note('소유자 검증 적용','good');}
+   else{
+     var orders=ou==='victim'?[{id:'ORD-771',item:'기계식 키보드',amt:89000}]:[{id:'ORD-1024',item:'프로젝터',amt:450000},{id:'ORD-1103',item:'태블릿',amt:890000}];
+     if(ou!=='victim'){note('타인 주문 열람 — 개인정보 노출','bad');win('fin-idor-order','user 파라미터 조작으로 타인 주문 내역 열람');}
+     R.html=jsonShell('/api/orders',{user:ou,orders:orders});
+   }
+ }
+ /* ── 이체: 금액 변조 + 재전송 ── */
+ else if(path==='/api/transfer'&&method==='POST'){
+   var amt=body.amount, txid=body.txid||('TX'+(STATE.transfers.length+1));
+   var dup=STATE.transfers.indexOf(txid)>=0;
+   note('이체 요청: from='+(body.from||'1001')+' to='+(body.to||'1002')+' amount='+amt+' txid='+txid);
+   if(isP('fin-replay')&&dup){note('동일 txid 재전송 감지 — 중복 거래 차단','good');R.status=409;R.html=jsonShell('/api/transfer',{error:'duplicate txid'},{});
+   }else{
+     if(dup){note('⚠ 동일 txid가 두 번 처리됨 — 재전송(REPLAY) 공격 성립','bad');win('fin-replay','동일 거래 ID 재전송으로 이체 2회 실행');}
+     var badAmt=!(parseFloat(amt)>0)||(String(amt).indexOf('.')>=0)||parseFloat(amt)>10000000;
+     if(isP('fin-amount')&&badAmt){note('금액 유효성 검사(양수·정수·상한) 적용 — 거부','good');R.status=400;R.html=jsonShell('/api/transfer',{error:'invalid amount'},{});}
+     else{
+       if(badAmt){note('이상 금액 그대로 승인 — 금액 변조 가능','bad');win('fin-amount','음수/소수점/초과 금액이 승인됨');}
+       STATE.transfers.push(txid);
+       R.html=jsonShell('/api/transfer',{result:'OK',txid:txid,amount:amt,balance:5000000-parseFloat(amt||0)},'가상 잔액 갱신');
+     }
+   }
+ }
+ else if(path==='/api/transfer'&&method==='GET'){
+   R.lab='fin-hts';
+   note('거래 파라미터가 GET(평문 URL)로 전송됨 — 금융거래 정보 보호 관점에서 점검','warn');
+   R.html=jsonShell('/api/transfer',{result:'OK',method:'GET',from:q.get('from')||'1001',to:q.get('to')||'1002',amount:q.get('amount')||'50000'},'이체가 GET 파라미터로 처리되었습니다');
+ }
+ /* ── 인증: 단계 우회·고정 코드·타인 수단 ── */
+ else if(path==='/api/verify'&&method==='POST'){
+   var ph=body.phone||'010-1111-1111', code=body.code||'', step=body.step;
+   note('인증 요청: phone='+ph+' code='+(code||'(없음)')+(step?' step='+step:''));
+   if(isP('fin-stepbypass')&&(step==='3'||body.verified==='true')){note('서버가 클라이언트 단계 파라미터를 신뢰하지 않음(패치)','good');R.status=400;R.html=jsonShell('/api/verify',{error:'invalid flow'},{});}
+   else if(step==='3'||body.verified==='true'){
+     note('step=3 도달 — 인증 완료로 처리(서버가 클라이언트 값을 신뢰)','bad');
+     R.html=jsonShell('/api/verify',{verified:true,user:'victim'});
+     win('fin-stepbypass','인증 단계 파라미터 조작으로 본인 인증 우회');
+   }else if(isP('fin-fixedcode')&&code==='000000'){note('일회성 코드 검증(패치)','good');R.status=400;R.html=jsonShell('/api/verify',{error:'code mismatch'},{});}
+   else if(code==='000000'){
+     note('고정 인증코드 000000 수용 — 코드가 랜덤하지 않음','bad');
+     R.html=jsonShell('/api/verify',{verified:true});
+     win('fin-fixedcode','고정/예측 인증코드 000000으로 본인 인증 통과');
+   }else if(ph!=='010-1111-1111'&&!isP('fin-authmeans')){
+     note('타인 전화번호로도 인증코드 발송 성공 — 인증 수단 소유 확인 부재','bad');
+     STATE.authPhone=ph;
+     win('fin-authmeans','victim 세션에서 공격자 전화번호로 인증코드 발송 성공');
+     R.html=jsonShell('/api/verify',isP('fin-otpleak')?{sent:true,phone:ph}:{sent:true,phone:ph,hint:'데모 환경 — 발송된 코드는 000000'});
+     if(!isP('fin-otpleak'))note('주의: 발송 응답에 인증코드 힌트가 포함됨 — 코드가 응답에 노출','bad');
+   }else if(ph!=='010-1111-1111'&&isP('fin-authmeans')){
+     note('등록된 수단(소유 확인) 검증 — 타인 번호 거부','good');R.status=400;R.html=jsonShell('/api/verify',{error:'unregistered phone'},{});
+   }else{
+     R.html=jsonShell('/api/verify',isP('fin-otpleak')?{sent:true,phone:ph}:{sent:true,phone:ph,hint:'데모 환경 — 발송된 코드는 000000'});
+     if(!isP('fin-otpleak')&&code==='')note('발송 응답의 hint 필드 확인 — 인증코드가 응답에 노출되는지 관찰하세요','warn');
+   }
+ }
+ /* ── 재설정 토큰 예측 ── */
+ else if(path==='/api/reset'&&method==='GET'){
+   var ru2=q.get('uid')||'victim';
+   STATE.resetTokens.n=(STATE.resetTokens.n||100)+1;
+   var tok='reset-'+String(STATE.resetTokens.n).padStart(4,'0');
+   note('재설정 토큰 생성: uid='+ru2+' → '+tok+(isP('fin-reset')?' (패치: 암호학적 난수)':' — 연속 번호 패턴'),'bad');
+   R.html=jsonShell('/api/reset',{uid:ru2,token:isP('fin-reset')?'c9f3'+Math.random().toString(36).slice(2,10):tok});
+ }
+ else if(path==='/api/reset'&&method==='POST'){
+   var rt=body.token||'';var n=parseInt((rt.match(/reset-(\d+)/)||[,'0'])[1],10);
+   var guessOk=n>(STATE.resetTokens.n||100)&&n<=(STATE.resetTokens.n||100)+5;
+   if(isP('fin-reset')){note('토큰 검증: 서버 저장값과 불일치 → 거부(패치)','good');R.status=403;R.html=jsonShell('/api/reset',{error:'invalid token'},{});}
+   else if(guessOk){
+     note('예측한 토큰 수용 — 시드가 예측 가능(연속 번호)','bad');
+     R.html=jsonShell('/api/reset',{result:'password changed',uid:body.uid||'admin'});
+     win('fin-reset','다음 토큰 값을 예측해 비밀번호 재설정 완료');
+   }else{R.status=403;R.html=jsonShell('/api/reset',{error:'invalid token'},{});note('토큰 불일치 — GET으로 새 토큰을 발급받은 뒤 다음 번호를 예측해 보세요','warn');}
+ }
+ /* ── 크리덴셜 재사용 ── */
+ else if(path==='/api/db'&&method==='POST'){
+   if(isP('fin-reuse')){note('서비스별 독립 크리덴셜(패치) — 거부','good');R.status=401;R.html=jsonShell('/api/db',{error:'auth fail'},{});}
+   else if(body.user==='admin'&&/^(admin|admin123)$/i.test(body.pwd||'')){
+     note('웹 관리자와 동일한 크리덴셜이 DB에도 유효 — 크리덴셜 재사용','bad');
+     R.html=jsonShell('/api/db',{connected:true,db:'bugpay',tables:['users','payments','cards'],'secret':'FLAG{credential-reuse-db}'});
+     win('fin-reuse','다른 시스템(DB)에서 같은 크리덴셜 재사용 확인');
+   }else{R.status=401;R.html=jsonShell('/api/db',{error:'auth fail'},{});}
+ }
+ /* ── 관찰형: 하드코딩 키·디버그 노출·백업·링크 ── */
+ else if(path==='/api/appconfig'){
+   note('앱 구성 응답 — 운영 크리덴셜 포함 여부 점검',isP('fin-hardkey')?'good':'bad');
+   R.html=jsonShell('/api/appconfig',isP('fin-hardkey')?{ver:'2.4.6'}:{ver:'2.4.6',debug:true,live_api_key:'BKPAY-LIVE-9f3e2a',db:'bugpay/prod!2026'});
+   if(!isP('fin-hardkey'))win('fin-hardkey','응답에 하드코딩된 운영 API 키 노출');
+ }
+ else if(path==='/api/debug'){
+   note('디버그 엔드포인트 — '+(isP('fin-cmdline')?'비활성화(패치)':'무인증 노출'),isP('fin-cmdline')?'good':'bad');
+   R.html=jsonShell('/api/debug',isP('fin-cmdline')?{error:'disabled'}:{process:'java -Xmx2g -Ddb.pass=bugpay!2026 -Dmode=prod com.bugpay.App --seed=777'});
+   if(!isP('fin-cmdline'))win('fin-cmdline','무인증 디버그 엔드포인트로 프로세스 인자(시크릿 포함) 노출');
+ }
+ else if(path==='/backup/dump.sql'){
+   if(isP('fin-backup')){R.status=404;R.html=appShell('404','<p class="err">Not Found</p>');note('웹 루트 백업 제거(패치)','good');}
+   else{note('웹에서 접근 가능한 위치에 결제 DB 백업 존재','bad');R.ctype='text/plain; charset=utf-8';R.html=appShell('백업 파일','<pre>'+H(VFS['/backup/dump.sql'])+'</pre>');win('fin-backup','/backup/dump.sql — 결제 DB 백업 파일 외부 노출');}
+ }
+ else if(path==='/deeplink'){
+   var uri=q.get('uri')||'';
+   R.lab='fin-deeplink';
+   note('앱 딥링크 처리: '+uri);
+   if(/mypay:\/\/transfer/i.test(uri)&&!/victim/i.test(uri)){
+     note('딥링크 파라미터로 이체 화면 자동 구성 — URI 검증 없음','bad');
+     R.html=appShell('📱 mypay 앱 — 딥링크 처리됨','<pre>URI: '+H(uri)+'</pre><p class="ok">이체 화면이 자동으로 채워졌습니다 (수신자·금액).</p><pre>FLAG{deeplink-parameter-injection}</pre>');
+     win('fin-deeplink','위조 딥링크로 앱 결제 화면 파라미터 주입');
+   }else if(uri){
+     R.html=appShell('📱 mypay 앱','<pre>URI: '+H(uri)+'</pre><p>처리된 딥링크 없음</p>');
+   }else{
+     R.html=appShell('딥링크 테스터','<form action="/deeplink" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">딥링크 URI</label><input type="text" name="uri" value="mypay://home"></p><button>열기</button></form><p class="muted">예: mypay://transfer?to=attacker&amount=1000000</p>');
+   }
+ }
+ /* ── 봇 검색 렌더(LLM 출력 XSS) ── */
+ else if(path==='/bot/search'){
+   var bq=q.get('q')||'';
+   R.lab='ai-markdown';
+   note('봇 응답 렌더링: '+(isP('ai-markdown')?'출력 이스케이프 적용(패치)':'모델 출력을 HTML로 그대로 렌더(취약)'),isP('ai-markdown')?'good':'bad');
+   var inner=isP('ai-markdown')?H('「'+bq+'」 검색 결과입니다.') : '「<b>'+bq+'</b>」 검색 결과입니다.<hr>관련 상품: 노트북 스탠드';
+   R.html=appShell('🤖 지원 봇 — 검색',inner);
+ }
+ /* ── 404 ── */
+ else{
+   R.status=404;R.reason='Not Found';
+   R.html=appShell('404','<p class="err">페이지를 찾을 수 없습니다: '+H(path)+'</p><p class="muted">사용 가능: / · /search · /product?id=1 · /login · /preview · /download · /ping · /upload · /xml · /ldaplogin · /go · /lookup · /profile · /admin · /api/accounts · /api/transfer · /api/verify · /api/reset · /api/db · /api/appconfig · /api/debug · /deeplink · /bot/search</p>');
+ }
+ return R;
+}

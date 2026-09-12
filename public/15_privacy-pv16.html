@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PV-16: 개인정보 암호화 미적용 | 교육 시뮬레이터</title>
+<meta name="description" content="PV-16: 개인정보 암호화 미적용 | 교육 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="PV-16: 개인정보 암호화 미적용 | 교육 시뮬레이터">
+<meta property="og:description" content="PV-16: 개인정보 암호화 미적용 | 교육 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/15_privacy-pv16.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#1a1a2e; --text:#2c3e50; --muted:#7f8c8d; --border:#e0e0e0; }
+body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:40px 20px; color:var(--text); }
+.container { max-width:1200px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,.3); overflow:hidden; }
+.topbar { background:#0f0f1e; padding:10px 24px; }
+.topbar a { color:#9aa6ff; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:42px 40px; text-align:center; }
+.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:14px; letter-spacing:1px; }
+.header h1 { font-size:30px; margin-bottom:10px; }
+.header p { opacity:.9; font-size:15px; }
+.sev { display:inline-block; margin-top:14px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.sev-상 { background:var(--danger); } .sev-중 { background:var(--warning); } .sev-하 { background:var(--success); }
+.body { padding:36px 40px; }
+.section { margin-bottom:30px; }
+.section h2 { font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }
+.desc { background:#f7f8ff; border-left:4px solid var(--primary); padding:16px 18px; border-radius:8px; line-height:1.7; font-size:15px; }
+.tabs { display:flex; gap:10px; margin-bottom:16px; }
+.state-tab { flex:1; padding:14px; border:2px solid var(--border); border-radius:10px; background:white; cursor:pointer; font-family:'Lora',serif; font-weight:700; font-size:15px; transition:.2s; }
+.state-tab.vuln.active { border-color:var(--danger); background:#fff5f5; color:var(--danger); }
+.state-tab.secure.active { border-color:var(--success); background:#f1f8f1; color:var(--success); }
+.terminal { background:var(--dark); border-radius:10px; padding:0; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,.2); }
+.terminal-head { background:#12122a; padding:10px 16px; display:flex; align-items:center; gap:8px; }
+.dot { width:12px; height:12px; border-radius:50%; } .dot.r { background:#ff5f56; } .dot.y { background:#ffbd2e; } .dot.g { background:#27c93f; }
+.terminal-title { color:#888; font-family:'JetBrains Mono',monospace; font-size:12px; margin-left:8px; }
+.terminal-body { padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.8; color:#d4d4d4; white-space:pre-wrap; min-height:160px; }
+.prompt { color:#27c93f; } .cmt { color:#6a9955; } .bad { color:#ff6b6b; } .good { color:#73d13d; } .warn { color:#ffd166; }
+.fix-steps { counter-reset:step; list-style:none; }
+.fix-steps li { position:relative; padding:14px 16px 14px 52px; margin-bottom:12px; background:#f7f8ff; border-radius:10px; line-height:1.6; }
+.fix-steps li::before { counter-increment:step; content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
+.fix-steps code, .inline-code { font-family:'JetBrains Mono',monospace; background:#1a1a2e; color:#9cdcfe; padding:2px 7px; border-radius:5px; font-size:13px; }
+.checklist { list-style:none; }
+.checklist li { padding:12px 16px; margin-bottom:10px; background:#fafbff; border:1px solid var(--border); border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:.2s; }
+.checklist li:hover { background:#f0f2ff; }
+.checklist li.done { background:#f1f8f1; border-color:#c8e6c9; }
+.checklist .box { width:22px; height:22px; border:2px solid var(--primary); border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; }
+.checklist li.done .box { background:var(--success); border-color:var(--success); }
+.kref { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }
+.footer { text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+@media (max-width:700px) { .tabs { flex-direction:column; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar"><a href="index.html">&larr; cd /index</a>&nbsp;&nbsp;<a href="vuln-hub.html">취약점 학습 허브</a>&nbsp;&nbsp;<a href="pia-assessment.html">영향평가 자가진단</a>&nbsp;&nbsp;<a href="privacy-policy-builder.html">처리방침 작성기</a>&nbsp;&nbsp;<a href="pseudonym-lab.html">가명처리 실습실</a></div>
+  <div class="header">
+    <div class="code-badge">PV-16</div>
+    <h1>🔐 개인정보 암호화 미적용</h1>
+    <p>개인정보보호 · 안전성 확보조치</p>
+    <span class="sev sev-상">위험도: 상</span>
+  </div>
+  <div class="body">
+    <div class="section">
+      <h2>📋 취약점 개요</h2>
+      <div class="desc">비밀번호는 <strong>복호화되지 않는 일방향 암호화</strong>(솔트 적용 권장), 고유식별정보·계좌·카드·생체인식정보는 저장 위치와 무관하게 암호화해야 합니다. 인터넷 구간 전송도 암호화 대상입니다.</div>
+    </div>
+
+    <div class="section">
+      <h2>🖥️ 상태 비교 시뮬레이션</h2>
+      <div class="tabs">
+        <button class="state-tab vuln active" onclick="setState('vuln')">⚠️ 취약한 상태</button>
+        <button class="state-tab secure" onclick="setState('secure')">✅ 안전한 상태</button>
+      </div>
+      <div class="terminal">
+        <div class="terminal-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="terminal-title" id="termTitle">privacy$ (취약)</span></div>
+        <div class="terminal-body" id="termBody"><span class="cmt"># DB 저장 상태 점검</span>
+<span class="prompt">db$ SELECT pw, ssn FROM users LIMIT 1</span>
+<span class="bad">&gt;&gt; pw = "qwer1234!" (평문)</span>
+<span class="bad">&gt;&gt; ssn = "900101-1234567" (평문) / 전송: http</span>
+<span class="warn">→ 유출 즉시 전량 악용 가능 · 법 제29조 위반</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔧 조치 방법</h2>
+      <ol class="fix-steps"><li>비밀번호는 솔트를 적용한 <strong>일방향 해시</strong>(예: Argon2id, bcrypt)로 저장합니다.</li><li>주민등록번호는 저장 위치와 무관하게, 그 밖의 고유식별정보·계좌·카드·생체인식정보는 기준에 따라 암호화합니다.</li><li>인증정보·개인정보의 인터넷 구간 송수신은 TLS 등으로 암호화합니다.</li><li>암호키의 생성·이용·보관·배포·파기 절차를 정하고 <strong>데이터와 분리</strong>해 관리합니다.</li><li>내부망 저장 시 암호화 적용 여부는 위험도 분석 결과에 따라 공식 절차로 결정·기록합니다.</li></ol>
+    </div>
+
+    <div class="section">
+      <h2>✅ 점검 체크리스트</h2>
+      <ul class="checklist" id="checklist"><li><span class="box"></span><span>비밀번호가 솔트 적용 일방향 암호화됨</span></li><li><span class="box"></span><span>고유식별정보 등 중요정보가 암호화 저장됨</span></li><li><span class="box"></span><span>암호키가 분리 관리됨</span></li></ul>
+      <div class="kref">근거: 개인정보 보호법 제29조 · 안전성 확보조치 기준 제7조·제8조 · PIA 4.3.1~4.3.5</div>
+    </div>
+  </div>
+  <div class="footer">「개인정보 보호법」·개인정보 영향평가 수행 안내서·가명정보 처리 가이드라인 등 개인정보보호위원회 공개 자료 기반 · 교육용 재구성</div>
+</div>
+<script>
+const VULN_TERM = `<span class="cmt"># DB 저장 상태 점검</span>
+<span class="prompt">db$ SELECT pw, ssn FROM users LIMIT 1</span>
+<span class="bad">&gt;&gt; pw = "qwer1234!" (평문)</span>
+<span class="bad">&gt;&gt; ssn = "900101-1234567" (평문) / 전송: http</span>
+<span class="warn">→ 유출 즉시 전량 악용 가능 · 법 제29조 위반</span>`;
+const SECURE_TERM = `<span class="cmt"># 암호화 적용</span>
+<span class="prompt">db$ 마이그레이션 후 재확인</span>
+<span class="good">&gt;&gt; pw = argon2id$...$ (솔트 포함 일방향)</span>
+<span class="good">&gt;&gt; ssn = AES-256 암호문 / 전송: TLS 1.3</span>
+<span class="good">→ 키는 KMS에서 분리 관리·주기적 교체</span>`;
+const HOST = `privacy$`;
+function setState(s){
+  document.querySelectorAll('.state-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.state-tab.'+s).classList.add('active');
+  document.getElementById('termBody').innerHTML = (s==='vuln')?VULN_TERM:SECURE_TERM;
+  document.getElementById('termTitle').textContent = HOST + ((s==='vuln')?' (취약)':' (안전)');
+}
+document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{
+  li.classList.toggle('done');
+  li.querySelector('.box').textContent = li.classList.contains('done')?'✓':'';
+}));
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/progress.js" defer></script>
+</body>
+</html>

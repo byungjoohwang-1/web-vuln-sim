@@ -16,6 +16,7 @@ PAIRS = {
     'ics': ('specs_ics', 'specs_ics_dyn'),
     'design': ('specs_design', 'specs_design_dyn'),
     'ai': ('specs_ai', 'specs_ai_dyn'),
+    'auto': ('specs_auto', 'specs_auto_dyn'),
 }
 
 
@@ -33,6 +34,8 @@ def build(domain):
         if miss:
             print('  [%s] missing keys %s' % (s['code'], miss)); continue
         full = {**s, **d}
+        if domain == 'ai':
+            full['ai_lab'] = True  # AI 코치(BYO 키 하이브리드) 섹션 렌더
         with open(os.path.join(OUT_DIR, s['file']), 'w', encoding='utf-8') as f:
             f.write(gen_infra2.render(full))
         n += 1

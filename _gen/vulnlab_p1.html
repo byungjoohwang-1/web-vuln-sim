@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>웹 취약점 실습장 — XSS·SSRF·SQL 삽입·AI 공격 직접 실습 | WEB-VULN-SIM</title>
+<meta name="description" content="가상 타깃 BugPay Mall을 상대로 SQL 삽입·XSS·SSRF·경로 조작·명령어 삽입·CSRF·XXE·파일 업로드·금융거래 공격과 AI 프롬프트 인젝션까지 직접 실행하는 버프 슈트 스타일 실습장 51미션. 브라우저 샌드박스 안에서만 동작 — 실제 시스템 영향 없음.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="웹 취약점 실습장 — 직접 공격해보는 XSS·SSRF·SQLi·금융·AI 인젝션">
+<meta property="og:description" content="일부러 취약하게 만든 가상 쇼핑몰·결제시스템을 Repeater로 공격하고, 패치 토글로 방어를 비교한다. 웹 15 + 진단 10 + 금융 20 + AI 6 = 51개 미션.">
+<meta property="og:url" content="https://vuln-sim.web.app/vulnlab.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#0b1220;--panel:#111a2e;--panel2:#0e1626;--line:#1e293b;--line2:#26334d;
+  --txt:#dbe4f0;--sub:#8fa0ba;--acc:#38bdf8;--red:#ef4444;--green:#4ade80;--amber:#fbbf24;--violet:#a78bfa;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body.soc{background:var(--bg);color:var(--txt);font-family:'Segoe UI','Noto Sans KR','Malgun Gothic',sans-serif;margin:0;overflow-x:hidden}
+body.soc a{color:var(--acc)}
+/* ── 탑바 ── */
+.soc-top{position:sticky;top:0;z-index:9500;display:flex;align-items:center;gap:18px;height:46px;padding:0 20px;
+  background:rgba(8,14,26,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.soc-top .logo{display:flex;align-items:center;gap:9px;color:#fff;text-decoration:none;font-weight:800;font-size:.95rem;letter-spacing:.4px;white-space:nowrap}
+.soc-top .logo .mk{color:var(--acc);font-size:1.1rem}
+.soc-top .logo small{display:block;font-size:.58rem;color:var(--sub);font-weight:500;letter-spacing:1px}
+.soc-top nav{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.soc-top nav::-webkit-scrollbar{display:none}
+.soc-top nav a{color:var(--sub);text-decoration:none;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:8px;white-space:nowrap}
+.soc-top nav a:hover{color:var(--txt);background:rgba(56,189,248,.08)}
+.soc-top nav a.on{color:#7dd3fc;background:rgba(56,189,248,.12)}
+.soc-top .kbtn{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line2);color:var(--sub);
+  border-radius:8px;padding:6px 13px;font-size:.76rem;cursor:pointer;white-space:nowrap;font-family:inherit}
+.soc-top .kbtn:hover{border-color:var(--acc);color:#7dd3fc}
+.soc-top .kbtn kbd{font-size:.62rem;border:1px solid #334155;border-radius:5px;padding:1px 6px;color:#64748b;background:none}
+@media(max-width:760px){.soc-top{gap:10px;padding:0 12px}.soc-top .kbtn kbd{display:none}.soc-top nav a{padding:6px 8px}.soc-top .logo small{display:none}}
+/* ── 히어로 ── */
+.lab-hero{position:relative;max-width:1340px;margin:18px auto 0;padding:26px 30px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(120deg,#0b1220 0%,#141032 52%,#1f1030 100%);border:1px solid var(--line)}
+.lab-hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(600px 200px at 88% -10%,rgba(239,68,68,.2),transparent 60%),
+             radial-gradient(500px 220px at 5% 110%,rgba(56,189,248,.15),transparent 60%)}
+.lab-hero .h-in{position:relative;display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.lab-hero .h-badge{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;font-weight:800;letter-spacing:.4px;
+  color:#fca5a5;border:1px solid rgba(239,68,68,.45);background:rgba(239,68,68,.1);border-radius:99px;padding:4px 13px;margin-bottom:10px}
+.lab-hero h1{font-weight:800;font-size:1.5rem;color:#fff;margin:0 0 8px;line-height:1.35}
+.lab-hero h1 .accent{color:#7dd3fc}
+.lab-hero p{color:#9fb0ca;font-size:.87rem;line-height:1.7;max-width:640px;margin:0}
+.lab-hero .p-wrap{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.lab-hero .p-ring{position:relative;width:86px;height:86px}
+.lab-hero .p-ring svg{transform:rotate(-90deg)}
+.lab-hero .p-ring .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;color:#fff}
+.lab-hero .p-ring .n small{font-size:.55rem;color:var(--sub);font-weight:600;display:block;text-align:center}
+.notice{max-width:1340px;margin:12px auto 0;display:flex;gap:12px;align-items:flex-start;background:rgba(74,222,128,.06);
+  border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:12px 16px;font-size:.78rem;color:#bbf7d0;line-height:1.65}
+.notice b{color:#4ade80}
+.notice .ic{font-size:1.1rem;line-height:1.2}
+/* ── 레이아웃 ── */
+.lab-cols{max-width:1340px;margin:16px auto 40px;padding:0 0 0 20px;display:grid;grid-template-columns:308px 1fr;gap:16px}
+@media(max-width:980px){.lab-cols{grid-template-columns:1fr;padding:0 12px}}
+.missions{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;align-self:start;position:sticky;top:62px;max-height:calc(100vh - 80px);overflow-y:auto}
+.missions h2{font-size:.8rem;font-weight:800;color:#fff;margin:2px 4px 10px;letter-spacing:.3px}
+.mcat{font-family:'Cascadia Mono',Consolas,monospace;font-size:.6rem;letter-spacing:1.5px;color:var(--sub);margin:12px 4px 5px;text-transform:uppercase}
+.mi{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:1px solid transparent;
+  border-radius:10px;padding:8px 10px;cursor:pointer;color:#9db0c8;font-family:inherit;font-size:.79rem;font-weight:600}
+.mi:hover{background:rgba(56,189,248,.07);color:#e2e8f0}
+.mi.on{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.4);color:#fff}
+.mi .chip{flex-shrink:0;font-family:'Cascadia Mono',Consolas,monospace;font-size:.56rem;font-weight:800;letter-spacing:.5px;
+  border-radius:5px;padding:2px 6px;border:1px solid;min-width:36px;text-align:center}
+.mi .t{flex:1;min-width:0;line-height:1.35}
+.mi .ok{flex-shrink:0;color:#4ade80;font-size:.78rem}
+.mi.done .t{color:#86efac}
+/* ── 워크스페이스 ── */
+.work{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0}
+.lab-head{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+.lab-head .cat-chip{font-family:'Cascadia Mono',Consolas,monospace;font-size:.62rem;font-weight:800;letter-spacing:1px;
+  border-radius:6px;padding:3px 9px;border:1px solid;flex-shrink:0}
+.lab-head h2{font-size:1.08rem;font-weight:800;color:#fff;margin:0 0 4px}
+.lab-head .goal{font-size:.8rem;color:var(--sub);line-height:1.6;margin:0;flex:1;min-width:240px}
+.lab-head .goal b{color:#e2e8f0}
+.lab-head .ref{font-size:.68rem;color:#64748b;margin-top:6px}
+.lab-head .ref a{color:#7dd3fc;text-decoration:none}
+.lab-head .ref a:hover{text-decoration:underline}
+.flag-state{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;
+  padding:8px 14px;font-size:.72rem;color:var(--sub);white-space:nowrap}
+.flag-state.win{border-color:rgba(74,222,128,.5);color:#86efac;background:rgba(74,222,128,.08)}
+.tabs{display:flex;gap:6px;margin:14px 0 0;flex-wrap:wrap}
+.tab{background:var(--panel2);border:1px solid var(--line);color:var(--sub);border-radius:9px;padding:8px 15px;
+  font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit}
+.tab:hover{color:var(--txt);border-color:var(--line2)}
+.tab.on{background:rgba(56,189,248,.13);border-color:rgba(56,189,248,.5);color:#7dd3fc}
+.pane{display:none;margin-top:14px}
+.pane.on{display:block}
+/* ── 미니 브라우저 ── */
+.browser{border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:#060b16}
+.bbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a1120;border-bottom:1px solid var(--line)}
+.bbar .dots{display:flex;gap:5px;flex-shrink:0}
+.bbar .dots i{width:9px;height:9px;border-radius:50%;display:block}
+.bbar input{flex:1;min-width:0;background:#060b16;border:1px solid var(--line2);border-radius:8px;padding:7px 12px;
+  color:#7dd3fc;font-family:'Cascadia Mono',Consolas,monospace;font-size:.76rem}
+.bbar input:focus{outline:none;border-color:var(--acc)}
+.bbar .go{background:var(--panel2);border:1px solid var(--line2);color:var(--sub);border-radius:8px;padding:7px 13px;
+  font-size:.72rem;cursor:pointer;font-family:inherit}
+.bbar .go:hover{border-color:var(--acc);color:#7dd3fc}
+#simFrame{width:100%;height:430px;border:0;background:#f6f7f9;display:block}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.acts button{background:var(--panel2);border:1px solid var(--line2);color:var(--sub);border-radius:9px;padding:8px 14px;
+  font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit}
+.acts button:hover{border-color:var(--acc);color:#7dd3fc}
+.acts button.danger:hover{border-color:var(--red);color:#f87171}
+/* 시뮬레이터 판정 */
+.simnotes{margin-top:12px;background:#060b16;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.simnotes h4{margin:0 0 8px;font-family:'Cascadia Mono',Consolas,monospace;font-size:.64rem;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase}
+.simnotes ul{margin:0;padding:0;list-style:none}
+.simnotes li{font-family:'Cascadia Mono',Consolas,monospace;font-size:.72rem;line-height:1.8;color:#a5f3fc;word-break:break-all}
+.simnotes li.warn{color:#fcd34d}
+.simnotes li.bad{color:#fca5a5}
+.simnotes li.good{color:#86efac}
+/* 프록시 로그 */
+.plog{margin-top:14px;background:#060b16;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.plog h4{margin:0;padding:10px 14px;font-family:'Cascadia Mono',Consolas,monospace;font-size:.64rem;letter-spacing:1.5px;color:var(--sub);
+  text-transform:uppercase;border-bottom:1px solid var(--line)}
+.plog ul{margin:0;padding:6px;list-style:none;max-height:190px;overflow-y:auto}
+.plog li{display:flex;gap:9px;align-items:center;font-family:'Cascadia Mono',Consolas,monospace;font-size:.7rem;
+  padding:6px 9px;border-radius:7px;cursor:pointer;color:#9db0c8}
+.plog li:hover{background:rgba(56,189,248,.08)}
+.plog .m{font-weight:800;min-width:42px}
+.plog .m.POST{color:#c4b5fd}.plog .m.GET{color:#7dd3fc}.plog .m.OPTIONS{color:#fbbf24}
+.plog .s{min-width:34px;text-align:right;font-weight:700}
+.plog .s.s2{color:#4ade80}.plog .s.s4{color:#fbbf24}.plog .s.s5{color:#f87171}
+.plog .lchip{font-size:.56rem;border:1px solid;border-radius:4px;padding:1px 5px;letter-spacing:.5px}
+.plog .empty{color:#475569;padding:10px;font-size:.72rem}
+/* ── 리피터 ── */
+.rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:980px){.rep-grid{grid-template-columns:1fr}}
+.rep-box{display:flex;flex-direction:column;gap:8px;min-width:0}
+.rep-box h4{margin:0;font-family:'Cascadia Mono',Consolas,monospace;font-size:.64rem;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase}
+.rep-box textarea{width:100%;height:320px;background:#060b16;border:1px solid var(--line2);border-radius:10px;color:#a5f3fc;
+  font-family:'Cascadia Mono',Consolas,monospace;font-size:.74rem;line-height:1.65;padding:12px;resize:vertical;white-space:pre;overflow:auto}
+.rep-box textarea:focus{outline:none;border-color:var(--acc)}
+.rep-send{align-self:flex-start;background:linear-gradient(135deg,#dc2626,#7f1d1d);color:#fff;border:0;border-radius:9px;
+  padding:10px 22px;font-size:.8rem;font-weight:800;cursor:pointer;font-family:inherit}
+.rep-send:hover{filter:brightness(1.12)}
+/* ── 진단 판정 바 ── */
+.diagbar{display:none;margin-top:12px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 16px}
+.diagbar.show{display:block}
+.diagbar .dq{font-size:.82rem;font-weight:700;color:#fde68a;margin-bottom:10px;line-height:1.5}
+.diagbar .dbtns{display:flex;gap:8px;flex-wrap:wrap}
+.diagbar button{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);border-radius:9px;padding:9px 20px;
+  font-size:.8rem;font-weight:800;cursor:pointer;font-family:inherit}
+.diagbar button.good{border-color:rgba(74,222,128,.5);color:#86efac}
+.diagbar button.bad{border-color:rgba(239,68,68,.5);color:#fca5a5}
+.diagbar button:hover{filter:brightness(1.2)}
+.diagbar .dresult{margin-top:10px;font-size:.78rem;line-height:1.7;display:none;border-top:1px dashed rgba(251,191,36,.3);padding-top:10px}
+.diagbar .dresult.show{display:block}
+.diagbar .dresult.ok{color:#bbf7d0}.diagbar .dresult.no{color:#fca5a5}
+/* ── 서버 코드 뷰 ── */
+.codebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.codebar .sw{position:relative;width:44px;height:24px;background:var(--panel2);border:1px solid var(--line2);border-radius:99px;cursor:pointer;flex-shrink:0}
+.codebar .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--red);transition:.18s}
+.codebar .sw.on::after{left:22px;background:var(--green)}
+.codebar .swlab{font-size:.78rem;font-weight:700}
+.codebar .swlab b.vuln{color:#f87171}.codebar .swlab b.safe{color:#4ade80}
+.codebar .hint{font-size:.68rem;color:#64748b}
+.codegrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:980px){.codegrid{grid-template-columns:1fr}}
+.codecard{background:#060b16;border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.codecard header{padding:9px 14px;border-bottom:1px solid var(--line);font-size:.72rem;font-weight:800}
+.codecard.vuln header{color:#f87171;background:rgba(239,68,68,.07)}
+.codecard.safe header{color:#4ade80;background:rgba(74,222,128,.07)}
+.codecard pre{margin:0;padding:13px 15px;overflow:auto;max-height:420px;font-family:'Cascadia Mono',Consolas,monospace;
+  font-size:.72rem;line-height:1.7;color:#c7d4e8;white-space:pre}
+/* ── AI 챗 ── */
+.chatwrap{border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:#060b16}
+.chathead{display:flex;align-items:center;gap:10px;padding:11px 16px;background:#0a1120;border-bottom:1px solid var(--line)}
+.chathead .botav{width:30px;height:30px;border-radius:9px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.4);
+  display:flex;align-items:center;justify-content:center;font-size:1rem}
+.chathead b{font-size:.84rem;color:#fff}
+.chathead small{display:block;font-size:.62rem;color:var(--sub)}
+.chatlog{height:380px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.cmsg{max-width:82%;border-radius:12px;padding:10px 14px;font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.cmsg.user{align-self:flex-end;background:rgba(56,189,248,.13);border:1px solid rgba(56,189,248,.35);color:#dbe4f0}
+.cmsg.bot{align-self:flex-start;background:#101a30;border:1px solid var(--line2);color:#c7d4e8}
+.cmsg.bot.sys{background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.3);color:#fde68a;font-family:'Cascadia Mono',Consolas,monospace;font-size:.74rem}
+.cmsg .src{display:block;margin-top:6px;font-size:.62rem;color:#64748b;font-style:italic}
+.chatin{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.chatin input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line2);border-radius:9px;padding:10px 14px;
+  color:var(--txt);font-size:.84rem;font-family:inherit}
+.chatin input:focus{outline:none;border-color:var(--violet)}
+.chatin button{background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;border:0;border-radius:9px;padding:10px 20px;
+  font-size:.8rem;font-weight:800;cursor:pointer;font-family:inherit}
+.chatctx{padding:9px 14px;border-top:1px dashed var(--line);font-size:.68rem;color:var(--sub);line-height:1.6}
+.chatctx b{color:#c4b5fd}
+/* ── 힌트·해설 ── */
+.hintzone{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+.hintrow{display:flex;gap:10px;align-items:center}
+.hintrow button{background:var(--panel2);border:1px solid var(--line2);color:var(--sub);border-radius:9px;padding:8px 15px;
+  font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit}
+.hintrow button:hover{border-color:var(--amber);color:#fcd34d}
+.hints{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.hints .h{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.3);border-radius:9px;padding:9px 13px;
+  font-size:.76rem;color:#fde68a;line-height:1.6}
+.hints .h b{color:#fbbf24}
+.solvebox{margin-top:14px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.4);border-radius:12px;padding:16px 18px;display:none}
+.solvebox.show{display:block}
+.solvebox .sb-h{display:flex;align-items:center;gap:9px;font-weight:800;color:#4ade80;font-size:.92rem;margin-bottom:8px}
+.solvebox .sb-how{font-family:'Cascadia Mono',Consolas,monospace;font-size:.72rem;color:#86efac;margin-bottom:10px}
+.solvebox p{font-size:.79rem;color:#bbf7d0;line-height:1.75;margin:0 0 8px}
+.solvebox p b{color:#fff}
+.solvebox a{color:#7dd3fc}
+.solvebox .next{margin-top:6px;display:inline-block;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.45);
+  color:#7dd3fc;border-radius:9px;padding:8px 16px;font-size:.76rem;font-weight:700;text-decoration:none}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);z-index:99998;
+  background:#0e1626;border:1px solid rgba(74,222,128,.55);border-radius:12px;padding:13px 22px;color:#bbf7d0;
+  font-size:.82rem;font-weight:700;box-shadow:0 14px 44px rgba(0,0,0,.55);transition:transform .25s;max-width:90vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+/* ── 푸터 ── */
+.soc-foot{border-top:1px solid var(--line);background:var(--panel2);padding:24px 20px;text-align:center}
+.soc-foot .f-logo{font-weight:800;color:#fff;font-size:.9rem;margin-bottom:8px}
+.soc-foot .f-logo span{color:var(--acc)}
+.soc-foot p{font-size:.72rem;color:var(--sub);line-height:1.8;margin:0}
+.soc-foot .f-kbd{font-size:.7rem;color:#64748b;margin-top:6px}
+.soc-foot kbd{border:1px solid #334155;border-radius:5px;padding:1px 6px;font-size:.62rem;color:#94a3b8;background:none}
+/* ── 미션 그룹·칩 보강 ── */
+.mgroup{margin:14px 4px 6px;font-family:'Cascadia Mono',Consolas,monospace;font-size:.66rem;font-weight:700;letter-spacing:.4px;color:#e2e8f0;border-top:1px dashed var(--line);padding-top:11px}
+.mgroup:first-child{border-top:0;margin-top:2px;padding-top:0}
+.mgroup span{color:#64748b;font-weight:600;margin-left:6px}
+.mi .lv{flex-shrink:0;font-size:.58rem;letter-spacing:1px;color:#f59e0b}
+.mi .cat{flex-shrink:0;font-family:'Cascadia Mono',Consolas,monospace;font-size:.55rem;font-weight:800;letter-spacing:.5px;border-radius:5px;padding:2px 6px;border:1px solid;min-width:40px;text-align:center}
+.mi .ck{flex-shrink:0;color:#4ade80;font-weight:800}
+.lab-head .lh-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
+.lab-head .cat2{font-family:'Cascadia Mono',Consolas,monospace;font-size:.62rem;font-weight:800;letter-spacing:1px;border-radius:6px;padding:3px 9px;border:1px solid}
+.lab-head .lv2{color:#f59e0b;font-size:.76rem;letter-spacing:2px}
+.lab-head .vtag{font-size:.62rem;font-weight:700;color:#c4b5fd;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.08);border-radius:99px;padding:2px 9px}
+.lab-head .ok-tag{font-size:.62rem;font-weight:800;color:#86efac;border:1px solid rgba(74,222,128,.45);background:rgba(74,222,128,.1);border-radius:99px;padding:2px 9px}
+.diagbar .dq .ev{margin-top:6px;font-size:.7rem;font-weight:600;color:#fcd34d;font-family:'Cascadia Mono',Consolas,monospace;word-break:break-all}
+.plog .st{min-width:30px;text-align:right;font-weight:700;color:#94a3b8;flex-shrink:0}
+.plog .st.ok{color:#4ade80}
+.hints .hint{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.3);border-radius:9px;padding:9px 13px;font-size:.76rem;color:#fde68a;line-height:1.6}
+.hints .hint b{color:#fbbf24}
+.hints .hint.muted2{color:#64748b;border-color:var(--line)}
+.codecard.cur{border-color:rgba(56,189,248,.5);box-shadow:0 0 0 1px rgba(56,189,248,.25)}
+.cmsg.sys{align-self:center;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);color:#fde68a;font-family:'Cascadia Mono',Consolas,monospace;font-size:.74rem}
+.solvebox.locked{background:rgba(30,41,59,.5);border-color:var(--line);color:var(--sub)}
+.solvebox.locked b{color:#fcd34d}
+</style>
+</head>

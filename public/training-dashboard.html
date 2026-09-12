@@ -161,6 +161,15 @@ header .wrap {
 }
 @media (max-width: 900px) {
   .main-layout { grid-template-columns: 1fr; }
+
+  /* [모바일 가로 넘침 수정] 페이지 전용 내비(.nav-links)는 항목이 16개인데
+     한 줄 고정(flex, nowrap)이라 390px 화면에서 문서 폭이 1000px 이상으로 벌어졌다.
+     공통 탑바(soc-chrome.js)가 이미 상시 내비와 Ctrl+K 검색을 제공하므로
+     모바일에서는 헤더 sticky 를 풀고(긴 메뉴가 화면을 잠식하지 않도록) 줄바꿈을 허용한다. */
+  header { position: static; }
+  header .wrap { flex-direction: column; align-items: stretch; height: auto; gap: 8px; padding: 10px 16px; }
+  .nav-links { flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .nav-btn { font-size: 12.5px; padding: 6px 10px; }
 }
 
 /* Card Sections */
@@ -716,5 +725,6 @@ window.onload = function() {
 };
 </script>
 <script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
 </body>
 </html>

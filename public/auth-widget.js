@@ -142,56 +142,75 @@ async function doLogin(){
 // leaderboard/{uid} = {name, xp, level, streak, updatedAt}. 본인만 쓰기, 로그인자만 읽기(firestore.rules).
 window.sdaBoard = {
   getUser(){ return currentUser ? { uid: currentUser.uid, name: currentUser.displayName || currentUser.email || '사용자' } : null; },
-  async publish(p){
-    if (!currentUser) throw new Error('not-logged-in');
-    const name = (p && p.name ? String(p.name) : (currentUser.displayName || '익명')).slice(0, 24);
-    await setDoc(doc(db, 'leaderboard', currentUser.uid), {
-      name, xp: (p && +p.xp) || 0, level: (p && +p.level) || 1, streak: (p && +p.streak) || 0,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    return true;
+  // [QA-P0-05] 리더보드는 서버 전용이 되었다.
+  // 이전에는 브라우저가 xp/level/streak 을 그대로 기록할 수 있어 점수 위조가 가능했다.
+  // 이제 leaderboard 쓰기는 firestore.rules 에서 전면 차단되고, 서버 채점을 통과한
+  // 인증시험 결과만 Cloud Functions(certApi)가 기록한다.
+  // 기존 호출부(academy-state.js, secure-dev-academy.html)가 깨지지 않도록 무해한 no-op 로 둔다.
+  async publish(){
+    return false;
   },
+  // 리더보드는 이제 "서버 검증 시험 점수"만 담는다(certApi 가 기록).
   async fetchTop(n){
-    const q = query(collection(db, 'leaderboard'), orderBy('xp', 'desc'), limit(n || 20));
+    const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), limit(n || 20));
     const snap = await getDocs(q);
     const me = currentUser ? currentUser.uid : null;
     const rows = [];
-    snap.forEach(d => { const v = d.data(); rows.push({ uid: d.id, name: v.name || '익명', xp: v.xp || 0, level: v.level || 1, streak: v.streak || 0, me: d.id === me }); });
+    snap.forEach(d => { const v = d.data(); rows.push({ uid: d.id, name: v.name || '익명', score: v.score || 0, certId: v.certId || '', verified: !!v.verified, me: d.id === me }); });
     return rows;
   },
-  // 수료증 온라인 등록(진위 검증용). certificates/{certId} 는 불변(create-only).
+  // [QA-P0-05] 자가 학습 기록 등록 — 검증된 수료증이 아니다.
+  // certificates 컬렉션은 서버 전용이 되었으므로 자가 보고 기록은 selfCerts 에 저장하고
+  // 검증 페이지에서 "미검증(자가 보고)"으로 명확히 구분해 표시한다.
   async registerCert(cert){
     if (!currentUser) throw new Error('not-logged-in');
     if (!cert || !cert.certId) throw new Error('bad-cert');
-    await setDoc(doc(db, 'certificates', String(cert.certId)), {
+    await setDoc(doc(db, 'selfCerts', String(cert.certId)), {
+      kind: 'self',
       uid: currentUser.uid,
       name: String(cert.name || '').slice(0, 40),
       certId: String(cert.certId),
       date: String(cert.date || ''),
-      level: (+cert.level) || 1,
-      xp: (+cert.xp) || 0,
-      concepts: (+cert.concepts) || 0,
-      practical: (+cert.practical) || 0,
-      hash: String(cert.hash || ''),
-      // F4 스킬 자격(skill-assess.html) 전용 필드 — 기존 수료증은 기본값으로 기록됨
       type: String(cert.t || ''),
       score: (+cert.score) || 0,
-      pct: (+cert.pct) || 0,
-      tier: (+cert.tier) || 0,
-      axes: String(cert.axes || '').slice(0, 120),
-      dur: (+cert.dur) || 0,
-      flags: (+cert.flags) || 0,
+      hash: String(cert.hash || ''),
       createdAt: serverTimestamp()
     });
     return true;
   },
-  // 공개 단건 조회(로그인 불필요). verify 페이지에서 사용.
+  // 공개 단건 조회(로그인 불필요). 검증 수료증 우선, 없으면 자가 기록을 조회한다.
   async fetchCert(certId){
     if (!certId) return null;
-    const snap = await getDoc(doc(db, 'certificates', String(certId)));
-    return snap.exists() ? snap.data() : null;
+    const v = await getDoc(doc(db, 'certificates', String(certId)));
+    if (v.exists()) return v.data();
+    const s = await getDoc(doc(db, 'selfCerts', String(certId)));
+    return s.exists() ? s.data() : null;
+  },
+
+  /* ── 검증된 수료증 API (Cloud Functions certApi) ── */
+  async idToken(){ return currentUser ? await currentUser.getIdToken() : null; },
+  async certExamStart(){
+    const t = await this.idToken();
+    if (!t) throw new Error('not-logged-in');
+    const r = await fetch(CERT_API, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+t },
+      body: JSON.stringify({ action:'start' }) });
+    return r.json();
+  },
+  async certExamSubmit(sid, answers, name){
+    const t = await this.idToken();
+    if (!t) throw new Error('not-logged-in');
+    const r = await fetch(CERT_API, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+t },
+      body: JSON.stringify({ action:'submit', sid, answers, name }) });
+    return r.json();
+  },
+  async certVerify(certId){
+    const r = await fetch(CERT_API + '?action=verify&id=' + encodeURIComponent(certId));
+    return r.json();
   }
 };
+
+// Cloud Functions certApi 엔드포인트 (us-central1 기본 리전)
+const CERT_API = 'https://us-central1-vuln-sim.cloudfunctions.net/certApi';
 
 setPersistence(auth, browserLocalPersistence).catch(() => {});
 // 리다이렉트 로그인 복귀 처리(에러 표면화). 성공 시 onAuthStateChanged가 이어서 처리한다.

@@ -1,0 +1,139 @@
+
+/* ── 8. UI 파이프라인 ── */
+function $(id){return document.getElementById(id);}
+var F=$('simFrame'),ADDR=$('addrBar');
+var REQLOGN=0,lastReq=null,curLab=null;
+
+/* iframe 샌드박스 SHIM — alert 의미를 parent로 전달, 폼·링크를 가로채 요청으로 변환 */
+function shimPre(qs){
+ var esc=String(qs||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+ return '<scr'+'ipt>(function(){window.__sim={qs:"'+esc+'"};'+
+ 'var send=function(t,d){try{parent.postMessage({sim:t,data:d},"*")}catch(e){}};'+
+ 'window.alert=function(m){send("alert",{msg:String(m)});return false};'+
+ 'window.prompt=function(m){send("alert",{msg:"prompt: "+m});return null};'+
+ 'window.confirm=function(m){send("alert",{msg:"confirm: "+m});return false};'+
+ 'document.addEventListener("submit",function(e){e.preventDefault();var f=e.target;'+
+ 'var m=(f.getAttribute("method")||"get").toLowerCase();var a=f.getAttribute("action")||"/";'+
+ 'var p=[];try{var fd=new FormData(f);fd.forEach(function(v,k){if(typeof v==="string")p.push(encodeURIComponent(k)+"="+encodeURIComponent(v))})}catch(ex){}'+
+ 'send("submit",{method:m,action:a,body:p.join("&")})},true);'+
+ 'document.addEventListener("click",function(e){var el=e.target;'+
+ 'while(el&&el.nodeType===1&&el.tagName!=="A")el=el.parentNode;'+
+ 'if(el&&el.getAttribute){var href=el.getAttribute("href")||"";if(href.charAt(0)==="/"&&href.charAt(1)!=="#"){e.preventDefault();send("nav",{href:href})}}},true);'+
+ '})();<\/scr'+'ipt>';
+}
+function renderFrame(html,qs){
+ F.srcdoc='<!doctype html><html><head><meta charset="utf-8"><style>'+APP_CSS+'</style></head><body>'+shimPre(qs||'')+html+'</body></html>';
+}
+
+/* 진단·금융 헤더 계열 패치 후처리 — handle() 뒤에 일괄 적용 */
+function randHex(n){var s='';for(var i=0;i<n;i++)s+='0123456789abcdef'[Math.floor(Math.random()*16)];return s;}
+function postHdrs(R){
+ if(isP('diag-serverver')){delete R.hdrs.Server;delete R.hdrs['X-Powered-By'];}
+ if(isP('diag-sec-header')){
+   R.hdrs['Strict-Transport-Security']='max-age=31536000; includeSubDomains';
+   R.hdrs['Content-Security-Policy']="default-src 'self'";
+   R.hdrs['X-Frame-Options']='DENY';
+ }
+ var sc=R.hdrs['Set-Cookie'];
+ if(sc){
+   if(isP('diag-cookie'))sc+='; HttpOnly; Secure; SameSite=Lax';
+   if(isP('diag-session-timeout'))sc+='; Max-Age=1800';
+   if(isP('fin-session-predict'))sc=sc.replace(/sid=[^;]*/,'sid=s_'+randHex(24));
+   R.hdrs['Set-Cookie']=sc;
+ }
+ return R;
+}
+function fmtRes(R){
+ var h='HTTP/1.1 '+R.status+' '+R.reason+'\r\n';
+ for(var k in R.hdrs)h+=k+': '+R.hdrs[k]+'\r\n';
+ h+='\r\n';
+ var b=R.html||'';
+ if(b.length>16000)b=b.slice(0,16000)+'\n… ('+(R.html.length-16000)+'자 생략)';
+ return h+b;
+}
+function renderNotes(notes){
+ $('simNotes').innerHTML=notes.length?notes.map(function(n){
+   return '<li class="'+(n.c||'')+'">'+H(n.s)+'</li>';}).join(''):'<li class="warn">이 요청에는 서버 노트가 없습니다.</li>';
+}
+function pushLog(method,path,status,qs,body){
+ REQLOGN++;
+ var li=document.createElement('li');
+ li.innerHTML='<span class="m">#'+REQLOGN+'</span> <b>'+H(method)+'</b> '+H(path)+((qs||'')?'?'+H(qs):'')+' <span class="st '+(status<400?'ok':'')+'">'+status+'</span>';
+ var m=method,p=path,q=qs||'',b=body||'';
+ li.title='클릭하면 Repeater로 이동';
+ $('plogList').insertBefore(li,$('plogList').firstChild);
+ while($('plogList').children.length>25)$('plogList').removeChild($('plogList').lastChild);
+ li.addEventListener('click',function(){
+   var req=m+' '+p+(q?'?'+q:'')+' HTTP/1.1\nHost: bugpay.example';
+   if(m==='POST')req+='\nContent-Type: application/x-www-form-urlencoded\n\n'+b;
+   $('reqText').value=req;
+   showTab('req');
+ });
+}
+
+/* 핵심: 요청 → handle() → 판정·렌더 */
+function doRequest(o){
+ o=o||{};
+ var method=(o.method||'GET').toUpperCase();
+ var path=o.path||'/';
+ var q=new URLSearchParams(o.qs||'');
+ var bodyStr=o.body||'';
+ var body={};
+ if(bodyStr)bodyStr.split('&').forEach(function(kv){var i=kv.indexOf('=');if(i>0)body[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1));});
+ var R=handle(method,path,q,body);
+ postHdrs(R);
+ lastReq={method:method,path:path,qs:o.qs||'',body:bodyStr};
+ curLab=R.lab||curLab;
+ ADDR.value=path+(o.qs?'?'+o.qs:'');
+ $('resText').value=fmtRes(R);
+ renderNotes(R.notes);
+ renderFrame(R.html,o.qs||'');
+ pushLog(method,path,o.status||R.status,o.qs||'',bodyStr);
+ if(R.win)grantFlag(R.win.lab,R.win.how);
+ if(curLabId&&R.lab===curLabId)refreshDiagBar();
+ return R;
+}
+
+/* 브라우저 주소창 */
+function addrGo(){
+ var v=ADDR.value.trim()||'/';
+ if(!/^\//.test(v))v='/'+v;
+ var i=v.indexOf('?');
+ doRequest({method:'GET',path:i<0?v:v.slice(0,i),qs:i<0?'':v.slice(i+1)});
+}
+
+/* iframe → parent 이벤트 (alert 시맨틱 / 폼 / 링크) */
+var XSS_LABS={'xss-reflected':1,'xss-stored':1,'xss-dom':1,'ai-markdown':1};
+window.addEventListener('message',function(e){
+ var d=e.data;
+ if(!d||!d.sim)return;
+ if(d.sim==='alert'){
+   toast('⚡ 스크립트 실행 감지(샌드박스 내): '+(d.data&&d.data.msg||'alert'),'ok');
+   var lab=LABS.filter(function(l){return l.id===curLabId;})[0];
+   var target=(lab&&XSS_LABS[lab.id])?lab.id:(curLab&&XSS_LABS[curLab]?curLab:null);
+   if(target)grantFlag(target,'격리 iframe 내 스크립트(alert) 실행 — XSS 코드 동작 확인');
+ }
+ else if(d.sim==='submit'){
+   var dd=d.data||{};
+   var ai=(dd.action||'').indexOf('?');
+   var bp=ai<0?(dd.action||'/'):(dd.action||'/').slice(0,ai);
+   var bqs=ai<0?'':(dd.action||'').slice(ai+1);
+   if(dd.method==='post')doRequest({method:'POST',path:bp,qs:bqs,body:dd.body||''});
+   else doRequest({method:'GET',path:bp,qs:[bqs,dd.body].filter(Boolean).join('&')});
+ }
+ else if(d.sim==='nav'){
+   var href=(d.data&&d.data.href)||'/';
+   var hi=href.indexOf('?');
+   doRequest({method:'GET',path:hi<0?href:href.slice(0,hi),qs:hi<0?'':href.slice(hi+1)});
+ }
+});
+
+/* Repeater 파서/전송 */
+function parseReq(t){
+ var lines=String(t).replace(/\r\n/g,'\n').split('\n');
+ var first=(lines[0]||'').trim().split(/\s+/);
+ var method=(first[0]||'GET').toUpperCase();
+ var target=first[1]||'/';
+ var i=target.indexOf('?');
+ return {method:method,path:i<0?target:target.slice(0,i),qs:i<0?'':target.slice(i+1),raw:t};
+}

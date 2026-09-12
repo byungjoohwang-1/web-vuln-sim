@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 레드팀 아레나 — AI 공격자와 방어 대결 | WEB-VULN-SIM</title>
+<meta name="description" content="AI 레드팀 에이전트가 시나리오 DB를 도구로 호출해 공격 체인을 조립합니다. 방어 선택지를 골라 4단계 침입 체인(정찰→침입→권한상승→유출)을 막아보세요. AI 출력은 기계 검증 후 사용됩니다.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="AI 레드팀 아레나 — AI 공격자와 방어 대결">
+<meta property="og:description" content="AI가 공격 체인을 조립하고, 당신이 막는다. 생성→검증→적응이 폐루프로 돌아가는 보안 훈련장.">
+<meta property="og:url" content="https://vuln-sim.web.app/redteam.html">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#0b1220;--panel:#111a2e;--panel2:#0e1626;--line:#1e293b;--line2:#26334d;
+  --txt:#dbe4f0;--sub:#8fa0ba;--acc:#38bdf8;--red:#ef4444;--green:#4ade80;--amber:#fbbf24;--violet:#a78bfa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI','Noto Sans KR',sans-serif;min-height:100vh}
+a{color:var(--acc)}
+/* ── 상단 바 ── */
+.rt-top{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--panel2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+.rt-back{color:var(--sub);text-decoration:none;font-size:.85rem;white-space:nowrap}
+.rt-back:hover{color:var(--txt)}
+.rt-brand{font-weight:800;font-size:1.05rem;flex:1}
+.rt-brand small{display:block;font-weight:500;font-size:.68rem;color:var(--sub)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;font-size:.75rem;font-weight:700;border:1px solid var(--line2);white-space:nowrap}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--amber)}
+.pill.byo{color:#86efac;border-color:#14532d}.pill.byo .dot{background:var(--green)}
+.pill.proxy{color:#7dd3fc;border-color:#0c4a6e}.pill.proxy .dot{background:var(--acc)}
+.pill.demo{color:#fcd34d;border-color:#78350f}.pill.demo .dot{background:var(--amber)}
+/* ── 레이아웃 ── */
+.rt-main{display:grid;grid-template-columns:250px minmax(0,1fr) 300px;gap:14px;padding:14px;max-width:1400px;margin:0 auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.panel h3{font-size:.8rem;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+/* ── 좌: 미션 ── */
+.dchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.dchip{padding:6px 10px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);color:var(--sub);font-size:.78rem;cursor:pointer}
+.dchip.on{border-color:var(--acc);color:var(--acc);background:rgba(56,189,248,.08)}
+.dchip:disabled{opacity:.4;cursor:not-allowed}
+.stage-track{margin:6px 0 14px}
+.stg{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:.8rem;color:var(--sub);border:1px solid transparent}
+.stg .n{width:20px;height:20px;border-radius:50%;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0}
+.stg.cur{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.stg.cur .n{border-color:var(--red);color:var(--red)}
+.stg.done{color:#f87171;text-decoration:line-through}
+.stg.done .n{background:rgba(239,68,68,.2);border-color:var(--red);color:#fca5a5}
+.rt-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.stat b{display:block;font-size:1.15rem}
+.stat span{font-size:.68rem;color:var(--sub)}
+.weak-banner{display:none;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.35);color:#fcd34d;border-radius:8px;padding:9px 11px;font-size:.75rem;line-height:1.55;margin-bottom:12px}
+.btn-primary{width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#dc2626,#7f1d1d);color:#fff;font-weight:800;font-size:.95rem;cursor:pointer}
+.btn-primary:hover{filter:brightness(1.15)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+/* ── 중앙: 배틀 ── */
+.battle{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-height:520px;display:flex;flex-direction:column}
+.battle-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:12px}
+.battle-empty h2{font-size:1.4rem}
+.battle-empty p{color:var(--sub);font-size:.88rem;line-height:1.7;max-width:480px}
+.flow-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.ftag{font-size:.7rem;padding:4px 10px;border-radius:99px;border:1px solid var(--line2);color:var(--sub)}
+.chat{flex:1;overflow-y:auto;padding:16px;max-height:64vh;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;max-width:92%}
+.msg .av{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;background:var(--panel2);border:1px solid var(--line2)}
+.msg .body{flex:1;min-width:0}
+.msg .who{font-size:.68rem;color:var(--sub);margin-bottom:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{font-size:.62rem;padding:2px 8px;border-radius:99px;font-weight:700}
+.badge.ai{background:rgba(167,139,250,.12);color:#c4b5fd;border:1px solid #4c1d95}
+.badge.rule{background:rgba(251,191,36,.1);color:#fcd34d;border:1px solid #78350f}
+.badge.stage{background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid #7f1d1d}
+.msg .say{background:var(--panel2);border:1px solid var(--line);border-radius:4px 12px 12px 12px;padding:11px 13px;font-size:.88rem;line-height:1.65;overflow-wrap:break-word}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg.me .say{background:rgba(56,189,248,.08);border-color:#0c4a6e;border-radius:12px 4px 12px 12px}
+/* 터미널 */
+.term{background:#060b16;border:1px solid var(--line);border-radius:10px;margin-top:10px;font-family:'Cascadia Mono','Consolas',monospace;font-size:.8rem;line-height:1.75;padding:12px 14px;overflow-x:auto}
+.term-head{color:#5b6b85;font-size:.68rem;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px;display:flex;gap:6px}
+.term-head i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.tln{white-space:pre-wrap;word-break:break-all}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--acc);vertical-align:-2px;animation:blink .8s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.term.flash-bad{animation:shake .4s;border-color:var(--red)}
+.term.flash-good{animation:pulseG .6s;border-color:var(--green)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes pulseG{0%{box-shadow:0 0 0 0 rgba(74,222,128,.5)}100%{box-shadow:0 0 0 14px rgba(74,222,128,0)}}
+/* 방어 선택지 */
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--panel2);border:2px solid var(--line2);border-radius:10px;padding:11px 13px;color:var(--txt);font-size:.85rem;line-height:1.6;cursor:pointer;transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--acc)}
+.opt:disabled{cursor:default;opacity:.75}
+.opt .k{font-weight:800;color:var(--acc);flex-shrink:0}
+.opt.right{border-color:var(--green);background:rgba(74,222,128,.08);opacity:1}
+.opt.wrong{border-color:var(--red);background:rgba(239,68,68,.08);opacity:1}
+/* 루브릭 */
+.rubric{margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.rubric .rt{font-size:.72rem;color:var(--sub);margin-bottom:10px}
+.rrow{display:grid;grid-template-columns:76px 1fr 34px;gap:10px;align-items:center;font-size:.75rem;margin-bottom:7px}
+.rbar{height:8px;background:#1a2438;border-radius:99px;overflow:hidden}
+.rbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--violet));transition:width .7s}
+.fblink{margin-top:8px;font-size:.8rem;line-height:1.7}
+.fblink a{font-weight:700}
+.verdict{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:.82rem;line-height:1.65}
+.verdict.ok{background:rgba(74,222,128,.08);border:1px solid #14532d}
+.verdict.no{background:rgba(239,68,68,.08);border:1px solid #7f1d1d}
+.rt-actions{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:center}
+.btn-ghost{padding:10px 24px;border-radius:10px;border:1px solid var(--line2);background:transparent;color:var(--txt);font-weight:700;cursor:pointer;font-size:.85rem}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+/* ── 우: 브레인 ── */
+.brain-log{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto}
+.blog{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:8px;padding:8px 10px;font-size:.72rem;line-height:1.6}
+.blog .bt{color:#c4b5fd;font-weight:700;font-family:monospace}
+.blog .bd{color:var(--sub);overflow-wrap:break-word}
+.blog .bts{color:#475569;font-size:.62rem}
+.keyrow{display:flex;gap:6px;margin-bottom:8px}
+.keyrow input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;color:var(--txt);font-size:.78rem}
+.keyrow button{padding:8px 14px;border:0;border-radius:8px;background:var(--acc);color:#04121f;font-weight:800;cursor:pointer;font-size:.78rem}
+.hint{font-size:.7rem;color:var(--sub);line-height:1.6}
+#remainInfo{font-size:.7rem;color:var(--sub);margin-top:8px}
+/* 요약 오버레이 */
+.overlay{position:fixed;inset:0;background:rgba(4,8,16,.82);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay.show{display:flex}
+.sumcard{background:var(--panel);border:1px solid var(--line2);border-radius:16px;max-width:520px;width:100%;padding:28px;text-align:center;max-height:90vh;overflow-y:auto}
+.sumcard h2{font-size:1.5rem;margin-bottom:6px}
+.sumcard .sub2{color:var(--sub);font-size:.85rem;margin-bottom:18px}
+.sumgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.sumgrid .stat b{font-size:1.3rem}
+.weaklist{text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:.8rem;line-height:1.8;margin-bottom:14px}
+.sharebox{display:flex;gap:8px;margin-bottom:14px}
+.sharebox textarea{flex:1;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;color:var(--sub);font-size:.72rem;padding:8px;resize:none;height:64px}
+@media(max-width:1100px){.rt-main{grid-template-columns:220px minmax(0,1fr)}.rt-right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}.rt-right .panel{margin-bottom:0}}
+@media(max-width:760px){.rt-main{grid-template-columns:1fr}.rt-right{grid-template-columns:1fr}.chat{max-height:none}.rt-top{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header class="rt-top">
+  <a href="vuln-hub.html" class="rt-back">← 허브</a>
+  <div class="rt-brand">🦹 레드팀 아레나<small>AI 공격 에이전트 vs 당신 — 공격 체인을 막아라</small></div>
+  <div class="pill demo" id="aiStatus"><span class="dot"></span><span id="aiStatusTxt">AI 확인 중…</span></div>
+</header>
+
+<main class="rt-main">
+  <aside class="rt-left">
+    <section class="panel">
+      <h3>🎯 미션</h3>
+      <div class="dchips" id="domainChips"></div>
+      <div class="stage-track" id="stageTrack"></div>
+      <div class="rt-stats">
+        <div class="stat"><b id="stRound">0</b><span>라운드</span></div>
+        <div class="stat"><b id="stDef">0</b><span>방어 성공</span></div>
+        <div class="stat"><b id="stStreak">0</b><span>연속 방어</span></div>
+        <div class="stat"><b id="stRate">–</b><span>방어율</span></div>
+      </div>
+      <div class="weak-banner" id="weakBanner"></div>
+      <button class="btn-primary" id="btnStart">⚔️ 대결 시작</button>
+    </section>
+  </aside>
+
+  <section class="battle">
+    <div class="chat" id="chat">
+      <div class="battle-empty" id="battleEmpty">
+        <div style="font-size:2.6rem">🦹⚔️🛡️</div>
+        <h2>AI 레드팀 에이전트가 당신을 노립니다</h2>
+        <p>AI 공격자 <b>'레드'</b>가 시나리오 DB 230종을 <b>도구로 호출</b>해 단계별 공격 체인을 조립합니다.
+           각 라운드마다 3개의 방어 선택지 중 최선을 고르세요. 방어에 실패하면 침입 체인이 다음 단계로 진행됩니다.</p>
+        <div class="flow-tags">
+          <span class="ftag">1️⃣ 정찰</span><span class="ftag">2️⃣ 침입</span><span class="ftag">3️⃣ 권한 상승</span><span class="ftag">4️⃣ 데이터 유출</span>
+        </div>
+        <p style="font-size:.78rem">AI의 모든 출력은 <b>스키마 기계 검증</b>을 통과해야 사용되며, 실패 시 규칙 엔진으로 폴백됩니다(우측 브레인 패널에서 투명하게 공개).</p>
+      </div>
+    </div>
+    <div class="rt-actions" id="rtActions"></div>
+  </section>
+
+  <aside class="rt-right">
+    <section class="panel">
+      <h3>🧠 에이전트 브레인</h3>
+      <div class="brain-log" id="brainLog"><div class="blog"><span class="bd">대결 시작 전입니다. 에이전트의 도구 호출 기록이 여기에 표시됩니다.</span></div></div>
+    </section>
+    <section class="panel">
+      <h3>🔑 AI 연결</h3>
+      <div class="keyrow">
+        <input id="keyInput" placeholder="sk-ant-… 또는 Z.ai 키 (선택)" autocomplete="off">
+        <button id="btnSaveKey">저장</button>
+      </div>
+      <p class="hint">내 API 키(Anthropic 또는 Z.ai)를 등록하면 무제한 실시간 AI. 키가 없어도 <b>공유 AI(일 12회)</b> → <b>데모 규칙 엔진</b> 순으로 자동 폴백되어 언제나 플레이 가능합니다. 키는 브라우저에만 저장됩니다.</p>
+      <div id="remainInfo"></div>
+    </section>
+  </aside>
+</main>
+
+<div class="overlay" id="sumOverlay">
+  <div class="sumcard" id="sumCard"></div>
+</div>
+
+<script src="js/ai-client.js"></script>
+<script src="js/bilingual.js"></script>
+<script src="/js/progress.js" defer></script>
+<script>
+(function () {
+  'use strict';
+  var DB = null, S = null, tier = 'demo';
+  var STAGES = ['정찰', '침입', '권한 상승', '데이터 유출'];
+  var STAGE_FLAVOR = {
+    '정찰': '네 시스템의 문지방을 훑어 봤다. ',
+    '침입': '외벽에 구멍을 찾았다. ',
+    '권한 상승': '안으로 들어왔다. 이제 권한을 올릴 차례다. ',
+    '데이터 유출': '금고 앞이다. 자료를 꺼낸다. '
+  };
+  var TIER_LABEL = { byo: ['byo', '🔑 내 키 · 실시간 AI'], proxy: ['proxy', '⚡ 공유 AI · 실시간'], demo: ['demo', '🎭 데모 AI · 규칙 엔진'] };
+  var MAX_ROUNDS = 8;
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ── 프로필(적응 엔진) ── */
+  function loadProfile() { try { return JSON.parse(localStorage.getItem('wvs_red_profile')) || {}; } catch (e) { return {}; } }
+  function saveProfile(p) { try { localStorage.setItem('wvs_red_profile', JSON.stringify(p)); } catch (e) {} }
+  function recordResult(dom, cat, ok) {
+    var p = loadProfile(); p[dom] = p[dom] || {}; p[dom][cat] = p[dom][cat] || { ok: 0, fail: 0 };
+    p[dom][cat][ok ? 'ok' : 'fail']++; saveProfile(p); renderWeak();
+  }
+  function weakCats(dom) {
+    var p = loadProfile()[dom] || {}, out = [];
+    Object.keys(p).forEach(function (c) { var s = p[c]; if (s.fail >= 2 && s.fail > s.ok) out.push({ cat: c, fail: s.fail, ok: s.ok }); });
+    return out;
+  }
+  function renderWeak() {
+    if (!S) return;
+    var w = weakCats(S.domain), b = $('weakBanner');
+    if (!w.length) { b.style.display = 'none'; return; }
+    b.style.display = 'block';
+    b.innerHTML = '🕸️ 적응 엔진: <b>' + w.slice(0, 2).map(function (x) { return x.cat + '(' + x.fail + '회 실패)'; }).join(', ') +
+      '</b>를 약점으로 감지 → 해당 시나리오가 가중 선정됩니다.';
+  }
+
+  /* ── 브레인 로그 ── */
+  function logBrain(icon, tool, detail) {
+    var box = $('brainLog');
+    var el = document.createElement('div');
+    el.className = 'blog';
+    var ts = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+    el.innerHTML = '<span class="bt">' + icon + ' ' + esc(tool) + '</span> <span class="bts">' + ts + '</span><div class="bd">' + esc(detail) + '</div>';
+    box.prepend(el);
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  /* ── 시나리오 선정(가중 샘플링) ── */
+  function pickCandidates(dom, n) {
+    var pool = DB[dom].filter(function (it) { return S.used.indexOf(it.c) < 0; });
+    if (pool.length < n) { S.used = []; pool = DB[dom].slice(); }
+    var weak = weakCats(dom), wset = {};
+    weak.forEach(function (w) { wset[w.cat] = 1; });
+    var out = [];
+    while (out.length < n && pool.length) {
+      var weights = pool.map(function (it) {
+        var w = wset[it.cat] ? 2.6 : 1;
+        if (it.sev === '상') w *= 1.2;
+        return w;
+      });
+      var sum = weights.reduce(function (a, b) { return a + b; }, 0), r = Math.random() * sum, idx = 0;
+      for (var i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0) { idx = i; break; } }
+      out.push(pool.splice(idx, 1)[0]);
+    }
+    return out;
+  }
+
+  /* ── AI 출력 기계 검증 ── */
+  function verifyAI(p, cand) {
+    var errs = [];
+    var codes = cand.map(function (c) { return c.c; });
+    if (!p || codes.indexOf(p.chosen) < 0) errs.push('chosen 코드 불일치');
+    if (!Array.isArray(p.options) || p.options.length !== 3) errs.push('options가 3개 아님');
+    else {
+      var norm = p.options.map(function (o) { return String(o).trim(); });
+      if (new Set(norm).size !== 3) errs.push('options 중복');
+      norm.forEach(function (o) { if (o.length < 8 || o.length > 140) errs.push('option 길이 위반'); });
+    }
+    if (!(Number.isInteger(p.correct) && p.correct >= 0 && p.correct <= 2)) errs.push('correct 범위 위반');
+    if (!p.attack_message || String(p.attack_message).length < 8) errs.push('attack_message 부족');
+    if (!p.why || String(p.why).length < 8) errs.push('why 부족');
+    if (!p.explanation || String(p.explanation).length < 20) errs.push('explanation 부족');
+    return errs.length ? { ok: false, errs: errs } : { ok: true, errs: [] };
+  }
+
+  /* ── 데모(규칙) 라운드 생성 ── */
+  function buildDemoRound(cand, stageName) {
+    var sc = cand[0];
+    var others = DB[S.domain].filter(function (it) { return it.c !== sc.c && it.fix && it.fix[0] && it.cat !== sc.cat; });
+    shuffle(others);
+    var correct = (sc.fix && sc.fix[0]) || (sc.os && sc.os.t) || '해당 취약점의 근본 조치를 적용한다';
+    var ds = others.slice(0, 2).map(function (o) { return o.fix[0]; });
+    while (ds.length < 2) ds.push('공격 로그를 백업 서버에 보관한다');
+    var opts = shuffle([correct, ds[0], ds[1]]);
+    return {
+      chosen: sc.c, sc: sc, src: 'rule',
+      attack_message: STAGE_FLAVOR[stageName] + (sc.al || sc.t),
+      options: opts, correct: opts.indexOf(correct),
+      why: '규칙 엔진 — 학습자 약점 프로필·공격 단계·미사용 시나리오 가중 선정',
+      explanation: ((sc.os && sc.os.d) ? sc.os.d + ' ' : '') + (sc.ez || sc.t).slice(0, 140)
+    };
+  }
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  /* ── 상태 표시 ── */
+  function refreshStats() {
+    $('stRound').textContent = S.rounds; $('stDef').textContent = S.defended; $('stStreak').textContent = S.streak;
+    $('stRate').textContent = S.rounds ? Math.round(S.defended / S.rounds * 100) + '%' : '–';
+    var track = $('stageTrack'); track.innerHTML = '';
+    STAGES.forEach(function (name, i) {
+      var d = document.createElement('div');
+      d.className = 'stg' + (i === S.stage ? ' cur' : '') + (i < S.stage ? ' done' : '');
+      d.innerHTML = '<span class="n">' + (i < S.stage ? '✓' : (i + 1)) + '</span>' + esc(name);
+      track.appendChild(d);
+    });
+  }
+
+  /* ── 채팅 렌더 ── */
+  function agentMsg(html) {
+    var m = document.createElement('div');
+    m.className = 'msg';
+    m.innerHTML = '<div class="av">🦹</div><div class="body">' + html + '</div>';
+    $('chat').appendChild(m); scrollChat(); return m;
+  }
+  function meMsg(text) {
+    var m = document.createElement('div');
+    m.className = 'msg me';
+    m.innerHTML = '<div class="av">🛡️</div><div class="body"><div class="who">방어자 · YOU</div><div class="say">' + esc(text) + '</div></div>';
+    $('chat').appendChild(m); scrollChat(); return m;
+  }
+  function scrollChat() { var c = $('chat'); c.scrollTop = c.scrollHeight; }
+
+  function typeLines(term, lines, speed, done) {
+    var colors = { cmt: '#7c8aa5', prompt: '#38bdf8', bad: '#f87171', good: '#4ade80', warn: '#fbbf24', '': '#dbe4f0' };
+    var i = 0;
+    (function nextLine() {
+      if (i >= lines.length) { if (done) done(); return; }
+      var cls = lines[i][0] || '', txt = lines[i][1] || '';
+      var ln = document.createElement('div');
+      ln.className = 'tln'; ln.style.color = colors[cls] || colors[''];
+      var cur = document.createElement('span'); cur.className = 'cursor';
+      ln.appendChild(cur); term.appendChild(ln); scrollChat();
+      var j = 0;
+      (function tick() {
+        if (j >= txt.length) { cur.remove(); i++; setTimeout(nextLine, 120); return; }
+        var step = Math.max(2, Math.round(speed / 14));
+        cur.insertAdjacentText('beforebegin', txt.slice(j, j + step));
+        j += step; setTimeout(tick, 14);
+      })();
+    })();
+  }
+
+  /* ── 라운드 진행 ── */
+  var SYS_PROMPT = [
+    '너는 한국어 보안 교육 플랫폼 WEB-VULN-SIM의 AI 레드팀 에이전트 "레드"다.',
+    '학습자(방어자)와 공격 시뮬레이션 대결을 진행한다. 교육 목적이며 실제로 작동하는 공격 코드나 페이로드는 절대 제공하지 않는다.',
+    '아래 후보 시나리오 목록에서 현재 공격 단계와 학습자 약점에 가장 맞는 것 하나를 골라, 방어 선택지 3개(정답 1개 + 그럴듯한 오답 2개)를 만든다.',
+    '정답 선택지는 그 시나리오의 근본적 방어 조치여야 하고, 오답은 관련 있지만 근본 대응이 아닌 것으로 만든다.',
+    '출력은 다음 JSON 형식만 따른다. JSON 외 어떤 텍스트도 출력하지 마라:',
+    '{"chosen":"시나리오코드","attack_message":"공격자의 한마디(2문장 이내, 위협적이지만 교육적)","options":["방어1","방어2","방어3"],"correct":0,"why":"이 시나리오를 고른 이유 1문장","explanation":"정답인 이유와 조치 요약 2~3문장"}'
+  ].join(' ');
+
+  async function startRound() {
+    if (!S || S.busy || S.over) return;
+    S.busy = true; setStartBtn('🤖 공격 준비 중…', true);
+    var stageName = STAGES[S.stage];
+    $('battleEmpty') && $('battleEmpty').remove();
+
+    var cand = pickCandidates(S.domain, 5);
+    logBrain('🔍', 'scenarios.query', 'domain=' + S.domain + ' stage=' + stageName + ' → ' + cand.length + '건 후보');
+    var w = weakCats(S.domain);
+    logBrain('👤', 'profile.get', w.length ? '약점 감지: ' + w.map(function (x) { return x.cat; }).join(', ') + ' → 가중치 2.6x' : '이력 없음 — 균등 탐색');
+
+    var ctx = {
+      stage: stageName,
+      domain: DB._meta.domains[S.domain].name,
+      learner_weak: w.map(function (x) { return x.cat; }),
+      candidates: cand.map(function (c) { return { c: c.c, t: c.t, cat: c.cat, sev: c.sev, attack: c.al, fix: (c.fix && c.fix[0]) || '', hint: (c.ez || '').slice(0, 90) }; })
+    };
+    var round = null;
+    var r = await WVS_AI.chat({ system: SYS_PROMPT, messages: [{ role: 'user', content: JSON.stringify(ctx) }], max_tokens: 700 });
+    if (r.ok && r.json) {
+      var v = verifyAI(r.json, cand);
+      if (v.ok) {
+        var sc = cand.filter(function (c) { return c.c === r.json.chosen; })[0];
+        round = { chosen: sc.c, sc: sc, src: 'ai', attack_message: String(r.json.attack_message), options: r.json.options.map(String), correct: r.json.correct, why: String(r.json.why), explanation: String(r.json.explanation) };
+        logBrain('✅', 'verify.schema', 'AI 출력 기계 검증 통과 → 실사용');
+      } else {
+        logBrain('⚠️', 'verify.schema', 'AI 출력 검증 실패(' + v.errs.join(', ') + ') → 규칙 엔진 폴백');
+      }
+    } else if (r.ok) {
+      logBrain('⚠️', 'verify.json', 'AI 응답에서 유효 JSON 없음 → 규칙 엔진 폴백');
+    } else {
+      logBrain('ℹ️', 'llm.unavailable', (tier === 'demo' ? '실시간 AI 부재' : '호출 실패') + ' → 규칙 엔진으로 진행');
+    }
+    if (!round) round = buildDemoRound(cand, stageName);
+    if (r.ok && typeof r.remaining === 'number') $('remainInfo').textContent = '공유 AI 오늘 남은 횟수: ' + r.remaining + '회';
+    logBrain('🧠', 'llm.plan', '선정 ' + round.chosen + ' — ' + round.why);
+
+    S.used.push(round.chosen);
+    renderRound(round, stageName);
+  }
+
+  function renderRound(round, stageName) {
+    S.rounds++; refreshStats();
+    var badge = round.src === 'ai' ? '<span class="badge ai">AI 생성 · 검증 ✓</span>' : '<span class="badge rule">규칙 엔진</span>';
+    var m = agentMsg(
+      '<div class="who">레드 · RED <span class="badge stage">' + esc(stageName) + '</span>' + badge + '</div>' +
+      '<div class="say">' + esc(round.attack_message) + '</div>'
+    );
+    var sc = round.sc;
+    var say = m.querySelector('.say');
+    var term = document.createElement('div');
+    term.className = 'term';
+    term.innerHTML = '<div class="term-head"><i style="background:#ef4444"></i><i style="background:#fbbf24"></i><i style="background:#22c55e"></i>&nbsp; attack-console — ' + esc(sc.c) + ' ' + esc(sc.t) + '</div>';
+    say.appendChild(term);
+    typeLines(term, sc.av || [], 3, function () {
+      var opts = document.createElement('div');
+      opts.className = 'opts';
+      round.options.forEach(function (o, i) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'opt';
+        b.innerHTML = '<span class="k">' + 'ABC'[i] + '</span><span>' + esc(o) + '</span>';
+        b.addEventListener('click', function () { pick(i); });
+        opts.appendChild(b);
+      });
+      say.appendChild(opts); scrollChat();
+      S.renderedAt = Date.now();
+      S.busy = false; setStartBtn('⚔️ 공격 진행 중…', true);
+    });
+    S.cur = round;
+  }
+
+  function pick(i) {
+    if (!S.cur || S.busy) return;
+    S.busy = true;
+    var round = S.cur, sc = round.sc;
+    var correct = i === round.correct;
+    var elapsed = Math.round((Date.now() - (S.renderedAt || Date.now())) / 1000);
+    var sayEl = $('chat').lastChild.querySelector('.say');
+    var opts = sayEl.querySelectorAll('.opt');
+    opts.forEach(function (b, k) {
+      b.disabled = true;
+      if (k === round.correct) b.classList.add('right');
+      else if (k === i) b.classList.add('wrong');
+    });
+    meMsg(round.options[i]);
+
+    var term = sayEl.querySelector('.term');
+    var rub = document.createElement('div');
+    rub.className = 'rubric';
+    var bars = [
+      { n: '정확성', v: correct ? 100 : 30 },
+      { n: '대응 속도', v: elapsed < 15 ? 100 : elapsed < 30 ? 70 : 50 },
+      { n: '연속 방어', v: Math.min(100, 40 + S.streak * 15) }
+    ];
+    rub.innerHTML = '<div class="rt">📊 방어 채점 — 규칙 기반 루브릭 (소요 ' + elapsed + '초)</div>' +
+      bars.map(function (b) { return '<div class="rrow"><span>' + b.n + '</span><div class="rbar"><i style="width:0" data-v="' + b.v + '"></i></div><span>' + b.v + '</span></div>'; }).join('');
+    var verdict = document.createElement('div');
+    verdict.className = 'verdict ' + (correct ? 'ok' : 'no');
+    var ov = sc.ov || {};
+    verdict.innerHTML = (correct
+      ? '<b>🛡️ 방어 성공!</b> ' + esc(round.explanation)
+      : '<b>🔓 침입 허용!</b> ' + esc((ov.d || '') + ' 정답은 ' + 'ABC'.charAt(round.correct) + '였습니다. — ' + round.explanation.slice(0, 90))
+    ) + '<div class="fblink">📚 심화 학습: <a href="' + esc(sc.f) + '">' + esc(sc.c) + ' ' + esc(sc.t) + ' →</a></div>';
+    sayEl.appendChild(rub); sayEl.appendChild(verdict); scrollChat();
+    setTimeout(function () { rub.querySelectorAll('.rbar i').forEach(function (el) { el.style.width = el.dataset.v + '%'; }); }, 60);
+
+    recordResult(S.domain, sc.cat, correct);
+    if (correct) {
+      S.defended++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak);
+      term.classList.add('flash-good');
+      typeLines(term, sc.as || [['good', '>> 방어 적용 — 공격 차단됨']], 2, function () {
+        agentMsg('<div class="who">레드 · RED</div><div class="say">흥, 막혔군. 하지만 체인은 끝나지 않았어. 다른 경로로 다시 온다.</div>');
+        afterRound(false);
+      });
+    } else {
+      S.streak = 0; S.stage++;
+      term.classList.add('flash-bad');
+      typeLines(term, [['bad', (ov.e || '🔓') + ' ' + (ov.t || '공격 성공')]], 2, function () {
+        agentMsg('<div class="who">레드 · RED</div><div class="say">뚫렸어. 다음 단계로 진행한다.</div>');
+        afterRound(true);
+      });
+    }
+    refreshStats();
+  }
+
+  function afterRound(advanced) {
+    S.busy = false; S.cur = null;
+    if (S.stage >= STAGES.length) return endGame(false);
+    if (S.rounds >= MAX_ROUNDS) return endGame(true);
+    setStartBtn(advanced ? '🦹 다음 공격 막기' : '🦹 에이전트의 재공격', false);
+  }
+
+  function setStartBtn(txt, disabled) { var b = $('btnStart'); b.textContent = txt; b.disabled = !!disabled; }
+
+  /* ── 종료 요약 ── */
+  function endGame(win) {
+    S.over = true; setStartBtn('게임 종료', true);
+    var rate = S.rounds ? Math.round(S.defended / S.rounds * 100) : 0;
+    var grade = rate >= 90 ? 'S' : rate >= 70 ? 'A' : rate >= 50 ? 'B' : 'C';
+    var w = weakCats(S.domain);
+    var used = S.used.map(function (c) {
+      var it = DB[S.domain].filter(function (x) { return x.c === c; })[0];
+      return it ? '<a href="' + esc(it.f) + '">' + esc(it.c) + ' ' + esc(it.t) + '</a>' : '';
+    }).filter(Boolean).slice(0, 6);
+    var share = '🦹🛡️ WEB-VULN-SIM 레드팀 아레나에서 AI 공격자와 ' + S.rounds + '라운드 대결! 방어 성공률 ' + rate + '% (' + grade + '등급) → https://vuln-sim.web.app/redteam.html';
+    $('sumCard').innerHTML =
+      '<h2>' + (win ? '🛡️ 방어 성공!' : '🔓 침해 발생…') + '</h2>' +
+      '<div class="sub2">' + (win ? '8라운드 동안 침입 체인을 저지했습니다.' : '공격 체인 4단계가 완주됐습니다. 어디를 보완해야 할까요?') + ' 등급 <b>' + grade + '</b></div>' +
+      '<div class="sumgrid">' +
+      '<div class="stat"><b>' + S.rounds + '</b><span>라운드</span></div>' +
+      '<div class="stat"><b>' + S.defended + '</b><span>방어 성공</span></div>' +
+      '<div class="stat"><b>' + rate + '%</b><span>방어율</span></div>' +
+      '<div class="stat"><b>' + S.bestStreak + '</b><span>최고 연속</span></div></div>' +
+      (w.length ? '<div class="weaklist">🕸️ <b>적응 엔진이 감지한 약점</b><br>' + w.map(function (x) { return '· ' + esc(x.cat) + ' — 실패 ' + x.fail + '회'; }).join('<br>') + '</div>' : '') +
+      '<div class="weaklist">📚 <b>이번 체인에 쓰인 시나리오 복습</b><br>' + used.join('<br>') + '</div>' +
+      '<div class="sharebox"><textarea id="shareTxt" readonly>' + esc(share) + '</textarea></div>' +
+      '<button class="btn-ghost" id="btnCopy" type="button">📋 결과 복사</button> ' +
+      '<button class="btn-primary" id="btnRetry" type="button" style="width:auto;padding:10px 24px">🔄 재도전</button>';
+    $('sumOverlay').classList.add('show');
+    $('btnCopy').addEventListener('click', function () {
+      var t = $('shareTxt'); t.select();
+      try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); }
+      this.textContent = '✅ 복사됨';
+    });
+    $('btnRetry').addEventListener('click', function () {
+      $('sumOverlay').classList.remove('show');
+      newGame(S.domain);
+    });
+  }
+
+  /* ── 게임 초기화 ── */
+  function newGame(domain) {
+    S = { domain: domain, stage: 0, used: [], rounds: 0, defended: 0, streak: 0, bestStreak: 0, busy: false, over: false, cur: null };
+    $('chat').innerHTML = '';
+    renderChips(); refreshStats(); renderWeak();
+    setStartBtn('⚔️ 대결 시작', false);
+  }
+  function renderChips() {
+    var box = $('domainChips'); box.innerHTML = '';
+    Object.keys(DB._meta.domains).forEach(function (d) {
+      var meta = DB._meta.domains[d];
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'dchip' + (S && S.domain === d ? ' on' : '');
+      b.textContent = meta.icon + ' ' + meta.name;
+      b.disabled = !!(S && !S.over && S.rounds > 0);
+      b.addEventListener('click', function () { if (b.disabled) return; newGame(d); });
+      box.appendChild(b);
+    });
+  }
+
+  /* ── 부트 ── */
+  function refreshPill() {
+    var p = $('aiStatus'), t = TIER_LABEL[tier] || TIER_LABEL.demo;
+    p.className = 'pill ' + t[0]; $('aiStatusTxt').textContent = t[1];
+  }
+  document.getElementById('btnSaveKey').addEventListener('click', function () {
+    var v = $('keyInput').value.trim();
+    var zaiRe = /^[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{4,}$/;
+    if (v && !v.startsWith('sk-') && !zaiRe.test(v)) { $('remainInfo').textContent = '⚠️ sk-ant- 키 또는 Z.ai 키(예: xxxx.yyyy)를 입력하세요.'; return; }
+    WVS_AI.saveByo(v);
+    if (v) { tier = 'byo'; $('remainInfo').textContent = '✅ 키가 저장됐습니다. 이제 무제한 실시간 AI로 대결합니다.'; }
+    else { $('remainInfo').textContent = '키를 삭제했습니다.'; WVS_AI.tier().then(function (t) { tier = t; refreshPill(); }); }
+    refreshPill();
+  });
+  $('btnStart').addEventListener('click', startRound);
+  $('sumOverlay').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
+
+  fetch('data/scenarios.json').then(function (r) { return r.json(); }).then(function (db) {
+    DB = db;
+    newGame('unix');
+    return WVS_AI.tier();
+  }).then(function (t) {
+    tier = t; refreshPill();
+    logBrain('🔌', 'ai.init', tier === 'byo' ? 'BYO 키 감지 — 실시간 AI 모드' : tier === 'proxy' ? '공유 AI 프록시 연결됨' : '실시간 AI 부재 — 데모 규칙 엔진 모드');
+    if (tier === 'proxy') WVS_AI.probe().then(function (ok) { if (ok) $('remainInfo').textContent = '공유 AI(일 12회) 사용 중. 내 키를 등록하면 무제한.'; });
+  }).catch(function (e) {
+    $('battleEmpty').innerHTML = '<h2>시나리오 DB 로드 실패</h2><p>' + esc(String(e)) + '</p>';
+  });
+})();
+</script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</body>
+</html>

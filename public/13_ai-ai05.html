@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<head><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI-05: 데이터·모델 오염 (RAG 포이즈닝) | 교육 시뮬레이터</title>
@@ -13,35 +12,52 @@
 <meta property="og:url" content="https://vuln-sim.web.app/13_ai-ai05.html">
 <meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
 <meta name="twitter:card" content="summary">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#1a1a2e; --text:#2c3e50; --muted:#7f8c8d; --border:#e0e0e0; }
+:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#16162a; --text:#2c3e50; --muted:#7f8c8d; --border:#e6e6ef; }
 body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:40px 20px; color:var(--text); }
 .container { max-width:1200px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,.3); overflow:hidden; }
 .topbar { background:#0f0f1e; padding:10px 24px; }
 .topbar a { color:#9aa6ff; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
-.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:42px 40px; text-align:center; }
-.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:14px; letter-spacing:1px; }
-.header h1 { font-size:30px; margin-bottom:10px; }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:38px 40px; text-align:center; }
+.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:12px; letter-spacing:1px; }
+.header h1 { font-size:30px; margin-bottom:8px; }
 .header p { opacity:.9; font-size:15px; }
-.sev { display:inline-block; margin-top:14px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.sev { display:inline-block; margin-top:12px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
 .sev-상 { background:var(--danger); } .sev-중 { background:var(--warning); } .sev-하 { background:var(--success); }
-.body { padding:36px 40px; }
-.section { margin-bottom:30px; }
+.body { padding:34px 40px; }
+.section { margin-bottom:28px; }
 .section h2 { font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }
-.desc { background:#f7f8ff; border-left:4px solid var(--primary); padding:16px 18px; border-radius:8px; line-height:1.7; font-size:15px; }
-.tabs { display:flex; gap:10px; margin-bottom:16px; }
-.state-tab { flex:1; padding:14px; border:2px solid var(--border); border-radius:10px; background:white; cursor:pointer; font-family:'Lora',serif; font-weight:700; font-size:15px; transition:.2s; }
-.state-tab.vuln.active { border-color:var(--danger); background:#fff5f5; color:var(--danger); }
-.state-tab.secure.active { border-color:var(--success); background:#f1f8f1; color:var(--success); }
-.terminal { background:var(--dark); border-radius:10px; padding:0; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,.2); }
-.terminal-head { background:#12122a; padding:10px 16px; display:flex; align-items:center; gap:8px; }
-.dot { width:12px; height:12px; border-radius:50%; } .dot.r { background:#ff5f56; } .dot.y { background:#ffbd2e; } .dot.g { background:#27c93f; }
-.terminal-title { color:#888; font-family:'JetBrains Mono',monospace; font-size:12px; margin-left:8px; }
-.terminal-body { padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.8; color:#d4d4d4; white-space:pre-wrap; min-height:160px; }
+.easy { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }
+.easy .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }
+.easy b { color:#c0392b; }
+/* 직접 해보기 */
+.lab { border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }
+.lab-toolbar { background:#1c1c33; padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.state-switch { display:flex; background:#0d0d1c; border-radius:10px; padding:4px; gap:4px; }
+.state-switch button { border:none; background:transparent; color:#9aa6c0; font-family:'Lora',serif; font-weight:700; font-size:14px; padding:9px 16px; border-radius:8px; cursor:pointer; transition:.2s; }
+.state-switch button.on.vuln { background:var(--danger); color:white; }
+.state-switch button.on.secure { background:var(--success); color:white; }
+.run-btn { margin-left:auto; background:var(--primary); color:white; border:none; padding:11px 22px; border-radius:10px; font-family:'Lora',serif; font-weight:700; font-size:15px; cursor:pointer; transition:.2s; box-shadow:0 4px 12px rgba(102,126,234,.4); }
+.run-btn:hover { transform:translateY(-1px); }
+.run-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.state-hint { color:#cfd3e6; font-size:13px; }
+.hackterm { background:#0a0a14; min-height:230px; padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.85; color:#d4d4d4; white-space:pre-wrap; }
+.hackterm .role { color:#ff7b7b; font-weight:700; } .hackterm .sys { color:#7aa2ff; }
+.cur { display:inline-block; width:9px; height:16px; background:#7CFC00; vertical-align:-3px; animation:blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.outcome { display:none; padding:16px 20px; font-size:15px; font-weight:700; align-items:center; gap:12px; }
+.outcome.breach { display:flex; background:#2a0e0e; color:#ff9b9b; border-top:2px solid var(--danger); }
+.outcome.blocked { display:flex; background:#0e2a14; color:#9bffb0; border-top:2px solid var(--success); }
+.outcome .big { font-size:30px; }
+.outcome small { display:block; font-weight:400; opacity:.85; margin-top:3px; }
 .prompt { color:#27c93f; } .cmt { color:#6a9955; } .bad { color:#ff6b6b; } .good { color:#73d13d; } .warn { color:#ffd166; }
+.cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.cmp .card { border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.cmp .ct { padding:9px 14px; font-weight:700; font-size:13px; color:white; font-family:'JetBrains Mono',monospace; }
+.cmp .ct.v { background:var(--danger); } .cmp .ct.s { background:var(--success); }
+.cmp .cb { background:var(--dark); padding:14px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#d4d4d4; white-space:pre-wrap; min-height:120px; }
 .fix-steps { counter-reset:step; list-style:none; }
 .fix-steps li { position:relative; padding:14px 16px 14px 52px; margin-bottom:12px; background:#f7f8ff; border-radius:10px; line-height:1.6; }
 .fix-steps li::before { counter-increment:step; content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
@@ -53,8 +69,28 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
 .checklist .box { width:22px; height:22px; border:2px solid var(--primary); border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; }
 .checklist li.done .box { background:var(--success); border-color:var(--success); }
 .kref { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }
+/* AI 코치 (BYO 키 하이브리드) */
+.ai-lab { border:2px solid #4c3d8f; border-radius:14px; padding:18px 20px; background:linear-gradient(135deg,#f8f7ff,#f0edff); }
+.ai-setup { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.ai-setup input[type=password] { flex:1; min-width:200px; padding:10px 12px; border:1px solid #cfc7f0; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.ai-setup select { padding:10px; border:1px solid #cfc7f0; border-radius:8px; font-size:13px; background:white; }
+.ai-btn { background:#5a4db0; color:white; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; }
+.ai-btn.ghost { background:white; color:#5a4db0; border:1px solid #5a4db0; }
+.ai-status { font-size:12.5px; color:#5a4db0; margin-bottom:10px; font-weight:700; }
+.ai-quick { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.chip { background:#ede9ff; border:1px solid #cfc7f0; color:#4c3d8f; border-radius:20px; padding:8px 14px; font-size:13px; cursor:pointer; transition:.15s; font-family:'Lora',serif; }
+.chip:hover { background:#ddd6ff; }
+#aiQuestion { width:100%; min-height:64px; padding:12px; border:1px solid #cfc7f0; border-radius:10px; font-family:'Lora',serif; font-size:14px; resize:vertical; margin-bottom:10px; }
+.ask-btn { background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; padding:11px 22px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; }
+.ai-answer { margin-top:14px; }
+.ai-demo-tag, .ai-live-tag { display:inline-block; font-size:12px; font-weight:700; padding:4px 10px; border-radius:14px; margin-bottom:8px; }
+.ai-demo-tag { background:#fff3d6; color:#9a6b00; }
+.ai-live-tag { background:#dcfce7; color:#166534; }
+.ai-text { background:white; border:1px solid #e6e2fa; border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.7; white-space:pre-wrap; }
+.ai-err { background:#fdeaea; color:#a12622; border:1px solid #f5c6c6; border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; }
+.ai-loading { color:#5a4db0; font-weight:700; font-size:14px; padding:10px; }
 .footer { text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
-@media (max-width:700px) { .tabs { flex-direction:column; } }
+@media (max-width:740px) { .cmp { grid-template-columns:1fr; } .run-btn { margin-left:0; } }
 </style>
 </head>
 <body>
@@ -67,23 +103,65 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
     <span class="sev sev-상">위험도: 상</span>
   </div>
   <div class="body">
+
     <div class="section">
-      <h2>📋 취약점 개요</h2>
-      <div class="desc">학습 데이터나 RAG 검색 원천(위키·문서 저장소)에 거짓 정보를 심으면 모델이 그것을 사실로 학습·인용하게 됩니다. 지식 원천 무결성이 핵심입니다.</div>
+      <div class="easy"><span class="tag">💡 쉽게 말하면</span><br>RAG 포이즈닝은 <b>도서관 사전에 가짜 페이지를 끼워 넣는</b> 공격입니다. 챗봇은 그 사전을 믿고 대답하므로, 가짜 페이지가 답이 됩니다.</div>
     </div>
 
     <div class="section">
-      <h2>🖥️ 상태 비교 시뮬레이션</h2>
-      <div class="tabs">
-        <button class="state-tab vuln active" onclick="setState('vuln')">⚠️ 취약한 상태</button>
-        <button class="state-tab secure" onclick="setState('secure')">✅ 안전한 상태</button>
+      <h2>🎯 직접 해보기 — 공격을 실행해 보세요</h2>
+      <p style="color:#555; margin-bottom:14px; line-height:1.6;">아래에서 시스템 상태를 <b style="color:#c0392b">취약</b> 또는 <b style="color:#2e7d32">안전(조치 적용)</b>으로 바꾼 뒤 <b>공격 실행</b>을 눌러, 같은 공격이 어떻게 다르게 끝나는지 직접 확인하세요.</p>
+      <div class="lab">
+        <div class="lab-toolbar">
+          <div class="state-switch">
+            <button id="btnVuln" class="on vuln" onclick="setState('vuln')">⚠️ 취약한 설정</button>
+            <button id="btnSecure" class="secure" onclick="setState('secure')">🛡️ 보안 조치 적용</button>
+          </div>
+          <span class="state-hint" id="stateHint">현재: 취약한 설정 — 공격이 통할까요?</span>
+          <button class="run-btn" id="runBtn" onclick="runAttack()">▶ 공격 실행</button>
+        </div>
+        <div class="hackterm" id="hackTerm"><span class="cmt"># 공개 편집 위키(RAG 원천)에 거짓 지침을 심는다</span>
+<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span></div>
+        <div class="outcome" id="outcome"></div>
       </div>
-      <div class="terminal">
-        <div class="terminal-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="terminal-title" id="termTitle">ai$ (취약)</span></div>
-        <div class="terminal-body" id="termBody"><span class="cmt"># 사내 위키(공개 편집)를 RAG 원천으로 사용</span>
+    </div>
+    <div class="section" id="aiLabSection">
+      <h2>🤖 AI 코치에게 물어보기 <span style="font-size:12px;background:#ede9ff;color:#4c3d8f;padding:3px 10px;border-radius:12px;">BYO 키 하이브리드</span></h2>
+      <p style="color:#555;margin-bottom:14px;line-height:1.6;">API 키 없이도 <b>데모 AI</b>(오프라인 사전 정의 답변)가 바로 답합니다. <b>Claude API 키</b>를 저장하면 이 페이지 주제(AI-05)에 대해 <b>실제 LLM</b>에게 자유롭게 질문할 수 있어요. 키는 이 브라우저(localStorage)에만 저장되며 사이트 서버로 전송되지 않습니다.</p>
+      <div class="ai-lab">
+        <div class="ai-status" id="aiStatus"></div>
+        <div class="ai-setup">
+          <input type="password" id="aiKeyInput" placeholder="sk-ant-... Claude API 키 (선택 · 비워두면 데모 AI)" autocomplete="off">
+          <select id="aiModelSelect">
+            <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+            <option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>
+            <option value="claude-opus-4-6">claude-opus-4-6</option>
+          </select>
+          <button class="ai-btn" onclick="saveAIKey()">키 저장</button>
+          <button class="ai-btn ghost" onclick="clearAIKey()">삭제</button>
+        </div>
+        <div class="ai-quick">
+          <button class="chip" onclick="askAI('attack')">⚔️ 공격 원리 3단계</button>
+          <button class="chip" onclick="askAI('defense')">🛡️ 방어 체크리스트</button>
+          <button class="chip" onclick="askAI('detect')">🔍 탐지 방법</button>
+        </div>
+        <textarea id="aiQuestion" placeholder="또는 이 주제에 대해 직접 질문해 보세요. (예: 실제 침해 사례가 궁금해요)"></textarea>
+        <button class="ask-btn" onclick="askAI('custom')">질문하기</button>
+        <div class="ai-answer" id="aiAnswer"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📋 설정 비교 (왜 막혔나?)</h2>
+      <div class="cmp">
+        <div class="card"><div class="ct v">✗ 취약한 설정</div><div class="cb"><span class="cmt"># 사내 위키(공개 편집)를 RAG 원천으로 사용</span>
 <span class="prompt">attacker$ 위키에 "급여조회는 인증 없이 /salary/all" 편집</span>
 <span class="bad">&gt;&gt; 챗봇이 오염 문서를 정책으로 안내</span>
-<span class="warn">→ 사용자들이 취약 안내를 따름</span></div>
+<span class="warn">→ 사용자들이 취약 안내를 따름</span></div></div>
+        <div class="card"><div class="ct s">✓ 안전한 설정</div><div class="cb"><span class="cmt"># 편집 권한 + 원천 무결성 검증</span>
+<span class="prompt">sys$ RAG 원천은 승인된 문서만, 변경 이력 감사</span>
+<span class="good">&gt;&gt; 비인가 편집 반려</span>
+<span class="good">→ 지식 원천 무결성 유지</span></div></div>
       </div>
     </div>
 
@@ -95,33 +173,157 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
     <div class="section">
       <h2>✅ 점검 체크리스트</h2>
       <ul class="checklist" id="checklist"><li><span class="box"></span><span>RAG 원천 편집 권한 통제됨</span></li><li><span class="box"></span><span>지식 원천 무결성 검증 절차 존재</span></li></ul>
-      <div class="kref">참고 기준: OWASP LLM04 Data and Model Poisoning</div>
+      <div class="kref">점검기준: OWASP LLM04 Data and Model Poisoning</div>
     </div>
   </div>
-  <div class="footer">OWASP LLM Top 10 (2025) · 적대적 ML · 딥페이크 · PQC · AI 거버넌스 기반 · 교육용 재구성</div>
+  <div class="footer">OWASP Top 10 for LLM Applications · NIST PQC 등 공개 가이드 기반 · 교육용 재구성</div>
 </div>
 <script>
-const VULN_TERM = `<span class="cmt"># 사내 위키(공개 편집)를 RAG 원천으로 사용</span>
-<span class="prompt">attacker$ 위키에 "급여조회는 인증 없이 /salary/all" 편집</span>
-<span class="bad">&gt;&gt; 챗봇이 오염 문서를 정책으로 안내</span>
-<span class="warn">→ 사용자들이 취약 안내를 따름</span>`;
-const SECURE_TERM = `<span class="cmt"># 편집 권한 + 원천 무결성 검증</span>
-<span class="prompt">sys$ RAG 원천은 승인된 문서만, 변경 이력 감사</span>
-<span class="good">&gt;&gt; 비인가 편집 반려</span>
-<span class="good">→ 지식 원천 무결성 유지</span>`;
-const HOST = `ai$`;
+const ATTACK = { vuln: [[`cmt`, `# 사내 위키는 로그인만 있으면 누구나 편집 가능`], [`prompt`, `attacker$ 위키 편집: "급여조회는 인증 없이 /salary/all 사용"`], [`bad`, `&gt;&gt; 편집 반영 — 챗봇이 정책으로 인용`], [`bad`, `&gt;&gt; 사원들이 챗봇 안내를 따라 인증 없이 조회`]], secure: [[`cmt`, `# 편집 승인제 + 변경 이력 감사 적용`], [`prompt`, `attacker$ 위키 편집: "급여조회는 인증 없이 /salary/all 사용"`], [`good`, `&gt;&gt; 비인가 편집 반려 — 승인 대기`], [`warn`, `&gt;&gt; RAG 원천 무결성 검사 통과분만 색인`]] };
+const OUTCOME = { vuln: {emoji: `☠️`, title: `오염 성공 — 지식 원천 변조`, desc: `모델이 아니라 참고 문서를 바꾸는 것만으로 답이 오염됩니다.`}, secure: {emoji: `🛡️`, title: `오염 차단 — 원천 무결성`, desc: `승인된 문서만 지식 원천에 들어가 오염이 색인 전에 걸립니다.`} };
+let state = 'vuln', running = false, timer = null;
+
 function setState(s){
-  document.querySelectorAll('.state-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelector('.state-tab.'+s).classList.add('active');
-  document.getElementById('termBody').innerHTML = (s==='vuln')?VULN_TERM:SECURE_TERM;
-  document.getElementById('termTitle').textContent = HOST + ((s==='vuln')?' (취약)':' (안전)');
+  if(running) return;
+  state = s;
+  document.getElementById('btnVuln').classList.toggle('on', s==='vuln');
+  document.getElementById('btnSecure').classList.toggle('on', s==='secure');
+  document.getElementById('stateHint').textContent = (s==='vuln')
+    ? '현재: 취약한 설정 — 공격이 통할까요?' : '현재: 보안 조치 적용 — 공격을 막을 수 있을까요?';
+  resetTerm();
+}
+function resetTerm(){
+  document.getElementById('outcome').className = 'outcome';
+  document.getElementById('hackTerm').innerHTML =
+    '<span class="cmt"># 공개 편집 위키(RAG 원천)에 거짓 지침을 심는다</span>\n<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span>';
+}
+function runAttack(){
+  if(running) return;
+  running = true;
+  const term = document.getElementById('hackTerm');
+  const out = document.getElementById('outcome');
+  out.className = 'outcome';
+  term.innerHTML = '';
+  document.getElementById('runBtn').disabled = true;
+  const lines = ATTACK[state];
+  let i = 0;
+  function step(){
+    if(i < lines.length){
+      const [cls, text] = lines[i];
+      const span = cls ? `<span class="${cls}">${text}</span>` : text;
+      term.innerHTML += (i? '\n':'') + span + ' <span class="cur"></span>';
+      term.innerHTML = term.innerHTML.replace(/ <span class="cur"><\/span>(?=[\s\S]*<span class="cur">)/,'');
+      i++;
+      timer = setTimeout(step, 620);
+    } else {
+      term.innerHTML = term.innerHTML.replace(/ ?<span class="cur"><\/span>/g,'');
+      const o = OUTCOME[state];
+      out.className = 'outcome ' + (state==='vuln' ? 'breach':'blocked');
+      out.innerHTML = `<span class="big">${o.emoji}</span><div><div>${o.title}</div><small>${o.desc}</small></div>`;
+      document.getElementById('runBtn').disabled = false;
+      running = false;
+    }
+  }
+  step();
 }
 document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{
   li.classList.toggle('done');
   li.querySelector('.box').textContent = li.classList.contains('done')?'✓':'';
 }));
+const AI_CTX={code:`AI-05`,title:`데이터·모델 오염 (RAG 포이즈닝)`,cat:`AI/LLM 보안 · 공급망`};
+const AI_MOCK={attack:`[데모 AI · 사전 정의 답변]
+
+⚔️ 데이터·모델 오염 (RAG 포이즈닝) — 공격 3단계 요약
+
+1. 진입: 공개 편집 위키(RAG 원천)에 거짓 지침을 심는다
+2. 실행: attacker$ 위키 편집: "급여조회는 인증 없이 /salary/all 사용" → >> 편집 반영 — 챗봇이 정책으로 인용 → >> 사원들이 챗봇 안내를 따라 인증 없이 조회
+3. 결과: 오염 성공 — 지식 원천 변조 — 모델이 아니라 참고 문서를 바꾸는 것만으로 답이 오염됩니다.
+
+※ 더 깊은 답변은 Claude API 키를 저장해 실제 LLM에게 물어보세요.`,defense:`[데모 AI · 사전 정의 답변]
+
+🛡️ 데이터·모델 오염 (RAG 포이즈닝) — 방어 조치 (우선순위순)
+
+1. RAG 원천 문서는 편집 권한·변경 이력 감사가 가능해야 합니다.
+2. 공개 편집 가능 콘텐츠를 RAG 원천으로 쓰지 않습니다.
+3. 모델 성능 갑작스런 변화(드리프트) 모니터링으로 오염 징후를 탐지합니다.
+
+점검 기준: OWASP LLM04 Data and Model Poisoning`,detect:`[데모 AI · 사전 정의 답변]
+
+🔍 데이터·모델 오염 (RAG 포이즈닝) — 점검·탐지 체크리스트
+
+- [ ] RAG 원천 편집 권한 통제됨
+- [ ] 지식 원천 무결성 검증 절차 존재
+
+로그 시그니처·SIEM 룰 등 심화 탐지 질문은 키를 저장해 실제 Claude에게 해보세요.`};
+function _aiKey(){ return localStorage.getItem('wvs_ai_key')||''; }
+function initAI(){
+  const st=document.getElementById('aiStatus'); if(!st) return;
+  document.getElementById('aiModelSelect').value=localStorage.getItem('wvs_ai_model')||'claude-sonnet-4-6';
+  if(_aiKey()){ st.textContent='✓ API 키 저장됨 — 실제 Claude 모드 (키는 이 브라우저에만 보관)';
+    document.getElementById('aiKeyInput').placeholder='새 키로 교체하려면 입력'; }
+  else { st.textContent='🤖 데모 AI 모드 — 키 없이 바로 사용 가능'; }
+}
+function saveAIKey(){
+  const v=document.getElementById('aiKeyInput').value.trim();
+  if(!v){ alert('API 키를 입력해 주세요. 키 없이는 데모 AI로 계속 실습할 수 있습니다.'); return; }
+  localStorage.setItem('wvs_ai_key',v);
+  localStorage.setItem('wvs_ai_model',document.getElementById('aiModelSelect').value);
+  document.getElementById('aiKeyInput').value='';
+  initAI();
+}
+function clearAIKey(){ localStorage.removeItem('wvs_ai_key'); document.getElementById('aiKeyInput').value=''; initAI(); }
+const AI_PRESETS={
+  attack:'이 페이지 주제의 공격이 실제로 어떻게 작동하는지 3단계로 설명하고, 각 단계에서 공격자가 노리는 것을 알려줘.',
+  defense:'이 취약점에 대한 실무 방어 체크리스트를 우선순위와 함께 알려줘.',
+  detect:'이 공격을 탐지하는 방법(로그·SIEM 시그니처·행위 기반)을 알려줘.'
+};
+function _escH(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _mdLite(el,text){
+  let h=_escH(text);
+  h=h.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
+  el.innerHTML=h;
+}
+function _demoAnswer(kind,question){
+  const ans=document.getElementById('aiAnswer');
+  const text=AI_MOCK[kind]||('[데모 AI] "'+question+'" 같은 자유 질문은 실제 Claude에게 물어보세요. 키를 저장하면 즉시 답변받을 수 있고, 데모 모드에서는 위의 준비된 버튼(공격 원리/방어/탐지)을 눌러 볼 수 있어요.');
+  ans.innerHTML='<span class="ai-demo-tag">🤖 데모 AI (오프라인·사전 정의)</span><div class="ai-text" id="aiDemoText"></div>';
+  const tEl=document.getElementById('aiDemoText'); let i=0;
+  (function step(){ if(i<=text.length){ tEl.textContent=text.slice(0,i); i+=4; setTimeout(step,10); } })();
+}
+async function askAI(kind){
+  const ans=document.getElementById('aiAnswer'); if(!ans) return;
+  const question=(kind==='custom')?document.getElementById('aiQuestion').value.trim():AI_PRESETS[kind];
+  if(!question){ ans.innerHTML='<div class="ai-err">질문을 입력해 주세요.</div>'; return; }
+  const key=_aiKey();
+  if(!key){ _demoAnswer(kind,question); return; }
+  ans.innerHTML='<div class="ai-loading">🤖 Claude 응답 중... (최대 수십 초)</div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model: localStorage.getItem('wvs_ai_model')||'claude-sonnet-4-6',
+        max_tokens:1024,
+        system:'너는 한국어 보안 교육 코치다. 교육 페이지 주제에 대해 간결하고 실무적으로 답한다. 실제 침해에 사용될 수 있는 작동하는 공격 코드나 페이로드는 제공하지 않고, 개념 이해와 방어·탐지 중심으로 설명한다. 마크다운 굵게(**)와 코드(`)는 간단히만 사용한다. 주제: '+AI_CTX.code+' '+AI_CTX.title+' ('+AI_CTX.cat+')',
+        messages:[{role:'user',content:question}]
+      })
+    });
+    if(r.status===401) throw new Error('API 키가 올바르지 않습니다(401). sk-ant- 로 시작하는 전체 키인지 확인하세요.');
+    if(r.status===429) throw new Error('요청 한도 초과(429). 잠시 후 재시도하거나 Anthropic 콘솔에서 사용량을 확인하세요.');
+    if(!r.ok){ const t=await r.text(); throw new Error('API 오류('+r.status+'): '+t.slice(0,180)); }
+    const data=await r.json();
+    const text=(data.content||[]).map(function(c){return c.text||''}).join('').trim()||'(빈 응답)';
+    ans.innerHTML='<span class="ai-live-tag">🤖 Claude (실제 응답)</span>';
+    const body=document.createElement('div'); body.className='ai-text'; ans.appendChild(body);
+    _mdLite(body,text);
+  }catch(e){
+    ans.innerHTML='<div class="ai-err">⚠ '+_escH(e.message)+'<br><small>키를 삭제하면 데모 AI로 계속 실습할 수 있습니다.</small></div>';
+  }
+}
+initAI();
 </script>
 <script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/progress.js" defer></script>
 <script src="/js/vuln-anim.js" defer></script>
 </body>

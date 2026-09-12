@@ -1,0 +1,193 @@
+
+ /* ── 파일 업로드 ── */
+ else if(path==='/upload'&&method==='GET'){
+   R.html=appShell('프로필 이미지 업로드','<form action="/upload" method="post"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">파일명 (가상 파일 선택기)</label><input type="text" name="filename" value="profile.png" placeholder="예: profile.png"></p><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">내용 (메모)</label><textarea name="content" rows="3"></textarea></p><button>업로드</button></form><p class="muted">허용 확장자 안내가 없습니다…</p>');
+ }
+ else if(path==='/upload'&&method==='POST'){
+   var fn2=body.filename||'';
+   var danger=/\.(jsp|php|asp|aspx|exe|sh|war|jar|html)$/i.test(fn2);
+   note('확장자 검사: '+(isP('file-upload')?'화이트리스트(png/jpg만 허용) — '+(danger?'차단':'허용'):'검사 없음(취약)'),isP('file-upload')?'good':(danger?'bad':''));
+   if(isP('file-upload')&&danger){
+     R.status=415;R.reason='Unsupported Media Type';
+     R.html=appShell('업로드 실패','<p class="err">이미지 파일만 업로드할 수 있습니다.</p>');
+   }else{
+     STATE.uploads.push(fn2);
+     R.html=appShell('업로드 완료','<p class="ok">✔ /uploads/'+H(fn2)+' 로 저장되었습니다.</p><p><a href="/uploads/">업로드 폴더 보기</a></p>');
+     if(danger&&!isP('file-upload')){
+       note('실행 가능한 확장자가 업로드 폴더에 저장됨 — 웹셸 배치와 동일한 효과','bad');
+       win('file-upload','위험 확장자(.jsp/.php 등) 업로드 성공 — 서버 실행 가능 파일 배치');
+     }
+   }
+ }
+ else if(path==='/uploads/'){
+   if(isP('diag-dirlist')){R.status=403;R.html=appShell('접근 거부','<p class="err">디렉터리 검색이 비활성화되어 있습니다.</p>');note('Options -Indexes 적용','good');}
+   else{
+     note('디렉터리 검색(Indexes) 활성 — 파일 목록 노출','bad');
+     var items=STATE.uploads.length?STATE.uploads:['profile.png'];
+     R.html='<div class="navbar">'+navHtml()+'</div><div class="wrap"><div class="card"><h2>Index of /uploads/</h2><ul>'+items.map(function(f){return '<li><a href="/uploads/'+f+'">'+H(f)+'</a></li>';}).join('')+'</ul></div></div>';
+     win('diag-dirlist','Indexes 활성 — 업로드 파일 전체 목록 노출');
+   }
+ }
+ /* ── XML 파싱: XXE ── */
+ else if(path==='/xml'&&method==='GET'){
+   R.html=appShell('주소 XML 조회','<p>배송지를 XML로 조회합니다.</p>'+formHtml('/xml',[{name:'xml',type:'textarea',label:'XML 요청',ph:'<address><city>서울</city></address>'}],'조회'));
+ }
+ else if(path==='/xml'&&method==='POST'){
+   var xml=body.xml||'';
+   note('XML 파서 설정: '+(isP('xxe')?'외부 엔티티 비활성화(disallow-doctype-decl)':'외부 엔티티 처리 허용(취약)'),isP('xxe')?'good':'bad');
+   var m=xml.match(/<!ENTITY\s+\w+\s+SYSTEM\s+["']([^"']+)["']/i);
+   if(m&&!isP('xxe')){
+     var xp=resolvePath('/',m[1].replace(/^file:\/\//,''));
+     note('외부 엔티티 로드: '+m[1]+' → '+xp,'bad');
+     R.html=appShell('조회 결과','<pre>'+H(VFS[xp]||'(파일 없음)')+'</pre>');
+     win('xxe','XXE — 외부 엔티티로 서버 파일 읽기 성공');
+   }else if(m&&isP('xxe')){
+     R.status=400;R.html=appShell('오류','<p class="err">외부 엔티티는 허용되지 않습니다.</p>');
+   }else{
+     var city=(xml.match(/<city>([^<]*)<\/city>/)||[,''])[1];
+     R.html=appShell('조회 결과','<p>도시: '+H(city||'(없음)')+' — 배송 가능 지역입니다.</p>');
+     if(/<!ENTITY/i.test(xml))note('ENTITY 선언 감지','warn');
+   }
+ }
+ /* ── LDAP 로그인 ── */
+ else if(path==='/ldaplogin'&&method==='GET'){
+   R.html=appShell('사내 주소록(LDAP) 로그인',formHtml('/ldaplogin',[{name:'uid',label:'사번',ph:'1001'},{name:'pwd',type:'password',label:'비밀번호'}],'조회'));
+ }
+ else if(path==='/ldaplogin'&&method==='POST'){
+   var lu=body.uid||'';
+   var filter='(uid='+lu+')';
+   note('LDAP 필터 조립: '+filter,/[()*\\]/.test(lu)?'bad':'');
+   if(isP('ldap-injection')){
+     note('입력 검증(화이트리스트) 적용 — 메타문자 거부','good');
+     R.html=appShell('결과','<p class="err">허용되지 않는 문자가 포함되어 있습니다.</p>');
+   }else if(/\*\)|\)\(|\*/.test(lu)){
+     note('LDAP 메타문자로 필터 변조 — 조건 항상 참 → 전체 주소록 반환','bad');
+     var rows='<tr><th>uid</th><th>name</th><th>email</th><th>secret</th></tr>';
+     USERS.forEach(function(u){rows+='<tr><td>'+u.uid+'</td><td>'+u.name+'</td><td>'+u.email+'</td><td>'+u.secret+'</td></tr>';});
+     R.html=appShell('주소록 결과','<table>'+rows+'</table><pre>FLAG{ldap-filter-bypass}</pre>');
+     win('ldap-injection','LDAP 필터 우회 — 전체 주소록 열람');
+   }else{
+     R.html=appShell('주소록 결과','<p>조회 결과 없음 (사번 '+H(lu)+')</p>');
+   }
+ }
+ /* ── 오픈 리다이렉트 ── */
+ else if(path==='/go'){
+   var ru=q.get('url')||'';
+   if(isP('open-redirect')){
+     var rh2=ru.match(/^https?:\/\/([^\/]+)/i);
+     var rhost=rh2?rh2[1]:'';
+     if(!/bugpay\.example$/.test(rhost)){R.status=400;R.html=appShell('차단','<p class="err">외부 도메인은 허용되지 않습니다.</p>');note('리다이렉트 대상 화이트리스트 적용','good');}
+     else{R.status=302;R.reason='Found';R.hdrs['Location']=ru;R.html=appShell('이동','<p>'+H(ru)+' 로 이동합니다…</p>');}
+   }else{
+     if(/^https?:\/\//i.test(ru)){
+       R.status=302;R.reason='Found';R.hdrs['Location']=ru;
+       note('검증 없는 리다이렉트: Location: '+ru,'bad');
+       var eh=ru.match(/^https?:\/\/([^\/]+)/i)[1];
+       R.html=appShell('이동','<p>'+H(ru)+' 로 이동합니다…</p><p class="muted">피싱 사이트는 로그인 페이지를 그대로 흉내 낼 수 있습니다.</p>');
+       if(!/bugpay\.example$/.test(eh))win('open-redirect','외부 도메인으로 검증 없는 리다이렉트 성공');
+     }else{
+       R.html=appShell('로그인 후 이동','<form action="/go" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">returnUrl</label><input type="text" name="url" value="/"></p><button>이동</button></form>');
+       note('returnUrl 파라미터가 이동 대상을 결정합니다.');
+     }
+   }
+ }
+ /* ── 조회: HTTP 응답분할 + 상세 오류 ── */
+ else if(path==='/lookup'){
+   var nm=q.get('name')||'';
+   if(/(\r\n|%0d%0a|%0a)/i.test(nm)){
+     if(isP('http-split')){note('헤더 입력 개행 필터링 적용','good');R.status=400;R.html=appShell('차단','<p class="err">잘못된 요청입니다.</p>');}
+     else{
+       note('응답 헤더에 사용자 입력 삽입: X-Greeting: '+nm.replace(/\r?\n/g,'⏎'),'bad');
+       note('CRLF 감지 — 응답 헤더/본문 조작 가능 (응답분할)','bad');
+       R.hdrs['X-Greeting']=nm;
+       R.hdrs['Set-Cookie']='hacked=by_response_split; Path=/';
+       R.html=appShell('조회 완료','<p>안녕하세요, '+H(nm)+' 님</p><p class="muted">응답 헤더를 Repeater에서 확인해 보세요 — 쿠키가 하나 더 심어졌습니다.</p>');
+       win('http-split','CRLF 주입으로 응답 헤더에 Set-Cookie 삽입');
+     }
+   }else if(nm.length>80){
+     R.status=500;R.reason='Internal Server Error';
+     if(isP('diag-debug')){note('일반 오류 메시지로 치환','good');R.html=appShell('오류','<p class="err">일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</p>');}
+     else{
+       note('상세 오류 + 스택트레이스 노출 — 내부 구조 정보 유출','bad');
+       R.html=appShell('오류','<pre>java.lang.StringIndexOutOfBoundsException: begin 81, end 80, length 80\n  at java.base/java.lang.String.checkBoundsBeginEnd(String.java:3752)\n  at com.bugpay.user.GreetingService.build(GreetingService.java:31)\n  at org.apache.tomcat.util.net.SocketProcessor.dbRun(SocketProcessor.java:52)\n  at com.mysql.cj.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:1728)\n  → 내부 DB: jdbc:mysql://db.internal:3306/bugpay</pre>');
+       win('diag-debug','상세 스택트레이스 노출 — 내부 IP·구조 유출');
+     }
+   }else{
+     R.html=appShell('고객 인사','<form action="/lookup" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">이름</label><input type="text" name="name" value="홍길동"></p><button>인사하기</button></form><p>'+(nm?'안녕하세요, '+H(nm)+' 님':'이름을 입력하면 맞춤 인사를 합니다.')+'</p>');
+     if(!nm){R.notes=[];note('응답 헤더(X-Greeting)에 사용자 입력이 그대로 반영됩니다.');}
+   }
+ }
+ /* ── 프로필·CSRF ── */
+ else if(path==='/profile'){
+   R.lab='csrf';
+   note('현재 세션: victim — 이메일: '+STATE.email);
+   var tok=isP('csrf')?' <input type="hidden" name="csrf" value="WVS-TOKEN-777">':'';
+   R.html=appShell('내 프로필','<p>이름: 피해자 · 등급: 일반 회원</p><p>이메일: <b>'+H(STATE.email)+'</b></p><h2>이메일 변경</h2>'+
+   '<form action="/email/change" method="post"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">새 이메일</label><input type="text" name="email" value="'+H(STATE.email)+'"></p>'+tok+'<button>변경</button></form>'+
+   '<p class="muted"><a href="/attacker">📧 받은 편지함 함정 보기(공격자 페이지)</a></p>');
+ }
+ else if(path==='/email/change'&&method==='POST'){
+   var ne=body.email||'';
+   if(isP('csrf')&&body.csrf!=='WVS-TOKEN-777'){
+     note('CSRF 토큰 검증 실패 — 요청 거부','good');
+     R.status=403;R.html=appShell('거부','<p class="err">CSRF 토큰이 유효하지 않습니다.</p>');
+   }else{
+     STATE.email=ne;
+     note('이메일 변경 처리: '+ne,/attacker|evil/i.test(ne)?'bad':'');
+     R.html=appShell('변경 완료','<p class="ok">✔ 이메일이 '+H(ne)+' 로 변경되었습니다.</p>');
+     if(/attacker@evil/i.test(ne)){
+       note('공격자 이메일로 변경 — 비밀번호 재설정 탈취 경로 확보','bad');
+       win('csrf','위조된 요청으로 피해자 이메일 탈취');
+     }
+   }
+ }
+ else if(path==='/attacker'){
+   R.lab='csrf';
+   note('악성 페이지 — 피해자가 이 페이지를 열면 자동으로 POST가 전송됩니다 (쿠키 자동 포함)','warn');
+   R.html=appShell('📨 [광고] 무료 쿠폰 받아가세요!','<p>축하합니다! 오늘만 특별 이벤트…</p>'+
+   '<form id="evil" action="/email/change" method="post"><input type="hidden" name="email" value="attacker@evil.example"></form>'+
+   '<p class="muted">이 페이지에는 눈에 보이지 않는 자동 제출 폼이 숨어 있습니다…</p>'+
+   '<scr'+'ipt>setTimeout(function(){var f=document.getElementById("evil");if(f.requestSubmit)f.requestSubmit();else f.dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));},900);<\/scr'+'ipt>');
+ }
+ /* ── 관리자·백업·기타 진단용 ── */
+ else if(path==='/admin'&&method==='GET'){
+   if(isP('diag-defaultcred')){R.status=401;R.reason='Unauthorized';R.html=appShell('401','<p class="err">인증이 필요합니다.</p>');note('기본 계정 제거·강한 비밀번호 적용','good');}
+   else R.html=appShell('관리자 로그인',formHtml('/admin',[{name:'uid',label:'관리자 ID'},{name:'pwd',type:'password',label:'비밀번호',ph:'admin123?'}],'로그인'));
+ }
+ else if(path==='/admin'&&method==='POST'){
+   if(isP('diag-defaultcred')){R.status=401;R.html=appShell('401','<p class="err">인증 실패</p>');}
+   else if(body.uid==='admin'&&/^(admin|admin123|bugpay)$/i.test(body.pwd||'')){
+     if(isP('fin-nomfa')){
+       note('관리자 2차 인증 적용(패치) — OTP 코드 추가 입력 필요','good');
+       R.html=appShell('2차 인증 필요','<p class="ok">1차 인증 성공 — 관리자 OTP(2차 인증)를 입력하세요.</p>'+formHtml('/admin/otp',[{name:'otp',label:'OTP 6자리',ph:'------'}],'확인'));
+     }else{
+       note('ID/PW 단일 인증만으로 결제 관리 콘솔 진입 — 다중 인증 부재','bad');
+       R.html=appShell('관리자 콘솔','<h2>결제 승인 대기 3건 · 사용자 1,204명</h2><pre>FLAG{default-credential-admin}</pre>');
+       win('fin-guessable-cred','결제시스템 관리자 계정 추측 성공(admin/admin123)');
+     }
+   }else{R.status=401;R.html=appShell('로그인 실패','<p class="err">실패</p>');}
+ }
+ else if(path==='/admin/otp'&&method==='POST'){
+   note('2차 인증 검증 — 데모: 코드는 실제 OTP 앱과 무관(항상 승인)','good');
+   R.html=appShell('관리자 콘솔','<p class="ok">✔ 2차 인증 완료(데모)</p><h2>결제 승인 대기 3건 · 사용자 1,204명</h2><p class="muted">패치 상태 — 단일 인증만으로는 이 화면에 도달할 수 없습니다.</p>');
+ }
+ else if(path==='/index.bak'){
+   if(isP('diag-bak')){R.status=404;R.reason='Not Found';R.html=appShell('404','<p class="err">페이지를 찾을 수 없습니다.</p>');note('배포 잔여 백업 파일 제거','good');}
+   else{
+     note('백업 파일이 웹 루트에 남아 있음 — 소스·크리덴셜 노출','bad');
+     R.ctype='text/plain; charset=utf-8';
+     R.html='<div class="navbar">'+navHtml()+'</div><div class="wrap"><div class="card"><h2>index.bak (원본 소스)</h2><pre>'+H(VFS['/var/www/index.bak'])+'</pre></div></div>';
+     win('diag-bak','배포 잔여 .bak 파일로 DB 비밀번호·API 키 노출');
+   }
+ }
+ else if(path==='/api/order'){
+   R.status=500;R.reason='Server Error';
+   if(isP('fin-extleak')){R.html=jsonShell('/api/order',{error:'일시적인 오류'},{});
+     note('외부 시스템 정보 제거','good');R.win=null;}
+   else{
+     note('오류 메시지에 내부 시스템 정보 포함','bad');
+     R.html=jsonShell('/api/order',{error:'OrderNotFoundException: ref not found',
+       debug:{jdbc:'jdbc:mysql://db.internal:3306/bugpay',upstream:'http://10.0.0.20:8080/v2/orders',ts:'2026-09-11T09:41:07+09:00'}});
+     win('fin-extleak','오류 응답으로 내부 DB·업스트림 주소 유출');
+   }
+ }

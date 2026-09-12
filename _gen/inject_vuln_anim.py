@@ -8,7 +8,7 @@ import re
 
 PUB = os.path.join(os.path.dirname(__file__), '..', 'public')
 TAG = '<script src="/js/vuln-anim.js" defer></script>'
-TARGET = re.compile(r'^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai)')
+TARGET = re.compile(r'^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai|14_auto)')
 BODY_RE = re.compile(r'</body>', re.IGNORECASE)
 
 

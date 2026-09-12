@@ -136,7 +136,7 @@
 
         <div class="list-group list-group-flush mt-2">
             
-            <div class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
+            <div role="button" tabindex="0" class="menu-category" data-bs-toggle="collapse" data-bs-target="#menu1">
                 <span><i class="fa-solid fa-bug text-danger me-2"></i> 1. Simulator (10 Attacks)</span>
                 <i class="fa-solid fa-chevron-down fa-xs"></i>
             </div>
@@ -156,7 +156,7 @@
                 <a href="sim-code.html" class="list-group-item list-group-item-action"><i class="fa-solid fa-code-branch"></i> Code Injection</a>
             </div>
 
-            <div class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
+            <div role="button" tabindex="0" class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu2">
                 <span><i class="fa-solid fa-book me-2"></i> 2. Secure Coding Guidelines</span>
                 <i class="fa-solid fa-chevron-down fa-xs"></i>
             </div>
@@ -420,6 +420,96 @@ MessageDigest md = MessageDigest.getInstance("SHA-256");
                     </div>
                 </div>
             </div>
+<!-- WVS-QUIZ-BOOST:v1 -->
+<style>
+.wvsq-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:26px 28px;margin:40px 0 24px;box-shadow:0 2px 8px rgba(15,23,42,.06)}
+.wvsq-title{font-size:1.3rem;font-weight:800;margin:0 0 6px;color:#1e293b}
+.wvsq-sub{color:#64748b;font-size:.92rem;margin:0 0 16px}
+.wvsq-item{border:1px solid #e2e8f0;border-radius:10px;padding:15px 18px;margin:13px 0}
+.wvsq-q{font-weight:700;margin:0 0 10px;line-height:1.65;color:#0f172a}
+.wvsq-btn{min-width:64px;padding:7px 20px;border-radius:8px;border:2px solid #cbd5e1;background:#fff;font-weight:800;font-size:1rem;cursor:pointer;transition:all .15s}
+.wvsq-btn:hover:not(:disabled){border-color:#4c3d8f;background:#f5f3ff}
+.wvsq-btn:disabled{cursor:default;opacity:.5}
+.wvsq-btn.wvsq-hit{border-color:#16a34a;background:#dcfce7;opacity:1}
+.wvsq-btn.wvsq-miss{border-color:#dc2626;background:#fee2e2;opacity:1}
+.wvsq-fb{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:.9rem;line-height:1.7;display:none;color:#334155}
+.wvsq-fb.ok{display:block;background:#f0fdf4;border:1px solid #bbf7d0}
+.wvsq-fb.no{display:block;background:#fef2f2;border:1px solid #fecaca}
+.wvsq-fb b{display:block;margin-bottom:3px}
+.wvsq-score{margin-top:16px;padding:14px 18px;border-radius:10px;background:#f5f3ff;border:1px solid #ddd6fe;font-weight:700;color:#4c3d8f;display:none}
+.wvsq-retry{margin-top:12px;padding:8px 22px;border-radius:8px;border:0;background:#4c3d8f;color:#fff;font-weight:700;cursor:pointer;display:none}
+.wvsq-retry:hover{background:#3d3073}
+</style>
+<div class="wvsq-card" id="wvsqBox">
+  <h2 class="wvsq-title">🎯 핵심 개념 O/X 퀴즈</h2>
+  <p class="wvsq-sub">이 페이지의 보안 개념을 4문항으로 점검해 보세요. O/X를 고르면 즉시 해설이 표시됩니다. · 진행 <span id="wvsqProg">0 / 4</span></p>
+  <div id="wvsqList"></div>
+  <div class="wvsq-score" id="wvsqScore"></div>
+  <button class="wvsq-retry" id="wvsqRetry" type="button">🔄 다시 풀기</button>
+</div>
+<script>
+(function () {
+  var QS = [{"q": "public 메서드가 내부 private 배열을 그대로 return 하면, 외부 코드가 반환된 배열을 수정해 내부 상태를 바꿀 수 있다.", "a": true, "why": "배열은 참조이므로 반환 시 내부 데이터가 그대로 노출됩니다. 방어적 복사본(clone)을 반환해 내부 상태를 보호해야 합니다."}, {"q": "생성자에서 외부에서 전달된 배열을 private 필드에 그대로 저장해도, 호출 이후 원본 배열을 수정하면 내부 데이터가 함께 바뀌므로 복사본을 저장하는 것이 안전하다.", "a": true, "why": "입력 배열도 참조입니다. 저장 시 복사하고, 필요 시 반환 시에도 복사하는 \"이중 방어적 복사\"로 캡슐화를 완성합니다."}, {"q": "배포 전에 남겨 둔 System.out.println 디버깅 코드는 일반 사용자가 콘솔을 볼 수 없으므로 정보노출 위험이 없다.", "a": false, "why": "\"제거되지 않은 디버깅 코드\"는 로그·에러 콘솔·모니터링 도구로 그대로 노출됩니다. 민감정보(비밀번호·내부 URL) 출력은 침해 단서가 됩니다."}, {"q": "자원 해제는 finalize()를 오버라이딩해 맡기면 GC가 즉시 호출해 주므로, try-finally로 명시적으로 해제하는 것보다 안전하다.", "a": false, "why": "API 오용 사례입니다. finalize()는 호출 시점·호출 여부 보장이 없고(Java 9+ 사용 중단 권고), 명시적 해제(try-with-resources)가 정답입니다."}];
+  var list = document.getElementById('wvsqList');
+  var prog = document.getElementById('wvsqProg');
+  var score = document.getElementById('wvsqScore');
+  var retry = document.getElementById('wvsqRetry');
+  var done = 0, right = 0;
+
+  window.wvsqInit = function () {
+    done = 0; right = 0;
+    list.innerHTML = '';
+    score.style.display = 'none';
+    retry.style.display = 'none';
+    prog.textContent = '0 / ' + QS.length;
+    QS.forEach(function (item, i) {
+      var box = document.createElement('div');
+      box.className = 'wvsq-item';
+      var q = document.createElement('p');
+      q.className = 'wvsq-q';
+      q.textContent = 'Q' + (i + 1) + '. ' + item.q;
+      var btnO = document.createElement('button');
+      btnO.type = 'button'; btnO.className = 'wvsq-btn'; btnO.textContent = 'O';
+      var btnX = document.createElement('button');
+      btnX.type = 'button'; btnX.className = 'wvsq-btn'; btnX.textContent = 'X';
+      btnX.style.marginLeft = '6px';
+      var fb = document.createElement('div');
+      fb.className = 'wvsq-fb';
+      function pick(val) {
+        var correct = val === item.a;
+        var picked = val ? btnO : btnX;
+        var correctBtn = item.a ? btnO : btnX;
+        btnO.disabled = true; btnX.disabled = true;
+        correctBtn.classList.add('wvsq-hit');
+        if (!correct) picked.classList.add('wvsq-miss');
+        fb.className = 'wvsq-fb ' + (correct ? 'ok' : 'no');
+        var head = document.createElement('b');
+        head.textContent = correct ? '⭕ 정답입니다!' : '❌ 아쉽습니다. 정답은 ' + (item.a ? 'O' : 'X') + '.';
+        var why = document.createElement('span');
+        why.textContent = item.why;
+        fb.appendChild(head); fb.appendChild(why);
+        done++; if (correct) right++;
+        prog.textContent = done + ' / ' + QS.length;
+        if (done === QS.length) {
+          var msg = right === QS.length ? '🏆 만점! 이 주제의 핵심을 완벽히 잡으셨습니다.'
+            : right >= QS.length - 1 ? '👍 아주 좋습니다! 한 문항만 다시 복습해 보세요.'
+            : '📖 해설을 다시 읽고 "다시 풀기"로 확인해 보세요.';
+          score.textContent = '결과: ' + QS.length + '문항 중 ' + right + '문항 정답 — ' + msg;
+          score.style.display = 'block';
+          retry.style.display = 'inline-block';
+        }
+      }
+      btnO.addEventListener('click', function () { pick(true); });
+      btnX.addEventListener('click', function () { pick(false); });
+      box.appendChild(q); box.appendChild(btnO); box.appendChild(btnX); box.appendChild(fb);
+      list.appendChild(box);
+    });
+  };
+  window.wvsqInit();
+})();
+</script>
+<!-- /WVS-QUIZ-BOOST -->
+
 
         </div>
     </div>
@@ -438,5 +528,6 @@ MessageDigest md = MessageDigest.getInstance("SHA-256");
 
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
 </body>
 </html>

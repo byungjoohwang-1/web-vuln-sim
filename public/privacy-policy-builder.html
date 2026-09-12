@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 처리방침 작성·점검기 — 24개 기재사항 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 처리방침 작성·점검기 — 24개 기재사항 · WEB-VULN-SIM">
+<meta property="og:description" content="개인정보 처리방침 작성지침(2026.4) 기반 24개 기재사항 작성기 + 자동 점검기">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-policy-builder.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="개인정보보호위원회 '개인정보 처리방침 작성지침'(2026.4) 기반 24개 기재사항 작성기 — 필수/조건부 판정, 템플릿 삽입, '등' 같은 모호표현·누락·금지 표현 자동 점검, 생성형 AI 서비스 부록, 라벨링 기호 안내, 초안 다운로드. 100% 브라우저.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 80px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .sp{margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--muted);margin:6px 0 3px}
+input[type=text],input[type=date],textarea,select{width:100%;background:#0b1220;border:1px solid #334155;color:var(--ink);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px}
+textarea{font-family:var(--mono);font-size:12.5px;min-height:96px;resize:vertical}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.btn.sm{padding:4px 9px;font-size:11px}
+/* 대시보드 */
+.dash{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.ring{--p:0;--c:var(--good);width:96px;height:96px;border-radius:50%;position:relative;flex-shrink:0;background:conic-gradient(var(--c) calc(var(--p)*1%), #1e293b 0);display:grid;place-items:center}
+.ring::before{content:'';position:absolute;width:72px;height:72px;border-radius:50%;background:var(--panel)}
+.ring .in{position:relative;text-align:center}
+.ring b{font-family:var(--mono);font-size:21px;color:#fff;display:block;line-height:1}
+.ring span{font-size:10px;color:var(--muted)}
+.kpis{display:flex;gap:8px;flex-wrap:wrap;flex:1;min-width:240px}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:11px;padding:9px 12px;min-width:88px}
+.kpi .n{font-family:var(--mono);font-size:19px;font-weight:800}
+.kpi .l{font-size:11px;color:var(--muted);margin-top:2px}
+.kpi.good .n{color:var(--good)}.kpi.bad .n{color:var(--bad)}.kpi.warn .n{color:var(--warn)}.kpi.tot .n{color:#fff}
+/* 섹션 */
+.sec{border:1px solid var(--border);border-radius:12px;background:var(--panel2);margin:9px 0;overflow:hidden}
+.sec>.hd{display:flex;align-items:center;gap:9px;padding:10px 13px;cursor:pointer;flex-wrap:wrap;background:linear-gradient(90deg,#141d33,#1b2540)}
+.sec>.hd .no{font-family:var(--mono);font-size:11px;font-weight:800;color:#7dd3fc;background:#0c2a3a;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.sec>.hd .ti{font-size:13.5px;font-weight:600;flex:1;min-width:160px}
+.tag{font-family:var(--mono);font-size:10px;font-weight:800;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.t-req{background:#3b1418;color:#fca5a5}.t-cond{background:#3a2a09;color:#fde047}.t-opt{background:#1e293b;color:#cbd5e1}
+.t-ai{background:#2a1e52;color:#c4b5fd}
+.stat{font-family:var(--mono);font-size:11px;flex-shrink:0}
+.stat.ok{color:#86efac}.stat.no{color:#fca5a5}.stat.na{color:#64748b}
+.sec>.bd{display:none;padding:11px 13px 13px;border-top:1px solid var(--border)}
+.sec.open>.bd{display:block}
+.sec.filled{border-left:3px solid var(--good)}
+.sec.missing{border-left:3px solid var(--bad)}
+.sec.na{border-left:3px solid #334155;opacity:.62}
+.guide{font-size:12.5px;color:#cbd5e1;background:#0b1220;border-left:3px solid var(--accent);border-radius:8px;padding:9px 11px;margin-bottom:8px}
+.guide ul{margin:5px 0 0 16px}
+.guide li{margin:2px 0}
+.tools{display:flex;gap:7px;flex-wrap:wrap;margin:7px 0}
+.warnbox{font-size:12px;border-radius:8px;padding:7px 10px;margin-top:7px}
+.w-bad{background:#3b1418;color:#fca5a5}.w-warn{background:#3a2a09;color:#fde047}.w-ok{background:#0f2a18;color:#86efac}
+/* 리포트 */
+.findings{list-style:none}
+.findings li{font-size:12.5px;padding:7px 10px 7px 28px;position:relative;border-radius:8px;margin-bottom:6px;background:var(--panel2);border:1px solid var(--border)}
+.findings li::before{position:absolute;left:9px;top:7px;font-size:12px}
+.findings li.f-bad{border-left:3px solid var(--bad)}.findings li.f-bad::before{content:'✖';color:#fca5a5}
+.findings li.f-warn{border-left:3px solid var(--warn)}.findings li.f-warn::before{content:'!';color:#fde047;font-weight:800}
+.findings li.f-ok{border-left:3px solid var(--good)}.findings li.f-ok::before{content:'✔';color:#86efac}
+.findings li b{color:#e2e8f0}
+pre.preview{background:#05080f;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;max-height:460px;overflow:auto}
+.labels{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px}
+.lb{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:12px}
+.lb .ic{font-size:19px}
+.lb b{display:block;font-size:12px;color:#7dd3fc;margin-top:3px}
+.lb span{color:var(--muted);font-size:11px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin-top:10px}
+.disc{margin-top:18px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="pia-assessment.html"><span data-en="PIA Self-Check">영향평가 자가진단</span></a>
+  <a href="pseudonym-lab.html"><span data-en="Pseudonymization Lab">가명처리 실습실</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>📄 <span data-en="Privacy Policy Builder &amp; Checker">개인정보 처리방침 작성·점검기</span></h1>
+    <div class="sub" data-en="Build a privacy policy across all 24 required sections of the Korean drafting guideline, then let the checker find what most real policies get wrong: missing mandatory sections, vague '~등' wording, retention periods without a basis, processors listed without contact details, and the new generative-AI appendix. Drafts stay in your browser.">
+      개인정보 처리방침 작성지침의 <b>24개 기재사항</b>을 채워 초안을 만들고, 실제 처리방침에서 가장 흔한 결함을 자동 점검합니다 — <b>필수 항목 누락</b>, <b>'~등' 모호 표현</b>, 근거 없는 보유기간, 연락처 없는 수탁자, 신설된 <b>생성형 AI 부록</b>까지. 작성 내용은 브라우저에만 저장됩니다.</div>
+    <div class="src">📕 기준: 개인정보보호위원회 「개인정보 처리방침 작성지침」(2026.4.) · 「개인정보 보호법」 제30조, 시행령 제31조 — 교육용 재구성</div>
+  </div>
+
+  <!-- 대시보드 -->
+  <div class="card">
+    <div class="dash">
+      <div class="ring" id="ring"><div class="in"><b id="ringPct">0%</b><span data-en="completeness">완성도</span></div></div>
+      <div class="kpis">
+        <div class="kpi tot"><div class="n" id="kApp">0</div><div class="l" data-en="Applicable sections">해당 항목</div></div>
+        <div class="kpi good"><div class="n" id="kDone">0</div><div class="l" data-en="Written">작성완료</div></div>
+        <div class="kpi bad"><div class="n" id="kMiss">0</div><div class="l" data-en="Missing (mandatory)">필수 누락</div></div>
+        <div class="kpi warn"><div class="n" id="kWarn">0</div><div class="l" data-en="Wording issues">표현 경고</div></div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn pri" onclick="buildPreview()">👁 <span data-en="Preview draft">초안 미리보기</span></button>
+        <button class="btn" onclick="download('txt')">⬇ TXT</button>
+        <button class="btn" onclick="download('html')">⬇ HTML</button>
+        <button class="btn" onclick="loadSample()">🧩 <span data-en="Load example">예시 채우기</span></button>
+        <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기본정보 -->
+  <div class="card">
+    <h2>🏢 <span data-en="Controller information">개인정보처리자 기본정보</span></h2>
+    <div class="grid">
+      <div><label data-en="Controller name">개인정보처리자명</label><input type="text" id="f_org" placeholder="(주)예시컴퍼니"></div>
+      <div><label data-en="Service / system name">서비스·시스템명</label><input type="text" id="f_svc" placeholder="예시몰 웹/앱"></div>
+      <div><label data-en="Privacy officer (CPO)">개인정보 보호책임자</label><input type="text" id="f_cpo" placeholder="홍길동 / 정보보호실장"></div>
+      <div><label data-en="Contact (dept · phone · email)">담당부서·연락처</label><input type="text" id="f_contact" placeholder="개인정보보호팀 / 02-000-0000 / privacy@example.com"></div>
+      <div><label data-en="Effective date">시행일</label><input type="date" id="f_date"></div>
+      <div><label data-en="Entity type">처리자 유형</label>
+        <select id="f_type">
+          <option value="민간" data-en="Private sector">민간기업</option>
+          <option value="공공" data-en="Public agency">공공기관</option>
+          <option value="소상공인" data-en="Small business">소상공인</option>
+        </select></div>
+    </div>
+  </div>
+
+  <!-- 섹션 -->
+  <div class="card">
+    <h2>🧾 <span data-en="24 required sections">24개 기재사항</span>
+      <span class="sp"></span>
+      <button class="btn sm" onclick="expandAll(true)" data-en="Expand all">모두 펼치기</button>
+      <button class="btn sm" onclick="expandAll(false)" data-en="Collapse all">모두 접기</button>
+    </h2>
+    <div class="note" data-en="ℹ️ <b>필수</b> = must always appear · <b>조건부</b> = required only when the controller actually does it (third-party provision, outsourcing, cross-border transfer, pseudonymized data, CCTV, automated decisions…). Turn off “해당” for what you do not do — it is then excluded from the score.">
+      ℹ️ <b>필수</b>는 항상 기재해야 하는 항목, <b>조건부</b>는 해당 처리를 실제로 하는 경우에만 기재하는 항목입니다(제3자 제공·위탁·국외이전·가명정보·영상정보처리기기·자동화된 결정 등). 해당하지 않는 항목은 <b>해당없음</b>으로 두면 점수에서 제외됩니다.</div>
+    <div id="secs"></div>
+  </div>
+
+  <!-- 점검 리포트 -->
+  <div class="card">
+    <h2>🔍 <span data-en="Automatic check">자동 점검 결과</span></h2>
+    <ul class="findings" id="findings"></ul>
+  </div>
+
+  <!-- 라벨링 -->
+  <div class="card">
+    <h2>🏷️ <span data-en="Key processing labels">주요 개인정보 처리 표시(라벨링)</span></h2>
+    <div class="sub" style="color:var(--muted);font-size:12.5px;margin-bottom:9px" data-en="A summary layer that lets a data subject grasp the key points at a glance. It never replaces the full policy, and it must be kept in sync whenever the policy changes. Official symbol files are distributed via privacy.go.kr; the icons below are teaching stand-ins.">
+      정보주체가 핵심 사항을 직관적으로 확인하도록 기호로 요약 표시하는 방법입니다. <b>본문 공개를 대체하지 않으며</b>, 처리방침 개정 시 표시 내용도 항상 동기화해야 합니다. 공식 기호 파일은 개인정보 포털(privacy.go.kr)에서 배포되며, 아래 아이콘은 학습용 대체 표기입니다.</div>
+    <div class="labels" id="labels"></div>
+  </div>
+
+  <!-- 미리보기 -->
+  <div class="card">
+    <h2>📑 <span data-en="Draft preview">처리방침 초안</span></h2>
+    <pre class="preview" id="preview" data-en="Press “Preview draft” to generate.">「초안 미리보기」를 누르면 생성됩니다.</pre>
+  </div>
+
+  <div class="disc" data-en="Educational tool based on the public drafting guideline. A generated draft is a starting point only — the controller must verify it against its actual processing, and legal review is recommended. Everything runs in your browser; nothing is uploaded.">
+    ⚠️ 공개 작성지침 기반 <b>교육용 도구</b>입니다. 생성된 초안은 출발점일 뿐이며, 실제 개인정보 처리 현황과 일치하는지 <b>개인정보처리자가 직접 확인</b>해야 하고 법률 검토를 권장합니다. 모든 처리는 브라우저에서 수행되며 어떤 내용도 업로드되지 않습니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+/* ---------- i18n ---------- */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();renderSecs();renderLabels();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* ---------- 24개 기재사항 ----------
+   req: 'req'(필수) | 'cond'(조건부) | 'opt'(자율)
+   tips: 작성 요령 · tpl: 템플릿 · checks: 항목별 자동 점검 규칙            */
+var ORG='<개인정보처리자명>';
+var SECS=[
+{n:1,id:'intro',req:'req',ko:'제목 및 서문',en:'Title & preamble',
+ tips:['처리방침임을 명확히 알 수 있는 제목을 사용합니다(‘개인정보 처리방침’).','법 제30조에 따라 수립·공개한다는 취지와 적용 대상 서비스를 밝힙니다.'],
+ tpl:ORG+'은(는) 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보 처리방침을 수립·공개합니다.'},
+{n:2,id:'purpose',req:'req',ko:'개인정보의 처리 목적',en:'Purposes of processing',
+ tips:['목적을 <b>구체적·명확하게</b> 특정하고, ‘~등’ 같은 불명확한 표현을 쓰지 않습니다.','서비스가 여러 개면 서비스별로 목적을 구분해 작성할 수 있습니다.','동의를 받아 처리하는 개인정보는 <b>동의 시 고지한 내용과 일치</b>해야 합니다.'],
+ tpl:'1. 회원 가입 및 관리\n  회원 가입 의사 확인, 본인 식별·인증, 회원자격 유지·관리, 서비스 부정이용 방지, 만 14세 미만 아동의 법정대리인 동의 여부 확인, 고지·통지, 고충처리\n2. 재화 또는 서비스 제공\n  물품 배송, 서비스 제공, 계약서·청구서 발송, 본인인증, 연령인증, 요금 결제·정산\n3. 서비스 개선 및 분석\n  서비스 이용 분석, 인구통계학적 분석, 서비스 개선'},
+{n:3,id:'items',req:'req',ko:'처리하는 개인정보의 항목',en:'Categories of personal data',
+ tips:['목적 달성에 필요한 <b>최소한의 범위</b>로 구성하고, 실제 처리 현황과 일치해야 합니다.','<b>동의를 받아 처리</b>하는 항목과 <b>동의 없이 처리</b>하는 항목을 구분해 작성합니다.','동의 없이 처리하는 경우 <b>처리의 법적 근거</b>(법령명·조문까지)를 함께 기재합니다.','고유식별정보·민감정보는 별도 하위 항목으로 구분해 기재할 수 있습니다.'],
+ tpl:'1. 정보주체의 동의를 받지 않고 처리하는 개인정보 항목\n  • 회원 서비스 운영 — 법적 근거: 「개인정보 보호법」 제15조제1항제4호(계약 체결·이행)\n    처리 항목: 이름, 생년월일, 아이디, 비밀번호, 휴대전화번호, 이메일주소\n2. 정보주체의 동의를 받아 처리하는 개인정보 항목\n  • 마케팅 정보 수신 — 법적 근거: 「개인정보 보호법」 제15조제1항제1호(동의)\n    처리 항목: 이메일, 휴대전화번호, 관심상품 내역'},
+{n:4,id:'child',req:'cond',ko:'14세 미만 아동의 개인정보 처리',en:'Children under 14',
+ tips:['법정대리인의 동의를 받는 방법과 동의 여부 확인 절차를 기재합니다.','법정대리인 동의를 위해 최소한의 정보(이름·연락처)만 아동에게서 직접 수집할 수 있습니다.','아동이 이해하기 쉬운 표현으로 별도 안내하는 것이 권장됩니다.'],
+ tpl:ORG+'은(는) 만 14세 미만 아동의 개인정보를 처리하는 경우 법정대리인의 동의를 받으며, 법정대리인의 성명·연락처는 동의 확인 목적으로만 이용하고 동의 거부 또는 확인되지 않은 경우 지체 없이 파기합니다.'},
+{n:5,id:'retention',req:'req',ko:'개인정보의 처리 및 보유 기간',en:'Retention period',
+ tips:['보유 기간은 <b>법령 근거 또는 동의받은 기간</b> 내에서 목적에 필요한 최소 기간으로 정합니다.','‘회원 탈퇴 시까지’처럼 기준 시점을 명확히 하고, 법령상 보존의무가 있으면 <b>근거 법령과 기간</b>을 함께 씁니다.','처리 목적별로 기간이 다르면 목적별로 구분해 기재합니다.'],
+ tpl:'• 회원 가입 및 관리: 회원 탈퇴 시까지 (단, 관계 법령 위반 조사 중인 경우 종료 시까지)\n• 계약·청약철회 등에 관한 기록: 5년 (「전자상거래 등에서의 소비자보호에 관한 법률」)\n• 대금결제 및 재화 등의 공급에 관한 기록: 5년 (동법)\n• 소비자 불만 또는 분쟁처리에 관한 기록: 3년 (동법)'},
+{n:6,id:'destroy',req:'req',ko:'개인정보의 파기 절차 및 방법',en:'Destruction procedure',
+ tips:['보유기간 경과·목적 달성 시 <b>지체 없이(5일 이내)</b> 파기하는 절차를 기재합니다.','전자적 파일은 복구 불가능한 방법으로, 출력물은 분쇄·소각하는 방법을 명시합니다.','다른 법령에 따라 보존하는 경우 <b>별도 분리 보관</b>한다는 점을 씁니다.'],
+ tpl:'파기 절차: 파기 사유가 발생한 개인정보를 선정하고, 개인정보 보호책임자의 승인을 받아 파기합니다.\n파기 방법: 전자적 파일 형태는 복구·재생되지 않도록 기술적 방법으로 영구 삭제하며, 종이 문서는 분쇄하거나 소각합니다.\n※ 다른 법령에 따라 보존해야 하는 개인정보는 별도의 데이터베이스로 분리하여 보관합니다.'},
+{n:7,id:'third',req:'cond',ko:'개인정보의 제3자 제공',en:'Provision to third parties',
+ tips:['제공받는 자, 제공 목적, 제공 항목, 보유·이용 기간을 <b>모두</b> 기재합니다.','법령에 따른 제공이면 근거 법령을, 동의에 따른 제공이면 동의받은 내용과 일치시킵니다.','제3자 제공과 <b>처리위탁</b>은 법적 성격이 다릅니다(제공: 법 제17조 / 위탁: 법 제26조).'],
+ tpl:'| 제공받는 자 | 제공 목적 | 제공 항목 | 보유·이용 기간 |\n| ○○택배(주) | 주문상품 배송 | 성명, 주소, 휴대전화번호 | 배송 완료 후 3개월 |'},
+{n:8,id:'addl',req:'cond',ko:'추가적인 이용·제공 판단기준',en:'Criteria for additional use',
+ tips:['당초 수집 목적과의 <b>관련성</b>, 수집 정황·처리 관행에 비춘 <b>예측 가능성</b>, 정보주체 이익의 부당한 침해 여부, <b>안전성 확보조치</b> 여부 4가지를 기준으로 씁니다(시행령 제14조의2).','추가적 이용·제공이 지속적으로 발생하는 경우에 기재합니다.'],
+ tpl:ORG+'은(는) 다음 사항을 고려하여 정보주체의 동의 없이 개인정보를 추가적으로 이용·제공할 수 있습니다.\n① 당초 수집 목적과 관련성이 있는지 ② 수집 정황·처리 관행에 비추어 예측 가능한지 ③ 정보주체의 이익을 부당하게 침해하는지 ④ 가명처리 또는 암호화 등 안전성 확보조치를 하였는지'},
+{n:9,id:'entrust',req:'cond',ko:'개인정보 처리업무의 위탁',en:'Outsourcing of processing',
+ tips:['<b>수탁자와 위탁 업무 내용</b>을 기재하고, 변경 시 지체 없이 공개합니다.','재위탁이 있으면 재위탁 사실도 공개해야 합니다.','수탁자에 대한 교육·감독 계획을 함께 밝히는 것이 바람직합니다.'],
+ tpl:'| 수탁자 | 위탁 업무 내용 |\n| ○○클라우드(주) | 서비스 인프라 운영 및 데이터 보관 |\n| ○○고객센터(주) | 고객 상담 및 불만 처리 |\n'+ORG+'은(는) 위탁계약 시 개인정보 보호 관련 사항을 문서에 명시하고, 수탁자가 개인정보를 안전하게 처리하는지 감독합니다.'},
+{n:10,id:'oversea',req:'cond',ko:'개인정보의 국외 수집 및 이전',en:'Cross-border transfer',
+ tips:['이전받는 자, 이전 국가, 이전 일시·방법, 이전 항목, 이전받는 자의 이용 목적·보유 기간을 기재합니다(법 제28조의8).','국외 이전에는 제공·처리위탁·보관이 모두 포함됩니다.','정보주체가 국외 이전을 거부할 수 있는 방법과 절차를 안내합니다.'],
+ tpl:'| 이전받는 자 | 이전 국가 | 이전 항목 | 이전 목적 | 보유 기간 |\n| ○○ Inc. | 미국 | 이메일, 서비스 이용기록 | 클라우드 보관 및 장애 대응 | 위탁계약 종료 시까지\n이전 일시 및 방법: 서비스 이용 시점에 정보통신망을 통해 수시 전송'},
+{n:11,id:'safety',req:'req',ko:'개인정보의 안전성 확보조치',en:'Security measures',
+ tips:['관리적(내부관리계획·교육), 기술적(접근권한 관리·접근통제·암호화·접속기록 보관·보안프로그램), 물리적(보관장소 출입통제·잠금장치) 조치를 구분해 기재합니다.','<b>실제 적용하지 않은 조치를 기재하면 안 됩니다</b> — 허위 공개는 그 자체로 위험합니다.'],
+ tpl:'① 내부관리계획 수립·시행 및 정기적 직원 교육\n② 개인정보처리시스템 접근권한 관리 및 접근통제(방화벽·침입차단), 접속기록 1년 이상 보관·점검\n③ 고유식별정보·비밀번호 등 중요 정보의 암호화 저장 및 전송 구간 암호화\n④ 보안프로그램 설치·주기적 갱신 및 취약점 점검\n⑤ 전산실·자료보관실 등 물리적 보관장소의 출입통제 및 잠금장치 운영'},
+{n:12,id:'sensitive',req:'cond',ko:'민감정보의 공개 가능성 및 비공개 선택 방법',en:'Sensitive data public exposure',
+ tips:['서비스 제공 과정에서 민감정보가 <b>다른 이용자에게 공개될 수 있는 경우</b> 그 사실과 비공개 선택 방법을 알립니다(법 제23조).','예: 프로필의 건강·종교·정치적 견해 표시 기능.'],
+ tpl:'프로필 항목 중 일부는 다른 이용자에게 공개될 수 있으며, 정보주체는 [내 정보 > 공개 설정] 메뉴에서 항목별로 공개 여부를 직접 선택하거나 비공개로 변경할 수 있습니다.'},
+{n:13,id:'pseudo',req:'cond',ko:'가명정보 처리에 관한 사항',en:'Pseudonymized data',
+ tips:['가명정보의 <b>처리 목적</b>, 보유 기간, 제3자 제공 시 제공받는 자, 처리하는 개인정보 항목, 안전성 확보조치를 기재합니다(법 제28조의2·제28조의4).','추가정보를 <b>별도 분리 보관</b>하고 접근권한을 분리한다는 점을 밝힙니다.'],
+ tpl:'처리 목적: 통계작성 및 서비스 개선을 위한 과학적 연구\n처리 항목: 연령대, 지역(시·군 단위), 서비스 이용 이력\n보유 기간: 연구 종료 후 지체 없이 파기\n안전조치: 추가정보는 별도 분리 보관하고 가명정보취급자의 접근권한을 분리하며, 재식별 시도를 금지하고 처리 기록을 작성·보관합니다.'},
+{n:14,id:'cookie',req:'cond',ko:'개인정보 자동 수집 장치의 설치·운영 및 거부',en:'Cookies & automatic collection',
+ tips:['쿠키 등 자동 수집 장치의 <b>사용 목적</b>과 <b>거부 방법</b>(브라우저 설정 경로)을 함께 안내합니다.','거부 시 서비스 이용에 어떤 영향이 있는지도 밝힙니다.'],
+ tpl:ORG+'은(는) 이용자에게 맞춤 서비스를 제공하기 위해 쿠키를 사용합니다.\n거부 방법: 웹 브라우저 상단 [설정 > 개인정보 및 보안 > 쿠키] 메뉴에서 쿠키 저장을 거부할 수 있습니다. 다만 쿠키 저장을 거부할 경우 맞춤형 서비스 이용에 제한이 있을 수 있습니다.'},
+{n:15,id:'behavior',req:'cond',ko:'제3자 행태정보 수집·이용 및 거부',en:'Third-party behavioral data',
+ tips:['행태정보를 수집하는 <b>제3자(광고사업자)</b>, 수집 항목·방법, 보유 기간, 이용 목적을 기재합니다.','이용자가 <b>맞춤형 광고를 차단·허용</b>할 수 있는 구체적 방법을 안내합니다.'],
+ tpl:'수집하는 사업자: ○○애드(주)\n수집 항목: 이용자의 웹·앱 방문 이력, 검색 이력, 구매·클릭 이력\n수집 방법: 이용자가 서비스를 방문·실행할 때 자동 수집·전송\n보유·이용 기간: 수집일로부터 12개월\n차단 방법: 브라우저 광고 설정 또는 모바일 단말기 [설정 > 개인정보 보호 > 광고 식별자 재설정/제한]'},
+{n:16,id:'rights',req:'req',ko:'정보주체와 법정대리인의 권리·의무 및 행사방법',en:'Rights of data subjects',
+ tips:['<b>열람·정정·삭제·처리정지</b> 요구권과 그 행사 방법(서식·창구·전자우편 등)을 안내합니다.','법정대리인·위임받은 자를 통한 대리 행사 방법과 위임장 서식을 안내합니다.','권리 행사 <b>거절 시 이의제기 절차</b>도 함께 안내합니다.'],
+ tpl:'정보주체는 언제든지 개인정보 열람·정정·삭제·처리정지를 요구할 수 있으며, 이는 서면, 전자우편, 팩스 등을 통해 하실 수 있습니다.\n권리 행사는 법정대리인이나 위임을 받은 자 등 대리인을 통하여 하실 수 있으며, 이 경우 위임장을 제출하셔야 합니다.\n요구에 대한 조치에 불복이 있는 경우 [개인정보보호팀]에 이의를 제기하실 수 있습니다.'},
+{n:17,id:'auto',req:'cond',ko:'자동화된 결정에 관한 사항',en:'Automated decision-making',
+ tips:['완전히 자동화된 시스템(AI 포함)으로 정보주체의 권리·의무에 <b>중대한 영향</b>을 미치는 결정을 하는 경우 기재합니다(법 제37조의2).','결정의 <b>기준과 절차</b>, 처리되는 개인정보 항목, 그리고 정보주체의 <b>거부·설명요구·의견제출</b> 방법을 밝힙니다.'],
+ tpl:'자동화된 결정의 여부: ○○ 심사 과정에서 완전히 자동화된 시스템으로 결정이 이루어집니다.\n결정의 기준·절차: 신청 정보와 이용 이력을 기반으로 사전에 정의된 평가 기준에 따라 점수를 산출하여 결정합니다.\n처리되는 개인정보 항목: 신청 정보, 서비스 이용 이력\n정보주체의 권리: 해당 결정에 대해 설명을 요구하거나 의견을 제출할 수 있으며, 권리·의무에 중대한 영향을 미치는 경우 그 결정을 거부할 수 있습니다. [고객센터]로 요청하시면 됩니다.'},
+{n:18,id:'cpo',req:'req',ko:'개인정보 보호책임자 및 담당부서',en:'Privacy officer & department',
+ tips:['보호책임자의 <b>성명 또는 직책</b>, 담당부서, 연락처(전화·이메일)를 기재합니다.','고충 처리 부서와 열람 청구 접수 부서를 함께 안내합니다.','지정·변경 사실은 처리방침에 <b>즉시 반영</b>해야 합니다.'],
+ tpl:'개인정보 보호책임자: <성명/직책>\n담당부서: <부서명> / 연락처: <전화>, <이메일>\n정보주체는 개인정보 보호와 관련한 모든 문의, 불만 처리, 피해 구제 등에 관한 사항을 개인정보 보호책임자 및 담당부서로 문의하실 수 있습니다.'},
+{n:19,id:'agent',req:'cond',ko:'국내대리인 지정에 관한 사항',en:'Domestic representative',
+ tips:['국내에 주소·영업소가 없는 일정 규모 이상의 사업자는 <b>국내대리인</b>을 지정하고 그 성명·주소·전화번호·전자우편을 기재해야 합니다(법 제31조의2).'],
+ tpl:'국내대리인: <성명 또는 법인명>\n주소: <국내 주소>  전화: <번호>  이메일: <주소>'},
+{n:20,id:'remedy',req:'req',ko:'정보주체의 권익침해 구제방법',en:'Remedies for infringement',
+ tips:['개인정보분쟁조정위원회, 개인정보침해신고센터, 대검찰청, 경찰청 등 <b>구제 기관과 연락처</b>를 안내합니다.','행정심판 청구 방법도 함께 안내할 수 있습니다.'],
+ tpl:'• 개인정보분쟁조정위원회: (국번없이) 1833-6972 (www.kopico.go.kr)\n• 개인정보침해신고센터: (국번없이) 118 (privacy.kisa.or.kr)\n• 대검찰청: (국번없이) 1301 (www.spo.go.kr)\n• 경찰청: (국번없이) 182 (ecrm.police.go.kr)'},
+{n:21,id:'cctv',req:'cond',ko:'고정형 영상정보처리기기 운영·관리',en:'Fixed CCTV',
+ tips:['설치 근거·목적, 설치 대수·위치·촬영 범위, 관리책임자와 접근권한자, 촬영시간·보관기간·보관장소·처리방법, 영상 확인 방법·장소, 열람 요구 조치, 기술적·관리적·물리적 조치를 기재합니다.','설치 사실을 정보주체가 쉽게 인식할 수 있는 <b>안내판</b>을 함께 설치해야 합니다.'],
+ tpl:'설치 근거·목적: 시설 안전 및 화재 예방(「개인정보 보호법」 제25조제1항)\n설치 대수·위치·촬영범위: 건물 1층 출입구 외 2대 / 출입구 주변\n관리책임자·접근권한자: <성명/부서>\n촬영시간·보관기간·보관장소: 24시간 촬영, 30일 보관, 영상정보 보관실\n영상 확인 방법 및 장소: 관리책임자에게 사전 요구\n정보주체의 열람 요구에 대한 조치: 본인 확인 후 7일 이내 회신, 제3자 영상은 모자이크 처리'},
+{n:22,id:'mcctv',req:'cond',ko:'이동형 영상정보처리기기 운영·관리',en:'Mobile CCTV / drones',
+ tips:['업무 목적의 드론·웨어러블 카메라·차량 블랙박스 등을 운영하는 경우 기재합니다(법 제25조의2).','촬영 사실을 불빛·소리·안내판·안내방송 등으로 <b>표시</b>해야 합니다.'],
+ tpl:'운영 목적: 배송 현장 안전 확인\n촬영 기기·촬영 범위: 웨어러블 카메라 / 배송 업무 수행 구간\n촬영 사실 표시 방법: 기기 촬영 표시등 점등 및 안내 문구 부착\n보관기간·파기: 촬영일로부터 30일 보관 후 지체 없이 파기'},
+{n:23,id:'voluntary',req:'opt',ko:'자율적으로 정한 처리 기준·보호조치',en:'Voluntary commitments',
+ tips:['법정 기재사항 외에 자율적으로 정한 보호 기준(프라이버시 원칙, 투명성 보고서, 인증 취득 등)을 밝힐 수 있습니다.','<b>지키지 못할 약속은 쓰지 않습니다</b> — 공개한 기준은 준수 의무로 작동합니다.'],
+ tpl:ORG+'은(는) 법정 기준을 넘어 다음의 자율적 보호 기준을 정하여 시행합니다.\n• 개인정보 처리 최소화 원칙에 따른 반기별 보유 데이터 점검\n• ISMS-P 인증 유지 및 연 1회 외부 모의침투 점검'},
+{n:24,id:'change',req:'req',ko:'개인정보 처리방침의 변경에 관한 사항',en:'Changes to this policy',
+ tips:['시행일자를 명시하고, 변경 시 <b>변경 사유와 내용</b>을 시행 7일 전부터 공지합니다.','변경 전 처리방침을 확인할 수 있도록 <b>이전 버전을 함께 제공</b>하는 것이 바람직합니다.','중요한 변경(제3자 제공·위탁·목적 추가 등)은 더 눈에 띄는 방법으로 알립니다.'],
+ tpl:'이 개인정보 처리방침은 <시행일>부터 적용됩니다.\n이전의 개인정보 처리방침은 아래에서 확인하실 수 있습니다.\n• <시행일자> 적용 (클릭)\n법령·정책 또는 보안기술의 변경에 따라 내용의 추가·삭제·수정이 있을 경우에는 변경 사항의 시행 7일 전부터 공지사항을 통하여 고지합니다.'},
+{n:25,id:'genai',req:'cond',ko:'[부록] 생성형 AI 서비스 처리방침',en:'[Appendix] Generative-AI service',
+ tips:['생성형 AI 기능을 제공하는 경우 <b>입력 프롬프트의 처리 여부</b>(학습 이용 여부 포함), 처리 근거, 보유 기간을 밝힙니다.','제3자 AI 모델(API)을 사용하면 <b>처리위탁·국외이전</b>에 해당할 수 있으므로 해당 항목과 연결해 기재합니다.','허용되는 이용방침(AUP), 부적절한 답변·개인정보 노출 <b>신고 기능</b>, 출력물에 생성된 얼굴·목소리 <b>삭제 요청</b> 절차를 안내합니다.'],
+ tpl:'• AI 기능 개요: 대화형 상담 기능에 생성형 AI를 활용합니다.\n• 입력 프롬프트의 처리: 입력 내용은 답변 생성 목적으로만 처리하며, 모델 학습에는 이용하지 않습니다(학습에 이용하는 경우 별도 동의 또는 가명처리 후 이용).\n• 제3자 AI 모델 이용: ○○ Inc.(미국)에 처리를 위탁하며 국외 이전 사항은 위 “국외 이전” 항목을 따릅니다.\n• 이용방침(AUP): 타인의 개인정보 입력 금지 등 허용되는 이용 범위를 공개합니다.\n• 신고·삭제 요청: 부적절한 답변이나 개인정보 노출은 [신고] 버튼으로 접수하며, 출력물에 생성된 얼굴·목소리 등의 삭제 요청은 [고객센터]에서 처리합니다.'}
+];
+
+/* ---------- 상태 ---------- */
+var SKEY='wvs_policy_builder';
+var ST={fields:{},secs:{}};   // secs[id] = {na:bool, txt:string}
+function load(){try{ST=JSON.parse(localStorage.getItem(SKEY))||{fields:{},secs:{}};}catch(e){ST={fields:{},secs:{}};}
+  ST.fields=ST.fields||{};ST.secs=ST.secs||{};}
+function save(){try{localStorage.setItem(SKEY,JSON.stringify(ST));}catch(e){}}
+function sec(id){return (ST.secs[id]=ST.secs[id]||{na:false,txt:''});}
+
+var FIELD_IDS=['f_org','f_svc','f_cpo','f_contact','f_date','f_type'];
+function loadFields(){FIELD_IDS.forEach(function(k){var el=document.getElementById(k);if(el&&ST.fields[k]!=null)el.value=ST.fields[k];});}
+function bindFields(){FIELD_IDS.forEach(function(k){var el=document.getElementById(k);if(!el)return;
+  el.addEventListener('input',function(){ST.fields[k]=el.value;save();check();});
+  el.addEventListener('change',function(){ST.fields[k]=el.value;save();check();});});}
+function fv(k){return (ST.fields[k]||'').trim();}
+
+/* ---------- 렌더 ---------- */
+function reqTag(r){
+  if(r==='req') return '<span class="tag t-req">'+L('필수','Required')+'</span>';
+  if(r==='cond')return '<span class="tag t-cond">'+L('조건부','Conditional')+'</span>';
+  return '<span class="tag t-opt">'+L('자율','Optional')+'</span>';
+}
+function renderSecs(){
+  document.getElementById('secs').innerHTML=SECS.map(function(s){
+    var st=sec(s.id), filled=!!st.txt.trim(), na=st.na;
+    var cls=na?'na':(filled?'filled':(s.req==='req'?'missing':''));
+    var stat=na?'<span class="stat na">'+L('해당없음','N/A')+'</span>':
+      (filled?'<span class="stat ok">✔ '+L('작성됨','written')+'</span>':'<span class="stat no">'+L('미작성','empty')+'</span>');
+    return '<div class="sec '+cls+'" id="sec_'+s.id+'">'+
+      '<div class="hd" onclick="toggleSec(\''+s.id+'\')">'+
+        '<span class="no">'+(s.n<=24?s.n:'AI')+'</span>'+
+        '<span class="ti">'+esc(L(s.ko,s.en))+'</span>'+
+        (s.id==='genai'?'<span class="tag t-ai">'+L('2026 신설','New 2026')+'</span>':'')+
+        reqTag(s.req)+stat+
+      '</div>'+
+      '<div class="bd">'+
+        '<div class="guide"><b>'+L('작성 요령','How to write')+'</b><ul>'+s.tips.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul></div>'+
+        '<div class="tools">'+
+          (s.req!=='req'?'<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0"><input type="checkbox" '+(na?'checked':'')+' onchange="setNa(\''+s.id+'\',this.checked)"> '+L('해당없음','Not applicable')+'</label>':'')+
+          '<button class="btn sm" onclick="insertTpl(\''+s.id+'\')">📋 '+L('템플릿 삽입','Insert template')+'</button>'+
+          '<button class="btn sm" onclick="clearSec(\''+s.id+'\')">'+L('비우기','Clear')+'</button>'+
+        '</div>'+
+        '<textarea id="ta_'+s.id+'" '+(na?'disabled':'')+' placeholder="'+L('내용을 입력하세요…','Write the content…')+'" oninput="setTxt(\''+s.id+'\',this.value)">'+esc(st.txt)+'</textarea>'+
+        '<div id="wb_'+s.id+'"></div>'+
+      '</div></div>';
+  }).join('');
+  check();
+}
+function toggleSec(id){document.getElementById('sec_'+id).classList.toggle('open');}
+function expandAll(open){document.querySelectorAll('.sec').forEach(function(e){e.classList.toggle('open',open);});}
+function setNa(id,v){sec(id).na=v;save();var ta=document.getElementById('ta_'+id);if(ta)ta.disabled=v;paint(id);check();}
+function setTxt(id,v){sec(id).txt=v;save();paint(id);check();}
+function clearSec(id){sec(id).txt='';save();var ta=document.getElementById('ta_'+id);if(ta)ta.value='';paint(id);check();}
+/* 템플릿에 입력한 기본정보를 채워 넣는다(insertTpl / loadSample 공용). */
+function fillTpl(s){
+  var t=s.tpl.replace(/<개인정보처리자명>/g, fv('f_org')||'<개인정보처리자명>');
+  if(s.id==='cpo'){
+    t=t.replace('<성명/직책>', fv('f_cpo')||'<성명/직책>')
+       .replace('담당부서: <부서명> / 연락처: <전화>, <이메일>',
+                fv('f_contact') ? '담당부서·연락처: '+fv('f_contact') : '담당부서: <부서명> / 연락처: <전화>, <이메일>');
+  }
+  if(s.id==='change'&&fv('f_date')) t=t.replace(/<시행일>/g, fv('f_date'));
+  return t;
+}
+function insertTpl(id){
+  var s=SECS.filter(function(x){return x.id===id;})[0];
+  var t=fillTpl(s);
+  sec(id).txt=t;save();
+  var ta=document.getElementById('ta_'+id);if(ta)ta.value=t;
+  paint(id);check();
+}
+function paint(id){
+  var s=SECS.filter(function(x){return x.id===id;})[0], st=sec(id);
+  var el=document.getElementById('sec_'+id); if(!el)return;
+  var open=el.classList.contains('open'), filled=!!st.txt.trim();
+  el.className='sec '+(st.na?'na':(filled?'filled':(s.req==='req'?'missing':'')))+(open?' open':'');
+  var stEl=el.querySelector('.stat');
+  if(stEl){
+    stEl.className='stat '+(st.na?'na':(filled?'ok':'no'));
+    stEl.textContent=st.na?L('해당없음','N/A'):(filled?'✔ '+L('작성됨','written'):L('미작성','empty'));
+  }
+}
+
+/* ---------- 자동 점검 ---------- */
+var VAGUE=[/등의?\s*목적/,/기타\s*등/,/그\s*밖의\s*사항\s*등/];
+function secWarnings(s){
+  var st=sec(s.id), t=st.txt||'', w=[];
+  if(st.na||!t.trim()) return w;
+  if(/(^|[\s,·])등([\s,.)·]|$)/.test(t)&&['purpose','items','third','entrust'].indexOf(s.id)>=0)
+    w.push(['w-warn',L('‘~등’ 같은 축약·모호 표현이 있습니다. 지침은 처리 목적·항목을 구체적으로 특정하도록 요구합니다.','Vague “등 (etc.)” wording — the guideline requires specific purposes and items.')]);
+  if(s.id==='retention'&&!/(년|개월|일|까지)/.test(t))
+    w.push(['w-bad',L('보유 기간이 구체적으로 드러나지 않습니다(‘○년’, ‘탈퇴 시까지’ 등 기준 시점 필요).','No concrete retention period (need “N years”, “until withdrawal”, …).')]);
+  if(s.id==='retention'&&/(년|개월)/.test(t)&&!/(법|령|규칙)/.test(t))
+    w.push(['w-warn',L('법령상 보존의무로 기간을 정한 경우 <b>근거 법령</b>을 함께 적어야 합니다.','If the period comes from a statute, cite that statute.')]);
+  if(s.id==='third'&&!/(제공받는\s*자|\|)/.test(t))
+    w.push(['w-bad',L('제공받는 자·목적·항목·보유기간 4요소가 모두 보이지 않습니다.','The four elements (recipient, purpose, items, period) are not all present.')]);
+  if(s.id==='entrust'&&!/(수탁자|위탁)/.test(t))
+    w.push(['w-bad',L('수탁자와 위탁 업무 내용이 확인되지 않습니다.','Processor and outsourced task are not identifiable.')]);
+  if(s.id==='oversea'&&!/(국가|미국|일본|유럽|싱가포르|이전받는)/.test(t))
+    w.push(['w-warn',L('이전받는 자와 <b>이전 국가</b>가 명시되어야 합니다(법 제28조의8).','Recipient and destination country must be stated (Act art. 28-8).')]);
+  if(s.id==='cookie'&&!/(거부|설정|차단)/.test(t))
+    w.push(['w-bad',L('쿠키 <b>거부 방법</b>이 없습니다. 사용 목적과 거부 방법을 함께 안내해야 합니다.','No opt-out method for cookies — purpose and refusal method must both be given.')]);
+  if(s.id==='auto'&&!/(거부|설명|의견)/.test(t))
+    w.push(['w-bad',L('자동화된 결정에 대한 <b>거부·설명요구·의견제출</b> 방법이 빠졌습니다(법 제37조의2).','Missing the right to refuse / request explanation / submit opinion (Act art. 37-2).')]);
+  if(s.id==='pseudo'&&!/추가정보/.test(t))
+    w.push(['w-warn',L('추가정보의 <b>분리 보관·접근권한 분리</b> 언급이 없습니다(법 제28조의4).','No mention of separating additional information and its access rights (Act art. 28-4).')]);
+  if(s.id==='cpo'&&!/[0-9]{2,}/.test(t))
+    w.push(['w-bad',L('연락처(전화·이메일)가 확인되지 않습니다. 보호책임자 연락처는 필수 기재사항입니다.','No contact details found — the privacy officer’s contact is mandatory.')]);
+  if(s.id==='genai'&&!/(학습|훈련)/.test(t))
+    w.push(['w-warn',L('입력 프롬프트를 <b>모델 학습에 이용하는지</b> 여부를 명확히 밝혀야 합니다.','State clearly whether input prompts are used for model training.')]);
+  if(/(모든 조치를 취하고 있|완벽하게 보호|절대 안전)/.test(t))
+    w.push(['w-bad',L('“완벽·절대 안전” 같은 과장 표현은 피해야 합니다 — 사고 시 허위 공개 책임이 될 수 있습니다.','Avoid absolute claims (“perfectly safe”) — they can become a misrepresentation after an incident.')]);
+  return w;
+}
+function applicable(s){return !sec(s.id).na;}
+
+function check(){
+  var app=SECS.filter(applicable);
+  var done=app.filter(function(s){return sec(s.id).txt.trim();});
+  var missReq=SECS.filter(function(s){return s.req==='req'&&!sec(s.id).txt.trim();});
+  var warns=[], secWarnCount=0;
+  SECS.forEach(function(s){
+    var w=secWarnings(s); secWarnCount+=w.length;
+    var box=document.getElementById('wb_'+s.id);
+    if(box) box.innerHTML=w.map(function(x){return '<div class="warnbox '+x[0]+'">'+x[1]+'</div>';}).join('');
+    w.forEach(function(x){warns.push([x[0]==='w-bad'?'f-bad':'f-warn','<b>'+esc(L(s.ko,s.en))+'</b> — '+x[1]]);});
+  });
+  var pct=app.length?Math.round(done.length/app.length*100):0;
+  var ring=document.getElementById('ring');
+  ring.style.setProperty('--p',pct);
+  ring.style.setProperty('--c',missReq.length?'var(--bad)':(pct>=90?'var(--good)':pct>=50?'var(--accent)':'var(--warn)'));
+  document.getElementById('ringPct').textContent=pct+'%';
+  document.getElementById('kApp').textContent=app.length;
+  document.getElementById('kDone').textContent=done.length;
+  document.getElementById('kMiss').textContent=missReq.length;
+  document.getElementById('kWarn').textContent=secWarnCount;
+
+  var f=[];
+  FIELD_IDS.forEach(function(k){}); // no-op: 기본정보는 아래에서 일괄 점검
+  if(!fv('f_org')) f.push(['f-bad',L('<b>개인정보처리자명</b>이 비어 있습니다. 처리방침의 주체를 식별할 수 없습니다.','Controller name is empty — the policy has no identifiable subject.')]);
+  if(!fv('f_cpo')||!fv('f_contact')) f.push(['f-bad',L('<b>개인정보 보호책임자·연락처</b>는 법 제30조제1항제7호의 필수 기재사항입니다.','Privacy officer and contact are mandatory (Act art. 30(1)7).')]);
+  if(!fv('f_date')) f.push(['f-warn',L('<b>시행일</b>이 비어 있습니다. 처리방침은 시행일자를 명시해야 합니다.','Effective date is empty — the policy must state it.')]);
+  missReq.forEach(function(s){f.push(['f-bad',L('필수 항목 미작성','Mandatory section empty')+': <b>'+esc(L(s.ko,s.en))+'</b>']);});
+  // 조건부 항목 일괄 안내
+  var condOpen=SECS.filter(function(s){return s.req==='cond'&&!sec(s.id).na&&!sec(s.id).txt.trim();});
+  if(condOpen.length) f.push(['f-warn',L('조건부 항목이 ‘해당’ 상태인데 비어 있습니다 — 실제로 해당하지 않으면 <b>해당없음</b>으로 표시하세요','Conditional sections marked applicable but empty — mark them N/A if you do not do it')+': '+condOpen.map(function(s){return esc(L(s.ko,s.en));}).join(', ')]);
+  // 상호 일관성
+  if(sec('genai').txt.trim()&&sec('oversea').na)
+    f.push(['f-warn',L('생성형 AI 항목을 작성했지만 <b>국외 이전</b>을 해당없음으로 두었습니다. 해외 AI API를 사용한다면 국외 이전 기재가 필요합니다.','Generative-AI section is written but cross-border transfer is marked N/A — using an overseas AI API requires that section.')]);
+  if(sec('pseudo').txt.trim()&&!/(통계|연구|기록보존)/.test(sec('pseudo').txt))
+    f.push(['f-warn',L('가명정보 처리 목적은 <b>통계작성·과학적 연구·공익적 기록보존</b> 범위여야 합니다(법 제28조의2).','Pseudonymized-data purposes must fall within statistics / scientific research / archiving in the public interest (art. 28-2).')]);
+  if(sec('third').txt.trim()&&sec('entrust').na===false&&!sec('entrust').txt.trim())
+    f.push(['f-warn',L('제3자 제공은 작성했으나 위탁 항목이 비어 있습니다. 제공(법 제17조)과 위탁(법 제26조)은 구분해 기재해야 합니다.','Third-party provision is written but outsourcing is empty — provision (art. 17) and outsourcing (art. 26) are distinct.')]);
+
+  f=f.concat(warns);
+  if(!f.length) f.push(['f-ok',L('점검된 결함이 없습니다. 다만 <b>실제 개인정보 처리 현황과 일치하는지</b>는 반드시 직접 확인하세요.','No issues detected. Still verify that it matches your actual processing.')]);
+  document.getElementById('findings').innerHTML=f.map(function(x){return '<li class="'+x[0]+'">'+x[1]+'</li>';}).join('');
+
+  try{ if(window.WVSProgress){ window.WVSProgress.markVisited('privacy-policy-builder.html');
+    if(!missReq.length && pct>=90) window.WVSProgress.complete(pct,'privacy-policy-builder.html'); } }catch(e){}
+}
+
+/* ---------- 라벨링 ---------- */
+var LABELS=[
+ ['👤','개인정보','Personal data','법 제2조에 따른 개인정보'],
+ ['🪪','고유식별정보','Unique ID','주민등록번호·여권번호·운전면허번호·외국인등록번호'],
+ ['🫆','생체정보','Biometric','지문·얼굴·홍채 등 신체적 특징 정보'],
+ ['🩺','건강정보','Health','건강·병력 등에 관한 정보'],
+ ['📋','처리 항목','Items','수집·이용하는 개인정보의 항목'],
+ ['🎯','처리 목적','Purpose','개인정보를 수집·이용하는 목적'],
+ ['➕','추가적 이용·제공','Additional use','당초 목적과 관련된 추가 이용·제공'],
+ ['⏳','보유 기간','Retention','개인정보의 보유·이용 기간'],
+ ['🗑️','파기','Destruction','보유기간 경과·목적 달성 시 파기'],
+ ['🤝','제3자 제공','Third party','제공받는 자·목적·항목·기간'],
+ ['📦','처리위탁','Outsourcing','수탁자 및 위탁 업무 내용'],
+ ['🌏','국외 이전','Cross-border','이전받는 자·국가·항목·목적'],
+ ['📞','고충처리','Grievance','고충처리 부서·열람 창구'],
+ ['📹','고정형 영상기기','Fixed CCTV','설치 목적·위치·보관기간'],
+ ['🎥','이동형 영상기기','Mobile camera','촬영 사실 표시 의무']
+];
+function renderLabels(){
+  document.getElementById('labels').innerHTML=LABELS.map(function(l){
+    return '<div class="lb"><span class="ic">'+l[0]+'</span><b>'+esc(L(l[1],l[2]))+'</b><span>'+esc(l[3])+'</span></div>';
+  }).join('');
+}
+
+/* ---------- 초안 생성 ---------- */
+function draftLines(){
+  var org=fv('f_org')||'<개인정보처리자명>';
+  var lines=[];
+  lines.push('■ '+org+' 개인정보 처리방침');
+  if(fv('f_svc')) lines.push('  ('+L('적용 대상','Scope')+': '+fv('f_svc')+')');
+  if(fv('f_date')) lines.push('  '+L('시행일','Effective')+': '+fv('f_date'));
+  lines.push('');
+  var no=0;
+  SECS.forEach(function(s){
+    var st=sec(s.id);
+    if(st.na) return;
+    var body=st.txt.trim();
+    if(!body) return;
+    no++;
+    lines.push((s.id==='genai'?'['+L('부록','Appendix')+'] ':no+'. ')+L(s.ko,s.en));
+    body.split('\n').forEach(function(l){lines.push('   '+l);});
+    lines.push('');
+  });
+  if(fv('f_cpo')||fv('f_contact')){
+    lines.push('※ '+L('개인정보 보호책임자','Privacy officer')+': '+fv('f_cpo'));
+    if(fv('f_contact')) lines.push('   '+fv('f_contact'));
+  }
+  return lines;
+}
+function buildPreview(){
+  var txt=draftLines().join('\n');
+  document.getElementById('preview').textContent=txt||L('작성된 항목이 없습니다.','Nothing written yet.');
+  check();
+}
+function download(kind){
+  var org=fv('f_org')||'처리방침';
+  var body, mime, ext;
+  if(kind==='html'){
+    var html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>'+esc(org)+' 개인정보 처리방침</title>'+
+      '<style>body{font-family:"Malgun Gothic",sans-serif;max-width:820px;margin:40px auto;padding:0 20px;line-height:1.75;color:#222}h1{font-size:22px}h2{font-size:16px;margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:6px}pre{white-space:pre-wrap;font-family:inherit;margin:6px 0 0}</style></head><body>';
+    html+='<h1>'+esc(org)+' 개인정보 처리방침</h1>';
+    if(fv('f_date')) html+='<p>시행일: '+esc(fv('f_date'))+'</p>';
+    var n=0;
+    SECS.forEach(function(s){var st=sec(s.id);if(st.na||!st.txt.trim())return;n++;
+      html+='<h2>'+(s.id==='genai'?'[부록] ':n+'. ')+esc(L(s.ko,s.en))+'</h2><pre>'+esc(st.txt.trim())+'</pre>';});
+    html+='</body></html>';
+    body=html;mime='text/html;charset=utf-8';ext='html';
+  }else{
+    body=draftLines().join('\n');mime='text/plain;charset=utf-8';ext='txt';
+  }
+  var blob=new Blob([body],{type:mime});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='개인정보처리방침_초안_'+new Date().toISOString().slice(0,10)+'.'+ext;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+
+/* ---------- 예시/초기화 ---------- */
+function loadSample(){
+  ST.fields={f_org:'(주)예시커머스',f_svc:'예시몰 웹/모바일 앱',f_cpo:'홍길동 / 정보보호실장',
+    f_contact:'개인정보보호팀 / 02-1234-5678 / privacy@example.com',
+    f_date:new Date().toISOString().slice(0,10),f_type:'민간'};
+  ST.secs={};
+  SECS.forEach(function(s){
+    var na=['agent','mcctv','sensitive'].indexOf(s.id)>=0;
+    ST.secs[s.id]={na:na,txt:na?'':fillTpl(s)};
+  });
+  save(); loadFields(); renderSecs(); buildPreview();
+}
+function resetAll(){
+  if(!confirm(L('작성 내용을 모두 지울까요? (이 기기 저장분만 삭제)','Clear everything on this device?')))return;
+  ST={fields:{},secs:{}};save();
+  FIELD_IDS.forEach(function(k){var el=document.getElementById(k);if(el)el.value='';});
+  renderSecs();document.getElementById('preview').textContent='';
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  load(); applyLang(); loadFields(); bindFields(); renderSecs(); renderLabels();
+});
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+</body>
+</html>

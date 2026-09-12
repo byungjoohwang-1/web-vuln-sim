@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 영향평가(PIA) 자가진단 — 121개 평가항목 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 영향평가(PIA) 자가진단 — 121개 평가항목 · WEB-VULN-SIM">
+<meta property="og:description" content="개인정보 영향평가 수행 안내서(2025.10) 121개 평가항목 인터랙티브 자가진단 · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/pia-assessment.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="개인정보보호위원회·KISA '개인정보 영향평가 수행 안내서(2025.10)' 기반 121개 평가항목 인터랙티브 자가진단 — 이행/부분이행/미이행/해당없음 체크로 이행률·개선과제 자동 산출, 항목별 주요 점검사항·지표 해설·관련 법령 제공. AI(5.7) 10개 신규 항목 포함. 100% 브라우저.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--na:#64748b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13px;margin-top:8px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.dash{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin:16px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.ring{--p:0;--c:var(--good);width:104px;height:104px;border-radius:50%;position:relative;flex-shrink:0;background:conic-gradient(var(--c) calc(var(--p)*1%), #1e293b 0);display:grid;place-items:center}
+.ring::before{content:'';position:absolute;width:78px;height:78px;border-radius:50%;background:var(--panel)}
+.ring .in{position:relative;text-align:center}
+.ring b{font-family:var(--mono);font-size:22px;color:#fff;display:block;line-height:1}
+.ring span{font-size:10px;color:var(--muted)}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:260px}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:92px}
+.kpi .n{font-family:var(--mono);font-size:20px;font-weight:800}
+.kpi .l{font-size:11px;color:var(--muted);margin-top:2px}
+.kpi.good .n{color:var(--good)}.kpi.part .n{color:var(--warn)}.kpi.bad .n{color:var(--bad)}.kpi.na .n{color:var(--na)}.kpi.tot .n{color:#fff}
+.areabars{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:8px;margin:10px 0 2px}
+.ab{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+.ab .t{font-size:11.5px;color:#cbd5e1;display:flex;justify-content:space-between;gap:6px}
+.ab .t b{font-family:var(--mono);color:#7dd3fc}
+.ab .bar{height:6px;border-radius:99px;background:#1e293b;margin-top:6px;overflow:hidden}
+.ab .bar>i{display:block;height:100%}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
+.seg{display:inline-flex;border:1px solid #334155;border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button{background:var(--panel2);color:#cbd5e1;border:none;padding:8px 12px;font-size:12.5px;font-family:var(--mono);cursor:pointer}
+.seg button.on{background:var(--accent);color:#04222e;font-weight:800}
+select,input[type=search]{background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit}
+input[type=search]{min-width:180px;flex:1}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;margin:12px 0;overflow:hidden}
+.sec>h2{font-size:14px;color:#e2e8f0;padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(90deg,#172033,#28344b);flex-wrap:wrap}
+.sec>h2 .dom{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.dom.a1{background:#1e2a52;color:#93c5fd}.dom.a2{background:#0c2a3a;color:#7dd3fc}.dom.a3{background:#2a1e52;color:#c4b5fd}
+.dom.a4{background:#3a2a09;color:#fde047}.dom.a5{background:#0f2a18;color:#86efac}
+.sec>h2 .pilln{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.sec>h2 .mini{width:64px;height:7px;border-radius:99px;background:#1e293b;overflow:hidden;flex-shrink:0}
+.sec>h2 .mini>i{display:block;height:100%;background:var(--good)}
+.sec .body{padding:6px 12px 12px}
+.item{border:1px solid var(--border);border-radius:11px;padding:11px 13px;margin:8px 0;background:var(--panel2)}
+.item .top{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.code{font-family:var(--mono);font-size:11px;font-weight:800;color:#7dd3fc;background:#0c2a3a;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.sf{font-family:var(--mono);font-size:10.5px;color:#a5b4fc;background:#1e1b4b;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.req{font-size:13.5px;font-weight:600;flex:1;min-width:200px}
+.states{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.st{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;font-family:var(--mono)}
+.st.on.g{background:#0f2a18;color:#86efac;border-color:#14532d}
+.st.on.p{background:#3a2a09;color:#fde047;border-color:#78350f}
+.st.on.v{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.st.on.n{background:#1e293b;color:#cbd5e1;border-color:#475569}
+.item.isg{border-left:3px solid var(--good)}.item.isp{border-left:3px solid var(--warn)}
+.item.isv{border-left:3px solid var(--bad)}.item.isn{border-left:3px solid var(--na)}
+.det{margin-top:10px;font-size:12.5px;color:#cbd5e1;border-top:1px dashed #334155;padding-top:9px;display:none}
+.item.open .det{display:block}
+.toggle{font-size:11.5px;color:#7dd3fc;cursor:pointer;font-family:var(--mono);margin-top:8px;display:inline-block}
+.det h4{font-size:11.5px;color:#7dd3fc;font-family:var(--mono);margin:9px 0 3px}
+.det p{margin:2px 0;white-space:pre-line}
+.cps{margin:3px 0 0 2px;list-style:none;counter-reset:cp}
+.cps li{font-size:12.5px;color:#e2e8f0;padding:3px 0 3px 24px;position:relative}
+.cps li::before{counter-increment:cp;content:counter(cp);position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:#0c2a3a;color:#7dd3fc;font-family:var(--mono);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.laws{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.law{background:#0b1220;border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:11.5px;color:#c4b5fd;font-family:var(--mono)}
+.simlink{display:inline-block;margin-top:8px;font-size:11.5px;font-family:var(--mono);color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:3px 9px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:14px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+.empty{color:var(--muted);font-size:13px;padding:16px;text-align:center}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid #334155;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
+  <a href="privacy-policy-builder.html"><span data-en="Policy Builder">처리방침 작성기</span></a>
+  <a href="pseudonym-lab.html"><span data-en="Pseudonymization Lab">가명처리 실습실</span></a>
+  <a href="my-progress.html"><span data-en="My Progress">내 학습 현황</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🛡️ <span data-en="Privacy Impact Assessment (PIA) Self-Check">개인정보 영향평가(PIA) 자가진단</span></h1>
+    <div class="sub" data-en="An interactive self-assessment over all 121 evaluation items of Korea's Privacy Impact Assessment framework. Mark each item 이행 / 부분이행 / 미이행 / 해당없음; the compliance score and improvement tasks are computed live (partial = 0.5). Each item shows its key check points, indicator commentary and the underlying statutes. Includes the new AI section (5.7, 10 items). Everything is stored in your browser.">
+      개인정보 영향평가(PIA) <b>121개 평가항목</b> 전체를 인터랙티브로 자가진단합니다. 항목마다 <b>이행 / 부분이행 / 미이행 / 해당없음</b>을 표시하면 이행률과 <b>개선과제</b>가 자동 산출됩니다(부분이행 0.5 가중). 항목별 <b>주요 점검사항 · 지표 해설 · 관련 법령</b>을 함께 제공하며, 신설된 <b>인공지능(5.7) 10개 항목</b>도 포함합니다. 모든 결과는 브라우저에 저장됩니다.</div>
+    <div class="src" id="srcLine">📕 출처: 개인정보 영향평가 수행 안내서(2025.10.) · 개인정보보호위원회 / 한국인터넷진흥원</div>
+  </div>
+
+  <div class="dash">
+    <div class="ring" id="ring"><div class="in"><b id="ringPct">0%</b><span data-en="compliance">이행률</span></div></div>
+    <div class="kpis">
+      <div class="kpi tot"><div class="n" id="kTot">0</div><div class="l" data-en="Total items">전체 항목</div></div>
+      <div class="kpi good"><div class="n" id="kG">0</div><div class="l" data-en="Implemented">이행</div></div>
+      <div class="kpi part"><div class="n" id="kP">0</div><div class="l" data-en="Partial">부분이행</div></div>
+      <div class="kpi bad"><div class="n" id="kV">0</div><div class="l" data-en="Not implemented">미이행</div></div>
+      <div class="kpi na"><div class="n" id="kN">0</div><div class="l" data-en="N/A">해당없음</div></div>
+      <div class="kpi"><div class="n" id="kC">0</div><div class="l" data-en="Checked">점검완료</div></div>
+    </div>
+  </div>
+  <div class="areabars" id="areaBars"></div>
+
+  <div class="controls">
+    <div class="seg" id="segArea">
+      <button data-v="all" class="on" data-en="All">전체</button>
+      <button data-v="1" data-en="Ⅰ Org">Ⅰ 대상기관</button>
+      <button data-v="2" data-en="Ⅱ System">Ⅱ 대상시스템</button>
+      <button data-v="3" data-en="Ⅲ Lifecycle">Ⅲ 처리단계별</button>
+      <button data-v="4" data-en="Ⅳ Technical">Ⅳ 기술적</button>
+      <button data-v="5" data-en="Ⅴ Specific IT">Ⅴ 특정IT기술</button>
+    </div>
+    <select id="selField"><option value="all" data-en="All fields">전체 평가분야</option></select>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><input type="checkbox" id="onlyGap"> <span data-en="Gaps only (미이행·부분이행)">미이행·부분이행만</span></label>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><input type="checkbox" id="onlyUn"> <span data-en="Unchecked only">미점검만</span></label>
+    <input type="search" id="q" placeholder="검색 (평가항목·점검사항·법령·코드)…">
+    <button class="btn" onclick="exportReport()">📄 <span data-en="Improvement tasks">개선과제 리포트</span></button>
+    <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+  </div>
+
+  <div class="note" data-en="ℹ️ Compliance = (implemented + 0.5 × partial) ÷ (implemented + partial + not-implemented); N/A items are excluded — the same formula the official guide uses in its sample report. This is an educational self-check based on the public guide and does not replace a PIA performed by a designated assessment agency.">
+    ℹ️ 이행률 = (이행 + 0.5 × 부분이행) ÷ (이행 + 부분이행 + 미이행), 해당없음은 제외합니다(안내서 예시 산정식과 동일). 본 도구는 공개 안내서 기반 <b>교육용 자가점검</b>으로, 영향평가기관이 수행하는 법정 영향평가를 대체하지 않습니다.</div>
+
+  <div id="list"><div class="empty"><span class="spin"></span> <span data-en="Loading evaluation items…">평가항목 불러오는 중…</span></div></div>
+
+  <div class="disc" data-en="Item text is extracted verbatim from the public guide (Korean regulatory source). Runs entirely in your browser; answers never leave your device.">
+    ⚠️ 평가항목 본문은 공개 안내서에서 추출한 규정 원문(국문)입니다. 전부 브라우저에서 동작하며 응답은 기기를 벗어나지 않습니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+/* i18n */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* 평가분야 → 관련 시뮬레이터 (교차 학습 배선) */
+var FIELD_SIM={
+ '1.3':'15_privacy-pv25.html','1.4':'15_privacy-pv22.html',
+ '2.3':'privacy-policy-builder.html',
+ '3.1':'15_privacy-pv01.html','3.2':'15_privacy-pv12.html','3.3':'15_privacy-pv07.html',
+ '3.4':'15_privacy-pv09.html','3.5':'15_privacy-pv13.html',
+ '4.1':'15_privacy-pv14.html','4.2':'15_privacy-pv15.html','4.3':'15_privacy-pv16.html',
+ '4.4':'15_privacy-pv17.html','4.5':'15_privacy-pv18.html','4.6':'15_privacy-pv21.html',
+ '4.7':'15_privacy-pv13.html','4.8':'15_privacy-pv19.html','4.9':'15_privacy-pv21.html',
+ '5.1':'15_privacy-pv26.html','5.2':'15_privacy-pv27.html','5.3':'15_privacy-pv28.html',
+ '5.4':'15_privacy-pv28.html','5.5':'pseudonym-lab.html','5.6':'15_privacy-pv24.html',
+ '5.7':'15_privacy-pv31.html'
+};
+
+var DATA=null, ITEMS=[], STATE={}, FILT={area:'all',field:'all',onlyGap:false,onlyUn:false,q:''};
+var SKEY='wvs_pia_assess';
+function loadState(){try{STATE=JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){STATE={};}}
+function saveState(){try{localStorage.setItem(SKEY,JSON.stringify(STATE));}catch(e){}}
+
+function stats(items){
+  var g=0,p=0,v=0,n=0;
+  items.forEach(function(it){var s=STATE[it.code];if(s==='g')g++;else if(s==='p')p++;else if(s==='v')v++;else if(s==='n')n++;});
+  var den=g+p+v, rate=den?Math.round((g+p*0.5)/den*100):0;
+  return {g:g,p:p,v:v,n:n,checked:g+p+v+n,total:items.length,rate:rate};
+}
+function rateColor(r,has){return r>=80?'var(--good)':r>=50?'var(--accent)':has?'var(--bad)':'var(--warn)';}
+
+function renderDash(){
+  var s=stats(ITEMS);
+  document.getElementById('kTot').textContent=s.total;
+  document.getElementById('kG').textContent=s.g;
+  document.getElementById('kP').textContent=s.p;
+  document.getElementById('kV').textContent=s.v;
+  document.getElementById('kN').textContent=s.n;
+  document.getElementById('kC').textContent=s.checked+' / '+s.total;
+  var ring=document.getElementById('ring');
+  ring.style.setProperty('--p',s.rate);
+  ring.style.setProperty('--c',rateColor(s.rate,s.v>0));
+  document.getElementById('ringPct').textContent=s.rate+'%';
+  renderAreaBars();
+  try{ if(window.WVSProgress){ window.WVSProgress.markVisited('pia-assessment.html');
+    if(s.checked>=s.total && s.total>0) window.WVSProgress.complete(s.rate,'pia-assessment.html'); } }catch(e){}
+}
+function renderAreaBars(){
+  if(!DATA) return;
+  var host=document.getElementById('areaBars');
+  host.innerHTML=(DATA.areas||[]).map(function(a){
+    var its=ITEMS.filter(function(i){return i.area_no===a.no;});
+    var s=stats(its);
+    return '<div class="ab"><div class="t"><span>'+esc('ⅠⅡⅢⅣⅤ'[a.no-1]+'. '+a.name)+'</span><b>'+(s.checked?s.rate+'%':'–')+'</b></div>'+
+      '<div class="bar"><i style="width:'+(s.checked?s.rate:0)+'%;background:'+rateColor(s.rate,s.v>0)+'"></i></div></div>';
+  }).join('');
+}
+
+function matchFilter(it){
+  if(FILT.area!=='all' && String(it.area_no)!==FILT.area) return false;
+  if(FILT.field!=='all' && it.field_no!==FILT.field) return false;
+  var st=STATE[it.code];
+  if(FILT.onlyGap && !(st==='v'||st==='p')) return false;
+  if(FILT.onlyUn && st) return false;
+  if(FILT.q){
+    var q=FILT.q.toLowerCase();
+    var hay=(it.code+' '+it.question+' '+it.subfield+' '+it.field+' '+(it.checkpoints||[]).join(' ')+' '+(it.laws||[]).join(' ')+' '+(it.explain||'')).toLowerCase();
+    if(hay.indexOf(q)<0) return false;
+  }
+  return true;
+}
+
+function render(){
+  var host=document.getElementById('list');
+  var vis=ITEMS.filter(matchFilter);
+  if(!vis.length){ host.innerHTML='<div class="empty" data-en="No items match the filters.">조건에 맞는 항목이 없습니다.</div>'; applyLang(); return; }
+  var groups=[], gmap={};
+  vis.forEach(function(it){
+    if(!gmap[it.field_no]){gmap[it.field_no]={key:it.field_no,area_no:it.area_no,field:it.field,items:[]};groups.push(gmap[it.field_no]);}
+    gmap[it.field_no].items.push(it);
+  });
+  host.innerHTML=groups.map(function(g){
+    var s=stats(g.items);
+    var sim=FIELD_SIM[g.key];
+    return '<div class="sec" data-k="'+g.key+'">'+
+      '<h2 onclick="toggleSec(this)"><span class="dom a'+g.area_no+'">'+'ⅠⅡⅢⅣⅤ'[g.area_no-1]+'</span>'+
+      '<span>'+esc(g.key+' '+g.field)+'</span>'+
+      (sim?'<a class="simlink" style="margin:0" href="'+sim+'" onclick="event.stopPropagation()">▶ '+L('관련 학습','Learn')+'</a>':'')+
+      '<span class="pilln">'+s.g+'✓ · '+s.p+'◐ · '+s.v+'✗ · '+s.total+L('개','')+'</span>'+
+      '<span class="mini"><i style="width:'+(s.checked?s.rate:0)+'%;background:'+rateColor(s.rate,s.v>0)+'"></i></span>'+
+      '</h2><div class="body">'+g.items.map(itemHtml).join('')+'</div></div>';
+  }).join('');
+  applyLang();
+}
+
+function itemHtml(it){
+  var st=STATE[it.code]||'';
+  var cls=st==='g'?'isg':st==='p'?'isp':st==='v'?'isv':st==='n'?'isn':'';
+  var cps=(it.checkpoints||[]).map(function(c){return '<li>'+esc(c)+'</li>';}).join('');
+  var laws=(it.laws||[]).map(function(l){return '<span class="law">'+esc(l)+'</span>';}).join('');
+  return '<div class="item '+cls+'" data-code="'+it.code+'">'+
+    '<div class="top">'+
+      '<span class="code">'+it.code+'</span>'+
+      (it.subfield?'<span class="sf">'+esc(it.subfield)+'</span>':'')+
+      '<span class="req">'+esc(it.question)+'</span>'+
+      '<span class="states">'+
+        '<span class="st g'+(st==='g'?' on':'')+'" onclick="setState(\''+it.code+'\',\'g\')" data-en="Done">이행</span>'+
+        '<span class="st p'+(st==='p'?' on':'')+'" onclick="setState(\''+it.code+'\',\'p\')" data-en="Partial">부분이행</span>'+
+        '<span class="st v'+(st==='v'?' on':'')+'" onclick="setState(\''+it.code+'\',\'v\')" data-en="Not done">미이행</span>'+
+        '<span class="st n'+(st==='n'?' on':'')+'" onclick="setState(\''+it.code+'\',\'n\')" data-en="N/A">해당없음</span>'+
+      '</span>'+
+    '</div>'+
+    '<span class="toggle" onclick="toggleItem(this)">▸ <span data-en="Details (check points · commentary · statutes)">상세 (주요 점검사항·지표 해설·관련 법령)</span></span>'+
+    '<div class="det">'+
+      (cps?'<h4 data-en="Key check points">주요 점검 사항</h4><ul class="cps">'+cps+'</ul>':'')+
+      (it.explain?'<h4 data-en="Indicator commentary">지표 해설</h4><p>'+esc(it.explain)+'</p>':'')+
+      (laws?'<h4 data-en="Related statutes">관련 법령·지침</h4><div class="laws">'+laws+'</div>':'')+
+    '</div>'+
+  '</div>';
+}
+
+function setState(code,val){
+  if(STATE[code]===val) delete STATE[code]; else STATE[code]=val;
+  saveState();
+  var el=document.querySelector('.item[data-code="'+code+'"]');
+  if(el){
+    var st=STATE[code]||'';
+    var open=el.classList.contains('open');
+    el.className='item'+(st==='g'?' isg':st==='p'?' isp':st==='v'?' isv':st==='n'?' isn':'')+(open?' open':'');
+    el.querySelectorAll('.st').forEach(function(b){b.classList.remove('on');});
+    if(st){var b=el.querySelector('.st.'+st);if(b)b.classList.add('on');}
+  }
+  renderDash(); updateSectionHead(code);
+  if(FILT.onlyGap||FILT.onlyUn) render();
+}
+function updateSectionHead(code){
+  var it=ITEMS.find(function(x){return x.code===code;}); if(!it)return;
+  var secEl=document.querySelector('.sec[data-k="'+it.field_no+'"]'); if(!secEl)return;
+  var codes={}; secEl.querySelectorAll('.item').forEach(function(x){codes[x.getAttribute('data-code')]=1;});
+  var s=stats(ITEMS.filter(function(x){return codes[x.code];}));
+  var pill=secEl.querySelector('.pilln'); if(pill)pill.textContent=s.g+'✓ · '+s.p+'◐ · '+s.v+'✗ · '+s.total+L('개','');
+  var mini=secEl.querySelector('.mini>i'); if(mini){mini.style.width=(s.checked?s.rate:0)+'%';mini.style.background=rateColor(s.rate,s.v>0);}
+}
+function toggleItem(t){t.parentNode.classList.toggle('open');t.firstChild.textContent=t.parentNode.classList.contains('open')?'▾ ':'▸ ';}
+function toggleSec(h){var b=h.nextElementSibling;b.style.display=b.style.display==='none'?'':'none';}
+
+function exportReport(){
+  var s=stats(ITEMS), lines=[];
+  lines.push('개인정보 영향평가(PIA) 자가진단 결과 — 개선과제 목록');
+  lines.push('출처: '+(DATA&&DATA.source||''));
+  lines.push('생성: '+new Date().toLocaleString('ko-KR'));
+  lines.push('전체 '+s.total+' · 이행 '+s.g+' · 부분이행 '+s.p+' · 미이행 '+s.v+' · 해당없음 '+s.n+' · 이행률 '+s.rate+'%');
+  lines.push('');
+  (DATA.areas||[]).forEach(function(a){
+    var its=ITEMS.filter(function(i){return i.area_no===a.no;}), as=stats(its);
+    lines.push('  ['+'ⅠⅡⅢⅣⅤ'[a.no-1]+'] '+a.name+' : '+(as.checked?as.rate+'%':'미점검')+' ('+as.total+'개)');
+  });
+  lines.push('');
+  ['v','p'].forEach(function(kind){
+    var label=kind==='v'?'미이행':'부분이행';
+    var g=ITEMS.filter(function(it){return STATE[it.code]===kind;});
+    lines.push('■ '+label+' 개선과제 ('+g.length+')');
+    if(!g.length) lines.push('  (없음)');
+    g.forEach(function(it){
+      lines.push('- ['+it.code+'] '+it.field+' > '+it.subfield);
+      lines.push('    평가항목: '+it.question);
+      (it.checkpoints||[]).forEach(function(c,i){lines.push('    점검'+(i+1)+': '+c);});
+      if(it.laws&&it.laws.length) lines.push('    근거: '+it.laws.join(' / '));
+    });
+    lines.push('');
+  });
+  var un=ITEMS.filter(function(it){return !STATE[it.code];});
+  lines.push('■ 미점검 ('+un.length+'): '+un.map(function(i){return i.code;}).join(', '));
+  var blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='PIA_자가진단_개선과제_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+function resetAll(){
+  if(!confirm(L('모든 점검 결과를 초기화할까요? (이 기기 저장분만 삭제)','Reset all results on this device?')))return;
+  STATE={};saveState();render();renderDash();
+}
+
+function bindControls(){
+  document.getElementById('segArea').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return;
+    this.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on'); FILT.area=b.getAttribute('data-v');
+    FILT.field='all'; document.getElementById('selField').value='all';
+    fillFieldSelect(); render();
+  });
+  document.getElementById('selField').addEventListener('change',function(){FILT.field=this.value;render();});
+  document.getElementById('onlyGap').addEventListener('change',function(){FILT.onlyGap=this.checked;render();});
+  document.getElementById('onlyUn').addEventListener('change',function(){FILT.onlyUn=this.checked;render();});
+  var qt;
+  document.getElementById('q').addEventListener('input',function(){var v=this.value;clearTimeout(qt);qt=setTimeout(function(){FILT.q=v.trim();render();},180);});
+}
+function fillFieldSelect(){
+  var sel=document.getElementById('selField');
+  var fields=(DATA&&DATA.fields||[]).filter(function(f){return FILT.area==='all'||f.no.split('.')[0]===FILT.area;});
+  sel.innerHTML='<option value="all">'+L('전체 평가분야','All fields')+'</option>'+
+    fields.map(function(f){return '<option value="'+f.no+'">'+esc(f.no+' '+f.name)+'</option>';}).join('');
+}
+
+function boot(){
+  loadState(); bindControls(); applyLang();
+  fetch('js/pia-items.json').then(function(r){return r.json();}).then(function(d){
+    DATA=d; ITEMS=d.items||[];
+    ITEMS.sort(function(a,b){
+      var pa=a.code.split('.').map(Number), pb=b.code.split('.').map(Number);
+      return pa[0]-pb[0]||pa[1]-pb[1]||pa[2]-pb[2];
+    });
+    document.getElementById('srcLine').textContent='📕 '+L('출처','Source')+': '+(d.source||'')+' · '+ITEMS.length+L('개 평가항목',' items');
+    fillFieldSelect(); render(); renderDash();
+  }).catch(function(e){
+    document.getElementById('list').innerHTML='<div class="empty">'+L('평가항목 데이터를 불러오지 못했습니다.','Failed to load item data.')+' ('+esc(e&&e.message||e)+')</div>';
+  });
+}
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+</body>
+</html>

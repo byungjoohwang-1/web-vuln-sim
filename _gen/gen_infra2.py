@@ -3,7 +3,7 @@
 인프라 점검 시뮬레이터 v2 — 동적·초보친화형.
 - 💡 쉽게 말하면(비유)  - 🎯 직접 해보기(공격 애니메이션, 상태별 결과)  - 설정 비교  - 조치  - 체크리스트
 """
-import html, os
+import html, os, re
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'public')
 
@@ -12,7 +12,12 @@ PAGE = r'''<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0ea5e9">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.json">
 <title>{code}: {title} | 교육 시뮬레이터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
 <style>
 * {{ margin:0; padding:0; box-sizing:border-box; }}
@@ -70,6 +75,26 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
 .checklist .box {{ width:22px; height:22px; border:2px solid var(--primary); border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; }}
 .checklist li.done .box {{ background:var(--success); border-color:var(--success); }}
 .kref {{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }}
+/* AI 코치 (BYO 키 하이브리드) */
+.ai-lab {{ border:2px solid #4c3d8f; border-radius:14px; padding:18px 20px; background:linear-gradient(135deg,#f8f7ff,#f0edff); }}
+.ai-setup {{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }}
+.ai-setup input[type=password] {{ flex:1; min-width:200px; padding:10px 12px; border:1px solid #cfc7f0; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:13px; }}
+.ai-setup select {{ padding:10px; border:1px solid #cfc7f0; border-radius:8px; font-size:13px; background:white; }}
+.ai-btn {{ background:#5a4db0; color:white; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; }}
+.ai-btn.ghost {{ background:white; color:#5a4db0; border:1px solid #5a4db0; }}
+.ai-status {{ font-size:12.5px; color:#5a4db0; margin-bottom:10px; font-weight:700; }}
+.ai-quick {{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }}
+.chip {{ background:#ede9ff; border:1px solid #cfc7f0; color:#4c3d8f; border-radius:20px; padding:8px 14px; font-size:13px; cursor:pointer; transition:.15s; font-family:'Lora',serif; }}
+.chip:hover {{ background:#ddd6ff; }}
+#aiQuestion {{ width:100%; min-height:64px; padding:12px; border:1px solid #cfc7f0; border-radius:10px; font-family:'Lora',serif; font-size:14px; resize:vertical; margin-bottom:10px; }}
+.ask-btn {{ background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; padding:11px 22px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; }}
+.ai-answer {{ margin-top:14px; }}
+.ai-demo-tag, .ai-live-tag {{ display:inline-block; font-size:12px; font-weight:700; padding:4px 10px; border-radius:14px; margin-bottom:8px; }}
+.ai-demo-tag {{ background:#fff3d6; color:#9a6b00; }}
+.ai-live-tag {{ background:#dcfce7; color:#166534; }}
+.ai-text {{ background:white; border:1px solid #e6e2fa; border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.7; white-space:pre-wrap; }}
+.ai-err {{ background:#fdeaea; color:#a12622; border:1px solid #f5c6c6; border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; }}
+.ai-loading {{ color:#5a4db0; font-weight:700; font-size:14px; padding:10px; }}
 .footer {{ text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }}
 @media (max-width:740px) {{ .cmp {{ grid-template-columns:1fr; }} .run-btn {{ margin-left:0; }} }}
 </style>
@@ -106,7 +131,7 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
         <div class="outcome" id="outcome"></div>
       </div>
     </div>
-
+{ai_lab_html}
     <div class="section">
       <h2>📋 설정 비교 (왜 막혔나?)</h2>
       <div class="cmp">
@@ -180,7 +205,13 @@ document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('clic
   li.classList.toggle('done');
   li.querySelector('.box').textContent = li.classList.contains('done')?'✓':'';
 }}));
+{ai_lab_js}
 </script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/pwa.js" defer></script>
 </body>
 </html>'''
 
@@ -213,9 +244,129 @@ def js_outcome(o):
     return '{emoji: %s, title: %s, desc: %s}' % (jss(o['emoji']), jss(esc(o['title'])), jss(esc(o['desc'])))
 
 
+# ===== AI 코치 (BYO 키 하이브리드) — ai_lab 플래그가 있는 스펙에만 렌더 =====
+AI_LAB_HTML = '''    <div class="section" id="aiLabSection">
+      <h2>🤖 AI 코치에게 물어보기 <span style="font-size:12px;background:#ede9ff;color:#4c3d8f;padding:3px 10px;border-radius:12px;">BYO 키 하이브리드</span></h2>
+      <p style="color:#555;margin-bottom:14px;line-height:1.6;">API 키 없이도 <b>데모 AI</b>(오프라인 사전 정의 답변)가 바로 답합니다. <b>Claude API 키</b>를 저장하면 이 페이지 주제(%s)에 대해 <b>실제 LLM</b>에게 자유롭게 질문할 수 있어요. 키는 이 브라우저(localStorage)에만 저장되며 사이트 서버로 전송되지 않습니다.</p>
+      <div class="ai-lab">
+        <div class="ai-status" id="aiStatus"></div>
+        <div class="ai-setup">
+          <input type="password" id="aiKeyInput" placeholder="sk-ant-... Claude API 키 (선택 · 비워두면 데모 AI)" autocomplete="off">
+          <select id="aiModelSelect">
+            <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+            <option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>
+            <option value="claude-opus-4-6">claude-opus-4-6</option>
+          </select>
+          <button class="ai-btn" onclick="saveAIKey()">키 저장</button>
+          <button class="ai-btn ghost" onclick="clearAIKey()">삭제</button>
+        </div>
+        <div class="ai-quick">
+          <button class="chip" onclick="askAI('attack')">⚔️ 공격 원리 3단계</button>
+          <button class="chip" onclick="askAI('defense')">🛡️ 방어 체크리스트</button>
+          <button class="chip" onclick="askAI('detect')">🔍 탐지 방법</button>
+        </div>
+        <textarea id="aiQuestion" placeholder="또는 이 주제에 대해 직접 질문해 보세요. (예: 실제 침해 사례가 궁금해요)"></textarea>
+        <button class="ask-btn" onclick="askAI('custom')">질문하기</button>
+        <div class="ai-answer" id="aiAnswer"></div>
+      </div>
+    </div>
+'''
+
+AI_LAB_JS = '''function _aiKey(){ return localStorage.getItem('wvs_ai_key')||''; }
+function initAI(){
+  const st=document.getElementById('aiStatus'); if(!st) return;
+  document.getElementById('aiModelSelect').value=localStorage.getItem('wvs_ai_model')||'claude-sonnet-4-6';
+  if(_aiKey()){ st.textContent='✓ API 키 저장됨 — 실제 Claude 모드 (키는 이 브라우저에만 보관)';
+    document.getElementById('aiKeyInput').placeholder='새 키로 교체하려면 입력'; }
+  else { st.textContent='🤖 데모 AI 모드 — 키 없이 바로 사용 가능'; }
+}
+function saveAIKey(){
+  const v=document.getElementById('aiKeyInput').value.trim();
+  if(!v){ alert('API 키를 입력해 주세요. 키 없이는 데모 AI로 계속 실습할 수 있습니다.'); return; }
+  localStorage.setItem('wvs_ai_key',v);
+  localStorage.setItem('wvs_ai_model',document.getElementById('aiModelSelect').value);
+  document.getElementById('aiKeyInput').value='';
+  initAI();
+}
+function clearAIKey(){ localStorage.removeItem('wvs_ai_key'); document.getElementById('aiKeyInput').value=''; initAI(); }
+const AI_PRESETS={
+  attack:'이 페이지 주제의 공격이 실제로 어떻게 작동하는지 3단계로 설명하고, 각 단계에서 공격자가 노리는 것을 알려줘.',
+  defense:'이 취약점에 대한 실무 방어 체크리스트를 우선순위와 함께 알려줘.',
+  detect:'이 공격을 탐지하는 방법(로그·SIEM 시그니처·행위 기반)을 알려줘.'
+};
+function _escH(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _mdLite(el,text){
+  let h=_escH(text);
+  h=h.replace(/\\*\\*([^*]+)\\*\\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\\n/g,'<br>');
+  el.innerHTML=h;
+}
+function _demoAnswer(kind,question){
+  const ans=document.getElementById('aiAnswer');
+  const text=AI_MOCK[kind]||('[데모 AI] "'+question+'" 같은 자유 질문은 실제 Claude에게 물어보세요. 키를 저장하면 즉시 답변받을 수 있고, 데모 모드에서는 위의 준비된 버튼(공격 원리/방어/탐지)을 눌러 볼 수 있어요.');
+  ans.innerHTML='<span class="ai-demo-tag">🤖 데모 AI (오프라인·사전 정의)</span><div class="ai-text" id="aiDemoText"></div>';
+  const tEl=document.getElementById('aiDemoText'); let i=0;
+  (function step(){ if(i<=text.length){ tEl.textContent=text.slice(0,i); i+=4; setTimeout(step,10); } })();
+}
+async function askAI(kind){
+  const ans=document.getElementById('aiAnswer'); if(!ans) return;
+  const question=(kind==='custom')?document.getElementById('aiQuestion').value.trim():AI_PRESETS[kind];
+  if(!question){ ans.innerHTML='<div class="ai-err">질문을 입력해 주세요.</div>'; return; }
+  const key=_aiKey();
+  if(!key){ _demoAnswer(kind,question); return; }
+  ans.innerHTML='<div class="ai-loading">🤖 Claude 응답 중... (최대 수십 초)</div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model: localStorage.getItem('wvs_ai_model')||'claude-sonnet-4-6',
+        max_tokens:1024,
+        system:'너는 한국어 보안 교육 코치다. 교육 페이지 주제에 대해 간결하고 실무적으로 답한다. 실제 침해에 사용될 수 있는 작동하는 공격 코드나 페이로드는 제공하지 않고, 개념 이해와 방어·탐지 중심으로 설명한다. 마크다운 굵게(**)와 코드(`)는 간단히만 사용한다. 주제: '+AI_CTX.code+' '+AI_CTX.title+' ('+AI_CTX.cat+')',
+        messages:[{role:'user',content:question}]
+      })
+    });
+    if(r.status===401) throw new Error('API 키가 올바르지 않습니다(401). sk-ant- 로 시작하는 전체 키인지 확인하세요.');
+    if(r.status===429) throw new Error('요청 한도 초과(429). 잠시 후 재시도하거나 Anthropic 콘솔에서 사용량을 확인하세요.');
+    if(!r.ok){ const t=await r.text(); throw new Error('API 오류('+r.status+'): '+t.slice(0,180)); }
+    const data=await r.json();
+    const text=(data.content||[]).map(function(c){return c.text||''}).join('').trim()||'(빈 응답)';
+    ans.innerHTML='<span class="ai-live-tag">🤖 Claude (실제 응답)</span>';
+    const body=document.createElement('div'); body.className='ai-text'; ans.appendChild(body);
+    _mdLite(body,text);
+  }catch(e){
+    ans.innerHTML='<div class="ai-err">⚠ '+_escH(e.message)+'<br><small>키를 삭제하면 데모 AI로 계속 실습할 수 있습니다.</small></div>';
+  }
+}
+initAI();'''
+
+
+def _strip_tags(t):
+    return re.sub(r'<[^>]+>', '', t)
+
+
+def ai_lab_block(s):
+    """스펙 기반 데모 답변 3종 + 컨텍스트를 JS로 생성, (html, js) 반환."""
+    att_steps = ' → '.join(_strip_tags(t) for c, t in s['attack_vuln'][1:4])
+    m_attack = ('[데모 AI · 사전 정의 답변]\n\n⚔️ %s — 공격 3단계 요약\n\n1. 진입: %s\n2. 실행: %s\n3. 결과: %s — %s\n\n※ 더 깊은 답변은 Claude API 키를 저장해 실제 LLM에게 물어보세요.'
+                % (s['title'], _strip_tags(s['attack_label']), att_steps,
+                   s['outcome_vuln']['title'], s['outcome_vuln']['desc']))
+    fixes = '\n'.join('%d. %s' % (i + 1, _strip_tags(f)) for i, f in enumerate(s['fix_steps']))
+    m_defense = '[데모 AI · 사전 정의 답변]\n\n🛡️ %s — 방어 조치 (우선순위순)\n\n%s\n\n점검 기준: %s' % (
+        s['title'], fixes, _strip_tags(s['kisa_ref']))
+    chks = '\n'.join('- [ ] %s' % _strip_tags(c) for c in s['checklist'])
+    m_detect = '[데모 AI · 사전 정의 답변]\n\n🔍 %s — 점검·탐지 체크리스트\n\n%s\n\n로그 시그니처·SIEM 룰 등 심화 탐지 질문은 키를 저장해 실제 Claude에게 해보세요.' % (
+        s['title'], chks)
+    html_part = AI_LAB_HTML % esc(s['code'])
+    js_part = 'const AI_CTX={code:%s,title:%s,cat:%s};\nconst AI_MOCK={attack:%s,defense:%s,detect:%s};\n%s' % (
+        jss(s['code']), jss(esc(s['title'])), jss(esc(s['category'])),
+        jss(m_attack), jss(m_defense), jss(m_detect), AI_LAB_JS)
+    return html_part, js_part
+
+
 def render(s):
     fix = ''.join('<li>%s</li>' % f for f in s['fix_steps'])
     chk = ''.join('<li><span class="box"></span><span>%s</span></li>' % esc(c) for c in s['checklist'])
+    ai_html, ai_js = ai_lab_block(s) if s.get('ai_lab') else ('', '')
     return PAGE.format(
         code=esc(s['code']), title=esc(s['title']), icon=s['icon'], category=esc(s['category']),
         severity=s['severity'], easy=s['easy'],
@@ -224,6 +375,8 @@ def render(s):
         outcome_vuln_js=js_outcome(s['outcome_vuln']), outcome_secure_js=js_outcome(s['outcome_secure']),
         vuln_term=term_html(s['vuln_term']), secure_term=term_html(s['secure_term']),
         fix_steps=fix, checklist=chk, kisa_ref=esc(s['kisa_ref']),
+        footer_note=esc(s.get('footer_note', '주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성')),
+        ai_lab_html=ai_html, ai_lab_js=ai_js,
     )
 
 

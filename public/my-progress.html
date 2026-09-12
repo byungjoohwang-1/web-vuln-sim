@@ -18,7 +18,7 @@
   --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#1e293b;
   --ink:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
   --bad:#ef4444; --good:#22c55e; --warn:#f59e0b;
-  --gA:#34d399; --gB:#60a5fa; --gC:#fbbf24; --gD:#22d3ee;
+  --gA:#34d399; --gB:#60a5fa; --gC:#fbbf24; --gD:#22d3ee; --gE:#fb7185;
   --mono:'JetBrains Mono','Consolas',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -122,7 +122,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
   <h2 class="sec" data-en="Skill radar (adaptive assessment)">스킬 레이더 (적응형 평가)</h2>
   <div id="skillBox"></div>
 
-  <div class="note" id="loginNote" data-en="Progress is saved on this device. Sign in with Google to sync across devices.">진도는 이 기기에 저장됩니다. Google 로그인 시 기기 간 동기화됩니다. <a href="login.html" style="color:#7dd3fc">로그인 →</a></div>
+  <div class="note" id="loginNote" data-en="Progress is saved on this device. Sign in with Google to sync across devices.">진도는 이 기기에 저장됩니다. Google 로그인 시 기기 간 동기화됩니다.</div>
 
   <div class="disc" data-en="Mastery is computed from your local progress across 360+ learning pages. Educational use only.">사이트 전 학습 페이지(360+) 진도를 바탕으로 계산됩니다 · 교육용.</div>
 </div>
@@ -145,7 +145,7 @@ function applyLang(){
 function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
 
 var CATALOG=null;
-function groupColor(g){return {A:'var(--gA)',B:'var(--gB)',C:'var(--gC)',D:'var(--gD)'}[g]||'var(--accent)';}
+function groupColor(g){return {A:'var(--gA)',B:'var(--gB)',C:'var(--gC)',D:'var(--gD)',E:'var(--gE)'}[g]||'var(--accent)';}
 function prog(){try{return (window.WVSProgress?window.WVSProgress.get():JSON.parse(localStorage.getItem('wvs_progress')||'{}'))||{};}catch(e){return {};}}
 function summ(){try{return window.WVSProgress?window.WVSProgress.summary():{visited:0,completed:0,xp:0,level:1,streak:0};}catch(e){return {visited:0,completed:0,xp:0,level:1,streak:0};}}
 
@@ -276,5 +276,6 @@ function boot(){
 document.addEventListener('DOMContentLoaded', boot);
 </script>
 <script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
 </body>
 </html>
