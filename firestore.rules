@@ -40,6 +40,12 @@ service cloud.firestore {
     match /certAttempts/{docId} {
       allow read, write: if false;
     }
+    // 응시 세션: 배부된 문항 ID와 채점 결과가 들어 있으므로 클라이언트는 읽지도 쓰지도 못한다.
+    // (읽히면 문항 목록이 새고, 쓰이면 status 를 open 으로 되돌려 재응시할 수 있다.)
+    // Admin SDK 는 규칙을 우회하므로 서버만 접근한다.
+    match /certSessions/{sessionId} {
+      allow read, write: if false;
+    }
     // PvP 퀴즈 대전 방: 로그인자만 단건 조회(방 코드로 참가), 목록 열람 차단.
     // 방장은 본인 uid로 생성, 방장 또는 (본인을 guest로 설정하는)참가자만 갱신.
     // 각 플레이어는 players/{uid} 하위 문서에 본인 점수만 기록(상대 점수 위조 불가).

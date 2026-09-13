@@ -75,6 +75,12 @@ const denied = (r) => r.status === 403 || r.status === 401;
   r = await req('GET', `certAttempts/${UID}_2026-09-12`, { uid: UID });
   check('certAttempts 읽기 거부', denied(r), `status=${r.status}`);
 
+  // 4-b) [G01] 응시 세션 — 읽으면 문항이 새고, 쓰면 status 를 되돌려 재응시할 수 있다
+  r = await req('GET', 'certSessions/abc123', { uid: UID });
+  check('certSessions 읽기 거부(문항 유출 차단)', denied(r), `status=${r.status}`);
+  r = await req('PATCH', 'certSessions/abc123', { uid: UID, fields: { status: S('open') } });
+  check('certSessions 쓰기 거부(세션 재개봉 차단)', denied(r), `status=${r.status}`);
+
   // 5) 자가 기록(selfCerts)은 본인 uid + kind:'self' 로만 생성 가능
   r = await req('PATCH', 'selfCerts/SELF-001', {
     uid: UID, fields: { uid: S(UID), kind: S('self'), name: S('학습자'), certId: S('SELF-001'), score: I(80) },
