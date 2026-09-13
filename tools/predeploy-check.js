@@ -10,11 +10,18 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const TOOLS = ['stamp-build.js', 'enrich-hub-keywords.js'];
+const PY = ['gen_content_catalog.py'];   // 파이썬 생성기 드리프트 검사
 let failed = 0;
 
 for (const t of TOOLS) {
   const p = path.join(__dirname, t);
   const r = spawnSync(process.execPath, [p, '--check'], { stdio: 'inherit' });
+  if (r.status !== 0) failed++;
+}
+
+for (const t of PY) {
+  const p2 = path.join(__dirname, '..', '_gen', t);
+  const r = spawnSync('python', [p2, '--check'], { stdio: 'inherit' });
   if (r.status !== 0) failed++;
 }
 

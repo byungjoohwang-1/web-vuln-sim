@@ -14,11 +14,25 @@
     try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
     catch (e) { return {}; }
   }
+  var SCHEMA = 2;   // 1 = 초기(버전 필드 없음), 2 = v 필드 도입
+
+  /**
+   * [G06] 스키마 어댑터.
+   * 기존 기록을 지우지 않는다. 모양이 달라졌으면 채워 넣기만 하고, 모르는 필드는 남긴다.
+   * 손상된 값(문자열 xp, 배열 아닌 items 등)만 안전한 기본값으로 바꾼다.
+   */
   function normalize(o) {
-    if (!o || typeof o !== 'object') o = {};
-    if (!o.items || typeof o.items !== 'object') o.items = {};
-    if (typeof o.xp !== 'number') o.xp = 0;
+    if (!o || typeof o !== 'object' || Array.isArray(o)) o = {};
+    if (!o.items || typeof o.items !== 'object' || Array.isArray(o.items)) o.items = {};
+    if (typeof o.xp !== 'number' || !isFinite(o.xp) || o.xp < 0) o.xp = Number(o.xp) > 0 ? Number(o.xp) : 0;
     if (!Array.isArray(o.days)) o.days = [];
+    /* 항목별 값이 옛 형태(숫자 하나)로 남아 있어도 버리지 않고 감싼다. */
+    for (var k in o.items) {
+      var it = o.items[k];
+      if (typeof it === 'number') o.items[k] = { v: it };
+      else if (!it || typeof it !== 'object') o.items[k] = {};
+    }
+    if (o.v !== SCHEMA) o.v = SCHEMA;
     return o;
   }
   function today() {
@@ -109,7 +123,40 @@
       id = id || pageId();
       if (this.isComplete(id)) { this.uncomplete(id); return false; }
       this.complete(undefined, id); return true;
-    }
+    },
+    /* [G06] 내보내기 — 기기 변경·초기화 전에 사용자가 직접 백업할 수 있어야 한다. */
+    exportJson: function () {
+      return JSON.stringify({ kind: 'wvs-progress-export', v: SCHEMA, exportedAt: new Date().toISOString(), data: this.get() });
+    },
+    /**
+     * 복구. 기본은 병합(merge)이라 기존 기록을 덮어써 잃지 않는다.
+     * 같은 항목은 "더 진행된 쪽"을 남긴다(완료 > 방문, 더 늦은 시각).
+     * @returns {{ok:boolean, merged:number, error?:string}}
+     */
+    importJson: function (text, replace) {
+      var parsed;
+      try { parsed = JSON.parse(text); } catch (e) { return { ok: false, merged: 0, error: 'JSON 형식이 아닙니다.' }; }
+      var incoming = normalize(parsed && parsed.data ? parsed.data : parsed);
+      if (replace) { save(incoming); return { ok: true, merged: Object.keys(incoming.items).length }; }
+      var cur = this.get(), n = 0;
+      for (var id in incoming.items) {
+        var a = cur.items[id], b = incoming.items[id];
+        if (!a) { cur.items[id] = b; n++; continue; }
+        if (b.c && !a.c) { a.c = b.c; n++; }
+        if (b.v && (!a.v || b.v < a.v)) { a.v = b.v; }      /* 처음 본 시각은 이른 쪽 */
+        if (typeof b.s === 'number' && (typeof a.s !== 'number' || b.s > a.s)) a.s = b.s;
+        if (b.x) a.x = 1;
+      }
+      /* XP 는 합산하지 않는다(중복 지급 방지). 완료 수 기준으로 다시 계산한다. */
+      var done = 0;
+      for (var k2 in cur.items) if (cur.items[k2].x) done++;
+      cur.xp = done * XP_PER;
+      incoming.days.forEach(function (d) { if (cur.days.indexOf(d) < 0) cur.days.push(d); });
+      cur.days.sort();
+      save(cur);
+      return { ok: true, merged: n };
+    },
+    schemaVersion: SCHEMA
   };
   function emit(name, detail) {
     try { window.dispatchEvent(new CustomEvent(name, { detail: detail })); } catch (e) {}
