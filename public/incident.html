@@ -304,7 +304,9 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
     show(res);
     if (!record) return;
     var st = load();
-    st[s.id] = { answer: answer(), passed: res.passed, at: Date.now() };
+    /* [G09] 실패한 검사 ID 를 함께 남긴다 — 오개념 복습 엔진이 "무엇을 보고 그렇게 판단했는지"의
+       근거로 쓴다. 이게 없으면 복습 제안이 추측이 된다. */
+    st[s.id] = { answer: answer(), passed: res.passed, failedTests: res.failedTests, at: Date.now() };
     save(st);
     renderSteps();
     /* 4단계까지 모두 통과하면 통합 진도에 완료로 기록 */

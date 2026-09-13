@@ -70,6 +70,18 @@ h2.sec{font-size:15px;color:#7dd3fc;font-family:var(--mono);margin:26px 4px 4px}
 .empty{color:var(--muted);font-size:13px;padding:8px 2px}
 .disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
 body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+
+.mis{background:#111a2e;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.mis .lab{font-weight:800;font-size:.92rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mis .conf{font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:99px;border:1px solid}
+.mis .conf.observed{color:#fca5a5;border-color:#7f1d1d;background:rgba(239,68,68,.08)}
+.mis .conf.single{color:#fcd34d;border-color:#78350f;background:rgba(251,191,36,.08)}
+.mis .why{color:#cbd5e1;font-size:.82rem;margin-top:6px;line-height:1.65}
+.mis .evd{color:#8fa0ba;font-size:.72rem;margin-top:8px;border-left:2px solid #26334d;padding-left:9px}
+.mis .sug{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mis .sug a{font-size:.76rem;padding:7px 12px;border-radius:8px;border:1px solid #26334d;
+ color:#dbe4f0;text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.mis .sug a:hover{border-color:#38bdf8;color:#7dd3fc}
 </style>
 </head>
 <body>
@@ -113,6 +125,15 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <div class="go" data-en="Start">시작하기</div>
   </div></a>
 
+  <!-- [G09] 오개념 복습 — 기록된 실패만 근거로 삼고, 근거를 함께 보여준다 -->
+  <section id="misSec" style="display:none">
+    <h2 class="sec" data-en="Review: repeated mistakes">반복된 실수 복습</h2>
+    <p style="color:#8fa0ba;font-size:.8rem;margin:-6px 0 10px"
+       data-en="Based only on recorded failures. Each item shows what it was inferred from.">
+      실제로 기록된 실패만 근거로 합니다. 항목마다 무엇을 보고 판단했는지 함께 표시합니다.</p>
+    <div id="misList"></div>
+  </section>
+
   <h2 class="sec" data-en="Mastery by category">카테고리별 마스터리</h2>
   <div class="grid" id="cats"></div>
 
@@ -129,6 +150,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
 
 <script src="/js/progress.js" defer></script>
 <script src="/js/skill-radar.js"></script>
+<script src="/js/misconception.js"></script>
 <script>
 function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
 function L(ko,en){return isEn()?en:ko;}
@@ -141,6 +163,7 @@ function applyLang(){
   });
   document.body.classList.toggle('lang-en', en);
   if(window.renderDynamic){try{window.renderDynamic();}catch(e){}}
+  try{renderMisconceptions();}catch(e){}
 }
 function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
 
@@ -264,6 +287,38 @@ function renderSkillCard(){
   }
 }
 window.renderDynamic=renderDynamic;
+
+/* [G09] 오개념 복습 렌더 — 근거가 있는 것만 보여준다. 없으면 섹션 자체를 숨긴다. */
+function renderMisconceptions(){
+  if(!window.WVS_REVIEW || !CATALOG) return;
+  var mis = WVS_REVIEW.collect();
+  var sec = document.getElementById('misSec');
+  if(!mis.length){ sec.style.display='none'; return; }
+  var P = prog().items||{};
+  var done = {};
+  Object.keys(P).forEach(function(k){ if(P[k] && P[k].c) done[k]=1; });
+  var esc=function(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  sec.style.display='block';
+  /* 이 페이지가 들고 있는 것은 '진도 카탈로그'라 필드 이름이 다르다(cwe 문자열 vs skills 배열).
+     복습 엔진이 기대하는 모양으로 바꿔 넘긴다. 별도 fetch 를 늘리지 않기 위함. */
+  var pool = CATALOG.items.map(function(x){
+    return { page:x.id, title:x.title, category:x.cat||'',
+             skills: x.cwe?[x.cwe]:[], keywords: [] };
+  });
+  document.getElementById('misList').innerHTML = mis.slice(0,5).map(function(m){
+    var sug = WVS_REVIEW.suggest(pool, m, {exclude:done, limit:3});
+    return '<div class="mis">'+
+      '<div class="lab">'+esc(m.label)+
+        '<span class="conf '+m.confidence+'">'+(m.confidence==='observed'?'반복 확인됨':'1회 — 참고')+'</span></div>'+
+      '<div class="why">'+esc(m.why)+'</div>'+
+      '<div class="evd">근거: '+m.evidence.slice(0,3).map(esc).join(' · ')+'</div>'+
+      (sug.length?'<div class="sug">'+sug.map(function(x){
+        return '<a href="'+esc(x.page)+'">'+esc(x.title||x.page)+'</a>';}).join('')+'</div>'
+       :'<div class="evd">아직 다른 맥락의 복습 항목을 찾지 못했습니다.</div>')+
+      '</div>';
+  }).join('');
+}
 
 function boot(){
   fetch('js/progress-catalog.json').then(function(r){return r.json();}).then(function(d){
