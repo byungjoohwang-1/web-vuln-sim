@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 법·제도 업데이트 &amp; 공식 포털 — 2026.9.11 시행 개정법 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 법·제도 업데이트 &amp; 공식 포털 · WEB-VULN-SIM">
+<meta property="og:description" content="2026.9.11 시행 개정 개인정보 보호법 변경점과 개인정보 관련 공식 포털·서비스 디렉터리">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-updates.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="2026년 9월 11일 시행된 개정 「개인정보 보호법」의 변경점 — 유출등 범위 확대(위조·변조·훼손), 유출 가능성 통지제, 통지 시 피해구제 방법 안내, 징벌적 과징금(매출액 10%), CPO 책임 강화, ISMS-P 인증 의무화(2027.7.1) — 과 개인정보 관련 공식 포털·서비스 디렉터리(개인정보 포털, 개인정보보호위원회, 국가법령정보센터, 털린 내 정보 찾기, e프라이버시 클린서비스, 침해신고센터, 분쟁조정위원회).">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 90px}
+/* hero */
+.hero{background:linear-gradient(135deg,#3b1418 0%,#4c1d24 50%,#0f172a 100%);border:1px solid #7f1d1d;border-radius:18px;padding:24px 26px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.hero .kick{font-family:var(--mono);font-size:11.5px;letter-spacing:1.4px;color:#fecaca;font-weight:800}
+.hero h1{font-size:26px;color:#fff;margin-top:8px;line-height:1.3}
+.hero p{color:#e2e8f0;font-size:14px;margin-top:10px;max-width:820px}
+.hero .when{display:inline-block;margin-top:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:6px 14px;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#fff}
+.sec-h{display:flex;align-items:baseline;gap:10px;margin:26px 0 10px;flex-wrap:wrap}
+.sec-h h2{font-size:19px;color:#fff}
+.sec-h .tag{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+/* 변경점 */
+.chg{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:14px;padding:16px 18px;margin:11px 0}
+.chg h3{font-size:15.5px;color:#fff;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.chg h3 .n{font-family:var(--mono);font-size:11px;font-weight:800;color:#fde047;background:#3a2a09;border-radius:5px;padding:2px 8px;flex-shrink:0}
+.chg h3 .when{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0}
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.ba>div{border-radius:10px;padding:10px 12px;font-size:13px}
+.ba .b4{background:#1a1020;border:1px solid #334155;color:#94a3b8}
+.ba .af{background:#0f2a18;border:1px solid #14532d;color:#d1fae5}
+.ba b{display:block;font-family:var(--mono);font-size:10.5px;margin-bottom:4px}
+.ba .b4 b{color:#64748b}.ba .af b{color:#86efac}
+.chg .impact{margin-top:10px;font-size:12.5px;color:#cbd5e1;background:#0b1220;border-radius:8px;padding:9px 11px}
+.chg .impact b{color:#7dd3fc;font-family:var(--mono);font-size:11.5px}
+.chg .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chg .links a{font-family:var(--mono);font-size:11.5px;background:#0c2a3a;color:#7dd3fc;border-radius:6px;padding:4px 9px}
+.chg .links a:hover{background:#0e3a50}
+.art{font-family:var(--mono);font-size:11.5px;background:#0b1220;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:#a5b4fc;display:inline-block;margin-top:7px}
+/* 반영 현황 */
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);border-radius:12px;overflow:hidden}
+th,td{border:1px solid var(--border);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:#0f172a;color:#7dd3fc;white-space:nowrap}
+.st{font-family:var(--mono);font-size:11px;font-weight:800;border-radius:5px;padding:2px 8px;white-space:nowrap}
+.st.done{background:#0f2a18;color:#86efac}
+.st.todo{background:#3a2a09;color:#fde047}
+.st.na{background:#1e293b;color:#cbd5e1}
+/* 포털 */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px 17px}
+.pcard h3{font-size:14.5px;color:#a5b4fc;display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.plink{display:block;background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:10px 12px;margin:7px 0;transition:.15s}
+.plink:hover{background:#18233c;border-left-color:#818cf8}
+.plink .t{font-size:13.5px;font-weight:700;color:#fff}
+.plink .u{font-family:var(--mono);font-size:11px;color:#7dd3fc;word-break:break-all}
+.plink .d{font-size:12px;color:var(--muted);margin-top:3px}
+.tel{font-family:var(--mono);font-size:12px;color:#fde047}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+@media(max-width:640px){.ba{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="privacy-breach-drill.html"><span data-en="Breach Drill">유출 대응 훈련</span></a>
+  <a href="pia-assessment.html"><span data-en="PIA Self-Check">영향평가 자가진단</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kick">LAW UPDATE · 개정 개인정보 보호법</div>
+    <h1 data-en="The amended Act took effect on 11 Sep 2026 — here is what changed">개정 「개인정보 보호법」이 <b>2026년 9월 11일</b> 시행됐습니다</h1>
+    <p data-en="The guides this site’s content is built on were published before the amendment. This page lists what changed, which of our pages it affects, and where the official sources are — so you can tell current rules from the ones the guides describe.">
+      이 사이트의 학습 콘텐츠가 근거로 삼은 안내서들은 <b>개정 이전</b>에 발간됐습니다. 무엇이 바뀌었는지, 이 사이트의 어느 페이지가 영향을 받는지, 1차 출처는 어디인지를 정리했습니다 — 안내서가 설명하는 규정과 현행 규정을 구분해서 보세요.</p>
+    <span class="when">법률 제21445호 · 2026.3.10. 공포 · 2026.9.11. 시행 (ISMS-P 인증 의무화는 2027.7.1.)</span>
+  </div>
+
+  <!-- 변경점 -->
+  <div class="sec-h"><h2 data-en="What changed">주요 변경점</h2><span class="tag">/ 6 changes</span></div>
+
+  <div class="chg">
+    <h3><span class="n">01</span><span data-en="“Breach” now includes forgery, alteration and damage">‘유출등’ 범위에 <b>위조·변조·훼손</b> 포함</span><span class="when">2026.9.11</span></h3>
+    <div class="ba">
+      <div class="b4"><b data-en="BEFORE">개정 전</b><span data-en="Only loss, theft and leakage triggered the duty. Ransomware that merely corrupted files did not.">분실·도난·유출된 경우에만 통지·신고 의무. 랜섬웨어로 파일이 훼손되기만 한 경우는 대상이 아니었습니다.</span></div>
+      <div class="af"><b data-en="AFTER">개정 후</b><span data-en="Forgery, alteration and damage are inside the scope — a ransomware incident with no exfiltration can still be notifiable.">위조·변조·훼손도 ‘유출등 사고’에 포함 — <b>외부로 빠져나간 정황이 없어도</b> 파일이 훼손되면 통지·신고 대상이 될 수 있습니다.</span></div>
+    </div>
+    <div class="impact"><b>이 사이트 영향</b> — 유출 대응 훈련에 랜섬웨어 훼손 시나리오를 추가하고, 판정 로직에 위조·변조·훼손을 반영했습니다.</div>
+    <div class="links"><a href="privacy-breach-drill.html">🚨 유출 72시간 대응 훈련</a><a href="15_privacy-pv25.html">PV-25 유출 통지·신고</a></div>
+    <span class="art">법 제34조</span>
+  </div>
+
+  <div class="chg">
+    <h3><span class="n">02</span><span data-en="Notification duty now starts at “possibility of a breach”">‘유출 <b>가능성</b>’ 단계부터 통지 의무</span><span class="when">2026.9.11</span></h3>
+    <div class="ba">
+      <div class="b4"><b data-en="BEFORE">개정 전</b><span data-en="The duty was triggered only once you knew a breach had occurred, so notice was often delayed while the facts were being confirmed.">‘유출등이 되었음을 알았을 때’ 통지 — 사실관계를 확인하는 동안 통지가 늦어지는 문제가 있었습니다.</span></div>
+      <div class="af"><b data-en="AFTER">개정 후</b><span data-en="Knowing there is a <i>possibility</i> of a breach (as specified by Presidential Decree) also triggers a duty to notify without delay.">대통령령으로 정하는 <b>유출 가능성이 있음을 알게 된 때</b>에도 지체 없이 통지하도록 의무화됐습니다.</span></div>
+    </div>
+    <div class="impact"><b>실무 의미</b> — “원인을 다 밝힌 뒤 알리자”는 판단이 더 위험해졌습니다. 훈련에서 가장 흔한 오답이 바로 이 선택지입니다.</div>
+    <div class="links"><a href="privacy-breach-drill.html">🚨 훈련에서 직접 확인</a></div>
+    <span class="art">법 제34조 · 세부 기준은 시행령 위임</span>
+  </div>
+
+  <div class="chg">
+    <h3><span class="n">03</span><span data-en="Notice must also explain how to seek redress">통지 시 <b>피해구제 방법</b>도 함께 안내</span><span class="when">2026.9.11</span></h3>
+    <div class="ba">
+      <div class="b4"><b data-en="BEFORE">개정 전</b><span data-en="Five mandatory elements: items, when &amp; how, what the subject can do, the controller’s response, and the contact desk.">법정 5개 항목 — 유출 항목 / 시점·경위 / 정보주체가 할 수 있는 방법 / 대응조치·피해 구제절차 / 접수 담당부서·연락처</span></div>
+      <div class="af"><b data-en="AFTER">개정 후</b><span data-en="The notice must additionally tell data subjects how to claim damages and apply for dispute mediation.">위에 더해 <b>손해배상 청구·분쟁조정 신청 등 피해구제 방법</b>을 함께 알려야 합니다.</span></div>
+    </div>
+    <div class="impact"><b>이 사이트 영향</b> — 훈련의 통지문 작성 단계에 이 항목을 추가했습니다(선택하지 않으면 누락으로 채점).</div>
+    <div class="links"><a href="privacy-breach-drill.html">🚨 통지문 작성 단계</a><a href="privacy-policy-builder.html">📄 처리방침 점검</a></div>
+    <span class="art">법 제34조제1항</span>
+  </div>
+
+  <div class="chg">
+    <h3><span class="n">04</span><span data-en="Punitive administrative fines — up to 10% of total revenue">징벌적 과징금 — <b>전체 매출액의 10%</b> 이내</span><span class="when">2026.9.11</span></h3>
+    <div class="ba">
+      <div class="b4"><b data-en="BEFORE">개정 전</b><span data-en="Fines were calculated on revenue related to the violation.">위반행위와 관련된 매출액 기준으로 산정했습니다.</span></div>
+      <div class="af"><b data-en="AFTER">개정 후</b><span data-en="Wilful or grossly negligent repeat violations within 3 years, or incidents affecting 10 million+ people, can draw up to 10% of <i>total</i> revenue. Investment in privacy budget, staff and equipment is a mitigating factor.">고의·중대한 과실로 <b>3년 이내 반복 위반</b>하거나 <b>1천만명 이상</b> 대규모 피해가 발생한 경우 등에 전체 매출액의 10% 이내로 부과할 수 있습니다. 예산·인력·설비 투자는 <b>감경 사유</b>입니다.</span></div>
+    </div>
+    <div class="impact"><b>실무 의미</b> — 보안 투자가 제재 산정에서 직접 감경 요소로 작동합니다. “투자 대비 효과를 설명하기 어렵다”는 반론에 쓸 수 있는 근거입니다.</div>
+    <span class="art">법 제64조의2 등</span>
+  </div>
+
+  <div class="chg">
+    <h3><span class="n">05</span><span data-en="CEO and CPO accountability">대표자·개인정보 보호책임자(CPO) <b>책임 강화</b></span><span class="when">2026.9.11</span></h3>
+    <div class="ba">
+      <div class="b4"><b data-en="BEFORE">개정 전</b><span data-en="A CPO was designated internally with no external procedure.">내부적으로 CPO를 지정하면 됐고 별도의 외부 절차가 없었습니다.</span></div>
+      <div class="af"><b data-en="AFTER">개정 후</b><span data-en="The business owner/representative is named as ultimate accountable party. For controllers above a certain size, designating, changing or removing the CPO requires a board resolution and a filing with the Commission (details in the Enforcement Decree).">사업주·대표자가 <b>최종 책임자</b>로 명시됩니다. 일정 규모 이상 처리자는 CPO <b>지정·변경·해제 시 이사회 의결과 개인정보위 신고</b>가 요구됩니다(세부 기준은 시행령).</span></div>
+    </div>
+    <div class="impact"><b>이 사이트 영향</b> — 영향평가 자가진단 1.1.1·1.1.2(보호책임자 지정·역할)는 안내서(2025.10) 기준입니다. 실제 점검 시 개정된 지정 절차를 함께 확인하세요.</div>
+    <div class="links"><a href="pia-assessment.html">📋 영향평가 1.1 개인정보보호 조직</a></div>
+    <span class="art">법 제31조 · 시행령 위임</span>
+  </div>
+
+  <div class="chg" style="border-left-color:#64748b">
+    <h3><span class="n">06</span><span data-en="ISMS-P certification becomes mandatory">ISMS-P <b>인증 의무화</b></span><span class="when">2027.7.1</span></h3>
+    <div class="ba">
+      <div class="b4"><b data-en="BEFORE">개정 전</b><span data-en="Certification was voluntary for most controllers.">대부분의 처리자에게 자율 사항이었습니다.</span></div>
+      <div class="af"><b data-en="AFTER">개정 후</b><span data-en="Mandatory for controllers above a certain size. Deferred to 1 July 2027 to allow for budget and preparation.">일정 규모 이상 개인정보처리자에게 의무화됩니다. 예산 확보 등을 고려해 <b>2027년 7월 1일</b>로 시행이 유예됐습니다.</span></div>
+    </div>
+    <div class="impact"><b>준비 시점</b> — 아직 시행 전입니다. 대상 여부와 준비 범위를 지금 확인해 두는 것이 좋습니다.</div>
+  </div>
+
+  <!-- 반영 현황 -->
+  <div class="sec-h"><h2 data-en="How this site reflects the amendment">이 사이트 콘텐츠 반영 현황</h2><span class="tag">/ transparency</span></div>
+  <div class="note" data-en="Our simulators and tools are built from the Commission’s published guides, which predate the amendment. Rather than silently rewriting the source material, we mark what has been updated and what still reflects the pre-amendment guide.">
+    시뮬레이터와 도구는 보호위원회가 공개한 안내서를 근거로 만들었고, 그 안내서들은 개정 이전 자료입니다. 출처를 조용히 고쳐 쓰는 대신 <b>무엇을 반영했고 무엇이 아직 개정 전 기준인지</b>를 표시합니다.</div>
+  <table>
+    <tr><th data-en="Content">콘텐츠</th><th data-en="Status">반영</th><th data-en="Detail">내용</th></tr>
+    <tr><td><a href="privacy-breach-drill.html" style="color:#7dd3fc">유출 72시간 대응 훈련</a></td><td><span class="st done">반영됨</span></td><td>위조·변조·훼손 시나리오 추가 · 피해구제 방법 통지 항목 추가 · 유출 가능성 단계 반영</td></tr>
+    <tr><td><a href="15_privacy-pv25.html" style="color:#7dd3fc">PV-25 유출 통지·신고 지연</a></td><td><span class="st done">반영됨</span></td><td>개정 범위·통지 항목 반영</td></tr>
+    <tr><td><a href="pia-assessment.html" style="color:#7dd3fc">영향평가 자가진단 121항목</a></td><td><span class="st na">안내서 기준</span></td><td>평가항목 원문은 수행 안내서(2025.10) 그대로입니다. 개정 반영판 안내서가 나오면 갱신 대상</td></tr>
+    <tr><td><a href="privacy-quiz.html" style="color:#7dd3fc">법령 Q&amp;A 99건</a></td><td><span class="st na">출처 기준</span></td><td>질의응답 모음집(2025.12) 해석 사례. 개정으로 조문 번호가 이동한 항이 있어 현행 조문은 국가법령정보센터 확인 필요</td></tr>
+    <tr><td><a href="privacy-policy-builder.html" style="color:#7dd3fc">처리방침 작성·점검기</a></td><td><span class="st na">기준 유지</span></td><td>기재사항 24개는 작성지침(2026.4) 기준으로 유지</td></tr>
+    <tr><td><a href="privacy-scope-check.html" style="color:#7dd3fc">적용범위 판단기</a></td><td><span class="st na">기준 유지</span></td><td>영향평가 대상 기준(5만·50만·100만)은 변경 없음</td></tr>
+  </table>
+
+  <!-- 공식 포털 -->
+  <div class="sec-h"><h2 data-en="Official portals &amp; services">공식 포털 · 서비스</h2><span class="tag">/ primary sources</span></div>
+  <div class="note" data-en="Always verify against the primary source — the law is amended frequently and educational material lags behind.">
+    법령은 자주 개정되고 교육 자료는 항상 그보다 늦습니다. <b>판단이 필요한 순간에는 반드시 1차 출처를 확인</b>하세요.</div>
+
+  <div class="pgrid">
+    <div class="pcard">
+      <h3>⚖️ <span data-en="Law &amp; guidance">법령 · 안내서</span></h3>
+      <a class="plink" href="https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS217&mCode=D010030000" target="_blank" rel="noopener">
+        <div class="t" data-en="PIPC — Guides">개인정보보호위원회 · 안내서</div><div class="u">pipc.go.kr › 정책·법령 › 법령정보 › 안내서</div>
+        <div class="d" data-en="Primary source for every guide this site is built on.">이 사이트가 근거로 삼은 모든 안내서의 1차 출처</div></a>
+      <a class="plink" href="https://www.law.go.kr/법령/개인정보보호법" target="_blank" rel="noopener">
+        <div class="t" data-en="National Law Information Center">국가법령정보센터 · 개인정보 보호법</div><div class="u">law.go.kr</div>
+        <div class="d" data-en="Current statutory text, effective dates and amendment history.">현행 조문·시행일·개정 이력. 조문 번호 이동 확인은 여기서</div></a>
+      <a class="plink" href="https://www.privacy.go.kr/front/bbs/bbsList.do?bbsNo=BBSMSTR_000000000049" target="_blank" rel="noopener">
+        <div class="t" data-en="Privacy Portal — Guides board">개인정보 포털 · 안내서 게시판</div><div class="u">privacy.go.kr › 자료 › 안내서</div>
+        <div class="d" data-en="Same guides, downloadable.">같은 안내서를 내려받을 수 있는 게시판</div></a>
+    </div>
+
+    <div class="pcard">
+      <h3>🏢 <span data-en="For controllers">사업자 · 처리자 의무</span></h3>
+      <a class="plink" href="https://www.pipc.go.kr/np/default/page.do?mCode=D030040000" target="_blank" rel="noopener">
+        <div class="t" data-en="Breach reporting">개인정보 유출신고 제도</div><div class="u">pipc.go.kr › 유출신고</div>
+        <div class="d" data-en="Requirements and the 72-hour reporting channel.">신고 요건과 72시간 신고 창구</div></a>
+      <a class="plink" href="https://www.privacy.go.kr/" target="_blank" rel="noopener">
+        <div class="t" data-en="Privacy Portal">개인정보 포털</div><div class="u">privacy.go.kr</div>
+        <div class="d" data-en="Impact-assessment submissions, personal-data file registration, education material.">영향평가 제출, 개인정보파일 등록, 교육 자료</div></a>
+      <a class="plink" href="https://dataprivacy.go.kr/" target="_blank" rel="noopener">
+        <div class="t" data-en="Pseudonymized data support platform">가명정보 지원 플랫폼</div><div class="u">dataprivacy.go.kr</div>
+        <div class="d" data-en="Combination applications, expert bodies, forms.">결합 신청·결합전문기관·서식</div></a>
+    </div>
+
+    <div class="pcard">
+      <h3>🙋 <span data-en="For data subjects">정보주체 권리행사</span></h3>
+      <a class="plink" href="https://kidc.eprivacy.go.kr/search/issueVerify.do" target="_blank" rel="noopener">
+        <div class="t" data-en="Find my leaked credentials">털린 내 정보 찾기</div><div class="u">kidc.eprivacy.go.kr</div>
+        <div class="d" data-en="Checks whether your account credentials appear in dark-web dumps. No sign-up; input is one-way hashed and discarded after the check.">다크웹 등에 유통되는 계정정보 유출 확인. 회원가입 없음 · 입력값은 일방향 암호화 후 조회 즉시 파기</div></a>
+      <a class="plink" href="https://www.eprivacy.go.kr/" target="_blank" rel="noopener">
+        <div class="t" data-en="e-Privacy Clean Service">e프라이버시 클린서비스</div><div class="u">eprivacy.go.kr</div>
+        <div class="d" data-en="Integrated view of your identity-verification history (spot identity theft), assisted withdrawal from sites, and access/erasure requests.">본인확인 내역 통합 조회(명의도용 확인) · 회원탈퇴 지원 · 열람·처리정지 요구 대행</div></a>
+      <a class="plink" href="https://www.privacy.go.kr/front/contents/cntntsView.do?contsNo=196" target="_blank" rel="noopener">
+        <div class="t" data-en="Rights-exercise services">정보주체 권리행사 서비스</div><div class="u">privacy.go.kr</div>
+        <div class="d" data-en="Access, correction, erasure and suspension requests in one place.">열람·정정·삭제·처리정지 요구 통합 창구</div></a>
+    </div>
+
+    <div class="pcard">
+      <h3>🚨 <span data-en="Report &amp; remedy">신고 · 구제</span></h3>
+      <a class="plink" href="https://privacy.kisa.or.kr/" target="_blank" rel="noopener">
+        <div class="t" data-en="Privacy Infringement Report Center">개인정보침해 신고센터 <span class="tel">국번없이 118</span></div><div class="u">privacy.kisa.or.kr</div>
+        <div class="d" data-en="Report infringements; operated by KISA as the designated body.">침해사실 신고·상담 (KISA 운영 전문기관)</div></a>
+      <a class="plink" href="https://www.kopico.go.kr/" target="_blank" rel="noopener">
+        <div class="t" data-en="Personal Information Dispute Mediation Committee">개인정보분쟁조정위원회 <span class="tel">1833-6972</span></div><div class="u">kopico.go.kr</div>
+        <div class="d" data-en="Free dispute mediation — now one of the remedies a breach notice must point to.">무료 분쟁조정 — 개정법상 유출 통지에 안내해야 하는 구제 수단</div></a>
+      <a class="plink" href="https://www.pipc.go.kr/np/cop/bbs/selectBoardList.do?bbsId=BS074&mCode=C020010000" target="_blank" rel="noopener">
+        <div class="t" data-en="PIPC press releases">개인정보보호위원회 · 보도자료</div><div class="u">pipc.go.kr › 위원회 소식</div>
+        <div class="d" data-en="Where amendments, new guides and enforcement decisions are announced first.">개정·신규 안내서·제재 결정이 가장 먼저 공개되는 곳</div></a>
+    </div>
+  </div>
+
+  <div class="disc" data-en="Sources: Personal Information Protection Commission (pipc.go.kr), Korea Policy Briefing (korea.kr), National Law Information Center (law.go.kr). Checked 12 Sep 2026. This page is an educational summary — for any actual determination, read the statute and the official guides directly. Details delegated to the Enforcement Decree (e.g. the threshold for “possibility of a breach” and the CPO filing scope) should be confirmed against the current Decree.">
+    ⚠️ 출처: 개인정보보호위원회(pipc.go.kr) · 대한민국 정책브리핑(korea.kr) · 국가법령정보센터(law.go.kr) · 확인일 2026-09-12.
+    이 페이지는 <b>교육용 요약</b>입니다. 실제 판단은 법령 원문과 공식 안내서를 직접 확인하세요.
+    특히 <b>시행령에 위임된 세부 기준</b>(유출 가능성의 범위, CPO 신고 대상 규모 등)은 현행 시행령으로 확인해야 합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+document.addEventListener('DOMContentLoaded',function(){applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-updates.html'); }catch(e){}});
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

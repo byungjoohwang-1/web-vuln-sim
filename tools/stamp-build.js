@@ -83,19 +83,37 @@ function main() {
 
   const pages = fs.readdirSync(PUBLIC).filter((f) => f.endsWith('.html')).length;
 
-  /* 스탬프는 '배포될 내용'의 해시로 만든다.
+  if (missing.length) console.warn('WARN 허브에서 못 찾은 메뉴 id:', missing.join(', '));
+
+  /* ── 1. 허브 title 의 페이지 수 ── */
+  const hubNew = hub.replace(/(<title>[^<]*?)\d+(페이지 학습 허브)/, '$1' + pages + '$2');
+  const hubChanged = hubNew !== hub;
+
+  /* ── 2. 홈의 실습 개수 ── */
+  const home = fs.readFileSync(HOME, 'utf8');
+  const homeNew = home.replace(/\d+개\+ 인터랙티브 공격·방어 실습/g, total + '개+ 인터랙티브 공격·방어 실습');
+  const homeChanged = homeNew !== home;
+
+  /* ── 3. 스탬프 = '배포될 내용'의 해시 ──
      커밋 해시를 쓰면 stamp → commit → 해시 변화 → 다시 drift 가 되어 게이트가 영원히 실패한다.
      내용 해시는 실제로 파일이 바뀔 때만 달라지므로 캐시 무효화 목적에도 정확히 맞는다.
-     자기 자신(sw.js/build-meta.json)은 제외해야 고정점이 생긴다. */
+     한 번에 수렴하려면 (a) 이 도구가 스스로 고쳐 쓰는 hub/home 은 '수정 후' 내용으로 해시하고,
+     (b) 해시 결과를 담는 sw.js·build-meta.json 은 해시 대상에서 뺀다. */
   const SELF = new Set(['sw.js', path.join('js', 'build-meta.json')]);
+  const OVERRIDE = new Map([
+    [path.basename(HUB), hubNew],
+    [path.basename(HOME), homeNew],
+  ]);
   const h = crypto.createHash('sha256');
   const walk = (dir, rel) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)) {
       const r = rel ? path.join(rel, e.name) : e.name;
       if (SELF.has(r)) continue;
       const p = path.join(dir, e.name);
-      if (e.isDirectory()) walk(p, r);
-      else { h.update(r); h.update(fs.readFileSync(p)); }
+      if (e.isDirectory()) { walk(p, r); continue; }
+      h.update(r);
+      const ov = OVERRIDE.get(r);
+      h.update(ov !== undefined ? Buffer.from(ov, 'utf8') : fs.readFileSync(p));
     }
   };
   walk(PUBLIC, '');
@@ -111,21 +129,9 @@ function main() {
     note: '이 파일은 tools/stamp-build.js 가 생성한다. 직접 수정하지 말 것.',
   };
 
-  if (missing.length) console.warn('WARN 허브에서 못 찾은 메뉴 id:', missing.join(', '));
-
-  /* ── 1. sw.js VERSION ── */
   const sw = fs.readFileSync(SW, 'utf8');
   const swNew = sw.replace(/var VERSION = '[^']*';/, "var VERSION = '" + stamp + "';");
   const swChanged = swNew !== sw;
-
-  /* ── 2. 허브 title 의 페이지 수 ── */
-  const hubNew = hub.replace(/(<title>[^<]*?)\d+(페이지 학습 허브)/, '$1' + pages + '$2');
-  const hubChanged = hubNew !== hub;
-
-  /* ── 3. 홈의 실습 개수 ── */
-  const home = fs.readFileSync(HOME, 'utf8');
-  const homeNew = home.replace(/\d+개\+ 인터랙티브 공격·방어 실습/g, total + '개+ 인터랙티브 공격·방어 실습');
-  const homeChanged = homeNew !== home;
 
   if (CHECK) {
     const drift = [];

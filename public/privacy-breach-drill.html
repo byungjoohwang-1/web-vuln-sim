@@ -12,7 +12,7 @@
 <meta property="og:url" content="https://vuln-sim.web.app/privacy-breach-drill.html">
 <meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
 <meta name="twitter:card" content="summary">
-<meta name="description" content="「개인정보 보호법」 제34조 기반 유출 대응 훈련 — 인지 시점부터 72시간 카운트다운 아래에서 초기 대응, 신고 의무 판정(1천명·민감정보·외부 불법접근), 법정 5개 통지 항목, 통지 방법을 결정하고 결과를 채점합니다. 3개 시나리오·모의훈련 리포트. 100% 브라우저.">
+<meta name="description" content="「개인정보 보호법」 제34조 기반 유출 대응 훈련 — 인지 시점부터 72시간 카운트다운 아래에서 초기 대응, 신고 의무 판정(1천명·민감정보·외부 불법접근), 법정 6개 통지 항목(2026 개정 반영), 통지 방법을 결정하고 결과를 채점합니다. 4개 시나리오·모의훈련 리포트. 100% 브라우저.">
 <style>
 :root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -101,6 +101,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
 <div class="topbar">
   <a href="index.html">🏠 <span data-en="Home">홈</span></a>
   <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="privacy-updates.html"><span data-en="Law updates">법·제도 업데이트</span></a>
   <a href="15_privacy-pv25.html"><span data-en="Breach notification sim">유출 통지 시뮬</span></a>
   <a href="pia-assessment.html"><span data-en="PIA Self-Check">영향평가 자가진단</span></a>
   <span class="sp"></span>
@@ -111,7 +112,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <h1>🚨 <span data-en="Breach Response Drill — 72 hours">개인정보 유출 72시간 대응 훈련</span></h1>
     <div class="sub" data-en="The clock starts the moment you become aware of a breach. Every decision costs hours. Decide what to contain first, whether this one is reportable, what must go in the notice, and how to deliver it — then see whether you made the 72-hour deadline and what you left out.">
       유출을 <b>인지한 순간</b>부터 시계가 돕니다. 모든 결정에는 시간이 듭니다. 무엇부터 차단할지, 이 사건이 <b>신고 대상</b>인지, 통지문에 무엇을 반드시 넣어야 하는지, 어떻게 전달할지를 결정한 뒤 — 72시간을 지켰는지, 무엇을 빠뜨렸는지 확인합니다.</div>
-    <div class="src">📕 기준: 「개인정보 보호법」 제34조(유출 등의 통지·신고) · 개인정보 영향평가 수행 안내서 1.3.2 — 교육용 재구성</div>
+    <div class="src">📕 기준: 「개인정보 보호법」 제34조(유출 등의 통지·신고) <b>2026.9.11. 시행 개정 반영</b> · 개인정보 영향평가 수행 안내서 1.3.2 — 교육용 재구성</div>
   </div>
 
   <div id="view"></div>
@@ -154,16 +155,26 @@ var SCEN=[
   n:800, items:'이름, 연락처, 상담 내용',
   itemsEn:'name, contact, consultation notes',
   sensitive:false, unique:false, external:false, contactable:false,
-  tags:['800명','고유식별·민감 없음','연락처 일부 불명']}
+  tags:['800명','고유식별·민감 없음','연락처 일부 불명']},
+ /* 2026.9.11 개정 반영: 위조·변조·훼손도 '유출등'에 포함된다(랜섬웨어). */
+ {id:'ransom', ic:'🔒', name:'랜섬웨어로 개인정보 파일 훼손', nameEn:'Ransomware damaged the personal-data files',
+  desc:'랜섬웨어가 주문 DB를 암호화했습니다. 외부로 데이터가 빠져나간 정황은 확인되지 않았고, 백업으로 복구는 가능합니다.',
+  descEn:'Ransomware encrypted the order DB. No evidence of exfiltration; backups can restore it.',
+  n:15000, items:'이름, 연락처, 주문내역 (암호화되어 접근 불가)',
+  itemsEn:'name, contact, order history (encrypted, inaccessible)',
+  sensitive:false, unique:false, external:true, damaged:true, contactable:true,
+  tags:['1.5만 명','훼손(유출 정황 없음)','2026 개정 반영']}
 ];
 
+/* 신고 요건: 1천명 이상 | 민감·고유식별정보 | 외부로부터의 불법적인 접근
+   (2026.9.11 개정으로 '유출등'의 범위에 위조·변조·훼손이 포함됨) */
 function mustReport(s){ return s.n>=1000 || s.sensitive || s.unique || s.external; }
 function reportReasons(s){
   var r=[];
-  if(s.n>=1000) r.push(L('1천 명 이상의 개인정보가 유출됨','1,000+ data subjects affected'));
-  if(s.sensitive) r.push(L('민감정보가 유출됨','sensitive data involved'));
-  if(s.unique) r.push(L('고유식별정보가 유출됨','unique identifying information involved'));
-  if(s.external) r.push(L('외부로부터의 불법적인 접근에 의해 유출됨','breach caused by unlawful external access'));
+  if(s.n>=1000) r.push(L('1천 명 이상의 개인정보가 유출등이 됨','1,000+ data subjects affected'));
+  if(s.sensitive) r.push(L('민감정보가 유출등이 됨','sensitive data involved'));
+  if(s.unique) r.push(L('고유식별정보가 유출등이 됨','unique identifying information involved'));
+  if(s.external) r.push(L('외부로부터의 불법적인 접근에 의해 유출등이 됨','breach caused by unlawful external access'));
   return r;
 }
 
@@ -173,7 +184,7 @@ function steps(s){
   return [
   {id:'contain',
    q:L('유출 정황을 확인했습니다. <b>가장 먼저</b> 무엇을 하시겠습니까?','You have confirmed a breach. What do you do <b>first</b>?'),
-   ctx:L('현재 경과: 0시간. 통지 기한은 인지 시점부터 72시간입니다.','Elapsed: 0h. The notice deadline is 72 hours from awareness.'),
+   ctx:L('현재 경과: 0시간. 통지 기한은 인지 시점부터 72시간입니다. <b>2026.9.11. 개정으로 ‘유출 가능성’을 알게 된 때에도 지체 없이 통지</b>해야 합니다 — 확정될 때까지 기다릴수록 불리합니다.','Elapsed: 0h. 72 hours from awareness. Since the 2026 amendment the duty also starts when you learn of the <b>possibility</b> of a breach.'),
    opts:[
     ['wait', L('원인이 완전히 규명될 때까지 대응을 보류한다','Hold everything until the cause is fully identified'), 40,'bad',
       L('가장 흔한 실패입니다. 원인 규명은 통지·신고 기한을 멈추지 않습니다. 규명을 기다리는 동안 피해가 확산되고 72시간이 소진됩니다.','The most common failure. Investigating does not pause the clock; harm spreads while the 72 hours burn.'),
@@ -220,17 +231,18 @@ function steps(s){
 
   {id:'content', kind:'check',
    q:L('정보주체에게 보낼 <b>통지문</b>에 포함할 항목을 모두 고르세요.','Select everything that must go into the <b>notice</b> to data subjects.'),
-   ctx:L('법 제34조제1항은 통지 시 반드시 알려야 할 사항을 정하고 있습니다. 빠뜨리면 통지를 해도 요건 미충족입니다.','Article 34(1) fixes the mandatory content; omissions make the notice non-compliant.'),
+   ctx:L('법 제34조제1항이 정한 필수 기재사항입니다. 빠뜨리면 통지를 해도 요건 미충족입니다. <b>2026.9.11. 개정으로 손해배상 청구·분쟁조정 신청 등 피해구제 방법이 추가</b>됐습니다.','Article 34(1) fixes the mandatory content. The 2026 amendment added how to claim damages and seek dispute mediation.'),
    checks:[
     ['items', L('유출된 개인정보의 <b>항목</b>','The <b>categories</b> of data leaked'), true],
     ['when',  L('유출된 <b>시점과 경위</b>','<b>When</b> it happened and <b>how</b>'), true],
     ['mitig', L('피해를 최소화하기 위해 <b>정보주체가 할 수 있는 방법</b>','What the <b>data subject can do</b> to minimise harm'), true],
     ['resp',  L('개인정보처리자의 <b>대응조치 및 피해 구제절차</b>','The controller’s <b>response and remedy procedure</b>'), true],
     ['desk',  L('피해 신고를 접수할 <b>담당부서 및 연락처</b>','The <b>department and contact</b> for reporting damage'), true],
+    ['redress',L('손해배상 청구·분쟁조정 신청 등 <b>피해구제 방법</b> <span style="color:#fde047">(2026 개정 추가)</span>','How to <b>claim damages and apply for dispute mediation</b> <span style="color:#fde047">(added 2026)</span>'), true],
     ['blamer',L('유출을 일으킨 <b>담당 직원의 실명</b>','The <b>name of the employee</b> who caused it'), false],
     ['promo', L('사과의 뜻으로 제공하는 <b>할인 쿠폰 안내</b>','A <b>discount coupon</b> as an apology'), false]
    ],
-   cost:6, law:'법 제34조제1항'},
+   cost:6, law:'법 제34조제1항 (2026.9.11. 개정)'},
 
   {id:'deliver',
    q:L('통지를 <b>어떻게</b> 전달하시겠습니까?','<b>How</b> will you deliver the notice?'),
@@ -311,7 +323,7 @@ function submitChecks(){
   S.picks[st.id]={key:'checks',verdict:verdict,miss:miss.map(function(c){return c[0];}),extra:extra.map(function(c){return c[0];})};
   pushLog(L('통지문 작성','Drafted the notice')+' (+'+st.cost+'h)', verdict==='good'?'good':verdict==='bad'?'bad':'warn');
   S.feedback={verdict:verdict, law:st.law,
-    why: (miss.length? L('<b>누락된 법정 항목 '+miss.length+'개</b>: ','<b>'+miss.length+' mandatory item(s) missing</b>: ')+miss.map(function(c){return c[1].replace(/<[^>]+>/g,'');}).join(' / ')+'<br>' : L('법정 5개 항목을 모두 포함했습니다.','All five mandatory elements included.')+'<br>')
+    why: (miss.length? L('<b>누락된 법정 항목 '+miss.length+'개</b>: ','<b>'+miss.length+' mandatory item(s) missing</b>: ')+miss.map(function(c){return c[1].replace(/<[^>]+>/g,'');}).join(' / ')+'<br>' : L('법정 6개 항목을 모두 포함했습니다.','All six mandatory elements included.')+'<br>')
         + (extra.length? L('<b>불필요·부적절한 포함</b>: ','<b>Inappropriate inclusions</b>: ')+extra.map(function(c){return c[1].replace(/<[^>]+>/g,'');}).join(' / ')
              +L(' — 통지문은 법정 항목을 정확히 전달하는 문서입니다. 담당자 실명 공개는 또 다른 개인정보 문제를 만들고, 보상 홍보는 통지의 목적이 아닙니다.',' — the notice is not a place for staff names or promotions.') : '')};
   render();
@@ -355,7 +367,7 @@ function grade(){
   var cp=S.picks.content;
   if(cp){
     if(cp.miss&&cp.miss.length) f.push(['f-bad',L('통지문에서 법정 항목 '+cp.miss.length+'개가 누락됐습니다.','The notice omitted '+cp.miss.length+' mandatory element(s).')]);
-    else f.push(['f-ok',L('통지문에 법정 5개 항목을 모두 포함했습니다.','The notice contained all five mandatory elements.')]);
+    else f.push(['f-ok',L('통지문에 법정 6개 항목을 모두 포함했습니다.','The notice contained all six mandatory elements.')]);
     if(cp.extra&&cp.extra.length) f.push(['f-warn',L('통지문에 넣지 말아야 할 내용이 포함됐습니다.','The notice included content that does not belong.')]);
   }
   // 초기 대응
@@ -459,6 +471,7 @@ function renderResult(host){
     '<div class="note">'+L('안내서는 침해사고 <b>모의훈련을 연 1회 이상</b> 실시할 것을 권고합니다(권고사항). 다른 시나리오는 신고 의무 판정이 다르니 세 가지를 모두 돌려 보세요.',
       'The guide recommends running a breach drill at least once a year. The other scenarios resolve differently — try all three.')+'</div>'+
     '<div class="acts"><button class="btn pri" onclick="reset()">'+L('다른 시나리오 →','Another scenario →')+'</button>'+
+    '<a class="btn" href="privacy-updates.html">'+L('2026 개정 내용 보기','What changed in 2026')+'</a>'+
     '<button class="btn" onclick="start(\''+sc.id+'\')">'+L('다시 하기','Retry')+'</button>'+
     '<a class="btn" href="15_privacy-pv25.html">'+L('유출 통지 시뮬 보기','Breach notification sim')+'</a></div></div>'+
     logHtml();

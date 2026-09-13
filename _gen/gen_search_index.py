@@ -74,6 +74,8 @@ TOOL_ALIAS = {
                                     '처리방침 작성 점검 기재사항 privacy policy 라벨링 쿠키 행태정보 국외이전 위탁 보유기간 생성형 ai 부록'),
     'pseudonym-lab.html': ('가명처리 실습실 · k-익명성·재식별',
                            '가명처리 가명정보 k익명성 l다양성 재식별 연결공격 linkage 마스킹 범주화 라운딩 해시 토큰화 잡음 총계처리 순열 pseudonymization'),
+    'privacy-updates.html': ('개인정보 법·제도 업데이트 & 공식 포털 · 2026.9.11 개정',
+                             '개정 2026 시행 변경점 위조 변조 훼손 유출 가능성 통지 피해구제 손해배상 분쟁조정 징벌적 과징금 cpo isms-p 포털 pipc privacy.go.kr 국가법령정보센터 털린 내 정보 찾기 e프라이버시'),
     'privacy-policy.html': ('WEB-VULN-SIM 개인정보 처리방침', '처리방침 개인정보 privacy policy 수집항목 국외이전 보유기간 보호책임자 이용약관'),
     'privacy-quiz.html': ('개인정보 법령 Q&A · 질의응답 99건',
                           '질의응답 모음집 법령해석 사례 조문 퀴즈 카드 오답 정의 영상정보 가명정보 공공서비스 민간사업자 민감 고유식별 위수탁 privacy qa quiz'),

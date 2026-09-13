@@ -381,19 +381,27 @@
     bindDim(bar);
   }
 
-  /* 맨 위에서 벗어나면 언어 바를 흐리게 해 본문을 가리지 않도록 한다. */
+  /* 맨 위에서 벗어나면 언어 바를 흐리게 해 본문을 가리지 않도록 한다.
+     rAF 로 미루면 탭이 숨겨져 있을 때(백그라운드·미렌더링 창) 콜백이 멈춰
+     상태가 낡은 채로 남는다. 토글 자체가 가벼우니 시간 기반으로 직접 처리하고,
+     다시 보이게 될 때 한 번 더 맞춘다. */
   function bindDim(bar) {
-    let ticking = false;
+    let last = 0;
     const update = () => {
-      ticking = false;
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      last = Date.now();
+      const y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       bar.classList.toggle('wvs-dim', y > 60);
     };
+    let pending = null;
     window.addEventListener('scroll', () => {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(update);
+      const since = Date.now() - last;
+      if (since >= 80) { update(); return; }
+      if (pending) return;
+      pending = setTimeout(() => { pending = null; update(); }, 80 - since);
     }, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') update();
+    });
     update();
   }
 
