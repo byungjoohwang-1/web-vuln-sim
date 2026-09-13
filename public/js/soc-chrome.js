@@ -25,13 +25,43 @@
   var TOPBAR_OFF = scriptEl && scriptEl.getAttribute('data-topbar') === 'off';
 
   var INDEX_URL = '/data/search-index.json';
+
+  /* ── 언어 ──
+     공용 크롬은 모든 페이지에 뜨므로, 본문이 한국어만 있는 페이지에서도
+     내비게이션만큼은 영어로 동작해야 한다. bilingual.js 와 같은 저장키를 쓴다. */
+  function lang() {
+    try {
+      var v = localStorage.getItem('wvs_lang') || localStorage.getItem('lang');
+      return v === 'en' ? 'en' : 'ko';
+    } catch (e) { return 'ko'; }
+  }
+  var T = {
+    ko: {
+      search: '검색', searchAria: '사이트 검색',
+      placeholder: '페이지·시나리오·도구 검색 (예: SQL, U-01, 레드팀)',
+      move: '이동', open: '열기', close: '닫기',
+      quick: '빠른 실행', noResult: '검색 결과가 없습니다',
+      loadFail: '검색 인덱스를 불러올 수 없습니다.', loadFail2: '검색 인덱스 로드 실패',
+      loading: '검색 인덱스를 불러오는 중…', retry: '다시 시도'
+    },
+    en: {
+      search: 'Search', searchAria: 'Site search',
+      placeholder: 'Search pages, scenarios, tools (e.g. SQL, U-01, red team)',
+      move: 'Move', open: 'Open', close: 'Close',
+      quick: 'Quick actions', noResult: 'No results',
+      loadFail: 'Could not load the search index.', loadFail2: 'Search index failed to load',
+      loading: 'Loading search index…', retry: 'Retry'
+    }
+  };
+  function t(k) { return (T[lang()] || T.ko)[k]; }
+
   var NAV = [
-    { t: '홈', u: '/vuln-hub.html' },
-    { t: '레드팀 아레나', u: '/redteam.html' },
-    { t: '취약점 실습장', u: '/vulnlab.html' },
-    { t: 'AI 문제 포지', u: '/quiz-forge.html' },
-    { t: '카탈로그', u: '/vuln-hub.html#catalog' },
-    { t: '내 기록', u: '/my-progress.html' }
+    { t: '홈', en: 'Home', u: '/vuln-hub.html' },
+    { t: '레드팀 아레나', en: 'Red Team Arena', u: '/redteam.html' },
+    { t: '취약점 실습장', en: 'Vuln Lab', u: '/vulnlab.html' },
+    { t: 'AI 문제 포지', en: 'AI Quiz Forge', u: '/quiz-forge.html' },
+    { t: '카탈로그', en: 'Catalog', u: '/vuln-hub.html#catalog' },
+    { t: '내 기록', en: 'My Progress', u: '/my-progress.html' }
   ];
 
   var GROUP_STYLE = {
@@ -87,6 +117,12 @@
     '.wvsx-pal .row.sel{background:rgba(56,189,248,.12)}',
     '.wvsx-pal .row.sel .tt{color:#7dd3fc}',
     '.wvsx-pal .empty{padding:28px;text-align:center;color:#64748b;font-size:.82rem}',
+    '.wvsx-pal .hd{padding:6px 12px 4px;color:#64748b;font-size:.66rem;font-weight:700;letter-spacing:.4px}',
+    '.wvsx-pal .row{text-decoration:none}',
+    '.wvsx-pal .row:focus-visible{outline:2px solid #38bdf8;outline-offset:-2px}',
+    '.wvsx-retry{background:#1e293b;border:1px solid #334155;color:#cbd5e1;border-radius:8px;',
+    'padding:6px 14px;cursor:pointer;font:inherit;font-size:.78rem}',
+    '.wvsx-retry:hover{border-color:#38bdf8;color:#7dd3fc}',
     '.wvsx-pal .ft{display:flex;gap:14px;padding:9px 16px;border-top:1px solid #1e293b;',
     'color:#475569;font-size:.66rem}',
     '.wvsx-pal .ft b{color:#64748b;font-weight:600}'
@@ -116,12 +152,13 @@
     bar.id = 'wvsx-topbar';
     var html = '<a class="wvsx-logo" href="/vuln-hub.html"><span class="mk">⛨</span>WEB-VULN-SIM</a>';
     html += '<nav class="wvsx-nav">';
+    var en = lang() === 'en';
     for (var i = 0; i < NAV.length; i++) {
       var n = NAV[i];
-      html += '<a href="' + n.u + '"' + (isCurrent(n.u) ? ' class="on"' : '') + '>' + n.t + '</a>';
+      html += '<a href="' + n.u + '"' + (isCurrent(n.u) ? ' class="on"' : '') + '>' + (en ? n.en : n.t) + '</a>';
     }
     html += '</nav>';
-    html += '<button type="button" class="wvsx-kbtn" id="wvsx-kbtn">🔍 검색 <span class="kb">Ctrl K</span></button>';
+    html += '<button type="button" class="wvsx-kbtn" id="wvsx-kbtn">🔍 ' + t('search') + ' <span class="kb">Ctrl K</span></button>';
     bar.innerHTML = html;
     if (document.body.firstChild) document.body.insertBefore(bar, document.body.firstChild);
     else document.body.appendChild(bar);
@@ -129,20 +166,23 @@
   }
 
   /* ── 커맨드 팔레트 ── */
-  var INDEX = null, INDEX_TRIED = false;
+  /* [G03] 예전에는 INDEX_TRIED 를 세우고 실패해도 되돌리지 않아 같은 페이지에서
+     영영 재시도할 수 없었다. 상태를 명시적으로 나눠 error 에서 다시 시도할 수 있게 한다. */
+  var INDEX = null, INDEX_STATE = 'idle';   // idle | loading | ready | error
   var palEl = null, inpEl = null, listEl = null;
   var results = [], sel = 0;
 
   function loadIndex(cb) {
-    if (INDEX || INDEX_TRIED) return cb(!!INDEX);
-    INDEX_TRIED = true;
+    if (INDEX_STATE === 'ready') return cb(true);
+    if (INDEX_STATE === 'loading') return;        /* 진행 중이면 기존 완료 콜백이 화면을 갱신한다 */
+    INDEX_STATE = 'loading';
     try {
       fetch(INDEX_URL).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-        INDEX = (d && d.pages) ? d.pages : [];
-        if (INDEX.length && d.kw) { /* 키워드는 항목 내 u/t에 이미 병합됨 */ }
-        cb(!!INDEX);
-      }).catch(function () { cb(false); });
-    } catch (e) { cb(false); }
+        INDEX = (d && d.pages) ? d.pages : null;
+        INDEX_STATE = INDEX ? 'ready' : 'error';
+        cb(INDEX_STATE === 'ready');
+      }).catch(function () { INDEX_STATE = 'error'; cb(false); });
+    } catch (e) { INDEX_STATE = 'error'; cb(false); }
   }
 
   function esc(s) {
@@ -157,17 +197,20 @@
     palEl.className = 'wvsx-pal';
     palEl.id = 'wvsx-palette';
     palEl.innerHTML =
-      '<div class="box" role="dialog" aria-label="사이트 검색">' +
+      '<div class="box" role="dialog" aria-modal="true" aria-label="' + t('searchAria') + '">' +
       '<div class="inp"><span class="ic">⌕</span>' +
-      '<input id="wvsx-pal-inp" type="text" placeholder="페이지·시나리오·도구 검색 (예: SQL, U-01, 레드팀)" autocomplete="off">' +
+      '<input id="wvsx-pal-inp" type="text" placeholder="' + t('placeholder') + '" autocomplete="off">' +
       '<span class="esc">ESC</span></div>' +
-      '<div class="list" id="wvsx-pal-list"></div>' +
-      '<div class="ft"><span><b>↑↓</b> 이동</span><span><b>↵</b> 열기</span><span><b>ESC</b> 닫기</span></div>' +
+      '<div class="list" id="wvsx-pal-list" role="listbox" aria-label="' + t('searchAria') + '"></div>' +
+      '<div class="ft"><span><b>↑↓</b> ' + t('move') + '</span><span><b>↵</b> ' + t('open') + '</span><span><b>ESC</b> ' + t('close') + '</span></div>' +
       '</div>';
     document.body.appendChild(palEl);
     inpEl = palEl.querySelector('#wvsx-pal-inp');
     listEl = palEl.querySelector('#wvsx-pal-list');
-    inpEl.addEventListener('input', function () { runSearch(inpEl.value); });
+    /* 인덱스가 아직 안 왔어도 입력은 받는다. 도착하면 refresh 가 현재 값으로 검색한다. */
+    inpEl.addEventListener('input', function () {
+      if (INDEX_STATE === 'ready') runSearch(inpEl.value); else refresh();
+    });
     inpEl.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
@@ -175,9 +218,22 @@
       else if (e.key === 'Escape') { closePalette(); }
     });
     palEl.addEventListener('click', function (e) {
-      if (e.target === palEl) closePalette();
+      if (e.target === palEl) { closePalette(); return; }
       var row = e.target.closest ? e.target.closest('.wvsx-pal .row') : null;
-      if (row && row.getAttribute('data-i') != null) go(+row.getAttribute('data-i'));
+      if (!row || row.getAttribute('data-i') == null) return;
+      /* 새 탭/새 창 열기는 브라우저 기본 동작에 맡긴다(결과가 진짜 링크이므로) */
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) { closePalette(); return; }
+      e.preventDefault();
+      go(+row.getAttribute('data-i'));
+    });
+    /* [G03] 모달 안에 포커스를 가둔다 — Tab 이 뒤 페이지로 새어 나가면 스크린리더가 길을 잃는다. */
+    palEl.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var f = palEl.querySelectorAll('input, button, a[href], [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
   }
 
@@ -200,13 +256,13 @@
   }
 
   function runSearch(q) {
-    if (!INDEX) { listEl.innerHTML = '<div class="empty">검색 인덱스를 불러올 수 없습니다.</div>'; return; }
+    if (!INDEX) { render({ emptyMsg: t('loadFail'), retry: t('retry') }); return; }
     var nq = norm(q);
     if (!nq) {
       // 기본: 대표 페이지 추천
       var quick = ['vuln-hub.html', 'redteam.html', 'vulnlab.html', 'quiz-forge.html', 'my-progress.html', 'labs-live.html', 'ai-tutor.html'];
       results = INDEX.filter(function (p) { return quick.indexOf(p.u) >= 0; });
-      sel = 0; render('빠른 실행'); return;
+      sel = 0; render({ heading: t('quick') }); return;
     }
     var scored = [];
     for (var i = 0; i < INDEX.length; i++) {
@@ -216,29 +272,55 @@
     scored.sort(function (a, b) { return b.s - a.s; });
     results = scored.slice(0, 30).map(function (x) { return x.p; });
     sel = 0;
-    render(results.length ? null : '검색 결과가 없습니다');
+    render(results.length ? {} : { emptyMsg: t('noResult') });
   }
 
-  function render(emptyMsg) {
+  /**
+   * [G03] 예전 render(msg) 는 메시지가 있으면 결과를 아예 안 그렸다.
+   * 그래서 팔레트를 처음 열 때 render('빠른 실행') 이 호출되며 추천 항목이 계산돼도
+   * 화면에는 문구만 남았다. 제목(heading)과 빈 상태(emptyMsg)를 분리한다.
+   * 결과는 실제 <a> 링크로 만들어 새 탭 열기·스크린리더 탐색이 가능하게 한다.
+   */
+  function render(opts) {
+    opts = opts || {};
     var html = '';
-    if (emptyMsg) { html = '<div class="empty">' + esc(emptyMsg) + '</div>'; }
-    else {
+    if (opts.heading) html += '<div class="hd">' + esc(opts.heading) + '</div>';
+    if (opts.emptyMsg) {
+      html += '<div class="empty">' + esc(opts.emptyMsg) + '</div>';
+      if (opts.retry) html += '<div class="empty"><button type="button" id="wvsx-pal-retry" class="wvsx-retry">' + esc(opts.retry) + '</button></div>';
+    } else {
       for (var i = 0; i < results.length; i++) {
         var p = results[i];
         var gs = GROUP_STYLE[p.g] || GROUP_STYLE.tools;
-        html += '<div class="row' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">' +
+        var href = p.u.charAt(0) === '/' ? p.u : '/' + p.u;
+        html += '<a class="row' + (i === sel ? ' sel' : '') + '" data-i="' + i + '" href="' + esc(href) + '"' +
+          ' role="option" aria-selected="' + (i === sel ? 'true' : 'false') + '" tabindex="-1">' +
           '<span class="g" style="color:' + gs[0] + ';border-color:' + gs[0] + '55">' + gs[1] + '</span>' +
           '<span class="tt">' + esc(p.t) + '</span>' +
-          '<span class="uu">' + esc(p.u) + '</span></div>';
+          '<span class="uu">' + esc(p.u) + '</span></a>';
       }
     }
     listEl.innerHTML = html;
+    var rb = listEl.querySelector('#wvsx-pal-retry');
+    if (rb) rb.addEventListener('click', function () { INDEX_STATE = 'idle'; refresh(); });
+  }
+
+  /** 현재 입력값 기준으로 인덱스를 확보하고 결과를 갱신한다(로딩/실패 상태 표시 포함). */
+  function refresh() {
+    if (INDEX_STATE === 'ready') { runSearch(inpEl.value); return; }
+    if (INDEX_STATE === 'error') { render({ emptyMsg: t('loadFail'), retry: t('retry') }); return; }
+    render({ emptyMsg: t('loading') });
+    loadIndex(function (ok) {
+      if (!palEl || !palEl.classList.contains('show')) return;
+      if (ok) runSearch(inpEl.value);                    /* 로딩 중 입력한 검색어를 그대로 쓴다 */
+      else render({ emptyMsg: t('loadFail'), retry: t('retry') });
+    });
   }
 
   function move(d) {
     if (!results.length) return;
     sel = (sel + d + results.length) % results.length;
-    render(null);
+    render({});
     var el = listEl.querySelector('.row.sel');
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
   }
@@ -250,14 +332,22 @@
     location.href = u.charAt(0) === '/' ? u : '/' + u;
   }
 
+  var lastFocus = null;
   function openPalette() {
     buildPalette();
+    lastFocus = document.activeElement;
     palEl.classList.add('show');
     inpEl.value = '';
-    loadIndex(function (ok) { if (ok) runSearch(''); else listEl.innerHTML = '<div class="empty">검색 인덱스 로드 실패</div>'; });
+    refresh();
     setTimeout(function () { inpEl.focus(); }, 30);
   }
-  function closePalette() { if (palEl) palEl.classList.remove('show'); }
+  function closePalette() {
+    if (!palEl || !palEl.classList.contains('show')) return;
+    palEl.classList.remove('show');
+    /* 팔레트를 열기 전 요소로 포커스를 돌려준다(키보드 사용자가 위치를 잃지 않도록) */
+    try { if (lastFocus && lastFocus.focus) lastFocus.focus(); } catch (e) {}
+    lastFocus = null;
+  }
 
   /* ── 접근성: div 기반 collapse 토글의 키보드 조작 ──
      <div role="button" tabindex="0" data-bs-toggle="collapse"> 는 포커스는 받지만
@@ -291,6 +381,14 @@
       } else if (e.key === 'Escape') {
         closePalette();
       }
+    });
+    /* 언어를 바꾸면 크롬은 이미 그려진 상태이므로 직접 다시 그린다(bilingual.js 가 알림). */
+    document.addEventListener('wvs:lang', function () {
+      try {
+        var old = document.getElementById('wvsx-topbar');
+        if (old) { old.remove(); buildTopbar(); }
+        if (palEl) { palEl.remove(); palEl = null; inpEl = null; listEl = null; }
+      } catch (e3) { /* no-op */ }
     });
   }
 

@@ -337,6 +337,35 @@
     translateTextNodes(next);
     translateAttributes(next);
     updateButtons(next);
+    /* 공용 크롬(탑바·설치 배너 등)은 자체 스크립트가 그리므로 알려서 다시 그리게 한다. */
+    try { document.dispatchEvent(new CustomEvent('wvs:lang', { detail: { lang: next } })); } catch (e) { /* no-op */ }
+    notifyUntranslated(next);
+  }
+
+  /* ── 번역 안 된 페이지에서 EN 을 고른 경우 정직하게 알린다 ──
+     사이트 전체 커버리지가 낮은데 토글만 보여주면 "영어를 지원한다"는 거짓 약속이 된다.
+     본문에 data-en/data-i18n 이 거의 없으면 안내를 띄운다(내비게이션은 계속 영어로 동작). */
+  function pageHasTranslation() {
+    if (document.querySelector('[data-i18n], [data-i18n-html]')) return true;   /* 사전 기반 페이지 */
+    return document.querySelectorAll('[data-en]').length >= 8;
+  }
+  function notifyUntranslated(lang) {
+    const id = 'wvs-i18n-notice';
+    const old = document.getElementById(id);
+    if (lang !== 'en' || pageHasTranslation()) { if (old) old.remove(); return; }
+    if (old) return;
+    const n = document.createElement('div');
+    n.id = id;
+    n.setAttribute('role', 'status');
+    n.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:100001;' +
+      'max-width:min(560px,92vw);background:rgba(20,20,30,.94);color:#e2e8f0;border:1px solid #475569;' +
+      'border-radius:10px;padding:10px 14px;font:500 13px/1.5 system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.4)';
+    n.innerHTML = 'This page is available in <b>Korean only</b> for now — the security guidance is not machine-translated ' +
+      'to avoid inaccuracies. Navigation stays in English. ' +
+      '<button type="button" style="margin-left:8px;background:#334155;border:0;color:#e2e8f0;border-radius:6px;padding:3px 9px;cursor:pointer">Dismiss</button>';
+    n.querySelector('button').addEventListener('click', () => n.remove());
+    document.body.appendChild(n);
+    setTimeout(() => { if (n.parentNode) n.remove(); }, 9000);
   }
 
   function ensureStyle() {

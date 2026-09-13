@@ -29,6 +29,26 @@ PREFIX_GROUP = [
     ('sim-', 'sim'), ('guide-', 'guide'),
 ]
 
+# [G03] 그룹별 검색 동의어 — 실무자가 실제로 칠 법한 한글/영문을 함께 심는다.
+# 파일명·제목에만 의존하면 한국어 검색이 통째로 실패한다.
+GROUP_SYNONYMS = {
+    'code': '시큐어코딩 코드 구현 취약점 secure coding',
+    'design': '설계 아키텍처 위협모델링 design',
+    'unix': '유닉스 리눅스 서버 unix linux server',
+    'db': '데이터베이스 디비 dbms database sql',
+    'fin': '금융 전자금융 핀테크 financial',
+    'win': '윈도우 서버 windows server',
+    'net': '네트워크 라우터 스위치 장비 network',
+    'sec': '보안장비 방화벽 침입탐지 firewall ips ids waf',
+    'cloud': '클라우드 컨테이너 쿠버네티스 도커 cloud kubernetes k8s docker',
+    'ics': '제어시스템 산업제어 ics scada ot plc',
+    'ai': 'AI 인공지능 LLM 생성형 프롬프트 머신러닝 딥페이크',
+    'auto': '자동차 차량 모빌리티 automotive vehicle can ecu uds ota misra',
+    'privacy': '개인정보 프라이버시 가명처리 영향평가 privacy pia 보호법',
+    'sim': '시뮬레이터 실습 체험 simulator',
+    'guide': '가이드 안내 개념 guide',
+}
+
 # 대표 도구 페이지: (파일, 제목, 키워드) — 우선 노출용 별칭
 TOOL_ALIAS = {
     'vuln-hub.html': ('미션 컨트롤 (허브)', '홈 main 시작 대시보드 hub'),
@@ -125,8 +145,10 @@ def main():
                 continue
         # 검색 보조: 파일명 토큰 (u-01, d-05, sql 등 코드 검색 지원)
         fn_kw = fn.replace('.html', '').replace('_', ' ').replace('-', ' ')
-        kw = (k + ' ' + fn_kw).strip()
-        pages.append({'t': t[:80], 'u': fn, 'g': g, 'k': kw[:120]})
+        # [G03] 그룹 동의어. 이게 없어서 '자동차'/'쿠버네티스' 검색이 0건이었다
+        # (14_auto-* 61개가 있는데도 k 값이 '14 auto auto01' 뿐이라 한글로는 안 잡혔다).
+        kw = ' '.join(x for x in (k, fn_kw, GROUP_SYNONYMS.get(g, '')) if x).strip()
+        pages.append({'t': t[:80], 'u': fn, 'g': g, 'k': kw[:220]})
 
     # 대표 도구를 앞으로 정렬(동점 점수 시 안정적)
     order = {'hub': 0, 'tools': 1}
