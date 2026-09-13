@@ -71,7 +71,7 @@
      아래 블록은 _gen/gen_progress_catalog.py 가 같은 정의에서 생성한다. 직접 고치지 말 것. */
   /* <generated:learnable> */
   var LEARNABLE = /^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai|14_auto|15_privacy)/;
-  var TOOLS = /^(vulnlab\.html|redteam\.html|quiz-forge\.html)$/;
+  var TOOLS = /^(vulnlab\.html|redteam\.html|quiz-forge\.html|incident\.html)$/;
   /* </generated:learnable> */
   function isLearnable(id) { return LEARNABLE.test(id) || /^sim-/.test(id) || TOOLS.test(id); }
 

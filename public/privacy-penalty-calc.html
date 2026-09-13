@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 과징금 산정 구조 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 과징금 산정 구조 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="관련 매출액 → 부과기준율 → 필수 가중·감경 → 추가 가중·감경 → 절사, 4단계 산정 구조를 직접 움직여 보는 도구">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-penalty-calc.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 제64조의2·시행령 [별표 1의5] 기반 과징금 산정 구조 시뮬레이터 — 관련 매출액, 위반행위 중대성별 부과기준율(매우중대 2.1~2.7%·중대 1.5~2.1%·보통 0.9~1.5%·약함 0.03~0.9%), 위반기간 필수 가중, 추가 가중·감경, 절사 규칙을 단계별로 적용하며 각 요소가 금액을 얼마나 움직이는지 확인합니다. 2026 개정 징벌적 과징금 상한 포함.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* 결과 배너 */
+.total{background:linear-gradient(135deg,#3b1418,#1a1020);border:1px solid #7f1d1d;border-radius:16px;padding:20px 22px;position:sticky;top:52px;z-index:40;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.total .lab{font-family:var(--mono);font-size:11.5px;color:#fecaca;letter-spacing:1px;font-weight:800}
+.total .amt{font-family:var(--mono);font-size:34px;font-weight:800;color:#fff;line-height:1.1;margin-top:6px;word-break:break-all}
+.total .won{font-size:14px;color:#fecaca;margin-top:4px}
+.total .cap{font-size:12px;color:#fca5a5;margin-top:8px}
+/* 단계 */
+.step{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:13px 15px;margin:9px 0}
+.step>.h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:14px;font-weight:700;color:#fff}
+.step>.h .n{font-family:var(--mono);font-size:11px;font-weight:800;color:#a5b4fc;background:#1e1b4b;border-radius:5px;padding:2px 8px;flex-shrink:0}
+.step>.h .out{margin-left:auto;font-family:var(--mono);font-size:14px;font-weight:800;color:#7dd3fc;flex-shrink:0}
+.step .hint{font-size:12px;color:var(--muted);margin-top:6px}
+.step .hint b{color:#cbd5e1}
+label{display:block;font-size:12px;color:var(--muted);margin:9px 0 4px}
+input[type=number],select{width:100%;background:#0b1220;border:1px solid #334155;color:var(--ink);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:14px}
+input[type=range]{width:100%;margin-top:6px}
+.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.opt{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.opt.on{background:var(--accent);color:#04222e;border-color:transparent}
+.chk{display:flex;gap:9px;align-items:flex-start;background:#0b1220;border:1px solid #334155;border-radius:9px;padding:9px 11px;margin:6px 0;cursor:pointer;font-size:13px}
+.chk.on{background:#0f2a18;border-color:#14532d}
+.chk.on.up{background:#3b1418;border-color:#7f1d1d}
+.chk input{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+.chk .tx b{display:block}
+.chk .tx span{font-size:11.5px;color:var(--muted);display:block}
+.chk .d{margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:800;flex-shrink:0}
+.chk.on .d{color:#86efac}.chk.on.up .d{color:#fca5a5}
+/* 흐름 표 */
+table{width:100%;border-collapse:collapse;font-size:13px;font-family:var(--mono)}
+th,td{border:1px solid var(--border);padding:8px 10px;text-align:left}
+th{background:#0f172a;color:#7dd3fc;white-space:nowrap}
+td.num{text-align:right;white-space:nowrap}
+tr.hl td{background:#0c2030;color:#fff;font-weight:800}
+.delta{font-size:11.5px}
+.delta.up{color:#fca5a5}.delta.dn{color:#86efac}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.warnbox{background:#3a2a09;border-left:4px solid var(--warn);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#fde047;margin:12px 0}
+.lesson{background:#0f2a18;border-left:4px solid var(--good);border-radius:8px;padding:12px 14px;font-size:13px;color:#d1fae5;margin:12px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+@media(max-width:640px){.total{position:static}.total .amt{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="privacy-updates.html"><span data-en="Law updates">법·제도 업데이트</span></a>
+  <a href="privacy-breach-drill.html"><span data-en="Breach drill">유출 대응 훈련</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>💰 <span data-en="Administrative Fine Structure Simulator">과징금 산정 구조 시뮬레이터</span></h1>
+    <div class="sub" data-en="This does not predict a number — the Commission decides the severity grade and the discretionary range. What it does show is the <b>structure</b>: which lever moves the amount, and by how much. The most useful thing you will see is that privacy investment and investigation cooperation are formal mitigating factors.">
+      <b>금액을 예측하는 도구가 아닙니다</b> — 중대성 등급과 재량 범위는 위원회가 정합니다. 대신 <b>구조</b>를 보여줍니다: 어떤 요소가 금액을 얼마나 움직이는지. 특히 <b>보안 투자와 조사 협조가 공식 감경 사유</b>로 작동한다는 점을 숫자로 확인할 수 있습니다.</div>
+    <div class="src">📕 기준: 「개인정보 보호법」 제64조의2 · 시행령 [별표 1의5] 과징금의 산정기준과 산정절차 · 「개인정보 보호법 위반에 대한 과징금 부과기준」(고시 제2023-3호) — 교육용 재구성</div>
+  </div>
+
+  <div class="warnbox" data-en="⚠️ The severity grade is decided by the Commission from four factors (intent/negligence, method, data types, scale of harm) using the annexed scoring table, which is <b>not</b> reproduced here — this tool lets you pick the grade yourself. The band-to-rate mapping and the calculation order follow the Enforcement Decree.">
+    ⚠️ <b>중대성 등급은 이 도구가 판정하지 않습니다.</b> 위원회가 고의·과실 / 위반행위의 방법 / 처리하는 개인정보의 유형 / 피해 규모·영향 4개 항목을 고시 별표의 배점표로 종합해 결정하며, 그 배점표는 여기에 반영돼 있지 않습니다. 등급은 직접 선택하세요. 등급별 <b>부과기준율 구간과 산정 순서</b>는 시행령 [별표 1의5] 기준입니다.</div>
+
+  <!-- 총액 -->
+  <div class="total" id="total"></div>
+
+  <!-- ① 관련 매출액 -->
+  <div class="card">
+    <h2>① <span data-en="Related revenue">관련 매출액</span></h2>
+    <div class="step">
+      <div class="h"><span class="n">STEP 1</span><span data-en="Revenue related to the violation">위반행위와 관련된 매출액</span><span class="out" id="o1"></span></div>
+      <label data-en="Related revenue (KRW)">관련 매출액 (원)</label>
+      <input type="number" id="rev" min="0" step="1000000" value="10000000000">
+      <div class="hint" data-en="Total revenue minus revenue unrelated to the violation. <b>Enforcement Decree amended 2026-08-20</b>: where the revenue of the fiscal year preceding the violation is larger than the 3-year average, that larger figure is used.">
+        전체 매출액에서 위반행위와 관련 없는 매출액을 제외한 금액. <b>2026.8.20. 시행 시행령 개정</b>으로, 직전 사업연도 매출액이 3개 사업연도 연평균보다 크면 <b>그 큰 금액</b>을 기준으로 산정합니다.</div>
+    </div>
+  </div>
+
+  <!-- ② 부과기준율 -->
+  <div class="card">
+    <h2>② <span data-en="Rate by severity → base amount">중대성 등급 → 부과기준율 → 기준금액</span></h2>
+    <div class="step">
+      <div class="h"><span class="n">STEP 2</span><span data-en="Severity grade">위반행위의 중대성</span><span class="out" id="o2"></span></div>
+      <div class="opts" id="grades"></div>
+      <label data-en="Rate within the band (%)">구간 내 부과기준율 (%)</label>
+      <input type="range" id="rate" step="0.01">
+      <div class="hint" id="rateHint"></div>
+    </div>
+  </div>
+
+  <!-- ③ 필수적 가중·감경 -->
+  <div class="card">
+    <h2>③ <span data-en="Mandatory adjustment">필수적 가중·감경</span></h2>
+    <div class="step">
+      <div class="h"><span class="n">STEP 3</span><span data-en="Duration of the violation">위반행위의 기간</span><span class="out" id="o3"></span></div>
+      <div class="opts" id="durs"></div>
+      <div class="hint" data-en="Duration runs from the start of the violation to its end; if it has not ended, to the date the Commission concludes its deliberation.">
+        위반기간은 개시일부터 종료일까지이며, 심의종결일까지 종료되지 않았다면 <b>심의종결일</b>을 종료일로 봅니다.</div>
+    </div>
+  </div>
+
+  <!-- ④ 추가적 가중·감경 -->
+  <div class="card">
+    <h2>④ <span data-en="Discretionary adjustment (±50%)">추가적 가중·감경 (±50% 범위)</span></h2>
+    <div class="step">
+      <div class="h"><span class="n">STEP 4</span><span data-en="Aggravating / mitigating factors">가중·감경 사유</span><span class="out" id="o4"></span></div>
+      <div id="factors"></div>
+      <div class="hint" data-en="The notification allows adjustment within ±50% of the amount after mandatory adjustment, considering whether the operator led the violation, cooperated with the investigation, and so on. The weights below are illustrative — the actual percentages are set by the annex.">
+        고시는 위반행위 주도 여부·조사 협조 여부 등을 고려해 필수 조정 후 금액의 <b>±50% 범위</b>에서 조정하도록 합니다. 아래 가중치는 <b>예시값</b>이며 실제 비율은 별표가 정합니다.</div>
+    </div>
+  </div>
+
+  <!-- 흐름 -->
+  <div class="card">
+    <h2>🧾 <span data-en="Calculation trail">산정 흐름</span></h2>
+    <table id="trail"></table>
+    <div class="note" data-en="Rounding: amounts below KRW 100 million are truncated to the nearest KRW 100,000; from KRW 100 million up, to the nearest KRW 1 million.">
+      절사: 산출액이 <b>1억원 미만이면 십만원 미만</b>, <b>1억원 이상이면 백만원 미만</b>을 버립니다.</div>
+    <div class="lesson" id="lesson"></div>
+    <div class="acts">
+      <button class="btn" onclick="preset('best')">🟢 <span data-en="Best case">최선 시나리오</span></button>
+      <button class="btn" onclick="preset('worst')">🔴 <span data-en="Worst case">최악 시나리오</span></button>
+      <button class="btn" onclick="exportReport()">⬇ <span data-en="Export">리포트</span></button>
+      <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+    </div>
+  </div>
+
+  <div class="disc" data-en="Educational simulator built from the Act, the Enforcement Decree annex and the public notification. It does not reproduce the annexed scoring table and does not predict an actual disposition. Since 11 Sep 2026 a punitive fine of up to 10% of total revenue can apply to wilful/grossly negligent repeat violations within 3 years or incidents affecting 10 million+ people. Runs entirely in your browser.">
+    ⚠️ 법률·시행령 별표·공개 고시를 근거로 만든 <b>교육용 시뮬레이터</b>입니다. 고시 별표의 배점표를 재현하지 않으며 실제 처분을 예측하지 않습니다.
+    2026.9.11.부터는 고의·중대한 과실로 3년 이내 반복 위반하거나 1천만명 이상 대규모 피해가 발생한 경우 <b>전체 매출액의 10% 이내</b> 징벌적 과징금이 적용될 수 있습니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* 시행령 [별표 1의5] 중대성 등급별 부과기준율 구간 */
+var GRADES=[
+ ['vhigh','매우 중대한 위반행위','Very serious',2.1,2.7],
+ ['high', '중대한 위반행위','Serious',1.5,2.1],
+ ['mid',  '보통 위반행위','Moderate',0.9,1.5],
+ ['low',  '약한 위반행위','Minor',0.03,0.9]
+];
+/* 필수적 가중 — 위반기간 */
+var DURS=[
+ ['short','1년 이내 (단기)','≤1 year',0],
+ ['mid',  '1년 초과 2년 이내 (중기)','1–2 years',25],
+ ['long', '2년 초과 (장기)','>2 years',50]
+];
+/* 추가적 가중·감경 — 예시 가중치(±50% 범위 내) */
+var FACTORS=[
+ ['lead',  '위반행위를 <b>주도</b>했다','Led the violation',            +20,'up'],
+ ['repeat','최근 3년 내 과징금 처분을 받은 적이 있다','Fined within the last 3 years', +15,'up'],
+ ['expand','유출 후 <b>추가 피해가 확산</b>됐다','Further harm spread after the breach', +15,'up'],
+ ['coop',  '조사에 <b>적극 협조</b>했다','Cooperated actively with the investigation', -20,'dn'],
+ ['self',  '유출 사실을 <b>자진 신고</b>했다','Self-reported the breach',  -10,'dn'],
+ ['invest','개인정보보호 <b>예산·인력·설비에 투자</b>했다','Invested in privacy budget, staff and equipment', -20,'dn'],
+ ['remedy','피해자 <b>구제·보상 조치</b>를 이행했다','Remedied and compensated victims', -10,'dn']
+];
+
+var SKEY='wvs_penalty_calc';
+var S={rev:10000000000, grade:'high', rate:null, dur:'short', f:{}};
+function load(){try{var v=JSON.parse(localStorage.getItem(SKEY)); if(v) S=Object.assign(S,v);}catch(e){} S.f=S.f||{};}
+function save(){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
+
+function gradeDef(){ return GRADES.filter(function(g){return g[0]===S.grade;})[0]; }
+function clampRate(){
+  var g=gradeDef();
+  if(S.rate==null||S.rate<g[3]||S.rate>g[4]) S.rate=+(((g[3]+g[4])/2).toFixed(2));
+  return S.rate;
+}
+function durDef(){ return DURS.filter(function(d){return d[0]===S.dur;})[0]; }
+
+/* 절사: 1억 미만 → 십만원 절사 / 1억 이상 → 백만원 절사 */
+function truncate(v){
+  if(v<100000000) return Math.floor(v/100000)*100000;
+  return Math.floor(v/1000000)*1000000;
+}
+function won(v){ return Math.round(v).toLocaleString('ko-KR'); }
+function eok(v){
+  if(v>=100000000) return (v/100000000).toFixed(v>=1000000000?0:1)+L('억원',' × 100M KRW');
+  if(v>=10000) return Math.round(v/10000).toLocaleString('ko-KR')+L('만원',' × 10k KRW');
+  return won(v)+L('원',' KRW');
+}
+
+function calc(){
+  var rev=Math.max(0,+S.rev||0);
+  var rate=clampRate();
+  var base=rev*rate/100;                       // ② 기준금액
+  var durPct=durDef()[3];
+  var afterDur=base*(1+durPct/100);            // ③ 필수적 가중
+  var addPct=0;
+  FACTORS.forEach(function(f){ if(S.f[f[0]]) addPct+=f[3]; });
+  addPct=Math.max(-50,Math.min(50,addPct));    // ④ ±50% 상한
+  var afterAdd=afterDur*(1+addPct/100);
+  var final=truncate(afterAdd);
+  return {rev:rev,rate:rate,base:base,durPct:durPct,afterDur:afterDur,addPct:addPct,afterAdd:afterAdd,final:final};
+}
+
+function renderTotal(){
+  var c=calc();
+  document.getElementById('total').innerHTML=
+    '<div class="lab">'+L('산정 결과 (교육용)','ESTIMATED — EDUCATIONAL')+'</div>'+
+    '<div class="amt">'+eok(c.final)+'</div>'+
+    '<div class="won">'+won(c.final)+L(' 원','')+'</div>'+
+    '<div class="cap">'+L('관련 매출액의 ','')+ (c.rev? (c.final/c.rev*100).toFixed(2):'0') +'% · '+
+      L('중대성 ','')+esc(L(gradeDef()[1],gradeDef()[2]))+' · '+L('기준율 ','rate ')+c.rate+'%</div>';
+}
+
+function renderGrades(){
+  document.getElementById('grades').innerHTML=GRADES.map(function(g){
+    return '<button class="opt'+(S.grade===g[0]?' on':'')+'" onclick="setGrade(\''+g[0]+'\')">'+
+      esc(L(g[1],g[2]))+' <span style="opacity:.8">'+g[3]+'~'+g[4]+'%</span></button>';
+  }).join('');
+  var g=gradeDef(), r=document.getElementById('rate');
+  r.min=g[3]; r.max=g[4]; r.value=clampRate();
+  document.getElementById('rateHint').innerHTML=
+    L('선택한 등급의 부과기준율 구간은 <b>'+g[3]+'% ~ '+g[4]+'%</b>입니다. 현재 <b>'+S.rate+'%</b> 적용.',
+      'Band for this grade: <b>'+g[3]+'–'+g[4]+'%</b>. Currently <b>'+S.rate+'%</b>.');
+  document.getElementById('o2').textContent=eok(calc().base);
+}
+function renderDurs(){
+  document.getElementById('durs').innerHTML=DURS.map(function(d){
+    return '<button class="opt'+(S.dur===d[0]?' on':'')+'" onclick="setDur(\''+d[0]+'\')">'+
+      esc(L(d[1],d[2]))+' <span style="opacity:.8">'+(d[3]?'+'+d[3]+'%':'±0')+'</span></button>';
+  }).join('');
+  document.getElementById('o3').textContent=eok(calc().afterDur);
+}
+function renderFactors(){
+  document.getElementById('factors').innerHTML=FACTORS.map(function(f){
+    var on=!!S.f[f[0]];
+    return '<label class="chk'+(on?' on '+f[4]:'')+'">'+
+      '<input type="checkbox" '+(on?'checked':'')+' onchange="toggleF(\''+f[0]+'\')">'+
+      '<span class="tx"><b>'+L(f[1],f[2])+'</b></span>'+
+      '<span class="d">'+(f[3]>0?'+':'')+f[3]+'%</span></label>';
+  }).join('');
+  var c=calc();
+  document.getElementById('o4').textContent=eok(c.afterAdd)+' ('+(c.addPct>0?'+':'')+c.addPct+'%)';
+}
+function renderTrail(){
+  var c=calc();
+  function row(no,label,val,delta,hl){
+    return '<tr'+(hl?' class="hl"':'')+'><td>'+no+'</td><td>'+label+'</td>'+
+      '<td class="num">'+won(val)+'</td>'+
+      '<td class="num delta '+(delta&&delta.indexOf('+')===0?'up':'dn')+'">'+(delta||'')+'</td></tr>';
+  }
+  document.getElementById('trail').innerHTML=
+    '<tr><th>#</th><th>'+L('단계','Step')+'</th><th class="num">'+L('금액(원)','Amount (KRW)')+'</th><th class="num">'+L('증감','Δ')+'</th></tr>'+
+    row('①',L('관련 매출액','Related revenue'),c.rev,'')+
+    row('②',L('× 부과기준율 '+c.rate+'% = 기준금액','× rate '+c.rate+'% = base'),c.base,'')+
+    row('③',L('필수적 가중(위반기간)','Mandatory (duration)'),c.afterDur,(c.durPct?'+'+c.durPct+'%':'±0'))+
+    row('④',L('추가적 가중·감경','Discretionary'),c.afterAdd,(c.addPct>0?'+':'')+c.addPct+'%')+
+    row('⑤',L('절사 후 <b>최종</b>','After rounding — <b>final</b>'),c.final,'',true);
+  document.getElementById('o1').textContent=eok(c.rev);
+}
+function renderLesson(){
+  var c=calc();
+  // 감경 사유를 모두 껐을 때와 비교
+  var saved=S.f, tmp={};
+  FACTORS.forEach(function(f){ if(f[3]>0&&saved[f[0]]) tmp[f[0]]=true; });
+  var keep=S.f; S.f=tmp; var without=calc().final; S.f=keep;
+  var diff=without-c.final;
+  var el=document.getElementById('lesson');
+  if(diff>0){
+    el.innerHTML='💡 '+L('현재 선택한 <b>감경 사유</b>가 금액을 <b>'+eok(diff)+'</b> 줄이고 있습니다 ('+won(without)+' → '+won(c.final)+'). '+
+      '개정법은 <b>개인정보보호 예산·인력·설비 투자</b>를 감경 사유로 명시했습니다 — 보안 투자가 제재 산정에서 직접 작동한다는 뜻입니다.',
+      'Your mitigating factors are reducing the amount by <b>'+eok(diff)+'</b>. The amended Act names privacy investment as a mitigating factor.');
+  }else{
+    el.innerHTML='💡 '+L('감경 사유를 하나도 선택하지 않았습니다. <b>조사 협조·자진 신고·보호 투자·피해 구제</b>를 켜 보면 금액이 어떻게 움직이는지 확인할 수 있습니다.',
+      'No mitigating factors selected — switch on cooperation, self-reporting, investment or remediation to see the effect.');
+  }
+}
+
+function setGrade(g){ S.grade=g; S.rate=null; save(); render(); }
+function setDur(d){ S.dur=d; save(); render(); }
+function toggleF(k){ S.f[k]=!S.f[k]; save(); render(); }
+function preset(kind){
+  if(kind==='best'){ S.grade='low'; S.rate=null; S.dur='short'; S.f={coop:true,self:true,invest:true,remedy:true}; }
+  else { S.grade='vhigh'; S.rate=null; S.dur='long'; S.f={lead:true,repeat:true,expand:true}; }
+  save(); render();
+}
+function resetAll(){ S={rev:10000000000,grade:'high',rate:null,dur:'short',f:{}}; save(); render(); }
+
+function exportReport(){
+  var c=calc();
+  var l=[];
+  l.push('개인정보 과징금 산정 구조 (교육용 시뮬레이션)');
+  l.push('근거: 「개인정보 보호법」 제64조의2 · 시행령 [별표 1의5] · 과징금 부과기준 고시(제2023-3호)');
+  l.push('생성: '+new Date().toLocaleString('ko-KR'));
+  l.push('');
+  l.push('① 관련 매출액            : '+won(c.rev)+' 원');
+  l.push('② 중대성/부과기준율      : '+gradeDef()[1]+' / '+c.rate+'%');
+  l.push('   기준금액              : '+won(c.base)+' 원');
+  l.push('③ 필수적 가중(위반기간)  : '+durDef()[1]+' ('+(c.durPct?'+'+c.durPct+'%':'±0')+') → '+won(c.afterDur)+' 원');
+  var on=FACTORS.filter(function(f){return S.f[f[0]];});
+  l.push('④ 추가적 가중·감경       : '+(c.addPct>0?'+':'')+c.addPct+'% → '+won(c.afterAdd)+' 원');
+  on.forEach(function(f){ l.push('   - '+f[1].replace(/<[^>]+>/g,'')+' ('+(f[3]>0?'+':'')+f[3]+'%)'); });
+  l.push('⑤ 절사 후 최종           : '+won(c.final)+' 원');
+  l.push('');
+  l.push('※ 중대성 등급은 위원회가 고시 별표의 배점표로 결정하며 이 도구는 이를 재현하지 않습니다.');
+  l.push('※ 2026.9.11.부터 고의·중과실 3년 내 반복 또는 1천만명 이상 피해 시 전체 매출액 10% 이내 징벌적 과징금 적용 가능.');
+  var blob=new Blob([l.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='과징금_산정구조_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+
+function render(){
+  renderGrades(); renderDurs(); renderFactors(); renderTrail(); renderTotal(); renderLesson(); applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-penalty-calc.html'); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',function(){
+  load(); applyLang();
+  document.getElementById('rev').value=S.rev;
+  document.getElementById('rev').addEventListener('input',function(){ S.rev=Math.max(0,+this.value||0); save(); render(); });
+  document.getElementById('rate').addEventListener('input',function(){ S.rate=+this.value; save(); render(); });
+  render();
+});
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

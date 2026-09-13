@@ -55,6 +55,7 @@ TOOL_PAGES = {
     'vulnlab.html': ('appsec', 'practice_tool'),
     'redteam.html': ('appsec', 'practice_tool'),
     'quiz-forge.html': ('appsec', 'practice_tool'),
+    'incident.html': ('automotive', 'guided_incident'),
 }
 
 

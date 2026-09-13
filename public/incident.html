@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대표 사건 실습 — 차량 데이터 접근 사고 | WEB-VULN-SIM</title>
+<meta name="description" content="가상의 모빌리티 기업에서 발생한 차량 데이터 접근 사건을 4단계로 해결합니다. API 인가 수정, 업데이트 패키지 검증, 개인정보 영향 범위 정리, 다른 자산으로의 전이까지 고정 검사기가 정상 동작과 비인가 차단을 함께 확인합니다.">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0e1626;--line:#1e293b;--line2:#26334d;
+ --txt:#dbe4f0;--sub:#8fa0ba;--acc:#38bdf8;--red:#ef4444;--green:#4ade80;--amber:#fbbf24;--violet:#a78bfa}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI','Noto Sans KR',sans-serif;min-height:100vh;font-size:16px;line-height:1.6}
+a{color:var(--acc)}
+.top{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--panel2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.top .back{color:var(--sub);text-decoration:none;font-size:.85rem;white-space:nowrap}
+.brand{font-weight:800;font-size:1rem;flex:1;min-width:180px}
+.brand small{display:block;font-weight:500;font-size:.68rem;color:var(--sub)}
+.demo-tag{font-size:.66rem;font-weight:800;color:#fcd34d;border:1px solid #78350f;background:rgba(251,191,36,.1);padding:4px 10px;border-radius:99px;white-space:nowrap}
+.wrap{max-width:1400px;margin:0 auto;padding:14px}
+.crumb{font-size:.78rem;color:var(--sub);margin-bottom:8px}
+/* 단계 진행 */
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.stepbtn{padding:8px 14px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);color:var(--sub);
+ font-size:.8rem;font-weight:700;cursor:pointer;min-height:44px;font-family:inherit}
+.stepbtn.on{border-color:var(--violet);color:#c4b5fd;background:rgba(167,139,250,.1)}
+.stepbtn.done{border-color:#14532d;color:#86efac}
+/* 3단 레이아웃 */
+.cols{display:grid;grid-template-columns:260px minmax(0,1fr) 320px;gap:14px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.panel h2{font-size:.78rem;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.panel h3{font-size:.88rem;margin:14px 0 6px}
+.muted{color:var(--sub);font-size:.8rem}
+.given{background:var(--panel2);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:9px 12px;margin:6px 0;font-size:.78rem;color:#cbd5e1}
+.ev{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+ padding:9px 12px;margin-bottom:6px;color:var(--txt);font-size:.78rem;cursor:pointer;font-family:inherit;min-height:44px}
+.ev:hover{border-color:var(--acc)}
+.ev.sel{border-color:var(--acc);background:rgba(56,189,248,.08)}
+pre{background:#060b16;border:1px solid var(--line);border-radius:9px;padding:11px 13px;overflow-x:auto;
+ font-family:'Cascadia Mono',Consolas,monospace;font-size:.76rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+select,input[type=number]{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);border-radius:8px;
+ padding:9px 10px;font-family:inherit;font-size:.82rem;min-height:44px}
+label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:pointer;min-height:44px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.btn{padding:11px 20px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--txt);
+ font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;min-height:44px}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.primary{background:linear-gradient(135deg,#7c3aed,#4c1d95);border:0;color:#fff}
+.btn.primary:hover{filter:brightness(1.15);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+/* 검증 결과 */
+.verdict{border-radius:10px;padding:12px 14px;margin:10px 0;font-size:.85rem;font-weight:700;display:none}
+.verdict.show{display:block}
+.verdict.ok{background:rgba(74,222,128,.1);border:1px solid #14532d;color:#86efac}
+.verdict.no{background:rgba(239,68,68,.1);border:1px solid #7f1d1d;color:#fca5a5}
+.tests{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.t{display:flex;gap:9px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);
+ border-radius:8px;padding:8px 11px;font-size:.76rem;line-height:1.55}
+.t.pass{border-left:3px solid var(--green)}
+.t.fail{border-left:3px solid var(--red)}
+.t .k{font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:5px;flex-shrink:0;border:1px solid}
+.k.normal{color:#7dd3fc;border-color:#0c4a6e}
+.k.unauthorized{color:#fca5a5;border-color:#7f1d1d}
+.axes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.axis{font-size:.72rem;padding:5px 10px;border-radius:7px;border:1px solid var(--line2);color:var(--sub)}
+.axis.ok{color:#86efac;border-color:#14532d}
+.axis.no{color:#fca5a5;border-color:#7f1d1d}
+.coach-out{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin-top:8px;font-size:.8rem}
+.coach-out b{color:var(--acc)}
+/* 탭(좁은 화면) */
+.tabs{display:none;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:11px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);
+ color:var(--sub);font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit;min-height:44px}
+.tabs button.on{border-color:var(--acc);color:var(--acc);background:rgba(56,189,248,.08)}
+@media(max-width:1199px){.cols{grid-template-columns:240px minmax(0,1fr)}
+ .col-coach{grid-column:1/-1}}
+@media(max-width:767px){
+ .tabs{display:flex}
+ .cols{grid-template-columns:1fr}
+ .cols>div{display:none}
+ .cols>div.active{display:block}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="vuln-hub.html" class="back">← 허브</a>
+  <h1 class="brand">🚗 대표 사건 실습<small>차량 데이터 접근 사고 · 4단계</small></h1>
+  <span class="demo-tag">합성 데모 데이터</span>
+</header>
+
+<div class="wrap" role="main">
+  <nav class="crumb" aria-label="위치">학습 경로 &gt; 자동차 &gt; <span id="crumbStage">차량 조회 API 인가</span></nav>
+
+  <div class="steps" id="steps" role="tablist" aria-label="사건 단계"></div>
+
+  <div class="tabs" role="tablist" aria-label="화면 전환">
+    <button type="button" data-pane="goal" class="on">목표·증거</button>
+    <button type="button" data-pane="work">실습</button>
+    <button type="button" data-pane="coach">코치</button>
+  </div>
+
+  <div class="cols">
+    <!-- 좌: 목표 / 가정 / 증거 -->
+    <div class="panel col-goal active" id="paneGoal">
+      <h2>목표</h2>
+      <p id="goalText" style="font-size:.86rem"></p>
+      <h3>이 단계가 가정하는 것</h3>
+      <div id="givens"></div>
+      <h3>성공 조건</h3>
+      <p class="muted" id="successText"></p>
+      <h3>증거</h3>
+      <div id="evList"></div>
+      <p class="muted" style="margin-top:10px;font-size:.74rem">선택한 증거 ID 만 코치에게 전달됩니다.</p>
+    </div>
+
+    <!-- 중앙: 실습 -->
+    <div class="panel col-work" id="paneWork">
+      <h2>실습</h2>
+      <div id="workArea"></div>
+      <div class="row">
+        <button type="button" class="btn" id="btnRun">▶ 시험 실행</button>
+        <button type="button" class="btn primary" id="btnSubmit">검증 제출</button>
+        <button type="button" class="btn" id="btnReset">초기화</button>
+      </div>
+      <p class="muted" style="font-size:.74rem">‘시험 실행’은 결과만 보여주고 기록하지 않습니다. ‘검증 제출’만 진도에 반영됩니다.</p>
+      <div class="verdict" id="verdict" role="status"></div>
+      <div class="axes" id="axes"></div>
+      <div class="tests" id="tests"></div>
+    </div>
+
+    <!-- 우: 코치 -->
+    <div class="panel col-coach" id="paneCoach">
+      <h2>AI 코치</h2>
+      <p class="muted" style="font-size:.76rem">막힌 지점을 스스로 넘도록 다음 확인 행동을 제안합니다. 코치는 채점하지 않습니다.</p>
+      <div class="row">
+        <button type="button" class="btn" id="btnCoach">코치에게 묻기</button>
+        <button type="button" class="btn" id="btnPreview">전송 내용 보기</button>
+      </div>
+      <div id="coachOut"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <h2>발표용 바로가기</h2>
+    <p class="muted" style="font-size:.78rem">3~5분 시연을 위해 준비된 중간 상태로 이동합니다. 모두 합성 데이터입니다.</p>
+    <div class="row">
+      <button type="button" class="btn" data-jump="0">1단계 처음부터</button>
+      <button type="button" class="btn" data-jump="fix1">1단계 — 취약 상태 재현</button>
+      <button type="button" class="btn" data-jump="2">2단계로</button>
+      <button type="button" class="btn" data-jump="3">3단계로</button>
+      <button type="button" class="btn" data-jump="4">4단계로</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/incident-engine.js"></script>
+<script src="/js/ai-client.js"></script>
+<script src="/js/coach.js"></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/pwa.js" defer></script>
+<script>
+(function () {
+  'use strict';
+  var INC = window.WVS_INCIDENT;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+
+  var KEY = 'wvs_incident';
+  var cur = 0;
+  var selectedEv = {};
+  var lastResult = null;
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+
+  /* ── 단계 버튼 ── */
+  function renderSteps() {
+    var st = load();
+    $('steps').innerHTML = INC.stages.map(function (s, i) {
+      var done = st[s.id] && st[s.id].passed;
+      return '<button type="button" role="tab" class="stepbtn' + (i === cur ? ' on' : '') + (done ? ' done' : '') +
+        '" data-i="' + i + '" aria-selected="' + (i === cur ? 'true' : 'false') + '">' +
+        (done ? '✓ ' : '') + esc(s.title) + '</button>';
+    }).join('');
+  }
+
+  /* ── 단계별 실습 화면 ── */
+  function renderWork() {
+    var s = INC.stages[cur];
+    $('crumbStage').textContent = s.title.replace(/^\d+\.\s*/, '');
+    $('goalText').textContent = s.goal;
+    $('givens').innerHTML = s.givens.map(function (g) { return '<div class="given">' + esc(g) + '</div>'; }).join('');
+    $('successText').textContent = s.success;
+    $('evList').innerHTML = s.evidenceIds.map(function (e) {
+      return '<button type="button" class="ev' + (selectedEv[e] ? ' sel' : '') + '" data-ev="' + esc(e) + '">' +
+        esc(e) + '</button>';
+    }).join('');
+
+    var w = $('workArea');
+    if (s.id === 'api-authz' || s.id === 'transfer') {
+      if (s.id === 'transfer') {
+        w.innerHTML =
+          '<p class="muted">1단계에서 쓴 <b>소유 관계를 서버에서 대조한다</b>를 정비 예약 API 에 적용합니다.</p>' +
+          '<pre>GET /api/bookings/:id\n// 현재: 로그인만 확인하고 예약 소유자를 보지 않는다</pre>' +
+          '<label><input type="checkbox" id="t_owner"> 요청자와 예약 소유자가 같은지 서버에서 대조한다</label>';
+      } else {
+        var opts = INC.s1Fields.map(function (f) { return '<option value="' + esc(f) + '">' + esc(f) + '</option>'; }).join('');
+        w.innerHTML =
+          '<p class="muted">아래 조건으로 허용 정책을 구성하세요. <b>조건에 맞지 않으면 기본 거부</b>입니다.</p>' +
+          '<pre>GET /api/vehicles/:vin\n// 현재: 로그인만 확인하고 소유 관계를 보지 않는다</pre>' +
+          '<div class="row"><select id="c1l">' + opts + '</select>' +
+          '<select id="c1o"><option value="==">==</option><option value="!=">!=</option></select>' +
+          '<select id="c1r">' + opts + '</select></div>' +
+          '<div class="row"><select id="join"><option value="or">또는(OR)</option><option value="and">그리고(AND)</option></select>' +
+          '<span class="muted">두 번째 조건과 결합</span></div>' +
+          '<div class="row"><select id="c2l"><option value="">(사용 안 함)</option>' + opts + '</select>' +
+          '<select id="c2o"><option value="==">==</option><option value="!=">!=</option></select>' +
+          '<select id="c2r">' + opts + '</select></div>';
+      }
+    } else if (s.id === 'ota-verify') {
+      w.innerHTML =
+        '<p class="muted">현재 펌웨어: v' + INC.currentFirmware.version + ' · ' + INC.currentFirmware.model + '/' + INC.currentFirmware.region + '</p>' +
+        '<pre>' + INC.packages.map(function (p) { return '- ' + p.desc; }).join('\n') + '</pre>' +
+        '<label><input type="checkbox" id="k_sig"> 서명을 검증한다</label><br>' +
+        '<label><input type="checkbox" id="k_ver"> 현재보다 낮거나 같은 버전을 거부한다</label><br>' +
+        '<label><input type="checkbox" id="k_tgt"> 차종·지역이 맞는지 확인한다</label>';
+    } else if (s.id === 'privacy-scope') {
+      w.innerHTML =
+        '<p class="muted">아래 합성 접근 로그에서 <b>비인가 접근</b>만 세어 범위를 정리하세요.</p>' +
+        '<pre>' + INC.accessLog.map(function (e) {
+          return e.ts + '  actor=' + e.actor + '  ' + e.vin + '  [' + e.fields.join(',') + ']  ' + (e.ok ? '허용' : '거부되지 않음(비인가)');
+        }).join('\n') + '</pre>' +
+        '<div class="row"><label for="p_count">영향받은 차량 수</label>' +
+        '<input type="number" id="p_count" min="0" max="10" value="0" style="width:90px"></div>' +
+        '<div class="row">영향받은 정보 항목: ' +
+        ['location', 'ownerName', 'phone', 'paymentCard'].map(function (f) {
+          return '<label><input type="checkbox" class="p_f" value="' + f + '"> ' + f + '</label>';
+        }).join(' ') + '</div>';
+    }
+    $('verdict').className = 'verdict';
+    $('tests').innerHTML = ''; $('axes').innerHTML = '';
+    lastResult = null;
+    restore();
+  }
+
+  /* ── 답안 수집/복원 ── */
+  function answer() {
+    var s = INC.stages[cur];
+    if (s.id === 'api-authz') {
+      var conds = [{ left: $('c1l').value, op: $('c1o').value, right: $('c1r').value }];
+      if ($('c2l').value) conds.push({ left: $('c2l').value, op: $('c2o').value, right: $('c2r').value });
+      return { join: $('join').value, conds: conds };
+    }
+    if (s.id === 'ota-verify') return { signature: $('k_sig').checked, version: $('k_ver').checked, target: $('k_tgt').checked };
+    if (s.id === 'privacy-scope') {
+      return { affectedVehicles: Number($('p_count').value),
+        fields: [].slice.call(document.querySelectorAll('.p_f:checked')).map(function (c) { return c.value; }) };
+    }
+    if (s.id === 'transfer') return { checkOwner: $('t_owner').checked };
+    return {};
+  }
+  function restore() {
+    var st = load()[INC.stages[cur].id];
+    if (!st || !st.answer) return;
+    var a = st.answer, s = INC.stages[cur];
+    try {
+      if (s.id === 'api-authz' && a.conds) {
+        $('c1l').value = a.conds[0].left; $('c1o').value = a.conds[0].op; $('c1r').value = a.conds[0].right;
+        $('join').value = a.join || 'or';
+        if (a.conds[1]) { $('c2l').value = a.conds[1].left; $('c2o').value = a.conds[1].op; $('c2r').value = a.conds[1].right; }
+      } else if (s.id === 'ota-verify') {
+        $('k_sig').checked = !!a.signature; $('k_ver').checked = !!a.version; $('k_tgt').checked = !!a.target;
+      } else if (s.id === 'privacy-scope') {
+        $('p_count').value = a.affectedVehicles || 0;
+        [].slice.call(document.querySelectorAll('.p_f')).forEach(function (c) {
+          c.checked = (a.fields || []).indexOf(c.value) >= 0; });
+      } else if (s.id === 'transfer') { $('t_owner').checked = !!a.checkOwner; }
+    } catch (e) { /* 저장 형태가 달라졌으면 그냥 기본값 */ }
+  }
+
+  /* ── 검증 ── */
+  function show(res) {
+    lastResult = res;
+    var v = $('verdict');
+    v.className = 'verdict show ' + (res.passed ? 'ok' : 'no');
+    v.textContent = res.message;
+    $('axes').innerHTML =
+      '<span class="axis ' + (res.keepsWorking ? 'ok' : 'no') + '">정상 동작 유지 ' + (res.keepsWorking ? '✓' : '✗') + '</span>' +
+      '<span class="axis ' + (res.blocksAbuse ? 'ok' : 'no') + '">비인가 차단 ' + (res.blocksAbuse ? '✓' : '✗') + '</span>';
+    $('tests').innerHTML = res.results.map(function (r) {
+      return '<div class="t ' + (r.pass ? 'pass' : 'fail') + '">' +
+        '<span class="k ' + r.kind + '">' + (r.kind === 'normal' ? '정상' : '비인가') + '</span>' +
+        '<span>' + esc(r.desc) + '<br><span class="muted">기대 ' + esc(r.expect) + ' · 실제 ' + esc(r.got) + '</span></span></div>';
+    }).join('');
+  }
+
+  function run(record) {
+    var s = INC.stages[cur];
+    var res = INC.grade(s.id, answer());
+    show(res);
+    if (!record) return;
+    var st = load();
+    st[s.id] = { answer: answer(), passed: res.passed, at: Date.now() };
+    save(st);
+    renderSteps();
+    /* 4단계까지 모두 통과하면 통합 진도에 완료로 기록 */
+    var all = INC.stages.every(function (x) { return st[x.id] && st[x.id].passed; });
+    if (all) {
+      try { window.WVSProgress && window.WVSProgress.complete(undefined, 'incident.html'); } catch (e) {}
+      $('verdict').textContent = res.message + ' — 4단계를 모두 완료했습니다. 내 학습 현황에 기록됐습니다.';
+    }
+  }
+
+  /* ── 코치 ── */
+  function coachCtx() {
+    var s = INC.stages[cur];
+    return {
+      activityId: 'incident:' + s.id,
+      step: lastResult ? 'verify' : 'evidence',
+      evidenceIds: Object.keys(selectedEv).filter(function (k) { return selectedEv[k]; }),
+      failedTests: lastResult ? lastResult.failedTests : [],
+      hintsUsed: (load()._hints || 0),
+    };
+  }
+  function askCoach() {
+    if (!window.WVS_COACH) return;
+    var st = load(); st._hints = (st._hints || 0) + 1; save(st);
+    $('coachOut').innerHTML = '<div class="coach-out">코치가 지금 상태를 확인하는 중…</div>';
+    window.WVS_COACH.ask(coachCtx()).then(function (r) {
+      var c = r.coach;
+      $('coachOut').innerHTML = '<div class="coach-out">' +
+        '<div><b>관찰</b> ' + esc(c.observation) + '</div>' +
+        '<div style="margin-top:6px"><b>다음 확인</b> ' + esc(c.nextAction) + '</div>' +
+        (c.hint ? '<div style="margin-top:6px"><b>힌트</b> ' + esc(c.hint) + '</div>' : '') +
+        (c.sources && c.sources.length ? '<div style="margin-top:6px" class="muted">참조: ' + esc(c.sources.join(', ')) + '</div>' : '') +
+        (c.uncertainty ? '<div style="margin-top:6px" class="muted">⚠ ' + esc(c.uncertainty) + '</div>' : '') +
+        (c.refused && c.refused.length ? '<div style="margin-top:6px" class="muted">ⓘ 점수·정답·권한 관련 ' + c.refused.length + '개 항목은 규칙상 사용하지 않았습니다.</div>' : '') +
+        '<div style="margin-top:6px" class="muted">모드: ' + (c.mode === 'ai' ? 'AI' : 'AI 미연결 — 일반 지침') + '</div>' +
+        '</div>';
+    });
+  }
+
+  /* ── 이벤트 ── */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target : null;
+    if (!t) return;
+    var sb = t.closest('.stepbtn');
+    if (sb) { cur = +sb.getAttribute('data-i'); renderSteps(); renderWork(); return; }
+    var ev = t.closest('.ev');
+    if (ev) { var id = ev.getAttribute('data-ev'); selectedEv[id] = !selectedEv[id]; ev.classList.toggle('sel'); return; }
+    var tab = t.closest('.tabs button');
+    if (tab) {
+      document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('on'); });
+      tab.classList.add('on');
+      var map = { goal: 'paneGoal', work: 'paneWork', coach: 'paneCoach' };
+      Object.keys(map).forEach(function (k) { $(map[k]).classList.remove('active'); });
+      $(map[tab.getAttribute('data-pane')]).classList.add('active');
+      return;
+    }
+    var jb = t.closest('[data-jump]');
+    if (jb) { jump(jb.getAttribute('data-jump')); return; }
+  });
+  $('btnRun').addEventListener('click', function () { run(false); });
+  $('btnSubmit').addEventListener('click', function () { run(true); });
+  $('btnReset').addEventListener('click', function () {
+    if (!confirm('이 단계의 입력과 검증 결과를 지웁니다. 다른 단계 기록은 그대로 둡니다. 계속할까요?')) return;
+    var st = load(); delete st[INC.stages[cur].id]; save(st); renderSteps(); renderWork();
+  });
+  $('btnCoach').addEventListener('click', askCoach);
+  $('btnPreview').addEventListener('click', function () {
+    if (!window.WVS_COACH) return;
+    $('coachOut').innerHTML = '<div class="coach-out"><b>코치에게 전송되는 내용</b><pre>' +
+      esc(window.WVS_COACH.preview(coachCtx())) + '</pre></div>';
+  });
+
+  /* ── 발표용 바로가기 ── */
+  function jump(k) {
+    var st = load();
+    if (k === '0') { delete st['api-authz']; save(st); cur = 0; }
+    else if (k === 'fix1') { /* 취약 상태 재현: 전부 허용 */
+      st['api-authz'] = { answer: { join: 'and', conds: [{ left: 'true', op: '==', right: 'true' }] }, passed: false, at: Date.now() };
+      save(st); cur = 0;
+    } else {
+      var n = Number(k);
+      /* 앞 단계를 통과 처리해 중간부터 시연할 수 있게 한다(데모 목적임을 표시) */
+      var good = {
+        'api-authz': { join: 'or', conds: [{ left: 'req.userId', op: '==', right: 'vehicle.ownerId' },
+          { left: 'req.role', op: '==', right: "'admin'" }] },
+        'ota-verify': { signature: true, version: true, target: true },
+        'privacy-scope': INC.truth(),
+      };
+      for (var i = 0; i < n - 1; i++) {
+        var id = INC.stages[i].id;
+        st[id] = { answer: good[id] || {}, passed: true, at: Date.now(), demo: true };
+      }
+      save(st); cur = n - 1;
+    }
+    renderSteps(); renderWork();
+    if (k !== '0' && k !== 'fix1') {
+      $('verdict').className = 'verdict show ok';
+      $('verdict').textContent = '발표용 바로가기: 앞 단계를 데모용으로 통과 처리했습니다(합성 데이터).';
+    }
+  }
+
+  renderSteps(); renderWork();
+})();
+</script>
+</body>
+</html>

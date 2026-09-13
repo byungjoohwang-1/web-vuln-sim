@@ -34,6 +34,8 @@ TOOLS = [
     ('vulnlab.html', ('실습 도구', 'B')),
     ('redteam.html', ('실습 도구', 'B')),
     ('quiz-forge.html', ('실습 도구', 'B')),
+    ('incident.html', ('대표 사건 실습', 'E')),   # G08 — 자동차·개인정보를 잇는 4단계 사건
+
 ]
 TITLE_RE = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
 CODE_RE = re.compile(r'^([A-Z]{1,4}-\d{1,3})\s*[:：]\s*(.+)$')

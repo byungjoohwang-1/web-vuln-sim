@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 처리방침 평가 시뮬레이터 — 적정성·가독성·접근성 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 처리방침 평가 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="개인정보위 처리방침 평가제(법 제30조의2) 3축 자가평가 — 2024년 실제 평가 결과와 비교">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-policy-eval.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="개인정보보호위원회 처리방침 평가제(「개인정보 보호법」 제30조의2, 고시 제2024-3호) 3축(적정성·가독성·접근성) 자가평가 — 2024년 첫 평가에서 실제로 지적된 항목으로 점검하고 당시 평균(적정성 53.4·접근성 60.8·가독성 69.1)과 비교합니다. 접근성은 클릭 수·스크롤 횟수를 실측해 채점. 100% 브라우저.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .sp{margin-left:auto}
+/* 3축 점수판 */
+.axes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.ax{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.ax .t{font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px}
+.ax .n{font-family:var(--mono);font-size:30px;font-weight:800;margin-top:6px;line-height:1}
+.ax .cmp{font-size:11.5px;color:var(--muted);margin-top:5px}
+.ax .bars{margin-top:9px}
+.ax .row{display:flex;align-items:center;gap:7px;font-size:10.5px;font-family:var(--mono);color:var(--muted);margin-top:4px}
+.ax .row .lbl{width:38px;flex-shrink:0}
+.ax .row .tr{flex:1;height:7px;border-radius:99px;background:#1e293b;overflow:hidden}
+.ax .row .tr>i{display:block;height:100%}
+.ax .row .v{width:30px;text-align:right;flex-shrink:0}
+/* 항목 */
+.grp{margin-top:10px}
+.grp>h3{font-size:13.5px;color:#a5b4fc;font-family:var(--mono);margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.grp>h3 .w{margin-left:auto;font-size:11px;color:var(--muted)}
+.it{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid #334155;border-radius:10px;padding:10px 12px;margin:6px 0;cursor:pointer;transition:.15s}
+.it:hover{background:#18233c}
+.it.on{background:#0c2030;border-color:#0ea5e9}
+.it input{width:17px;height:17px;flex-shrink:0;margin-top:2px}
+.it .tx{flex:1;min-width:0}
+.it .tx b{font-size:13.5px;font-weight:600;display:block}
+.it .tx span{font-size:11.5px;color:var(--muted);display:block;margin-top:2px}
+.it .tx .real{color:#fca5a5;font-size:11.5px;display:block;margin-top:3px}
+/* 접근성 실측 */
+.meas{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:8px}
+.mz{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.mz label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.mz input[type=number]{width:100%;background:#0b1220;border:1px solid #334155;color:var(--ink);border-radius:8px;padding:7px 10px;font-family:var(--mono);font-size:14px}
+.mz .hint{font-size:11px;color:#64748b;margin-top:5px}
+.mz .verdict{font-family:var(--mono);font-size:11.5px;font-weight:800;margin-top:6px}
+.mz .verdict.ok{color:#86efac}.mz .verdict.warn{color:#fde047}.mz .verdict.bad{color:#fca5a5}
+/* 결과 */
+.findings{list-style:none;margin-top:8px}
+.findings li{font-size:12.5px;padding:8px 11px 8px 29px;position:relative;border-radius:8px;margin-bottom:6px;background:var(--panel2);border:1px solid var(--border)}
+.findings li::before{position:absolute;left:10px;top:8px}
+.findings li.f-bad{border-left:3px solid var(--bad)}.findings li.f-bad::before{content:'✖';color:#fca5a5}
+.findings li.f-warn{border-left:3px solid var(--warn)}.findings li.f-warn::before{content:'!';color:#fde047;font-weight:800}
+.findings li.f-ok{border-left:3px solid var(--good)}.findings li.f-ok::before{content:'✔';color:#86efac}
+.findings li b{color:#e2e8f0}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.warnbox{background:#3a2a09;border-left:4px solid var(--warn);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#fde047;margin:12px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="privacy-policy-builder.html"><span data-en="Policy Builder">처리방침 작성기</span></a>
+  <a href="privacy-penalty-calc.html"><span data-en="Penalty calculator">과징금 산정</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🔎 <span data-en="Privacy Policy Evaluation Simulator">개인정보 처리방침 평가 시뮬레이터</span></h1>
+    <div class="sub" data-en="Since 2024 the Commission evaluates published privacy policies every year on three axes — adequacy, readability, accessibility — and can recommend改善 or publish the result. This simulator scores you on what the first round actually flagged, and shows where you stand against that year’s averages.">
+      개인정보보호위원회는 2024년부터 <b>공개된 처리방침을 매년 평가</b>합니다(법 제30조의2). 평가 축은 <b>적정성 · 가독성 · 접근성</b> 세 가지이고, 결과에 따라 개선권고·공표까지 이어집니다. 이 도구는 <b>첫 평가에서 실제로 지적된 항목</b>으로 점검하고 그해 평균과 비교해 줍니다.</div>
+    <div class="src">📕 기준: 「개인정보 보호법」 제30조의2 · 「개인정보 처리방침 평가에 관한 고시」(제2024-3호) · 2024년 평가 결과 보도자료 — 교육용 재구성</div>
+  </div>
+
+  <div class="warnbox" data-en="⚠️ The official scoring table is in the annex to the notification and is not reproduced here. This tool weights every item equally and is a <b>learning self-check</b>, not a prediction of an official score.">
+    ⚠️ 고시 별표의 <b>공식 배점표는 이 도구에 반영돼 있지 않습니다.</b> 모든 항목을 동일 가중으로 계산하는 <b>학습용 자가점검</b>이며, 실제 평가 점수를 예측하지 않습니다.</div>
+
+  <!-- 점수판 -->
+  <div class="card">
+    <h2>📊 <span data-en="Your score vs the 2024 average">내 점수 vs 2024년 평가 평균</span></h2>
+    <div class="axes" id="axes"></div>
+    <div class="note" data-en="2024 averages across 49 companies in 7 sectors: readability 69.1, accessibility 60.8, adequacy 53.4 (out of 100). Adequacy scored lowest — 72% of those evaluated had a policy that did not match what they actually told users at the point of collection.">
+      2024년 7개 분야 49개 기업·기관 평균(100점 만점): <b>가독성 69.1 · 접근성 60.8 · 적정성 53.4</b>. 적정성이 가장 낮았고,
+      평가대상의 <b>72%가 처리방침 기재내용과 실제 서비스에서 고지한 목적·항목·보유기간이 달랐습니다.</b></div>
+  </div>
+
+  <!-- 적정성 -->
+  <div class="card">
+    <h2>① <span data-en="Adequacy — does it match reality?">적정성 — 실제 처리와 일치하는가</span><span class="sp"></span><span style="font-size:11.5px;color:var(--muted)">2024 평균 53.4</span></h2>
+    <div id="gAdeq"></div>
+  </div>
+
+  <!-- 가독성 -->
+  <div class="card">
+    <h2>② <span data-en="Readability — can a normal person read it?">가독성 — 일반인이 읽을 수 있는가</span><span class="sp"></span><span style="font-size:11.5px;color:var(--muted)">2024 평균 69.1</span></h2>
+    <div id="gRead"></div>
+  </div>
+
+  <!-- 접근성 -->
+  <div class="card">
+    <h2>③ <span data-en="Accessibility — can they find it?">접근성 — 찾을 수 있는가</span><span class="sp"></span><span style="font-size:11.5px;color:var(--muted)">2024 평균 60.8</span></h2>
+    <div class="note" data-en="Measure it on your own service and type the numbers in. In 2024 it took an average of about 12 scroll-downs to reach the policy link on the web, and some online-shopping sites needed 50+.">
+      직접 재서 입력하세요. 2024년 평가에서 웹 기준 처리방침 링크까지 <b>평균 약 12회 스크롤</b>이 필요했고, 온라인 쇼핑 일부는 <b>50회 이상</b> 스크롤해도 찾기 어려웠습니다.</div>
+    <div class="meas" id="meas"></div>
+    <div id="gAcc"></div>
+  </div>
+
+  <!-- 결과 -->
+  <div class="card">
+    <h2>🎯 <span data-en="Improvement priorities">개선 우선순위</span></h2>
+    <ul class="findings" id="findings"></ul>
+    <div class="acts">
+      <a class="btn pri" href="privacy-policy-builder.html">📄 <span data-en="Open the policy builder">처리방침 작성기 열기</span></a>
+      <button class="btn" onclick="exportReport()">⬇ <span data-en="Export report">리포트</span></button>
+      <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+    </div>
+  </div>
+
+  <div class="disc" data-en="Educational self-check based on the notification and the published evaluation results. The Commission’s actual evaluation uses its own annexed scoring table, expert panels and a user panel. Runs entirely in your browser.">
+    ⚠️ 고시와 공개된 평가 결과를 근거로 만든 <b>교육용 자가점검</b>입니다. 실제 평가는 고시 별표의 배점표와 전문가위원·이용자평가단이 수행합니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* 2024년 첫 평가 평균 (보도자료) */
+var AVG={adeq:53.4, read:69.1, acc:60.8};
+
+/* 항목: [id, 제목, 설명, 2024 지적사항(있으면)] */
+var AXES={
+ adeq:{ko:'적정성',en:'Adequacy',ic:'📋',groups:[
+  ['일치성', 'Consistency', [
+   ['match', '처리방침 기재내용이 <b>실제 서비스에서 고지하는 내용과 일치</b>한다',
+    '수집 화면·동의서의 목적·항목·보유기간과 처리방침을 대조해 확인',
+    '2024년 평가대상의 <b>72%</b>가 여기서 불일치 — 적정성 점수를 가장 크게 끌어내린 항목'],
+   ['sync', '신규 서비스 도입·변경 시 처리방침을 <b>함께 갱신하는 내부 절차</b>가 있다',
+    '보호책임자 사전 통보 등 절차를 문서화', ''],
+  ]],
+  ['기재 완결성', 'Completeness', [
+   ['items', '처리 항목을 <b>‘~등’ 없이 구체적으로</b> 기재했다','축약·모호 표현 대신 항목을 열거', ''],
+   ['basis', '동의 없이 처리하는 항목의 <b>법적 근거를 법령·조문까지</b> 기재했다','「○○법」 제○조 형태로', ''],
+   ['period', '보유기간을 <b>기준 시점과 근거 법령</b>까지 기재했다','“탈퇴 시까지”, “전자상거래법 5년” 등', ''],
+   ['entrust', '수탁자·위탁업무와 <b>국외 이전 사항</b>을 빠짐없이 기재했다','해외 클라우드·SaaS 포함', ''],
+   ['rights', '<b>정보주체 권리행사 방법</b>과 거절 시 이의제기 절차를 안내했다','', ''],
+  ]],
+  ['최신성', 'Currency', [
+   ['agent', '국내대리인을 지정한 경우 <b>실제로 민원·열람을 처리</b>하고 있다','',
+    '2024년 지정 의무 대상 10곳 중 <b>5곳이 형식적 운영</b>으로 지적'],
+   ['ver', '<b>이전 버전 처리방침</b>을 함께 제공하고 변경 이력을 확인할 수 있다','', ''],
+  ]]
+ ]},
+ read:{ko:'가독성',en:'Readability',ic:'📖',groups:[
+  ['문장·용어', 'Wording', [
+   ['plain', '전문용어·법률용어에 <b>쉬운 설명</b>을 덧붙였다','“고유식별정보(주민등록번호 등)” 형태', ''],
+   ['short', '한 문장이 지나치게 길지 않다(<b>대략 60자 이내</b>)','긴 문장은 나눠 쓰기', ''],
+   ['trans', '번역투 문장이 아니라 <b>국내 법·정책 용어</b>로 작성했다','',
+    '2024년 <b>해외사업자 12곳</b>이 번역투·국내법 불일치로 전 영역 저조'],
+  ]],
+  ['구조', 'Structure', [
+   ['toc', '<b>목차</b>가 있어 원하는 항목으로 바로 이동할 수 있다','', ''],
+   ['table', '제3자 제공·위탁·국외이전을 <b>표</b>로 정리했다','줄글보다 표가 대조에 유리', ''],
+   ['label', '<b>주요 개인정보 처리 표시(라벨링)</b>로 핵심을 요약 제공한다','본문 공개를 대체하지는 않음', ''],
+   ['child', '아동 대상 서비스인 경우 <b>아동이 이해할 수 있는 별도 안내</b>가 있다','', ''],
+  ]]
+ ]},
+ acc:{ko:'접근성',en:'Accessibility',ic:'🧭',groups:[
+  ['노출 위치', 'Placement', [
+   ['first', '<b>첫 화면</b>에서 처리방침 링크가 보인다(스크롤 없이)','', ''],
+   ['bold', '다른 약관과 구분되도록 <b>‘개인정보 처리방침’을 굵게</b> 표시했다','법정 권고 표기', ''],
+   ['nologin', '<b>로그인 없이</b> 처리방침을 볼 수 있다','',
+    '2024년 일부 모바일 앱은 <b>별도 로그인·여러 단계</b>를 요구해 감점'],
+   ['mobile', '모바일 앱·웹에서도 <b>같은 깊이</b>로 접근된다','', ''],
+  ]]
+ ]}
+};
+
+/* 접근성 실측 입력 */
+var MEAS=[
+ ['scroll','웹 첫 화면에서 처리방침 링크까지 <b>스크롤 횟수</b>','Scroll-downs to reach the policy link',
+  [[0,3,'ok','우수 — 2024 평균(약 12회)보다 훨씬 낫습니다'],
+   [4,12,'warn','평균 수준 — 2024년 평균이 약 12회였습니다'],
+   [13,9999,'bad','과다 — 2024년에 50회 이상 걸린 곳도 지적됐습니다']]],
+ ['clicks','처리방침까지 <b>클릭 횟수</b>','Clicks to reach the policy',
+  [[0,1,'ok','우수 — 한 번에 도달'],
+   [2,2,'warn','보통 — 2단계'],
+   [3,9999,'bad','깊음 — 메뉴 깊이를 줄이세요']]],
+ ['appclicks','모바일 앱에서 처리방침까지 <b>탭 횟수</b>','Taps in the mobile app',
+  [[0,2,'ok','우수'],
+   [3,4,'warn','보통'],
+   [5,9999,'bad','깊음 — 앱에서 특히 감점 요인']]]
+];
+
+var SKEY='wvs_policy_eval';
+var ST={chk:{},meas:{}};
+function load(){try{ST=JSON.parse(localStorage.getItem(SKEY))||{chk:{},meas:{}};}catch(e){ST={chk:{},meas:{}};}
+  ST.chk=ST.chk||{};ST.meas=ST.meas||{};}
+function save(){try{localStorage.setItem(SKEY,JSON.stringify(ST));}catch(e){}}
+
+function allItems(ax){
+  var out=[]; AXES[ax].groups.forEach(function(g){ g[2].forEach(function(it){ out.push(it); }); }); return out;
+}
+function measBand(m,v){
+  if(v==null||v==='') return null;
+  for(var i=0;i<m[3].length;i++){ var b=m[3][i]; if(v>=b[0]&&v<=b[1]) return b; }
+  return null;
+}
+/* 접근성 점수 = 체크항목 + 실측 3개(우수 100 / 보통 55 / 미흡 10) 평균 */
+function score(ax){
+  var items=allItems(ax);
+  var got=items.filter(function(it){return ST.chk[it[0]];}).length;
+  var parts=[items.length?got/items.length*100:0];
+  var weights=[items.length];
+  if(ax==='acc'){
+    MEAS.forEach(function(m){
+      var b=measBand(m, ST.meas[m[0]]);
+      if(b){ parts.push(b[2]==='ok'?100:b[2]==='warn'?55:10); weights.push(1); }
+    });
+  }
+  var num=0,den=0;
+  for(var i=0;i<parts.length;i++){ num+=parts[i]*weights[i]; den+=weights[i]; }
+  return den?Math.round(num/den):0;
+}
+function color(v,avg){ return v>=avg+15?'var(--good)':v>=avg?'var(--accent)':v>=avg-15?'var(--warn)':'var(--bad)'; }
+
+function renderAxes(){
+  document.getElementById('axes').innerHTML=['adeq','read','acc'].map(function(k){
+    var v=score(k), a=AVG[k], c=color(v,a);
+    return '<div class="ax"><div class="t">'+AXES[k].ic+' '+esc(L(AXES[k].ko,AXES[k].en))+'</div>'+
+      '<div class="n" style="color:'+c+'">'+v+'<span style="font-size:13px;color:var(--muted)"> / 100</span></div>'+
+      '<div class="cmp">'+(v>=a?L('2024 평균 +','2024 avg +'):L('2024 평균 ','2024 avg '))+(v-a).toFixed(1)+'</div>'+
+      '<div class="bars">'+
+        '<div class="row"><span class="lbl">'+L('나','you')+'</span><span class="tr"><i style="width:'+v+'%;background:'+c+'"></i></span><span class="v">'+v+'</span></div>'+
+        '<div class="row"><span class="lbl">2024</span><span class="tr"><i style="width:'+a+'%;background:#475569"></i></span><span class="v">'+a+'</span></div>'+
+      '</div></div>';
+  }).join('');
+}
+
+function renderGroups(ax,hostId){
+  var host=document.getElementById(hostId);
+  host.innerHTML=AXES[ax].groups.map(function(g){
+    var done=g[2].filter(function(it){return ST.chk[it[0]];}).length;
+    return '<div class="grp"><h3><span>'+esc(L(g[0],g[1]))+'</span><span class="w">'+done+' / '+g[2].length+'</span></h3>'+
+      g[2].map(function(it){
+        var on=!!ST.chk[it[0]];
+        return '<label class="it'+(on?' on':'')+'">'+
+          '<input type="checkbox" '+(on?'checked':'')+' onchange="toggle(\''+it[0]+'\')">'+
+          '<span class="tx"><b>'+it[1]+'</b>'+
+            (it[2]?'<span>'+it[2]+'</span>':'')+
+            (it[3]?'<span class="real">📌 '+it[3]+'</span>':'')+
+          '</span></label>';
+      }).join('')+'</div>';
+  }).join('');
+}
+
+function renderMeas(){
+  document.getElementById('meas').innerHTML=MEAS.map(function(m){
+    var v=ST.meas[m[0]];
+    var b=measBand(m,v);
+    return '<div class="mz"><label>'+m[1]+'</label>'+
+      '<input type="number" min="0" step="1" value="'+(v==null?'':esc(v))+'" placeholder="'+L('횟수 입력','count')+'" oninput="setMeas(\''+m[0]+'\',this.value)">'+
+      (b?'<div class="verdict '+b[2]+'">'+esc(b[3])+'</div>':'<div class="hint">'+L('직접 측정해 입력하세요.','Measure and enter.')+'</div>')+
+      '</div>';
+  }).join('');
+}
+
+function toggle(id){ ST.chk[id]=!ST.chk[id]; save(); render(); }
+function setMeas(id,v){ if(v==='') delete ST.meas[id]; else ST.meas[id]=Math.max(0,parseInt(v,10)||0); save(); render(); }
+function resetAll(){ if(!confirm(L('점검 결과를 모두 지울까요?','Clear all?')))return; ST={chk:{},meas:{}}; save(); render(); }
+
+function renderFindings(){
+  var f=[];
+  if(!ST.chk.match) f.push(['f-bad',L('<b>기재내용과 실제 처리가 일치하는지 확인하세요.</b> 2024년 평가에서 대상의 72%가 여기서 걸렸고, 적정성 점수를 가장 크게 깎은 항목입니다. 수집 화면의 동의서와 처리방침을 나란히 놓고 목적·항목·보유기간을 대조하세요.','<b>Check that the policy matches what you actually tell users.</b> 72% of those evaluated in 2024 failed here.')]);
+  if(!ST.chk.first||!ST.chk.nologin) f.push(['f-warn',L('<b>접근 경로를 줄이세요.</b> 첫 화면 노출과 로그인 없는 열람은 접근성에서 바로 드러나는 항목입니다.','<b>Shorten the path.</b> Visibility on the first screen and access without login are the accessibility basics.')]);
+  var sc=ST.meas.scroll;
+  if(sc!=null&&sc>12) f.push(['f-bad',L('스크롤 '+sc+'회는 2024년 평균(약 12회)보다 깊습니다. 푸터 링크 위치를 올리거나 상단 메뉴에 노출하세요.','A '+sc+'-scroll depth is worse than the 2024 average of about 12.')]);
+  if(!ST.chk.basis||!ST.chk.period) f.push(['f-warn',L('법적 근거와 보유기간은 <b>조문·기준 시점까지</b> 적어야 합니다. 작성기의 린터가 이 두 가지를 잡아 줍니다.','Legal basis and retention need the article and the reference point.')]);
+  if(!ST.chk.trans&&!ST.chk.plain) f.push(['f-warn',L('가독성은 세 축 중 평균이 가장 높았던 영역(69.1)입니다 — 여기서 평균 이하면 눈에 띕니다.','Readability had the highest average (69.1) — falling below it stands out.')]);
+  if(!ST.chk.agent) f.push(['f-warn',L('국내대리인을 지정했다면 <b>실제로 민원을 처리하는지</b> 확인하세요. 2024년 대상 10곳 중 5곳이 형식적 운영으로 지적됐습니다.','If you have a domestic representative, check they actually handle requests — 5 of 10 were flagged as nominal in 2024.')]);
+
+  var s={adeq:score('adeq'),read:score('read'),acc:score('acc')};
+  var below=Object.keys(s).filter(function(k){return s[k]<AVG[k];});
+  if(!below.length) f.unshift(['f-ok',L('세 축 모두 2024년 평균을 넘었습니다. 다만 공식 배점표와는 다르므로 <b>실제 평가 결과를 보장하지 않습니다.</b>','All three axes beat the 2024 averages — but this is not the official scoring table.')]);
+  else f.unshift(['f-warn',L('2024년 평균에 못 미치는 축: <b>'+below.map(function(k){return AXES[k].ko;}).join(' · ')+'</b> — 여기부터 개선하세요.','Below the 2024 average on: '+below.map(function(k){return AXES[k].en;}).join(', '))]);
+
+  document.getElementById('findings').innerHTML=f.map(function(x){return '<li class="'+x[0]+'">'+x[1]+'</li>';}).join('');
+}
+
+function exportReport(){
+  var s={adeq:score('adeq'),read:score('read'),acc:score('acc')};
+  var l=[];
+  l.push('개인정보 처리방침 평가 자가점검 결과');
+  l.push('기준: 「개인정보 보호법」 제30조의2 · 개인정보 처리방침 평가에 관한 고시(제2024-3호)');
+  l.push('생성: '+new Date().toLocaleString('ko-KR'));
+  l.push('');
+  l.push('적정성 '+s.adeq+' (2024 평균 '+AVG.adeq+')');
+  l.push('가독성 '+s.read+' (2024 평균 '+AVG.read+')');
+  l.push('접근성 '+s.acc+' (2024 평균 '+AVG.acc+')');
+  l.push('');
+  ['adeq','read','acc'].forEach(function(ax){
+    l.push('■ '+AXES[ax].ko);
+    AXES[ax].groups.forEach(function(g){
+      g[2].forEach(function(it){
+        l.push('  ['+(ST.chk[it[0]]?'O':'X')+'] '+it[1].replace(/<[^>]+>/g,''));
+      });
+    });
+    l.push('');
+  });
+  l.push('■ 접근성 실측');
+  MEAS.forEach(function(m){
+    var v=ST.meas[m[0]], b=measBand(m,v);
+    l.push('  '+m[1].replace(/<[^>]+>/g,'')+': '+(v==null?'(미입력)':v+' — '+(b?b[3]:'')));
+  });
+  l.push('');
+  l.push('※ 고시 별표의 공식 배점표가 아닌 학습용 자가점검입니다.');
+  var blob=new Blob([l.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='처리방침_평가_자가점검_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+
+function render(){
+  renderAxes(); renderGroups('adeq','gAdeq'); renderGroups('read','gRead');
+  renderMeas(); renderGroups('acc','gAcc'); renderFindings(); applyLang();
+  try{ if(window.WVSProgress){ window.WVSProgress.markVisited('privacy-policy-eval.html');
+    var s=(score('adeq')+score('read')+score('acc'))/3;
+    if(s>=70) window.WVSProgress.complete(Math.round(s),'privacy-policy-eval.html'); } }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',function(){ load(); applyLang(); render(); });
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>
