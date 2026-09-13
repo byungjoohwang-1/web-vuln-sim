@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 동의서 설계·점검기 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 동의서 설계·점검기 · WEB-VULN-SIM">
+<meta property="og:description" content="별도 동의 분해 · 법정 고지사항 · 화면 표시 요건 · 동의 다크패턴 진단 — 「개인정보 보호법」 제22조와 시행령 제17조로 동의서를 설계하고 점검합니다">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-consent-designer.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 제22조·시행령 제17조·「개인정보 처리 방법에 관한 고시」 제4조 기반 동의서 설계 도구 — 처리 유형별 별도 동의 분해, 법정 고지사항(제15조제2항·제17조제2항·제18조제3항), 자유로운 의사 3대 저해요인, 중요한 내용 표시, 대법원 2014두2638·2018도13694 판례 기반 동의 다크패턴 7종 진단, 동의서 초안 내보내기.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:400}
+/* 점수 배너 */
+.score{background:linear-gradient(135deg,#0b2233,#141026);border:1px solid #1e4b63;border-radius:16px;padding:18px 20px;position:sticky;top:52px;z-index:40;box-shadow:0 14px 40px rgba(0,0,0,.4);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.score .big{font-family:var(--mono);font-size:32px;font-weight:800;color:#fff;line-height:1}
+.score .lab{font-family:var(--mono);font-size:11px;color:#7dd3fc;letter-spacing:1px;font-weight:800}
+.score .seg{min-width:104px}
+.score .bar{height:7px;background:#1e293b;border-radius:99px;overflow:hidden;margin-top:7px;width:100%}
+.score .bar i{display:block;height:100%;background:linear-gradient(90deg,#0ea5e9,#22c55e)}
+.score .flex{flex:1;min-width:180px}
+/* 스텝 */
+.step{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:13px 15px;margin:9px 0}
+.step>.h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:14px;font-weight:700;color:#fff}
+.step>.h .n{font-family:var(--mono);font-size:11px;font-weight:800;color:#a5b4fc;background:#1e1b4b;border-radius:5px;padding:2px 8px;flex-shrink:0}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.hint b{color:#cbd5e1}
+.chk{display:flex;gap:9px;align-items:flex-start;background:#0b1220;border:1px solid #334155;border-radius:9px;padding:9px 11px;margin:6px 0;cursor:pointer;font-size:13px}
+.chk.on{background:#0f2a18;border-color:#14532d}
+.chk input{width:16px;height:16px;flex-shrink:0;margin-top:3px}
+.chk .tx{flex:1}
+.chk .tx b{display:block}
+.chk .tx span{font-size:11.5px;color:var(--muted);display:block;margin-top:2px}
+.chk .law{font-family:var(--mono);font-size:10.5px;color:#67e8f9;flex-shrink:0;margin-top:3px}
+/* 동의 블록 */
+.blk{border:1px solid #1e4b63;border-radius:11px;background:#0b1b28;padding:12px 14px;margin:9px 0}
+.blk .t{font-size:13.5px;font-weight:800;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.badge.sep{background:#7c2d12;color:#fed7aa}
+.badge.law{background:#0c2030;color:#7dd3fc}
+.badge.free{background:#14532d;color:#bbf7d0}
+.fields{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.fld{font-size:11.5px;font-family:var(--mono);border:1px solid #334155;border-radius:7px;padding:4px 9px;color:#94a3b8;cursor:pointer;background:#0b1220}
+.fld.on{background:#0c2030;border-color:#0ea5e9;color:#e0f2fe}
+.fld.miss{border-color:#7f1d1d;color:#fca5a5}
+/* 다크패턴 */
+.dp{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:13px 15px;margin:10px 0}
+.dp .q{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:8px}
+.mock{background:#f8fafc;color:#0f172a;border-radius:9px;padding:12px 13px;font-size:12.5px;line-height:1.55;margin:8px 0;border:1px solid #cbd5e1}
+.mock .tiny{font-size:7px;color:#64748b;line-height:1.3;display:block}
+.mock .ttl{font-weight:800;font-size:13px;margin-bottom:5px}
+.mock .row{display:flex;gap:7px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.mock .btn2{background:#2563eb;color:#fff;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:700}
+.mock .box{width:13px;height:13px;border:1.5px solid #64748b;border-radius:3px;display:inline-block;flex-shrink:0}
+.mock .box.ck{background:#2563eb;border-color:#2563eb}
+.mock .scr{max-height:54px;overflow:hidden;position:relative;border:1px dashed #94a3b8;padding:6px;border-radius:6px}
+.mock .scr::after{content:'▼ 스크롤';position:absolute;right:5px;bottom:2px;font-size:9px;color:#94a3b8}
+.opts2{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.o2{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#cbd5e1;border-radius:9px;padding:8px 11px;font-size:12.5px;text-align:left}
+.o2.pick{border-color:#0ea5e9;background:#0c2030}
+.o2.ok{border-color:#14532d;background:#0f2a18;color:#bbf7d0}
+.o2.no{border-color:#7f1d1d;background:#3b1418;color:#fca5a5}
+.fb{font-size:12.5px;border-radius:8px;padding:10px 12px;margin-top:8px;display:none}
+.fb.show{display:block}
+.fb.ok{background:#0f2a18;border-left:4px solid var(--good);color:#d1fae5}
+.fb.no{background:#3b1418;border-left:4px solid var(--bad);color:#fecaca}
+.fb .lw{font-family:var(--mono);font-size:11px;color:#7dd3fc;display:block;margin-top:5px}
+/* 발견 */
+.find{background:#3b1418;border-left:4px solid var(--bad);border-radius:8px;padding:10px 12px;font-size:12.5px;color:#fecaca;margin:7px 0}
+.find.warn{background:#3a2a09;border-left-color:var(--warn);color:#fde047}
+.find b{color:#fff}
+.find .lw{font-family:var(--mono);font-size:11px;color:#fca5a5;display:block;margin-top:4px}
+.find.warn .lw{color:#fcd34d}
+.okbox{background:#0f2a18;border-left:4px solid var(--good);border-radius:8px;padding:11px 13px;font-size:13px;color:#d1fae5;margin:10px 0}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.warnbox{background:#3a2a09;border-left:4px solid var(--warn);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#fde047;margin:12px 0}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+pre.out{background:#0b1220;border:1px solid #334155;border-radius:10px;padding:12px;font-family:var(--mono);font-size:11.5px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow:auto;margin-top:10px}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+@media(max-width:640px){.score{position:static}.score .big{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="privacy-basis-check.html"><span data-en="Legal basis">적법근거 판단</span></a>
+  <a href="privacy-policy-builder.html"><span data-en="Policy builder">처리방침 작성</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>✍️ <span data-en="Consent Form Designer &amp; Checker">동의서 설계·점검기</span></h1>
+    <div class="sub" data-en="Most Korean consent screens are unlawful for the same three reasons: they bundle things that must be split, they demand consent for data the law says needs no consent, and they bury the disclosure. This tool splits your processing into the consent blocks the Act requires, checks each block's mandatory disclosures, and then tests you against seven dark patterns drawn from actual court rulings.">
+      국내 동의 화면이 위법해지는 이유는 대체로 셋입니다 — <b>나눠야 할 것을 묶고</b>, <b>동의가 필요 없는 것에 동의를 받고</b>, <b>고지사항을 묻어 둡니다</b>. 이 도구는 처리 유형을 법이 요구하는 동의 블록으로 분해하고, 블록별 법정 고지사항을 점검한 뒤, 실제 판례에서 나온 <b>동의 다크패턴 7종</b>으로 시험합니다.</div>
+    <div class="src">📕 기준: 「개인정보 보호법」 제15조·제17조·제18조·제22조·제23조·제24조·제28조의8 · 시행령 제17조 · 「개인정보 처리 방법에 관한 고시」 제4조 · 개인정보보호위원회 「개인정보 처리 통합 안내서」(2025.7.) Ⅳ장</div>
+  </div>
+
+  <div class="warnbox" data-en="⚠️ The first question is not &quot;how do I word the consent&quot; but <b>&quot;do I need consent at all&quot;</b>. Data needed to perform a contract is processed under Art.15(1)4 without consent, and the burden of proving that no consent was needed rests on the controller. Asking for consent you do not need is itself a risk: it can make the consent look coerced.">
+    ⚠️ 첫 질문은 "동의서를 어떻게 쓰나"가 아니라 <b>"동의가 필요하기는 한가"</b>입니다. 계약 이행에 필요한 개인정보는 제15조제1항제4호로 <b>동의 없이</b> 처리하며, 동의가 필요 없다는 입증책임은 개인정보처리자에게 있습니다. 필요 없는 동의를 받는 것 자체가 위험 요소입니다 — 그 동의가 강제된 것으로 보일 수 있습니다.</div>
+
+  <div class="score" id="score"></div>
+
+  <!-- ① 적법근거 선확인 -->
+  <div class="card">
+    <h2>① <span data-en="Before you draft: is consent the right basis?">동의서를 쓰기 전 — 동의가 맞는 근거인가</span></h2>
+    <div id="pre"></div>
+    <div id="preOut"></div>
+  </div>
+
+  <!-- ② 별도 동의 분해 -->
+  <div class="card">
+    <h2>② <span data-en="Split into separate consent blocks">별도 동의 블록으로 분해</span><span class="cnt" id="cntTypes"></span></h2>
+    <div class="hint" data-en="Tick every kind of processing you are asking consent for. Art.22(1) lists eight cases that must be consented to <b>separately</b> — bundling them into one checkbox is a violation on its own.">
+      동의를 받으려는 처리 유형을 모두 고르세요. 법 제22조제1항은 <b>구분하여 각각 동의(별도 동의)</b>를 받아야 하는 8가지를 열거합니다 — 한 체크박스로 묶는 것 자체가 위반입니다.</div>
+    <div id="types"></div>
+    <div id="blocks"></div>
+  </div>
+
+  <!-- ③ 화면·표시 요건 -->
+  <div class="card">
+    <h2>③ <span data-en="Screen and presentation requirements">화면·표시 요건</span><span class="cnt" id="cntScreen"></span></h2>
+    <div id="screen"></div>
+  </div>
+
+  <!-- ④ 다크패턴 진단 -->
+  <div class="card">
+    <h2>④ <span data-en="Dark pattern diagnosis">동의 다크패턴 진단</span><span class="cnt" id="cntDark"></span></h2>
+    <div class="hint" data-en="Each screen below is modelled on a real ruling or on an example the Commission's guide calls out. Pick the single defect that makes it unlawful.">
+      아래 화면은 각각 실제 판례 또는 개인정보위 안내서가 명시한 사례를 본뜬 것입니다. 이 화면을 위법하게 만드는 <b>결정적 결함 하나</b>를 고르세요.</div>
+    <div id="dark"></div>
+  </div>
+
+  <!-- ⑤ 결과 -->
+  <div class="card">
+    <h2>🧾 <span data-en="Findings">점검 결과</span></h2>
+    <div id="findings"></div>
+    <div class="acts">
+      <button class="btn pri" onclick="genDraft()">📄 <span data-en="Generate consent draft">동의서 초안 생성</span></button>
+      <button class="btn" onclick="exportReport()">⬇ <span data-en="Export report">점검 리포트</span></button>
+      <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+    </div>
+    <pre class="out" id="draft" style="display:none"></pre>
+  </div>
+
+  <div class="note" data-en="Where consent is <b>not</b> the basis, Art.22(3) still requires you to publish which items you process without consent and under which legal ground, kept separate from the consent-based items — normally in the privacy policy.">
+    동의가 근거가 <b>아닌</b> 경우에도 법 제22조제3항에 따라 <b>동의 없이 처리하는 항목과 그 법적 근거</b>를 동의로 처리하는 개인정보와 구분해 공개해야 합니다 — 보통 개인정보 처리방침에 씁니다.</div>
+
+  <div class="disc" data-en="Educational tool built from the Act, its Enforcement Decree, the public notification and the Commission's 2025 consolidated guide. It does not constitute legal advice and does not certify compliance. Violating Art.22(1)–(3) carries an administrative fine of up to KRW 10 million (Art.75(4)3); lacking a lawful basis altogether is penalised as a surcharge. Runs entirely in your browser.">
+    ⚠️ 법률·시행령·고시와 개인정보보호위원회 「개인정보 처리 통합 안내서」(2025.7.)를 근거로 만든 <b>교육용 도구</b>입니다. 법률 자문이 아니며 적법성을 보증하지 않습니다. 법 제22조제1항~제3항 위반은 <b>1천만원 이하 과태료</b>(제75조제4항제3호)이고, 적법근거 자체를 갖추지 못한 경우는 과징금 대상입니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function strip(s){return String(s).replace(/<[^>]+>/g,'');}
+
+/* ───────── ① 적법근거 선확인 (법 §15①) ───────── */
+var PRE=[
+ ['contract','이 개인정보는 <b>계약 체결·이행</b>에 필요하다','This data is needed to conclude or perform a contract','법 제15조제1항제4호',
+  '계약 이행에 필요한 개인정보는 <b>동의 없이</b> 수집·이용할 수 있습니다. 종전 필수동의 관행은 ‘고지 후 확인’ 절차로 전환하는 것이 바람직합니다.',
+  'Data needed for the contract may be processed <b>without consent</b>. Convert the old mandatory-consent flow into a notice-and-acknowledge flow.'],
+ ['law','<b>법령상 의무</b>를 준수하기 위해 불가피하다','Unavoidable to comply with a statutory duty','법 제15조제1항제2호',
+  '법령에 근거가 있으면 동의를 받을 필요가 없습니다. 동의를 받아 두면 오히려 정보주체가 동의 철회로 처리 중단을 요구할 수 있다고 오인합니다.',
+  'A statutory basis removes the need for consent. Taking consent anyway misleads the data subject into thinking withdrawal stops the processing.'],
+ ['pub','<b>공공기관의 소관 업무</b> 수행을 위해 불가피하다','Unavoidable for a public authority’s statutory duties','법 제15조제1항제3호',
+  '공공기관은 힘의 불균형 때문에 자유로운 의사에 따른 동의가 성립하기 어렵습니다. <b>동의 외 적법근거를 우선 검토</b>하라고 안내서가 명시합니다.',
+  'Public authorities face a power imbalance that undermines free consent. The guide tells them to look for a non-consent basis first.'],
+ ['urgent','<b>급박한 생명·신체·재산의 이익</b>을 위해 필요하다','Needed for an imminent threat to life, body or property','법 제15조제1항제5호',
+  '2023년 개정으로 ‘의사표시를 할 수 없는 상태’ 제약이 삭제되어, 급박하다고 인정되면 우선 조치할 수 있습니다.',
+  'The 2023 amendment removed the “unable to express intent” precondition — you may act first when the urgency is clear.'],
+ ['legit','개인정보처리자의 <b>정당한 이익</b>이 명백히 정보주체의 권리보다 우선한다','The controller’s legitimate interest clearly overrides the data subject’s rights','법 제15조제1항제6호',
+  '정당한 이익과 <b>상당한 관련</b>이 있고 <b>합리적 범위를 초과하지 않는</b> 경우로 한정됩니다. 입증책임은 개인정보처리자에게 있습니다.',
+  'Limited to interests substantially related and not exceeding a reasonable scope. The controller bears the burden of proof.'],
+ ['extra','당초 수집 목적과 <b>합리적으로 관련된 범위</b>의 추가 이용·제공이다','An additional use/disclosure reasonably related to the original purpose','법 제15조제3항·제17조제4항, 영 제14조의2',
+  '관련성·예측가능성·부당한 침해 여부·안전조치 4요건을 모두 고려해야 합니다. 지속적으로 발생하면 판단기준을 <b>처리방침에 공개</b>하고 보호책임자가 점검해야 합니다.',
+  'All four factors apply. If it recurs, publish the criteria in the privacy policy and have the CPO review it.']
+];
+
+/* ───────── ② 별도 동의 대상 (법 §22① 각 호) ───────── */
+var F_COLLECT=[['목적','수집·이용 목적','Purpose of collection and use'],['항목','수집하려는 개인정보의 항목','Items collected'],['기간','보유 및 이용 기간','Retention and use period'],['거부','동의 거부 권리 및 거부 시 불이익','Right to refuse and the resulting disadvantage']];
+var F_PROVIDE=[['수령자','개인정보를 제공받는 자','Recipient'],['목적','제공받는 자의 이용 목적','Recipient’s purpose'],['항목','제공하는 개인정보의 항목','Items provided'],['기간','제공받는 자의 보유 및 이용 기간','Recipient’s retention period'],['거부','동의 거부 권리 및 거부 시 불이익','Right to refuse and the resulting disadvantage']];
+var F_OVERSEA=[['수령자','이전받는 자의 성명·연락처','Name and contact of the transferee'],['국가','이전되는 국가·시기·방법','Country, timing and method'],['항목','이전하는 개인정보의 항목','Items transferred'],['목적','이전받는 자의 이용 목적·보유기간','Transferee’s purpose and retention period'],['거부','거부 권리·방법·절차 및 거부 시 불이익','Right to refuse, how to refuse, and the disadvantage']];
+
+var TYPES=[
+ ['collect','개인정보 수집·이용','Collection and use','법 제15조제1항제1호 · §22①(1)',F_COLLECT,false],
+ ['provide','제3자 제공','Third-party disclosure','법 제17조제1항제1호 · §22①(2)',F_PROVIDE,false],
+ ['purpose','목적 외 이용·제공','Use/disclosure beyond the original purpose','법 제18조제2항제1호 · §22①(3)',F_PROVIDE,true],
+ ['recv','제공받은 자의 목적 외 이용·제공','Recipient’s use beyond the received purpose','법 제19조제1호 · §22①(4)',F_PROVIDE,false],
+ ['sens','민감정보 처리','Sensitive data','법 제23조제1항제1호 · §22①(5)',F_COLLECT,false],
+ ['uid','고유식별정보 처리','Unique identifiers','법 제24조제1항제1호 · §22①(6)',F_COLLECT,false],
+ ['mkt','홍보·판매 권유','Marketing and sales solicitation','법 제22조제1항제7호',F_COLLECT,true],
+ ['oversea','국외 이전','Cross-border transfer','법 제28조의8제1항제1호',F_OVERSEA,false]
+];
+
+/* ───────── ③ 화면·표시 요건 ───────── */
+var SCREEN=[
+ ['free1','개인정보처리자와 정보주체 사이에 <b>힘의 불균형</b>(공공기관·고용주 등)으로 동의를 강요하는 요소가 없다','No power imbalance coercing consent','영 §17①(1)'],
+ ['free2','동의를 거부해도 <b>과도한 불이익</b>이 없다 (단순한 부가 혜택 제한은 해당 없음)','No excessive disadvantage for refusing','영 §17①(1)'],
+ ['free3','서비스 제공에 <b>필요하지 않은</b> 개인정보 동의를 서비스 조건·계약 내용으로 만들지 않았다','Unnecessary consent is not a condition of service','영 §17①(1)'],
+ ['clear1','동의를 받으려는 내용이 <b>구체적이고 명확</b>하다','Consent content is specific and clear','영 §17①(2)'],
+ ['clear2','내용을 <b>쉽게 읽고 이해</b>할 수 있는 문구를 사용한다','Plain, readable wording','영 §17①(3)'],
+ ['clear3','시행령 제17조제2항의 <b>6가지 방법 중 하나</b>로 동의 의사표시를 확인한다','Consent is captured by one of the six prescribed methods','영 §17①(4)·②'],
+ ['sel1','선택 동의 항목은 <b>선택할 수 있다는 사실</b>을 명확히 알 수 있게 표시했다','Optional items are visibly marked as optional','영 §17④'],
+ ['def1','"동의함" 체크박스가 <b>기본값으로 선택되어 있지 않다</b>','No pre-ticked consent boxes','통합 안내서 Ⅳ장'],
+ ['imp1','중요한 내용을 <b>글씨 크기·색깔·굵기·밑줄</b>로 명확히 표시했다','Important content is emphasised by size, colour, weight or underline','고시 §4(1)'],
+ ['imp2','동의 사항이 많은 경우 중요한 내용을 <b>별도로 구분</b>해 표시했다','Important content is separated out when there are many items','고시 §4(2)'],
+ ['place1','법정 고지사항과 동의 표시란을 <b>밀접하게 배치</b>해, 읽은 상태에서 동의할 수 있다','Disclosure and the consent control are placed close together','대법원 2014두2638'],
+ ['tel1','전화 동의 시 <b>통화에 응했다는 사실만으로</b> 동의로 간주하지 않는다','Answering the phone is not treated as consent','통합 안내서 Ⅳ장'],
+ ['pub1','동의 없이 처리하는 개인정보의 <b>항목과 법적 근거</b>를 구분해 공개했다','Non-consent items and their legal grounds are published separately','법 §22③'],
+ ['rec1','동의 <b>증빙자료를 관리</b>하되, 증빙을 이유로 추가 인적사항을 더 받지 않는다','Consent records kept without collecting extra personal data','통합 안내서 Ⅳ장']
+];
+
+/* ───────── ④ 다크패턴 7종 ───────── */
+var DARK=[
+ {id:'d1',
+  q:'이벤트 응모 화면. 법정 고지사항은 페이지 <b>맨 아래</b>에 있고, 스크롤바를 내려야 보입니다.',
+  qe:'An event entry page. The mandatory disclosures sit at the very bottom, reachable only by scrolling.',
+  mock:'<div class="ttl">🎁 경품 이벤트 응모!</div>이름 <span style="border-bottom:1px solid #94a3b8;display:inline-block;width:90px"></span> 연락처 <span style="border-bottom:1px solid #94a3b8;display:inline-block;width:110px"></span><div class="row"><span class="box"></span> 개인정보 수집·이용 및 제3자 제공에 동의합니다 <span class="btn2">응모하기</span></div><div class="scr" style="margin-top:8px"><span class="tiny">제공받는 자: ○○보험 외 12개사 / 이용 목적: 보험상품 안내를 위한 전화 등 마케팅 / 제공 항목: 성명, 연락처, 생년월일 / 보유기간: 3년 …</span></div>',
+  opts:['스크롤바만 있으면 고지사항을 ‘명확히 게재’한 것이므로 문제 없다','고지사항과 동의 표시란이 <b>밀접하게 배치</b>되지 않아 인지한 상태의 동의로 볼 수 없다','제공받는 자가 12개사로 너무 많다','경품 금액을 표시하지 않았다'],
+  optse:['No problem — a scrollbar means the disclosure was published','The disclosure is not placed close to the consent control, so consent was not informed','Twelve recipients is too many','The prize value is not shown'],
+  a:1,
+  why:'대법원은 법정 고지사항을 <b>제일 하단에 배치</b>한 것은 명확히 인지·확인할 수 있게 배치한 것으로 볼 수 없고, <b>스크롤바를 설치한 것만으로는</b> 고지사항의 존재를 쉽게 인지할 수 있는 형태가 아니라고 판단했습니다. 고지 부분과 동의 표시 부분은 <b>밀접하게 배치</b>해야 합니다.',
+  whye:'The Supreme Court held that placing the statutory disclosures at the very bottom is not a placement the user can readily perceive, and that adding a scrollbar does not fix it. The disclosure and the consent control must be placed close together.',
+  law:'대법원 2016. 6. 28. 선고 2014두2638 판결'},
+ {id:'d2',
+  q:'경품 응모권 뒷면. 동의 관련 사항이 <b>약 1mm 크기</b> 글씨로 인쇄되어 있습니다.',
+  qe:'The back of a prize entry form. The consent text is printed at roughly 1 mm.',
+  mock:'<div class="ttl">응모권 (뒷면)</div><span class="tiny">[개인정보 수집, 취급위탁, 이용 동의] 수집/이용목적: 경품 추첨 및 발송, 보험마케팅을 위한 정보 제공, 제휴상품 소개 및 제휴사에 대한 정보 제공 등의 업무 / [개인정보 제3자 제공] 개인정보를 제공받는 자: R, S 등 / 이용목적: 보험상품 등의 안내를 위한 전화 등 마케팅자료로 활용됩니다.</span><div style="color:#dc2626;font-size:10px;margin-top:6px;font-weight:700">※ 기재/동의 사항 일부 미기재, 미동의, 서명 누락시 경품추첨에서 제외됩니다.</div>',
+  opts:['고시에서 ‘9포인트 이상’ 규정이 삭제됐으므로 글씨 크기는 더 이상 문제되지 않는다','제휴사 이름을 ‘R, S 등’으로 줄여 쓴 것만 문제다','읽기 어려운 크기로 기재해 <b>각각의 동의 사항을 명확히 인지</b>할 수 없게 한 것이 위반이다','뒷면에 인쇄한 것이 문제다'],
+  optse:['The 9-point rule was deleted, so font size no longer matters','Only the abbreviated partner names are a problem','Printing it at an unreadable size defeats the duty to make each consent item clearly perceivable','Printing on the back is the problem'],
+  a:2,
+  why:'고시에서 ‘9포인트 이상’·‘다른 내용보다 20% 이상 크게’ 규정은 <b>삭제되었지만</b>, 글씨의 크기·색깔·굵기·밑줄로 <b>명확히 표시</b>할 의무는 그대로입니다. 안내서는 "글씨 크기를 의도적으로 작게 하는 등 정보주체를 기만하거나 알아보기 어려운 형태로 동의를 받아서는 안 된다"고 명시합니다. 법원은 이를 제22조 위반으로 보았습니다.',
+  whye:'The fixed 9-point rule was deleted, but the duty to mark important content clearly by size, colour, weight or underline remains. The guide states that deliberately shrinking text to deceive or obscure is not acceptable, and the court treated this as an Art.22 violation.',
+  law:'서울중앙지법 2017노1296 · 대법원 2019. 7. 25. 선고 2018도13694로 확정 · 고시 제4조'},
+ {id:'d3',
+  q:'회원가입 화면. 마케팅 수신 동의 체크박스가 <b>미리 체크된 상태</b>로 표시됩니다.',
+  qe:'A signup page where the marketing consent box is pre-ticked.',
+  mock:'<div class="ttl">회원가입</div><div class="row"><span class="box ck"></span> [필수] 이용약관 동의</div><div class="row"><span class="box ck"></span> [필수] 개인정보 수집·이용 동의</div><div class="row"><span class="box ck"></span> 광고성 정보 수신 동의 <span style="font-size:10px;color:#64748b">(선택)</span></div><div class="row"><span class="btn2">가입하기</span></div>',
+  opts:['선택 항목임을 표시했으므로 기본 체크는 허용된다','기본값 체크는 <b>동의 여부를 명확하게 표시</b>한 것으로 볼 수 없다','광고성 정보 수신은 개인정보 보호법 소관이 아니다','필수 항목이 2개나 되는 것이 문제다'],
+  optse:['Pre-ticking is fine because it is labelled optional','A pre-ticked box is not a clear expression of the data subject’s choice','Marketing messages fall outside this Act','Having two mandatory items is the problem'],
+  a:1,
+  why:'안내서는 인터넷 홈페이지에서 동의 여부를 표시하도록 하는 경우 <b>"동의함" 체크 박스가 기본값으로 설정되어 있지 않도록</b> 해야 한다고 명시합니다. 동의는 정보주체가 <b>능동적으로</b> 표시해야 하며, 기본값 동의는 시행령 제17조제1항제4호의 "동의 여부를 명확하게 표시할 수 있는 방법"에 해당하지 않습니다.',
+  whye:'The guide explicitly requires that the “I agree” box must not be pre-selected. Consent must be an affirmative act; a default-on box is not a clear way to express the choice under Decree Art.17(1)4.',
+  law:'영 제17조제1항제4호 · 통합 안내서 Ⅳ장'},
+ {id:'d4',
+  q:'팝업 하나가 뜨고 ‘확인’ 버튼만 있습니다. 확인을 누르면 <b>개인정보 수집과 제3자 제공에 동의한 것으로 간주</b>됩니다.',
+  qe:'A popup with only an “OK” button; pressing it is treated as consent to collection and third-party disclosure.',
+  mock:'<div class="ttl">알림</div>이벤트 참여를 위해 아래 내용을 확인해 주세요.<div class="row" style="justify-content:center;margin-top:10px"><span class="btn2">확인</span></div>',
+  opts:['확인 버튼도 클릭이므로 시행령의 ‘홈페이지 동의’에 해당한다','팝업 문구만으로는 대상이 <b>개인정보</b>이고 제공처가 <b>제3자</b>라는 점을 알 수 없어 적법한 동의가 아니다','팝업을 한 번만 띄운 것이 문제다','확인 버튼의 색상이 문제다'],
+  optse:['Clicking OK counts as website consent under the Decree','The popup text does not make clear that personal data and a third party are involved, so consent is not valid','Showing the popup only once is the problem','The button colour is the problem'],
+  a:1,
+  why:'대법원은 팝업창 문구만으로는 <b>수집·제공의 대상이 ‘개인정보’이고 제공처가 제3자인 보험회사라는 점</b>을 쉽고 명확하게 밝힌 것으로 볼 수 없는데도 ‘확인’ 버튼만 누르면 동의한 것으로 간주되도록 한 점을 위법 사유로 들었습니다. 동의는 <b>무엇에 동의하는지 인식한 상태</b>에서 이루어져야 합니다.',
+  whye:'The court found that the popup did not make clear that personal data was being collected and disclosed to a third-party insurer, yet a single OK click was treated as consent. Consent must be given in awareness of what is being consented to.',
+  law:'대법원 2016. 6. 28. 선고 2014두2638 판결'},
+ {id:'d5',
+  q:'쇼핑몰 회원가입. 배송을 위한 주소·연락처와 상품 개발용 결혼 여부·직업을 <b>하나의 필수 동의</b>로 묶었습니다.',
+  qe:'A shop signup bundling delivery address and marital status/occupation for product development into a single mandatory consent.',
+  mock:'<div class="ttl">[필수] 개인정보 수집·이용 동의</div><span style="font-size:11.5px">수집 항목: 이름, 주소, 연락처, 결제정보, <b>결혼 여부, 직업</b><br>수집 목적: 주문·결제·배송, <b>상품 개발</b><br>보유 기간: 회원 탈퇴 시까지</span><div class="row"><span class="box"></span> 위 내용에 동의합니다 (필수)</div>',
+  opts:['보유 기간을 ‘회원 탈퇴 시까지’로 쓴 것만 문제다','배송 정보는 <b>동의 대상이 아니고</b>, 계약과 무관한 정보는 <b>자유로운 의사로 선택</b>할 수 있어야 하므로 이 묶음 자체가 위법이다','상품 개발 목적은 언제나 금지된다','항목이 6개나 되어 최소수집 원칙 위반이다'],
+  optse:['Only the open-ended retention period is a problem','Delivery data needs no consent at all, and the unrelated data must be freely optional — so the bundle itself is unlawful','Product development is always prohibited','Six items breaches data minimisation'],
+  a:1,
+  why:'안내서의 전형적인 개선 사례입니다. 계약 이행에 필요한 주소·연락처·결제정보는 제15조제1항제4호로 <b>동의 없이</b> 처리하므로 동의 고지사항에서 <b>삭제</b>하고, 계약과 관계없는 결혼 여부·직업은 정보주체가 <b>자유로운 의사로 동의 여부를 선택</b>할 수 있게 분리해야 합니다. 그리고 처리방침에 "동의를 받아 수집하는 개인정보"와 "그 외"를 구분해 공개합니다.',
+  whye:'This is the guide’s canonical fix. Contract-necessary data is processed under Art.15(1)4 without consent and must be removed from the consent text; the unrelated items must become a genuinely free choice. The privacy policy then separates consent-based items from the rest.',
+  law:'법 제15조제1항제4호 · 제22조제1항 · 통합 안내서 Ⅳ장 참고1'},
+ {id:'d6',
+  q:'인터넷 쇼핑몰 결제 단계. <b>계열사에 개인정보를 제공하는 데 동의해야만</b> 결제 버튼이 활성화됩니다.',
+  qe:'At checkout, the pay button only activates after consenting to share data with affiliates.',
+  mock:'<div class="ttl">결제</div>주문금액 <b>42,000원</b><div class="row"><span class="box"></span> [필수] 계열사 마케팅 목적 개인정보 제공 동의</div><div class="row"><span class="btn2" style="background:#94a3b8">결제하기 (동의 필요)</span></div>',
+  opts:['필수 동의로 표시했으므로 문제 없다','계열사도 같은 그룹이므로 제3자 제공이 아니다','상품 구매에 필요하지 않은 동의를 <b>서비스 제공의 조건</b>으로 만든 것이어서 자유로운 의사 원칙에 반한다','결제 금액을 표시한 것이 문제다'],
+  optse:['Labelling it mandatory makes it fine','Affiliates in the same group are not third parties','Making an unnecessary consent a condition of the service defeats the free-will principle','Showing the amount is the problem'],
+  a:2,
+  why:'안내서가 그대로 드는 사례입니다 — "인터넷 쇼핑몰 사업자가 결제 과정에서 계열사에 개인정보를 제공하는 것에 동의한 경우에만 결제가 가능하도록 서비스를 구성하였다면, 이는 상품 구매에 필요하지 않은 동의를 <b>서비스 제공의 조건</b>으로 만드는 것으로 자유로운 의사에 따른 동의 원칙에 반할 수 있음". 계열사는 별개 법인이므로 제3자에 해당합니다.',
+  whye:'The guide gives this exact example: conditioning checkout on consent to share data with affiliates turns an unnecessary consent into a condition of service, which conflicts with the free-will principle. Affiliates are separate legal entities and therefore third parties.',
+  law:'영 제17조제1항제1호 · 통합 안내서 Ⅳ장'},
+ {id:'d7',
+  q:'신용카드 발급 신청. <b>광고메일 수신에 동의하지 않으면</b> 발급을 거절합니다.',
+  qe:'A credit card application refused unless the applicant consents to marketing email.',
+  mock:'<div class="ttl">카드 발급 신청</div><div class="row"><span class="box"></span> [필수] 광고성 정보(이메일) 수신 동의</div><div style="color:#dc2626;font-size:11px;margin-top:6px">※ 미동의 시 카드 발급이 제한됩니다.</div>',
+  opts:['홍보·판매 권유 동의를 거부했다는 이유로 <b>재화·서비스 제공을 거부할 수 없다</b>','광고메일은 정보통신망법 소관이므로 개인정보 보호법 위반이 아니다','발급 거절 사유를 화면에 밝혔으므로 적법하다','광고메일 수신자에게 포인트를 더 주는 것도 똑같이 금지된다'],
+  optse:['Service may not be refused for declining marketing consent','Marketing email falls under a different Act, so this is not a violation here','Stating the reason on screen makes it lawful','Giving extra points to subscribers is equally prohibited'],
+  a:0,
+  why:'법 제22조제5항은 <b>선택 동의 미동의·목적 외 이용 제공 동의 거부·홍보 판매 권유 동의 거부</b>를 이유로 재화 또는 서비스 제공을 거부하지 못하게 합니다. 다만 안내서는 경계를 분명히 합니다 — 광고메일 <b>수신자에게만 주는 포인트나 마일리지를 주지 않는 것</b>은 위반이 아닙니다. 금지되는 것은 서비스 자체의 거부이지 부가 혜택의 차등이 아닙니다.',
+  whye:'Art.22(5) bars refusing goods or services because the subject declined optional, beyond-purpose, or marketing consent. The guide draws the line clearly: withholding points or mileage reserved for subscribers is <b>not</b> a violation. What is barred is refusing the service itself, not differentiating add-on benefits.',
+  law:'법 제22조제5항 · 제16조제3항 · 통합 안내서 Ⅳ장'}
+];
+
+/* ───────── 상태 ───────── */
+var KEY='wvs_consent_designer';
+var S={pre:{},types:{},flds:{},screen:{},dark:{}};
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.types){S=r;S.pre=S.pre||{};S.flds=S.flds||{};S.screen=S.screen||{};S.dark=S.dark||{};}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function resetAll(){S={pre:{},types:{},flds:{},screen:{},dark:{}};save();render();window.scrollTo(0,0);}
+
+/* ───────── 렌더 ───────── */
+function renderPre(){
+  var h='';
+  PRE.forEach(function(p){
+    h+='<label class="chk'+(S.pre[p[0]]?' on':'')+'"><input type="checkbox" data-pre="'+p[0]+'"'+(S.pre[p[0]]?' checked':'')+'>'+
+       '<span class="tx"><b>'+L(p[1],p[2])+'</b></span><span class="law">'+esc(p[3])+'</span></label>';
+  });
+  document.getElementById('pre').innerHTML=h;
+  var on=PRE.filter(function(p){return S.pre[p[0]];});
+  var o='';
+  if(on.length){
+    o+='<div class="okbox"><b>'+L('동의가 아닌 근거를 먼저 검토하세요.','Consider a non-consent basis first.')+'</b></div>';
+    on.forEach(function(p){
+      o+='<div class="find warn"><b>'+esc(strip(L(p[1],p[2])))+'</b><br>'+L(p[4],p[5])+'<span class="lw">'+esc(p[3])+'</span></div>';
+    });
+  }else{
+    o+='<div class="hint" data-x>'+L('해당하는 항목이 없다면 동의를 근거로 처리하게 됩니다. 아래에서 동의서를 설계하세요.','If none apply, consent is your basis. Design the consent form below.')+'</div>';
+  }
+  document.getElementById('preOut').innerHTML=o;
+}
+
+function renderTypes(){
+  var h='';
+  TYPES.forEach(function(t){
+    h+='<label class="chk'+(S.types[t[0]]?' on':'')+'"><input type="checkbox" data-type="'+t[0]+'"'+(S.types[t[0]]?' checked':'')+'>'+
+       '<span class="tx"><b>'+L(t[1],t[2])+'</b></span><span class="law">'+esc(t[3])+'</span></label>';
+  });
+  document.getElementById('types').innerHTML=h;
+  var n=TYPES.filter(function(t){return S.types[t[0]];}).length;
+  document.getElementById('cntTypes').textContent=n+' / '+TYPES.length;
+}
+
+function renderBlocks(){
+  var sel=TYPES.filter(function(t){return S.types[t[0]];});
+  var el=document.getElementById('blocks');
+  if(!sel.length){el.innerHTML='';return;}
+  var h='<div class="note">'+L('선택한 유형은 <b>'+sel.length+'개의 서로 다른 동의 블록</b>으로 분리해야 합니다 — 하나의 체크박스나 "전체 동의" 한 번으로 묶으면 그 자체가 제22조제1항 위반입니다. 블록마다 법정 고지사항을 모두 적었는지 확인하세요.',
+        'Your selection must be split into <b>'+sel.length+' separate consent blocks</b> — collapsing them into one checkbox or a single “agree to all” is itself an Art.22(1) violation. Check each block’s mandatory disclosures.')+'</div>';
+  sel.forEach(function(t,i){
+    var free=t[5];
+    h+='<div class="blk"><div class="t"><span class="badge sep">'+L('별도 동의 '+(i+1),'BLOCK '+(i+1))+'</span>'+L(t[1],t[2])+
+       '<span class="badge law">'+esc(t[3])+'</span>'+(free?'<span class="badge free">'+L('거부해도 서비스 거부 금지','Cannot refuse service')+'</span>':'')+'</div>';
+    h+='<div class="fields">';
+    t[4].forEach(function(f){
+      var k=t[0]+'.'+f[0];
+      var on=!!S.flds[k];
+      h+='<button class="fld'+(on?' on':' miss')+'" data-fld="'+esc(k)+'">'+(on?'✓ ':'✗ ')+L(f[1],f[2])+'</button>';
+    });
+    h+='</div></div>';
+  });
+  el.innerHTML=h;
+}
+
+function renderScreen(){
+  var h='';
+  SCREEN.forEach(function(s){
+    h+='<label class="chk'+(S.screen[s[0]]?' on':'')+'"><input type="checkbox" data-scr="'+s[0]+'"'+(S.screen[s[0]]?' checked':'')+'>'+
+       '<span class="tx"><b>'+L(s[1],s[2])+'</b></span><span class="law">'+esc(s[3])+'</span></label>';
+  });
+  document.getElementById('screen').innerHTML=h;
+  var n=SCREEN.filter(function(s){return S.screen[s[0]];}).length;
+  document.getElementById('cntScreen').textContent=n+' / '+SCREEN.length;
+}
+
+function renderDark(){
+  var h='';
+  DARK.forEach(function(d,di){
+    var picked=S.dark[d.id];
+    var done=picked!=null;
+    h+='<div class="dp"><div class="q">'+(di+1)+'. '+L(d.q,d.qe)+'</div>';
+    h+='<div class="mock">'+d.mock+'</div>';
+    h+='<div class="opts2">';
+    (isEn()?d.optse:d.opts).forEach(function(o,oi){
+      var cls='o2';
+      if(done){ if(oi===d.a)cls+=' ok'; else if(oi===picked)cls+=' no'; }
+      else if(picked===oi)cls+=' pick';
+      h+='<button class="'+cls+'" data-dark="'+d.id+'" data-oi="'+oi+'">'+String.fromCharCode(65+oi)+'. '+o+'</button>';
+    });
+    h+='</div>';
+    if(done){
+      var ok=picked===d.a;
+      h+='<div class="fb show '+(ok?'ok':'no')+'">'+(ok?'✅ ':'❌ ')+L(d.why,d.whye)+'<span class="lw">📕 '+esc(d.law)+'</span></div>';
+    }
+    h+='</div>';
+  });
+  document.getElementById('dark').innerHTML=h;
+  var done=DARK.filter(function(d){return S.dark[d.id]!=null;}).length;
+  var right=DARK.filter(function(d){return S.dark[d.id]===d.a;}).length;
+  document.getElementById('cntDark').textContent=right+' / '+DARK.length+L(' 정답',' correct')+(done<DARK.length?L(' ('+(DARK.length-done)+'문항 남음',' ('+(DARK.length-done)+' left')+')':'');
+}
+
+function scores(){
+  var sel=TYPES.filter(function(t){return S.types[t[0]];});
+  var tot=0,got=0;
+  sel.forEach(function(t){ t[4].forEach(function(f){ tot++; if(S.flds[t[0]+'.'+f[0]])got++; }); });
+  var fld=tot?Math.round(got*100/tot):0;
+  var scr=Math.round(SCREEN.filter(function(s){return S.screen[s[0]];}).length*100/SCREEN.length);
+  var drk=Math.round(DARK.filter(function(d){return S.dark[d.id]===d.a;}).length*100/DARK.length);
+  return {fld:fld,fldGot:got,fldTot:tot,scr:scr,drk:drk,sel:sel};
+}
+
+function renderScore(){
+  var s=scores();
+  var parts=[];
+  if(s.fldTot)parts.push(s.fld);
+  parts.push(s.scr,s.drk);
+  var all=Math.round(parts.reduce(function(a,b){return a+b;},0)/parts.length);
+  function seg(lab,v,sub){
+    return '<div class="seg"><div class="lab">'+lab+'</div><div class="big">'+v+'</div><div class="bar"><i style="width:'+v+'%"></i></div>'+(sub?'<div style="font-size:11px;color:#94a3b8;margin-top:4px">'+sub+'</div>':'')+'</div>';
+  }
+  document.getElementById('score').innerHTML=
+    seg(L('종합','OVERALL'),all,'')+
+    seg(L('고지사항','DISCLOSURE'),s.fld,s.fldTot?(s.fldGot+' / '+s.fldTot):L('유형 미선택','no type picked'))+
+    seg(L('화면 요건','SCREEN'),s.scr,'')+
+    seg(L('다크패턴','DARK PATTERN'),s.drk,'')+
+    '<div class="flex" style="font-size:12.5px;color:#94a3b8">'+
+    L('종합 점수는 세 영역의 평균입니다. 이 점수는 적법성을 보증하지 않습니다 — 지적사항이 0건이어야 출발점에 선 것입니다.',
+      'The overall score averages the three areas. It certifies nothing — zero findings is the starting line, not the finish.')+'</div>';
+}
+
+function findings(){
+  var out=[];
+  var s=scores();
+  /* 적법근거 경고 */
+  if(S.pre.contract&&S.types.collect){
+    out.push(['warn',L('계약 이행에 필요하다고 표시했는데 수집·이용 <b>동의</b>도 받고 있습니다.','You marked the data as contract-necessary but are still taking collection consent.'),
+      L('계약 관련 항목은 동의 고지사항에서 <b>삭제</b>하고 ‘고지 후 확인’으로 전환한 뒤, 나머지만 자유로운 의사로 선택하게 하세요.','Remove contract-necessary items from the consent text, switch to notice-and-acknowledge, and leave only the rest as a free choice.'),
+      '법 제15조제1항제4호 · 통합 안내서 Ⅳ장 참고1']);
+  }
+  if(S.pre.pub){
+    out.push(['warn',L('공공기관 소관 업무를 근거로 표시했습니다.','You marked a public-authority statutory duty as the basis.'),
+      L('공공기관은 <b>힘의 불균형</b>으로 자유로운 의사에 따른 동의가 성립하기 어렵습니다. 동의 외 근거를 우선 검토하세요.','Public authorities face a power imbalance that undermines free consent — look for a non-consent basis first.'),'영 제17조제1항제1호']);
+  }
+  /* 유형 미선택 */
+  if(!s.sel.length){
+    out.push(['warn',L('동의 유형을 아직 선택하지 않았습니다.','No processing type selected yet.'),
+      L('②에서 동의를 받으려는 처리 유형을 고르면 블록별 법정 고지사항을 점검합니다.','Pick your processing types in ② to check each block’s mandatory disclosures.'),'법 제22조제1항']);
+  }
+  /* 누락 고지사항 */
+  s.sel.forEach(function(t){
+    var miss=t[4].filter(function(f){return !S.flds[t[0]+'.'+f[0]];});
+    if(miss.length){
+      out.push(['bad',L(strip(t[1])+' 블록의 법정 고지사항 '+miss.length+'개 누락',strip(t[2])+': '+miss.length+' mandatory disclosure(s) missing'),
+        miss.map(function(f){return L(f[1],f[2]);}).join(' · '),t[3]]);
+    }
+  });
+  /* 중요한 내용 표시 */
+  if((S.types.sens||S.types.mkt||S.types.provide||S.types.oversea)&&(!S.screen.imp1||!S.screen.imp2)){
+    out.push(['bad',L('서면·전자문서 동의 시 <b>중요한 내용</b>을 명확히 표시해야 합니다.','Important content must be clearly marked in written or electronic consent.'),
+      L('민감정보·여권/운전면허/외국인등록번호, 보유 및 이용 기간, 제공받는 자와 그 이용 목적, 마케팅 연락 가능 사실 — 이 네 가지가 ‘중요한 내용’입니다.',
+        'Sensitive data and passport/driver’s licence/alien registration numbers, the retention period, the recipient and its purpose, and the fact that you may contact them for marketing — these four are the “important content”.'),
+      '영 제17조제3항 · 고시 제4조']);
+  }
+  /* 화면 요건 누락 */
+  var missScr=SCREEN.filter(function(x){return !S.screen[x[0]];});
+  missScr.forEach(function(x){
+    var critical=['free1','free2','free3','def1','place1','sel1'].indexOf(x[0])>=0;
+    out.push([critical?'bad':'warn',L(strip(x[1]),strip(x[2])),
+      critical?L('자유로운 의사·선택권과 직결되는 항목입니다.','This goes directly to free will and the ability to choose.'):L('점검 후 충족 표시하세요.','Verify and tick it.'),x[3]]);
+  });
+  /* 다크패턴 오답 */
+  DARK.forEach(function(d,i){
+    if(S.dark[d.id]!=null&&S.dark[d.id]!==d.a){
+      out.push(['bad',L('다크패턴 '+(i+1)+'번 오답','Dark pattern '+(i+1)+' answered incorrectly'),L(strip(d.why),strip(d.whye)),d.law]);
+    }
+  });
+  return out;
+}
+
+function renderFindings(){
+  var f=findings();
+  var el=document.getElementById('findings');
+  if(!f.length){
+    el.innerHTML='<div class="okbox">✅ <b>'+L('지적사항 0건.','No findings.')+'</b> '+
+      L('다만 이 도구는 화면 구현을 보지 못합니다 — 실제 동의 화면을 캡처해 두고, 제22조제3항에 따라 동의 없이 처리하는 항목을 처리방침에 공개했는지 함께 확인하세요.',
+        'The tool cannot see your actual screen — capture it, and confirm that non-consent items are published in the privacy policy per Art.22(3).')+'</div>';
+    return;
+  }
+  var bad=f.filter(function(x){return x[0]==='bad';}).length;
+  var h='<div class="hint" style="margin-bottom:8px">'+L('지적사항 <b>'+f.length+'건</b> (중대 '+bad+'건)','<b>'+f.length+'</b> findings ('+bad+' critical)')+'</div>';
+  f.forEach(function(x){
+    h+='<div class="find'+(x[0]==='warn'?' warn':'')+'"><b>'+x[1]+'</b><br>'+x[2]+'<span class="lw">📕 '+esc(x[3])+'</span></div>';
+  });
+  el.innerHTML=h;
+}
+
+/* ───────── 초안 생성 ───────── */
+function genDraft(){
+  var sel=TYPES.filter(function(t){return S.types[t[0]];});
+  var el=document.getElementById('draft');
+  if(!sel.length){ el.style.display='block'; el.textContent=L('② 에서 처리 유형을 먼저 선택하세요.','Pick processing types in ② first.'); return; }
+  var l=[];
+  l.push('개인정보 처리 동의서 (초안 골격)');
+  l.push('생성: '+new Date().toLocaleString('ko-KR')+' · WEB-VULN-SIM 동의서 설계·점검기');
+  l.push('='.repeat(58));
+  l.push('');
+  if(S.pre.contract||S.pre.law||S.pre.pub||S.pre.urgent||S.pre.legit||S.pre.extra){
+    l.push('[0] 동의 없이 처리하는 개인정보 — 고지(동의 아님)');
+    l.push('  ※ 법 제22조제3항: 항목과 법적 근거를 동의로 처리하는 개인정보와 구분해 공개할 것');
+    PRE.forEach(function(p){ if(S.pre[p[0]]) l.push('  · 근거: '+p[3]+' — '+strip(p[1])); });
+    l.push('  · 항목: (        )   · 이용 목적: (        )   · 보유 기간: (        )');
+    l.push('');
+  }
+  sel.forEach(function(t,i){
+    l.push('['+(i+1)+'] '+strip(t[1])+'  — 별도 동의 ('+t[3]+')');
+    t[4].forEach(function(f){
+      var has=S.flds[t[0]+'.'+f[0]];
+      l.push('   '+(has?'■':'□')+' '+strip(f[1])+': (                    )');
+    });
+    if(t[5]) l.push('   ※ 이 동의를 거부해도 재화·서비스 제공을 거부할 수 없음 (법 제22조제5항)');
+    l.push('   □ 동의함   □ 동의하지 않음        ← 기본값 선택 금지, 선택 가능 사실 명확 표시');
+    l.push('');
+  });
+  l.push('-'.repeat(58));
+  l.push('[중요한 내용 표시] 영 제17조제3항 — 아래 항목은 글씨 크기·색깔·굵기·밑줄로 강조하거나 별도 구분 표시');
+  l.push('  1. 마케팅 목적으로 연락할 수 있다는 사실');
+  l.push('  2. 민감정보 / 여권번호·운전면허번호·외국인등록번호');
+  l.push('  3. 보유 및 이용 기간 (제공 시 제공받는 자의 보유·이용 기간)');
+  l.push('  4. 제공받는 자 및 제공받는 자의 이용 목적');
+  l.push('');
+  l.push('[동의 의사 확인 방법] 영 제17조제2항 — 아래 중 하나');
+  l.push('  1. 서면 발급/우편/팩스 후 서명·날인   2. 전화 음성   3. 전화+인터넷주소 확인 후 전화');
+  l.push('  4. 홈페이지 게재 후 표시              5. 전자우편 회신   6. 이에 준하는 방법');
+  l.push('');
+  l.push('※ 이 문서는 골격입니다. 괄호를 채우고 실제 화면 배치(고지사항과 동의란의 밀접 배치)를 검증하세요.');
+  el.style.display='block';
+  el.textContent=l.join('\n');
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function exportReport(){
+  var s=scores(),f=findings();
+  var l=[];
+  l.push('개인정보 동의서 설계·점검 리포트');
+  l.push('근거: 「개인정보 보호법」 제22조 · 시행령 제17조 · 「개인정보 처리 방법에 관한 고시」 제4조');
+  l.push('생성: '+new Date().toLocaleString('ko-KR'));
+  l.push('');
+  l.push('법정 고지사항 : '+s.fld+'%  ('+s.fldGot+' / '+s.fldTot+')');
+  l.push('화면·표시요건 : '+s.scr+'%');
+  l.push('다크패턴 진단 : '+s.drk+'%');
+  l.push('');
+  l.push('[별도 동의 블록]');
+  if(!s.sel.length)l.push('  (선택 없음)');
+  s.sel.forEach(function(t,i){
+    var miss=t[4].filter(function(x){return !S.flds[t[0]+'.'+x[0]];});
+    l.push('  '+(i+1)+'. '+strip(t[1])+' ('+t[3]+')'+(miss.length?'  ← 누락: '+miss.map(function(x){return strip(x[1]);}).join(', '):'  ✓'));
+  });
+  l.push('');
+  l.push('[지적사항 '+f.length+'건]');
+  f.forEach(function(x,i){ l.push('  '+(i+1)+'. ['+(x[0]==='bad'?'중대':'확인')+'] '+strip(x[1])); l.push('        '+strip(x[2])); l.push('        근거: '+x[3]); });
+  l.push('');
+  l.push('※ 교육용 점검 결과이며 법률 자문이나 적법성 보증이 아닙니다.');
+  var blob=new Blob([l.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='동의서_점검리포트_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+
+/* ───────── 이벤트 ───────── */
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-fld]');
+  if(t){var k=t.getAttribute('data-fld');S.flds[k]=!S.flds[k];save();render();return;}
+  var d=e.target.closest('[data-dark]');
+  if(d){
+    var id=d.getAttribute('data-dark');
+    if(S.dark[id]!=null)return;
+    S.dark[id]=+d.getAttribute('data-oi');save();render();
+    if(DARK.every(function(x){return S.dark[x.id]!=null;})){
+      try{ if(window.WVSProgress) window.WVSProgress.complete('privacy-consent-designer.html'); }catch(err){}
+    }
+    return;
+  }
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.hasAttribute&&el.hasAttribute('data-pre')){S.pre[el.getAttribute('data-pre')]=el.checked;save();render();}
+  else if(el.hasAttribute&&el.hasAttribute('data-type')){S.types[el.getAttribute('data-type')]=el.checked;save();render();}
+  else if(el.hasAttribute&&el.hasAttribute('data-scr')){S.screen[el.getAttribute('data-scr')]=el.checked;save();render();}
+});
+
+function render(){
+  renderPre();renderTypes();renderBlocks();renderScreen();renderDark();renderScore();renderFindings();applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-consent-designer.html'); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',function(){ load(); applyLang(); render(); });
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

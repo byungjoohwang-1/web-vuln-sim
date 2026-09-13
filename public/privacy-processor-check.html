@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>위탁·제3자 제공·영업양도 구분기 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="위탁·제3자 제공·영업양도 구분기 · WEB-VULN-SIM">
+<meta property="og:description" content="같은 '개인정보를 남에게 넘기는 일'인데 의무가 완전히 다릅니다 — 대법원 판단 기준으로 구분하고 의무 체크리스트를 받아보세요">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-processor-check.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 제17조·제26조·제27조 및 시행령 제28조·제29조 기반 구분 도구 — 위탁(처리위탁)인지 제3자 제공인지 영업양도인지를 대법원 2016도13263의 판단 기준(취득 목적·대가·실질적 관리감독·업무 성과 귀속)으로 가르고, 위수탁 문서 7개 필수 기재사항, 공개 방법, 홍보·판매권유 위탁의 개별 고지, 교육·감독, 재위탁 동의, 손해배상 귀속까지 의무 체크리스트로 제시합니다. 사례 분류 연습 10문항 포함.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:400}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.hint b{color:#cbd5e1}
+/* 판정 배너 */
+.verdict{border-radius:16px;padding:18px 20px;position:sticky;top:52px;z-index:40;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.verdict.v-wetak{background:linear-gradient(135deg,#0b2233,#141026);border:1px solid #1e4b63}
+.verdict.v-provide{background:linear-gradient(135deg,#3b1418,#1a1020);border:1px solid #7f1d1d}
+.verdict.v-transfer{background:linear-gradient(135deg,#2a1d05,#161020);border:1px solid #78350f}
+.verdict.v-none{background:linear-gradient(135deg,#0f2a18,#101a12);border:1px solid #14532d}
+.verdict.v-unsure{background:linear-gradient(135deg,#151a26,#0f1420);border:1px solid #334155}
+.verdict .lab{font-family:var(--mono);font-size:11px;letter-spacing:1px;font-weight:800;color:#94a3b8}
+.verdict .big{font-family:var(--mono);font-size:27px;font-weight:800;color:#fff;line-height:1.15;margin-top:5px}
+.verdict .d{font-size:13px;color:#cbd5e1;margin-top:8px}
+.verdict .sc{display:flex;gap:14px;margin-top:11px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:#94a3b8}
+.verdict .sc b{color:#e2e8f0}
+.tug{height:9px;border-radius:99px;background:#1e293b;margin-top:10px;overflow:hidden;display:flex}
+.tug i{display:block;height:100%}
+.tug i.w{background:#0ea5e9}.tug i.p{background:#ef4444}
+/* 질문 */
+.q{border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:12px 14px;margin:9px 0}
+.q .t{font-size:13.5px;font-weight:700;color:#fff}
+.q .law{font-family:var(--mono);font-size:10.5px;color:#67e8f9;margin-top:4px;display:block}
+.ans{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.a{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;flex:1;min-width:140px;text-align:left}
+.a.on.w{background:#0c2030;border-color:#0ea5e9;color:#e0f2fe}
+.a.on.p{background:#3b1418;border-color:#ef4444;color:#fecaca}
+.a.on.n{background:#1e293b;border-color:#64748b;color:#cbd5e1}
+/* 게이트 */
+.gate{border-left:4px solid var(--warn);background:#3a2a09;border-radius:8px;padding:11px 13px;font-size:12.5px;color:#fde047;margin:9px 0}
+.gate b{color:#fff}
+.gate .lw{font-family:var(--mono);font-size:11px;display:block;margin-top:5px;opacity:.85}
+.chk{display:flex;gap:9px;align-items:flex-start;background:#0b1220;border:1px solid #334155;border-radius:9px;padding:9px 11px;margin:6px 0;cursor:pointer;font-size:13px}
+.chk.on{background:#0f2a18;border-color:#14532d}
+.chk input{width:16px;height:16px;flex-shrink:0;margin-top:3px}
+.chk .tx{flex:1}.chk .tx b{display:block}
+.chk .tx span{font-size:11.5px;color:var(--muted);display:block;margin-top:2px}
+.chk .law{font-family:var(--mono);font-size:10.5px;color:#67e8f9;flex-shrink:0;margin-top:3px}
+.okbox{background:#0f2a18;border-left:4px solid var(--good);border-radius:8px;padding:11px 13px;font-size:13px;color:#d1fae5;margin:10px 0}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:9px}
+th,td{border:1px solid var(--border);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#0f172a;color:#7dd3fc;font-family:var(--mono);font-size:11.5px}
+td.mono{font-family:var(--mono);font-size:11.5px;color:#7dd3fc;white-space:nowrap}
+/* 4열 비교표는 320px 화면에서 접히지 않는다 — 표만 가로 스크롤시키고 페이지는 넘치지 않게 한다 */
+#cmp{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#cmp table{min-width:560px}
+/* 사례 퀴즈 */
+.case{border:1px solid var(--border);border-radius:11px;background:var(--panel2);padding:11px 13px;margin:8px 0}
+.case .s{font-size:13px;color:#e2e8f0}
+.case .pick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.case .pick button{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;font-family:var(--mono)}
+.case .pick button.ok{background:#0f2a18;border-color:#14532d;color:#bbf7d0}
+.case .pick button.no{background:#3b1418;border-color:#7f1d1d;color:#fca5a5}
+.case .fb{font-size:12.5px;margin-top:8px;padding:9px 11px;border-radius:8px;display:none}
+.case .fb.show{display:block}
+.case .fb.ok{background:#0f2a18;border-left:4px solid var(--good);color:#d1fae5}
+.case .fb.no{background:#3b1418;border-left:4px solid var(--bad);color:#fecaca}
+.case .fb .lw{font-family:var(--mono);font-size:11px;color:#7dd3fc;display:block;margin-top:4px}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+@media(max-width:640px){.verdict{position:static}.verdict .big{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="privacy-basis-check.html"><span data-en="Legal basis">적법근거 판단</span></a>
+  <a href="privacy-policy-builder.html"><span data-en="Policy builder">처리방침 작성</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🔀 <span data-en="Outsourcing vs Disclosure vs Business Transfer">위탁·제3자 제공·영업양도 구분기</span></h1>
+    <div class="sub" data-en="All three look the same from the outside — personal data leaves your building. The duties are completely different: outsourcing needs a document and a website notice, disclosure needs a lawful basis and usually consent, and a business transfer needs advance notice with an opt-out. Getting the label wrong is one of the most common findings in Korean enforcement.">
+      셋 다 겉보기에는 같습니다 — <b>개인정보가 우리 밖으로 나갑니다</b>. 그런데 의무는 완전히 다릅니다. 위탁은 <b>문서와 홈페이지 공개</b>, 제공은 <b>적법근거와 대개 동의</b>, 영업양도는 <b>사전 통지와 거부 절차</b>가 필요합니다. 이 분류를 틀리는 것은 국내 제재 사례에서 가장 흔한 지적 중 하나입니다.</div>
+    <div class="src">📕 기준: 「개인정보 보호법」 제17조·제19조·제26조·제27조 · 시행령 제28조·제29조 · 대법원 2017. 4. 7. 선고 2016도13263 · 대법원 2024. 7. 11. 선고 2020도13960 · 개인정보보호위원회 「개인정보 처리 통합 안내서」(2025.7.) Ⅵ·Ⅶ장</div>
+  </div>
+
+  <div class="verdict v-unsure" id="verdict"></div>
+
+  <!-- ① 사전 관문 -->
+  <div class="card">
+    <h2>① <span data-en="Two gates before the test">먼저 걸러야 할 두 가지</span></h2>
+    <div id="gates"></div>
+    <div id="gateOut"></div>
+  </div>
+
+  <!-- ② 판단 질문 -->
+  <div class="card" id="qCard">
+    <h2>② <span data-en="The Supreme Court’s factors">대법원의 판단 요소</span><span class="cnt" id="cntQ"></span></h2>
+    <div class="hint" data-en="The Court weighs these together — no single answer decides it. The most telling question is <b>whose work the processing really is</b>, and to whom its results accrue.">
+      대법원은 이 요소들을 <b>종합하여</b> 판단합니다 — 한 답으로 결정되지 않습니다. 가장 결정적인 질문은 <b>그 처리가 실질적으로 누구의 업무이고 그 성과가 누구에게 귀속되는가</b>입니다.</div>
+    <div id="qs"></div>
+  </div>
+
+  <!-- ③ 의무 -->
+  <div class="card">
+    <h2>③ <span data-en="Duties for this classification">이 분류에 따르는 의무</span><span class="cnt" id="cntD"></span></h2>
+    <div id="duties"></div>
+  </div>
+
+  <!-- ④ 비교표 -->
+  <div class="card">
+    <h2>📊 <span data-en="Side by side">한눈에 비교</span></h2>
+    <div id="cmp"></div>
+  </div>
+
+  <!-- ⑤ 사례 -->
+  <div class="card">
+    <h2>🧩 <span data-en="Classify these cases">사례 분류 연습</span><span class="cnt" id="cntC"></span></h2>
+    <div class="hint" data-en="Every case below is taken from the Commission’s guide or from a reported judgment.">
+      아래 사례는 모두 개인정보위 안내서 또는 실제 판결에서 가져온 것입니다.</div>
+    <div id="cases"></div>
+  </div>
+
+  <div class="acts">
+    <button class="btn" onclick="exportReport()">⬇ <span data-en="Export">판단 리포트</span></button>
+    <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+  </div>
+
+  <div class="disc" data-en="Educational tool built from the Act, its Enforcement Decree and the Commission's 2025 consolidated guide. It does not constitute legal advice. Classification is a case-by-case judgement on the totality of the relationship; this tool surfaces the factors, it does not decide for you. Runs entirely in your browser.">
+    ⚠️ 법률·시행령과 개인정보보호위원회 「개인정보 처리 통합 안내서」(2025.7.)를 근거로 만든 <b>교육용 도구</b>입니다. 법률 자문이 아닙니다. 구분은 관계 전체를 종합해 개별적으로 판단하며, 이 도구는 <b>판단 요소를 드러낼 뿐 대신 판단하지 않습니다</b>. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function strip(s){return String(s).replace(/<[^>]+>/g,'');}
+
+/* ① 사전 관문 */
+var GATES=[
+ ['transfer','<b>영업의 전부 또는 일부를 양도·합병</b>하면서 개인정보를 이전한다','Data moves as part of a transfer or merger of the business','법 제27조'],
+ ['nonproc','상대방이 개인정보를 <b>처리하지 않고</b> 단순히 전달·전송·통과만 시킨다','The other party merely transmits or relays without processing','대법원 2020도13960']
+];
+
+/* ② 판단 질문 — w = 위탁 방향, p = 제공 방향 */
+var QS=[
+ {id:'q1',t:'이 개인정보 처리는 실질적으로 <b>누구의 업무 영역</b>에 속합니까?',te:'Whose work is this processing, really?',
+  law:'대법원 2016도13263 · 통합 안내서 Ⅵ장 Tip',
+  w:'우리(위탁하려는 쪽)의 업무다',we:'Ours — the party sending the data',
+  p:'상대방의 업무다',pe:'The other party’s'},
+ {id:'q2',t:'처리 결과의 <b>업무 성과</b>는 주로 누구에게 귀속됩니까?',te:'To whom do the results of the processing mainly accrue?',
+  law:'통합 안내서 Ⅵ장 Tip',
+  w:'주로 우리에게 귀속된다',we:'Mainly to us',
+  p:'주로 상대방에게 귀속된다',pe:'Mainly to them'},
+ {id:'q3',t:'상대방이 처리하는 개인정보에 대한 <b>지배·관리권</b>은 누구에게 있습니까?',te:'Who holds control over the data they handle?',
+  law:'통합 안내서 Ⅵ장 · 법 제17조 개요',
+  w:'여전히 우리에게 있다 — 우리 이름으로 처리된다',we:'Still ours — processed in our name',
+  p:'상대방에게 이전된다',pe:'It transfers to them'},
+ {id:'q4',t:'상대방은 <b>위탁사무 처리 대가</b> 외에 개인정보 처리에 관한 <b>독자적인 이익</b>을 가집니까?',te:'Does the other party gain an independent interest beyond its fee?',
+  law:'대법원 2016도13263',
+  w:'아니다 — 대가만 받는다',we:'No — only the fee',
+  p:'그렇다 — 독자적 이익이 있다',pe:'Yes — it has its own interest'},
+ {id:'q5',t:'우리가 상대방을 <b>실질적으로 관리·감독</b>합니까?',te:'Do we actually manage and supervise them?',
+  law:'대법원 2016도13263 · 법 제26조제4항',
+  w:'그렇다 — 범위를 정하고 점검한다',we:'Yes — we scope and audit them',
+  p:'아니다 — 상대방이 독립적으로 판단한다',pe:'No — they act independently'},
+ {id:'q6',t:'정보주체는 이 이전을 <b>사전에 예측</b>할 수 있습니까?',te:'Could the data subject foresee this transfer?',
+  law:'통합 안내서 Ⅵ장 비교표',
+  w:'예측 가능하다 — 신뢰 범위 안이다',we:'Yes — within their expectations',
+  p:'예측하기 어렵다 — 신뢰 범위 밖이다',pe:'No — outside their expectations'},
+ {id:'q7',t:'상대방이 정보주체와 <b>직접 법률관계</b>를 맺고 대고객 서비스를 제공합니까?',te:'Does the other party form its own legal relationship with the subject?',
+  law:'통합 안내서 Ⅵ장',
+  w:'아니다 — 정보주체와의 관계는 우리만 맺는다',we:'No — only we have that relationship',
+  p:'그렇다 — 상대방도 직접 관계를 맺는다',pe:'Yes — they do too'}
+];
+
+/* ③ 의무 */
+var DOC=[
+ ['d1','위탁업무 수행 <b>목적 외 개인정보 처리 금지</b>에 관한 사항','No processing beyond the outsourced purpose','법 §26①(1)'],
+ ['d2','개인정보의 <b>기술적·관리적 보호조치</b>에 관한 사항','Technical and managerial safeguards','법 §26①(2)'],
+ ['d3','<b>위탁업무의 목적 및 범위</b>','Purpose and scope of the outsourced work','영 §28①(1)'],
+ ['d4','<b>재위탁 제한</b>에 관한 사항','Limits on sub-processing','영 §28①(2)'],
+ ['d5','개인정보에 대한 <b>접근 제한 등 안전성 확보 조치</b>에 관한 사항','Access limits and other security measures','영 §28①(3)'],
+ ['d6','보유 개인정보의 <b>관리 현황 점검 등 감독</b>에 관한 사항','Inspection and supervision arrangements','영 §28①(4)'],
+ ['d7','수탁자가 <b>의무를 위반한 경우의 손해배상 등 책임</b>에 관한 사항','Liability if the processor breaches its duties','영 §28①(5)']
+];
+var WDUTY=[
+ ['w1','위탁하는 <b>업무의 내용과 수탁자</b>를 홈페이지에 <b>지속적으로 게재</b>한다','Publish the outsourced work and the processor continuously on your website','영 §28②'],
+ ['w2','홈페이지 게재가 불가능하면 사업장 게시·관보/일간신문·연 2회 이상 간행물·계약서 발급 중 <b>하나 이상</b>으로 공개한다','If you cannot, use one of the four alternatives','영 §28③'],
+ ['w3','<b>홍보·판매 권유</b> 업무를 위탁하는 경우에는 서면등의 방법으로 <b>정보주체에게 개별 고지</b>한다 (내용·수탁자 변경 시에도)','For marketing outsourcing, notify each subject directly — and again on any change','법 §26③ · 영 §28④'],
+ ['w4','개별 고지가 과실 없이 불가능하면 홈페이지에 <b>30일 이상</b> 게재한다 (홈페이지가 없으면 사업장에 30일 이상 게시)','If notice is impossible without fault, post for 30+ days','영 §28⑤'],
+ ['w5','수탁자를 <b>교육</b>하고 처리 현황 점검 등으로 <b>감독</b>한다','Train and supervise the processor','법 §26④ · 영 §28⑥'],
+ ['w6','수탁자가 제3자에게 <b>재위탁</b>하려면 <b>위탁자의 동의</b>를 받게 한다 (2023년 신설)','Sub-processing requires the controller’s consent (added 2023)','법 §26⑥'],
+ ['w7','수탁자 선정 시 인력·물적 시설·재정 부담능력·기술 보유·책임능력을 <b>종합 평가</b>한다','Assess the processor’s capacity before selecting','표준 개인정보 보호지침 §16'],
+ ['w8','위탁 <b>종료 후</b> 수탁자의 개인정보 파기·반환을 확인한다','Confirm deletion or return when the engagement ends','통합 안내서 Ⅵ장 3단계']
+];
+var PDUTY=[
+ ['p1','제17조의 <b>적법근거</b>를 갖춘다 — 별도 동의(5개 고지사항) 또는 수집 목적 범위 내 제공','Secure an Art.17 basis — separate consent with five disclosures, or within-purpose disclosure','법 §17①'],
+ ['p2','제공받는 자·이용 목적·항목·보유기간을 <b>처리방침에 공개</b>한다','Publish recipient, purpose, items and retention in the privacy policy','법 §30'],
+ ['p3','제공받은 자는 <b>제공받은 목적 외로 이용·제공할 수 없다</b>','The recipient may not use or pass on the data beyond the received purpose','법 §19'],
+ ['p4','제공하는 자는 제3자에 대한 <b>관리·감독 책임을 지지 않는다</b> — 대신 손해배상은 각자 야기한 범위에서 진다','No supervision duty over the recipient; liability is each party’s own','통합 안내서 Ⅵ장 비교표'],
+ ['p5','제공받은 자가 개인정보처리자라면 <b>스스로 이 법의 의무</b>를 진다','If the recipient is a controller, it bears this Act’s duties directly','법 §19 비고']
+];
+var TDUTY=[
+ ['t1','이전 <b>전에 미리</b> ① 이전 사실 ② 이전받는 자의 성명·주소·전화번호 등 연락처 ③ 이전을 원하지 않을 때의 조치 방법·절차를 알린다','Before the transfer, disclose the three statutory items','법 §27①'],
+ ['t2','알리는 방법은 <b>서면등의 방법</b>(서면·전자우편·팩스·전화·문자 또는 이에 상당하는 방법)이다','Use written or equivalent means','영 §29①'],
+ ['t3','과실 없이 알릴 수 없으면 홈페이지에 <b>30일 이상</b> 게재한다','If notice is impossible without fault, post for 30+ days','영 §29②'],
+ ['t4','영업양수자등은 이전받은 즉시 <b>지체 없이</b> 그 사실을 알린다 — 다만 양도자가 이미 알렸다면 생략','The transferee must notify without delay unless the transferor already did','법 §27②'],
+ ['t5','영업양수자등은 <b>이전 당시의 본래 목적으로만</b> 이용·제공할 수 있고, <b>개인정보처리자로 본다</b>','The transferee may use it only for the original purpose and is treated as a controller','법 §27③']
+];
+
+/* ⑤ 사례 */
+var CASES=[
+ ['c1','인터넷 쇼핑몰이 <b>택배사</b>에 배송업무를 위탁했다','An online shop outsources delivery to a courier','w',
+  '안내서 비교표가 드는 위탁의 대표 예시입니다. 배송은 쇼핑몰 자신의 계약 이행이고, 택배사는 대가만 받습니다.',
+  'The guide’s canonical outsourcing example: delivery performs the shop’s own contract and the courier only earns a fee.','통합 안내서 Ⅵ장 비교표'],
+ ['c2','<b>오픈마켓</b>이 입점 판매자에게 구매고객의 주문·배송정보를 넘겼다','A marketplace passes buyer order data to a seller','p',
+  '입점 판매자는 <b>자신의 업무와 이익</b>을 위해 정보를 받습니다. 안내서는 이를 제3자 제공 예시로 듭니다. 다만 중개서비스의 본질상 계약 이행에 필요하다면 <b>추가적 제공</b>(영 §14의2)으로 동의 없이 가능할 수 있고, 그때는 판단기준을 처리방침에 공개해야 합니다.',
+  'The seller receives the data for its own business and benefit — the guide lists this as third-party disclosure. Where the platform’s service inherently requires it, the additional-disclosure test may apply without consent, with the criteria published.','통합 안내서 Ⅵ장 비교표 · 영 §14의2'],
+ ['c3','<b>호텔과 항공사</b>가 사업제휴로 고객 개인정보를 주고받았다','A hotel and an airline swap customer data under a partnership','p',
+  '제휴는 양쪽이 각자의 이익을 위해 정보를 씁니다 — 지배·관리권이 이전되므로 제3자 제공입니다.',
+  'In a partnership each side uses the data for its own benefit — control transfers, so it is disclosure.','통합 안내서 Ⅵ장 비교표'],
+ ['c4','기업이 <b>문서 파쇄업체</b>를 고용해 인사 문서를 파기했다','A company hires a shredding firm to destroy HR documents','w',
+  '파기도 ‘처리’입니다. 파쇄업체는 위탁자의 업무를 대행하므로 수탁자입니다.',
+  'Destruction is processing. The shredder performs the controller’s own task, so it is a processor.','통합 안내서 Ⅵ장 위탁 사례'],
+ ['c5','<b>이동통신사</b>가 내용을 확인하지 않고 개인정보를 단순히 전달·전송만 했다','A carrier merely transmits data without seeing it','n',
+  '기간통신역무로서의 단순 전송은 개인정보의 ‘처리’로 보지 않으므로 <b>위탁에도 해당하지 않습니다</b>.',
+  'Pure transmission as a common-carrier service is not “processing”, so it is not outsourcing either.','통합 안내서 Ⅵ장'],
+ ['c6','<b>전자처방전 플랫폼</b>이 병원→약국 전송을 중계하며 처방 정보를 일시 보관했다','An e-prescription platform briefly stores data while relaying it','n',
+  '대법원은 중계를 위한 일시 보관을 개인정보의 처리로 보지 않았습니다. 다만 ‘일시 보관’의 범위를 넘어 별도 활용하면 결론이 달라집니다.',
+  'The Supreme Court held that temporary storage purely for relaying is not processing. Using it beyond that changes the answer.','대법원 2024. 7. 11. 선고 2020도13960'],
+ ['c7','대학이 <b>은행</b>에 재학생 정보를 주어 등록금 대리 수납 서비스를 운영하게 했다','A university lets a bank collect tuition using student data','w',
+  '안내서가 위탁 사례로 명시합니다. 수납은 대학 자신의 업무이고 은행은 이를 대행합니다.',
+  'The guide lists this as outsourcing: collection is the university’s own task, performed by the bank on its behalf.','통합 안내서 Ⅵ장 위탁 사례'],
+ ['c8','보험사가 <b>텔레마케팅 전문업체</b>에 TM 업무를 위탁했다','An insurer outsources telemarketing','w',
+  '위탁입니다. 다만 <b>홍보·판매 권유</b> 업무 위탁이므로 홈페이지 공개로 끝나지 않고 <b>정보주체에게 개별 고지</b>해야 하고, 내용이나 수탁자가 바뀌면 다시 알려야 합니다.',
+  'It is outsourcing — but because it is marketing, a website notice is not enough: each subject must be notified directly, and again on any change.','법 §26③ · 영 §28④'],
+ ['c9','회사가 <b>교육 전문업체</b>에 직원 이름·사번·휴대폰번호를 주고 사내 교육을 맡겼다','A company gives staff details to a training firm','w',
+  '안내서의 위탁 사례입니다. 직원 교육은 회사의 업무이고 교육업체는 이를 수행합니다.',
+  'A guide example of outsourcing: staff training is the company’s task, carried out by the vendor.','통합 안내서 Ⅵ장 위탁 사례'],
+ ['c10','<b>공공기관끼리 협약</b>을 맺어 업무 일부를 다른 공공기관에 맡기고 개인정보를 전송했다','Two public authorities agree that one performs part of the other’s work','w',
+  '공공기관 간이라도 <b>위탁자의 업무</b>를 대신 수행하는 관계라면 위탁입니다. 기관 성격이 아니라 관계의 실질로 판단합니다.',
+  'Even between public authorities, performing the other’s work makes it outsourcing. The substance of the relationship decides it, not the parties’ status.','통합 안내서 Ⅵ장 위탁 사례']
+];
+var CATS=[['w','위탁','Outsourcing'],['p','제3자 제공','Disclosure'],['n','처리 아님','Not processing']];
+
+var KEY='wvs_processor_check';
+var S={gates:{},q:{},doc:{},wd:{},pd:{},td:{},cases:{}};
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.q){S=r;['gates','q','doc','wd','pd','td','cases'].forEach(function(k){S[k]=S[k]||{};});}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function resetAll(){S={gates:{},q:{},doc:{},wd:{},pd:{},td:{},cases:{}};save();render();window.scrollTo(0,0);}
+
+function tally(){
+  var w=0,p=0,n=0;
+  QS.forEach(function(q){ var v=S.q[q.id]; if(v==='w')w++; else if(v==='p')p++; else n++; });
+  return {w:w,p:p,unanswered:n};
+}
+function classify(){
+  if(S.gates.transfer)return 'transfer';
+  if(S.gates.nonproc)return 'none';
+  var t=tally();
+  if(t.unanswered===QS.length)return 'unsure';
+  if(t.unanswered>2)return 'unsure';
+  if(t.w>=5&&t.p<=1)return 'wetak';
+  if(t.p>=5&&t.w<=1)return 'provide';
+  if(t.w>t.p+1)return 'wetak';
+  if(t.p>t.w+1)return 'provide';
+  return 'mixed';
+}
+
+function renderGates(){
+  document.getElementById('gates').innerHTML=GATES.map(function(g){
+    return '<label class="chk'+(S.gates[g[0]]?' on':'')+'"><input type="checkbox" data-gate="'+g[0]+'"'+(S.gates[g[0]]?' checked':'')+'>'+
+      '<span class="tx"><b>'+L(g[1],g[2])+'</b></span><span class="law">'+esc(g[3])+'</span></label>';}).join('');
+  var h='';
+  if(S.gates.transfer){
+    h+='<div class="gate"><b>'+L('영업양도 경로입니다.','This is the business-transfer route.')+'</b> '+
+      L('제26조(위탁)도 제17조(제공)도 아니라 <b>제27조</b>가 적용됩니다. 위탁·제공 판단 질문은 건너뛰어도 됩니다.',
+        'Neither Art.26 nor Art.17 applies — Art.27 does. You can skip the outsourcing/disclosure questions.')+'<span class="lw">법 제27조</span></div>';
+  }
+  if(S.gates.nonproc){
+    h+='<div class="gate"><b>'+L('개인정보 ‘처리’가 아닐 수 있습니다.','This may not be “processing” at all.')+'</b> '+
+      L('단순 전달·전송·통과는 처리로 보지 않으므로 위탁에 해당하지 않습니다. 다만 <b>일시 보관을 넘어 열람·분석·활용</b>이 개입하면 결론이 바뀝니다 — 실제로 무엇을 하는지로 판단하세요.',
+        'Pure relaying is not processing, so it is not outsourcing. But if the party reads, analyses or uses the data beyond momentary storage, the answer changes — judge by what actually happens.')+'<span class="lw">대법원 2020도13960</span></div>';
+  }
+  document.getElementById('gateOut').innerHTML=h;
+}
+
+function renderQs(){
+  var skip=S.gates.transfer||S.gates.nonproc;
+  document.getElementById('qCard').style.opacity=skip?'.5':'1';
+  document.getElementById('qs').innerHTML=QS.map(function(q,i){
+    var v=S.q[q.id];
+    return '<div class="q"><div class="t">'+(i+1)+'. '+L(q.t,q.te)+'</div><span class="law">📕 '+esc(q.law)+'</span>'+
+      '<div class="ans">'+
+      '<button class="a w'+(v==='w'?' on':'')+'" data-q="'+q.id+'" data-v="w">→ '+L(q.w,q.we)+'</button>'+
+      '<button class="a p'+(v==='p'?' on':'')+'" data-q="'+q.id+'" data-v="p">→ '+L(q.p,q.pe)+'</button>'+
+      '<button class="a n'+(v==='n'?' on':'')+'" data-q="'+q.id+'" data-v="n">'+L('모르겠다','Not sure')+'</button>'+
+      '</div></div>';}).join('');
+  var t=tally();
+  document.getElementById('cntQ').textContent=(QS.length-t.unanswered)+' / '+QS.length;
+}
+
+function renderVerdict(){
+  var c=classify(),t=tally();
+  var map={
+    wetak:['v-wetak',L('처리위탁 (법 제26조)','Outsourcing (Art.26)'),
+      L('위탁자 본인의 업무와 이익을 위해 개인정보가 이전되는 <b>내부관계</b>입니다. 정보주체에 대한 책임 주체는 <b>여전히 위탁자</b>이고 법률관계에 변동이 없으므로, 원칙적으로 <b>동의가 필요 없고</b> 홈페이지 공개로 가능합니다.',
+        'An internal relationship where data moves for the controller’s own work and benefit. The controller remains answerable to the subject, so consent is generally not required and a website notice suffices.')],
+    provide:['v-provide',L('제3자 제공 (법 제17조)','Third-party disclosure (Art.17)'),
+      L('개인정보 처리 이익과 책임이 <b>제공받는 자에게 이전</b>되고 정보주체에 대한 책임 주체도 바뀝니다. 그래서 <b>적법근거(대개 별도 동의)</b>가 필요하고 요건이 엄격합니다.',
+        'The benefit and responsibility transfer to the recipient, and so does accountability to the subject — hence a lawful basis, usually separate consent, is required.')],
+    transfer:['v-transfer',L('영업양도 등에 따른 이전 (법 제27조)','Transfer on business assignment (Art.27)'),
+      L('개인정보DB에 관한 권리·의무가 <b>포괄 승계</b>됩니다. 동의를 받는 것이 아니라 <b>미리 알리고 거부할 기회를 주는</b> 구조입니다.',
+        'Rights and duties over the database pass as a whole. The mechanism is not consent but advance notice with a chance to opt out.')],
+    none:['v-none',L('개인정보 ‘처리’에 해당하지 않음','Not “processing”'),
+      L('단순 전달·전송·통과만 한다면 위탁도 제공도 아닙니다. 다만 이 결론은 <b>실제로 아무것도 하지 않을 때만</b> 유지됩니다.',
+        'Pure relaying is neither outsourcing nor disclosure — but only while the party genuinely does nothing with the data.')],
+    mixed:['v-unsure',L('혼재 — 제3자 제공으로 판단될 위험','Mixed — risk of being treated as disclosure'),
+      L('위탁 요소와 제공 요소가 섞여 있습니다. 안내서는 <b>쌍방의 이익이 혼재되면 자칫 제3자 제공으로 판단될 수 있다</b>고 경고하며, 이때 위탁자는 이전한 개인정보가 <b>수탁자의 고유한 이익을 위해 활용되지 않도록 통제</b>하라고 합니다.',
+        'Outsourcing and disclosure factors are mixed. The guide warns that where both sides’ interests are intertwined this can be treated as disclosure, and tells the controller to ensure the data is not used for the processor’s own benefit.')],
+    unsure:['v-unsure',L('판단 미완료','Not enough answers'),
+      L('②의 질문에 답하면 판정합니다. ‘모르겠다’가 3개 이상이면 결론을 내지 않습니다 — 모호한 상태로 위탁이라고 단정하는 것이 가장 위험합니다.',
+        'Answer the questions in ② . With three or more “not sure” answers no verdict is given — assuming outsourcing while unclear is the riskiest move.')]
+  };
+  var m=map[c];
+  var wpct=t.w+t.p?Math.round(t.w*100/(t.w+t.p)):50;
+  var el=document.getElementById('verdict');
+  el.className='verdict '+m[0];
+  el.innerHTML='<div class="lab">'+L('판정','VERDICT')+'</div><div class="big">'+m[1]+'</div><div class="d">'+m[2]+'</div>'+
+    (c==='transfer'||c==='none'?'':'<div class="tug"><i class="w" style="width:'+wpct+'%"></i><i class="p" style="width:'+(100-wpct)+'%"></i></div>'+
+    '<div class="sc"><span>'+L('위탁 방향','Outsourcing')+' <b>'+t.w+'</b></span><span>'+L('제공 방향','Disclosure')+' <b>'+t.p+'</b></span><span>'+L('모름','Not sure')+' <b>'+t.unanswered+'</b></span></div>');
+}
+
+function renderDuties(){
+  var c=classify(),h='',tot=0,got=0;
+  function block(title,items,bucket){
+    var s='<div class="hint" style="margin:12px 0 4px;color:#7dd3fc;font-weight:700">'+title+'</div>';
+    items.forEach(function(x){
+      tot++; if(S[bucket][x[0]])got++;
+      s+='<label class="chk'+(S[bucket][x[0]]?' on':'')+'"><input type="checkbox" data-duty="'+bucket+'|'+x[0]+'"'+(S[bucket][x[0]]?' checked':'')+'>'+
+        '<span class="tx"><b>'+L(x[1],x[2])+'</b></span><span class="law">'+esc(x[3])+'</span></label>';
+    });
+    return s;
+  }
+  if(c==='wetak'||c==='mixed'){
+    h+='<div class="note">'+L('위탁은 <b>문서로</b> 해야 합니다. 형식과 명칭은 자유이고(협약서·약정서·약관도 가능) 독립 문서일 필요도 없지만, 아래 <b>7가지는 모두</b> 들어가야 합니다. 계약 갱신이나 업무 변경 시에는 문서를 다시 검토·수정하세요.',
+      'Outsourcing must be in writing. Form and title are free — an MOU, an addendum or standard terms all qualify, and it need not be a standalone document — but all seven items below must appear. Review and amend the document whenever the contract renews or the work changes.')+'</div>';
+    h+=block(L('위·수탁 문서 필수 기재사항 7가지','Seven mandatory contract items'),DOC,'doc');
+    h+=block(L('위탁자의 운영 의무','The controller’s operating duties'),WDUTY,'wd');
+    h+='<div class="note">'+L('<b>책임 구조</b> — 수탁자가 위탁 업무와 관련해 이 법을 위반해 발생한 손해배상책임에 대하여는 <b>수탁자를 개인정보처리자의 소속 직원으로 봅니다</b>(§26⑦). 정보주체에 대한 실질적 책임은 위탁자가 지고, 수탁자는 책임 있는 범위에서 함께 책임집니다. 2023년 개정으로 수탁자에게도 과징금·벌칙·과태료가 직접 적용될 수 있습니다.',
+      '<b>Liability</b> — for damages arising from the processor’s breach in the outsourced work, the processor is treated as the controller’s own employee (Art.26(7)). The controller answers to the subject; the processor shares liability to the extent of its fault, and since the 2023 amendment can face surcharges and penalties directly.')+'</div>';
+  }
+  if(c==='provide'||c==='mixed'){
+    h+=block(L('제3자 제공 시 의무','Duties when disclosing'),PDUTY,'pd');
+  }
+  if(c==='transfer'){
+    h+=block(L('영업양도 등에 따른 이전 의무','Duties on business transfer'),TDUTY,'td');
+  }
+  if(c==='none'){
+    h+='<div class="okbox">'+L('개인정보 ‘처리’에 해당하지 않는다면 제26조·제17조의 의무는 발생하지 않습니다. 다만 이 판단은 <b>지속적으로 유효한지 점검</b>해야 합니다 — 서비스가 바뀌어 로그를 남기거나 분석을 시작하는 순간 처리가 됩니다.',
+      'If it is not processing, neither Art.26 nor Art.17 applies. Re-check this over time — the moment the service starts logging or analysing, it becomes processing.')+'</div>';
+  }
+  if(c==='unsure'){
+    h+='<div class="note">'+L('판정이 나오면 해당 의무 체크리스트가 표시됩니다.','The relevant checklist appears once a verdict is reached.')+'</div>';
+  }
+  document.getElementById('duties').innerHTML=h;
+  document.getElementById('cntD').textContent=tot?(got+' / '+tot):'';
+}
+
+function renderCmp(){
+  var rows=[
+    [L('관련 조항','Provision'),'§26','§17 · §18 · §23 · §24','§27'],
+    [L('이전 목적','Purpose of transfer'),L('위탁자의 업무 처리와 이익','The controller’s work and benefit'),L('제3자의 업무 처리와 이익','The third party’s work and benefit'),L('영업의 양도·합병에 수반','Incidental to the transfer of a business')],
+    [L('예측가능성','Foreseeability'),L('정보주체가 사전 예측 가능 (신뢰 범위 내)','Foreseeable — within the subject’s expectations'),L('사전 예측 곤란 (신뢰 범위 밖)','Hard to foresee — outside expectations'),L('사전 통지로 확보','Secured by advance notice')],
+    [L('이전 방법','How it is done'),L('홈페이지에 위탁 내용·수탁자 공개<br>※ 홍보·판매 권유 위탁은 개별 고지','Publish on the website; marketing outsourcing needs individual notice'),L('정보주체의 동의 등 적법요건 충족','A lawful basis, usually consent'),L('미리 알리고 거부 절차 안내','Advance notice with an opt-out route')],
+    [L('관리·감독 책임','Supervision'),L('위탁자가 교육·감독 의무 부담 (내부관계)','The controller must train and supervise'),L('제공하는 자는 책임 없음','The discloser has none'),L('양수자가 개인정보처리자가 됨','The transferee becomes the controller')],
+    [L('목적 외 금지','Beyond-purpose limits'),L('수탁자는 위탁 범위 초과 이용·제공 금지 (§26⑤)','Processor may not exceed the outsourced scope'),L('제공받은 자는 제공 목적 외 이용·제공 금지 (§19)','Recipient may not go beyond the received purpose'),L('이전 당시의 본래 목적으로만 (§27③)','Only the purpose existing at transfer')],
+    [L('손해배상','Damages'),L('위탁자가 부담 — 수탁자를 소속 직원으로 봄 (§26⑦), 구상권 행사 가능','The controller bears it; processor treated as its employee, with recourse'),L('각자 야기한 범위에서 부담','Each bears its own share'),L('양수자가 처리자로서 부담','The transferee bears it as controller')]
+  ];
+  document.getElementById('cmp').innerHTML='<table><tr><th></th><th>'+L('위탁','Outsourcing')+'</th><th>'+L('제3자 제공','Disclosure')+'</th><th>'+L('영업양도','Business transfer')+'</th></tr>'+
+    rows.map(function(r){return '<tr><td><b>'+r[0]+'</b></td><td'+(r[1].indexOf('§')===0?' class="mono"':'')+'>'+r[1]+'</td><td'+(r[2].indexOf('§')===0?' class="mono"':'')+'>'+r[2]+'</td><td'+(r[3].indexOf('§')===0?' class="mono"':'')+'>'+r[3]+'</td></tr>';}).join('')+'</table>';
+}
+
+function renderCases(){
+  document.getElementById('cases').innerHTML=CASES.map(function(c,i){
+    var picked=S.cases[c[0]];
+    var done=picked!=null;
+    var h='<div class="case"><div class="s">'+(i+1)+'. '+L(c[1],c[2])+'</div><div class="pick">';
+    CATS.forEach(function(k){
+      var cls='';
+      if(done){ if(k[0]===c[3])cls='ok'; else if(k[0]===picked)cls='no'; }
+      h+='<button class="'+cls+'" data-case="'+c[0]+'" data-cv="'+k[0]+'">'+L(k[1],k[2])+'</button>';
+    });
+    h+='</div>';
+    if(done){
+      var ok=picked===c[3];
+      h+='<div class="fb show '+(ok?'ok':'no')+'">'+(ok?'✅ ':'❌ ')+L(c[4],c[5])+'<span class="lw">📕 '+esc(c[6])+'</span></div>';
+    }
+    return h+'</div>';
+  }).join('');
+  var right=CASES.filter(function(c){return S.cases[c[0]]===c[3];}).length;
+  var done=CASES.filter(function(c){return S.cases[c[0]]!=null;}).length;
+  document.getElementById('cntC').textContent=right+' / '+CASES.length+L(' 정답',' correct')+(done<CASES.length?L(' ('+(CASES.length-done)+' 남음',' ('+(CASES.length-done)+' left')+')':'');
+}
+
+function exportReport(){
+  var c=classify(),t=tally();
+  var names={wetak:'처리위탁 (법 제26조)',provide:'제3자 제공 (법 제17조)',transfer:'영업양도 등에 따른 이전 (법 제27조)',none:'개인정보 처리에 해당하지 않음',mixed:'혼재 — 제3자 제공으로 판단될 위험',unsure:'판단 미완료'};
+  var l=[];
+  l.push('위탁 · 제3자 제공 · 영업양도 구분 판단');
+  l.push('근거: 「개인정보 보호법」 제17조·제19조·제26조·제27조 · 시행령 제28조·제29조 · 대법원 2016도13263');
+  l.push('생성: '+new Date().toLocaleString('ko-KR'));
+  l.push('');
+  l.push('판정: '+names[c]);
+  l.push('  위탁 방향 '+t.w+' / 제공 방향 '+t.p+' / 모름 '+t.unanswered);
+  l.push('');
+  l.push('[판단 요소]');
+  QS.forEach(function(q,i){
+    var v=S.q[q.id];
+    l.push('  '+(i+1)+'. '+strip(q.t));
+    l.push('      → '+(v==='w'?strip(q.w):v==='p'?strip(q.p):'(미응답/모름)'));
+  });
+  if(c==='wetak'||c==='mixed'){
+    l.push('');
+    l.push('[위·수탁 문서 필수 기재사항]');
+    DOC.forEach(function(x){l.push('  '+(S.doc[x[0]]?'■':'□')+' '+strip(x[1])+'  ['+x[3]+']');});
+    l.push('');
+    l.push('[위탁자의 운영 의무]');
+    WDUTY.forEach(function(x){l.push('  '+(S.wd[x[0]]?'■':'□')+' '+strip(x[1])+'  ['+x[3]+']');});
+  }
+  if(c==='provide'||c==='mixed'){
+    l.push('');
+    l.push('[제3자 제공 시 의무]');
+    PDUTY.forEach(function(x){l.push('  '+(S.pd[x[0]]?'■':'□')+' '+strip(x[1])+'  ['+x[3]+']');});
+  }
+  if(c==='transfer'){
+    l.push('');
+    l.push('[영업양도 이전 의무]');
+    TDUTY.forEach(function(x){l.push('  '+(S.td[x[0]]?'■':'□')+' '+strip(x[1])+'  ['+x[3]+']');});
+  }
+  var right=CASES.filter(function(x){return S.cases[x[0]]===x[3];}).length;
+  l.push('');
+  l.push('사례 분류 연습: '+right+' / '+CASES.length);
+  l.push('');
+  l.push('※ 교육용 판단 보조이며 법률 자문이 아닙니다. 구분은 관계 전체를 종합해 개별 판단합니다.');
+  var blob=new Blob([l.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='위탁_제공_구분_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+
+document.addEventListener('click',function(e){
+  var q=e.target.closest('[data-q]');
+  if(q){S.q[q.getAttribute('data-q')]=q.getAttribute('data-v');save();render();return;}
+  var c=e.target.closest('[data-case]');
+  if(c){
+    var id=c.getAttribute('data-case');
+    if(S.cases[id]!=null)return;
+    S.cases[id]=c.getAttribute('data-cv');save();render();
+    if(CASES.every(function(x){return S.cases[x[0]]!=null;})){
+      try{ if(window.WVSProgress) window.WVSProgress.complete('privacy-processor-check.html'); }catch(err){}
+    }
+    return;
+  }
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.hasAttribute&&el.hasAttribute('data-gate')){S.gates[el.getAttribute('data-gate')]=el.checked;save();render();}
+  else if(el.hasAttribute&&el.hasAttribute('data-duty')){
+    var p=el.getAttribute('data-duty').split('|');S[p[0]][p[1]]=el.checked;save();render();
+  }
+});
+
+function render(){
+  renderGates();renderQs();renderVerdict();renderDuties();renderCmp();renderCases();applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-processor-check.html'); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',function(){ load(); applyLang(); render(); });
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

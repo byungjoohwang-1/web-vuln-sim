@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 적법 처리근거 판단기 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 적법 처리근거 판단기 · WEB-VULN-SIM">
+<meta property="og:description" content="수집·이용 / 제3자 제공 / 목적 외 이용·제공 — 어떤 조문을 근거로 삼을 수 있는지, 그리고 그 근거를 쓰면 따라오는 의무가 무엇인지 확인합니다">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-basis-check.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 제15조·제17조·제18조·제19조·제23조·제24조·제24조의2 및 시행령 제14조의2 기반 적법 처리근거 판단 도구 — 수집·이용 7개 요건, 제3자 제공 2개 요건(계약 이행 근거는 제외된다는 함정 포함), 목적 외 이용·제공 10개 요건과 공공기관 한정 5~9호, 추가적 이용·제공 4요건 평가, 민감정보·고유식별정보·주민등록번호 특칙(주민번호는 동의로 처리 불가)과 근거별 후속 의무를 함께 제시합니다.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:400}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.hint b{color:#cbd5e1}
+.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.opt{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.opt.on{background:var(--accent);color:#04222e;border-color:transparent}
+.chk{display:flex;gap:9px;align-items:flex-start;background:#0b1220;border:1px solid #334155;border-radius:9px;padding:9px 11px;margin:6px 0;cursor:pointer;font-size:13px}
+.chk.on{background:#0f2a18;border-color:#14532d}
+.chk input{width:16px;height:16px;flex-shrink:0;margin-top:3px}
+.chk .tx{flex:1}
+.chk .tx b{display:block}
+.chk .tx span{font-size:11.5px;color:var(--muted);display:block;margin-top:2px}
+.chk .law{font-family:var(--mono);font-size:10.5px;color:#67e8f9;flex-shrink:0;margin-top:3px}
+/* 근거 카드 */
+.basis{border-radius:12px;padding:13px 15px;margin:9px 0;border:1px solid var(--border);background:var(--panel2)}
+.basis.ok{border-color:#14532d;background:#0d2417}
+.basis.no{border-color:#334155;opacity:.55}
+.basis.block{border-color:#7f1d1d;background:#2a1116}
+.basis .t{display:flex;gap:9px;align-items:center;flex-wrap:wrap;font-size:14px;font-weight:800;color:#fff}
+.basis .st{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 8px;flex-shrink:0}
+.basis.ok .st{background:#14532d;color:#bbf7d0}
+.basis.no .st{background:#1e293b;color:#94a3b8}
+.basis.block .st{background:#7f1d1d;color:#fecaca}
+.basis .lw{margin-left:auto;font-family:var(--mono);font-size:11px;color:#7dd3fc;flex-shrink:0}
+.basis .d{font-size:12.5px;color:#cbd5e1;margin-top:7px}
+.basis ul{margin:7px 0 0 17px;font-size:12.5px;color:#94a3b8}
+.basis ul li{margin:3px 0}
+.basis ul li b{color:#e2e8f0}
+/* 게이트 */
+.gate{border-left:4px solid var(--warn);background:#3a2a09;border-radius:8px;padding:11px 13px;font-size:12.5px;color:#fde047;margin:8px 0}
+.gate.hard{border-left-color:var(--bad);background:#3b1418;color:#fecaca}
+.gate b{color:#fff}
+.gate .lw{font-family:var(--mono);font-size:11px;display:block;margin-top:5px;opacity:.85}
+.okbox{background:#0f2a18;border-left:4px solid var(--good);border-radius:8px;padding:11px 13px;font-size:13px;color:#d1fae5;margin:10px 0}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.warnbox{background:#3a2a09;border-left:4px solid var(--warn);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#fde047;margin:12px 0}
+/* 추가적 이용 4요건 */
+.meter{display:flex;gap:6px;margin-top:9px}
+.meter i{flex:1;height:7px;border-radius:99px;background:#1e293b}
+.meter i.on{background:linear-gradient(90deg,#0ea5e9,#22c55e)}
+.verdict{font-family:var(--mono);font-size:13px;font-weight:800;margin-top:9px}
+.verdict.ok{color:#86efac}.verdict.mid{color:#fcd34d}.verdict.no{color:#fca5a5}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:9px}
+th,td{border:1px solid var(--border);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#0f172a;color:#7dd3fc;white-space:nowrap;font-family:var(--mono);font-size:11.5px}
+td.mono{font-family:var(--mono);font-size:11.5px;color:#7dd3fc;white-space:nowrap}
+/* 근거 조문 열은 줄바꿈하지 않으므로 좁은 화면에서 표만 가로 스크롤시킨다 */
+#duties{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="privacy-consent-designer.html"><span data-en="Consent designer">동의서 설계</span></a>
+  <a href="privacy-processor-check.html"><span data-en="Processor vs third party">위탁·제공 구분</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>⚖️ <span data-en="Lawful Basis Finder">적법 처리근거 판단기</span></h1>
+    <div class="sub" data-en="Consent is one of seven bases, not the default. This tool walks the actual statutory tests for collection/use, third-party disclosure and beyond-purpose processing, then shows what each basis <b>obliges you to do afterwards</b> — because picking a basis is only half the job.">
+      동의는 <b>7개 근거 중 하나</b>일 뿐 기본값이 아닙니다. 이 도구는 수집·이용 / 제3자 제공 / 목적 외 이용·제공의 법정 요건을 그대로 따라가고, 각 근거를 선택하면 <b>뒤따르는 의무</b>까지 보여줍니다 — 근거를 고르는 건 절반일 뿐이라서요.</div>
+    <div class="src">📕 기준: 「개인정보 보호법」 제15조·제17조·제18조·제19조·제23조·제24조·제24조의2·제30조 · 시행령 제14조의2·제15조·제19조 · 「개인정보 처리 방법에 관한 고시」 제2조 · 개인정보보호위원회 「개인정보 처리 통합 안내서」(2025.7.)</div>
+  </div>
+
+  <!-- ① 행위 -->
+  <div class="card">
+    <h2>① <span data-en="What are you doing with the data?">무엇을 하려고 합니까</span></h2>
+    <div class="opts" id="acts"></div>
+    <div class="hint" id="actHint"></div>
+  </div>
+
+  <!-- ② 처리자 / 수집 근거 -->
+  <div class="card">
+    <h2>② <span data-en="Who are you, and how was the data collected?">처리자 유형과 수집 시 근거</span></h2>
+    <div class="hint" data-en="Five of the ten beyond-purpose grounds apply to public authorities only.">
+      목적 외 이용·제공 10개 사유 중 <b>5개는 공공기관에만</b> 적용됩니다.</div>
+    <div class="opts" id="orgs"></div>
+    <div id="srcWrap" style="display:none">
+      <div class="hint" style="margin-top:12px" data-en="For disclosure and beyond-purpose processing, what mattered first is the basis under which the data was <b>originally collected</b>.">
+        제공과 목적 외 처리에서 먼저 따지는 것은 그 개인정보를 <b>애초에 어떤 근거로 수집했는가</b>입니다.</div>
+      <div class="opts" id="srcs"></div>
+    </div>
+  </div>
+
+  <!-- ③ 정보 유형 -->
+  <div class="card">
+    <h2>③ <span data-en="What kind of data?">어떤 정보입니까</span></h2>
+    <div id="kinds"></div>
+    <div id="kindOut"></div>
+  </div>
+
+  <!-- ④ 상황 -->
+  <div class="card">
+    <h2>④ <span data-en="Which of these is true?">해당하는 상황</span><span class="cnt" id="cntCond"></span></h2>
+    <div id="conds"></div>
+  </div>
+
+  <!-- ⑤ 결과 -->
+  <div class="card">
+    <h2>✅ <span data-en="Available bases">사용할 수 있는 근거</span></h2>
+    <div id="result"></div>
+  </div>
+
+  <!-- ⑥ 추가적 이용·제공 -->
+  <div class="card" id="extraCard">
+    <h2>➕ <span data-en="Additional use / disclosure without consent">동의 없는 추가적 이용·제공</span></h2>
+    <div class="hint" data-en="Where the data was lawfully collected under Art.15(1), you may use or disclose it further without consent — but only after weighing all four factors in Decree Art.14-2(1). This is not a checkbox; all four are considered together.">
+      제15조제1항으로 <b>적법하게 수집한</b> 개인정보는 동의 없이 추가로 이용·제공할 수 있습니다. 다만 시행령 제14조의2제1항의 <b>4가지를 종합적으로</b> 고려해야 합니다 — 체크리스트가 아니라 종합 판단입니다.</div>
+    <div id="extra"></div>
+    <div class="meter" id="extraMeter"></div>
+    <div class="verdict" id="extraVerdict"></div>
+    <div id="extraNote"></div>
+  </div>
+
+  <!-- ⑦ 후속 의무 -->
+  <div class="card">
+    <h2>📌 <span data-en="Obligations that follow">근거를 골랐다면 따라오는 의무</span></h2>
+    <div id="duties"></div>
+    <div class="acts">
+      <button class="btn" onclick="exportReport()">⬇ <span data-en="Export">판단 리포트</span></button>
+      <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+    </div>
+  </div>
+
+  <div class="disc" data-en="Educational tool built from the Act, its Enforcement Decree, the public notification and the Commission's 2025 consolidated guide. It does not constitute legal advice. Whether a ground such as &quot;legitimate interest&quot; or &quot;unavoidable&quot; is met is a case-by-case judgement the controller must be able to prove. Runs entirely in your browser.">
+    ⚠️ 법률·시행령·고시와 개인정보보호위원회 「개인정보 처리 통합 안내서」(2025.7.)를 근거로 만든 <b>교육용 도구</b>입니다. 법률 자문이 아닙니다. ‘정당한 이익’·‘불가피’ 같은 요건의 충족 여부는 개별 사안에서 판단하며, <b>입증책임은 개인정보처리자</b>에게 있습니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function strip(s){return String(s).replace(/<[^>]+>/g,'');}
+
+var ACTS=[
+ ['collect','수집·이용','Collect &amp; use','법 제15조'],
+ ['provide','제3자 제공','Disclose to a third party','법 제17조'],
+ ['beyond','목적 외 이용·제공','Use/disclose beyond the purpose','법 제18조']
+];
+var ORGS=[['priv','민간 개인정보처리자','Private controller'],['pub','공공기관','Public authority']];
+
+/* 수집 시 근거 — 제공/목적외 판단에 필요 */
+var SRCS=[
+ ['s1','동의 (제15조제1항제1호)','Consent (Art.15(1)1)'],
+ ['s2','법령상 의무 (제2호)','Statutory duty (2)'],
+ ['s3','공공기관 소관 업무 (제3호)','Public authority duty (3)'],
+ ['s4','계약 이행 (제4호)','Contract (4)'],
+ ['s5','급박한 생명·신체·재산 (제5호)','Imminent vital interest (5)'],
+ ['s6','정당한 이익 (제6호)','Legitimate interest (6)'],
+ ['s7','공중위생 등 긴급 (제7호)','Public health urgency (7)']
+];
+
+/* 정보 유형 특칙 */
+var KINDS=[
+ ['normal','일반 개인정보','Ordinary personal data',''],
+ ['sens','민감정보 (건강·유전·생체인식·범죄경력·사상·신념·노조/정당·정치적 견해·성생활·인종/민족)','Sensitive data','법 제23조'],
+ ['uid','고유식별정보 — 여권번호·운전면허번호·외국인등록번호','Unique identifiers (passport / driver’s licence / alien registration)','법 제24조 · 영 제19조'],
+ ['rrn','주민등록번호','Resident registration number','법 제24조의2']
+];
+
+/* 상황 조건 */
+var CONDS={
+ collect:[
+  ['c1','정보주체의 <b>동의</b>를 받을 수 있고, 자유로운 의사로 거부할 수 있다','Consent is obtainable and genuinely refusable','법 §15①(1)'],
+  ['c2','<b>법률에 특별한 규정</b>이 있거나 법령상 의무 준수를 위해 <b>불가피</b>하다','A statute requires it, or it is unavoidable to meet a legal duty','법 §15①(2)'],
+  ['c3','<b>공공기관</b>이 법령 등에서 정하는 <b>소관 업무</b> 수행을 위해 불가피하다','A public authority needs it for its statutory duties','법 §15①(3)'],
+  ['c4','정보주체와 체결한 <b>계약의 이행</b> 또는 계약 체결 과정에서 정보주체의 요청에 따른 조치에 필요하다','Needed to perform a contract or act on the subject’s pre-contract request','법 §15①(4)'],
+  ['c5','명백히 정보주체 또는 제3자의 <b>급박한 생명·신체·재산의 이익</b>을 위해 필요하다','Clearly needed for an imminent threat to life, body or property','법 §15①(5)'],
+  ['c6','개인정보처리자의 <b>정당한 이익</b>이 명백히 정보주체의 권리보다 우선하고, 그 이익과 상당한 관련이 있으며 합리적 범위를 넘지 않는다','The controller’s legitimate interest clearly overrides, is substantially related, and stays within a reasonable scope','법 §15①(6)'],
+  ['c7','<b>공중위생 등 공공의 안전과 안녕</b>을 위해 긴급히 필요하다','Urgently needed for public health, safety or order','법 §15①(7)']
+ ],
+ provide:[
+  ['p1','제공에 대해 <b>별도의 동의</b>를 받을 수 있다','Separate consent for the disclosure is obtainable','법 §17①(1)'],
+  ['p2','<b>수집 목적의 범위 안에서</b> 제공하는 것이다','The disclosure stays within the original collection purpose','법 §17①(2)']
+ ],
+ beyond:[
+  ['b1','정보주체로부터 <b>별도의 동의</b>를 받았다','Separate consent obtained','법 §18②(1)'],
+  ['b2','<b>다른 법률에 특별한 규정</b>이 있다','Another statute expressly provides for it','법 §18②(2)'],
+  ['b3','명백히 정보주체 또는 제3자의 <b>급박한 생명·신체·재산의 이익</b>을 위해 필요하다','Clearly needed for an imminent vital interest','법 §18②(3)'],
+  ['b5','목적 외로 이용·제공하지 않으면 <b>다른 법률의 소관 업무를 수행할 수 없어</b> 보호위원회 심의·의결을 거쳤다','Without it a statutory duty cannot be performed, and the Commission has so resolved','법 §18②(5) · 공공기관 한정'],
+  ['b6','<b>조약·국제협정</b>의 이행을 위해 외국정부·국제기구에 제공해야 한다','Required to implement a treaty or international agreement','법 §18②(6) · 공공기관 한정'],
+  ['b7','<b>범죄 수사·공소 제기 및 유지</b>를 위해 필요하다','Needed for criminal investigation or prosecution','법 §18②(7) · 공공기관 한정'],
+  ['b8','<b>법원의 재판업무</b> 수행을 위해 필요하다','Needed for court proceedings','법 §18②(8) · 공공기관 한정'],
+  ['b9','<b>형 및 감호·보호처분의 집행</b>을 위해 필요하다','Needed to execute a sentence or protective disposition','법 §18②(9) · 공공기관 한정'],
+  ['b10','<b>공중위생 등 공공의 안전과 안녕</b>을 위해 긴급히 필요하다','Urgently needed for public health, safety or order','법 §18②(10)'],
+  ['bx','정보주체 또는 제3자의 이익을 <b>부당하게 침해할 우려가 없다</b>','No risk of unfairly infringing the subject’s or a third party’s interests','법 §18② 본문']
+ ]
+};
+var PUBONLY={b5:1,b6:1,b7:1,b8:1,b9:1};
+
+/* 추가적 이용·제공 4요건 (영 §14의2①) */
+var EXTRA=[
+ ['e1','당초 수집 목적과 <b>관련성</b>이 있다 (성질·경향에서 연관)','Related to the original purpose'],
+ ['e2','수집 정황이나 처리 관행에 비추어 <b>예측 가능</b>하다 (정보주체 기준 객관적 판단)','Reasonably foreseeable from the circumstances or practice'],
+ ['e3','정보주체의 이익을 <b>부당하게 침해하지 않는다</b>','Does not unfairly infringe the subject’s interests'],
+ ['e4','<b>가명처리·암호화·마스킹·최소화·접근권한 최소화</b> 등 안전성 확보 조치를 했다','Pseudonymisation, encryption, masking, minimisation or access limits applied']
+];
+
+var KEY='wvs_basis_check';
+var S={act:'collect',org:'priv',src:'',kinds:{normal:true},cond:{},extra:{}};
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.act){S=r;S.kinds=S.kinds||{};S.cond=S.cond||{};S.extra=S.extra||{};}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function resetAll(){S={act:'collect',org:'priv',src:'',kinds:{normal:true},cond:{},extra:{}};save();render();window.scrollTo(0,0);}
+
+function renderActs(){
+  document.getElementById('acts').innerHTML=ACTS.map(function(a){
+    return '<button class="opt'+(S.act===a[0]?' on':'')+'" data-act="'+a[0]+'">'+L(a[1],a[2])+'</button>';}).join('');
+  var a=ACTS.filter(function(x){return x[0]===S.act;})[0];
+  var hint={
+    collect:[ '수집 목적의 범위에서만 이용할 수 있습니다. 목적을 넘어서면 ③ 목적 외 이용으로 넘어갑니다.',
+              'You may use it only within the collection purpose. Beyond that, it becomes beyond-purpose processing.'],
+    provide:['제공은 <b>지배·관리권이 제3자에게 이전</b>되는 것입니다. 위탁과 헷갈리면 위탁·제공 구분기를 먼저 쓰세요.',
+             'Disclosure transfers control to a third party. If you are unsure whether it is outsourcing, use the processor checker first.'],
+    beyond: ['수집 목적을 넘어선 이용·제공입니다. 요건이 가장 좁고, 공공기관은 추가 공고·대장 의무가 붙습니다.',
+             'Processing beyond the collection purpose. The narrowest grounds, plus publication and register duties for public authorities.']
+  }[S.act];
+  document.getElementById('actHint').innerHTML='📕 '+esc(a[3])+' — '+L(hint[0],hint[1]);
+}
+function renderOrgs(){
+  document.getElementById('orgs').innerHTML=ORGS.map(function(o){
+    return '<button class="opt'+(S.org===o[0]?' on':'')+'" data-org="'+o[0]+'">'+L(o[1],o[2])+'</button>';}).join('');
+  var need=(S.act==='provide'||S.act==='beyond');
+  document.getElementById('srcWrap').style.display=need?'':'none';
+  if(need){
+    document.getElementById('srcs').innerHTML=SRCS.map(function(s){
+      return '<button class="opt'+(S.src===s[0]?' on':'')+'" data-src="'+s[0]+'">'+L(s[1],s[2])+'</button>';}).join('');
+  }
+}
+function renderKinds(){
+  document.getElementById('kinds').innerHTML=KINDS.map(function(k){
+    return '<label class="chk'+(S.kinds[k[0]]?' on':'')+'"><input type="checkbox" data-kind="'+k[0]+'"'+(S.kinds[k[0]]?' checked':'')+'>'+
+      '<span class="tx"><b>'+L(k[1],k[2])+'</b></span>'+(k[3]?'<span class="law">'+esc(k[3])+'</span>':'')+'</label>';}).join('');
+  var h='';
+  if(S.kinds.sens){
+    h+='<div class="gate"><b>'+L('민감정보 게이트','Sensitive data gate')+'</b> — '+
+      L('원칙적으로 <b>처리 금지</b>입니다. ① 제15조제2항 또는 제17조제2항의 사항을 알리고 <b>다른 동의와 별도로</b> 동의를 받았거나, ② <b>법령에서 민감정보의 처리를 요구하거나 허용</b>하는 경우에만 처리할 수 있습니다. 처리한다면 제29조 안전성 확보조치가 의무입니다.',
+        'Processing is prohibited by default. It is allowed only where (i) you disclosed the Art.15(2)/17(2) items and took consent <b>separate from</b> other consents, or (ii) a statute requires or permits it. If you process it, Art.29 security measures are mandatory.')+
+      '<span class="lw">법 제23조제1항·제2항</span></div>';
+    h+='<div class="gate"><b>'+L('공개 가능성 고지','Disclosure-risk notice')+'</b> — '+
+      L('서비스 과정에서 공개되는 정보에 민감정보가 포함돼 사생활 침해 위험이 있다고 판단하면, <b>서비스 제공 전에</b> 공개 가능성과 비공개 선택 방법을 알아보기 쉽게 알려야 하고, 처리방침에도 적어야 합니다.',
+        'If sensitive data may become visible through your service and this risks privacy, you must warn about the exposure and how to opt out <b>before</b> providing the service, and record it in the privacy policy.')+
+      '<span class="lw">법 제23조제3항 · 제30조제1항제3호의3</span></div>';
+  }
+  if(S.kinds.uid){
+    h+='<div class="gate"><b>'+L('고유식별정보 게이트','Unique identifier gate')+'</b> — '+
+      L('① <b>별도 동의</b>, 또는 ② <b>법령에서 구체적으로</b> 처리를 요구·허용하는 경우에만 가능합니다. "법령에 근거가 있는 것 같다" 수준으로는 부족하고 <b>구체적</b>이어야 합니다. 처리 시 <b>암호화 등</b> 안전성 확보 조치가 의무입니다.',
+        'Allowed only with (i) separate consent or (ii) a statute that <b>specifically</b> requires or permits it — a vague statutory hook is not enough. Encryption and other security measures are mandatory.')+
+      '<span class="lw">법 제24조제1항·제3항 · 영 제19조</span></div>';
+  }
+  if(S.kinds.rrn){
+    h+='<div class="gate hard"><b>'+L('주민등록번호는 동의로 처리할 수 없습니다','A resident registration number cannot be processed on consent')+'</b><br>'+
+      L('가장 많이 틀리는 지점입니다. 제24조제1항(별도 동의)이 <b>적용되지 않고</b> 제24조의2가 적용됩니다. 허용되는 경우는 셋뿐입니다 — ① <b>법률·대통령령·국회규칙·대법원규칙·헌법재판소규칙·중앙선거관리위원회규칙·감사원규칙</b>에서 구체적으로 요구·허용, ② 급박한 생명·신체·재산의 이익을 위해 명백히 필요, ③ 이에 준하여 불가피한 경우로서 <b>보호위원회 고시</b>. <u>부령(시행규칙)·조례·내부규정은 근거가 되지 못합니다.</u>',
+        'This is the most commonly missed rule. Art.24(1) separate consent does <b>not</b> apply; Art.24-2 does. Only three cases are allowed — (i) a specific requirement or permission in an Act, Presidential Decree or one of the named institutional rules, (ii) a clear imminent vital interest, or (iii) a case the Commission designates by notification. Ministerial rules, local ordinances and internal policies do <b>not</b> qualify.')+
+      '<span class="lw">법 제24조의2제1항</span></div>';
+    h+='<div class="gate"><b>'+L('처리가 허용되더라도','Even where processing is allowed')+'</b> — '+
+      L('전자적으로 보관한다면 <b>암호화</b> 보관이 의무이고, 홈페이지 회원가입 단계에서는 <b>주민등록번호 없이 가입할 수 있는 방법</b>을 반드시 제공해야 합니다.',
+        'If stored electronically it must be encrypted, and you must offer a way to sign up online <b>without</b> the number.')+
+      '<span class="lw">법 제24조의2제2항·제3항 · 영 제21조의2</span></div>';
+  }
+  document.getElementById('kindOut').innerHTML=h;
+}
+function renderConds(){
+  var list=CONDS[S.act].filter(function(c){
+    if(S.act!=='beyond')return true;
+    if(PUBONLY[c[0]]&&S.org!=='pub')return false;
+    return true;
+  });
+  if(S.act==='collect'&&S.org!=='pub')list=list.filter(function(c){return c[0]!=='c3';});
+  document.getElementById('conds').innerHTML=list.map(function(c){
+    return '<label class="chk'+(S.cond[c[0]]?' on':'')+'"><input type="checkbox" data-cond="'+c[0]+'"'+(S.cond[c[0]]?' checked':'')+'>'+
+      '<span class="tx"><b>'+L(c[1],c[2])+'</b></span><span class="law">'+esc(c[3])+'</span></label>';}).join('');
+  var n=list.filter(function(c){return S.cond[c[0]];}).length;
+  document.getElementById('cntCond').textContent=n+' / '+list.length;
+  if(S.act==='beyond'&&S.org!=='pub'){
+    document.getElementById('conds').insertAdjacentHTML('beforeend',
+      '<div class="note">'+L('공공기관 한정 사유(제5호~제9호) 5개는 민간에는 표시되지 않습니다. 처리자 유형을 공공기관으로 바꾸면 나타납니다.',
+        'The five public-authority-only grounds (items 5–9) are hidden for private controllers. Switch the controller type to see them.')+'</div>');
+  }
+}
+
+/* 근거 산출 */
+function bases(){
+  var out=[];
+  var C=S.cond;
+  if(S.act==='collect'){
+    var map=[
+     ['c1','정보주체의 동의','Consent','법 제15조제1항제1호',
+      ['동의 사항을 <b>구분하여</b> 알리고 받을 것 (법 §22①)','법정 고지사항 4가지 — 목적·항목·보유기간·거부권리와 불이익 (법 §15②)','변경 시 <b>다시 알리고 다시 동의</b>'],
+      ['Disclose and take consent in separated items (Art.22(1))','Four mandatory disclosures: purpose, items, retention, right to refuse and its consequence (Art.15(2))','Any change requires fresh notice and fresh consent']],
+     ['c2','법령상 의무','Statutory duty','법 제15조제1항제2호',
+      ['근거 법령의 <b>조문을 특정</b>해 둘 것','‘불가피’ 요건까지 충족해야 함 — 편의상 필요한 정도로는 부족'],
+      ['Pin down the exact statutory provision','The “unavoidable” test must also be met — mere convenience is not enough']],
+     ['c3','공공기관 소관 업무','Public authority duty','법 제15조제1항제3호',
+      ['법령 등에서 정하는 소관 업무일 것','공공기관은 <b>힘의 불균형</b>으로 동의가 성립하기 어려우므로 이 근거를 우선 검토'],
+      ['Must be a duty set by law','Public authorities should prefer this over consent because of the power imbalance']],
+     ['c4','계약의 체결·이행','Contract','법 제15조제1항제4호',
+      ['2023년 개정으로 <b>‘불가피’ 요건이 삭제</b>됨 — ‘필요한 경우’면 됨','이 항목은 <b>동의를 받지 말고</b> 고지·안내로 운영','처리방침에 ‘동의 없이 처리하는 항목’으로 구분 공개 (법 §22③)'],
+      ['The 2023 amendment dropped the “unavoidable” test — “necessary” suffices','Do <b>not</b> take consent for these; use notice instead','Publish them separately as non-consent items (Art.22(3))']],
+     ['c5','급박한 생명·신체·재산의 이익','Imminent vital interest','법 제15조제1항제5호',
+      ['2023년 개정으로 ‘의사표시 불가·주소불명’ 제약이 삭제됨','급박성이 해소되면 근거도 소멸 — 계속 보유할 근거를 별도로 확보'],
+      ['The 2023 amendment removed the “unable to express intent” precondition','The basis lapses when the urgency ends — secure a separate basis to keep the data']],
+     ['c6','정당한 이익','Legitimate interest','법 제15조제1항제6호',
+      ['<b>명백하게</b> 정보주체의 권리보다 우선해야 함','정당한 이익과 <b>상당한 관련</b>이 있을 것','<b>합리적 범위를 초과하지 않을</b> 것 — 셋 다 입증책임은 처리자에게'],
+      ['Must <b>clearly</b> override the subject’s rights','Must be substantially related to that interest','Must not exceed a reasonable scope — the controller proves all three']],
+     ['c7','공중위생 등 긴급','Public health urgency','법 제15조제1항제7호',
+      ['긴급성이 요건 — 상시 업무에는 쓸 수 없음','이 근거로 처리해도 안전조치·파기·정보주체 권리 보장 의무는 그대로'],
+      ['Urgency is an element — not for routine operations','Security, deletion and data-subject rights duties still apply']]
+    ];
+    map.forEach(function(m){ if(C[m[0]]) out.push({t:L(m[1],m[2]),law:m[3],duties:isEn()?m[5]:m[4]}); });
+  }
+  else if(S.act==='provide'){
+    if(C.p1) out.push({t:L('제공에 대한 별도 동의','Separate consent to disclose'),law:'법 제17조제1항제1호',
+      duties:isEn()?['Five mandatory disclosures: recipient, recipient’s purpose, items, recipient’s retention period, right to refuse (Art.17(2))','Must be a <b>separate</b> consent from collection consent (Art.22(1)2)','Recipient and retention period are “important content” needing clear emphasis (Decree Art.17(3))']
+        :['법정 고지사항 5가지 — 제공받는 자·그 이용 목적·항목·제공받는 자의 보유기간·거부권리 (법 §17②)','수집 동의와 <b>구분하여 각각</b> 받을 것 (법 §22①(2))','제공받는 자와 보유기간은 <b>중요한 내용</b>이라 명확히 강조 표시 (영 §17③)']});
+    if(C.p2){
+      var okSrc={s2:1,s3:1,s5:1,s6:1,s7:1};
+      if(S.src&&okSrc[S.src]){
+        out.push({t:L('수집 목적 범위 내 제공','Disclosure within the collection purpose'),law:'법 제17조제1항제2호',
+          duties:isEn()?['Only collection grounds 2, 3, 5, 6 and 7 qualify','The 2023 amendment added grounds 6 and 7','Must stay strictly within the original purpose']
+            :['제15조제1항 <b>제2호·제3호·제5호·제6호·제7호</b>로 수집한 경우만 해당','2023년 개정으로 <b>제6호(정당한 이익)·제7호</b>가 추가됨','수집 목적의 범위를 엄격히 지킬 것']});
+      }else if(S.src==='s4'){
+        out.push({t:L('수집 목적 범위 내 제공','Disclosure within the collection purpose'),law:'법 제17조제1항제2호',blocked:true,
+          duties:isEn()?['<b>Contract (Art.15(1)4) is deliberately excluded</b> from Art.17(1)2 — the listed grounds are 2, 3 and 5–7 only','If disclosure is essential to perform the contract, tell the subject plainly and take consent, or assess the additional-disclosure test in Art.17(4)']
+            :['<b>계약 이행(제15조제1항제4호)은 제17조제1항제2호에서 의도적으로 빠져 있습니다</b> — 열거된 것은 제2호·제3호·제5호~제7호뿐입니다','계약 이행에 제공이 불가피하다면 그 사정을 명확히 알리고 <b>동의</b>를 받거나, 제17조제4항의 <b>추가적 제공</b> 요건을 따져야 합니다']});
+      }else if(S.src==='s1'){
+        out.push({t:L('수집 목적 범위 내 제공','Disclosure within the collection purpose'),law:'법 제17조제1항제2호',blocked:true,
+          duties:isEn()?['Consent-collected data is not covered by Art.17(1)2 — take a separate disclosure consent under Art.17(1)1']
+            :['동의로 수집한 개인정보는 제17조제1항제2호의 대상이 아닙니다 — 제17조제1항제1호의 <b>제공 동의</b>를 별도로 받으세요']});
+      }else{
+        out.push({t:L('수집 목적 범위 내 제공','Disclosure within the collection purpose'),law:'법 제17조제1항제2호',pending:true,
+          duties:isEn()?['Pick the original collection ground in ② — only grounds 2, 3 and 5–7 qualify']
+            :['②에서 <b>수집 시 근거</b>를 먼저 고르세요 — 제2호·제3호·제5호~제7호만 해당합니다']});
+      }
+    }
+  }
+  else{
+    var bmap=[
+     ['b1','정보주체의 별도 동의','Separate consent','법 제18조제2항제1호',
+      ['법정 고지사항 5가지 (법 §18③)','구분하여 각각 동의 (법 §22①(3))','<b>거부해도 재화·서비스 제공을 거부할 수 없음</b> (법 §22⑤)'],
+      ['Five mandatory disclosures (Art.18(3))','Separate consent (Art.22(1)3)','You may <b>not</b> refuse service for declining (Art.22(5))']],
+     ['b2','다른 법률의 특별한 규정','Another statute','법 제18조제2항제2호',
+      ['‘다른 법률’ — 시행령·규칙은 해당하지 않음','공공기관이면 관보·홈페이지 게재 대상'],
+      ['Must be an Act, not a decree or rule','If a public authority, publication applies']],
+     ['b3','급박한 생명·신체·재산의 이익','Imminent vital interest','법 제18조제2항제3호',
+      ['2023년 개정으로 사전 동의 불가 요건이 삭제됨','공공기관이면 관보·홈페이지 게재 대상'],
+      ['The pre-consent-impossible condition was removed in 2023','If a public authority, publication applies']],
+     ['b5','소관 업무 수행 불가 + 보호위원회 심의·의결','Commission resolution','법 제18조제2항제5호',['보호위원회 <b>심의·의결</b>을 반드시 거칠 것','공공기관만 사용 가능'],['The Commission must resolve it','Public authorities only']],
+     ['b6','조약·국제협정 이행','Treaty implementation','법 제18조제2항제6호',['공공기관만','관보·홈페이지 게재 대상'],['Public authorities only','Publication applies']],
+     ['b7','범죄 수사·공소 제기 및 유지','Criminal investigation','법 제18조제2항제7호',['공공기관만','<b>제7호는 관보 게재 대상에서 제외</b> (법 §18④는 제2호~제6호·제8호~제10호)'],['Public authorities only','<b>Item 7 is excluded</b> from the publication duty (Art.18(4) covers 2–6 and 8–10)']],
+     ['b8','법원의 재판업무','Court proceedings','법 제18조제2항제8호',['공공기관만','관보·홈페이지 게재 대상'],['Public authorities only','Publication applies']],
+     ['b9','형·감호·보호처분의 집행','Sentence execution','법 제18조제2항제9호',['공공기관만','관보·홈페이지 게재 대상'],['Public authorities only','Publication applies']],
+     ['b10','공중위생 등 긴급','Public health urgency','법 제18조제2항제10호',['안전조치·파기·정보주체 권리 보장 의무는 그대로 적용'],['Security, deletion and rights duties still apply']]
+    ];
+    bmap.forEach(function(m){ if(C[m[0]]&&(!PUBONLY[m[0]]||S.org==='pub')) out.push({t:L(m[1],m[2]),law:m[3],duties:isEn()?m[5]:m[4]}); });
+  }
+  return out;
+}
+
+function renderResult(){
+  var b=bases(),h='';
+  var C=S.cond;
+  if(S.act==='beyond'&&b.length&&!C.bx){
+    h+='<div class="gate hard"><b>'+L('제18조제2항 본문의 관문을 통과하지 못했습니다.','You have not cleared the chapeau of Art.18(2).')+'</b><br>'+
+      L('각 호에 해당하더라도 <b>정보주체 또는 제3자의 이익을 부당하게 침해할 우려가 있을 때</b>는 목적 외 이용·제공을 할 수 없습니다. ④에서 해당 항목을 확인하세요.',
+        'Even if a listed ground applies, you may not proceed where there is a risk of unfairly infringing the subject’s or a third party’s interests. Confirm that item in ④.')+
+      '<span class="lw">법 제18조제2항 본문</span></div>';
+  }
+  if(!b.length){
+    h+='<div class="gate"><b>'+L('아직 사용할 수 있는 근거가 없습니다.','No basis is available yet.')+'</b><br>'+
+      L('④에서 실제로 충족하는 상황을 고르세요. 어느 것도 충족하지 않는다면 그 처리는 <b>할 수 없습니다</b> — 동의를 받는 것이 답이 아닐 수도 있습니다(민감·고유식별·주민번호 게이트를 확인하세요).',
+        'Tick the situations that genuinely apply in ④. If none do, the processing is simply <b>not permitted</b> — and consent may not be the answer (check the special-category gates).')+'</div>';
+  }
+  b.forEach(function(x){
+    var cls=x.blocked?'block':(x.pending?'':'ok');
+    var st=x.blocked?L('사용 불가','NOT AVAILABLE'):(x.pending?L('입력 필요','NEEDS INPUT'):L('사용 가능','AVAILABLE'));
+    h+='<div class="basis '+cls+'"><div class="t"><span class="st">'+st+'</span>'+x.t+'<span class="lw">'+esc(x.law)+'</span></div><ul>';
+    x.duties.forEach(function(d){h+='<li>'+d+'</li>';});
+    h+='</ul></div>';
+  });
+  /* 주민번호 충돌 검사 */
+  if(S.kinds.rrn&&(C.c1||C.p1||C.b1)){
+    h+='<div class="gate hard"><b>'+L('충돌: 주민등록번호를 동의로 처리하려 하고 있습니다.','Conflict: you are trying to process a resident registration number on consent.')+'</b><br>'+
+      L('동의는 주민등록번호의 적법근거가 <b>되지 못합니다</b>. 제24조의2제1항 각 호 중 하나를 확보하거나, 주민등록번호를 수집하지 않는 설계로 바꾸세요.',
+        'Consent is <b>not</b> a lawful basis for this number. Secure one of the Art.24-2(1) grounds, or redesign so you do not collect it.')+
+      '<span class="lw">법 제24조의2제1항</span></div>';
+  }
+  document.getElementById('result').innerHTML=h;
+}
+
+function renderExtra(){
+  var show=(S.act!=='beyond');
+  document.getElementById('extraCard').style.display=show?'':'none';
+  if(!show)return;
+  document.getElementById('extra').innerHTML=EXTRA.map(function(e){
+    return '<label class="chk'+(S.extra[e[0]]?' on':'')+'"><input type="checkbox" data-extra="'+e[0]+'"'+(S.extra[e[0]]?' checked':'')+'>'+
+      '<span class="tx"><b>'+L(e[1],e[2])+'</b></span></label>';}).join('');
+  var n=EXTRA.filter(function(e){return S.extra[e[0]];}).length;
+  document.getElementById('extraMeter').innerHTML=EXTRA.map(function(e,i){
+    return '<i class="'+(i<n?'on':'')+'"></i>';}).join('');
+  var v=document.getElementById('extraVerdict'),note='';
+  if(n===4){ v.className='verdict ok'; v.textContent=L('4요건 모두 고려됨 — 동의 없이 추가적 이용·제공을 검토할 수 있습니다','All four factors considered — additional use/disclosure without consent is arguable'); }
+  else if(n>=2){ v.className='verdict mid'; v.textContent=L(n+'/4 — 남은 요건을 해소하기 전에는 동의 없이 진행하지 마세요',n+'/4 — do not proceed without consent until the rest are resolved'); }
+  else { v.className='verdict no'; v.textContent=L(n+'/4 — 추가적 이용·제공으로 보기 어렵습니다',n+'/4 — this does not look like a permissible additional use'); }
+  if(n===4){
+    note='<div class="okbox">'+L('<b>지속적으로 발생한다면</b> 시행령 제14조의2제1항 각 호의 <b>판단 기준을 개인정보 처리방침에 공개</b>하고, <b>개인정보 보호책임자</b>가 그 기준대로 이뤄지는지 점검해야 합니다. 일회성이면 공개 의무는 없습니다.',
+      'If this <b>recurs</b>, publish the criteria in the privacy policy and have the <b>CPO</b> verify that practice follows them. One-off cases carry no publication duty.')+'<br><span style="font-family:var(--mono);font-size:11px;color:#7dd3fc">영 제14조의2제2항</span></div>';
+    note+='<div class="note">'+L('<b>지속 사례</b>: 택시 호출 앱이 호출을 위해 승객 정보를 기사에게 제공 · 오픈마켓이 배송을 위해 입점 판매자에게 주문정보 제공 · 채용 플랫폼이 지원 기업에 이력정보 제공<br><b>일회성 사례</b>: 리콜을 위해 소매점이 제조사에 연락처 제공 · 두고 간 물건 반환 연락 · 경력증명서 발급 기간 경과 후 재발급',
+      '<b>Recurring</b>: ride-hailing passing rider details to the driver; a marketplace passing order data to sellers for delivery; a hiring platform passing a CV to the employer.<br><b>One-off</b>: a retailer passing a contact to a manufacturer for a recall; contacting someone who took the wrong item; reissuing a work certificate after the retention period.')+'</div>';
+  }
+  var badCase='<div class="note">'+L('<b>판례로 본 실패 사례</b> — 코로나19 자가진단 목적으로 수집한 학부모 연락처를, 감염병과 무관한 상황에서 다른 학부모에게 제공한 사안. 법원은 ①관련성 없음 ②예측 불가 ④안전조치 없음을 들어 제17조제4항 주장을 배척했습니다.',
+    '<b>A failed case</b> — a phone number collected for COVID-19 self-checks was passed to another parent in an unrelated dispute. The court rejected the Art.17(4) defence: no relatedness, no foreseeability, no safeguards.')+
+    '<br><span style="font-family:var(--mono);font-size:11px;color:#7dd3fc">대구지법 2022고단5309</span></div>';
+  document.getElementById('extraNote').innerHTML=note+badCase;
+}
+
+function duties(){
+  var d=[];
+  d.push([L('처리방침 공개','Publish in the privacy policy'),
+    L('어떤 적법요건을 근거로 수집·이용하는지 개인정보 처리방침으로 공개해야 합니다.','You must publish which lawful ground you rely on.'),'법 제30조 · 통합 안내서 Ⅱ장']);
+  d.push([L('동의 없이 처리하는 항목의 구분 공개','Separate the non-consent items'),
+    L('동의 없이 처리할 수 있는 개인정보는 <b>항목과 법적 근거</b>를 동의로 처리하는 개인정보와 구분해 공개하세요. 동의 없이 처리할 수 있다는 <b>입증책임은 개인정보처리자</b>가 집니다.',
+      'Publish the items processed without consent and their legal grounds, separately from consent-based items. The controller bears the burden of proving no consent was needed.'),'법 제22조제3항']);
+  if(S.act==='beyond'){
+    d.push([L('제공받는 자에 대한 제한·조치 요청','Impose limits on the recipient'),
+      L('목적 외로 제3자에게 제공할 때는 이용 목적·방법 등에 <b>제한</b>을 걸거나 안전성 확보 조치를 마련하도록 <b>요청</b>해야 하고, 요청받은 자는 조치해야 합니다.',
+        'When disclosing beyond the purpose you must restrict the recipient’s purpose and methods or require safeguards, and the recipient must comply.'),'법 제18조제5항']);
+    if(S.org==='pub'){
+      d.push([L('관보·홈페이지 게재','Publish in the Gazette or website'),
+        L('제2호~제6호·제8호~제10호로 목적 외 이용·제공한 경우, 그날부터 <b>30일 이내</b>에 날짜·법적 근거·목적·항목을 게재해야 하고, 홈페이지에 올릴 때는 <b>10일 이상 계속</b> 게재해야 합니다. <b>제7호(수사)는 제외</b>됩니다.',
+          'For grounds 2–6 and 8–10 you must publish the date, legal ground, purpose and items within 30 days, and keep a website posting up for at least 10 days. Ground 7 (investigation) is excluded.'),'법 제18조제4항 · 고시 제2조']);
+      d.push([L('목적 외 이용·제공 대장 기록','Keep the beyond-purpose register'),
+        L('명칭·이용/제공 기관·목적·법적 근거·항목·날짜와 주기·형태·제한 요청 내용 <b>8가지</b>를 대장에 기록·관리해야 합니다.',
+          'Record eight fields in the register: file name, institution, purpose, legal ground, items, date/frequency, form, and any restrictions requested.'),'영 제15조']);
+    }
+  }
+  if(S.kinds.sens||S.kinds.uid||S.kinds.rrn){
+    d.push([L('안전성 확보 조치','Security measures'),
+      L('민감정보는 제29조 안전조치, 고유식별정보는 <b>암호화 등</b>, 주민등록번호는 전자적 보관 시 <b>암호화가 의무</b>입니다.',
+        'Sensitive data requires Art.29 measures, unique identifiers require encryption and the like, and resident registration numbers must be encrypted when stored electronically.'),'법 제23조제2항 · 제24조제3항 · 제24조의2제2항']);
+  }
+  if(S.act==='provide'){
+    d.push([L('제공 후에도 남는 의무','Duties that survive the disclosure'),
+      L('제공받은 자는 <b>제공받은 목적 외로 이용하거나 제3자에게 다시 제공할 수 없습니다</b>(제19조). 또 제공받은 자가 개인정보처리자라면 그 자신이 이 법의 의무를 집니다.',
+        'The recipient may not use the data beyond the received purpose or pass it on (Art.19), and if it is itself a controller it bears this Act’s duties directly.'),'법 제19조']);
+  }
+  return d;
+}
+function renderDuties(){
+  document.getElementById('duties').innerHTML='<table><tr><th>'+L('의무','Duty')+'</th><th>'+L('내용','What')+'</th><th>'+L('근거','Basis')+'</th></tr>'+
+    duties().map(function(x){return '<tr><td><b>'+x[0]+'</b></td><td>'+x[1]+'</td><td class="mono">'+esc(x[2])+'</td></tr>';}).join('')+'</table>';
+}
+
+function exportReport(){
+  var b=bases(),d=duties();
+  var a=ACTS.filter(function(x){return x[0]===S.act;})[0];
+  var l=[];
+  l.push('개인정보 적법 처리근거 판단 결과');
+  l.push('근거: 「개인정보 보호법」 제15조·제17조·제18조·제23조·제24조·제24조의2 · 시행령 제14조의2·제15조');
+  l.push('생성: '+new Date().toLocaleString('ko-KR'));
+  l.push('');
+  l.push('처리 행위 : '+strip(a[1])+' ('+a[3]+')');
+  l.push('처리자     : '+strip(ORGS.filter(function(x){return x[0]===S.org;})[0][1]));
+  if(S.src){var s=SRCS.filter(function(x){return x[0]===S.src;})[0]; l.push('수집 근거 : '+strip(s[1]));}
+  l.push('정보 유형 : '+KINDS.filter(function(k){return S.kinds[k[0]];}).map(function(k){return strip(k[1]).split(' —')[0].split(' (')[0];}).join(', '));
+  l.push('');
+  l.push('[사용 가능한 근거]');
+  if(!b.length)l.push('  (없음 — 이 처리는 현재 조건에서 허용되지 않습니다)');
+  b.forEach(function(x){
+    l.push('  · '+(x.blocked?'[사용 불가] ':(x.pending?'[입력 필요] ':''))+strip(x.t)+'  ('+x.law+')');
+    x.duties.forEach(function(y){l.push('      - '+strip(y));});
+  });
+  if(S.act!=='beyond'){
+    var n=EXTRA.filter(function(e){return S.extra[e[0]];}).length;
+    l.push('');
+    l.push('[추가적 이용·제공 4요건] '+n+' / 4  (영 제14조의2제1항)');
+    EXTRA.forEach(function(e){l.push('  '+(S.extra[e[0]]?'■':'□')+' '+strip(e[1]));});
+  }
+  l.push('');
+  l.push('[따라오는 의무]');
+  d.forEach(function(x){l.push('  · '+strip(x[0])+' — '+strip(x[1])+'  ['+x[2]+']');});
+  l.push('');
+  l.push('※ 교육용 판단 보조이며 법률 자문이 아닙니다. 요건 충족 입증책임은 개인정보처리자에게 있습니다.');
+  var blob=new Blob([l.join('\n')],{type:'text/plain;charset=utf-8'});
+  var el=document.createElement('a');el.href=URL.createObjectURL(blob);
+  el.download='적법근거_판단_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(el);el.click();el.remove();
+  setTimeout(function(){URL.revokeObjectURL(el.href);},2000);
+}
+
+document.addEventListener('click',function(e){
+  var a=e.target.closest('[data-act]');
+  if(a){S.act=a.getAttribute('data-act');S.cond={};save();render();return;}
+  var o=e.target.closest('[data-org]');
+  if(o){S.org=o.getAttribute('data-org');save();render();return;}
+  var s=e.target.closest('[data-src]');
+  if(s){var v=s.getAttribute('data-src');S.src=(S.src===v?'':v);save();render();return;}
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.hasAttribute&&el.hasAttribute('data-kind')){
+    var k=el.getAttribute('data-kind');S.kinds[k]=el.checked;
+    if(k==='normal'&&el.checked){} save();render();
+  }
+  else if(el.hasAttribute&&el.hasAttribute('data-cond')){S.cond[el.getAttribute('data-cond')]=el.checked;save();render();}
+  else if(el.hasAttribute&&el.hasAttribute('data-extra')){S.extra[el.getAttribute('data-extra')]=el.checked;save();render();}
+});
+
+function render(){
+  renderActs();renderOrgs();renderKinds();renderConds();renderResult();renderExtra();renderDuties();applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-basis-check.html'); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',function(){ load(); applyLang(); render(); });
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>
