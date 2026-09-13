@@ -97,9 +97,18 @@ const denied = (r) => r.status === 403 || r.status === 401;
   });
   check("selfCerts 에 kind:'verified' 위장 거부", denied(r), `status=${r.status}`);
 
-  // 6) 비로그인 사용자의 수료증 단건 조회는 허용(제3자 검증 경로)
+  // 6) [QA N-04] 수료증 문서에는 실명이 들어 있다. 예전에는 제3자 검증 경로를 위해
+  //    무인증 단건 조회를 열어 뒀지만, 수료번호를 훑어 이름을 모을 수 있었다.
+  //    공개 검증은 certApi(action=verify)가 이름을 가려서 내려주므로 직접 조회는 막는다.
   r = await req('GET', 'certificates/ANY-ID');
-  check('비로그인 수료증 단건 조회 허용(404/200 모두 규칙 통과)', !denied(r), `status=${r.status}`);
+  check('비로그인 수료증 직접 조회 거부(실명 수집 차단)', denied(r), `status=${r.status}`);
+
+  r = await req('GET', 'certificates/ANY-ID', { uid: UID });
+  check('로그인해도 수료증 직접 조회 거부', denied(r), `status=${r.status}`);
+
+  // 7) 클래스 목록 훑기 차단(참여는 코드를 아는 사람이 단건으로)
+  r = await req('GET', 'classes', { uid: UID });
+  check('classes 목록 열람 거부', denied(r), `status=${r.status}`);
 
   // 7) 리더보드 읽기는 로그인 사용자에게 허용
   r = await req('GET', 'leaderboard/someone', { uid: UID });

@@ -21,9 +21,11 @@ service cloud.firestore {
     // 검증된 수료증: 단건 공개 조회(제3자 검증)만 허용. 생성·수정·삭제는 서버만.
     // [QA-P0-05] 이전에는 클라이언트가 uid만 맞추면 임의 점수·날짜·해시로 생성할 수 있었다.
     // 이제 발급은 certApi(서버 채점 + HMAC 서명)에서만 이뤄진다. Admin SDK는 규칙을 우회한다.
+    // [QA N-04] 예전에는 무인증 단건 조회(get)를 열어 뒀다. 문서에 실명이 들어 있어
+    // 수료번호만 알면 이름을 읽을 수 있었다. 공개 검증은 certApi(action=verify)가
+    // 이름을 가려서(홍*동) 내려주므로, 클라이언트 직접 조회는 닫는다.
     match /certificates/{certId} {
-      allow get: if true;
-      allow list: if false;
+      allow read: if false;
       allow create, update, delete: if false;
     }
     // 자가 학습 기록(self-reported): 브라우저 진도 기반 기록은 "검증된 성취"와 분리해 보관한다.
@@ -66,8 +68,11 @@ service cloud.firestore {
       }
     }
     // 무료 공개형 강의실: 로그인한 강사는 클래스를 만들고, 학생은 참여 코드로 조회 후 본인 진행률만 갱신한다.
+    // [QA] read 를 열어 두면 로그인한 누구나 전체 클래스 목록을 훑을 수 있다.
+    // 참여는 클래스 코드를 아는 사람이 하는 것이므로 단건 조회(get)만 허용한다.
     match /classes/{classId} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if false;
       allow create: if request.auth != null
         && request.resource.data.instructorUid == request.auth.uid;
       allow update, delete: if request.auth != null
@@ -82,6 +87,11 @@ service cloud.firestore {
           && (request.auth.uid == uid
             || get(/databases/$(database)/documents/classes/$(classId)).data.instructorUid == request.auth.uid);
       }
+    }
+    // 명시하지 않은 경로는 전부 거부한다. 새 컬렉션을 추가하면서 규칙을 빠뜨려도
+    // 기본값이 "열림"이 되지 않게 한다.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

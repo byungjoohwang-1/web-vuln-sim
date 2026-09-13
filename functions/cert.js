@@ -248,6 +248,27 @@ async function handleSubmit(db, uid, bodyIn) {
   return out;
 }
 
+/**
+ * 검증 응답에 실명을 그대로 싣지 않는다 (QA N-04).
+ *
+ * 검증은 로그인 없이 열려 있어야 한다(제3자가 수료증 진위를 확인해야 하므로).
+ * 그런데 응답에 실명이 그대로 들어가면, 수료번호를 훑는 것만으로 이름을 모을 수 있다.
+ * 검증에 필요한 것은 "이 번호의 주인이 내가 받은 증서의 그 사람인가"를 대조하는 것뿐이라
+ * 일부를 가려도 목적을 해치지 않는다.
+ */
+function maskName(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  // 공백이 있으면 토큰별로 첫 글자만 남긴다(영문 이름 등): "Hong Gildong" → "H* G*"
+  if (/\s/.test(s)) {
+    return s.split(/\s+/).filter(Boolean).map((t) => t[0] + "*").join(" ");
+  }
+  const ch = Array.from(s);                 // 서러게이트 쌍 안전
+  if (ch.length <= 1) return "*";
+  if (ch.length === 2) return ch[0] + "*";
+  return ch[0] + "*".repeat(ch.length - 2) + ch[ch.length - 1];
+}
+
 async function handleVerify(db, certId) {
   const snap = await db.collection("certificates").doc(String(certId)).get();
   if (!snap.exists) return { status: 200, body: { ok: true, found: false } };
@@ -255,7 +276,7 @@ async function handleVerify(db, certId) {
   if (d.kind !== "verified" || d.v !== 2) {
     // 구(舊) 클라이언트 발급본 — 서버가 보증하지 않는다.
     return { status: 200, body: { ok: true, found: true, verified: false, legacy: true,
-      cert: { certId: d.certId || certId, name: d.name || "", issuedAt: d.date || d.createdAt || "" },
+      cert: { certId: d.certId || certId, name: maskName(d.name), issuedAt: d.date || d.createdAt || "" },
       note: "서버가 발급·서명하지 않은 기록입니다(자가 보고). 공식 검증 대상이 아닙니다." } };
   }
   const secret = await getSecret(db);
@@ -265,10 +286,10 @@ async function handleVerify(db, certId) {
     status: 200,
     body: {
       ok: true, found: true, verified: valid, legacy: false,
-      cert: { certId: d.certId, name: d.name, score: d.score, correct: d.correct, total: d.total,
+      cert: { certId: d.certId, name: maskName(d.name), score: d.score, correct: d.correct, total: d.total,
         issuedAt: d.issuedAt, examVersion: d.examVersion },
     },
   };
 }
 
-module.exports = { handleStart, handleSubmit, handleVerify, certCanonical, QUESTIONS_PER_EXAM, PASS_RATIO, MAX_ATTEMPTS_PER_DAY };
+module.exports = { handleStart, handleSubmit, handleVerify, maskName, certCanonical, QUESTIONS_PER_EXAM, PASS_RATIO, MAX_ATTEMPTS_PER_DAY };

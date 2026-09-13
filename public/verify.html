@@ -128,27 +128,39 @@ function b64urlDecode(s){
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // 온라인 등록 대조(진위) — 미등록/오프라인이면 무결성만 표시하는 기본 결과 반환
+/* [QA N-02] 이 페이지는 URL 에 담긴 데이터를 다시 해싱해 첨부 해시와 비교했고,
+ * 일치하면 "무결성 확인됨 · 위·변조 없음" 이라고 적었다. 비밀 키가 없으므로
+ * 이름을 바꾸고 해시를 다시 계산하면 똑같이 통과한다 — 보증하지 못하는 것을 보증한다고 말한 것이다.
+ * 실제 보증 수준은 세 가지뿐이라 문구를 거기에 맞춘다.
+ *   1) 서버 기록 + 서명 유효 → 발급 확인됨
+ *   2) 서버 기록은 있으나 서명이 없거나(구버전) 내용이 다름 → 확인 불가/불일치
+ *   3) 서버 기록 없음 → 발급 사실 미확인 (링크 자체가 앞뒤로 맞다는 것까지만 참) */
 async function checkOnline(id, cert, h){
   const skill = isSkill(cert);
   const noun = skill ? '자격' : '수료증';
-  let r = {
-    ic:'🔒', cls:'v-warn', title:'무결성 확인됨',
-    sub:'이 '+noun+'의 내용은 발급 당시와 동일합니다(위·변조 없음). 발급 사실까지 확인하려면 온라인 등록이 필요합니다.',
-    onlineBadge:'<span class="badge">🔒 무결성 확인됨 (오프라인)</span>'
+  const unverified = {
+    ic:'🔎', cls:'v-warn', title:'발급 사실 미확인',
+    sub:'이 링크는 앞뒤가 맞습니다(링크 안의 내용과 첨부 값이 일치). 다만 그것만으로는 '+noun+' 발급 사실을 증명하지 못합니다. 링크를 만든 사람은 내용을 바꾸고 값을 다시 계산할 수 있습니다. 서버 기록에서 확인되지 않았습니다.',
+    onlineBadge:'<span class="badge">🔎 발급 사실 미확인 (링크 자체 일치)</span>'
   };
   let rec = null;
-  try { rec = await fetchCert(id || cert.certId); } catch(e){ return r; }
-  if (!rec) return r;
-  if (rec.hash === h){
-    r = { ic:'✅', cls:'v-ok', title:'진위 확인됨',
-      sub:'이 '+noun+'은 발급자가 온라인 등록한 정식 '+noun+'이며, 내용도 위·변조되지 않았습니다.',
-      onlineBadge:'<span class="badge online">☁ 온라인 등록됨 · 진위 확인</span>' };
-  } else {
-    r = { ic:'⚠️', cls:'v-warn', title:'주의: 등록본과 다름',
-      sub:'동일 번호의 온라인 등록본과 내용이 다릅니다. 최신 발급 링크인지 확인하세요.',
-      onlineBadge:'<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 등록본과 불일치</span>' };
+  try { rec = await fetchCert(id || cert.certId); } catch(e){ return unverified; }
+  if (!rec) return unverified;
+
+  if (rec.legacy) {
+    return { ic:'⚠️', cls:'v-warn', title:'서버가 보증하지 않는 기록',
+      sub:'같은 번호의 기록이 서버에 있으나 서버 서명이 없습니다(구버전 자가 기록). 공식 검증 대상이 아닙니다.',
+      onlineBadge:'<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 서버 서명 없음</span>' };
   }
-  return r;
+  if (rec.verified) {
+    const masked = (rec.cert && rec.cert.name) ? ' · '+esc(rec.cert.name) : '';
+    return { ic:'✅', cls:'v-ok', title:'발급 확인됨 (서버 기록)',
+      sub:'서버가 발급하고 자기 키로 서명한 '+noun+'입니다. 서버 기록의 명의'+masked+'가 받으신 '+noun+'과 같은지 확인하세요.',
+      onlineBadge:'<span class="badge online">☁ 발급 확인됨 (서버 기록)</span>' };
+  }
+  return { ic:'⚠️', cls:'v-warn', title:'서명 검증 실패',
+    sub:'같은 번호의 서버 기록이 있으나 서명이 내용과 맞지 않습니다. 최신 발급 링크인지 확인하세요.',
+    onlineBadge:'<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 서명 불일치</span>' };
 }
 
 function render(verdict, cls, title, sub, cert, onlineBadge){
@@ -267,12 +279,17 @@ async function renderServerVerified(id){
   async function _noop(){}
 })();
 
+/* [QA N-04] 예전에는 브라우저가 certificates 문서를 직접 읽었다.
+ * 그래서 보안 규칙이 무인증 단건 조회를 열어 둬야 했고, 문서에 실명이 그대로 있어
+ * 수료번호를 훑는 것만으로 이름을 모을 수 있었다.
+ * 이제 공개 검증 API 만 부른다. 서버는 이름을 가려서(홍*동) 돌려준다. */
 async function fetchCert(id){
   try{
-    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const snap = await getDoc(doc(db, 'certificates', String(id)));
-    return snap.exists() ? snap.data() : null;
+    const res = await fetch(CERT_API + '?action=verify&id=' + encodeURIComponent(String(id)), { method: 'GET' });
+    if(!res.ok) return null;
+    const j = await res.json();
+    if(!j || !j.ok || !j.found) return null;
+    return { _api: true, verified: !!j.verified, legacy: !!j.legacy, cert: j.cert || {} };
   }catch(e){ return null; }
 }
 window.fetchCert = fetchCert;

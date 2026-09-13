@@ -409,6 +409,7 @@ select.pin{width:100%;max-width:360px;padding:9px 11px;border:1px solid #cbd5e1;
   .ptbl tr{page-break-inside:avoid}
 }
 </style>
+<script src="/js/external-run-notice.js"></script>
 </head>
 <body>
 <a href="#mainviews" class="skiplink">본문 바로가기</a>
@@ -1642,6 +1643,10 @@ async function runPython(code){
   return (out||'')+err;
 }
 async function wandboxRun(lang,code){
+  // [QA N-06] 편집기 내용이 외부로 나가기 전에 한 번 알린다(탭 세션당 1회)
+  if(window.WVS_EXTERNAL_RUN&&!window.WVS_EXTERNAL_RUN.confirmOnce("Wandbox","wandbox.org")){
+    return window.WVS_EXTERNAL_RUN.cancelledText();
+  }
   // Wandbox 원격 컴파일·실행 (Piston은 2026-02 화이트리스트 전환으로 사용 불가)
   const comp=(lang==='Java')?'openjdk-jdk-22+36':(lang==='C')?'gcc-13.2.0-c':'gcc-13.2.0';
   let src=code;
