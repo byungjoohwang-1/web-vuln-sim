@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI 레드팀 아레나 — AI 공격자와 방어 대결 | WEB-VULN-SIM</title>
-<meta name="description" content="AI 레드팀 에이전트가 시나리오 DB를 도구로 호출해 공격 체인을 조립합니다. 방어 선택지를 골라 4단계 침입 체인(정찰→침입→권한상승→유출)을 막아보세요. AI 출력은 기계 검증 후 사용됩니다.">
+<meta name="description" content="AI 레드팀 에이전트가 시나리오 DB를 도구로 호출해 공격 체인을 조립합니다. 방어 선택지를 골라 4단계 침입 체인(정찰→침입→권한상승→유출)을 막아보세요. AI 출력은 스키마 형식 검사를 통과해야 사용됩니다.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
 <meta property="og:title" content="AI 레드팀 아레나 — AI 공격자와 방어 대결">
@@ -167,7 +167,7 @@ a{color:var(--acc)}
         <div class="flow-tags">
           <span class="ftag">1️⃣ 정찰</span><span class="ftag">2️⃣ 침입</span><span class="ftag">3️⃣ 권한 상승</span><span class="ftag">4️⃣ 데이터 유출</span>
         </div>
-        <p style="font-size:.78rem">AI의 모든 출력은 <b>스키마 기계 검증</b>을 통과해야 사용되며, 실패 시 규칙 엔진으로 폴백됩니다(우측 브레인 패널에서 투명하게 공개).</p>
+        <p style="font-size:.78rem">AI의 모든 출력은 <b>스키마 형식 검사</b>(필드 존재·타입·허용값)를 통과해야 사용되며, 실패 시 규칙 엔진으로 폴백됩니다(우측 브레인 패널에서 공개). 형식만 확인하며 내용의 사실 여부는 검증하지 않습니다.</p>
       </div>
     </div>
     <div class="rt-actions" id="rtActions"></div>
@@ -264,7 +264,7 @@ a{color:var(--acc)}
     return out;
   }
 
-  /* ── AI 출력 기계 검증 ── */
+  /* ── AI 출력 스키마 형식 검사(내용 정확성은 미검증) ── */
   function verifyAI(p, cand) {
     var errs = [];
     var codes = cand.map(function (c) { return c.c; });
@@ -383,7 +383,7 @@ a{color:var(--acc)}
       if (v.ok) {
         var sc = cand.filter(function (c) { return c.c === r.json.chosen; })[0];
         round = { chosen: sc.c, sc: sc, src: 'ai', attack_message: String(r.json.attack_message), options: r.json.options.map(String), correct: r.json.correct, why: String(r.json.why), explanation: String(r.json.explanation) };
-        logBrain('✅', 'verify.schema', 'AI 출력 기계 검증 통과 → 실사용');
+        logBrain('✅', 'verify.schema', 'AI 출력 스키마 형식 검사 통과 → 실사용');
       } else {
         logBrain('⚠️', 'verify.schema', 'AI 출력 검증 실패(' + v.errs.join(', ') + ') → 규칙 엔진 폴백');
       }
