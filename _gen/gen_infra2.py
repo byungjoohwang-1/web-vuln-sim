@@ -36,7 +36,7 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
 .section {{ margin-bottom:28px; }}
 .section h2 {{ font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }}
 .easy {{ background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }}
-.easy .tag {{ display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }}
+.easy .tag {{ display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }}
 .easy b {{ color:#c0392b; }}
 /* 직접 해보기 */
 .lab {{ border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }}
@@ -90,7 +90,7 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
 .ask-btn {{ background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; padding:11px 22px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; }}
 .ai-answer {{ margin-top:14px; }}
 .ai-demo-tag, .ai-live-tag {{ display:inline-block; font-size:12px; font-weight:700; padding:4px 10px; border-radius:14px; margin-bottom:8px; }}
-.ai-demo-tag {{ background:#fff3d6; color:#9a6b00; }}
+.ai-demo-tag {{ background:#fff3d6; color:#916500; }}
 .ai-live-tag {{ background:#dcfce7; color:#166534; }}
 .ai-text {{ background:white; border:1px solid #e6e2fa; border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.7; white-space:pre-wrap; }}
 .ai-err {{ background:#fdeaea; color:#a12622; border:1px solid #f5c6c6; border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; }}

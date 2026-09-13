@@ -84,9 +84,9 @@
         서버는 주문 XML을 연결로 만듭니다: <code>&lt;user&gt;&lt;name&gt;{name}&lt;/name&gt;&lt;role&gt;user&lt;/role&gt;&lt;/user&gt;</code>. <b>name</b>이 이스케이프되지 않으므로 주입된 <code>&lt;/name&gt;...&lt;/role&gt;</code>가 요소를 일찍 닫고 새 태그를 위조합니다. 대부분의 XML 파서는 중복 요소 중 <b>마지막</b> 값을 채택하므로, 주입된 role이 실제 값을 덮어씁니다.
       </div>
       <label data-en="name field (attacker-controlled)">name 필드 (공격자 조작)</label>
-      <input id="v_name" value="alice">
+      <input id="v_name" value="alice" aria-label="name 필드 (공격자 조작)">
       <label data-en="quantity field (attacker-controlled)">quantity 필드 (공격자 조작)</label>
-      <input id="v_qty" value="1">
+      <input id="v_qty" value="1" aria-label="quantity 필드 (공격자 조작)">
       <div class="preset" id="presets"></div>
       <div class="btns">
         <button class="act run" onclick="runVuln()">▶ <span data-en="Build &amp; parse order">주문 생성·파싱</span></button>
@@ -102,9 +102,9 @@
         수정본은 삽입 전에 XML 메타문자 5종(<code>&amp; &lt; &gt; &quot; '</code>)을 이스케이프하거나, 더 나아가 DOM/파라미터화 빌더로 트리를 만들어 텍스트가 항상 텍스트 노드로만 남게 합니다. 스키마 검증으로 범위 밖 값은 거부합니다.
       </div>
       <label data-en="same name value, escaped">동일한 name 값 (이스케이프 적용)</label>
-      <input id="s_name" value="alice">
+      <input id="s_name" value="alice" aria-label="동일한 name 값 (이스케이프 적용)">
       <label data-en="same quantity value, validated">동일한 quantity 값 (검증 적용)</label>
-      <input id="s_qty" value="1">
+      <input id="s_qty" value="1" aria-label="동일한 quantity 값 (검증 적용)">
       <div class="btns">
         <button class="act fix" onclick="runSecure()">▶ <span data-en="Build safely &amp; parse">안전 생성·파싱</span></button>
       </div>

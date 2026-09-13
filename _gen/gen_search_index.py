@@ -26,6 +26,7 @@ PREFIX_GROUP = [
     ('06_db', 'db'), ('07_fin', 'fin'), ('08_win', 'win'), ('09_net', 'net'),
     ('10_sec', 'sec'), ('11_cloud', 'cloud'), ('12_ics', 'ics'),
     ('13_ai', 'ai'), ('14_auto', 'auto'), ('15_privacy', 'privacy'),
+    ('16_zt', 'zt'),
     ('sim-', 'sim'), ('guide-', 'guide'),
 ]
 
@@ -45,6 +46,7 @@ GROUP_SYNONYMS = {
     'ai': 'AI 인공지능 LLM 생성형 프롬프트 머신러닝 딥페이크',
     'auto': '자동차 차량 모빌리티 automotive vehicle can ecu uds ota misra',
     'privacy': '개인정보 프라이버시 가명처리 영향평가 privacy pia 보호법',
+    'zt': '제로트러스트 zero trust 성숙도 maturity 암묵적신뢰 최소권한 마이크로세그멘테이션 지속인증 pam dlp',
     'sim': '시뮬레이터 실습 체험 simulator',
     'guide': '가이드 안내 개념 guide',
 }
@@ -98,6 +100,8 @@ TOOL_ALIAS = {
                                  '처리방침 평가제 적정성 가독성 접근성 제30조의2 고시 2024-3 평가대상 개선권고 스크롤 클릭 실측 policy evaluation'),
     'privacy-penalty-calc.html': ('개인정보 과징금 산정 구조 시뮬레이터',
                                   '과징금 산정 부과기준 제64조의2 별표1의5 관련매출액 부과기준율 중대성 위반기간 가중 감경 절사 징벌적 매출액 10% penalty fine'),
+    'privacy-pseudonym-process.html': ('가명처리 5단계 절차 · 위험도 판정기 (2026.3 개정)',
+                                       '가명처리 절차 5단계 사전준비 위험성 검토 적정성 검토 안전한 관리 위험도 저위험 중위험 고위험 판정 검토위원회 내부심의 담당자 검토 서식 10종 위험성 검토서 가명처리 계획서 결과서 관리대장 결합전문기관 데이터전문기관 이노베이션 존 비정형데이터 반복 유사 활용 통계작성 과학적 연구 공익적 기록보존 제28조의2 제28조의4 가명정보 가이드라인 pseudonymization risk tier'),
     'privacy-basis-check.html': ('개인정보 적법 처리근거 판단기 · 수집·제공·목적 외',
                                  '적법근거 처리근거 판단 제15조 제17조 제18조 제19조 수집 이용 제3자 제공 목적외 추가적 이용 시행령 14조의2 정당한 이익 계약 이행 법령상 의무 공공기관 소관업무 민감정보 고유식별정보 주민등록번호 24조의2 동의 불가 관보 게재 대장 lawful basis legal ground'),
     'privacy-consent-designer.html': ('개인정보 동의서 설계·점검기 · 다크패턴 7종',

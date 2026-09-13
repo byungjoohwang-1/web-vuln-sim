@@ -60,7 +60,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
-.easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
 @media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
 </style>
@@ -96,7 +96,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
-          <textarea class="req-box" id="reqBox" spellcheck="false">openssl version
+          <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">openssl version
 # 기대: OpenSSL 3.x (최신 패치 적용)</textarea>
           <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
           <div class="result-card" id="resultCard"></div>
@@ -127,7 +127,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
       <div class="panel">
         <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
         <p style="font-size:14px; color:#555; margin-bottom:15px;">TLS 라이브러리(OpenSSL 등)는 <strong>알려진 취약점이 제거된 최신 패치 버전</strong>으로 갱신해야 합니다. 아래와 같이 취약 버전을 <strong>패치(patched)</strong>된 버전으로 교체하세요.</p>
-        <textarea id="codeEditor" class="code-editor"># [취약] Heartbleed 취약 OpenSSL 사용
+        <textarea id="codeEditor" class="code-editor" aria-label="취약 코드 편집기"># [취약] Heartbleed 취약 OpenSSL 사용
 $ openssl version
 OpenSSL 1.0.1f 6 Jan 2014   # CVE-2014-0160 취약
 # Dockerfile

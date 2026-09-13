@@ -75,9 +75,9 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
   <div class="card" id="keyCard">
     <h2>🔑 <span data-en="API key (stored in your browser only)">API 키 (브라우저에만 저장)</span></h2>
     <div class="rowf">
-      <div style="flex:2"><label data-en="Anthropic API key (sk-ant-...)">Anthropic API 키 (sk-ant-...)</label><input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off"></div>
+      <div style="flex:2"><label data-en="Anthropic API key (sk-ant-...)">Anthropic API 키 (sk-ant-...)</label><input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off" aria-label="AI API 키 입력"></div>
       <div><label data-en="Model">모델</label>
-        <input id="model" type="text" value="claude-sonnet-5" list="models">
+        <input id="model" type="text" value="claude-sonnet-5" list="models" aria-label="AI 모델 선택">
         <datalist id="models">
           <option value="claude-sonnet-5"></option>
           <option value="claude-haiku-4-5"></option>
@@ -98,7 +98,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
   <div class="card">
     <h2>🎯 <span data-en="Challenge">과제</span></h2>
     <label data-en="Pick a challenge (or choose Custom to paste your own)">과제 선택 (또는 '직접 입력'으로 붙여넣기)</label>
-    <select id="chSel" onchange="loadCh()"></select>
+    <select id="chSel" onchange="loadCh()" aria-label="과제"></select>
     <div style="margin-top:10px"><span class="tag" id="chCwe">—</span> <span id="chTitle" style="font-weight:700"></span></div>
     <div style="font-size:13px;color:var(--muted);margin:8px 0 4px" id="chTask"></div>
     <div id="vulnWrap"><label data-en="Vulnerable code (fix this)">취약 코드 (이걸 고치세요)</label><pre class="code" id="chCode"></pre></div>
@@ -107,7 +107,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
   <!-- 답안 -->
   <div class="card">
     <h2>✍️ <span data-en="Your fix / answer">당신의 수정 코드 / 답안</span></h2>
-    <textarea id="answer" spellcheck="false" placeholder="여기에 안전하게 고친 코드를 작성하세요…"></textarea>
+    <textarea id="answer" spellcheck="false" placeholder="여기에 안전하게 고친 코드를 작성하세요…" aria-label="여기에 안전하게 고친 코드를 작성하세요…"></textarea>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="act grade" id="btnGrade" onclick="grade()">🤖 <span data-en="AI grade">AI 채점</span></button>
       <button class="act hint" id="btnHint" onclick="grade(true)">💡 <span data-en="Hint only (Socratic)">힌트만 (소크라테스)</span></button>

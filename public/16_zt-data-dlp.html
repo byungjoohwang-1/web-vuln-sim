@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제로트러스트: 무엇이 중요한지 모르는 채 지키는 데이터 · WEB-VULN-SIM</title>
+<style>
+:root { --bank-primary:#134e4a; --bank-secondary:#0f766e; --bank-bg:#f3f4f6; --text-dark:#1a1a1a; --danger:#d32f2f; --success:#2e7d32; --warning:#ed6c02; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,sans-serif; background:var(--bank-bg); color:var(--text-dark); padding:20px; line-height:1.5; }
+.container { max-width:1400px; margin:0 auto; }
+.top-nav { margin-bottom:15px; }
+.top-nav a { color:var(--bank-primary); text-decoration:none; font-weight:700; font-size:14px; }
+.header { background:white; padding:20px 30px; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; border-left:6px solid var(--bank-primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.header h1 { font-size:22px; color:var(--bank-primary); display:flex; align-items:center; gap:12px; }
+.badge { background:#e3f2fd; color:#1565c0; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; }
+.risk { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#fff; background:var(--danger); }
+.tabs { display:flex; gap:15px; margin-bottom:20px; }
+.tab { flex:1; padding:18px; background:white; border-radius:10px; cursor:pointer; font-weight:600; color:#666; transition:.3s; border:2px solid transparent; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+.tab:hover { transform:translateY(-2px); }
+.tab.active { border-color:var(--bank-primary); color:var(--bank-primary); background:#eef5ff; }
+.grid-container { display:grid; grid-template-columns:1fr 1fr; gap:25px; }
+.content-section { display:none; animation:fadeIn .4s ease; }
+.content-section.active { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.panel { background:white; border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; }
+.panel-title { font-size:18px; font-weight:700; color:#333; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; }
+.scenario { background:#f8fbff; border:1px solid #d6e6fb; border-radius:8px; padding:15px; font-size:14px; color:#33475b; margin-bottom:18px; }
+.scenario b { color:var(--bank-primary); }
+.attack-controls { background:#212121; color:#fff; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #333; }
+.toggle-switch { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.toggle-status { font-family:'Consolas',monospace; color:#00ff00; font-weight:700; }
+.req-label { display:block; font-size:12px; font-weight:700; color:#555; margin:14px 0 6px; }
+.req-box { width:100%; background:#0d1b2a; color:#7ddcff; border:1px solid #1b3a5b; border-radius:8px; padding:14px; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; min-height:140px; }
+.btn-submit { width:100%; padding:15px; background:var(--bank-primary); color:white; border:none; border-radius:6px; font-size:15px; font-weight:700; cursor:pointer; transition:.3s; margin-top:16px; }
+.btn-submit:hover { background:#002a5c; }
+.btn-submit.hacked { background:var(--danger); }
+.terminal { background:#1e1e1e; color:#d4d4d4; padding:15px; border-radius:8px; font-family:'Consolas',monospace; font-size:13px; height:240px; overflow-y:auto; line-height:1.6; border:1px solid #333; }
+.log-time { color:#569cd6; margin-right:8px; }
+.result-card { display:none; margin-top:18px; border-radius:8px; padding:16px; animation:fadeIn .3s; }
+.result-breach { background:#fff5f5; border:1px solid #ffcdd2; color:#b71c1c; }
+.result-blocked { background:#e8f5e9; border:1px solid #c8e6c9; color:#1b5e20; }
+.data-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.data-table th { background:#f8f9fa; padding:10px; text-align:left; border-bottom:2px solid #ddd; color:#555; }
+.data-table td { padding:10px; border-bottom:1px solid #eee; }
+.amount { font-family:'Consolas',monospace; font-weight:700; color:var(--bank-primary); text-align:right; }
+.compliance-alert { background:#fff5f5; border:1px solid #ffcdd2; padding:15px; border-radius:8px; margin-top:15px; font-size:13px; color:#b71c1c; display:none; animation:fadeIn .3s; }
+.code-editor { width:100%; height:320px; background:#282c34; color:#abb2bf; padding:20px; border-radius:8px; border:none; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; }
+.kisa-ref { font-size:14px; line-height:1.7; color:#444; }
+.kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
+.kisa-ref ul { margin-left:18px; }
+.easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
+.easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox b { color:#c0392b; }
+@media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="header">
+    <h1><span>🏷️</span> 제로트러스트 실습 &middot; 무엇이 중요한지 모르는 채 지키는 데이터</h1>
+    <div style="text-align:right; font-size:13px; color:#555;">
+      Target: <strong>사내 문서·데이터 저장소</strong><br>
+      성숙도: <span class="risk">기존 → 최적화</span> <span class="badge">데이터 / 데이터 분류 · 손실 방지</span>
+    </div>
+  </div>
+
+  <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
+    <div class="tab" onclick="switchTab('defense')">🛡️ 대응 방안 (Blue Team)</div>
+  </div>
+
+  <div id="tab-attack" class="content-section active">
+    <div class="grid-container">
+      <div>
+        <div class="panel">
+          <div class="panel-title"><span>대량 반출 시도</span><span style="font-size:12px; color:#666; font-weight:normal;">🔒 Secured Channel</span></div>
+          <div class="scenario">데이터 통제는 <b>분류에서 시작</b>합니다. 어떤 문서가 중요한지 표시돼 있지 않으면 보호 정책을 걸 대상 자체를 고를 수 없고, 탐지 규칙은 "이름에 기밀이 들어간 파일"처럼 허술해집니다. 결과적으로 반출은 평범한 업무 활동과 구분되지 않습니다.</div>
+          <div class="attack-controls">
+            <div class="toggle-switch" onclick="toggleAttack()">
+              <div><strong>⚡ 분류되지 않은 민감 데이터 반출</strong><br><span style="font-size:12px; opacity:.7;">개인 클라우드로 12,400건 업로드</span></div>
+              <div class="toggle-status" id="attackStatus">OFF</div>
+            </div>
+          </div>
+          <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="요청 전문 편집기">문서 열람
+{
+  "file": "2026_마케팅_계획.pptx",
+  "label": "내부용",
+  "action": "read"
+}</textarea>
+          <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
+          <div class="result-card" id="resultCard"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">🖥️ 금융 시스템 처리 로그</div>
+          <div class="terminal" id="systemLog">
+            <div><span class="log-time">[SYSTEM]</span> Core Banking Channel ready.</div>
+            <div><span class="log-time">[INFO]</span> 거래 요청 대기 중...</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">⚖️ 컴플라이언스 위반 분석</div>
+          <div id="complianceReport" style="color:#666; font-size:14px; text-align:center; padding:20px;">공격 실행 후 분석 결과가 표시됩니다.</div>
+          <div id="violationAlert" class="compliance-alert">
+            <strong>[심각] 암묵적 신뢰가 악용되었습니다</strong>
+            <ul style="margin-top:8px; margin-left:20px; list-style:circle;"><li>데이터 / 데이터 분류 — 데이터 목록과 등급 체계가 없어 보호 대상 선정 불가</li><li>데이터 손실 방지(DLP) 규칙이 내용이 아닌 이름에 의존</li><li>성숙도 1단계(기존): 데이터 위치·민감도를 수작업으로 파악</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-defense" class="content-section">
+    <div class="grid-container">
+      <div class="panel">
+        <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
+        <p style="font-size:14px; color:#555; margin-bottom:15px;">먼저 <strong>어디에 무엇이 있는지 목록을 만들고 등급을 붙인 다음</strong>, 등급에 따라 열람·복사·반출을 다르게 통제하세요. 탐지는 파일명이 아니라 내용과 라벨을 기준으로 합니다.</p>
+        <textarea id="codeEditor" class="code-editor" aria-label="취약 코드 편집기">// [취약] 이름으로 중요도를 짐작한다
+boolean canExport(File f, User u) {
+    if (f.getName().contains("기밀")) return false;
+    return true;   // 나머지는 전부 허용
+}</textarea>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+          <button onclick="verifyCode()" class="btn-submit" style="width:auto; background:var(--success); margin-top:0;">코드 검증</button>
+          <button onclick="showHint()" style="padding:15px; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer;">힌트(정답) 보기</button>
+        </div>
+        <div id="codeResult" style="margin-top:15px;"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📚 제로트러스트 성숙도 해설 / 적용 가이드</div>
+        <div class="kisa-ref"><h4>1. 무엇을 보는 항목인가</h4><b>보호할 대상을 조직이 알고 있는지</b>를 본다. 분류가 없으면 그 뒤의 암호화·접근제어·탐지 규칙이 모두 근거 없이 세워진다.<h4>2. 성숙도 단계별 모습</h4><ul><li><b>기존</b> — 데이터 목록·등급 없음, 담당자 경험에 의존</li><li><b>초기</b> — 주요 시스템만 수동 분류, 일부 DLP 규칙 운영</li><li><b>향상</b> — 자동 분류·라벨링, 등급별 접근·반출 정책 적용</li><li><b>최적화</b> — 생성 시점에 라벨이 붙고 라벨이 데이터를 따라 이동함</li></ul><h4>3. 무엇을 증적으로 남길 수 있나</h4><ul><li>저장소별 분류 완료율과 미분류 데이터 추이</li><li>등급별 접근·반출 정책 정의서</li><li>DLP 탐지·차단 건수와 오탐 조정 이력</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NORMAL_REQ = `문서 열람
+{
+  "file": "2026_마케팅_계획.pptx",
+  "label": "내부용",
+  "action": "read"
+}`;
+const ATTACK_REQ = `대량 반출
+{
+  "files": 12400,
+  "label": null,              // 분류 안 됨
+  "contains": "주민등록번호, 계좌번호",
+  "dest": "personal-cloud.example"
+}`;
+const SECURE_HINT = `// [안전] 분류 → 등급별 통제 → 내용 기반 탐지
+boolean canExport(File f, User u, Destination d) {
+    // 1) 라벨이 없으면 먼저 분류한다(미분류를 기본 허용으로 두지 않는다)
+    Label lb = f.label() != null ? f.label() : classifier.inspect(f);
+    if (lb == null) return deny(f, "분류되지 않은 데이터는 반출 불가");
+
+    // 2) 등급별로 허용 목적지를 다르게 둔다
+    if (!policy.allowedDestinations(lb).contains(d.kind()))
+        return deny(f, lb + " 등급은 해당 목적지로 반출 불가");
+
+    // 3) 내용 기반 탐지: 라벨이 낮아도 실제 내용이 민감하면 막는다
+    Findings fd = contentScanner.scan(f);   // 주민등록번호·계좌번호 등
+    if (fd.hasSensitive()) return deny(f, "민감정보 포함: " + fd.summary());
+
+    // 4) 대량 반출은 양 자체를 신호로 본다
+    if (usage.exportedCountLastHour(u) > policy.bulkThreshold())
+        return deny(f, "대량 반출 임계 초과");
+
+    audit.export(u, f, lb, d);
+    return true;
+}`;
+const CHECKS = [[`classifier`, `label`, `분류`], [`contentScanner`, `bulkThreshold`, `allowedDestinations`]];
+let isAttackOn = false;
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content-section').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function addLog(msg,type='info'){
+  const box=document.getElementById('systemLog'); const time=new Date().toLocaleTimeString('ko-KR');
+  let color='#d4d4d4'; if(type==='error')color='#f48771'; if(type==='warn')color='#cca700'; if(type==='success')color='#89d185';
+  const d=document.createElement('div'); d.innerHTML=`<span class="log-time">[${time}]</span> <span style="color:${color}">${msg}</span>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+function toggleAttack(){
+  isAttackOn=!isAttackOn;
+  const s=document.getElementById('attackStatus'), btn=document.getElementById('sendBtn'), req=document.getElementById('reqBox');
+  if(isAttackOn){
+    s.innerText='ON (Tampering...)'; s.style.color='#ff4444';
+    req.value=ATTACK_REQ; req.style.color='#ff6b6b';
+    btn.innerText='변조 요청 전송 (Execute)'; btn.classList.add('hacked');
+    addLog('[ATTACK] 요청 데이터 변조 활성화', 'warn');
+  } else {
+    s.innerText='OFF'; s.style.color='#00ff00';
+    req.value=NORMAL_REQ; req.style.color='#7ddcff';
+    btn.innerText='요청 전송'; btn.classList.remove('hacked');
+    addLog('[INFO] 공격 모드 해제', 'success');
+  }
+}
+function sendRequest(){
+  const btn=document.getElementById('sendBtn'); btn.innerText='처리 중...';
+  addLog('[REQUEST] 금융 거래 요청 수신');
+  setTimeout(()=>{
+    if(isAttackOn){ addLog('[STORE] 문서 12,400건 접근 — 라벨 없음','warn'); addLog('[DLP] 탐지 규칙: 파일명에 기밀 포함 → 해당 없음','error'); addLog('[NET] 외부 스토리지 업로드 4.2GB 허용','error'); addLog('[AUDIT] 무엇이 나갔는지 사후 식별 불가','error'); showBreach(); showCompliance(); }
+    else { addLog('[OK] 정상 거래 처리 완료', 'success'); showNormal(); }
+    btn.innerText = isAttackOn ? '변조 요청 전송 (Execute)' : '요청 전송';
+  }, 900);
+}
+function showBreach(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-breach'; c.style.display='block';
+  c.innerHTML = `<strong>🚨 무엇이 유출됐는지 모르는 유출</strong><br>분류가 없으니 탐지도, 사후 영향 분석도 불가능했습니다.<table class="data-table"><tr><th>항목</th><th>필요</th><th>현재</th></tr><tr><td>데이터 분류</td><td>등급·라벨 부여</td><td style="color:#b71c1c">미분류 87%</td></tr><tr><td>탐지 기준</td><td>내용 기반</td><td style="color:#b71c1c">파일명 기반</td></tr><tr><td>반출 통제</td><td>등급별 차등</td><td style="color:#b71c1c">일괄 허용</td></tr></table>`;
+}
+function showNormal(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-blocked'; c.style.display='block';
+  c.innerHTML = '<strong>✅ 정상 거래</strong><br>요청이 검증을 통과하여 정상 처리되었습니다. (공격 모드를 켜고 변조를 시도해 보세요)';
+}
+function showCompliance(){
+  document.getElementById('complianceReport').style.display='none';
+  document.getElementById('violationAlert').style.display='block';
+}
+function verifyCode(){
+  // 주석 제거(주석 속 토큰으로 통과하는 우회 차단) + 공백/연산자 정규화
+  const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,' ').replace(/#[^\n]*/g,' ');
+  const norm=s=>strip(s).replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  const code=norm(document.getElementById('codeEditor').value);
+  const r=document.getElementById('codeResult');
+  const ok=CHECKS.every(grp=>{
+    const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
+    return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
+  });
+  if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">분류·등급별 통제·내용 기반 탐지로 미분류 대량 반출이 차단됩니다.</span></div>'; }
+  else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">데이터 분류, 등급별 목적지 제한, 내용 기반 탐지, 대량 반출 임계가 필요합니다.</span></div>'; }
+}
+function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
+</script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</body>
+</html>

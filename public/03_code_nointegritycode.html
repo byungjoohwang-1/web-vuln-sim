@@ -42,7 +42,7 @@
         .panel-title { font-size: 20px; font-weight: bold; color: #2c3e50; }
         .status-badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .status-vulnerable { background: #dc3545; color: white; }
-        .status-secure { background: #28a745; color: white; }
+        .status-secure { background: #28a745; color: #0b1220; }
         .status-editing { background: #ffc107; color: #000; }
         .code-editor { background: #1e1e1e; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex-grow: 1; min-height: 500px; }
         .editor-toolbar { background: #2d2d2d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e3e; }
@@ -55,7 +55,7 @@
         .control-panel { display: flex; gap: 15px; margin-top: 20px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
         .btn-analyze { background: #d63031; color: white; }
-        .btn-validate { background: #28a745; color: white; }
+        .btn-validate { background: #28a745; color: #0b1220; }
         .btn-hint { background: #ffc107; color: #000; }
         .btn-reset { background: #6c757d; color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -73,7 +73,7 @@
         .info-content { color: #555; line-height: 1.6; }
         .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
         .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
-        .langbar button.on { background:#3b82f6; color:#fff; }
+        .langbar button.on { background:#3473da; color:#fff; }
     </style>
 <!-- RESP-NET -->
 <style>
@@ -135,7 +135,7 @@
     execute(file);
 }</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false">public void updateSoftware(String url, String expectedHash) {
+                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false" aria-label="Java 코드 편집기">public void updateSoftware(String url, String expectedHash) {
     File file = download(url);
     
     // [취약점] 파일의 무결성(해시값) 검증 없이 바로 실행
@@ -206,7 +206,7 @@ def run_remote_script(url, expected_hash):
     # [취약점] 무결성 검사 없이 바로 실행 (매우 위험)
     exec(code)</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">import requests
+                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false" aria-label="Python 코드 편집기">import requests
 import hashlib
 
 def run_remote_script(url, expected_hash):

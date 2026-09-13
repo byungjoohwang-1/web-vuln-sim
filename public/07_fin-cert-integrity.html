@@ -60,7 +60,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
-.easybox .tag { display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
 @media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
 </style>
@@ -96,7 +96,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
-          <textarea class="req-box" id="reqBox" spellcheck="false">POST https://bank.example.com/transfer
+          <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">POST https://bank.example.com/transfer
 # 정상: 신뢰체인 검증 + 인증서 핀 일치
 Server Cert: CN=bank.example.com (DigiCert 발급, pin 일치)
 {
@@ -132,7 +132,7 @@ Server Cert: CN=bank.example.com (DigiCert 발급, pin 일치)
       <div class="panel">
         <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
         <p style="font-size:14px; color:#555; margin-bottom:15px;">클라이언트는 서버 인증서의 <strong>기본 신뢰체인·호스트명 검증을 유지</strong>하고, 가능하면 <strong>Certificate Pinning</strong>을 적용해야 합니다. <strong>TrustManager를 비우는(모두 신뢰) 무력화는 금지</strong>입니다. 아래 코드를 보완하세요.</p>
-        <textarea id="codeEditor" class="code-editor">// [취약] TrustManager 무력화 → 모든 인증서 신뢰
+        <textarea id="codeEditor" class="code-editor" aria-label="취약 코드 편집기">// [취약] TrustManager 무력화 → 모든 인증서 신뢰
 val trustAll = object : X509TrustManager {
     override fun checkServerTrusted(c: Array&lt;X509Certificate&gt;, a: String) { }
     override fun checkClientTrusted(c: Array&lt;X509Certificate&gt;, a: String) { }

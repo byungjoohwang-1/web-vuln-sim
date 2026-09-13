@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제로트러스트: 언젠가 쓸지 몰라서 준 권한 · WEB-VULN-SIM</title>
+<style>
+:root { --bank-primary:#134e4a; --bank-secondary:#0f766e; --bank-bg:#f3f4f6; --text-dark:#1a1a1a; --danger:#d32f2f; --success:#2e7d32; --warning:#ed6c02; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,sans-serif; background:var(--bank-bg); color:var(--text-dark); padding:20px; line-height:1.5; }
+.container { max-width:1400px; margin:0 auto; }
+.top-nav { margin-bottom:15px; }
+.top-nav a { color:var(--bank-primary); text-decoration:none; font-weight:700; font-size:14px; }
+.header { background:white; padding:20px 30px; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; border-left:6px solid var(--bank-primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.header h1 { font-size:22px; color:var(--bank-primary); display:flex; align-items:center; gap:12px; }
+.badge { background:#e3f2fd; color:#1565c0; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; }
+.risk { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#fff; background:var(--danger); }
+.tabs { display:flex; gap:15px; margin-bottom:20px; }
+.tab { flex:1; padding:18px; background:white; border-radius:10px; cursor:pointer; font-weight:600; color:#666; transition:.3s; border:2px solid transparent; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+.tab:hover { transform:translateY(-2px); }
+.tab.active { border-color:var(--bank-primary); color:var(--bank-primary); background:#eef5ff; }
+.grid-container { display:grid; grid-template-columns:1fr 1fr; gap:25px; }
+.content-section { display:none; animation:fadeIn .4s ease; }
+.content-section.active { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.panel { background:white; border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; }
+.panel-title { font-size:18px; font-weight:700; color:#333; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; }
+.scenario { background:#f8fbff; border:1px solid #d6e6fb; border-radius:8px; padding:15px; font-size:14px; color:#33475b; margin-bottom:18px; }
+.scenario b { color:var(--bank-primary); }
+.attack-controls { background:#212121; color:#fff; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #333; }
+.toggle-switch { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.toggle-status { font-family:'Consolas',monospace; color:#00ff00; font-weight:700; }
+.req-label { display:block; font-size:12px; font-weight:700; color:#555; margin:14px 0 6px; }
+.req-box { width:100%; background:#0d1b2a; color:#7ddcff; border:1px solid #1b3a5b; border-radius:8px; padding:14px; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; min-height:140px; }
+.btn-submit { width:100%; padding:15px; background:var(--bank-primary); color:white; border:none; border-radius:6px; font-size:15px; font-weight:700; cursor:pointer; transition:.3s; margin-top:16px; }
+.btn-submit:hover { background:#002a5c; }
+.btn-submit.hacked { background:var(--danger); }
+.terminal { background:#1e1e1e; color:#d4d4d4; padding:15px; border-radius:8px; font-family:'Consolas',monospace; font-size:13px; height:240px; overflow-y:auto; line-height:1.6; border:1px solid #333; }
+.log-time { color:#569cd6; margin-right:8px; }
+.result-card { display:none; margin-top:18px; border-radius:8px; padding:16px; animation:fadeIn .3s; }
+.result-breach { background:#fff5f5; border:1px solid #ffcdd2; color:#b71c1c; }
+.result-blocked { background:#e8f5e9; border:1px solid #c8e6c9; color:#1b5e20; }
+.data-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.data-table th { background:#f8f9fa; padding:10px; text-align:left; border-bottom:2px solid #ddd; color:#555; }
+.data-table td { padding:10px; border-bottom:1px solid #eee; }
+.amount { font-family:'Consolas',monospace; font-weight:700; color:var(--bank-primary); text-align:right; }
+.compliance-alert { background:#fff5f5; border:1px solid #ffcdd2; padding:15px; border-radius:8px; margin-top:15px; font-size:13px; color:#b71c1c; display:none; animation:fadeIn .3s; }
+.code-editor { width:100%; height:320px; background:#282c34; color:#abb2bf; padding:20px; border-radius:8px; border:none; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; }
+.kisa-ref { font-size:14px; line-height:1.7; color:#444; }
+.kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
+.kisa-ref ul { margin-left:18px; }
+.easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
+.easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox b { color:#c0392b; }
+@media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="header">
+    <h1><span>🎚️</span> 제로트러스트 실습 &middot; 언젠가 쓸지 몰라서 준 권한</h1>
+    <div style="text-align:right; font-size:13px; color:#555;">
+      Target: <strong>사내 권한 관리(IAM)</strong><br>
+      성숙도: <span class="risk">기존 → 최적화</span> <span class="badge">식별자·신원 / 접근 관리 — 조건부·최소 권한</span>
+    </div>
+  </div>
+
+  <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
+    <div class="tab" onclick="switchTab('defense')">🛡️ 대응 방안 (Blue Team)</div>
+  </div>
+
+  <div id="tab-attack" class="content-section active">
+    <div class="grid-container">
+      <div>
+        <div class="panel">
+          <div class="panel-title"><span>일반 직원 계정으로 권한 확장</span><span style="font-size:12px; color:#666; font-weight:normal;">🔒 Secured Channel</span></div>
+          <div class="scenario">권한은 "필요할 때 필요한 만큼"이어야 합니다. 업무가 바뀔 때마다 더하기만 하고 빼지 않으면 권한은 쌓입니다(권한 적체). <b>한 계정이 털렸을 때 잃는 것의 크기</b>가 바로 이 적체의 크기입니다.</div>
+          <div class="attack-controls">
+            <div class="toggle-switch" onclick="toggleAttack()">
+              <div><strong>⚡ 누적 권한 악용</strong><br><span style="font-size:12px; opacity:.7;">부서 3회 이동하며 누적된 역할 11개</span></div>
+              <div class="toggle-status" id="attackStatus">OFF</div>
+            </div>
+          </div>
+          <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="요청 전문 편집기">역할 요청
+{
+  "user": "choi.mk",
+  "need": "마케팅 대시보드 조회",
+  "period": "2026-09-01 ~ 09-30"
+}</textarea>
+          <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
+          <div class="result-card" id="resultCard"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">🖥️ 금융 시스템 처리 로그</div>
+          <div class="terminal" id="systemLog">
+            <div><span class="log-time">[SYSTEM]</span> Core Banking Channel ready.</div>
+            <div><span class="log-time">[INFO]</span> 거래 요청 대기 중...</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">⚖️ 컴플라이언스 위반 분석</div>
+          <div id="complianceReport" style="color:#666; font-size:14px; text-align:center; padding:20px;">공격 실행 후 분석 결과가 표시됩니다.</div>
+          <div id="violationAlert" class="compliance-alert">
+            <strong>[심각] 암묵적 신뢰가 악용되었습니다</strong>
+            <ul style="margin-top:8px; margin-left:20px; list-style:circle;"><li>식별자·신원 / 접근 관리 — 최소 권한 원칙이 부여 시점에만 적용되고 유지되지 않음</li><li>권한에 유효기간과 재승인 주기가 없음</li><li>성숙도 1단계(기존): 역할이 정적이고 회수는 수동</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-defense" class="content-section">
+    <div class="grid-container">
+      <div class="panel">
+        <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
+        <p style="font-size:14px; color:#555; margin-bottom:15px;">권한은 <strong>기본이 없음(deny)</strong>이고, 필요할 때 <strong>기간을 정해</strong> 부여했다가 자동으로 사라져야 합니다. 요청 시점의 맥락(기기 상태·위치·업무)까지 조건으로 넣으세요.</p>
+        <textarea id="codeEditor" class="code-editor" aria-label="취약 코드 편집기">// [취약] 한 번 준 역할은 계속 남는다
+public boolean can(User u, String action) {
+    return u.roles().stream()
+            .anyMatch(r -&gt; r.allows(action));   // 유효기간·조건 없음
+}</textarea>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+          <button onclick="verifyCode()" class="btn-submit" style="width:auto; background:var(--success); margin-top:0;">코드 검증</button>
+          <button onclick="showHint()" style="padding:15px; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer;">힌트(정답) 보기</button>
+        </div>
+        <div id="codeResult" style="margin-top:15px;"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📚 제로트러스트 성숙도 해설 / 적용 가이드</div>
+        <div class="kisa-ref"><h4>1. 무엇을 보는 항목인가</h4>권한이 <b>업무에 맞게 줄어드는 구조인지</b>를 본다. 부여 절차만 있고 회수 절차가 없으면 최소 권한은 문서에만 존재한다.<h4>2. 성숙도 단계별 모습</h4><ul><li><b>기존</b> — 역할이 정적이고 회수는 담당자 기억에 의존</li><li><b>초기</b> — 정기 권한 재검토(반기·연)를 수행</li><li><b>향상</b> — 유효기간이 붙은 권한, 조건부 접근 정책 적용</li><li><b>최적화</b> — 요청 시점에 필요한 만큼만 임시 부여하고 자동 회수</li></ul><h4>3. 무엇을 증적으로 남길 수 있나</h4><ul><li>권한별 유효기간·재승인 주기 설정값</li><li>부서 이동 건 대비 권한 회수 완료율</li><li>거부된 접근 요청과 그 사유 로그</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NORMAL_REQ = `역할 요청
+{
+  "user": "choi.mk",
+  "need": "마케팅 대시보드 조회",
+  "period": "2026-09-01 ~ 09-30"
+}`;
+const ATTACK_REQ = `현재 보유 권한 조회
+{
+  "user": "choi.mk",
+  "roles": [
+    "마케팅_조회", "영업_고객DB_조회",
+    "인사_급여_조회",   // 2년 전 부서
+    "결제_승인",        // 1년 전 부서
+    ... 총 11개
+  ]
+}`;
+const SECURE_HINT = `// [안전] 기간이 정해진 권한 + 요청 맥락 조건
+public boolean can(User u, String action, RequestContext ctx) {
+    // 1) 기본은 거부. 명시적으로 허용된 것만 통과시킨다
+    Grant g = grants.findActive(u.getId(), action);
+    if (g == null) { audit.deny(u, action, "부여된 권한 없음"); return false; }
+
+    // 2) 유효기간이 지난 권한은 스스로 사라진다
+    if (g.expiresAt().isBefore(now())) {
+        grants.revoke(g);
+        audit.deny(u, action, "권한 유효기간 만료");
+        return false;
+    }
+
+    // 3) 조건부 접근: 기기 상태·위치 등 맥락이 정책을 만족해야 한다
+    if (!policy.conditionsMet(g, ctx)) {
+        audit.deny(u, action, "접근 조건 불충족");
+        return false;
+    }
+
+    // 4) 고위험 작업은 승인받은 시간 창에서만
+    if (policy.isHighRisk(action) && !g.withinApprovedWindow(now()))
+        return false;
+
+    audit.allow(u, action, g);
+    return true;
+}`;
+const CHECKS = [[`findActive`, `expiresAt`, `revoke`], [`conditionsMet`, `isHighRisk`, `audit`]];
+let isAttackOn = false;
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content-section').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function addLog(msg,type='info'){
+  const box=document.getElementById('systemLog'); const time=new Date().toLocaleTimeString('ko-KR');
+  let color='#d4d4d4'; if(type==='error')color='#f48771'; if(type==='warn')color='#cca700'; if(type==='success')color='#89d185';
+  const d=document.createElement('div'); d.innerHTML=`<span class="log-time">[${time}]</span> <span style="color:${color}">${msg}</span>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+function toggleAttack(){
+  isAttackOn=!isAttackOn;
+  const s=document.getElementById('attackStatus'), btn=document.getElementById('sendBtn'), req=document.getElementById('reqBox');
+  if(isAttackOn){
+    s.innerText='ON (Tampering...)'; s.style.color='#ff4444';
+    req.value=ATTACK_REQ; req.style.color='#ff6b6b';
+    btn.innerText='변조 요청 전송 (Execute)'; btn.classList.add('hacked');
+    addLog('[ATTACK] 요청 데이터 변조 활성화', 'warn');
+  } else {
+    s.innerText='OFF'; s.style.color='#00ff00';
+    req.value=NORMAL_REQ; req.style.color='#7ddcff';
+    btn.innerText='요청 전송'; btn.classList.remove('hacked');
+    addLog('[INFO] 공격 모드 해제', 'success');
+  }
+}
+function sendRequest(){
+  const btn=document.getElementById('sendBtn'); btn.innerText='처리 중...';
+  addLog('[REQUEST] 금융 거래 요청 수신');
+  setTimeout(()=>{
+    if(isAttackOn){ addLog('[IAM] choi.mk 보유 역할 11개','warn'); addLog('[IAM] 부서 이동 시 이전 역할 회수 절차 없음','error'); addLog('[IAM] 유효기간 없는 영구 권한 9개','error'); addLog('[DLP] 급여 데이터 4,200행 내려받기 — 정책상 차단 대상 아님','error'); showBreach(); showCompliance(); }
+    else { addLog('[OK] 정상 거래 처리 완료', 'success'); showNormal(); }
+    btn.innerText = isAttackOn ? '변조 요청 전송 (Execute)' : '요청 전송';
+  }, 900);
+}
+function showBreach(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-breach'; c.style.display='block';
+  c.innerHTML = `<strong>🚨 한 계정으로 3개 부서 데이터 접근</strong><br>권한이 쌓이기만 하고 회수되지 않아 침해 범위가 그만큼 넓어졌습니다.<table class="data-table"><tr><th>권한</th><th>부여 시점</th><th>현재 업무 관련</th><th>유효기간</th></tr><tr><td>인사_급여_조회</td><td>2년 전</td><td style="color:#b71c1c">무관</td><td style="color:#b71c1c">없음</td></tr><tr><td>결제_승인</td><td>1년 전</td><td style="color:#b71c1c">무관</td><td style="color:#b71c1c">없음</td></tr><tr><td>영업_고객DB_조회</td><td>1년 전</td><td style="color:#b71c1c">무관</td><td style="color:#b71c1c">없음</td></tr></table>`;
+}
+function showNormal(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-blocked'; c.style.display='block';
+  c.innerHTML = '<strong>✅ 정상 거래</strong><br>요청이 검증을 통과하여 정상 처리되었습니다. (공격 모드를 켜고 변조를 시도해 보세요)';
+}
+function showCompliance(){
+  document.getElementById('complianceReport').style.display='none';
+  document.getElementById('violationAlert').style.display='block';
+}
+function verifyCode(){
+  // 주석 제거(주석 속 토큰으로 통과하는 우회 차단) + 공백/연산자 정규화
+  const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,' ').replace(/#[^\n]*/g,' ');
+  const norm=s=>strip(s).replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  const code=norm(document.getElementById('codeEditor').value);
+  const r=document.getElementById('codeResult');
+  const ok=CHECKS.every(grp=>{
+    const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
+    return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
+  });
+  if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">기간이 정해진 권한과 조건부 접근으로 누적 권한 악용이 차단됩니다.</span></div>'; }
+  else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">기본 거부·유효기간 만료·접근 조건 검증을 모두 갖춰야 합니다.</span></div>'; }
+}
+function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
+</script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</body>
+</html>

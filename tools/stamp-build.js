@@ -33,6 +33,7 @@ const GROUPS = {
   D: ['menuAI'],
   E: ['menuAuto'],
   F: ['menuPrivacy'],
+  G: ['menuZT'],
 };
 
 /* id="X" 로 열리는 div 의 닫는 태그까지를 깊이 계산으로 잘라낸다. */

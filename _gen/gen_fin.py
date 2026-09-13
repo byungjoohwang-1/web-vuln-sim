@@ -61,7 +61,7 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
 .kisa-ref h4 {{ color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }}
 .kisa-ref ul {{ margin-left:18px; }}
 .easybox {{ background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }}
-.easybox .tag {{ display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }}
+.easybox .tag {{ display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }}
 .easybox b {{ color:#c0392b; }}
 @media (max-width:1000px) {{ .grid-container {{ grid-template-columns:1fr; }} }}
 </style>

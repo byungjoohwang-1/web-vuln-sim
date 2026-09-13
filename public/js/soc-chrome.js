@@ -100,6 +100,7 @@
     fin: ['#fbbf24', 'FIN'], win: ['#60a5fa', 'WIN'], net: ['#a78bfa', 'NET'],
     sec: ['#f472b6', 'SEC'], cloud: ['#7dd3fc', 'CLD'], ics: ['#fb923c', 'ICS'],
     ai: ['#c4b5fd', 'AI'], auto: ['#fb7185', 'AUTO'], tools: ['#e2e8f0', 'TOOL'],
+    zt: ['#5eead4', 'ZT'], privacy: ['#a5b4fc', 'PRIV'], governance: ['#fcd34d', 'GOV'],
     hub: ['#e2e8f0', 'MAIN']
   };
 
@@ -137,6 +138,11 @@
     '.wvsx-bnav a:active{background:rgba(56,189,248,.12)}',
     '.wvsx-bnav a.on{color:#38bdf8;font-weight:800}',
     '.wvsx-bnav .ic{font-size:1.15rem;line-height:1.2;margin-bottom:1px}',
+    /* 건너뛰기 링크 — 포커스를 받기 전까지는 보이지 않는다 */
+    '.wvsx-skip{position:fixed;left:8px;top:-60px;z-index:var(--wvs-z-toast,1000);background:#0e1626;',
+    'color:#7dd3fc;border:1px solid #38bdf8;border-radius:8px;padding:9px 16px;font-size:.82rem;',
+    "font-weight:700;text-decoration:none;transition:top .15s;font-family:'Segoe UI','Noto Sans KR',sans-serif}",
+    '.wvsx-skip:focus{top:8px;outline:2px solid var(--wvs-focus,#38bdf8);outline-offset:2px}',
     /* 팔레트 */
     '.wvsx-pal{position:fixed;inset:0;z-index:var(--wvs-z-modal,900);display:none;align-items:flex-start;',
     'justify-content:center;padding:12vh 16px 16px;background:rgba(4,8,16,.72);',
@@ -216,6 +222,50 @@
     if (document.body.firstChild) document.body.insertBefore(bar, document.body.firstChild);
     else document.body.appendChild(bar);
     document.getElementById('wvsx-kbtn').addEventListener('click', function () { openPalette(); });
+  }
+
+  /* ── 본문 랜드마크 + 건너뛰기 링크 (QA-P2-03 / P1-06) ──
+     519개 페이지에 <main> 이 없어 스크린리더가 "본문"으로 바로 갈 수 없었다.
+     페이지마다 구조가 제각각이라 HTML 을 일괄 수정하면 레이아웃이 깨질 위험이 크다.
+     접근성 트리에만 필요한 정보이므로 런타임에 role="main" 을 붙인다.
+     고르는 기준은 "h1 을 담고 있는, body 바로 아래 블록" — 사람이 본문이라고 부르는 것. */
+  function markMainLandmark() {
+    if (document.querySelector('main, [role="main"]')) return null;
+    var h1 = document.querySelector('h1');
+    var el = null;
+    if (h1) {
+      el = h1;
+      while (el.parentElement && el.parentElement !== document.body) el = el.parentElement;
+      if (el === h1) el = null;                       /* h1 이 body 직계면 감쌀 블록이 없다 */
+    }
+    if (!el) {
+      var kids = document.body.children;
+      for (var i = 0; i < kids.length; i++) {
+        var k = kids[i];
+        if (/^(SCRIPT|STYLE|LINK|NAV|HEADER|FOOTER)$/.test(k.tagName)) continue;
+        if (/wvsx-|wvs-/.test(k.id || '') || /wvsx-|wvs-langbar/.test(k.className || '')) continue;
+        el = k; break;
+      }
+    }
+    if (!el || el === document.body) return null;
+    el.setAttribute('role', 'main');
+    if (!el.id) el.id = 'wvs-main';
+    return el.id;
+  }
+  function addSkipLink(mainId) {
+    if (!mainId || document.getElementById('wvsx-skip')) return;
+    var a = document.createElement('a');
+    a.id = 'wvsx-skip';
+    a.className = 'wvsx-skip';
+    a.href = '#' + mainId;
+    a.textContent = lang() === 'en' ? 'Skip to content' : '본문 바로가기';
+    a.addEventListener('click', function () {
+      var m = document.getElementById(mainId);
+      if (!m) return;
+      if (!m.hasAttribute('tabindex')) m.setAttribute('tabindex', '-1');
+      setTimeout(function () { m.focus(); }, 0);
+    });
+    document.body.insertBefore(a, document.body.firstChild);
   }
 
   function buildBottomNav() {
@@ -468,6 +518,7 @@
   /* ── 부트 ── */
   function boot() {
     try { injectCss(); buildTopbar(); buildBottomNav(); } catch (e) { /* 어떤 페이지에서도 크래시 없이 */ }
+    try { addSkipLink(markMainLandmark()); } catch (eM) { /* no-op */ }
     try { bindCollapseKeys(); } catch (eK) { /* no-op */ }
     try { /* 자체 헤더(data-topbar=off) 페이지의 검색 버튼도 팔레트에 연결 */
       var pb = document.getElementById('palBtn');

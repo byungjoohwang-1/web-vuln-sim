@@ -10,7 +10,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const TOOLS = ['stamp-build.js', 'enrich-hub-keywords.js'];
-const PY = ['gen_content_catalog.py'];   // 파이썬 생성기 드리프트 검사
+const PY = ['gen_content_catalog.py', 'link_checklist_sims.py'];   // 파이썬 생성기 드리프트 검사
 let failed = 0;
 
 for (const t of TOOLS) {

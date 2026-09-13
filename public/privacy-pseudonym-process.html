@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가명처리 5단계 절차 · 위험도 판정기 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="가명처리 5단계 절차 · 위험도 판정기 · WEB-VULN-SIM">
+<meta property="og:description" content="2026.3 개정 가명정보 처리 가이드라인의 위험도 기반 절차·서류 차등화 — 저·중·고 위험도를 판정하고 적정성 검토 방식과 서식 10종 작성 범위를 결정합니다">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-pseudonym-process.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="개인정보보호위원회 「가명정보 처리 가이드라인」(2026.3. 개정) 기반 가명처리 절차 도구 — 5단계(사전준비·위험성 검토·가명처리·적정성 검토·안전한 관리), 활용주체×처리환경 기준 기본 위험도(저·중·고) 판정과 반복·유사 활용·안전기관 제공에 따른 하향 조정, 비정형데이터 상향 조정, 위험도별 적정성 검토 방식(담당자 검토/2인 내부심의/3인 검토위원회)과 서식 10종 작성 필요 범위를 자동 산출합니다.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#a5b4fc;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:400}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.hint b{color:#cbd5e1}
+/* 판정 배너 */
+.verdict{border-radius:16px;padding:18px 20px;position:sticky;top:52px;z-index:40;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.verdict.r-low{background:linear-gradient(135deg,#0f2a18,#101a12);border:1px solid #14532d}
+.verdict.r-mid{background:linear-gradient(135deg,#2a1d05,#161020);border:1px solid #78350f}
+.verdict.r-high{background:linear-gradient(135deg,#3b1418,#1a1020);border:1px solid #7f1d1d}
+.verdict .lab{font-family:var(--mono);font-size:11px;letter-spacing:1px;font-weight:800;color:#94a3b8}
+.verdict .big{font-family:var(--mono);font-size:29px;font-weight:800;color:#fff;line-height:1.15;margin-top:5px}
+.verdict .d{font-size:13px;color:#cbd5e1;margin-top:8px}
+.verdict .row{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;font-size:12.5px}
+.verdict .row div{background:rgba(0,0,0,.28);border-radius:9px;padding:8px 12px;flex:1;min-width:180px}
+.verdict .row b{display:block;font-family:var(--mono);font-size:10.5px;color:#94a3b8;letter-spacing:.5px}
+.verdict .row span{color:#fff;font-weight:700}
+.adj{font-family:var(--mono);font-size:11.5px;margin-top:9px;color:#cbd5e1}
+.adj i{font-style:normal;border-radius:5px;padding:2px 7px;margin-right:6px;font-weight:800}
+.adj i.dn{background:#14532d;color:#bbf7d0}
+.adj i.up{background:#7f1d1d;color:#fecaca}
+/* 옵션 */
+.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.opt{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:9px;padding:9px 13px;font-size:12.5px;font-weight:700;text-align:left;flex:1;min-width:220px}
+.opt.on{background:#0c2030;border-color:#0ea5e9;color:#e0f2fe}
+.opt small{display:block;font-weight:400;font-size:11.5px;color:var(--muted);margin-top:3px}
+.opt.on small{color:#94c9e8}
+.chk{display:flex;gap:9px;align-items:flex-start;background:#0b1220;border:1px solid #334155;border-radius:9px;padding:9px 11px;margin:6px 0;cursor:pointer;font-size:13px}
+.chk.on{background:#0f2a18;border-color:#14532d}
+.chk.on.up{background:#3b1418;border-color:#7f1d1d}
+.chk input{width:16px;height:16px;flex-shrink:0;margin-top:3px}
+.chk .tx{flex:1}.chk .tx b{display:block}
+.chk .tx span{font-size:11.5px;color:var(--muted);display:block;margin-top:2px}
+.chk .law{font-family:var(--mono);font-size:10.5px;color:#67e8f9;flex-shrink:0;margin-top:3px}
+textarea{width:100%;background:#0b1220;border:1px solid #334155;color:var(--ink);border-radius:9px;padding:10px 12px;font-family:inherit;font-size:13px;min-height:74px;resize:vertical}
+/* 서류 매트릭스 */
+.docwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+table.docs{min-width:560px}
+th,td{border:1px solid var(--border);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#0f172a;color:#7dd3fc;font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+td.st{text-align:center;font-family:var(--mono);font-weight:800;white-space:nowrap}
+td.st.req{background:#0d2417;color:#86efac}
+td.st.opt{background:#241d07;color:#fcd34d}
+td.st.non{background:#141b28;color:#758498}
+td.note{font-size:11.5px;color:var(--muted)}
+tr.dim td{opacity:.45}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;font-family:var(--mono);color:var(--muted);margin-top:8px}
+.legend b{color:#86efac}.legend i{font-style:normal;color:#fcd34d}.legend u{text-decoration:none;color:#64748b}
+/* 박스 */
+.okbox{background:#0f2a18;border-left:4px solid var(--good);border-radius:8px;padding:11px 13px;font-size:13px;color:#d1fae5;margin:10px 0}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:12px 0}
+.warnbox{background:#3a2a09;border-left:4px solid var(--warn);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#fde047;margin:12px 0}
+.find{background:#3b1418;border-left:4px solid var(--bad);border-radius:8px;padding:10px 12px;font-size:12.5px;color:#fecaca;margin:7px 0}
+.find.warn{background:#3a2a09;border-left-color:var(--warn);color:#fde047}
+.find b{color:#fff}
+.find .lw{font-family:var(--mono);font-size:11px;display:block;margin-top:4px;opacity:.85}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}
+.stp{flex:1;min-width:120px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);padding:9px 11px}
+.stp .n{font-family:var(--mono);font-size:10.5px;color:#a5b4fc;font-weight:800}
+.stp .t{font-size:12.5px;font-weight:700;color:#fff;margin-top:2px}
+.stp .d{font-size:11.5px;color:var(--muted);margin-top:3px}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+@media(max-width:640px){.verdict{position:static}.verdict .big{font-size:23px}}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
+  <a href="pseudonym-lab.html"><span data-en="Pseudonymization Lab">가명처리 실습실</span></a>
+  <a href="privacy-basis-check.html"><span data-en="Legal basis">적법근거 판단</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <h1>🧭 <span data-en="Pseudonymization Process &amp; Risk Tiering">가명처리 5단계 절차 · 위험도 판정기</span></h1>
+    <div class="sub" data-en="The March 2026 revision changed how this works: instead of treating every case as high risk, you first settle <b>who uses the data and where it is processed</b>, and that tier decides how thorough the adequacy review must be and which of the ten forms you actually have to write. This tool runs that decision.">
+      <b>2026년 3월 개정으로 방식이 바뀌었습니다.</b> 모든 사안을 획일적·보수적으로 고위험 취급하던 관행을 줄이기 위해, <b>누가 활용하고 어디서 처리하는지</b>를 먼저 확정해 위험도를 정하고, 그 등급이 <b>적정성 검토 방식과 작성할 서류 범위</b>를 결정합니다. 이 도구가 그 판단을 돌립니다.</div>
+    <div class="src">📕 기준: 개인정보보호위원회 「가명정보 처리 가이드라인」(2026.3. 개정) 제2장 가명처리 절차 · 「개인정보 보호법」 제28조의2 · 제28조의4 · 제28조의5</div>
+  </div>
+
+  <div class="warnbox" data-en="⚠️ There is deliberately <b>no scoring table</b>. The guideline states that risk depends on the subject, method, environment, field, data attributes and linkability, and so <b>cannot be reduced to a uniform quantitative index</b>. This tool therefore reproduces the guideline's own objective criteria — who uses it, where it is processed — and never invents a point system.">
+    ⚠️ <b>점수표는 일부러 없습니다.</b> 가이드라인은 위험도가 활용 주체·처리 방법·환경·활용 분야·데이터 속성·결합 가능성에 따라 달라져 <b>일률적인 정량 지표로 환산하기 어려운 영역</b>이라고 명시합니다. 그래서 이 도구는 가이드라인이 제시한 <b>객관적·확정적 기준(누가·어디서)</b>만 그대로 구현하고, 배점을 지어내지 않습니다.</div>
+
+  <div class="verdict r-low" id="verdict"></div>
+
+  <!-- 5단계 -->
+  <div class="card">
+    <h2>🗺️ <span data-en="The five steps">가명처리 5단계</span></h2>
+    <div class="steps" id="steps"></div>
+    <div class="hint" data-en="Pseudonymization under the special provisions is not just masking a few fields — it is the whole chain from setting the purpose to managing re-identification risk afterwards.">
+      가명정보 특례에 따른 가명처리는 <b>일부를 가리는 기술적 처리가 아니라</b>, 목적 설정부터 사후 관리까지 재식별 위험을 낮추고 높아지지 않게 관리하는 일련의 과정입니다.</div>
+  </div>
+
+  <!-- ① 사전 준비 -->
+  <div class="card">
+    <h2>① <span data-en="Preparation — set the purpose">사전 준비 — 처리 목적 설정</span></h2>
+    <div class="hint" data-en="The special provisions apply only to three purposes. Pick one, then write the purpose concretely — “research”, “statistics”, “AI training”, “public use” on their own are not acceptable.">
+      가명정보 제도는 법이 정한 <b>3개 목적</b>에만 적용됩니다. 목적을 고른 뒤 <b>구체적으로</b> 적으세요 — "연구", "통계", "AI 학습", "공익 활용" 같은 추상적 설정은 안 됩니다.</div>
+    <div class="opts" id="purposes"></div>
+    <div style="margin-top:10px">
+      <div class="hint" style="margin-bottom:5px" data-en="Write what exactly you intend to research, analyse or verify.">무엇을 연구·분석·검증하려는지까지 적으세요.</div>
+      <textarea id="pText" placeholder="예) △△ AI 서비스의 추천 성능 개선을 위해 연령대·시간별 서비스 활용 패턴과 서비스 결제금액의 연관성에 대한 과학적 연구 수행" aria-label="무엇을 연구·분석·검증하려는지까지 적으세요."></textarea>
+    </div>
+    <div id="pOut"></div>
+  </div>
+
+  <!-- ② 기본 위험도 -->
+  <div class="card">
+    <h2>② <span data-en="Base risk — who uses it, where">기본 위험도 — 활용 주체와 처리 환경</span></h2>
+    <div class="hint" data-en="Settle this first. These are the objective, determinate factors the guideline uses to keep judgements consistent between institutions and staff.">
+      이것부터 확정합니다. 기관·담당자 간 판단 편차를 줄이기 위해 가이드라인이 고른 <b>객관적·확정적 요소</b>입니다.</div>
+    <div class="opts" id="bases"></div>
+  </div>
+
+  <!-- ③ 조정 -->
+  <div class="card">
+    <h2>③ <span data-en="Case-by-case adjustment">사례별 위험도 조정</span></h2>
+    <div class="hint" data-en="Actual risk can differ case by case, so the base tier may be adjusted up or down. Record the reason — the risk assessment sheet must show <b>why</b>, not just the tier.">
+      개별 사례에 따라 실질적 위험이 다를 수 있어 기본 위험도를 상향·하향 조정할 수 있습니다. 「위험성 검토서」는 <b>저·중·고를 표시하는 문서가 아니라 왜 그렇게 판단했는지를 남기는 문서</b>이므로 조정 사유를 구체적으로 적어야 합니다.</div>
+    <div id="adjs"></div>
+    <div class="note" data-en="Other factors the guideline lists for adjustment: the sensitivity of the data itself, outlier records, the impact if re-identified, how the processing is technically implemented, and the institution’s own internal criteria.">
+      가이드라인이 함께 드는 조정 고려 요소: <b>데이터 자체의 위험도</b>(민감성 높은 정보·특이정보·재식별 시 영향도), <b>처리 맥락·상황</b>(기술적 구현 방식에 따른 유출·재식별 위험), <b>기관 자체 지침</b>(기관 특성·전문성·경험을 반영한 내부 기준이 있으면 적용 가능).</div>
+  </div>
+
+  <!-- ④ 적정성 검토 -->
+  <div class="card">
+    <h2>④ <span data-en="Adequacy review">적정성 검토</span><span class="cnt" id="cntAdeq"></span></h2>
+    <div id="adeqMethod"></div>
+    <div class="hint" style="margin-top:10px" data-en="Five things are reviewed. Each has its own supporting document.">
+      검토하는 것은 <b>5가지</b>이고, 항목마다 근거 서류가 따로 있습니다.</div>
+    <div id="adeq"></div>
+    <div class="note" data-en="If the review concludes the pseudonymization is inadequate, you must redo steps 1–3 or apply additional pseudonymization to the parts concerned.">
+      적정성 검토 결과 <b>부적정</b>으로 판단되면 1·2·3단계를 다시 수행하거나 부분적으로 추가 가명처리를 해야 합니다.</div>
+    <div id="repeatBox"></div>
+  </div>
+
+  <!-- ⑤ 서류 -->
+  <div class="card">
+    <h2>📑 <span data-en="Forms to produce (10)">작성 필요 서류 (서식 10종)</span><span class="cnt" id="cntDocs"></span></h2>
+    <div class="docwrap"><table class="docs" id="docs"></table></div>
+    <div class="legend">
+      <span><b>✔ </b><span data-en="mandatory">필수 — 반드시 작성</span></span>
+      <span><i>△ </i><span data-en="optional — may be omitted">선택 — 생략 가능</span></span>
+      <span><u>− </u><span data-en="not required">작성 불필요</span></span>
+    </div>
+  </div>
+
+  <!-- ⑥ 안전한 관리 -->
+  <div class="card">
+    <h2>⑤ <span data-en="Ongoing management">안전한 관리</span><span class="cnt" id="cntSafe"></span></h2>
+    <div id="safe"></div>
+  </div>
+
+  <div class="acts">
+    <button class="btn" onclick="exportReport()">⬇ <span data-en="Export">절차 리포트</span></button>
+    <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+  </div>
+
+  <div class="disc" data-en="Educational tool reconstructed from the Commission's publicly released guideline. It does not constitute legal advice and does not substitute for your institution's own adequacy review. Combination through a designated combination-expert institution follows a separate procedure (application, combination, export screening) not covered here. Runs entirely in your browser.">
+    ⚠️ 개인정보보호위원회가 공개한 가이드라인을 <b>교육용으로 재구성</b>한 도구입니다. 법률 자문이 아니며 기관의 실제 적정성 검토를 대체하지 않습니다. <b>결합전문기관을 통한 가명정보 결합</b>은 결합 신청 → 결합·추가 가명처리 → 반출심사의 별도 절차를 따르며 여기서는 다루지 않습니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();render();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function strip(s){return String(s).replace(/<[^>]+>/g,'');}
+
+var STEPS=[
+ ['1','사전 준비','Preparation','왜 활용하려는지 정리 — 목적 설정·대상 선정','Set the purpose, select the data'],
+ ['2','위험성 검토','Risk assessment','가명처리 방법·수준을 정하기 위한 위험도 판단','Decide the method and depth'],
+ ['3','가명처리','Pseudonymization','항목별 계획 수립 후 실제 처리','Plan per field, then process'],
+ ['4','적정성 검토','Adequacy review','목적·항목·위험도·처리·달성 가능성 검토','Purpose, fields, tier, processing, feasibility'],
+ ['5','안전한 관리','Ongoing management','재식별 위험 지속 모니터링·파기','Monitor re-identification risk, destroy']
+];
+
+/* 법 제28조의2 — 3개 목적 */
+var PURPOSES=[
+ ['stat','통계작성','Statistics','특정 집단·대상에 관한 수량적 정보. 시장조사·마케팅 전략 수립용 <b>상업적 통계도 포함</b>','Quantitative information about a group. Commercial statistics are included.'],
+ ['sci','과학적 연구','Scientific research','과학적 방법을 적용하는 연구. 기술 개발·실증, 기초·응용·민간투자 연구 포함. <b>AI 개발·고도화도 해당</b>','Research applying scientific method — including AI development and improvement.'],
+ ['arch','공익적 기록보존','Archiving in the public interest','공익을 위한 기록의 보존','Preserving records in the public interest']
+];
+
+/* 기본 위험도 — 활용주체 × 처리환경 */
+var BASES=[
+ ['low','동일 개인정보처리자의 <b>직접 활용</b>','Direct use by the same controller',
+  '외부에 제공하지 않고 직접 활용 · 내부 타 부서에 제공 · 내부 부서 간 결합',
+  'Used internally, shared with another internal department, or combined between internal departments',
+  '원본 개인정보를 이미 보유하고 있고 외부 제공으로 인한 새로운 위험이 발생하지 않음',
+  'The controller already holds the original data and no new external exposure arises'],
+ ['mid','<b>제3자 제공</b> + 제공기관이 <b>통제 가능한</b> 환경','Third-party disclosure into a controlled environment',
+  '기관 내부망, 제공기관이 운영하는 분석공간 등 제공기관의 관리·통제 범위 내',
+  'The provider’s internal network or an analysis space the provider operates',
+  '제3자가 쓰지만 처리환경이 제공기관의 관리·통제 범위 안에 있음',
+  'A third party uses it, but within the provider’s span of control'],
+ ['high','<b>제3자 제공</b> + 제공기관이 <b>통제 불가능한</b> 환경','Third-party disclosure into an uncontrolled environment',
+  '제3자의 자체 환경 등에서 처리되어 제공기관이 처리환경을 통제·확인할 수 없음',
+  'Processed in the third party’s own environment, which the provider cannot control or verify',
+  '처리환경을 확인할 수 없다는 점 자체가 위험 요소',
+  'Not being able to verify the environment is itself the risk']
+];
+
+/* 조정 요소 — [id, 방향, 제목ko, 제목en, 설명ko, 설명en] 순서를 반드시 지킬 것 */
+var ADJS=[
+ ['repeat','dn','이전 사례와 <b>반복·유사 활용</b>이다','Repeat or similar to a previously reviewed case',
+  '△처리 목적 △데이터 항목 △제공받는 자 △활용 방법·범위가 동일한 반복 활용이거나 중대한 변경이 없는 유사 활용 (다년도 연구 반복, 활용기간 연장, 연구자 일부 변경·추가)',
+  'Same purpose, fields, recipient and scope — or no material change (multi-year study, extension, researcher changes)'],
+ ['safeorg','dn','정부가 지정한 <b>안전한 기관</b>에 제공한다','Disclosure to a government-designated safe institution',
+  '결합전문기관(데이터전문기관) 또는 개인정보 이노베이션 존 — 정부가 처리환경의 안전성을 이미 검증했고, 제공 후에도 반출심사 또는 전문심의위원회 심의로 추가 검토를 거침',
+  'A combination-expert institution or a Privacy Innovation Zone — the environment is pre-verified and a further export/expert review follows'],
+ ['unstruct','up','<b>비정형데이터</b>를 가명처리해 활용한다','Unstructured data is pseudonymized and used',
+  '영상·이미지·음성·텍스트 등. 적정한 처리 방법 설정과 기술적 한계 보완에 전문적 검토가 필요해 <b>상향 조정이 권장</b>됨',
+  'Video, image, audio, text. Specialist review is needed, so raising the tier is recommended']
+];
+
+/* 적정성 검토 5항목 */
+var ADEQ=[
+ ['a1','가명정보 처리 <b>목적 적합성</b>','Purpose is eligible and specific',
+  '법 제28조의2의 3개 목적에 해당하는지, 처리 목적을 구체적으로 설정했는지','서식➊ 이용·제공 신청서 · 서식➋ 활용 계획서'],
+ ['a2','가명정보 <b>이용항목 적합성</b>','Only necessary fields are included',
+  '처리 목적 달성에 필요한 항목만 처리 대상에 포함했는지','서식➊ 이용·제공 신청서 · 서식➋ 활용 계획서'],
+ ['a3','<b>위험도 판단</b>의 적정성','The risk tier was correctly judged',
+  '활용 주체·처리 환경·사례별 특수성을 고려해 적정하게 판단했는지, 판단 근거가 적절한지','서식➌ 위험성 검토서'],
+ ['a4','<b>가명처리</b>의 적정성 (재식별 위험성)','Pseudonymization sufficiently lowers re-identification risk',
+  '항목별 방법·수준을 적절히 설정했는지, 데이터 자체와 처리환경의 위험성을 종합해 재식별 위험을 충분히 낮췄는지','서식❹ 가명처리 계획서 · 서식❺ 결과서 · 서식❻ 비정형 추가검수 결과서'],
+ ['a5','<b>목적 달성 가능성</b>','The purpose remains achievable',
+  '당초 목적을 달성할 수 있는지 — <b>과도한 가명처리로 목적 달성이 어려워지지 않는지</b>','서식➋ 활용 계획서 · 서식❺ 가명처리 결과서']
+];
+
+/* 서식 10종 — 위험도별 필수(req)/선택(opt)/불필요(non) */
+var DOCS=[
+ ['d1','➊','가명정보 이용·제공 신청서','Use / disclosure application','1',
+  {low:'opt',mid:'req',high:'req'},{low:'내부 활용 시 생략',mid:'',high:''},{low:'Omit for internal use',mid:'',high:''}],
+ ['d2','➋','가명정보 활용 계획서','Utilisation plan','1',
+  {low:'req',mid:'req',high:'req'},{low:'',mid:'',high:''},{low:'',mid:'',high:''}],
+ ['d3','➌','위험성 검토서','Risk assessment sheet','2',
+  {low:'req',mid:'req',high:'req'},{low:'',mid:'',high:''},{low:'',mid:'',high:''}],
+ ['d4','❹','가명처리 계획서','Pseudonymization plan','3',
+  {low:'opt',mid:'req',high:'req'},{low:'반복·유사 활용 시 생략',mid:'',high:''},{low:'Omit for repeat/similar use',mid:'',high:''}],
+ ['d5','❺','가명처리 결과서','Pseudonymization result','3',
+  {low:'opt',mid:'req',high:'req'},{low:'반복·유사 활용 시 생략',mid:'',high:''},{low:'Omit for repeat/similar use',mid:'',high:''}],
+ ['d6','❻','비정형데이터 추가검수 결과서','Unstructured data extra-inspection result','3',
+  {low:'non',mid:'opt',high:'opt'},{low:'비정형 포함 시 위험도 상향',mid:'비정형 미포함 시 생략',high:'비정형 미포함 시 생략'},
+  {low:'Unstructured data raises the tier',mid:'Omit if no unstructured data',high:'Omit if no unstructured data'}],
+ ['d7','❼','적정성 검토 결과서','Adequacy review result','4',
+  {low:'opt',mid:'req',high:'req'},{low:'반복·유사 활용 시 생략',mid:'',high:''},{low:'Omit for repeat/similar use',mid:'',high:''}],
+ ['d8','➑','적정성 평가위원 서약서','Reviewer’s pledge','4',
+  {low:'non',mid:'opt',high:'req'},{low:'',mid:'',high:''},{low:'',mid:'',high:''}],
+ ['d9','➒','안전조치 이행 확약서','Security-measures undertaking','5',
+  {low:'non',mid:'opt',high:'req'},{low:'',mid:'',high:''},{low:'',mid:'',high:''}],
+ ['d10','❿','가명(추가)정보 관리대장','Pseudonymized / additional-information register','5',
+  {low:'req',mid:'req',high:'req'},{low:'',mid:'',high:''},{low:'',mid:'',high:''}]
+];
+
+/* 안전한 관리 */
+var SAFE=[
+ ['s1','추가 정보를 <b>별도로 분리</b>하여 보관·관리한다','Keep the additional information separately','법 제28조의4제1항'],
+ ['s2','기술적·관리적·물리적 <b>안전조치</b>를 이행한다','Apply technical, managerial and physical safeguards','법 제28조의4제1항 · 별권 제3장'],
+ ['s3','재식별 가능성을 <b>지속 모니터링</b>한다 (가명처리 기술의 취약점, 새 공개데이터 발생, 재식별 기술 발전)','Continuously monitor re-identification risk','가이드라인 제2장 5단계'],
+ ['s4','처리 목적 달성 또는 처리 기간 도래 시 가명정보를 <b>파기</b>한다','Destroy when the purpose is met or the period expires','법 제28조의4제2항·제3항'],
+ ['s5','파기한 날부터 관련 기록을 <b>3년 이상 보관</b>한다','Keep the records for at least 3 years after destruction','법 제28조의4제3항'],
+ ['s6','처리 내용 관리를 위한 <b>관련 기록을 작성·보관</b>한다 (목적·제공받는 자·처리 기간 등)','Maintain processing records','법 제28조의4제3항']
+];
+
+var KEY='wvs_pseudo_process';
+var S={purpose:'',pText:'',base:'',adj:{},adeq:{},safe:{}};
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S=r;S.adj=S.adj||{};S.adeq=S.adeq||{};S.safe=S.safe||{};}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function resetAll(){S={purpose:'',pText:'',base:'',adj:{},adeq:{},safe:{}};save();render();window.scrollTo(0,0);}
+
+/* ── 위험도 산출 ── */
+function riskInfo(){
+  var order=['low','mid','high'];
+  var base=S.base||'';
+  if(!base)return {final:'',base:'',moves:[]};
+  var i=order.indexOf(base),moves=[];
+  /* 하향: 반복·유사 활용 또는 안전기관 제공 → 저위험으로 판단 가능 */
+  if(S.adj.repeat){moves.push(['dn','repeat']);}
+  if(S.adj.safeorg){moves.push(['dn','safeorg']);}
+  /* 상향 권장: 비정형데이터 */
+  if(S.adj.unstruct){moves.push(['up','unstruct']);}
+  var f=i;
+  if(S.adj.repeat||S.adj.safeorg)f=0;              /* 가이드라인: 저위험으로 하향 조정 가능 */
+  if(S.adj.unstruct)f=Math.min(2,f+1);             /* 상향 조정 권장 */
+  return {final:order[f],base:base,moves:moves};
+}
+/* [클래스, (미사용), 라벨ko, 라벨en] — 라벨은 렌더 시점에 L() 로 고른다(정의 시점에 고르면 토글이 안 먹는다) */
+var RISK={
+ low:['r-low','','저위험','LOW'],
+ mid:['r-mid','','중위험','MEDIUM'],
+ high:['r-high','','고위험','HIGH']
+};
+var METHOD={
+ low:['담당자 검토','Reviewed by the responsible staff member','내부 담당자가 가명처리 결과에 대한 적정성을 <b>간단히</b> 검토','A staff member reviews the result briefly','—'],
+ mid:['내부 심의','Internal deliberation','<b>최소 2인 이상</b>으로 내부심의 실시 (서면·온라인 심의 가능)','At least two people; written or online deliberation is allowed','2+'],
+ high:['적정성 검토위원회 개최','Adequacy review committee','<b>최소 3인 이상</b>으로 검토위원회를 구성해 개최(<b>대면심의 원칙</b>). 객관성·신뢰성 확보를 위해 <b>기관에 소속되지 않은 외부 전문가</b>를 포함할 것을 권고','At least three people, meeting in person as a rule, with an external expert recommended','3+']
+};
+
+function renderSteps(){
+  document.getElementById('steps').innerHTML=STEPS.map(function(s){
+    return '<div class="stp"><div class="n">STEP '+s[0]+'</div><div class="t">'+L(s[1],s[2])+'</div><div class="d">'+L(s[3],s[4])+'</div></div>';
+  }).join('');
+}
+function renderPurposes(){
+  document.getElementById('purposes').innerHTML=PURPOSES.map(function(p){
+    return '<button class="opt'+(S.purpose===p[0]?' on':'')+'" data-purpose="'+p[0]+'">'+L(p[1],p[2])+'<small>'+L(p[3],p[4])+'</small></button>';
+  }).join('');
+  document.getElementById('pText').value=S.pText||'';
+  document.getElementById('pOut').innerHTML=purposeFindings().map(function(f){
+    return '<div class="find'+(f[0]==='warn'?' warn':'')+'"><b>'+f[1]+'</b><br>'+f[2]+'<span class="lw">📕 '+esc(f[3])+'</span></div>';
+  }).join('');
+}
+/* 목적 구체성 — 가이드라인의 "추상적으로 설정해서는 안 된다"를 읽기 쉬운 휴리스틱으로 옮긴 것.
+   공식 판정 기준이 아니며, 통과했다고 적절한 목적 설정이라는 뜻도 아니다. */
+var VAGUE=/^\s*(연구|통계|ai\s*학습|인공지능\s*학습|공익\s*활용|빅데이터\s*분석|데이터\s*분석|서비스\s*개선|고도화)\s*(수행|목적)?\s*$/i;
+/* 무엇을 분석하는지 드러내는 표지. 가이드라인의 적절 예시("연령대·시간별 … 패턴과 … 연관성")에는 있고
+   부적절 예시("신제품 고도화를 위한 과학적 연구 수행")에는 없는 것들이다. */
+var SPECIFIC=/(연관성|상관|패턴|추이|분포|비교|예측|정확도|성능|비율|빈도|효과|영향|검증|[가-힣]별\b|\d)/;
+function purposeFindings(){
+  var out=[],t=(S.pText||'').trim();
+  if(!S.purpose){
+    out.push(['warn',L('처리 목적을 아직 고르지 않았습니다.','No purpose selected yet.'),
+      L('가명정보 특례는 <b>통계작성·과학적 연구·공익적 기록보존</b> 세 목적에만 적용됩니다. 여기에 해당하지 않으면 가명정보 제도를 쓸 수 없습니다.',
+        'The special provisions cover only statistics, scientific research and archiving in the public interest. Outside these, the regime is unavailable.'),'법 제28조의2제1항']);
+  }
+  if(t){
+    if(VAGUE.test(t)||t.length<20){
+      out.push(['bad',L('목적이 추상적입니다.','The purpose is too abstract.'),
+        L('"연구", "통계", "AI 학습", "공익 활용" 같은 설정은 안 됩니다. <b>무엇을 연구·분석·검증하려는지</b>까지 적어야 목적에 필요한 항목을 선별하고 후속 절차를 그 목적에 맞출 수 있습니다.',
+          'Terms like “research” or “AI training” alone are not acceptable. State what exactly you will research, analyse or verify.'),'가이드라인 제2장 1단계']);
+    }else if(!SPECIFIC.test(t)&&t.length<45){
+      out.push(['warn',L('목표는 있지만 <b>무엇을 분석하는지</b>가 없습니다.','A goal is stated, but not what will be analysed.'),
+        L('가이드라인이 <b>부적절한 예시</b>로 드는 것이 바로 이 형태입니다 — "신제품 고도화를 위한 과학적 연구 수행". 대상 변수와 알아보려는 관계까지 적으세요. 적절한 예시: "△△ AI 서비스의 추천 성능 개선을 위해 <b>연령대·시간별 서비스 활용 패턴과 결제금액의 연관성</b>에 대한 과학적 연구 수행".',
+          'This is the shape the guideline gives as its <b>inadequate</b> example — “scientific research to improve a new product”. Name the variables and the relationship you want to establish.'),'가이드라인 제2장 1단계']);
+    }
+    if(/타겟|타깃|1\s*:\s*1|맞춤형\s*(광고|마케팅)|개인별\s*추천/i.test(t)){
+      out.push(['bad',L('재식별을 전제로 한 활용으로 보입니다.','This looks like a use that presupposes re-identification.'),
+        L('통계는 집합적 데이터여서 특정 개인에 관한 정보가 없습니다. 가명정보로 작성한 통계를 이용해 <b>해당 정보주체를 대상으로 1:1 맞춤형 타겟 마케팅을 하는 것은 불가능</b>하며, 재식별이 전제된 통계 작성은 애초에 ‘통계작성’ 목적에 해당하지 않습니다.',
+          'Statistics are aggregate and contain no individual. Using them for 1:1 targeted marketing is not possible, and statistics premised on re-identification do not qualify as the “statistics” purpose.'),'법 제28조의2 · 제28조의5']);
+    }
+  }
+  return out;
+}
+function renderBases(){
+  document.getElementById('bases').innerHTML=BASES.map(function(b){
+    return '<button class="opt'+(S.base===b[0]?' on':'')+'" data-base="'+b[0]+'" style="min-width:100%">'+
+      L(b[1],b[2])+'<small>'+L(b[3],b[4])+'<br>→ '+L(b[5],b[6])+'</small></button>';
+  }).join('');
+}
+function renderAdjs(){
+  document.getElementById('adjs').innerHTML=ADJS.map(function(a){
+    var dir=a[1];
+    return '<label class="chk'+(S.adj[a[0]]?' on':'')+(dir==='up'&&S.adj[a[0]]?' up':'')+'"><input type="checkbox" data-adj="'+a[0]+'"'+(S.adj[a[0]]?' checked':'')+'>'+
+      '<span class="tx"><b>'+L(a[2],a[3])+'</b><span>'+L(a[4],a[5])+'</span></span>'+
+      '<span class="law">'+(dir==='up'?'▲ '+L('상향 권장','raise'):'▼ '+L('하향 가능','lower'))+'</span></label>';
+  }).join('');
+}
+function renderVerdict(){
+  var r=riskInfo();
+  var el=document.getElementById('verdict');
+  if(!r.final){
+    el.className='verdict r-low';
+    el.innerHTML='<div class="lab">'+L('위험도','RISK TIER')+'</div><div class="big">'+L('미판정','NOT SET')+'</div>'+
+      '<div class="d">'+L('②에서 <b>활용 주체와 처리 환경</b>을 고르면 위험도가 정해지고, 그에 따라 적정성 검토 방식과 작성 서류가 결정됩니다.',
+        'Pick the user and the processing environment in ② — the tier, the review method and the paperwork all follow from it.')+'</div>';
+    return;
+  }
+  var m=METHOD[r.final];
+  var docs=docCount(r.final);
+  el.className='verdict '+RISK[r.final][0];
+  var moves=r.moves.map(function(mv){
+    var id=mv[1];
+    var lbl={repeat:L('반복·유사 활용','repeat/similar use'),safeorg:L('안전기관 제공','safe institution'),unstruct:L('비정형데이터','unstructured data')}[id];
+    return '<i class="'+mv[0]+'">'+(mv[0]==='dn'?'▼':'▲')+'</i>'+lbl;
+  }).join('　');
+  el.innerHTML='<div class="lab">'+L('최종 위험도','FINAL RISK TIER')+'</div>'+
+    '<div class="big">'+L(RISK[r.final][2],RISK[r.final][3])+'</div>'+
+    (r.base!==r.final?'<div class="adj">'+L('기본 ','base ')+L(RISK[r.base][2],RISK[r.base][3])+' → '+L(RISK[r.final][2],RISK[r.final][3])+'　'+moves+'</div>':(moves?'<div class="adj">'+moves+'</div>':''))+
+    '<div class="row">'+
+      '<div><b>'+L('적정성 검토 방식','REVIEW METHOD')+'</b><span>'+L(m[0],m[1])+'</span></div>'+
+      '<div><b>'+L('최소 인원','MINIMUM PEOPLE')+'</b><span>'+m[4]+'</span></div>'+
+      '<div><b>'+L('작성 서류','FORMS')+'</b><span>'+L('필수 '+docs.req+'종 · 선택 '+docs.opt+'종',docs.req+' mandatory · '+docs.opt+' optional')+'</span></div>'+
+    '</div>';
+}
+function docCount(tier){
+  var req=0,opt=0,non=0;
+  DOCS.forEach(function(d){var s=d[5][tier];if(s==='req')req++;else if(s==='opt')opt++;else non++;});
+  return {req:req,opt:opt,non:non};
+}
+function renderAdeq(){
+  var r=riskInfo();
+  var el=document.getElementById('adeqMethod');
+  if(!r.final){ el.innerHTML='<div class="note">'+L('위험도가 정해지면 검토 방식이 표시됩니다.','The review method appears once the tier is set.')+'</div>'; }
+  else{
+    var m=METHOD[r.final];
+    el.innerHTML='<div class="okbox"><b>'+L(RISK[r.final][2],RISK[r.final][3])+' → '+L(m[0],m[1])+'</b><br>'+L(m[2],m[3])+'<br>'+
+      '<span style="font-size:11.5px;color:#7dd3fc;font-family:var(--mono)">'+L('외부전문가 섭외 시 가명정보 지원 플랫폼(dataprivacy.go.kr)의 ‘가명정보 전문가 풀’ 참고',
+        'For external experts, see the expert pool on dataprivacy.go.kr')+'</span></div>';
+  }
+  document.getElementById('adeq').innerHTML=ADEQ.map(function(a,i){
+    return '<label class="chk'+(S.adeq[a[0]]?' on':'')+'"><input type="checkbox" data-adeq="'+a[0]+'"'+(S.adeq[a[0]]?' checked':'')+'>'+
+      '<span class="tx"><b>'+(i+1)+'. '+L(a[1],a[2])+'</b><span>'+L(a[3],a[3])+'</span><span style="color:#67e8f9;font-family:var(--mono);font-size:11px">'+esc(a[4])+'</span></span></label>';
+  }).join('');
+  document.getElementById('cntAdeq').textContent=ADEQ.filter(function(a){return S.adeq[a[0]];}).length+' / '+ADEQ.length;
+  /* 반복·유사 활용 간이 절차 */
+  var rb=document.getElementById('repeatBox');
+  if(S.adj.repeat){
+    rb.innerHTML='<div class="okbox"><b>'+L('반복·유사 활용 — 간이 적정성 검토','Repeat / similar use — simplified review')+'</b><br>'+
+      L('기존 검토를 처음부터 반복할 필요가 없습니다. 담당자가 다음 순서로 수행합니다:',
+        'There is no need to repeat the whole review. The staff member proceeds as follows:')+
+      '<div style="margin-top:7px;font-size:12.5px">'+
+      L('❶ 기존 사례와 다른 점 확인 — △처리 목적 △데이터 항목 △제공받는 자 △활용 방법·범위 △처리 환경<br>'+
+        '❷ 변경이 있으면 <b>그 변경으로 재식별 위험이 높아지는지만</b> 검토<br>'+
+        '❸ 위험이 동일하거나 낮아지면 <b>기존 검토결과를 그대로 준용</b>, 높아지면 추가 가명처리·처리환경 통제 강화',
+        '❶ Identify what differs — purpose, fields, recipient, scope, environment.<br>❷ If something changed, assess only whether it raises re-identification risk.<br>❸ Same or lower risk → reuse the existing result. Higher → add pseudonymization or tighten controls.')+
+      '</div><div style="margin-top:7px;font-size:12.5px">'+
+      L('이 경우 <b>가명처리 계획서(서식❹)·가명처리 결과서(서식❺)·적정성 검토 결과서(서식❼)를 새로 작성할 필요가 없습니다.</b> 변경 내용과 검토·조치 결과만 간단히 기록하면 충분합니다.',
+        'Forms ❹, ❺ and ❼ need not be rewritten — recording the changes and the resulting check is enough.')+'</div>'+
+      '<span style="font-size:11.5px;color:#7dd3fc;font-family:var(--mono)">📕 가이드라인 제2장 4단계</span></div>';
+  }else rb.innerHTML='';
+}
+function renderDocs(){
+  var r=riskInfo(),tier=r.final;
+  var head='<tr><th>'+L('단계','Step')+'</th><th>'+L('서식','Form')+'</th><th>'+L('저위험','LOW')+'</th><th>'+L('중위험','MED')+'</th><th>'+L('고위험','HIGH')+'</th><th>'+L('비고','Note')+'</th></tr>';
+  var rows=DOCS.map(function(d){
+    function cell(t){
+      var s=d[5][t],sym=s==='req'?'✔':(s==='opt'?'△':'−');
+      var hl=(tier===t)?' style="outline:2px solid #38bdf8;outline-offset:-2px"':'';
+      return '<td class="st '+s+'"'+hl+'>'+sym+'</td>';
+    }
+    var note=tier?(isEn()?d[7][tier]:d[6][tier]):'';
+    var dim=(tier&&d[5][tier]==='non')?' class="dim"':'';
+    return '<tr'+dim+'><td class="st non" style="background:#0f172a;color:#a5b4fc">'+d[4]+'</td>'+
+      '<td>'+d[1]+' '+L(d[2],d[3])+'</td>'+cell('low')+cell('mid')+cell('high')+
+      '<td class="note">'+esc(note||'')+'</td></tr>';
+  }).join('');
+  document.getElementById('docs').innerHTML=head+rows;
+  if(tier){var c=docCount(tier);document.getElementById('cntDocs').textContent=L('필수 '+c.req+' · 선택 '+c.opt+' · 불필요 '+c.non,c.req+' req · '+c.opt+' opt · '+c.non+' n/a');}
+  else document.getElementById('cntDocs').textContent='';
+}
+function renderSafe(){
+  document.getElementById('safe').innerHTML=SAFE.map(function(s){
+    return '<label class="chk'+(S.safe[s[0]]?' on':'')+'"><input type="checkbox" data-safe="'+s[0]+'"'+(S.safe[s[0]]?' checked':'')+'>'+
+      '<span class="tx"><b>'+L(s[1],s[2])+'</b></span><span class="law">'+esc(s[3])+'</span></label>';
+  }).join('');
+  document.getElementById('cntSafe').textContent=SAFE.filter(function(s){return S.safe[s[0]];}).length+' / '+SAFE.length;
+}
+
+function exportReport(){
+  var r=riskInfo();
+  var l=[];
+  l.push('가명처리 절차 판단 결과');
+  l.push('근거: 개인정보보호위원회 「가명정보 처리 가이드라인」(2026.3.) · 「개인정보 보호법」 제28조의2·제28조의4');
+  l.push('생성: '+new Date().toLocaleString('ko-KR'));
+  l.push('');
+  var p=PURPOSES.filter(function(x){return x[0]===S.purpose;})[0];
+  l.push('처리 목적 : '+(p?strip(p[1]):'(미선택)'));
+  l.push('목적 서술 : '+((S.pText||'').trim()||'(미작성)'));
+  var b=BASES.filter(function(x){return x[0]===S.base;})[0];
+  l.push('기본 위험도: '+(b?strip(b[1])+' → '+RISK[S.base][2]:'(미선택)'));
+  if(r.moves.length){
+    l.push('조정 요소  : '+r.moves.map(function(m){
+      return (m[0]==='dn'?'▼ ':'▲ ')+{repeat:'반복·유사 활용',safeorg:'안전기관 제공',unstruct:'비정형데이터'}[m[1]];}).join(', '));
+  }
+  l.push('최종 위험도: '+(r.final?RISK[r.final][2]:'(미판정)'));
+  if(r.final){
+    var m=METHOD[r.final],c=docCount(r.final);
+    l.push('적정성 검토: '+m[0]+' ('+strip(m[2])+')');
+    l.push('작성 서류  : 필수 '+c.req+'종 / 선택 '+c.opt+'종 / 불필요 '+c.non+'종');
+    l.push('');
+    l.push('[서식 10종]');
+    DOCS.forEach(function(d){
+      var s=d[5][r.final],sym=s==='req'?'[필수]':(s==='opt'?'[선택]':'[불필요]');
+      var note=d[6][r.final];
+      l.push('  '+sym+' '+d[1]+' '+d[2]+(note?'  ※ '+note:''));
+    });
+  }
+  l.push('');
+  l.push('[적정성 검토 5항목]');
+  ADEQ.forEach(function(a,i){l.push('  '+(S.adeq[a[0]]?'■':'□')+' '+(i+1)+'. '+strip(a[1])+'  ('+a[4]+')');});
+  l.push('');
+  l.push('[안전한 관리]');
+  SAFE.forEach(function(s){l.push('  '+(S.safe[s[0]]?'■':'□')+' '+strip(s[1])+'  ['+s[3]+']');});
+  l.push('');
+  l.push('※ 교육용 재구성이며 법률 자문이나 기관의 적정성 검토를 대체하지 않습니다.');
+  l.push('※ 가이드라인은 위험도를 정량 점수로 환산하지 않습니다. 이 문서에도 배점은 없습니다.');
+  var blob=new Blob([l.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='가명처리_절차_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+
+document.addEventListener('click',function(e){
+  var p=e.target.closest('[data-purpose]');
+  if(p){var v=p.getAttribute('data-purpose');S.purpose=(S.purpose===v?'':v);save();render();return;}
+  var b=e.target.closest('[data-base]');
+  if(b){var v2=b.getAttribute('data-base');S.base=(S.base===v2?'':v2);save();render();return;}
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.hasAttribute&&el.hasAttribute('data-adj')){S.adj[el.getAttribute('data-adj')]=el.checked;save();render();}
+  else if(el.hasAttribute&&el.hasAttribute('data-adeq')){S.adeq[el.getAttribute('data-adeq')]=el.checked;save();render();}
+  else if(el.hasAttribute&&el.hasAttribute('data-safe')){S.safe[el.getAttribute('data-safe')]=el.checked;save();render();}
+});
+document.addEventListener('input',function(e){
+  if(e.target&&e.target.id==='pText'){S.pText=e.target.value;save();
+    document.getElementById('pOut').innerHTML=purposeFindings().map(function(f){
+      return '<div class="find'+(f[0]==='warn'?' warn':'')+'"><b>'+f[1]+'</b><br>'+f[2]+'<span class="lw">📕 '+esc(f[3])+'</span></div>';}).join('');
+  }
+});
+
+function render(){
+  renderSteps();renderPurposes();renderBases();renderAdjs();renderVerdict();renderAdeq();renderDocs();renderSafe();applyLang();
+  try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-pseudonym-process.html'); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',function(){ load(); applyLang(); render(); });
+</script>
+<script src="js/bilingual.js"></script>
+</body>
+</html>

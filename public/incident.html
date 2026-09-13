@@ -212,14 +212,14 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
         w.innerHTML =
           '<p class="muted">아래 조건으로 허용 정책을 구성하세요. <b>조건에 맞지 않으면 기본 거부</b>입니다.</p>' +
           '<pre>GET /api/vehicles/:vin\n// 현재: 로그인만 확인하고 소유 관계를 보지 않는다</pre>' +
-          '<div class="row"><select id="c1l">' + opts + '</select>' +
-          '<select id="c1o"><option value="==">==</option><option value="!=">!=</option></select>' +
-          '<select id="c1r">' + opts + '</select></div>' +
-          '<div class="row"><select id="join"><option value="or">또는(OR)</option><option value="and">그리고(AND)</option></select>' +
+          '<div class="row"><select id="c1l" aria-label="조건 1 좌변">' + opts + '</select>' +
+          '<select id="c1o" aria-label="조건 1 연산자"><option value="==">==</option><option value="!=">!=</option></select>' +
+          '<select id="c1r" aria-label="!=">' + opts + '</select></div>' +
+          '<div class="row"><select id="join" aria-label="조건 결합 방식"><option value="or">또는(OR)</option><option value="and">그리고(AND)</option></select>' +
           '<span class="muted">두 번째 조건과 결합</span></div>' +
-          '<div class="row"><select id="c2l"><option value="">(사용 안 함)</option>' + opts + '</select>' +
-          '<select id="c2o"><option value="==">==</option><option value="!=">!=</option></select>' +
-          '<select id="c2r">' + opts + '</select></div>';
+          '<div class="row"><select id="c2l" aria-label="두 번째 조건과 결합"><option value="">(사용 안 함)</option>' + opts + '</select>' +
+          '<select id="c2o" aria-label="(사용 안 함)"><option value="==">==</option><option value="!=">!=</option></select>' +
+          '<select id="c2r" aria-label="!=">' + opts + '</select></div>';
       }
     } else if (s.id === 'ota-verify') {
       w.innerHTML =

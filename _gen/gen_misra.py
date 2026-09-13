@@ -31,12 +31,12 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#0ea5e9 0%,#
 .header p {{ opacity:.9; font-size:14px; }}
 .lang-pill {{ display:inline-block; margin-top:10px; background:#0b1220; color:#7dd3fc; padding:4px 12px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; }}
 .sev {{ display:inline-block; margin:10px 0 0 8px; padding:4px 12px; border-radius:8px; font-size:12px; font-weight:700; font-family:'JetBrains Mono',monospace; }}
-.sev-상 {{ background:var(--danger); color:#fff; }} .sev-중 {{ background:#f59e0b; color:#fff; }} .sev-하 {{ background:var(--success); color:#fff; }}
+.sev-상 {{ background:var(--danger); color:#fff; }} .sev-중 {{ background:#f59e0b; color:#0b1220; }} .sev-하 {{ background:var(--success); color:#fff; }}
 .body {{ padding:32px 40px; }}
 .section {{ margin-bottom:26px; }}
 .section h2 {{ font-size:19px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #e0f2fe; }}
 .easy {{ background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }}
-.easy .tag {{ display:inline-block; background:#f59e0b; color:#fff; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }}
+.easy .tag {{ display:inline-block; background:#f59e0b; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }}
 .easy b {{ color:#b45309; }}
 .switch {{ display:flex; background:#0b1220; border-radius:10px; padding:4px; gap:4px; width:fit-content; margin-bottom:14px; }}
 .switch button {{ border:none; background:transparent; color:#94a3b8; font-family:'Lora',serif; font-weight:700; font-size:14px; padding:9px 18px; border-radius:8px; cursor:pointer; transition:.2s; }}

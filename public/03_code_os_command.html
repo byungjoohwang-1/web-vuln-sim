@@ -73,7 +73,7 @@
         .panel-title { font-size: 20px; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
         .status-badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .status-vulnerable { background: #dc3545; color: white; }
-        .status-secure { background: #28a745; color: white; }
+        .status-secure { background: #28a745; color: #0b1220; }
         .status-editing { background: #ffc107; color: #000; }
 
         .code-editor {
@@ -105,8 +105,8 @@
             flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
             transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
-        .btn-analyze { background: #d9534f; color: white; }
-        .btn-validate { background: #28a745; color: white; }
+        .btn-analyze { background: #c64c48; color: white; }
+        .btn-validate { background: #28a745; color: #0b1220; }
         .btn-hint { background: #ffc107; color: #000; }
         .btn-reset { background: #6c757d; color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -162,7 +162,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: #d9534f;
+            color: #dc5d59;
             font-weight: bold;
             font-size: 14px;
         }
@@ -196,7 +196,7 @@
             transition: all 0.2s;
         }
         .burp-btn-forward {
-            background: #d9534f;
+            background: #c64c48;
             color: white;
             border-color: #d9534f;
         }
@@ -269,12 +269,12 @@
         }
         .defense-badge.off {
             background: #fee2e2;
-            color: #ef4444;
+            color: #bb3535;
             border: 1px solid #fecaca;
         }
         .defense-badge.on {
             background: #dcfce7;
-            color: #22c55e;
+            color: #16813d;
             border: 1px solid #bbf7d0;
         }
         .switch {
@@ -413,7 +413,7 @@
 
         .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
         .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
-        .langbar button.on { background:#3b82f6; color:#fff; }
+        .langbar button.on { background:#3473da; color:#fff; }
     </style>
 </head>
 <body>
@@ -475,7 +475,7 @@
     Runtime.getRuntime().exec(cmd);
 }</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false">public void ping(String ip) throws IOException {
+                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false" aria-label="Java 코드 편집기">public void ping(String ip) throws IOException {
     // [취약한 코드] 입력값 ip를 검증 없이 명령어에 연결
     // 공격자 입력: "8.8.8.8; cat /etc/passwd"
     String cmd = "ping -c 3 " + ip;
@@ -564,7 +564,7 @@ def ping_host(ip):
     command = "ping -c 3 " + ip
     os.system(command)</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">import os
+                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false" aria-label="Python 코드 편집기">import os
 
 def ping_host(ip):
     # [취약한 코드] os.system은 쉘을 호출하므로 메타문자 해석이 일어남
@@ -643,7 +643,7 @@ subprocess.run(["ping", "-c", "3", ip])
                     <div style="padding: 15px; background: #1e1e1e; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #333;">
                         <div>
                             <label style="display:block; font-size:12px; color:#aaa; margin-bottom: 5px;" data-en="Ping Target IP Address">대상 IP 주소</label>
-                            <input type="text" id="cmdIpAddress" value="8.8.8.8" style="width:100%; padding:10px; background:#2b2b2b; border:1px solid #444; color:#a6e22e; font-family:monospace; outline:none; font-size: 14px;">
+                            <input type="text" id="cmdIpAddress" value="8.8.8.8" style="width:100%; padding:10px; background:#2b2b2b; border:1px solid #444; color:#a6e22e; font-family:monospace; outline:none; font-size: 14px;" aria-label="대상 IP 주소">
                         </div>
                         <button class="burp-btn burp-btn-forward" onclick="runCmdSimulation()" style="width:100%; margin-top:5px;" data-en="Execute Ping ➔">핑 명령어 실행 ➔</button>
                     </div>

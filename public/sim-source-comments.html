@@ -85,9 +85,9 @@
         <div class="page">
           <h3>My Account</h3>
           <label style="color:#475569;font-size:12px">Email</label>
-          <input value="alice@shop.example" readonly>
+          <input value="alice@shop.example" readonly aria-label="Email">
           <label style="color:#475569;font-size:12px">Password</label>
-          <input value="••••••••" type="password" readonly>
+          <input value="••••••••" type="password" readonly aria-label="Password">
           <button style="margin-top:8px;background:#0ea5e9;color:#fff;border:none;border-radius:6px;padding:8px 14px">Sign in</button>
         </div>
       </div>
@@ -175,8 +175,8 @@ var RAW_LINES=[
   '</head><body>',
   '  <h2>My Account</h2>',
   '  <form id="login" action="/login" method="post">',
-  '    <input name="email" value="alice@shop.example">',
-  '    <input name="password" type="password">',
+  '    <input name="email" value="alice@shop.example" aria-label="My Account">',
+  '    <input name="password" type="password" aria-label="비밀번호">',
   '    <button>Sign in</button>',
   '  </form>',
   '  <script>',
@@ -238,7 +238,7 @@ function grepSecrets(){
 }
 
 // 운영 빌드: 주석/비밀 제거 + minify
-var CLEAN='<!doctype html><html lang=en><head><meta charset=utf-8><title>My Account - shop.example</title></head><body><h2>My Account</h2><form action=/login method=post><input name=email><input name=password type=password><button>Sign in</button></form><script>initAccountPage();fetch("/api/checkout",{method:"POST"})<\/script></body></html>';
+var CLEAN='<!doctype html><html lang=en><head><meta charset=utf-8><title>My Account - shop.example</title></head><body><h2>My Account</h2><form action=/login method=post><input name=email aria-label="My Account"><input name=password type=password aria-label="My Account"><button>Sign in</button></form><script>initAccountPage();fetch("/api/checkout",{method:"POST"})<\/script></body></html>';
 
 function viewClean(){
   document.getElementById('s_out').innerHTML=

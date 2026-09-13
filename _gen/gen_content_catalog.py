@@ -49,6 +49,7 @@ DOMAIN_RULES = [
     ('13_ai', 'ai', 'concept_simulation'),
     ('14_auto', 'automotive', 'concept_simulation'),
     ('15_privacy', 'privacy', 'concept_simulation'),
+    ('16_zt', 'zerotrust', 'concept_simulation'),
     ('sim-', 'appsec', 'concept_simulation'),
 ]
 TOOL_PAGES = {

@@ -359,7 +359,7 @@ select:focus, textarea:focus, input[type="text"]:focus {
           <!-- Weakness Name Selection -->
           <div class="input-group">
             <div class="input-lbl">2. KISA 표준 보안약점명 선택</div>
-            <select id="weaknessSelect">
+            <select id="weaknessSelect" aria-label="2. KISA 표준 보안약점명 선택">
               <option value="">-- 약점 분류 선택 --</option>
               <!-- Filled via python datasets -->
             </select>
@@ -368,20 +368,20 @@ select:focus, textarea:focus, input[type="text"]:focus {
           <!-- Rationale Text (Keywords evaluation) -->
           <div class="input-group">
             <div class="input-lbl">3. 취약 원인 진단 의견 (필수 키워드 채점 대상)</div>
-            <textarea id="rationaleInput" placeholder="이 코드가 취약한 구체적인 원인을 설명해 주세요. (예: Statement 객체 생성, 문자열 결합 등)" rows="3"></textarea>
+            <textarea id="rationaleInput" placeholder="이 코드가 취약한 구체적인 원인을 설명해 주세요. (예: Statement 객체 생성, 문자열 결합 등)" rows="3" aria-label="3. 취약 원인 진단 의견 (필수 키워드 채점 대상)"></textarea>
           </div>
 
           <!-- Secure Refactoring Code -->
           <div class="input-group">
             <div class="input-lbl">4. 안전한 코드 리팩토링 방안</div>
-            <textarea id="secureCodeInput" placeholder="취약점을 개선한 안전한 리팩토링 코드 조각을 입력하세요." rows="5" style="font-family:'JetBrains Mono', monospace; font-size:13px;"></textarea>
+            <textarea id="secureCodeInput" placeholder="취약점을 개선한 안전한 리팩토링 코드 조각을 입력하세요." rows="5" style="font-family:'JetBrains Mono', monospace; font-size:13px;" aria-label="4. 안전한 코드 리팩토링 방안"></textarea>
           </div>
         </div>
 
         <div id="safeForm" style="display: none;">
           <div class="input-group">
             <div class="input-lbl">2. 오탐(안전한 코드) 진단 의견 설명</div>
-            <textarea id="safeRationaleInput" placeholder="이 코드가 취약하지 않고 안전한 구체적인 논리적 이유를 설명하세요. (예: 정규식 화이트리스트 필터링 적용)" rows="3"></textarea>
+            <textarea id="safeRationaleInput" placeholder="이 코드가 취약하지 않고 안전한 구체적인 논리적 이유를 설명하세요. (예: 정규식 화이트리스트 필터링 적용)" rows="3" aria-label="2. 오탐(안전한 코드) 진단 의견 설명"></textarea>
           </div>
         </div>
       </div>
@@ -1084,7 +1084,7 @@ function renderTheoryPanel(q, ans) {
     answerHtml = `
       <div class="input-group">
         <div class="input-lbl">단답 입력</div>
-        <input type="text" id="theoryShortAnswer" value="${escapeHtml(ans.value || '')}" placeholder="핵심 용어를 입력하세요.">
+        <input type="text" id="theoryShortAnswer" value="${escapeHtml(ans.value || '')}" placeholder="핵심 용어를 입력하세요." aria-label="단답 입력">
       </div>`;
   } else {
     const options = q.options || [];

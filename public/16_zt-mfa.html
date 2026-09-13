@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제로트러스트: 단일 비밀번호가 남긴 크리덴셜 스터핑 · WEB-VULN-SIM</title>
+<style>
+:root { --bank-primary:#134e4a; --bank-secondary:#0f766e; --bank-bg:#f3f4f6; --text-dark:#1a1a1a; --danger:#d32f2f; --success:#2e7d32; --warning:#ed6c02; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,sans-serif; background:var(--bank-bg); color:var(--text-dark); padding:20px; line-height:1.5; }
+.container { max-width:1400px; margin:0 auto; }
+.top-nav { margin-bottom:15px; }
+.top-nav a { color:var(--bank-primary); text-decoration:none; font-weight:700; font-size:14px; }
+.header { background:white; padding:20px 30px; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; border-left:6px solid var(--bank-primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.header h1 { font-size:22px; color:var(--bank-primary); display:flex; align-items:center; gap:12px; }
+.badge { background:#e3f2fd; color:#1565c0; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; }
+.risk { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#fff; background:var(--danger); }
+.tabs { display:flex; gap:15px; margin-bottom:20px; }
+.tab { flex:1; padding:18px; background:white; border-radius:10px; cursor:pointer; font-weight:600; color:#666; transition:.3s; border:2px solid transparent; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+.tab:hover { transform:translateY(-2px); }
+.tab.active { border-color:var(--bank-primary); color:var(--bank-primary); background:#eef5ff; }
+.grid-container { display:grid; grid-template-columns:1fr 1fr; gap:25px; }
+.content-section { display:none; animation:fadeIn .4s ease; }
+.content-section.active { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.panel { background:white; border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; }
+.panel-title { font-size:18px; font-weight:700; color:#333; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; }
+.scenario { background:#f8fbff; border:1px solid #d6e6fb; border-radius:8px; padding:15px; font-size:14px; color:#33475b; margin-bottom:18px; }
+.scenario b { color:var(--bank-primary); }
+.attack-controls { background:#212121; color:#fff; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #333; }
+.toggle-switch { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.toggle-status { font-family:'Consolas',monospace; color:#00ff00; font-weight:700; }
+.req-label { display:block; font-size:12px; font-weight:700; color:#555; margin:14px 0 6px; }
+.req-box { width:100%; background:#0d1b2a; color:#7ddcff; border:1px solid #1b3a5b; border-radius:8px; padding:14px; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; min-height:140px; }
+.btn-submit { width:100%; padding:15px; background:var(--bank-primary); color:white; border:none; border-radius:6px; font-size:15px; font-weight:700; cursor:pointer; transition:.3s; margin-top:16px; }
+.btn-submit:hover { background:#002a5c; }
+.btn-submit.hacked { background:var(--danger); }
+.terminal { background:#1e1e1e; color:#d4d4d4; padding:15px; border-radius:8px; font-family:'Consolas',monospace; font-size:13px; height:240px; overflow-y:auto; line-height:1.6; border:1px solid #333; }
+.log-time { color:#569cd6; margin-right:8px; }
+.result-card { display:none; margin-top:18px; border-radius:8px; padding:16px; animation:fadeIn .3s; }
+.result-breach { background:#fff5f5; border:1px solid #ffcdd2; color:#b71c1c; }
+.result-blocked { background:#e8f5e9; border:1px solid #c8e6c9; color:#1b5e20; }
+.data-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.data-table th { background:#f8f9fa; padding:10px; text-align:left; border-bottom:2px solid #ddd; color:#555; }
+.data-table td { padding:10px; border-bottom:1px solid #eee; }
+.amount { font-family:'Consolas',monospace; font-weight:700; color:var(--bank-primary); text-align:right; }
+.compliance-alert { background:#fff5f5; border:1px solid #ffcdd2; padding:15px; border-radius:8px; margin-top:15px; font-size:13px; color:#b71c1c; display:none; animation:fadeIn .3s; }
+.code-editor { width:100%; height:320px; background:#282c34; color:#abb2bf; padding:20px; border-radius:8px; border:none; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; }
+.kisa-ref { font-size:14px; line-height:1.7; color:#444; }
+.kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
+.kisa-ref ul { margin-left:18px; }
+.easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
+.easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox b { color:#c0392b; }
+@media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="header">
+    <h1><span>🔑</span> 제로트러스트 실습 &middot; 단일 비밀번호가 남긴 크리덴셜 스터핑</h1>
+    <div style="text-align:right; font-size:13px; color:#555;">
+      Target: <strong>임직원 포털 로그인</strong><br>
+      성숙도: <span class="risk">기존 → 향상</span> <span class="badge">식별자·신원 / 인증 — 다중인증(MFA)</span>
+    </div>
+  </div>
+
+  <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
+    <div class="tab" onclick="switchTab('defense')">🛡️ 대응 방안 (Blue Team)</div>
+  </div>
+
+  <div id="tab-attack" class="content-section active">
+    <div class="grid-container">
+      <div>
+        <div class="panel">
+          <div class="panel-title"><span>유출 계정 목록 대입</span><span style="font-size:12px; color:#666; font-weight:normal;">🔒 Secured Channel</span></div>
+          <div class="scenario">비밀번호는 이미 유출된 자격 증명으로 간주해야 합니다. <b>다중인증이 없으면</b> 외부에서 떠도는 아이디·비밀번호 목록을 그대로 대입하는 것만으로 정상 로그인과 구분되지 않는 접속이 만들어집니다. "내부망이니까 괜찮다"는 가정은 이 지점에서 가장 먼저 무너집니다.</div>
+          <div class="attack-controls">
+            <div class="toggle-switch" onclick="toggleAttack()">
+              <div><strong>⚡ 크리덴셜 스터핑</strong><br><span style="font-size:12px; opacity:.7;">타 서비스 유출 목록 1,200건 자동 대입</span></div>
+              <div class="toggle-status" id="attackStatus">OFF</div>
+            </div>
+          </div>
+          <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="요청 전문 편집기">POST /login
+{
+  "id": "park.dev",
+  "pw": "********"
+}
+→ 200 OK (세션 발급)</textarea>
+          <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
+          <div class="result-card" id="resultCard"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">🖥️ 금융 시스템 처리 로그</div>
+          <div class="terminal" id="systemLog">
+            <div><span class="log-time">[SYSTEM]</span> Core Banking Channel ready.</div>
+            <div><span class="log-time">[INFO]</span> 거래 요청 대기 중...</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">⚖️ 컴플라이언스 위반 분석</div>
+          <div id="complianceReport" style="color:#666; font-size:14px; text-align:center; padding:20px;">공격 실행 후 분석 결과가 표시됩니다.</div>
+          <div id="violationAlert" class="compliance-alert">
+            <strong>[심각] 암묵적 신뢰가 악용되었습니다</strong>
+            <ul style="margin-top:8px; margin-left:20px; list-style:circle;"><li>식별자·신원 / 인증 — 다중인증이 일부 시스템에만 적용되거나 우회 가능</li><li>비정상 인증 시도(대량·연속 실패)에 대한 자동 대응 부재</li><li>성숙도 1단계(기존): 비밀번호 단일 요소 인증에 의존</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-defense" class="content-section">
+    <div class="grid-container">
+      <div class="panel">
+        <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
+        <p style="font-size:14px; color:#555; margin-bottom:15px;">모든 접근을 <strong>인증된 신원 + 추가 요소</strong>로 검증하고, 요청의 맥락(새 단말·새 위치·연속 실패)을 함께 보고 단계를 올려야 합니다. 피싱에 견디는 방식(FIDO2 등)을 우선하세요.</p>
+        <textarea id="codeEditor" class="code-editor" aria-label="취약 코드 편집기">// [취약] 비밀번호만 맞으면 세션을 준다
+public Session login(Cred c) {
+    if (!password.verify(c.id(), c.pw()))
+        throw new AuthException("인증 실패");
+    return Session.create(c.id());
+}</textarea>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+          <button onclick="verifyCode()" class="btn-submit" style="width:auto; background:var(--success); margin-top:0;">코드 검증</button>
+          <button onclick="showHint()" style="padding:15px; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer;">힌트(정답) 보기</button>
+        </div>
+        <div id="codeResult" style="margin-top:15px;"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📚 제로트러스트 성숙도 해설 / 적용 가이드</div>
+        <div class="kisa-ref"><h4>1. 무엇을 보는 항목인가</h4>다중인증이 <b>어디까지, 어떤 방식으로</b> 적용돼 있는지를 본다. 일부 시스템만 적용되거나 SMS 하나로 끝난다면 공격자는 적용되지 않은 쪽을 고른다.<h4>2. 성숙도 단계별 모습</h4><ul><li><b>기존</b> — 비밀번호 단일 요소, 일부 시스템만 선택적 2차 인증</li><li><b>초기</b> — 외부 접속 경로에 2차 인증 적용, 방식은 혼재</li><li><b>향상</b> — 내부 포함 전 경로 적용, 위험 신호에 따라 단계 상승</li><li><b>최적화</b> — 피싱 저항 방식이 기본, 인증 결과가 실시간 정책 판단에 사용</li></ul><h4>3. 무엇을 증적으로 남길 수 있나</h4><ul><li>시스템별 MFA 적용 현황과 예외 목록·사유·만료일</li><li>단계 상승이 발동한 사례와 그 판단 근거</li><li>인증 실패·차단 통계의 추이</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NORMAL_REQ = `POST /login
+{
+  "id": "park.dev",
+  "pw": "********"
+}
+→ 200 OK (세션 발급)`;
+const ATTACK_REQ = `POST /login   × 1,200 (자동화)
+{
+  "id": "park.dev",
+  "pw": "Summer2025!"   // 타 서비스 유출본
+}
+→ 2차 인증 요구 없음`;
+const SECURE_HINT = `// [안전] 2차 요소 + 위험 기반 단계 상승
+public Session login(Cred c, RequestContext ctx) {
+    if (!password.verify(c.id(), c.pw()))
+        throw new AuthException("인증 실패");
+
+    // 1) 피싱 저항 2차 요소를 기본값으로 요구
+    if (!mfa.verify(c.id(), c.assertion(), Mfa.FIDO2))
+        throw new AuthException("2차 인증 실패");
+
+    // 2) 요청 맥락으로 위험도를 매기고, 높으면 더 강한 확인을 요구
+    int risk = riskEngine.score(ctx);        // 새 단말·새 국가·연속 실패 등
+    if (risk >= HIGH) {
+        mfa.stepUp(c.id(), ctx);
+        audit.stepUp(c.id(), risk, ctx);
+    }
+
+    // 3) 대량 대입은 계정이 아니라 출처 기준으로도 차단
+    rateLimiter.checkBySource(ctx.sourceIp(), ctx.deviceId());
+    return Session.create(c.id());
+}`;
+const CHECKS = [[`mfa.verify`, `FIDO2`, `2차`], [`riskEngine`, `stepUp`, `rateLimiter`]];
+let isAttackOn = false;
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content-section').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function addLog(msg,type='info'){
+  const box=document.getElementById('systemLog'); const time=new Date().toLocaleTimeString('ko-KR');
+  let color='#d4d4d4'; if(type==='error')color='#f48771'; if(type==='warn')color='#cca700'; if(type==='success')color='#89d185';
+  const d=document.createElement('div'); d.innerHTML=`<span class="log-time">[${time}]</span> <span style="color:${color}">${msg}</span>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+function toggleAttack(){
+  isAttackOn=!isAttackOn;
+  const s=document.getElementById('attackStatus'), btn=document.getElementById('sendBtn'), req=document.getElementById('reqBox');
+  if(isAttackOn){
+    s.innerText='ON (Tampering...)'; s.style.color='#ff4444';
+    req.value=ATTACK_REQ; req.style.color='#ff6b6b';
+    btn.innerText='변조 요청 전송 (Execute)'; btn.classList.add('hacked');
+    addLog('[ATTACK] 요청 데이터 변조 활성화', 'warn');
+  } else {
+    s.innerText='OFF'; s.style.color='#00ff00';
+    req.value=NORMAL_REQ; req.style.color='#7ddcff';
+    btn.innerText='요청 전송'; btn.classList.remove('hacked');
+    addLog('[INFO] 공격 모드 해제', 'success');
+  }
+}
+function sendRequest(){
+  const btn=document.getElementById('sendBtn'); btn.innerText='처리 중...';
+  addLog('[REQUEST] 금융 거래 요청 수신');
+  setTimeout(()=>{
+    if(isAttackOn){ addLog('[BOT] 유출 목록 1,200건 대입 시작','warn'); addLog('[AUTH] 비밀번호 일치 14건 → 전부 세션 발급','error'); addLog('[AUTH] 2차 인증 단계 없음','error'); addLog('[AUTH] 신규 국가/신규 단말 여부 미판정','warn'); showBreach(); showCompliance(); }
+    else { addLog('[OK] 정상 거래 처리 완료', 'success'); showNormal(); }
+    btn.innerText = isAttackOn ? '변조 요청 전송 (Execute)' : '요청 전송';
+  }, 900);
+}
+function showBreach(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-breach'; c.style.display='block';
+  c.innerHTML = `<strong>🚨 14개 계정 탈취</strong><br>비밀번호 하나만 맞으면 끝나는 구조라 자동 대입이 그대로 통했습니다.<table class="data-table"><tr><th>시도</th><th>성공</th><th>추가 인증</th><th>차단</th></tr><tr><td>1,200</td><td style="color:#b71c1c">14</td><td style="color:#b71c1c">없음</td><td style="color:#b71c1c">없음</td></tr></table>`;
+}
+function showNormal(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-blocked'; c.style.display='block';
+  c.innerHTML = '<strong>✅ 정상 거래</strong><br>요청이 검증을 통과하여 정상 처리되었습니다. (공격 모드를 켜고 변조를 시도해 보세요)';
+}
+function showCompliance(){
+  document.getElementById('complianceReport').style.display='none';
+  document.getElementById('violationAlert').style.display='block';
+}
+function verifyCode(){
+  // 주석 제거(주석 속 토큰으로 통과하는 우회 차단) + 공백/연산자 정규화
+  const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,' ').replace(/#[^\n]*/g,' ');
+  const norm=s=>strip(s).replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  const code=norm(document.getElementById('codeEditor').value);
+  const r=document.getElementById('codeResult');
+  const ok=CHECKS.every(grp=>{
+    const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
+    return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
+  });
+  if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">2차 요소와 위험 기반 단계 상승으로 대입 공격이 성공해도 세션이 발급되지 않습니다.</span></div>'; }
+  else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">2차 인증 검증과 위험도 기반 단계 상승·출처 기준 제한이 필요합니다.</span></div>'; }
+}
+function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
+</script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</body>
+</html>

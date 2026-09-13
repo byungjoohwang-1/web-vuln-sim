@@ -141,7 +141,7 @@
         <button class="act ghost" onclick="exportJson()">📥 <span data-en="Export JSON">JSON 내보내기</span></button>
         <button class="act ghost" onclick="document.getElementById('jsonfile').click()">📤 <span data-en="Import JSON">JSON 가져오기</span></button>
         <button class="act danger" onclick="resetReport()">🗑 <span data-en="New report (reset)">초기화(새 보고서)</span></button>
-        <input type="file" id="jsonfile" accept="application/json,.json" style="display:none" onchange="importJson(event)">
+        <input type="file" id="jsonfile" aria-label="보고서 JSON 파일 선택" accept="application/json,.json" style="display:none" onchange="importJson(event)" aria-label="초기화(새 보고서)">
       </div>
       <div class="note" data-en="Tip: in the print dialog choose <b>“Save as PDF”</b> as the destination. Drafts auto-save to this browser; use Export JSON to keep multiple reports as files.">
         팁: 인쇄 대화상자에서 대상(프린터)을 <b>“PDF로 저장”</b>으로 선택하세요. 초안은 이 브라우저에 자동 저장되며, 여러 보고서를 파일로 보관하려면 JSON 내보내기를 사용하세요.
@@ -161,35 +161,35 @@
         <div class="row">
           <div class="col">
             <label data-en="Target system name">진단 대상 시스템명</label>
-            <input id="m_system" placeholder="예: 통합 민원 포털">
+            <input id="m_system" placeholder="예: 통합 민원 포털" aria-label="진단 대상 시스템명">
           </div>
           <div class="col">
             <label data-en="Document version">문서 버전</label>
-            <input id="m_version" placeholder="예: v1.0">
+            <input id="m_version" placeholder="예: v1.0" aria-label="문서 버전">
           </div>
         </div>
         <div class="row">
           <div class="col">
             <label data-en="Assessment org">진단 기관</label>
-            <input id="m_org" placeholder="예: ○○ 보안컨설팅">
+            <input id="m_org" placeholder="예: ○○ 보안컨설팅" aria-label="진단 기관">
           </div>
           <div class="col">
             <label data-en="Assessor name">진단원명</label>
-            <input id="m_assessor" placeholder="예: 홍길동">
+            <input id="m_assessor" placeholder="예: 홍길동" aria-label="진단원명">
           </div>
         </div>
         <div class="row">
           <div class="col">
             <label data-en="Assessment start">진단 시작일</label>
-            <input id="m_start" type="date">
+            <input id="m_start" type="date" aria-label="진단 시작일">
           </div>
           <div class="col">
             <label data-en="Assessment end">진단 종료일</label>
-            <input id="m_end" type="date">
+            <input id="m_end" type="date" aria-label="진단 종료일">
           </div>
           <div class="col">
             <label data-en="Report date">보고서 작성일</label>
-            <input id="m_date" type="date">
+            <input id="m_date" type="date" aria-label="보고서 작성일">
           </div>
         </div>
       </div>
@@ -197,7 +197,7 @@
       <div class="card">
         <h2>🧭 <span data-en="Assessment overview">진단 개요 · 요약</span></h2>
         <label data-en="Assessment scope">진단 범위</label>
-        <textarea id="m_scope" placeholder="예: 웹 애플리케이션 전체 화면, 인증/결제 모듈, 외부 연동 API"></textarea>
+        <textarea id="m_scope" placeholder="예: 웹 애플리케이션 전체 화면, 인증/결제 모듈, 외부 연동 API" aria-label="진단 범위"></textarea>
         <label data-en="Assessment methods">진단 방법</label>
         <div class="row" style="gap:18px;margin:4px 0 2px">
           <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--ink)"><input type="checkbox" id="meth_sast" style="width:auto"> <span data-en="Static (SAST)">정적 분석 (SAST)</span></label>
@@ -205,7 +205,7 @@
           <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--ink)"><input type="checkbox" id="meth_manual" style="width:auto"> <span data-en="Manual">수동 진단</span></label>
         </div>
         <label data-en="Overall opinion / executive summary">종합 의견</label>
-        <textarea id="m_opinion" placeholder="진단 결과에 대한 종합 의견을 작성합니다."></textarea>
+        <textarea id="m_opinion" placeholder="진단 결과에 대한 종합 의견을 작성합니다." aria-label="종합 의견"></textarea>
 
         <h2 style="margin-top:16px">📊 <span data-en="Severity summary (auto)">위험도 요약 (자동)</span></h2>
         <div class="summary" id="summaryBox"></div>
@@ -219,7 +219,7 @@
         <div class="row">
           <div class="col" style="flex:2">
             <label data-en="Prefill from KISA weakness catalog (49 items)">KISA 보안약점 목록에서 자동 채우기 (49개)</label>
-            <select id="conceptPick"></select>
+            <select id="conceptPick" aria-label="KISA 보안약점 목록에서 자동 채우기 (49개)"></select>
           </div>
           <div class="col" style="display:flex;align-items:flex-end;gap:8px">
             <button class="act primary" style="flex:1" onclick="addFromConcept()">＋ <span data-en="Add selected">선택 항목 추가</span></button>
@@ -243,15 +243,15 @@
         <div class="row">
           <div class="col">
             <label data-en="Recipient (dev team)">수신 (개발/운영팀)</label>
-            <input id="r_to" placeholder="예: 포털개발팀">
+            <input id="r_to" placeholder="예: 포털개발팀" aria-label="수신 (개발/운영팀)">
           </div>
           <div class="col">
             <label data-en="Requester">요청자</label>
-            <input id="r_from" placeholder="예: 보안진단팀">
+            <input id="r_from" placeholder="예: 보안진단팀" aria-label="요청자">
           </div>
         </div>
         <label data-en="Cover note">요청 개요</label>
-        <textarea id="r_note" placeholder="보완요청서 상단에 들어갈 안내문을 작성합니다."></textarea>
+        <textarea id="r_note" placeholder="보완요청서 상단에 들어갈 안내문을 작성합니다." aria-label="요청 개요"></textarea>
       </div>
       <div id="remedyList"></div>
     </div>
@@ -419,18 +419,18 @@ function renderFindings(){
         +'</span>'
       +'</div>'
       +'<div class="row">'
-        +'<div class="col" style="flex:2"><label>'+L('취약점명','Name')+'</label><input data-fi="'+idx+'" data-fk="name" value="'+esc(f.name)+'"></div>'
-        +'<div class="col"><label>CWE</label><input data-fi="'+idx+'" data-fk="cwe" value="'+esc(f.cwe)+'"></div>'
+        +'<div class="col" style="flex:2"><label>'+L('취약점명','Name')+'</label><input data-fi="'+idx+'" data-fk="name" aria-label="취약점명" value="'+esc(f.name)+'"></div>'
+        +'<div class="col"><label>CWE</label><input data-fi="'+idx+'" data-fk="cwe" aria-label="CWE 번호" value="'+esc(f.cwe)+'" aria-label="CWE"></div>'
       +'</div>'
       +'<div class="row">'
-        +'<div class="col"><label>'+L('분류 (7대)','Category')+'</label><select data-fi="'+idx+'" data-fk="cat">'+catOpts+'</select></div>'
-        +'<div class="col"><label>'+L('위험도','Severity')+'</label><select data-fi="'+idx+'" data-fk="sev">'+sevOpts+'</select></div>'
-        +'<div class="col"><label>'+L('조치 기한','Due date')+'</label><input type="date" data-fi="'+idx+'" data-fk="due" value="'+esc(f.due)+'"></div>'
+        +'<div class="col"><label>'+L('분류 (7대)','Category')+'</label><select data-fi="'+idx+'" data-fk="cat" aria-label="취약점 분류">'+catOpts+'</select></div>'
+        +'<div class="col"><label>'+L('위험도','Severity')+'</label><select data-fi="'+idx+'" data-fk="sev" aria-label="위험도">'+sevOpts+'</select></div>'
+        +'<div class="col"><label>'+L('조치 기한','Due date')+'</label><input type="date" data-fi="'+idx+'" data-fk="due" aria-label="조치 기한" value="'+esc(f.due)+'"></div>'
       +'</div>'
-      +'<label>'+L('발견 위치 (파일/URL)','Location (file/URL)')+'</label><input data-fi="'+idx+'" data-fk="location" value="'+esc(f.location)+'">'
-      +'<label>'+L('현황 및 근거','Status & evidence')+'</label><textarea data-fi="'+idx+'" data-fk="status">'+esc(f.status)+'</textarea>'
-      +'<label>'+L('위험 영향','Risk impact')+'</label><textarea data-fi="'+idx+'" data-fk="impact">'+esc(f.impact)+'</textarea>'
-      +'<label>'+L('조치 방안 / 권고사항','Remediation / recommendation')+'</label><textarea data-fi="'+idx+'" data-fk="remediation">'+esc(f.remediation)+'</textarea>';
+      +'<label>'+L('발견 위치 (파일/URL)','Location (file/URL)')+'</label><input data-fi="'+idx+'" data-fk="location" aria-label="발견 위치" value="'+esc(f.location)+'">'
+      +'<label>'+L('현황 및 근거','Status & evidence')+'</label><textarea data-fi="'+idx+'" data-fk="status" aria-label="현황 및 근거">'+esc(f.status)+'</textarea>'
+      +'<label>'+L('위험 영향','Risk impact')+'</label><textarea data-fi="'+idx+'" data-fk="impact" aria-label="영향">'+esc(f.impact)+'</textarea>'
+      +'<label>'+L('조치 방안 / 권고사항','Remediation / recommendation')+'</label><textarea data-fi="'+idx+'" data-fk="remediation" aria-label="조치 방안">'+esc(f.remediation)+'</textarea>';
     box.appendChild(d);
   });
   box.querySelectorAll('[data-fi]').forEach(function(el){
@@ -481,10 +481,10 @@ function renderRemedy(){
         +'<span class="sevpill sev-'+f.sev+'">'+sevKo(f.sev)+'</span>'
         +'<span style="color:#cbd5e1;font-weight:700">'+esc(f.name||L('(제목 없음)','(untitled)'))+'</span></div>'
       +'<label>'+L('보완 요청 사항','Remediation request')+'</label>'
-      +'<textarea data-ri="'+idx+'" data-rk="request">'+esc(f.request||f.remediation||'')+'</textarea>'
+      +'<textarea data-ri="'+idx+'" data-rk="request" aria-label="요청 사항">'+esc(f.request||f.remediation||'')+'</textarea>'
       +'<div class="row">'
-        +'<div class="col"><label>'+L('조치 기한','Due date')+'</label><input type="date" data-ri="'+idx+'" data-rk="due" value="'+esc(f.due)+'"></div>'
-        +'<div class="col"><label>'+L('담당','Owner')+'</label><input data-ri="'+idx+'" data-rk="owner" value="'+esc(f.owner)+'"></div>'
+        +'<div class="col"><label>'+L('조치 기한','Due date')+'</label><input type="date" data-ri="'+idx+'" data-rk="due" aria-label="요청 기한" value="'+esc(f.due)+'"></div>'
+        +'<div class="col"><label>'+L('담당','Owner')+'</label><input data-ri="'+idx+'" data-rk="owner" aria-label="담당자" value="'+esc(f.owner)+'"></div>'
       +'</div></div>';
   }).join('');
   card.innerHTML='<h2>📑 <span>'+L('항목별 보완 요청','Per-item requests')+'</span></h2>'+rows;

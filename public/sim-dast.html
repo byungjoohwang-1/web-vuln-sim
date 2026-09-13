@@ -469,7 +469,7 @@ function renderRepeater(){
    '<div class="split" style="height:100%">'+
    '<div class="pane" style="flex:1"><div class="hd">'+L('요청 (편집 가능)','Request (editable)')+
      '<span class="sp" style="margin-left:auto"></span><button class="btn go sm" onclick="repSend()">▶ '+L('전송','Send')+'</button></div>'+
-     '<div class="bd" style="padding:0"><textarea id="repReq"></textarea></div></div>'+
+     '<div class="bd" style="padding:0"><textarea id="repReq" aria-label="Repeater 요청 편집기"></textarea></div></div>'+
    '<div class="pane" style="flex:1"><div class="hd">'+L('응답','Response')+' <span id="repMeta" class="legend" style="margin-left:auto"></span></div>'+
      '<div class="bd"><pre id="repRes" class="muted">'+L('전송을 눌러 응답을 확인하세요.','Press Send to get a response.')+'</pre></div></div>'+
    '</div>';
@@ -493,10 +493,10 @@ function renderIntruder(){
   el('v-intruder').innerHTML=
    '<div class="split v" style="height:100%">'+
    '<div class="pane" style="flex:0 0 auto"><div class="hd">'+L('요청 템플릿 — 페이로드 위치를 §...§ 로 표시','Request template — mark positions with §...§')+'</div>'+
-     '<div class="bd" style="height:150px;padding:0"><textarea id="intTpl">'+esc(intruder.template)+'</textarea></div></div>'+
+     '<div class="bd" style="height:150px;padding:0"><textarea id="intTpl" aria-label="Intruder 요청 템플릿">'+esc(intruder.template)+'</textarea></div></div>'+
    '<div class="split" style="flex:0 0 auto;gap:12px">'+
      '<div class="pane" style="flex:1"><div class="hd">'+L('페이로드 (한 줄에 하나)','Payloads (one per line)')+'</div>'+
-       '<div class="bd" style="height:130px;padding:0"><textarea id="intPay">'+esc(intruder.payloads)+'</textarea></div></div>'+
+       '<div class="bd" style="height:130px;padding:0"><textarea id="intPay" aria-label="Intruder 페이로드 목록">'+esc(intruder.payloads)+'</textarea></div></div>'+
      '<div class="pane" style="flex:0 0 220px"><div class="hd">'+L('공격','Attack')+'</div><div class="bd">'+
        '<div class="legend">'+L('유형: Sniper (위치 1곳 순차 대입)','Type: Sniper (single position)')+'</div>'+
        '<button class="btn go" style="margin-top:10px;width:100%" onclick="intStart()">▶ '+L('공격 시작','Start attack')+'</button>'+
@@ -639,7 +639,7 @@ function renderScanner(){
 function renderDecoder(){
   el('v-decoder').innerHTML=
    '<div class="card"><h3>'+L('인코더 / 디코더','Encoder / Decoder')+'</h3>'+
-   '<textarea id="decIn" style="height:120px" oninput="decRun()" placeholder="'+L('변환할 텍스트 입력','enter text to transform')+'">&lt;script&gt;alert(1)&lt;/script&gt;</textarea>'+
+   '<textarea id="decIn" aria-label="디코더 입력" style="height:120px" oninput="decRun()" placeholder="'+L('변환할 텍스트 입력','enter text to transform')+'">&lt;script&gt;alert(1)&lt;/script&gt;</textarea>'+
    '<div class="kbar" style="margin-top:10px">'+
      ['URL','Base64','HTML','Hex'].map(function(t){return '<button class="btn alt sm" onclick="decDo(\''+t+'\',1)">'+t+' '+L('인코딩','encode')+'</button> <button class="btn alt sm" onclick="decDo(\''+t+'\',0)">'+t+' '+L('디코딩','decode')+'</button>';}).join(' ')+
    '</div>'+

@@ -353,7 +353,7 @@ body.soc a{color:var(--acc)}
         <div class="browser">
           <div class="bbar">
             <span class="dots"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#4ade80"></i></span>
-            <input type="text" id="addrBar" spellcheck="false" placeholder="/search?q=laptop 처럼 경로를 직접 입력할 수도 있습니다">
+            <input type="text" id="addrBar" spellcheck="false" placeholder="/search?q=laptop 처럼 경로를 직접 입력할 수도 있습니다" aria-label="/search?q=laptop 처럼 경로를 직접 입력할 수도 있습니다">
             <button type="button" class="go" id="addrGo">이동</button>
           </div>
           <iframe id="simFrame" sandbox="allow-scripts" title="가상 타깃 앱"></iframe>
@@ -381,12 +381,12 @@ body.soc a{color:var(--acc)}
         <div class="rep-grid">
           <div class="rep-box">
             <h4>→ Request (편집 가능 · GET/POST/OPTIONS 지원)</h4>
-            <textarea id="reqText" spellcheck="false"></textarea>
+            <textarea id="reqText" spellcheck="false" aria-label="Request (편집 가능 · GET/POST/OPTIONS 지원)"></textarea>
             <button type="button" class="rep-send" id="repSend">⚡ Send</button>
           </div>
           <div class="rep-box">
             <h4>← Response (헤더 포함)</h4>
-            <textarea id="resText" spellcheck="false" readonly></textarea>
+            <textarea id="resText" spellcheck="false" readonly aria-label="Response (헤더 포함)"></textarea>
           </div>
         </div>
       </div>
@@ -411,7 +411,7 @@ body.soc a{color:var(--acc)}
           </div>
           <div class="chatlog" id="chatLog"></div>
           <div class="chatin">
-            <input type="text" id="chatInp" placeholder="봇에게 메시지를 보내세요 — 예: 주문 조회해줘" autocomplete="off">
+            <input type="text" id="chatInp" placeholder="봇에게 메시지를 보내세요 — 예: 주문 조회해줘" autocomplete="off" aria-label="봇에게 메시지를 보내세요 — 예: 주문 조회해줘">
             <button type="button" id="chatSend">전송</button>
           </div>
           <div class="chatctx" id="chatCtx"></div>
@@ -596,8 +596,8 @@ function formHtml(action,fields,btn){
  var h='<form action="'+action+'" method="post">';
  fields.forEach(function(f){
    h+='<p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">'+f.label+'</label>';
-   if(f.type==='textarea')h+='<textarea name="'+f.name+'" rows="4" placeholder="'+(f.ph||'')+'"></textarea>';
-   else h+='<input type="'+(f.type||'text')+'" name="'+f.name+'" value="'+(f.v||'')+'" placeholder="'+(f.ph||'')+'">';
+   if(f.type==='textarea')h+='<textarea name="'+f.name+'" rows="4" aria-label="'+(f.label||f.name)+'" placeholder="'+(f.ph||'')+'"></textarea>';
+   else h+='<input type="'+(f.type||'text')+'" name="'+f.name+'" aria-label="'+(f.label||f.name)+'" value="'+(f.v||'')+'" placeholder="'+(f.ph||'')+'">';
    h+='</p>';
  });
  return h+'<button type="submit">'+(btn||'전송')+'</button></form>';
@@ -641,7 +641,7 @@ function handle(method,path,q,body,bodyStr){
      var echo=isP('xss-reflected')?H(qq):qq;
      var hits=PRODUCTS.filter(function(p){return p.name.indexOf(qq)>=0;});
      var list=hits.length?'<ul>'+hits.map(function(p){return '<li>'+p.name+' — <span class="price">'+p.price+'원</span></li>';}).join('')+'</ul>':'<p>검색 결과가 없습니다.</p>';
-     R.html=appShell('검색 결과','<form action="/search" method="get"><p><input type="text" name="q" value="'+echo+'" placeholder="상품명"></p><button>검색</button></form><p>검색어: <b>'+echo+'</b></p>'+list);
+     R.html=appShell('검색 결과','<form action="/search" method="get"><p><input type="text" name="q" value="'+echo+'" placeholder="상품명" aria-label="상품명"></p><button>검색</button></form><p>검색어: <b>'+echo+'</b></p>'+list);
      if(isP('xss-reflected'))note('출력 이스케이프 적용 — 반사된 값은 HTML 엔티티로 인코딩됨','good');
    }
    R.lab='xss-reflected';
@@ -765,7 +765,7 @@ function handle(method,path,q,body,bodyStr){
    }
    if(R.html===''){R.html=appShell('URL 미리보기',formHtml('/preview',[{name:'url',label:'미리볼 URL',v:'http://shop.example.com/'}],'미리보기').replace('method="post"','method="get"'));}
    else if(!R.html){R.html='';}
-   if(path==='/preview'&&method==='GET'&&!q.get('url')){R.html=appShell('URL 미리보기','<form action="/preview" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">미리볼 URL</label><input type="text" name="url" value="http://shop.example.com/"></p><button>미리보기</button></form>');R.notes=[];note('링크 미리보기 기능 — 사용자가 지정한 URL을 서버가 대신 요청합니다.');}
+   if(path==='/preview'&&method==='GET'&&!q.get('url')){R.html=appShell('URL 미리보기','<form action="/preview" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">미리볼 URL</label><input type="text" name="url" value="http://shop.example.com/" aria-label="미리볼 URL"></p><button>미리보기</button></form>');R.notes=[];note('링크 미리보기 기능 — 사용자가 지정한 URL을 서버가 대신 요청합니다.');}
  }
  /* ── 다운로드: 경로 조작 ── */
  else if(path==='/download'){
@@ -805,14 +805,14 @@ function handle(method,path,q,body,bodyStr){
      }
      R.html=appShell('ping','<pre>'+vshell(cmdline)+'\n\n'+outs.join('\n')+'</pre>');
    }else{
-     R.html=appShell('ping 유틸리티','<form action="/ping" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">Ping 대상 호스트</label><input type="text" name="host" value="8.8.8.8"></p><button>Ping</button></form><hr><pre>'+(host?vshell(cmdline):'')+'</pre>');
+     R.html=appShell('ping 유틸리티','<form action="/ping" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">Ping 대상 호스트</label><input type="text" name="host" value="8.8.8.8" aria-label="Ping 대상 호스트"></p><button>Ping</button></form><hr><pre>'+(host?vshell(cmdline):'')+'</pre>');
      if(!host){R.notes=[];note('서버가 ping 명령을 직접 실행하는 유틸리티 — host 파라미터를 주목하세요.');}
    }
  }
 
  /* ── 파일 업로드 ── */
  else if(path==='/upload'&&method==='GET'){
-   R.html=appShell('프로필 이미지 업로드','<form action="/upload" method="post"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">파일명 (가상 파일 선택기)</label><input type="text" name="filename" value="profile.png" placeholder="예: profile.png"></p><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">내용 (메모)</label><textarea name="content" rows="3"></textarea></p><button>업로드</button></form><p class="muted">허용 확장자 안내가 없습니다…</p>');
+   R.html=appShell('프로필 이미지 업로드','<form action="/upload" method="post"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">파일명 (가상 파일 선택기)</label><input type="text" name="filename" value="profile.png" placeholder="예: profile.png" aria-label="파일명 (가상 파일 선택기)"></p><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">내용 (메모)</label><textarea name="content" rows="3" aria-label="내용 (메모)"></textarea></p><button>업로드</button></form><p class="muted">허용 확장자 안내가 없습니다…</p>');
  }
  else if(path==='/upload'&&method==='POST'){
    var fn2=body.filename||'';
@@ -897,7 +897,7 @@ function handle(method,path,q,body,bodyStr){
        R.html=appShell('이동','<p>'+H(ru)+' 로 이동합니다…</p><p class="muted">피싱 사이트는 로그인 페이지를 그대로 흉내 낼 수 있습니다.</p>');
        if(!/bugpay\.example$/.test(eh))win('open-redirect','외부 도메인으로 검증 없는 리다이렉트 성공');
      }else{
-       R.html=appShell('로그인 후 이동','<form action="/go" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">returnUrl</label><input type="text" name="url" value="/"></p><button>이동</button></form>');
+       R.html=appShell('로그인 후 이동','<form action="/go" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">returnUrl</label><input type="text" name="url" value="/" aria-label="returnUrl"></p><button>이동</button></form>');
        note('returnUrl 파라미터가 이동 대상을 결정합니다.');
      }
    }
@@ -924,7 +924,7 @@ function handle(method,path,q,body,bodyStr){
        win('diag-debug','상세 스택트레이스 노출 — 내부 IP·구조 유출');
      }
    }else{
-     R.html=appShell('고객 인사','<form action="/lookup" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">이름</label><input type="text" name="name" value="홍길동"></p><button>인사하기</button></form><p>'+(nm?'안녕하세요, '+H(nm)+' 님':'이름을 입력하면 맞춤 인사를 합니다.')+'</p>');
+     R.html=appShell('고객 인사','<form action="/lookup" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">이름</label><input type="text" name="name" value="홍길동" aria-label="이름"></p><button>인사하기</button></form><p>'+(nm?'안녕하세요, '+H(nm)+' 님':'이름을 입력하면 맞춤 인사를 합니다.')+'</p>');
      if(!nm){R.notes=[];note('응답 헤더(X-Greeting)에 사용자 입력이 그대로 반영됩니다.');}
    }
  }
@@ -934,7 +934,7 @@ function handle(method,path,q,body,bodyStr){
    note('현재 세션: victim — 이메일: '+STATE.email);
    var tok=isP('csrf')?' <input type="hidden" name="csrf" value="WVS-TOKEN-777">':'';
    R.html=appShell('내 프로필','<p>이름: 피해자 · 등급: 일반 회원</p><p>이메일: <b>'+H(STATE.email)+'</b></p><h2>이메일 변경</h2>'+
-   '<form action="/email/change" method="post"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">새 이메일</label><input type="text" name="email" value="'+H(STATE.email)+'"></p>'+tok+'<button>변경</button></form>'+
+   '<form action="/email/change" method="post"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">새 이메일</label><input type="text" name="email" value="'+H(STATE.email)+'" aria-label="새 이메일"></p>'+tok+'<button>변경</button></form>'+
    '<p class="muted"><a href="/attacker">📧 받은 편지함 함정 보기(공격자 페이지)</a></p>');
  }
  else if(path==='/email/change'&&method==='POST'){
@@ -1134,7 +1134,7 @@ function handle(method,path,q,body,bodyStr){
    }else if(uri){
      R.html=appShell('📱 mypay 앱','<pre>URI: '+H(uri)+'</pre><p>처리된 딥링크 없음</p>');
    }else{
-     R.html=appShell('딥링크 테스터','<form action="/deeplink" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">딥링크 URI</label><input type="text" name="uri" value="mypay://home"></p><button>열기</button></form><p class="muted">예: mypay://transfer?to=attacker&amount=1000000</p>');
+     R.html=appShell('딥링크 테스터','<form action="/deeplink" method="get"><p><label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px">딥링크 URI</label><input type="text" name="uri" value="mypay://home" aria-label="딥링크 URI"></p><button>열기</button></form><p class="muted">예: mypay://transfer?to=attacker&amount=1000000</p>');
    }
  }
  /* ── 봇 검색 렌더(LLM 출력 XSS) ── */

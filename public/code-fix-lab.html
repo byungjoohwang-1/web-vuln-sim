@@ -60,7 +60,7 @@
   .tag.bad{background:#3b1418;color:#fca5a5}
   .objective{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:13.5px;color:#cbd5e1;margin:10px 0}
   .editor-wrap{display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#0a0f1c;font-family:var(--mono);font-size:13px;margin-top:8px}
-  .gutter{padding:12px 8px 12px 12px;text-align:right;color:#475569;background:#0b1220;user-select:none;white-space:pre;line-height:1.5;min-width:42px}
+  .gutter{padding:12px 8px 12px 12px;text-align:right;color:#75808f;background:#0b1220;user-select:none;white-space:pre;line-height:1.5;min-width:42px}
   #editor{flex:1;background:transparent;color:#e2e8f0;border:0;outline:none;resize:vertical;padding:12px;line-height:1.5;font-family:var(--mono);font-size:13px;min-height:240px;white-space:pre;overflow-wrap:normal;overflow-x:auto;tab-size:4}
   .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   .act{border:0;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
@@ -109,11 +109,11 @@
     </div>
 
     <div class="filters">
-      <select id="f-lang"><option value="" data-en="🌐 All languages">🌐 전체 언어</option><option value="Java">Java</option><option value="Python">Python</option><option value="C">C</option></select>
-      <select id="f-cat"><option value="" data-en="All categories">전체 분류</option></select>
-      <select id="f-diff"><option value="" data-en="All levels">전체 난이도</option><option value="하" data-en="Easy">하</option><option value="중" data-en="Medium">중</option><option value="상" data-en="Hard">상</option></select>
-      <select id="f-status"><option value="" data-en="All">전체</option><option value="unsolved" data-en="Unsolved">미해결</option><option value="solved" data-en="Solved">해결됨</option></select>
-      <input id="f-search" type="text" placeholder="검색 (제목/CWE)" style="flex:1;min-width:140px">
+      <select id="f-lang" aria-label="언어 필터"><option value="" data-en="🌐 All languages">🌐 전체 언어</option><option value="Java">Java</option><option value="Python">Python</option><option value="C">C</option></select>
+      <select id="f-cat" aria-label="분류 필터"><option value="" data-en="All categories">전체 분류</option></select>
+      <select id="f-diff" aria-label="난이도 필터"><option value="" data-en="All levels">전체 난이도</option><option value="하" data-en="Easy">하</option><option value="중" data-en="Medium">중</option><option value="상" data-en="Hard">상</option></select>
+      <select id="f-status" aria-label="상태 필터"><option value="" data-en="All">전체</option><option value="unsolved" data-en="Unsolved">미해결</option><option value="solved" data-en="Solved">해결됨</option></select>
+      <input id="f-search" type="text" placeholder="검색 (제목/CWE)" style="flex:1;min-width:140px" aria-label="카탈로그 검색어">
     </div>
 
     <div class="layout">
@@ -247,7 +247,7 @@ function renderWork(x){
         'Rewrite the code below to remove the <b>'+esc(x.weaknessName||x.cwe)+'</b> weakness. You pass when the right defenses are present and the dangerous calls are gone.')+
     '</div>'+
     '<div class="editor-wrap"><div class="gutter" id="gutter">1</div>'+
-      '<textarea id="editor" spellcheck="false"></textarea></div>'+
+      '<textarea id="editor" spellcheck="false" aria-label="코드 편집기"></textarea></div>'+
     '<div class="btns">'+
       '<button class="act grade" onclick="doGrade()">✅ '+L('채점','Grade')+'</button>'+
       '<button class="act ghost" onclick="resetCode()">↺ '+L('초기화','Reset')+'</button>'+

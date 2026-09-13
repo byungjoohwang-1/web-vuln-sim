@@ -92,8 +92,8 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <h2>⚠️ <span data-en="Vulnerable login (string-concatenated SQL)">취약한 로그인 (문자열 결합 SQL)</span> <span class="tag bad">VULNERABLE</span></h2>
     <div class="cap" data-en="The query is built by concatenating your input. Try a normal login, then an injection.">쿼리를 입력값 문자열 결합으로 만듭니다. 정상 로그인 후, 인젝션을 시도해 보세요.</div>
     <div class="row">
-      <div class="col"><label data-en="Username">아이디</label><input id="vu" value="alice" spellcheck="false"></div>
-      <div class="col"><label data-en="Password">비밀번호</label><input id="vp" value="wonderland" spellcheck="false"></div>
+      <div class="col"><label data-en="Username">아이디</label><input id="vu" value="alice" spellcheck="false" aria-label="아이디"></div>
+      <div class="col"><label data-en="Password">비밀번호</label><input id="vp" value="wonderland" spellcheck="false" aria-label="비밀번호"></div>
     </div>
     <div class="presets">
       <button class="ghost" onclick="setV('alice','wonderland')" data-en="✔ Normal login">✔ 정상 로그인</button>
@@ -110,7 +110,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
   <div class="card vuln">
     <h2>🔎 <span data-en="Vulnerable search → UNION credential dump">취약한 검색 → UNION 계정 덤프</span> <span class="tag bad">VULNERABLE</span></h2>
     <div class="cap" data-en="A product search using LIKE. A UNION payload pulls the users table into the results.">LIKE로 상품을 검색합니다. UNION 페이로드로 users 테이블을 결과에 끌어옵니다.</div>
-    <label data-en="Search keyword">검색어</label><input id="sq" value="mouse" spellcheck="false">
+    <label data-en="Search keyword">검색어</label><input id="sq" value="mouse" spellcheck="false" aria-label="검색어">
     <div class="presets">
       <button class="ghost" onclick="setS('mouse')" data-en="✔ Normal search">✔ 정상 검색</button>
       <button class="ghost" onclick="setS(\"x' UNION SELECT username||':'||password, role FROM users --\")">💉 UNION dump</button>
@@ -126,8 +126,8 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <h2>✅ <span data-en="Secure login (parameter binding)">안전한 로그인 (파라미터 바인딩)</span> <span class="tag good">SECURE</span></h2>
     <div class="cap" data-en="Same engine, same payload — but the input is bound as a parameter, never parsed as SQL.">같은 엔진·같은 페이로드지만, 입력을 파라미터로 바인딩해 SQL로 해석되지 않습니다.</div>
     <div class="row">
-      <div class="col"><label data-en="Username">아이디</label><input id="su" value="' OR '1'='1' --" spellcheck="false"></div>
-      <div class="col"><label data-en="Password">비밀번호</label><input id="sp" value="" spellcheck="false"></div>
+      <div class="col"><label data-en="Username">아이디</label><input id="su" value="' OR '1'='1' --" spellcheck="false" aria-label="아이디"></div>
+      <div class="col"><label data-en="Password">비밀번호</label><input id="sp" value="" spellcheck="false" aria-label="비밀번호"></div>
     </div>
     <button class="act fix" onclick="secureLogin()" id="btnSLogin" disabled>▶ <span data-en="Attempt login (prepared statement)">로그인 시도 (Prepared Statement)</span></button>
     <div class="cap" style="margin:12px 0 0" data-en="Prepared statement + bound values:">Prepared Statement + 바인딩 값:</div>

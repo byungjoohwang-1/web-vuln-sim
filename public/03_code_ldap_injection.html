@@ -42,7 +42,7 @@
         .panel-title { font-size: 20px; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
         .status-badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .status-vulnerable { background: #dc3545; color: white; }
-        .status-secure { background: #28a745; color: white; }
+        .status-secure { background: #28a745; color: #0b1220; }
         .status-editing { background: #ffc107; color: #000; }
         .code-editor { background: #1e1e1e; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex-grow: 1; min-height: 500px; }
         .editor-toolbar { background: #2d2d2d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e3e; }
@@ -56,8 +56,8 @@
         .code-textarea:focus { outline: 2px solid #007acc; outline-offset: -2px; }
         .control-panel { display: flex; gap: 15px; margin-top: 20px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-analyze { background: #d9534f; color: white; }
-        .btn-validate { background: #28a745; color: white; }
+        .btn-analyze { background: #c64c48; color: white; }
+        .btn-validate { background: #28a745; color: #0b1220; }
         .btn-hint { background: #ffc107; color: #000; }
         .btn-reset { background: #6c757d; color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -78,7 +78,7 @@
         @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
         .langbar { position:fixed; top:12px; right:12px; z-index:99999; display:flex; gap:4px; background:rgba(20,20,30,.72); padding:4px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
         .langbar button { background:transparent; color:#cbd5e1; border:none; padding:5px 11px; border-radius:6px; font:600 12px/1 'Malgun Gothic',sans-serif; cursor:pointer; }
-        .langbar button.on { background:#3b82f6; color:#fff; }
+        .langbar button.on { background:#3473da; color:#fff; }
     </style>
 </head>
 <body>
@@ -138,7 +138,7 @@
     NamingEnumeration&lt;SearchResult&gt; results = ctx.search("ou=users,dc=example,dc=com", filter, controls);
 }</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false">public void searchUser(String user) throws NamingException {
+                        <textarea class="code-textarea" id="codeEditorJava" style="display: none;" spellcheck="false" aria-label="Java 코드 편집기">public void searchUser(String user) throws NamingException {
     DirContext ctx = new InitialDirContext(env);
     
     // [취약한 코드] 입력값을 검증 없이 LDAP 필터 생성에 사용
@@ -232,7 +232,7 @@ def find_user(conn, username):
     search_filter = "(cn=%s)" % username
     conn.search('dc=example,dc=com', search_filter)</code></pre>
                         </div>
-                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false">from ldap3 import Connection
+                        <textarea class="code-textarea" id="codeEditorPython" style="display: none;" spellcheck="false" aria-label="Python 코드 편집기">from ldap3 import Connection
 
 def find_user(conn, username):
     # [취약한 코드] 문자열 포맷팅으로 필터 생성

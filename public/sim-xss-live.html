@@ -89,7 +89,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <h2>⚠️ <span data-en="Vulnerable render (innerHTML)">취약한 렌더링 (innerHTML)</span> <span class="tag bad">VULNERABLE</span></h2>
     <div class="cap" data-en="The app inserts your comment with innerHTML, so markup runs as code.">앱이 댓글을 innerHTML로 삽입해, 마크업이 코드로 실행됩니다.</div>
     <label data-en="Your comment / payload">댓글 / 페이로드</label>
-    <textarea id="vin" spellcheck="false">&lt;img src=x onerror="alert('XSS! '+SESSION)"&gt;</textarea>
+    <textarea id="vin" spellcheck="false" aria-label="댓글 / 페이로드">&lt;img src=x onerror="alert('XSS! '+SESSION)"&gt;</textarea>
     <div class="presets">
       <button class="ghost" onclick="setV(\"안녕하세요, 좋은 글이네요!\")" data-en="✔ Normal comment">✔ 정상 댓글</button>
       <button class="ghost" onclick='setV("&lt;img src=x onerror=\"alert(\x27XSS! \x27+SESSION)\"&gt;")'>💉 img onerror</button>
@@ -106,7 +106,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <h2>✅ <span data-en="Secure render (textContent + sanitize)">안전한 렌더링 (textContent + 새니타이즈)</span> <span class="tag good">SECURE</span></h2>
     <div class="cap" data-en="Same app, same payload — but output is escaped, so markup becomes visible text, not code.">같은 앱·같은 페이로드지만, 출력을 이스케이프해서 마크업이 코드가 아닌 텍스트로 보입니다.</div>
     <label data-en="Your comment / payload">댓글 / 페이로드</label>
-    <textarea id="sin" spellcheck="false">&lt;img src=x onerror="alert('XSS! '+SESSION)"&gt;</textarea>
+    <textarea id="sin" spellcheck="false" aria-label="댓글 / 페이로드">&lt;img src=x onerror="alert('XSS! '+SESSION)"&gt;</textarea>
     <button class="act fix" onclick="renderSafe()" id="btnS" disabled>▶ <span data-en="Post comment (escaped)">댓글 게시 (이스케이프)</span></button>
     <div class="cap" style="margin:12px 0 0" data-en="Sink executed:">실행된 싱크:</div>
     <div class="sqlbox" id="sSink">out.textContent = comment</div>

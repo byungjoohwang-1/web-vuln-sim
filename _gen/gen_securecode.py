@@ -45,7 +45,7 @@ PAGE = r'''<!DOCTYPE html>
         .panel-title {{ font-size: 20px; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 10px; }}
         .status-badge {{ padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }}
         .status-vulnerable {{ background: #dc3545; color: white; }}
-        .status-secure {{ background: #28a745; color: white; }}
+        .status-secure {{ background: #28a745; color: #0b1220; }}
         .status-editing {{ background: #ffc107; color: #000; }}
         .code-editor {{ background: #1e1e1e; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; flex-grow: 1; min-height: 420px; }}
         .editor-toolbar {{ background: #2d2d2d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e3e; }}
@@ -59,8 +59,8 @@ PAGE = r'''<!DOCTYPE html>
         .code-textarea:focus {{ outline: 2px solid #007acc; outline-offset: -2px; }}
         .control-panel {{ display: flex; gap: 15px; margin-top: 20px; }}
         .btn {{ flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px; }}
-        .btn-analyze {{ background: #d9534f; color: white; }}
-        .btn-validate {{ background: #28a745; color: white; }}
+        .btn-analyze {{ background: #c64c48; color: white; }}
+        .btn-validate {{ background: #28a745; color: #0b1220; }}
         .btn-hint {{ background: #ffc107; color: #000; }}
         .btn-reset {{ background: #6c757d; color: white; }}
         .btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
@@ -79,7 +79,7 @@ PAGE = r'''<!DOCTYPE html>
         .info-title {{ font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #d9534f; display: flex; align-items: center; gap: 8px; }}
         .info-content {{ color: #555; line-height: 1.6; }}
         .easybox {{ background: linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:20px; font-size:15.5px; line-height:1.75; color:#333; }}
-        .easybox .tag {{ display:inline-block; background:#ff9800; color:white; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }}
+        .easybox .tag {{ display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }}
         .easybox b {{ color:#c0392b; }}
         @media (max-width: 1200px) {{ .main-content {{ grid-template-columns: 1fr; }} }}
     </style>

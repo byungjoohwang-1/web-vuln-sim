@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제로트러스트: 모두가 아는 root 비밀번호 · WEB-VULN-SIM</title>
+<style>
+:root { --bank-primary:#134e4a; --bank-secondary:#0f766e; --bank-bg:#f3f4f6; --text-dark:#1a1a1a; --danger:#d32f2f; --success:#2e7d32; --warning:#ed6c02; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,sans-serif; background:var(--bank-bg); color:var(--text-dark); padding:20px; line-height:1.5; }
+.container { max-width:1400px; margin:0 auto; }
+.top-nav { margin-bottom:15px; }
+.top-nav a { color:var(--bank-primary); text-decoration:none; font-weight:700; font-size:14px; }
+.header { background:white; padding:20px 30px; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; border-left:6px solid var(--bank-primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.header h1 { font-size:22px; color:var(--bank-primary); display:flex; align-items:center; gap:12px; }
+.badge { background:#e3f2fd; color:#1565c0; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; }
+.risk { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; color:#fff; background:var(--danger); }
+.tabs { display:flex; gap:15px; margin-bottom:20px; }
+.tab { flex:1; padding:18px; background:white; border-radius:10px; cursor:pointer; font-weight:600; color:#666; transition:.3s; border:2px solid transparent; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+.tab:hover { transform:translateY(-2px); }
+.tab.active { border-color:var(--bank-primary); color:var(--bank-primary); background:#eef5ff; }
+.grid-container { display:grid; grid-template-columns:1fr 1fr; gap:25px; }
+.content-section { display:none; animation:fadeIn .4s ease; }
+.content-section.active { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.panel { background:white; border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); margin-bottom:25px; }
+.panel-title { font-size:18px; font-weight:700; color:#333; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; }
+.scenario { background:#f8fbff; border:1px solid #d6e6fb; border-radius:8px; padding:15px; font-size:14px; color:#33475b; margin-bottom:18px; }
+.scenario b { color:var(--bank-primary); }
+.attack-controls { background:#212121; color:#fff; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #333; }
+.toggle-switch { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.toggle-status { font-family:'Consolas',monospace; color:#00ff00; font-weight:700; }
+.req-label { display:block; font-size:12px; font-weight:700; color:#555; margin:14px 0 6px; }
+.req-box { width:100%; background:#0d1b2a; color:#7ddcff; border:1px solid #1b3a5b; border-radius:8px; padding:14px; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; min-height:140px; }
+.btn-submit { width:100%; padding:15px; background:var(--bank-primary); color:white; border:none; border-radius:6px; font-size:15px; font-weight:700; cursor:pointer; transition:.3s; margin-top:16px; }
+.btn-submit:hover { background:#002a5c; }
+.btn-submit.hacked { background:var(--danger); }
+.terminal { background:#1e1e1e; color:#d4d4d4; padding:15px; border-radius:8px; font-family:'Consolas',monospace; font-size:13px; height:240px; overflow-y:auto; line-height:1.6; border:1px solid #333; }
+.log-time { color:#569cd6; margin-right:8px; }
+.result-card { display:none; margin-top:18px; border-radius:8px; padding:16px; animation:fadeIn .3s; }
+.result-breach { background:#fff5f5; border:1px solid #ffcdd2; color:#b71c1c; }
+.result-blocked { background:#e8f5e9; border:1px solid #c8e6c9; color:#1b5e20; }
+.data-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.data-table th { background:#f8f9fa; padding:10px; text-align:left; border-bottom:2px solid #ddd; color:#555; }
+.data-table td { padding:10px; border-bottom:1px solid #eee; }
+.amount { font-family:'Consolas',monospace; font-weight:700; color:var(--bank-primary); text-align:right; }
+.compliance-alert { background:#fff5f5; border:1px solid #ffcdd2; padding:15px; border-radius:8px; margin-top:15px; font-size:13px; color:#b71c1c; display:none; animation:fadeIn .3s; }
+.code-editor { width:100%; height:320px; background:#282c34; color:#abb2bf; padding:20px; border-radius:8px; border:none; font-family:'Consolas',monospace; font-size:13px; line-height:1.6; resize:vertical; }
+.kisa-ref { font-size:14px; line-height:1.7; color:#444; }
+.kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
+.kisa-ref ul { margin-left:18px; }
+.easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
+.easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
+.easybox b { color:#c0392b; }
+@media (max-width:1000px) { .grid-container { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="header">
+    <h1><span>🗝️</span> 제로트러스트 실습 &middot; 모두가 아는 root 비밀번호</h1>
+    <div style="text-align:right; font-size:13px; color:#555;">
+      Target: <strong>운영 서버 관리 접근</strong><br>
+      성숙도: <span class="risk">기존 → 향상</span> <span class="badge">시스템 / 접근통제 — 시스템 계정·자격 증명 관리</span>
+    </div>
+  </div>
+
+  <div class="easybox"><span class="tag">💡 쉽게 말하면</span><br></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('attack')">🔓 공격 시뮬레이션 (Red Team)</div>
+    <div class="tab" onclick="switchTab('defense')">🛡️ 대응 방안 (Blue Team)</div>
+  </div>
+
+  <div id="tab-attack" class="content-section active">
+    <div class="grid-container">
+      <div>
+        <div class="panel">
+          <div class="panel-title"><span>공용 관리자 계정 사용</span><span style="font-size:12px; color:#666; font-weight:normal;">🔒 Secured Channel</span></div>
+          <div class="scenario">특권 계정은 조직에서 가장 위험한 자산입니다. <b>공용 계정을 여러 명이 나눠 쓰면</b> 누가 무엇을 했는지 추적할 수 없고, 한 사람이 퇴사해도 비밀번호는 계속 밖을 돌아다닙니다. 제로트러스트에서는 특권 접근도 "그때그때 승인받아 잠깐"이어야 합니다.</div>
+          <div class="attack-controls">
+            <div class="toggle-switch" onclick="toggleAttack()">
+              <div><strong>⚡ 공용 특권 계정 오·남용</strong><br><span style="font-size:12px; opacity:.7;">인프라팀 4명이 root 비밀번호 공유</span></div>
+              <div class="toggle-status" id="attackStatus">OFF</div>
+            </div>
+          </div>
+          <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="요청 전문 편집기">ssh admin_kim@prod-db-01
+  → 개인 계정, sudo 로 권한 상승, 명령 기록 남음</textarea>
+          <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
+          <div class="result-card" id="resultCard"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">🖥️ 금융 시스템 처리 로그</div>
+          <div class="terminal" id="systemLog">
+            <div><span class="log-time">[SYSTEM]</span> Core Banking Channel ready.</div>
+            <div><span class="log-time">[INFO]</span> 거래 요청 대기 중...</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">⚖️ 컴플라이언스 위반 분석</div>
+          <div id="complianceReport" style="color:#666; font-size:14px; text-align:center; padding:20px;">공격 실행 후 분석 결과가 표시됩니다.</div>
+          <div id="violationAlert" class="compliance-alert">
+            <strong>[심각] 암묵적 신뢰가 악용되었습니다</strong>
+            <ul style="margin-top:8px; margin-left:20px; list-style:circle;"><li>시스템 / 접근통제 — 특권 계정이 개인에 귀속되지 않고 공용으로 운영</li><li>특권 접근에 요청·승인·한시 부여 절차 부재</li><li>성숙도 1단계(기존): 관리 계정을 수동 관리하고 세션을 기록하지 않음</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-defense" class="content-section">
+    <div class="grid-container">
+      <div class="panel">
+        <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
+        <p style="font-size:14px; color:#555; margin-bottom:15px;">특권 접근은 <strong>개인 식별 → 요청·승인 → 한시 부여 → 세션 기록 → 자동 회수</strong> 순서로 만들어야 합니다. 비밀번호는 사람이 알지 못하게 금고가 대신 주입하게 하세요.</p>
+        <textarea id="codeEditor" class="code-editor" aria-label="취약 코드 편집기">// [취약] 공용 계정으로 바로 붙는다
+public Session connect(String host) {
+    return ssh.connect(host, "root", sharedPassword);
+}</textarea>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+          <button onclick="verifyCode()" class="btn-submit" style="width:auto; background:var(--success); margin-top:0;">코드 검증</button>
+          <button onclick="showHint()" style="padding:15px; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer;">힌트(정답) 보기</button>
+        </div>
+        <div id="codeResult" style="margin-top:15px;"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📚 제로트러스트 성숙도 해설 / 적용 가이드</div>
+        <div class="kisa-ref"><h4>1. 무엇을 보는 항목인가</h4>특권 접근이 <b>누구에게, 언제까지, 무엇을 위해</b> 열렸는지 설명할 수 있는지를 본다. 설명할 수 없으면 사고가 나도 원인을 좁힐 수 없다.<h4>2. 성숙도 단계별 모습</h4><ul><li><b>기존</b> — 공용 관리 계정, 비밀번호 공유, 세션 기록 없음</li><li><b>초기</b> — 개인 계정 + sudo, 비밀번호 주기 변경</li><li><b>향상</b> — 금고 기반 자격 증명, 요청·승인 후 한시 부여, 세션 기록</li><li><b>최적화</b> — 상시 특권 0을 목표로 하고 이상 명령을 실시간 차단</li></ul><h4>3. 무엇을 증적으로 남길 수 있나</h4><ul><li>상시 특권 계정 수의 감소 추이</li><li>특권 요청·승인 이력과 평균 보유 시간</li><li>자격 증명 자동 교체 주기와 실패 건수</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NORMAL_REQ = `ssh admin_kim@prod-db-01
+  → 개인 계정, sudo 로 권한 상승, 명령 기록 남음`;
+const ATTACK_REQ = `ssh root@prod-db-01
+  비밀번호: (4명이 공유, 최근 변경 2년 전)
+  → 누가 접속했는지 구분 불가`;
+const SECURE_HINT = `// [안전] 요청·승인 기반 한시 특권 + 세션 기록
+public Session connect(String host, User who, String reason) {
+    // 1) 누가 왜 필요한지 남기고 승인받는다
+    ElevationRequest req = pam.request(who, host, reason);
+    if (!pam.approved(req)) throw new AccessDenied("특권 접근 미승인");
+
+    // 2) 비밀번호는 사람에게 주지 않고 금고가 주입한다(주기적 자동 교체)
+    Credential c = vault.checkout(host, req.getTtl());
+
+    // 3) 세션을 개인에게 귀속시키고 명령을 기록한다
+    Session s = ssh.connectAs(host, c, who.getId());
+    recorder.attach(s, who, req);
+
+    // 4) 사용 시간이 끝나면 자격 증명을 회수하고 즉시 교체한다
+    scheduler.after(req.getTtl(), () -> {
+        vault.checkin(c);
+        vault.rotate(host);
+        s.close();
+    });
+    return s;
+}`;
+const CHECKS = [[`pam.request`, `approved`, `승인`], [`vault`, `recorder`, `rotate`]];
+let isAttackOn = false;
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content-section').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function addLog(msg,type='info'){
+  const box=document.getElementById('systemLog'); const time=new Date().toLocaleTimeString('ko-KR');
+  let color='#d4d4d4'; if(type==='error')color='#f48771'; if(type==='warn')color='#cca700'; if(type==='success')color='#89d185';
+  const d=document.createElement('div'); d.innerHTML=`<span class="log-time">[${time}]</span> <span style="color:${color}">${msg}</span>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+function toggleAttack(){
+  isAttackOn=!isAttackOn;
+  const s=document.getElementById('attackStatus'), btn=document.getElementById('sendBtn'), req=document.getElementById('reqBox');
+  if(isAttackOn){
+    s.innerText='ON (Tampering...)'; s.style.color='#ff4444';
+    req.value=ATTACK_REQ; req.style.color='#ff6b6b';
+    btn.innerText='변조 요청 전송 (Execute)'; btn.classList.add('hacked');
+    addLog('[ATTACK] 요청 데이터 변조 활성화', 'warn');
+  } else {
+    s.innerText='OFF'; s.style.color='#00ff00';
+    req.value=NORMAL_REQ; req.style.color='#7ddcff';
+    btn.innerText='요청 전송'; btn.classList.remove('hacked');
+    addLog('[INFO] 공격 모드 해제', 'success');
+  }
+}
+function sendRequest(){
+  const btn=document.getElementById('sendBtn'); btn.innerText='처리 중...';
+  addLog('[REQUEST] 금융 거래 요청 수신');
+  setTimeout(()=>{
+    if(isAttackOn){ addLog('[SSH] root 직접 로그인 허용','error'); addLog('[AUTH] 공용 비밀번호 — 최종 변경일 2024-08-11','warn'); addLog('[AUDIT] 세션 주체 식별 불가(root)','error'); addLog('[DB] 고객 테이블 덤프 실행 — 책임 추적 불가','error'); showBreach(); showCompliance(); }
+    else { addLog('[OK] 정상 거래 처리 완료', 'success'); showNormal(); }
+    btn.innerText = isAttackOn ? '변조 요청 전송 (Execute)' : '요청 전송';
+  }, 900);
+}
+function showBreach(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-breach'; c.style.display='block';
+  c.innerHTML = `<strong>🚨 책임 추적이 불가능한 특권 세션</strong><br>공용 계정이라 감사 로그에 남은 주체가 사람이 아니라 계정 이름뿐입니다.<table class="data-table"><tr><th>항목</th><th>있어야 할 상태</th><th>현재</th></tr><tr><td>접속 주체</td><td>개인 식별</td><td style="color:#b71c1c">root(공용)</td></tr><tr><td>권한 획득</td><td>요청·승인 후 한시 부여</td><td style="color:#b71c1c">상시 보유</td></tr><tr><td>세션 기록</td><td>명령·화면 기록</td><td style="color:#b71c1c">없음</td></tr></table>`;
+}
+function showNormal(){
+  const c=document.getElementById('resultCard'); c.className='result-card result-blocked'; c.style.display='block';
+  c.innerHTML = '<strong>✅ 정상 거래</strong><br>요청이 검증을 통과하여 정상 처리되었습니다. (공격 모드를 켜고 변조를 시도해 보세요)';
+}
+function showCompliance(){
+  document.getElementById('complianceReport').style.display='none';
+  document.getElementById('violationAlert').style.display='block';
+}
+function verifyCode(){
+  // 주석 제거(주석 속 토큰으로 통과하는 우회 차단) + 공백/연산자 정규화
+  const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/[^\n]*/g,' ').replace(/#[^\n]*/g,' ');
+  const norm=s=>strip(s).replace(/\s+/g,' ').replace(/\s*(==|!=|<=|>=|=)\s*/g,'$1');
+  const code=norm(document.getElementById('codeEditor').value);
+  const r=document.getElementById('codeResult');
+  const ok=CHECKS.every(grp=>{
+    const pos=grp.filter(t=>!t.startsWith('!')), neg=grp.filter(t=>t.startsWith('!')).map(t=>t.slice(1));
+    return (pos.length===0||pos.some(t=>code.includes(norm(t)))) && neg.every(t=>!code.includes(norm(t)));
+  });
+  if(ok){ r.innerHTML='<div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:6px; font-weight:bold;">✅ 보안 조치 완료 (Secure)<br><span style="font-size:12px; font-weight:normal;">한시 특권 부여와 금고 기반 자격 증명으로 공용 계정 문제가 사라집니다.</span></div>'; }
+  else { r.innerHTML='<div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; font-weight:bold;">❌ 여전히 취약함 (Vulnerable)<br><span style="font-size:12px; font-weight:normal;">요청·승인, 금고 주입, 세션 기록, 자동 회수가 모두 필요합니다.</span></div>'; }
+}
+function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
+</script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</body>
+</html>
