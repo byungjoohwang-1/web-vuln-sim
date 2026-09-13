@@ -292,4 +292,14 @@ async function handleVerify(db, certId) {
   };
 }
 
-module.exports = { handleStart, handleSubmit, handleVerify, maskName, certCanonical, QUESTIONS_PER_EXAM, PASS_RATIO, MAX_ATTEMPTS_PER_DAY };
+
+/**
+ * 익명화 등으로 수료증 내용이 바뀌었을 때 서명을 다시 만든다.
+ * 이걸 안 하면 검증이 "서명 불일치"로 뜨는데, 실제로는 위조가 아니라
+ * 본인 요청에 따른 정당한 변경이라 사용자에게 잘못된 경고를 주게 된다.
+ */
+async function resignCanonical(db, cert) {
+  const secret = await getSecret(db);
+  return hmac(secret, certCanonical(cert));
+}
+module.exports = { handleStart, handleSubmit, handleVerify, maskName, resignCanonical, certCanonical, QUESTIONS_PER_EXAM, PASS_RATIO, MAX_ATTEMPTS_PER_DAY };

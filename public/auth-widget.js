@@ -233,3 +233,30 @@ getRedirectResult(auth).catch(e => {
 });
 onAuthStateChanged(auth, u => u ? onLogin(u) : onLogout());
 render();
+
+/* ===== 계정 데이터 열람·삭제 (QA N-07) =====
+   개인정보 처리방침에 "열람·내려받기·삭제할 수 있다"고 적으려면 실제 수단이 있어야 한다.
+   서버 호출은 Cloud Functions(accountApi)가 하고, 여기서는 ID 토큰만 붙여 준다. */
+const ACCOUNT_API = 'https://us-central1-vuln-sim.cloudfunctions.net/accountApi';
+
+async function accountCall(action, extra){
+  if (!currentUser) throw new Error('로그인이 필요합니다.');
+  const token = await currentUser.getIdToken();
+  const res = await fetch(ACCOUNT_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify(Object.assign({ action }, extra || {})),
+  });
+  const j = await res.json().catch(() => null);
+  if (!res.ok || !j || !j.ok) throw new Error((j && j.error) || ('요청 실패 (' + res.status + ')'));
+  return j;
+}
+
+window.WVS_ACCOUNT = {
+  isSignedIn(){ return !!currentUser; },
+  user(){ return currentUser ? { uid: currentUser.uid, name: currentUser.displayName || '', email: currentUser.email || '' } : null; },
+  /** 서버에 저장된 내 데이터 전부를 JSON 으로 돌려준다. */
+  exportData(){ return accountCall('export'); },
+  /** 서버 데이터 삭제. 수료증은 발급 사실만 남기고 이름을 익명 처리한다(검증 링크 보존). */
+  deleteData(){ return accountCall('delete', { confirm: 'DELETE' }); },
+};

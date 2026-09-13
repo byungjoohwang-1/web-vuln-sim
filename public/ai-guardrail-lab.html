@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<title>AI 가드레일 연습장 · WEB-VULN-SIM</title>
+<meta name="description" content="AI 가드레일 연습장: 위험 요청 거부, 힌트 설계, 취약 코드 리팩터, 시크릿 탐지, 프롬프트 주입 인지. API 키 없이 규칙 기반으로 채점합니다.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="AI 가드레일 연습장">
+<meta property="og:description" content="AI 도우미의 안전 장치를 직접 설계하고 규칙 기반 채점으로 확인합니다. API 키가 필요 없습니다.">
+<meta property="og:url" content="https://vuln-sim.web.app/ai-guardrail-lab.html">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#f59e0b;--accent2:#38bdf8;--ok:#22c55e;--bad:#ef4444;--mono:'JetBrains Mono','Consolas',monospace}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  a{color:var(--accent2);text-decoration:none}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#0a101e;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30;flex-wrap:wrap}
+  .topbar a{color:#cbd5e1;font-size:14px}.topbar .sp{flex:1}
+  .wrap{max-width:980px;margin:0 auto;padding:18px 14px 40px}
+  .hero h1{font-size:23px;margin:6px 0 6px}
+  .hero .sub{color:var(--muted);font-size:13.5px;max-width:70ch}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin:16px 0}
+  h2{font-size:17px;margin:0 0 8px}
+  .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0 0}
+  .tab{background:var(--panel2);border:1px solid var(--border);color:#cbd5e1;border-radius:999px;padding:8px 15px;font:600 12.5px/1.2 inherit;cursor:pointer;display:flex;align-items:center;gap:7px}
+  .tab[aria-selected="true"]{border-color:var(--accent);background:#1c1708;color:#fde68a}
+  .tab .dot{width:8px;height:8px;border-radius:50%;background:#334155;flex:0 0 auto}
+  .tab[data-done="1"] .dot{background:var(--ok)}
+  .goal{background:#0f172a;border-left:3px solid var(--accent2);border-radius:8px;padding:11px 13px;font-size:13px;margin:0 0 12px}
+  .goal b{color:#7dd3fc}
+  .why{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+  .prompt{white-space:pre-wrap;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:13px 15px;font-size:13.5px;margin:0 0 12px}
+  pre.given{background:#0a101e;border:1px solid var(--border);border-radius:10px;padding:13px 15px;overflow:auto;font-family:var(--mono);font-size:12.5px;margin:0 0 14px;color:#e2e8f0}
+  label{font-size:12.5px;color:var(--muted);display:block;margin:12px 0 5px}
+  textarea,input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--ink);border-radius:9px;padding:10px 12px;font-size:13.5px;font-family:inherit;resize:vertical}
+  textarea.code{font-family:var(--mono);font-size:12.5px}
+  .act{border:0;border-radius:9px;padding:10px 18px;font:700 13.5px/1 inherit;cursor:pointer}
+  .act.primary{background:var(--accent);color:#3a2a04}
+  .act.ghost{background:#1e293b;color:#cbd5e1}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .picklist{display:grid;gap:5px;margin:0 0 6px}
+  .pickline{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-family:var(--mono);font-size:12.5px;cursor:pointer}
+  .pickline:hover{border-color:#334155}
+  .pickline input{margin-top:3px;flex:0 0 auto}
+  .pickline .ln{color:var(--muted);flex:0 0 26px;text-align:right}
+  .choices{display:grid;gap:8px;margin:4px 0 0}
+  .choice{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;font-size:13.5px;cursor:pointer}
+  .choice input{margin-top:4px;flex:0 0 auto}
+  .res{margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+  .res h3{font-size:14.5px;margin:0 0 10px}
+  .crit{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:9px;margin-bottom:7px;font-size:13px;border:1px solid transparent}
+  .crit.pass{background:#06281a;border-color:#14532d}
+  .crit.fail{background:#2a0f12;border-color:#4c1d1d}
+  .crit .mk{flex:0 0 auto;font-weight:800}
+  .crit.pass .mk{color:#4ade80}.crit.fail .mk{color:#f87171}
+  .crit .hint{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .score{font-weight:800;font-size:14px;margin-bottom:10px}
+  .score.ok{color:#4ade80}.score.no{color:#fbbf24}
+  details.model{margin-top:14px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);padding:0 14px}
+  details.model>summary{cursor:pointer;padding:12px 0;font-size:13px;font-weight:600;color:#cbd5e1}
+  details.model pre{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;background:#0a101e;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto}
+  .disc{font-size:12px;color:var(--muted);background:#0f172a;border-left:3px solid var(--accent);border-radius:8px;padding:11px 13px;margin-top:18px}
+  .progress{display:flex;align-items:center;gap:11px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .pbar{flex:1;min-width:140px;height:8px;border-radius:99px;background:#1e293b;overflow:hidden}
+  .pbar i{display:block;height:100%;background:var(--ok);border-radius:99px;width:0}
+  .langbtn{background:#1e293b;border:1px solid var(--border);color:#cbd5e1;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:13px}
+  .hidden{display:none}
+  @media(max-width:640px){.wrap{padding:14px 12px 34px}.card{padding:14px}}
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+#wvs-main:focus-visible{outline:2px solid var(--wvs-focus,#38bdf8);outline-offset:3px}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
+
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="ai-hub.html" data-en="AI Track">AI 트랙</a>
+  <a href="ai-tutor.html" data-en="AI Tutor">AI 튜터</a>
+  <a href="ai-grader.html" data-en="AI Grader">AI 채점기</a>
+  <span class="sp"></span>
+  <button class="langbtn" type="button" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🛟 <span data-en="AI Guardrail Lab">AI 가드레일 연습장</span></h1>
+    <p class="sub" data-en="Stand on the side that makes an AI helper safe. Write the refusal yourself, design the hint ladder, strip the weaknesses out of generated code. Grading is rule-based, so <b>no API key and no network are needed.</b>">AI 도우미를 안전하게 만드는 쪽에 서 봅니다. 거부 문장을 직접 쓰고, 힌트 사다리를 설계하고,
+      생성된 코드의 약점을 걷어냅니다. 채점은 규칙 기반이라 <b>API 키도 네트워크도 필요 없습니다.</b></p>
+  </div>
+
+  <div class="card">
+    <div class="progress">
+      <span id="progText">진행 0 / 5</span>
+      <span class="pbar"><i id="progBar"></i></span>
+      <button class="act ghost" type="button" onclick="resetAll()" data-en="Reset progress">진행 초기화</button>
+    </div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+  </div>
+
+  <div class="card" id="missionCard">
+    <h2 id="mTitle">불러오는 중</h2>
+    <p class="goal"><b data-en="Goal">학습 목표</b> <span id="mGoal"></span></p>
+    <p class="why" id="mWhy"></p>
+    <div class="prompt" id="mPrompt"></div>
+    <pre class="given hidden" id="mGiven"></pre>
+    <div id="mInputs"></div>
+    <div class="actions">
+      <button class="act primary" type="button" onclick="submitMission()" data-en="Grade">채점하기</button>
+      <button class="act ghost" type="button" onclick="clearMission()" data-en="Clear input">입력 지우기</button>
+      <span style="font-size:12px;color:var(--muted)" data-en="Your answers stay in this browser.">답안은 이 브라우저에만 저장됩니다.</span>
+    </div>
+    <div class="res hidden" id="mRes" aria-live="polite"></div>
+    <details class="model" id="mModelBox">
+      <summary data-en="Show the model answer (try it yourself first)">모범 답안 보기 (먼저 직접 해 보고 여는 것을 권합니다)</summary>
+      <pre id="mModel"></pre>
+    </details>
+  </div>
+
+  <div class="disc" data-en="⚠️ The grader reads wording, not meaning. Passing does not prove the answer is right, and a good answer can miss the rules and read as incomplete. Put it next to the model answer and judge for yourself. Every scenario here is fictional and targets no real system.">
+    ⚠️ 채점기는 표현을 보지 의미를 보지 않습니다. 통과가 곧 정답 보장은 아니고, 반대로 좋은 답안이 규칙에 걸리지 않아
+    미달로 나올 수도 있습니다. 모범 답안과 나란히 놓고 스스로 판단하세요.
+    이 연습장의 모든 시나리오는 가상이며, 실제 시스템을 대상으로 하지 않습니다.
+  </div>
+</div>
+
+<script src="js/guardrail-missions.js"></script>
+<script>
+/* ---------- i18n ---------- */
+/* 사이트 공통 방식을 따른다. data-en 을 가진 요소만 바꾸고, 원문은 dataset.ko 에 남긴다. */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function T(v){return (window.WvsGuardrail&&window.WvsGuardrail.T)?window.WvsGuardrail.T(v):v;}
+function applyLang(){
+  var en=isEn();
+  document.documentElement.lang = en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    if(el.dataset.ko===undefined) el.dataset.ko=el.innerHTML;
+    el.innerHTML = en?el.dataset.en:el.dataset.ko;
+  });
+  document.title = en ? 'AI Guardrail Lab · WEB-VULN-SIM' : 'AI 가드레일 연습장 · WEB-VULN-SIM';
+}
+function toggleLang(){
+  try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}
+  applyLang(); renderTabs(); renderMission();
+}
+
+/* ---------- 상태 ---------- */
+var M = (window.WvsGuardrail && window.WvsGuardrail.MISSIONS) || [];
+var cur = 0;
+var STORE = 'wvs_ai_guardrail';   /* A-07: AI 트랙 진도 키는 wvs_ai_* 로 통일한다 */
+
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE)||'{}'); }catch(e){ return {}; } }
+function save(s){ try{ localStorage.setItem(STORE, JSON.stringify(s)); }catch(e){} }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ---------- 탭 ---------- */
+function renderTabs(){
+  var st = load();
+  var box = document.getElementById('tabs');
+  box.textContent = '';
+  M.forEach(function(m,i){
+    var b = document.createElement('button');
+    b.type='button'; b.className='tab'; b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', String(i===cur));
+    if(st[m.id] && st[m.id].cleared) b.setAttribute('data-done','1');
+    var dot=document.createElement('span'); dot.className='dot'; b.appendChild(dot);
+    b.appendChild(document.createTextNode(T(m.title).replace(/^(미션|Mission)\s*/,'')));
+    b.onclick=function(){ cur=i; renderTabs(); renderMission(); };
+    box.appendChild(b);
+  });
+  var done = M.filter(function(m){ return st[m.id] && st[m.id].cleared; }).length;
+  document.getElementById('progText').textContent = L('진행 ','Done ') + done + ' / ' + M.length;
+  document.getElementById('progBar').style.width = (M.length? Math.round(done*100/M.length):0) + '%';
+}
+
+/* ---------- 미션 화면 ---------- */
+function el(tag, cls, text){
+  var e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(text!=null) e.textContent=text;
+  return e;
+}
+
+function renderMission(){
+  var m = M[cur];
+  if(!m) return;
+  var st = load();
+  var saved = st[m.id] || {};
+
+  document.getElementById('mTitle').textContent = T(m.title);
+  document.getElementById('mGoal').textContent = T(m.goal);
+  document.getElementById('mWhy').textContent = T(m.why);
+  document.getElementById('mPrompt').textContent = T(m.prompt);
+
+  var g = document.getElementById('mGiven');
+  var given = (isEn() && m.givenEn) ? m.givenEn : m.given;
+  if(given){ g.textContent = given; g.classList.remove('hidden'); }
+  else g.classList.add('hidden');
+
+  var box = document.getElementById('mInputs');
+  box.textContent = '';
+
+  if(m.kind === 'steps'){
+    m.steps.forEach(function(lbl,i){
+      var l = el('label', null, T(lbl)); l.setAttribute('for','step'+i);
+      var t = document.createElement('textarea');
+      t.id='step'+i; t.rows=3; t.value=(saved.parts&&saved.parts[i])||'';
+      box.appendChild(l); box.appendChild(t);
+    });
+  } else if(m.kind === 'pick'){
+    var list = el('div','picklist');
+    m.lines.forEach(function(ln){
+      var row = el('label','pickline');
+      var cb = document.createElement('input');
+      cb.type='checkbox'; cb.value=String(ln.n); cb.className='pickbox';
+      if(saved.picked && saved.picked.indexOf(ln.n)>=0) cb.checked=true;
+      row.appendChild(cb);
+      row.appendChild(el('span','ln', ln.n+'.'));
+      row.appendChild(el('span',null, ln.text));
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+    var fl = el('label',null,T(m.followup)); fl.setAttribute('for','follow');
+    var ft = document.createElement('textarea'); ft.id='follow'; ft.rows=2;
+    ft.value=(saved.parts&&saved.parts[0])||'';
+    box.appendChild(fl); box.appendChild(ft);
+  } else if(m.kind === 'quiz'){
+    var cl = el('div','choices');
+    m.choices.forEach(function(c){
+      var row = el('label','choice');
+      var rb = document.createElement('input');
+      rb.type='radio'; rb.name='qchoice'; rb.value=c.id; rb.className='choicebox';
+      if(saved.choice===c.id) rb.checked=true;
+      row.appendChild(rb);
+      row.appendChild(el('span',null,T(c.text)));
+      cl.appendChild(row);
+    });
+    box.appendChild(cl);
+    var ql = el('label',null,T(m.followup)); ql.setAttribute('for','follow');
+    var qt = document.createElement('textarea'); qt.id='follow'; qt.rows=3;
+    qt.value=(saved.parts&&saved.parts[0])||'';
+    box.appendChild(ql); box.appendChild(qt);
+  } else {
+    var tl = el('label',null,L('답안','Your answer')); tl.setAttribute('for','answer');
+    var ta = document.createElement('textarea');
+    ta.id='answer'; ta.rows = m.kind==='code' ? 14 : 7;
+    if(m.kind==='code') ta.className='code';
+    ta.placeholder = T(m.placeholder) || '';
+    ta.value = saved.text || (m.kind==='code' && !saved.text ? m.given : '');
+    box.appendChild(tl); box.appendChild(ta);
+  }
+
+  document.getElementById('mModel').textContent = T(m.model);
+  document.getElementById('mModelBox').open = false;
+
+  var res = document.getElementById('mRes');
+  res.textContent=''; res.classList.add('hidden');
+  if(saved.result) showResult(m, saved.result);
+}
+
+/* ---------- 수집과 채점 ---------- */
+function collect(m){
+  if(m.kind === 'steps'){
+    var parts = m.steps.map(function(_,i){ return (document.getElementById('step'+i)||{}).value || ''; });
+    return { text: parts.join('\n\n'), parts: parts };
+  }
+  if(m.kind === 'pick'){
+    var picked = [];
+    Array.prototype.forEach.call(document.querySelectorAll('.pickbox'), function(cb){
+      if(cb.checked) picked.push(parseInt(cb.value,10));
+    });
+    var f = (document.getElementById('follow')||{}).value || '';
+    return { text: f, parts: [f], picked: picked };
+  }
+  if(m.kind === 'quiz'){
+    var sel = document.querySelector('.choicebox:checked');
+    var f2 = (document.getElementById('follow')||{}).value || '';
+    return { text: f2, parts: [f2], choice: sel ? sel.value : '' };
+  }
+  var v = (document.getElementById('answer')||{}).value || '';
+  return { text: v, parts: [v] };
+}
+
+function submitMission(){
+  var m = M[cur];
+  var ans = collect(m);
+  var r = window.WvsGuardrail.grade(m, ans);
+  var st = load();
+  st[m.id] = {
+    text: ans.text, parts: ans.parts, picked: ans.picked, choice: ans.choice,
+    cleared: r.cleared, passed: r.passed, total: r.total,
+    at: new Date().toISOString().slice(0,10),
+    result: { results: r.results, passed: r.passed, total: r.total, cleared: r.cleared, extra: r.extra }
+  };
+  save(st);
+  renderTabs();
+  showResult(m, st[m.id].result);
+  document.getElementById('mRes').scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+
+function showResult(m, r){
+  var res = document.getElementById('mRes');
+  res.textContent=''; res.classList.remove('hidden');
+
+  var h = el('h3', null, L('채점 결과','Result'));
+  res.appendChild(h);
+
+  var sc = el('div', 'score ' + (r.cleared?'ok':'no'),
+    r.cleared ? L('통과. 기준 ' + r.total + '개를 모두 충족했습니다.',
+                  'Passed. All ' + r.total + ' criteria met.')
+              : L('기준 ' + r.total + '개 중 ' + r.passed + '개 충족. 아래 미달 항목을 보완해 보세요.',
+                  r.passed + ' of ' + r.total + ' criteria met. Work on the gaps below.'));
+  res.appendChild(sc);
+
+  if(m.kind === 'pick' && r.extra && r.extra.detail){
+    var d = r.extra.detail;
+    var line = L('비밀값 ' + d.found + ' / ' + d.total + ' 개 찾음',
+                 'Found ' + d.found + ' of ' + d.total + ' secrets');
+    if(d.wrong && d.wrong.length) line += L(', 비밀값이 아닌 줄 ' + d.wrong.length + '개를 함께 골랐습니다 (' + d.wrong.join(', ') + '번)',
+                                            ', and selected ' + d.wrong.length + ' line(s) that are not secrets (' + d.wrong.join(', ') + ')');
+    res.appendChild(el('p','why', line));
+  }
+  if(m.kind === 'quiz' && r.extra && r.extra.chosen){
+    res.appendChild(el('p','why', L('고른 답: ','You chose: ') + T(r.extra.chosen.text) + ' -> ' + T(r.extra.chosen.why)));
+  }
+
+  r.results.forEach(function(c){
+    var row = el('div','crit ' + (c.pass?'pass':'fail'));
+    row.appendChild(el('span','mk', c.pass?L('통과','Pass'):L('미달','Gap')));
+    var body = el('span');
+    body.appendChild(document.createTextNode(c.label));
+    if(!c.pass) body.appendChild(el('span','hint', c.hint));
+    row.appendChild(body);
+    res.appendChild(row);
+  });
+}
+
+function clearMission(){
+  var m = M[cur];
+  var st = load();
+  delete st[m.id];
+  save(st);
+  renderTabs();
+  renderMission();
+}
+
+function resetAll(){
+  save({});
+  renderTabs();
+  renderMission();
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  applyLang();
+  if(!M.length){
+    document.getElementById('mTitle').textContent = L('미션을 불러오지 못했습니다.','Could not load the missions.');
+    return;
+  }
+  renderTabs();
+  renderMission();
+});
+</script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/safety-notice.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</body>
+</html>

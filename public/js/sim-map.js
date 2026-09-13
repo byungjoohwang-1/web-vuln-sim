@@ -8,7 +8,7 @@ window.SIM_BY_CWE = {
   'CWE-113': 'sim-split.html', 'CWE-190': 'sim-int-overflow.html', 'CWE-807': 'sim-untrusted-decision.html',
   'CWE-120': 'sim-bufferoverflow.html', 'CWE-134': 'sim-formatstring.html', 'CWE-306': 'sim-no-auth.html',
   'CWE-285': 'sim-idor.html', 'CWE-732': 'sim-wrong-permission.html', 'CWE-327': 'sim-weak-crypto.html',
-  'CWE-311': 'sim-unencrypted_data.html', 'CWE-798': 'sim-hardedcode.html', 'CWE-326': 'sim-weak-keylength.html',
+  'CWE-311': 'sim-unencrypted_data.html', 'CWE-798': 'sim-hardcoded-credentials.html', 'CWE-326': 'sim-weak-keylength.html',
   'CWE-330': 'sim-weak-random.html', 'CWE-521': 'sim-weak-password.html', 'CWE-347': 'sim-signature-verify.html',
   'CWE-295': 'sim-cert-validation.html', 'CWE-539': 'sim-cookiebyunjo.html', 'CWE-615': 'sim-source-comments.html',
   'CWE-759': 'sim-nosalt-hash.html', 'CWE-494': 'sim-code-integrity.html', 'CWE-307': 'sim-brute.html',

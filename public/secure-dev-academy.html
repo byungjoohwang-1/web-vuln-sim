@@ -412,6 +412,26 @@ select.pin{width:100%;max-width:360px;padding:9px 11px;border:1px solid #cbd5e1;
 <script src="/js/external-run-notice.js"></script>
 </head>
 <body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
 <a href="#mainviews" class="skiplink">본문 바로가기</a>
 <div id="ariaLive" class="visually-hidden" role="status" aria-live="polite"></div>
 <div class="top"><div class="wrap"><a href="secure-dev-portal.html">&larr; 개발보안 학습 포털</a> &nbsp;·&nbsp; <a href="index.html">홈</a></div></div>
@@ -518,7 +538,7 @@ const CATEGORY_INFO = {
   'API오용':{full:'API 오용',def:'의도와 다르게 또는 보안상 위험한 API를 사용하는 유형.',ex:'DNS lookup에 의존한 보안 결정 · 취약한 API 사용',diag:'폐기(deprecated)·위험 API 사용 여부, 보안 결정을 위·변조 가능한 정보(DNS 등)에 의존하는지, 안전한 대체 API로 교체됐는지 확인한다.'}
 };
 // 개념→대표 시뮬레이터 매핑(있으면 링크)
-const SIMMAP={'SQL 삽입':'03_code_sql_injection.html','코드 삽입':'03_code_codeinjection.html','경로 조작 및 자원 삽입':'03_code_path_traversal.html','크로스사이트 스크립트(XSS)':'03_code_xss.html','운영체제 명령어 삽입':'03_code_os_command.html','위험한 형식 파일 업로드':'03_code_dangerous_file_upload.html','신뢰되지 않는 URL 주소로 자동접속 연결':'03_code_open_redirect.html','XML 외부 개체(XXE)':'03_code_xxe.html','XML 삽입':'03_code_xml.html','LDAP 삽입':'03_code_ldap_injection.html','크로스사이트 요청 위조(CSRF)':'03_code_csrf.html','서버사이드 요청 위조(SSRF)':'03_code_ssrf.html','HTTP 응답 분할':'03_code_http_split.html','정수형 오버플로우':'03_code_integer_overflow.html','메모리 버퍼 오버플로우':'03_code_bufferoverflow.html','적절한 인증 없는 중요기능 허용':'03_code_missing_auth.html','부적절한 인가':'03_code_inapporiate_auth.html','취약한 암호화 알고리즘 사용':'03_code_risky_crypto.html','하드코드된 중요정보':'03_code_hardedcode.html','적절하지 않은 난수값 사용':'03_code_useofinsufficient_random.html','취약한 비밀번호 허용':'03_code_weakpassword.html','솔트 없이 일방향 해시함수 사용':'03_code_nosalthash.html','경쟁조건: 검사시점과 사용시점(TOCTOU)':'03_code_race_condition.html','오류 메시지 정보 노출':'03_code_error_message.html','부적절한 예외 처리':'03_code_improper_exception.html','Null Pointer 역참조':'03_code_null_pointer.html','부적절한 자원 해제':'03_code_improper_resource_release.html','해제된 자원 사용':'03_code_use_after_free.html','초기화되지 않은 변수 사용':'03_code_uninitialized_variable.html','신뢰할 수 없는 데이터의 역직렬화':'03_code_deserialization.html','제거되지 않고 남은 디버그 코드':'03_code_debug_code.html','DNS lookup에 의존한 보안 결정':'03_code_dns_security_decision.html','취약한 API 사용':'03_code_vulnerable_api.html'};
+const SIMMAP={'SQL 삽입':'03_code_sql_injection.html','코드 삽입':'03_code_codeinjection.html','경로 조작 및 자원 삽입':'03_code_path_traversal.html','크로스사이트 스크립트(XSS)':'03_code_xss.html','운영체제 명령어 삽입':'03_code_os_command.html','위험한 형식 파일 업로드':'03_code_dangerous_file_upload.html','신뢰되지 않는 URL 주소로 자동접속 연결':'03_code_open_redirect.html','XML 외부 개체(XXE)':'03_code_xxe.html','XML 삽입':'03_code_xml.html','LDAP 삽입':'03_code_ldap_injection.html','크로스사이트 요청 위조(CSRF)':'03_code_csrf.html','서버사이드 요청 위조(SSRF)':'03_code_ssrf.html','HTTP 응답 분할':'03_code_http_split.html','정수형 오버플로우':'03_code_integer_overflow.html','메모리 버퍼 오버플로우':'03_code_bufferoverflow.html','적절한 인증 없는 중요기능 허용':'03_code_missing_auth.html','부적절한 인가':'03_code_inappropriate_auth.html','취약한 암호화 알고리즘 사용':'03_code_risky_crypto.html','하드코드된 중요정보':'03_code_hardcoded_credentials.html','적절하지 않은 난수값 사용':'03_code_useofinsufficient_random.html','취약한 비밀번호 허용':'03_code_weakpassword.html','솔트 없이 일방향 해시함수 사용':'03_code_nosalthash.html','경쟁조건: 검사시점과 사용시점(TOCTOU)':'03_code_race_condition.html','오류 메시지 정보 노출':'03_code_error_message.html','부적절한 예외 처리':'03_code_improper_exception.html','Null Pointer 역참조':'03_code_null_pointer.html','부적절한 자원 해제':'03_code_improper_resource_release.html','해제된 자원 사용':'03_code_use_after_free.html','초기화되지 않은 변수 사용':'03_code_uninitialized_variable.html','신뢰할 수 없는 데이터의 역직렬화':'03_code_deserialization.html','제거되지 않고 남은 디버그 코드':'03_code_debug_code.html','DNS lookup에 의존한 보안 결정':'03_code_dns_security_decision.html','취약한 API 사용':'03_code_vulnerable_api.html'};
 
 const NS='sda_';
 function load(k,d){try{return JSON.parse(localStorage.getItem(NS+k))??d;}catch(e){return d;}}
@@ -2105,5 +2125,6 @@ rDash();
 </script>
 <script type="module" src="auth-widget.js"></script>
 <script src="/js/soc-chrome.js" defer></script>
+<script src="/js/shell.js" defer></script>
 </body>
 </html>

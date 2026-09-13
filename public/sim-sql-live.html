@@ -62,6 +62,26 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
 </style>
 </head>
 <body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
 <div class="topbar">
   <a href="index.html">🏠 <span data-en="Home">홈</span></a>
   <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
@@ -161,7 +181,7 @@ ps.executeQuery();      // 입력은 데이터로만 처리</pre></div>
     ⚠️ 교육용 시뮬레이션입니다. SQLite 엔진은 브라우저 안(sql.js / WebAssembly)에서만 로컬로 동작하며, 실제 서버·네트워크는 관여하지 않고 데이터가 기기를 벗어나지 않습니다.</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js" crossorigin="anonymous" integrity="sha384-DJiKBv+LC78e5InEB+MvFIAH079ynMK/ERTtFUCpDzXhH1Bht7aVfpg3yOVsuYl9" referrerpolicy="no-referrer"></script>
 <script>
 /* ---------- i18n (자기완결) ---------- */
 function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
@@ -299,5 +319,7 @@ document.addEventListener('DOMContentLoaded', boot);
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
 <script src="/js/soc-chrome.js" defer></script>
+<script src="/js/shell.js" defer></script>
+<script src="/js/safety-notice.js" defer></script>
 </body>
 </html>

@@ -120,9 +120,30 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
 .sr-item{background:#0d1224;border:1px solid #232d52;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#cbd5e1;font-size:12.5px}
 .sr-item:hover{border-color:#818cf8;color:#fff}
 
+.wvs-btn{cursor:pointer;background:#0e1626;border:1px solid #26334d;color:#cbd5e1;border-radius:9px;padding:9px 15px;font-size:.82rem;font-weight:700;font-family:inherit;min-height:40px}.wvs-btn:hover{border-color:#38bdf8;color:#7dd3fc}.wvs-btn:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}.wvs-btn.danger{border-color:#7f1d1d;color:#fca5a5}.wvs-btn.danger:hover{border-color:#ef4444;color:#fecaca}
 </style>
 </head>
 <body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
 <div class="topbar">
   <a href="index.html">🏠 <span data-en="Home">홈</span></a>
   <a href="vuln-hub.html"><span data-en="Vuln Hub">취약점 학습 허브</span></a>
@@ -224,6 +245,25 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
   </div></a>
 
   <!-- [G09] 오개념 복습 — 기록된 실패만 근거로 삼고, 근거를 함께 보여준다 -->
+
+  <!-- [QA N-07] 개인정보 처리방침이 약속하는 열람·내려받기·삭제의 실제 수단.
+       문서만 올리고 버튼이 없으면 지키지 못할 약속이 된다. -->
+  <section id="acctSec">
+    <h2 class="sec" data-en="My data">내 데이터</h2>
+    <p style="color:#8fa0ba;font-size:.8rem;margin:-6px 0 10px"
+       data-en="Progress is stored in this browser. Server storage happens only if you sign in.">
+      학습 진도는 이 브라우저에 저장됩니다. 로그인한 경우에만 서버에도 저장됩니다.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button type="button" id="btnExportLocal" class="wvs-btn">이 브라우저 기록 내려받기</button>
+      <button type="button" id="btnExportServer" class="wvs-btn">서버 기록 내려받기</button>
+      <button type="button" id="btnDeleteServer" class="wvs-btn danger">서버 기록 삭제</button>
+    </div>
+    <p id="acctMsg" role="status" style="font-size:.8rem;color:#94a3b8;margin-top:10px"></p>
+    <p style="font-size:.75rem;color:#64748b;margin-top:6px">
+      삭제해도 <b>발급된 수료증 기록 자체</b>는 남습니다(이미 배포된 검증 링크가 깨지지 않도록).
+      다만 이름은 익명 처리됩니다. 자세한 내용은 <a href="/privacy-policy.html">개인정보 처리방침</a>을 보세요.
+    </p>
+  </section>
   <section id="misSec" style="display:none">
     <h2 class="sec" data-en="Review: repeated mistakes">반복된 실수 복습</h2>
     <p style="color:#8fa0ba;font-size:.8rem;margin:-6px 0 10px"
@@ -445,7 +485,7 @@ var CAREER_TRACKS = {
     items: [
       { id: "03_code_sql_injection.html", title: "SEC-01: SQL 삽입 방어", link: "03_code_sql_injection.html" },
       { id: "03_code_xss.html", title: "SEC-02: 크로스사이트 스크립트 방어", link: "03_code_xss.html" },
-      { id: "03_code_hardedcode.html", title: "SEC-03: 하드코딩 패스워드 제거", link: "03_code_hardedcode.html" },
+      { id: "03_code_hardcoded_credentials.html", title: "SEC-03: 하드코딩 패스워드 제거", link: "03_code_hardcoded_credentials.html" },
       { id: "03_code_race_condition.html", title: "SEC-04: 레이스 컨디션 동시성 제어", link: "03_code_race_condition.html" }
     ]
   },
@@ -550,5 +590,45 @@ document.addEventListener('DOMContentLoaded', boot);
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/soc-chrome.js" defer></script>
+<script type="module" src="/auth-widget.js"></script>
+<script>
+/* 계정 데이터 열람·삭제 배선 */
+(function(){
+  var msg = document.getElementById('acctMsg');
+  function say(t){ if(msg) msg.textContent = t; }
+  function download(name, obj){
+    var blob = new Blob([typeof obj==='string'?obj:JSON.stringify(obj,null,1)],{type:'application/json'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+  }
+  var bL=document.getElementById('btnExportLocal');
+  if(bL) bL.addEventListener('click', function(){
+    try{ download('wvs-progress-local.json', window.WVSProgress.exportJson()); say('이 브라우저의 학습 기록을 내려받았습니다.'); }
+    catch(e){ say('내려받기에 실패했습니다: '+e.message); }
+  });
+  function needLogin(){ say('로그인한 경우에만 서버 기록이 존재합니다. 먼저 로그인해 주세요.'); }
+  var bS=document.getElementById('btnExportServer');
+  if(bS) bS.addEventListener('click', function(){
+    if(!window.WVS_ACCOUNT || !window.WVS_ACCOUNT.isSignedIn()) return needLogin();
+    say('서버에서 가져오는 중…');
+    window.WVS_ACCOUNT.exportData().then(function(j){
+      download('wvs-account-data.json', j); say('서버에 저장된 내 데이터를 내려받았습니다.');
+    }).catch(function(e){ say('실패: '+e.message); });
+  });
+  var bD=document.getElementById('btnDeleteServer');
+  if(bD) bD.addEventListener('click', function(){
+    if(!window.WVS_ACCOUNT || !window.WVS_ACCOUNT.isSignedIn()) return needLogin();
+    if(!confirm(['서버에 저장된 학습 기록과 순위 기록을 삭제합니다.',
+                 '수료증은 발급 사실만 남기고 이름을 익명 처리합니다.',
+                 '', '계속할까요?'].join('\n'))) return;
+    say('삭제 중…');
+    window.WVS_ACCOUNT.deleteData().then(function(j){
+      var r=j.removed||{};
+      say('삭제 완료 — 진도 '+(r.progress||0)+'건, 순위 '+(r.leaderboard||0)+'건, 자가기록 '+(r.selfCerts||0)+'건, 수료증 익명처리 '+(r.certificatesAnonymized||0)+'건');
+    }).catch(function(e){ say('실패: '+e.message); });
+  });
+})();
+</script>
+<script src="/js/shell.js" defer></script>
 </body>
 </html>

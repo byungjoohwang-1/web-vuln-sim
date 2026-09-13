@@ -58,6 +58,26 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
 <script src="/js/soc-chrome.js" data-topbar="off" defer></script>
 </head>
 <body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
 <div class="topbar">
   <a href="index.html">🏠 <span data-en="Home">홈</span></a>
   <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보 허브</span></a>
@@ -193,7 +213,7 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <table>
       <tr><th>기능</th><th>공개되는 항목</th><th>공개 범위</th></tr>
       <tr><td>리더보드</td><td>표시 이름, 점수</td><td>로그인한 이용자</td></tr>
-      <tr><td>수료증 검증</td><td>표시 이름, 점수, 발급일</td><td>수료증 번호를 아는 사람 (제3자 검증 목적)</td></tr>
+      <tr><td>수료증 검증</td><td><b>일부를 가린 표시 이름</b>(예: 홍*동), 점수, 발급일</td><td>수료증 번호를 아는 사람 (제3자 검증 목적)</td></tr>
       <tr><td>퀴즈 대전·강의실</td><td>표시 이름, 진행률</td><td>같은 방 참가자 또는 담당 강사</td></tr>
     </table>
     <p style="font-size:13px;color:var(--muted)">표시 이름은 Google 계정의 이름이 기본값입니다. 실명 노출을 원하지 않으시면 수료증 발급 시 표시 이름을 변경하시거나 해당 기능을 이용하지 않으실 수 있습니다.</p>
@@ -206,7 +226,17 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
       <li><b>저장 데이터 보호</b> — 클라우드 제공사의 저장 데이터 암호화가 적용됩니다.</li>
       <li><b>최소 수집</b> — 서비스 제공에 필요한 최소한의 항목만 처리하며, 개인 API 키 등 민감한 값은 애초에 서버로 전송하지 않습니다.</li>
       <li><b>무결성 검증</b> — 수료증은 서버에서 채점하고 서명(HMAC)을 붙여 위조를 방지합니다.</li>
+      <li><b>표시 이름 가림</b> — 수료증 검증은 로그인 없이 열려 있어야 하므로, 번호를 훑어 이름을 모으는 일을 막기 위해 검증 응답의 이름은 일부를 가려(예: 홍*동) 내려보냅니다. 수료증 문서 자체는 브라우저에서 직접 조회할 수 없습니다.</li>
     </ul>
+
+    <div class="callout c-warn">
+      <b>외부 서비스로 코드가 전송되는 기능이 있습니다.</b><br>
+      C/C++ 코딩 표준 페이지와 개발보안 아카데미의 <b>연습 IDE에서 “실행”을 누르면</b>, 편집기에 있는 코드 전문이
+      원격 컴파일 서비스 <b>wandbox.org</b>로 전송됩니다. 이는 이용자가 직접 실행을 눌렀을 때만 일어나며,
+      실행 전에 전송 사실을 알리고 취소할 수 있도록 확인 창을 띄웁니다.
+      <b>사내 코드나 비공개 코드는 붙여넣지 마시기 바랍니다.</b>
+      전송되는 내용은 이용자가 편집기에 입력한 코드이며, 계정 정보나 학습 기록은 함께 보내지 않습니다.
+    </div>
     <div class="callout c-warn" data-en="This is a free educational service operated by an individual. Despite the measures above, no service can guarantee absolute safety — please do not enter sensitive personal data anywhere on this site.">
       본 서비스는 개인이 운영하는 무료 교육 서비스입니다. 위 조치에도 불구하고 어떤 서비스도 <b>절대적인 안전을 보장할 수는 없으므로</b>, 이 사이트의 어떤 입력란에도 민감한 개인정보를 입력하지 마시기 바랍니다.
     </div>
@@ -226,7 +256,14 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <ul>
       <li><b>열람</b> — 저장된 학습 기록은 <a href="my-progress.html">내 학습 현황</a>에서 직접 확인할 수 있습니다.</li>
       <li><b>정정</b> — 계정의 이름·이메일은 Google 계정에서 변경하시면 다음 로그인 시 반영됩니다.</li>
-      <li><b>삭제·처리정지</b> — 아래 14항의 연락처로 요청하시면 계정과 관련된 모든 기록을 삭제합니다. 브라우저에서 로그아웃하고 사이트 데이터를 삭제하면 기기에 남은 기록도 제거됩니다.</li>
+      <li><b>내려받기</b> — <a href="my-progress.html">내 학습 현황</a>의 <b>‘내 데이터’</b>에서 브라우저 기록과 서버 기록을 각각 JSON으로 받을 수 있습니다.</li>
+      <li><b>삭제·처리정지</b> — <a href="my-progress.html">내 학습 현황</a>의 <b>‘서버 기록 삭제’</b>를 직접 누르시거나, 아래 14항의 연락처로 요청하실 수 있습니다. 브라우저에서 로그아웃하고 사이트 데이터를 삭제하면 기기에 남은 기록도 제거됩니다.
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">
+          삭제 시 학습 진도·순위·자가 기록은 지워집니다. 다만 <b>이미 발급된 수료증의 발급 사실 자체는 남깁니다</b> —
+          제3자에게 이미 전달된 검증 링크가 깨지지 않도록 하기 위해서입니다. 대신 그 기록의 이름은
+          <b>익명으로 바꿉니다</b>(개인 식별 정보 제거). 발급 사실까지 지우기를 원하시면 14항으로 요청해 주세요.
+        </div>
+      </li>
     </ul>
     <p>권리 행사는 서면·전자우편 등을 통해 하실 수 있으며, 서비스는 요청을 받은 날부터 <b>10일 이내</b>에 조치합니다. 법정대리인이나 위임받은 대리인을 통해서도 행사하실 수 있습니다.</p>
     <p>요청에 대한 조치에 <b>불복이 있는 경우</b> 아래 14항의 연락처로 이의를 제기하실 수 있으며, 15항의 기관을 통해 분쟁조정이나 침해신고를 하실 수도 있습니다.</p>
@@ -283,5 +320,6 @@ function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang'
 document.addEventListener('DOMContentLoaded',applyLang);
 </script>
 <script src="js/bilingual.js"></script>
+<script src="/js/shell.js" defer></script>
 </body>
 </html>

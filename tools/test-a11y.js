@@ -203,12 +203,34 @@ console.log('\n[4] 보이는 포커스');
 
 const focusKill = [];
 function scanFocus(label, text) {
-  for (const b of cssBlocks(text)) {
+  const blocks = cssBlocks(text);
+  /* `:focus { outline:none }` + `:focus-visible { outline:… }` 는 요즘 권장되는 조합이다.
+     마우스 클릭에는 링을 안 띄우고 키보드 이동에는 띄운다.
+     같은 규칙 안만 보면 이 정상 패턴을 위반으로 잡으므로, 같은 셀렉터의
+     :focus-visible 짝이 문서 안에 있는지도 함께 본다. */
+  const visibleBases = new Set();
+  let universalFocusVisible = false;      // 셀렉터가 그냥 `:focus-visible` 이면 모든 요소를 덮는다
+  for (const b of blocks) {
+    if (!/:focus-visible/.test(b.sel)) continue;
+    const o = decl(b.body, 'outline');
+    const hasIndicator = (o && !/^(none|0(px)?)$/i.test(o.trim()))
+      || decl(b.body, 'box-shadow') || decl(b.body, 'border') || decl(b.body, 'border-color');
+    if (!hasIndicator) continue;
+    b.sel.split(',').forEach((one) => {
+      const base = one.replace(/:focus-visible/g, '').trim();
+      if (base === '' || base === '*') universalFocusVisible = true;
+      else visibleBases.add(base);
+    });
+  }
+  for (const b of blocks) {
     if (!/:focus(?!-visible)/.test(b.sel)) continue;
     const o = decl(b.body, 'outline');
     if (!o || !/^(none|0(px)?)$/i.test(o.trim())) continue;
     /* outline 을 껐다면 box-shadow/border 로 대체 표시가 있어야 한다 */
     if (decl(b.body, 'box-shadow') || decl(b.body, 'border') || decl(b.body, 'border-color')) continue;
+    if (universalFocusVisible) continue;                           // 전역 :focus-visible 이 덮는다
+    const bases = b.sel.split(',').map((one) => one.replace(/:focus\b/g, '').trim());
+    if (bases.every((base) => visibleBases.has(base))) continue;   // 같은 셀렉터의 :focus-visible 짝이 있다
     focusKill.push(label + ' | ' + b.sel.slice(0, 60));
   }
 }

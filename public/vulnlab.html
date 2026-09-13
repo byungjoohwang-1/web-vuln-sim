@@ -285,6 +285,26 @@ body.soc a{color:var(--acc)}
 </style>
 </head>
 <body class="soc">
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
 <script src="/js/progress.js" defer></script>
 <script src="/js/pwa.js" defer></script>
 <header class="soc-top">
@@ -1316,7 +1336,7 @@ LABS.push(
  route:'/login',verdict:true,
  seed:'POST /login HTTP/1.1\nHost: bugpay.example\nContent-Type: application/x-www-form-urlencoded\n\nuid=admin&pwd=wrong',
  ev:'존재하는 아이디 → "비밀번호가 올바르지 않습니다" / 없는 아이디 → "존재하지 않는 아이디입니다" — 메시지 분기',
- ref:'기반시설 상세가이드 WEB-09 · 진단가이드 3장',link:'03_code_inapporiate_auth.html',
+ ref:'기반시설 상세가이드 WEB-09 · 진단가이드 3장',link:'03_code_inappropriate_auth.html',
  hints:['아이디 admin+틀린 비번, 그리고 없는 아이디 — 두 번 전송해 비교하세요.','메시지가 다르면 공격자는 유효 아이디 목록을 수집할 수 있습니다.','시뮬레이터 노트 패널에도 분기 내용이 표시됩니다 — 취약'],
  solve:'계정 열거는 무차별 대입의 전 단계입니다. 동일한 일반화된 메시지("아이디 또는 비밀번호 불일치")를 사용해야 합니다.',
  vulnCode:'if (user == null) return "존재하지 않는 아이디입니다.";\nreturn "비밀번호가 올바르지 않습니다.";   // 존재 여부 노출',
@@ -2152,5 +2172,6 @@ else boot();
 })();
 </script>
 <script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/shell.js" defer></script>
 </body>
 </html>

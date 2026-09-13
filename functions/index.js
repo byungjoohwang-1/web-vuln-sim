@@ -381,3 +381,91 @@ exports.certApi = onRequest({ memory: "256MiB", timeoutSeconds: 60, cors: true }
     return res.status(500).json({ ok: false, error: "서버 오류" });
   }
 });
+
+/**
+ * 계정 데이터 열람·삭제 (QA N-07)
+ *
+ * 개인정보 처리방침에 "삭제할 수 있다"고 적으려면 실제로 삭제되는 경로가 있어야 한다.
+ * 문서만 올리고 수단이 없으면 지키지 못할 약속이 된다.
+ *
+ * 삭제 대상과 처리 방식
+ *  - users/{uid}          : 학습 진도 → 문서 삭제
+ *  - leaderboard/{uid}    : 순위 기록 → 문서 삭제
+ *  - selfCerts (uid 일치) : 자가 기록 → 문서 삭제
+ *  - certificates (uid 일치) : **삭제하지 않는다.** 제3자가 이미 받아 간 검증 링크를
+ *    깨뜨리게 되고, 발급 사실 자체는 서버가 남겨야 하는 기록이다.
+ *    대신 이름을 익명으로 바꾸고(서명도 새 정본으로 다시 계산) 개인 식별성을 제거한다.
+ *    이 처리 방식은 처리방침에 그대로 적어 둔다.
+ */
+exports.accountApi = onRequest({ memory: "256MiB", timeoutSeconds: 120, cors: true }, async (req, res) => {
+  try {
+    if (req.method === "OPTIONS") return res.status(204).send("");
+    if (req.method !== "POST") return res.status(405).json({ ok: false, error: "method" });
+
+    const uid = await requireUid(req);
+    if (!uid) return res.status(401).json({ ok: false, error: "로그인이 필요합니다." });
+
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const action = String(body.action || "");
+
+    if (action === "export") {
+      const [userSnap, selfSnap, certSnap, lbSnap] = await Promise.all([
+        db.collection("users").doc(uid).get(),
+        db.collection("selfCerts").where("uid", "==", uid).get(),
+        db.collection("certificates").where("uid", "==", uid).get(),
+        db.collection("leaderboard").doc(uid).get(),
+      ]);
+      return res.status(200).json({
+        ok: true,
+        exportedAt: new Date().toISOString(),
+        data: {
+          progress: userSnap.exists ? userSnap.data() : null,
+          leaderboard: lbSnap.exists ? lbSnap.data() : null,
+          selfCerts: selfSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+          certificates: certSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+        },
+      });
+    }
+
+    if (action === "delete") {
+      // 실수로 한 번 눌러 지워지지 않도록 확인 문구를 요구한다.
+      if (String(body.confirm || "") !== "DELETE") {
+        return res.status(400).json({ ok: false, error: 'confirm 필드에 "DELETE" 가 필요합니다.' });
+      }
+      const removed = { progress: 0, leaderboard: 0, selfCerts: 0, certificatesAnonymized: 0 };
+
+      const userRef = db.collection("users").doc(uid);
+      if ((await userRef.get()).exists) { await userRef.delete(); removed.progress = 1; }
+
+      const lbRef = db.collection("leaderboard").doc(uid);
+      if ((await lbRef.get()).exists) { await lbRef.delete(); removed.leaderboard = 1; }
+
+      const selfSnap = await db.collection("selfCerts").where("uid", "==", uid).get();
+      for (const d of selfSnap.docs) { await d.ref.delete(); removed.selfCerts++; }
+
+      /* 발급 기록은 남기고 개인 식별 정보만 지운다. 서명은 새 정본으로 다시 계산해야
+         검증이 "서명 불일치"로 오인되지 않는다. */
+      const certSnap = await db.collection("certificates").where("uid", "==", uid).get();
+      for (const d of certSnap.docs) {
+        const c = d.data();
+        if (c.kind === "verified" && c.v === 2) {
+          const next = { ...c, name: "(삭제 요청)" };
+          const sig = await certSvc.resignCanonical(db, next);
+          await d.ref.set({ name: next.name, sig, anonymizedAt: new Date().toISOString() }, { merge: true });
+        } else {
+          await d.ref.set({ name: "(삭제 요청)", anonymizedAt: new Date().toISOString() }, { merge: true });
+        }
+        removed.certificatesAnonymized++;
+      }
+
+      logger.info("accountApi delete", { uid, removed });
+      return res.status(200).json({ ok: true, removed,
+        note: "발급 기록 자체는 검증 링크 유지를 위해 남기고 이름만 익명 처리했습니다." });
+    }
+
+    return res.status(400).json({ ok: false, error: "action 은 export|delete 여야 합니다." });
+  } catch (e) {
+    logger.error("accountApi fail", { error: String(e && e.stack || e) });
+    return res.status(500).json({ ok: false, error: "서버 오류" });
+  }
+});

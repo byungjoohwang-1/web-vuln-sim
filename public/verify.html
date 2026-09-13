@@ -43,6 +43,26 @@
 </style>
 </head>
 <body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
   <div class="topbar">
     <a href="index.html">🏠 홈</a>
     <a href="vuln-hub.html">취약점 학습 허브</a>
@@ -53,8 +73,11 @@
     <h1>🔐 수료증 검증 <span class="muted" style="font-size:14px">Certificate Verification</span></h1>
     <div id="result"><div class="card"><div class="muted">검증 중...</div></div></div>
     <div class="disc">
-      이 페이지는 SecureDev Academy 수료증의 <b>무결성</b>(위·변조 여부)을 브라우저에서 SHA-256으로 직접 재계산해 확인하고,
-      발급자가 <b>온라인 등록</b>한 경우 발급 사실(<b>진위</b>)까지 대조합니다.<br>
+      이 페이지는 수료증 번호를 <b>서버 기록과 대조</b>해 발급 사실을 확인합니다.
+      서버가 자기 키로 붙인 서명이 맞을 때만 <b>발급 확인됨</b>으로 표시합니다.<br>
+      링크 안의 값만으로는 <b>발급 사실을 증명할 수 없습니다</b> — 링크를 만든 사람은 내용을 바꾸고
+      첨부 값을 다시 계산할 수 있기 때문입니다. 서버 기록에서 확인되지 않으면 <b>발급 사실 미확인</b>으로 표시됩니다.<br>
+      개인정보 보호를 위해 검증 결과의 이름은 일부를 가려(예: 홍*동) 표시합니다.<br>
       ⚠️ 본 수료증은 비영리 교육용 학습 이수 증명이며, KISA의 공식 자격(보안약점 진단원)을 대체하지 않습니다.
     </div>
   </div>
@@ -295,5 +318,6 @@ async function fetchCert(id){
 window.fetchCert = fetchCert;
 </script>
 <script src="/js/soc-chrome.js" defer></script>
+<script src="/js/shell.js" defer></script>
 </body>
 </html>
