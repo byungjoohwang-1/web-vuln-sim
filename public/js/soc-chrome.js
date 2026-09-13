@@ -341,12 +341,25 @@
     location.href = u.charAt(0) === '/' ? u : '/' + u;
   }
 
+  /* 떠 있는 보조 컨트롤(언어바·진도 칩) 숨김.
+     CSS 규칙(body.wvs-modal-open …)만으로는 opacity 가 적용되지 않는 사례가 있어
+     — pointer-events 는 먹는데 opacity 만 무시되는 현상을 라이브에서도 확인 —
+     인라인 스타일로 직접 지정한다. 인라인은 캐스케이드 논쟁 없이 확실하다. */
+  function setFloatingHidden(hide) {
+    var els = document.querySelectorAll('.wvs-langbar, #wvs-progress-chip');
+    for (var i = 0; i < els.length; i++) {
+      els[i].style.opacity = hide ? '0' : '';
+      els[i].style.pointerEvents = hide ? 'none' : '';
+    }
+  }
+
   var lastFocus = null;
   function openPalette() {
     buildPalette();
     lastFocus = document.activeElement;
     palEl.classList.add('show');
     document.body.classList.add('wvs-modal-open');
+    setFloatingHidden(true);
     inpEl.value = '';
     refresh();
     setTimeout(function () { inpEl.focus(); }, 30);
@@ -355,6 +368,7 @@
     if (!palEl || !palEl.classList.contains('show')) return;
     palEl.classList.remove('show');
     document.body.classList.remove('wvs-modal-open');
+    setFloatingHidden(false);
     /* 팔레트를 열기 전 요소로 포커스를 돌려준다(키보드 사용자가 위치를 잃지 않도록) */
     try { if (lastFocus && lastFocus.focus) lastFocus.focus(); } catch (e) {}
     lastFocus = null;
