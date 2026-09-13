@@ -357,7 +357,7 @@
     const n = document.createElement('div');
     n.id = id;
     n.setAttribute('role', 'status');
-    n.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:100001;' +
+    n.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:var(--wvs-z-toast,1000);' +
       'max-width:min(560px,92vw);background:rgba(20,20,30,.94);color:#e2e8f0;border:1px solid #475569;' +
       'border-radius:10px;padding:10px 14px;font:500 13px/1.5 system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.4)';
     n.innerHTML = 'This page is available in <b>Korean only</b> for now — the security guidance is not machine-translated ' +
@@ -373,7 +373,7 @@
     const style = document.createElement('style');
     style.id = 'wvs-bilingual-style';
     style.textContent = `
-      .wvs-langbar{position:fixed;top:12px;right:12px;z-index:100000;display:flex;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px);transition:opacity .18s ease}
+      .wvs-langbar{position:fixed;top:var(--wvs-edge,14px);right:var(--wvs-edge,14px);z-index:var(--wvs-z-float,300);display:flex;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px);transition:opacity .18s ease}
       .wvs-langbar button,.langbar button{border:0;padding:6px 11px;border-radius:7px;font:700 12px/1 'Malgun Gothic',Arial,sans-serif;cursor:pointer}
       .wvs-langbar button{background:transparent;color:#cbd5e1}
       .wvs-langbar button.on,.langbar button.on{background:#2563eb!important;color:#fff!important}

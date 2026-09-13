@@ -127,7 +127,9 @@
     wrap.id = 'wvs-progress-chip';
     wrap.setAttribute('role', 'group');
     wrap.style.cssText = [
-      'position:fixed', 'left:14px', 'bottom:14px', 'z-index:2147483000',
+      /* [G05] 예전에는 2147483000 이라 검색 모달 위에 떠서 클릭까지 됐다. 공통 층을 쓴다. */
+      'position:fixed', 'left:var(--wvs-edge,14px)', 'bottom:var(--wvs-edge,14px)',
+      'z-index:var(--wvs-z-float,300)', 'transition:opacity .15s ease',
       'font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif',
       'display:flex', 'align-items:center', 'gap:8px'
     ].join(';');

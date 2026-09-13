@@ -75,7 +75,7 @@
 
   /* ── 공통 CSS (wvsx- 접두사로 스코프 격리) ── */
   var CSS = [
-    '.wvsx-top{position:sticky;top:0;z-index:9000;display:flex;align-items:center;gap:18px;',
+    '.wvsx-top{position:sticky;top:0;z-index:var(--wvs-z-sticky,100);display:flex;align-items:center;gap:18px;',
     'height:42px;padding:0 18px;background:#080e1a;border-bottom:1px solid #1e293b;',
     "font-family:'Segoe UI','Noto Sans KR','Malgun Gothic',sans-serif;direction:ltr}",
     '.wvsx-top .wvsx-logo{display:flex;align-items:center;gap:8px;color:#e2e8f0;',
@@ -95,7 +95,7 @@
     '@media(max-width:640px){.wvsx-top{gap:10px;padding:0 12px}.wvsx-top .wvsx-kbtn .kb{display:none}',
     '.wvsx-top .wvsx-nav a{padding:5px 8px}}',
     /* 팔레트 */
-    '.wvsx-pal{position:fixed;inset:0;z-index:99999;display:none;align-items:flex-start;',
+    '.wvsx-pal{position:fixed;inset:0;z-index:var(--wvs-z-modal,900);display:none;align-items:flex-start;',
     'justify-content:center;padding:12vh 16px 16px;background:rgba(4,8,16,.72);',
     "backdrop-filter:blur(4px);font-family:'Segoe UI','Noto Sans KR','Malgun Gothic',sans-serif}",
     '.wvsx-pal.show{display:flex}',
@@ -129,6 +129,15 @@
   ].join('');
 
   function injectCss() {
+    /* [G05] 공통 토큰(레이어·간격·포커스 링)은 별도 파일 한 곳에서 관리한다.
+       모듈마다 z-index 를 키우다 진도 칩이 검색 모달 위로 올라가는 일이 있었다. */
+    if (!document.getElementById('wvs-tokens')) {
+      var lk = document.createElement('link');
+      lk.id = 'wvs-tokens';
+      lk.rel = 'stylesheet';
+      lk.href = '/css/platform-tokens.css';
+      document.head.appendChild(lk);
+    }
     var st = document.createElement('style');
     st.id = 'wvsx-style';
     st.textContent = CSS;
@@ -337,6 +346,7 @@
     buildPalette();
     lastFocus = document.activeElement;
     palEl.classList.add('show');
+    document.body.classList.add('wvs-modal-open');
     inpEl.value = '';
     refresh();
     setTimeout(function () { inpEl.focus(); }, 30);
@@ -344,6 +354,7 @@
   function closePalette() {
     if (!palEl || !palEl.classList.contains('show')) return;
     palEl.classList.remove('show');
+    document.body.classList.remove('wvs-modal-open');
     /* 팔레트를 열기 전 요소로 포커스를 돌려준다(키보드 사용자가 위치를 잃지 않도록) */
     try { if (lastFocus && lastFocus.focus) lastFocus.focus(); } catch (e) {}
     lastFocus = null;
