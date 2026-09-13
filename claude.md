@@ -1,436 +1,272 @@
 # CLAUDE.md
 
-이 문서는 라오어 무한매수법 v4.0 자동매매봇을 Claude Code로 유지보수할 때 따라야 할 프로젝트 기준이다.  
-이 봇은 실제 계좌 주문, 체결 반영, 상태 저장을 다루므로 **전략 이해와 안전 검증을 코드 작성보다 우선**한다.
+이 문서는 WEB-VULN-SIM 보안 학습 포털을 유지보수할 때 따라야 할 프로젝트 기준이다.
+
+> QA N-09 대응. 이 자리에는 원래 전혀 다른 프로젝트(한국투자증권 API 기반 자동매매봇)의
+> 문서가 들어 있었다. AI 도구가 잘못된 컨텍스트를 물고 작업하게 만들므로 교체했다.
 
 ---
 
 ## 1. 프로젝트 정체성
 
-이 프로젝트는 라오어 무한매수법 v4.0을 한국투자증권(KIS) Open API로 자동화하는 Python 기반 자동매매봇이다.
+웹, 인프라, 시큐어코딩 보안 취약점을 브라우저 안에서 체험하고 방어 방법을 익히는
+**교육용 정적 웹 포털**이다. Firebase Hosting 으로 배포한다.
 
-주요 목표:
+- 공격 시연은 전부 페이지 내부 mock 이다. 실제 외부 시스템을 공격하지 않는다.
+- 학습 진도는 기본적으로 `localStorage` 에 남고, Google 로그인 시 Firestore 로 동기화한다.
+- 콘텐츠는 KISA, 행정안전부, 금융보안원 공개 가이드라인을 개념적으로 재구성한 것이다.
 
-- 매일 현재가와 보유 상태를 조회한다.
-- 무한매수법 v4.0 규칙에 따라 매수가와 매도가를 계산한다.
-- 매수 LOC와 매도 LOC 주문을 함께 넣는다.
-- 장 마감 후 체결 내역을 조회하고 신규 체결만 상태에 반영한다.
-- 사이클 종료 시 잔금을 다음 시드로 이월해 복리 운용한다.
-- 다계좌, 다종목, 텔레그램 제어, 액면분할 대응, 미국장 휴장일 처리를 지원한다.
+핵심 전제 두 가지.
 
-가장 중요한 전제:
+> 이 사이트는 "공격을 가르치는 곳"이 아니라 "왜 막아야 하는지 이해시키는 곳"이다.
+> 시연을 추가할 때는 항상 방어 코드와 짝을 이루게 한다.
 
-> AI는 구현을 도울 수 있지만, 무한매수법의 판단을 대신할 수 없다.  
-> 전략 규칙이 애매하면 추측하지 말고 사용자에게 확인한다.
-
----
-
-## 2. 절대 원칙
-
-### 실거래 안전
-
-- 실투자 주문 로직을 변경할 때는 반드시 모의투자 또는 dry-run 경로를 먼저 고려한다.
-- 주문 수량, 주문 가격, 주문 구분 코드, 계좌번호, 실투자/모의투자 URL을 임의로 바꾸지 않는다.
-- 주문 API 호출부를 수정했다면 주문 전송 직전 로그와 텔레그램 알림에 주문 요약이 남도록 유지한다.
-- 같은 체결이 두 번 반영되면 state가 깨진다. 체결 중복 방지 로직은 최우선 보호 대상이다.
-- state 파일을 덮어쓰는 코드는 항상 백업, 원자적 저장, 복구 가능성을 고려한다.
-
-### 전략 정확성
-
-- 별%, 별지점, 전반전/후반전, 리버스 모드, T값, 사이클 종료, 복리 이월 규칙은 추측으로 구현하지 않는다.
-- 전략 계산은 외부 API, 파일 저장, 텔레그램, 주문 실행과 분리된 순수 함수 계층에 둔다.
-- 전략 로직 변경 시 대표 케이스 테스트를 추가하거나 갱신한다.
-- 주문 실행 결과가 아니라 "계산 결과"를 먼저 검증할 수 있어야 한다.
-
-### 장애 격리
-
-- 텔레그램 발송 실패가 주문 로직을 멈추게 하면 안 된다.
-- 시장 심리 지표, 모닝 리포트, 알림 같은 부가 기능 실패가 주문/체결 처리에 영향을 주면 안 된다.
-- API 요청 실패는 재시도 횟수와 딜레이를 제한한다.
-- 토큰 발급 실패, 401, 호출 제한, 체결 조회 지연은 정상적인 운영 상황으로 보고 처리한다.
+> 학습자가 콘솔을 열어 규칙을 우회할 수 있는 구조를 만들지 않는다.
+> 수료 판정처럼 의미가 있는 판단은 서버가 한다.
 
 ---
 
-## 3. 권장 아키텍처
-
-프로젝트는 다음 계층으로 나눈다.
+## 2. 디렉터리 구조
 
 ```text
-trading_bot_v40.py
-  진입점, APScheduler 스케줄, 일일 주문 집행 루프
+public/                     배포 루트 (Firebase Hosting)
+  index.html                학습 트랙 4개로 가는 허브
+  vuln-hub.html             취약점 학습 허브 (Track 01)
+  secure-dev-portal.html    진단원 학습 포털 (Track 02)
+  training-dashboard.html   실전 훈련장 (Track 03)
+  coding-standards.html     C/C++ 코딩 표준 레퍼런스 (Track 04, 3.2MB)
+  03_code_*.html            시큐어코딩 49개 보안약점 해설 (50종)
+  04_design-sd*.html        설계 단계 보안 (20종)
+  05_linux-u*.html          Linux 서버 점검 (41종)
+  06_db-d*.html             DBMS 점검 (21종)
+  07_fin-*.html             전자금융기반시설 점검 (43종)
+  08_win-w*.html            Windows 서버 점검 (28종)
+  09_net-n*.html            네트워크 장비 점검 (21종)
+  10_sec-s*.html            보안장비 점검 (23종)
+  11_cloud-c*.html          클라우드, 컨테이너 (20종)
+  12_ics-ics*.html          제어시스템 ICS/SCADA (14종)
+  13_ai-ai*.html            AI 보안 (26종)
+  sim-*.html                인터랙티브 공격 시뮬레이터 (62종)
+  privacy.html terms.html   개인정보 처리방침, 이용약관
+  ai-hub.html               AI 보안 트랙 허브 (Track 05)
+  ai-guardrail-lab.html     AI 가드레일 연습장 (미션 5개, 규칙 기반 채점)
+  data/
+    content-registry.json   콘텐츠 수치 단일 원천 (생성물)
+  js/
+    shell.js                공통 셸: 랜드마크, 푸터, 언어, 이전-다음
+    boot-guard.js           window.onload 부팅 보호와 오류 표시
+    registry.js             레지스트리 수치를 배지에 채움
+    safety-notice.js        공격형 실습 진입 시 안전 고지
+    ai-demo.js              키 없이 도는 데모 튜터 엔진
+    ai-track.js             AI 트랙 학습 경로 데이터
+    ai-card.js              AI 카드 상단 정보 띠와 이전-다음
+    guardrail-missions.js   가드레일 미션과 루브릭 채점기 (KO/EN)
+    academy-data-ai.js      AI 생성 코드 과제 10개 (tags: ai-generated)
+    pwa.js  sw.js           PWA 설치와 오프라인
+    progress.js             학습 진도 기록
+    academy-data*.js        학습 콘텐츠 데이터 (합계 620KB)
+    qbank/                  문제은행
+    page-order.json         학습 페이지 순서 카탈로그
+  icons/                    PWA 아이콘 (192, 512, maskable)
 
-account.py
-  BOT_ACCOUNT별 데이터 경로 라우팅, 1코드 다계좌 운영
-
-strategy_v40.py
-  매수, 매도, 리버스 판정
-  수량, 가격, T값 계산
-  외부 의존 없는 순수 함수
-
-fill_processor.py
-  체결 반영
-  state 갱신
-  사이클 종료와 잔금 이월
-  중복 체결 방지
-
-state.py
-  종목별 JSON state 영속화
-  백업, 원자적 저장, 복구
-
-runtime_settings.py
-  활성 종목, RP 잔고, 주문 정지/재개 등 런타임 설정
-
-kis_auth.py
-  KIS 인증, 토큰 발급, 캐시, 만료 전 갱신
-  스레드 안전한 토큰 공유
-
-kis_client.py
-  KIS API 호출 공통 클라이언트
-  URL 분기, 헤더, 재시도, rate limit 대응
-
-kis_api/
-  order.py
-  price.py
-  dailyprice.py
-  inquire_balance.py
-  inquire_present_balance.py
-  inquire_ccnl.py
-
-telegram_handler.py
-telegram_keyboards.py
-telegram_settings.py
-telegram_settings_handler.py
-  텔레그램 명령, 키보드 UI, 설정 입력 처리
-
-market_calendar.py
-  미국장 영업일, 휴장일, 서머타임 처리
-
-split_detector.py
-  액면분할/병합 감지와 state 보정
-
-market_sentiment.py
-morning_report.py
-bot_control.py
-restore_state.py
-  보조 기능
+functions/index.js          수료증 발급과 검증, 데이터 삭제, AI 프록시
+firestore.rules             Firestore 보안 규칙
+firebase.json               보안 헤더, CSP, 리다이렉트, 캐시 정책
+_gen/                       생성기와 주입 스크립트, 검증 게이트
 ```
 
 ---
 
-## 4. 하루 실행 흐름
+## 3. 절대 원칙
 
-```text
-[스케줄러]
-  서머타임 17:40 KST
-  동절기 18:40 KST
+### 생성기 산출물은 반드시 검증한다
 
-    ↓
+이 저장소에서 나온 심각한 결함 대부분은 "생성기가 만든 결과를 아무도 검사하지 않는다"는
+한 가지 원인에서 나왔다. 실제 사례.
 
-[현재가, 최근 종가 조회]
+- `inject_progress.py` 가 파일의 **첫 번째** `</body>` 를 치환했다. 시뮬레이터들은
+  자바스크립트 문자열 안에 mock HTML 을 들고 있어서, 첫 `</body>` 가 문자열 내부였다.
+  결과적으로 `<script>` 블록 한가운데에 `</script>` 가 박혀 **페이지 6개가 죽었다.**
+  화면에는 자바스크립트 소스가 본문 텍스트로 20KB씩 노출됐다.
 
-    ↓
+그래서 다음을 강제한다.
 
-[strategy_v40.py]
-  매수가, 매도가, 리버스 상태, 주문 수량 계산
+- 문서 끝을 찾을 때는 **반드시 `rfind('</body>')`** 를 쓴다. 정규식 `sub(..., count=1)` 금지.
+- 자바스크립트 문자열 안에 HTML 을 담을 때 `</script>` 는 `<\/script>` 로 이스케이프한다.
+- 파일을 건드리는 스크립트를 만들었으면 `_gen/validate_build.py` 에 검사도 함께 추가한다.
+- 배포 전 `python _gen/validate_build.py` 가 통과해야 한다.
 
-    ↓
+### 전역에 브라우저 내장 이름을 쓰지 않는다
 
-[KIS 주문]
-  매수 LOC + 매도 LOC 함께 전송
-  필요 시 MOC 안전망 고려
+`window.history`, `window.location`, `window.name`, `window.top` 등은
+Window 의 설정 불가 접근자다. 최상위에서 `var history = []` 를 써도
+선언이 **조용히 무시되고**, 첫 `history.push()` 에서 TypeError 로 페이지가 죽는다.
 
-    ↓
+실제로 `sim-dast.html` 과 `ai-tutor.html` 두 곳에서 같은 원인으로 기능이 죽어 있었다.
+대화 기록은 `chatLog`, 요청 기록은 `reqHistory` 처럼 이름을 바꾼다.
 
-[장 마감 후 체결 조회]
-  KIS 서버 반영 지연을 고려해 5분 간격 재조회
+### 화면 수치는 레지스트리에서 읽는다
 
-    ↓
+`public/data/content-registry.json` 이 콘텐츠 수치의 단일 원천이다.
 
-[fill_processor.py]
-  신규 체결만 반영
-  수량, 평단, T, 현금, pending order 갱신
+- 생성: `python _gen/gen_registry.py`
+- 표기: `<span data-wvs-count="totals.interactiveTotal">367</span>`
+  (HTML 안의 값은 스크립트 실패 시 보일 대비값이다)
+- 커버리지: `data-wvs-coverage="linux"`, 미수록 목록: `data-wvs-missing="linux"`
+- `validate_build.py` 가 대비값과 레지스트리가 어긋나면 배포를 막는다
 
-    ↓
+콘텐츠를 추가하거나 지웠으면 `gen_registry.py` 를 다시 돌린다.
+없는 항목은 "완전 구성" 이라고 쓰지 말고 커버리지로 드러낸다.
 
-[state.py]
-  JSON 저장
-  사이클 종료 시 잔금 다음 시드로 이월
+### 신뢰 경계를 클라이언트에 두지 않는다
+
+- 수료 판정, 수료번호 발급, 서명은 Cloud Functions 에서만 한다.
+- 브라우저가 보낸 진도 수치, 완료 개수, 점수를 그대로 믿지 않는다.
+- `window.force*`, `*ForDev` 같은 전역 우회 함수를 배포본에 남기지 않는다.
+  실제로 `forceUnlockForDev()` 한 줄로 수료증이 발급되던 적이 있다.
+- 서명에는 서버만 아는 키를 쓴다. 비밀 키 없는 SHA-256 은 위조 방지가 되지 않는다.
+
+### 개인정보는 필요한 만큼만 다룬다
+
+- 수료증 조회 응답에는 마스킹된 이름만 담는다.
+- Firestore 규칙의 기본값은 거부다. 새 컬렉션을 만들면 규칙도 같이 쓴다.
+- 수집 항목을 늘리면 `public/privacy.html` 을 같은 커밋에서 갱신한다.
+
+### 외부 의존은 검증 가능한 형태로만 둔다
+
+- 외부 스크립트와 스타일에는 `integrity` 와 `crossorigin` 을 붙인다.
+- 해시는 npm 배포본에서 계산하고, 그 패키지를 그대로 서빙하는 CDN 경로를 쓴다
+  (jsDelivr `/npm/...`). 재포장하는 CDN 경로는 해시 일치를 보증하지 않는다.
+- `cdn.tailwindcss.com` 같은 런타임 컴파일 CDN 은 쓰지 않는다. SRI 를 걸 수 없고
+  CSP 에서 `unsafe-eval` 을 요구한다.
+
+### 접근성은 기능이다
+
+- 이동은 `<a>`, 상태 변경은 `<button>` 으로 만든다.
+  `<div onclick>` 은 키보드 사용자에게 존재하지 않는 버튼이다.
+- 새 페이지에는 skip link 와 `js/shell.js` 가 들어가야 한다
+  (`python _gen/inject_shell.py` 가 멱등으로 처리한다).
+- 상태 변화는 `aria-live` 또는 `role="alert"` 로 알린다.
+
+---
+
+## 4. 자주 하는 작업
+
+```bash
+# 공통 셸 주입 (skip link, 랜드마크, 푸터, 이전-다음)
+python _gen/inject_shell.py
+
+# 콘텐츠 레지스트리 재생성 (콘텐츠를 더하거나 지웠으면 필수)
+python _gen/gen_registry.py
+
+# 안전 고지 주입 (공격형 실습 페이지)
+python _gen/inject_safety.py
+
+# AI 트랙 학습 경로 주입 (13_ai-* 카드)
+python _gen/inject_ai_meta.py
+
+# PDF 합자 깨짐 복원 (먼저 --dry 로 무엇을 고칠지 확인한다)
+python _gen/fix_ligatures.py --dry
+python _gen/fix_ligatures.py
+
+# 진도 엔진 주입
+python _gen/inject_progress.py
+
+# sitemap 재생성
+python _gen/gen_sitemap.py
+
+# 배포 전 검증 (통과해야 배포)
+python _gen/validate_build.py
+
+# 로컬 확인
+python -m http.server 8099 --directory public
+
+# 배포
+firebase deploy --only hosting
+firebase deploy --only functions
+firebase deploy --only firestore:rules
 ```
 
 ---
 
-## 5. 상태 파일 기준
+## 5. Cloud Functions 배포 준비
 
-종목별 state는 대략 다음 구조를 가진다.
+```bash
+# 수료증 서명 키 (한 번만 생성, 분실하면 기존 수료증 검증 불가)
+openssl rand -hex 32
+firebase functions:secrets:set CERT_SIGNING_KEY
 
-```json
-{
-  "mode": "normal",
-  "qty": 100,
-  "avg_price": 12.34,
-  "T": 5,
-  "principal": 5000.0,
-  "cash": 10000.0,
-  "pending_buy_orders": [],
-  "pending_sell_orders": [],
-  "close_prices": [],
-  "split_detected": false,
-  "split_pending_confirmation": false,
-  "split_log": [],
-  "processed_fills": []
-}
+# AI 튜터 프록시를 쓸 경우
+firebase functions:secrets:set ANTHROPIC_API_KEY
 ```
 
-주의:
-
-- `mode`는 `"normal"` 또는 `"reverse"`를 사용한다.
-- `processed_fills` 또는 동등한 중복 방지 저장소는 반드시 유지한다.
-- 액면분할/병합 감지 시 주문은 자동 정지되어야 한다.
-- state schema를 바꿀 때는 기존 state 마이그레이션 경로를 준비한다.
+`functions/index.js` 의 `ALLOW_AI_PROXY` 는 기본이 `false` 다.
+조직 키로 과금되므로 사용량 정책(`DAILY_MESSAGE_LIMIT`)을 정한 뒤 켠다.
 
 ---
 
-## 6. KIS API 규칙
+## 6. 콘텐츠 작성 규칙
 
-### 환경 분리
-
-- 모의투자와 실투자는 API URL이 완전히 다르다.
-- 환경 변수 또는 설정 파일로 명확히 분기한다.
-- 실투자 기본값을 코드에 하드코딩하지 않는다.
-
-### 토큰 관리
-
-- 토큰은 발급 후 파일에 캐시한다.
-- API 호출 전 만료 여부를 확인한다.
-- 만료 1시간 전이면 자동 재발급한다.
-- 여러 봇/스레드가 동시에 토큰을 갱신하지 않도록 락을 사용한다.
-- 401 응답은 토큰 만료 가능성으로 보고 1회 재발급 후 재시도할 수 있다.
-
-### 호출 제한
-
-- KIS API 초당 호출 제한을 고려한다.
-- 여러 종목/계좌 처리 시 호출 사이에 짧은 딜레이를 둔다.
-- 재시도는 무한 반복하지 않는다.
-- rate limit, 네트워크 오류, 서버 지연을 로그로 남긴다.
-
-### LOC/MOC 주문
-
-- LOC와 MOC는 일반 지정가/시장가와 주문 구분 코드가 다르다.
-- `ord_dvsn` 등 주문 파라미터는 공식 문서 또는 검증된 샘플 기준으로만 수정한다.
-- 주문 타입 변경은 반드시 로그와 테스트를 동반한다.
+- 공격 시연에는 반드시 방어 코드와 "쉽게 말하면" 비유 설명을 함께 둔다.
+- 화면에 수치를 쓸 때는 데이터에서 센 값을 쓴다. 손으로 적은 값은 금방 어긋난다.
+  (실제로 "규칙 500여종" 표기에 실제 1,117개, "319개+ 실습"에 실제 369개였다.)
+- PDF 에서 추출한 텍스트는 두 가지로 깨진다. 단어 안에 공백이 들어가거나
+  (`defi ne`, `pointe r`), 합자가 다른 글자로 바뀐다 (`de9ned`, `unde%ned`).
+  `validate_build.py` 의 LIGATURE, LIGATURE-SYMBOL 검사가 잡고,
+  `_gen/fix_ligatures.py` 가 고친다.
+- 합자 복원을 정규식으로 일괄 치환하지 않는다. `uint8_t u8a`, `0x9e3779b9` 처럼
+  정상 코드가 같은 모양이다. 복원 결과가 저장소 안에서 정상 표기로도 쓰일 때만 바꾼다.
+- 쪼개진 단어를 붙일 때도 마찬가지다. `size of`, `can not`, `prepared statement` 는
+  띄어 쓰는 것이 맞다. 확인한 목록만 `fix_ligatures.py` 의 `SPLITS` 에 넣는다.
+- 제작 공정 설명("PDF 원문에서 분리되지 않아...")을 학습자 화면에 노출하지 않는다.
+- 실존 상표를 모의 화면 소품으로 쓰지 않는다. 가상 브랜드를 만든다.
 
 ---
 
-## 7. 전략 모듈 작성 규칙
+## 7. 파일명과 URL 규칙
 
-`strategy_v40.py`는 계산 전용이어야 한다.
-
-허용:
-
-- 숫자 계산
-- 가격표 생성
-- 매수/매도/리버스 판정
-- 입력 state와 시세 데이터 기반 결과 반환
-
-금지:
-
-- KIS API 호출
-- 파일 저장
-- 텔레그램 발송
-- 현재 시간 직접 조회
-- 환경 변수 직접 조회
-- 전역 state 변경
-
-전략 함수는 가능한 한 다음 형태를 따른다.
-
-```python
-def calculate_plan(state, market_data, config):
-    return {
-        "buy_orders": [],
-        "sell_orders": [],
-        "mode": "normal",
-        "reason": "...",
-        "warnings": []
-    }
-```
+- 학습 페이지는 `<번호>_<도메인>-<식별자>.html` 또는 `sim-<식별자>.html`.
+- 구분자는 하이픈으로 통일한다. 밑줄을 쓰면 주입 스크립트가 걸러내지 못한다
+  (`sim_insufficient_session.html` 이 그 사례였다).
+- URL 오타를 발견하면 정규 URL 을 만들고 `firebase.json` 의 `redirects` 에 301 을 추가한다.
+  파일명만 바꾸면 외부 링크와 검색 색인이 깨진다.
 
 ---
 
-## 8. 체결 처리 규칙
+## 8. 변경 시 확인해야 하는 것
 
-체결 처리는 자동매매봇에서 가장 위험한 부분이다.
-
-반드시 지킬 것:
-
-- 체결마다 고유 키를 만든다.
-- 이미 처리한 체결은 다시 반영하지 않는다.
-- 조회가 여러 번 돌아도 state 반영은 정확히 한 번이어야 한다.
-- 일반 매수, 폭락대비 추가매수, 익절 매도, 리버스 체결을 구분한다.
-- 수수료와 환율 반영 방식은 기존 프로젝트 기준을 따른다.
-- 체결 조회가 너무 빨라 빈 결과가 나오는 상황을 실패로 단정하지 않는다.
-
-체결 고유 키 예시:
-
-```text
-account + ticker + order_no + fill_time + side + qty + price
-```
-
-기존 코드에 이미 다른 기준이 있다면 기존 기준을 우선한다.
+| 바꾼 것 | 같이 봐야 하는 것 |
+|:--|:--|
+| 새 페이지 추가 | `inject_shell.py`, `gen_sitemap.py`, `page-order.json` |
+| 파일명 변경 | 내부 링크 전수, sitemap, `firebase.json` 리다이렉트 |
+| 외부 라이브러리 추가 | SRI 해시, `firebase.json` 의 CSP, `privacy.html` 의 위탁 표 |
+| 수집 데이터 추가 | `firestore.rules`, `privacy.html`, 삭제 경로 |
+| 인라인 이벤트 추가 | CSP `script-src` 강화 계획과 충돌 여부 |
+| 콘텐츠 수 변경 | `python _gen/gen_registry.py` 재실행, `gen_sitemap.py`, `page-order.json` |
+| 공격형 실습 추가 | `_gen/inject_safety.py` 재실행 |
+| AI 개념 카드 추가 | `js/ai-track.js` 의 경로 표, `_gen/inject_ai_meta.py` 재실행 |
+| AI 진도 키 추가 | `wvs_ai_*` 네임스페이스를 쓴다 |
+| 실습 과제 추가 | `codefix-grader.js` 로 자체 채점 시험 (모범답안 통과, 위장 제출 차단) |
+| 화면 문구 추가 | 한국어와 영어를 같이 쓴다. 채점 규칙도 두 언어를 인정해야 한다 |
 
 ---
 
-## 9. 텔레그램 제어 원칙
+## 9. 채점 규칙을 쓸 때
 
-텔레그램은 운영 UI이며 주문 엔진이 아니다.
-
-지원 기능:
-
-- 리포트
-- 매수계획 미리보기
-- 종목 설정
-- 주문 정지/재개
-- 미체결 취소
-- RP 잔고 수동 입력
-
-규칙:
-
-- 가능한 한 명령어 타이핑보다 키보드 버튼 기반으로 유지한다.
-- 텔레그램 발송 실패는 격리한다.
-- 설정 변경은 확인 메시지를 거친다.
-- 실거래에 영향을 주는 버튼은 오작동 방지 확인 단계를 둔다.
+- 어간으로 대안을 적었으면 뒤에 `\b` 를 두지 않는다.
+  `/\b(rotat|separat)\b/` 는 "rotate", "separate" 를 잡지 못한다.
+- 새 과제나 미션을 만들면 **모범 답안이 자기 루브릭을 통과하는지** 반드시 확인한다.
+  실제로 처음 작성한 미션 5개 중 2개가 자기 기준에 미달했다.
+- 빈 답안이 "하지 않았다" 류 항목(부정형 기준)을 거저 통과하지 않게 막는다.
 
 ---
 
-## 10. 스케줄과 시장 캘린더
+## 10. 알려진 미해결 과제
 
-- 미국장 기준으로 주말과 NYSE 공휴일은 주문을 스킵한다.
-- 서머타임 여부에 따라 KST 주문 시각을 자동 조정한다.
-- 기본 주문 시각:
-  - 서머타임: 17:40 KST
-  - 동절기: 18:40 KST
-- 체결 확인은 장 마감 직후 바로 단정하지 않고 지연 조회한다.
-- 서버 시간대는 명시적으로 관리한다.
-
----
-
-## 11. 액면분할/병합 대응
-
-액면분할/병합은 state를 크게 깨뜨릴 수 있다.
-
-원칙:
-
-- 매일 지정 시각에 감지한다.
-- 감지되면 주문을 자동 정지한다.
-- 수량과 평단을 보정한다.
-- 보정 내역을 로그에 남긴다.
-- 사용자가 확인하기 전까지 재개하지 않는다.
-- 이미 처리한 split 이벤트는 `split_log`로 중복 처리하지 않는다.
-
----
-
-## 12. 로컬 개발과 서버 운영
-
-운영 서버는 Oracle Cloud Always Free Ubuntu 인스턴스를 기준으로 한다.
-
-권장 흐름:
-
-```text
-로컬 PC에서 코드 수정
-  ↓
-비공개 GitHub 저장소에 push
-  ↓
-서버에서 git pull
-  ↓
-봇 재시작 스크립트 실행
-  ↓
-로그와 텔레그램 리포트 확인
-```
-
-서버에서 직접 임시 수정한 코드는 반드시 Git에 반영한다.
-
----
-
-## 13. 비밀정보 관리
-
-절대 커밋하지 말 것:
-
-- KIS App Key
-- KIS App Secret
-- 계좌번호
-- Telegram Bot Token
-- Telegram Chat ID
-- 실투자 URL을 포함한 민감 설정 파일
-- 토큰 캐시 파일
-- 실제 state/log 백업 파일
-
-비밀정보는 `.env`, 서버 환경 변수, 비공개 설정 파일 중 프로젝트 기존 방식을 따른다.
-
----
-
-## 14. 테스트 기준
-
-가능하면 다음 테스트를 우선한다.
-
-- 전략 계산 단위 테스트
-- 리버스 모드 진입/종료 테스트
-- 전반전/후반전 경계값 테스트
-- 별지점 계산 테스트
-- 체결 중복 반영 방지 테스트
-- state 저장/복구 테스트
-- KIS 클라이언트 모의 응답 테스트
-- 토큰 만료/재발급 테스트
-- 휴장일/서머타임 테스트
-
-실제 API 호출 테스트는 모의투자 환경에서 먼저 수행한다.
-
----
-
-## 15. Claude Code 작업 방식
-
-Claude는 다음 순서로 작업한다.
-
-1. 관련 파일을 먼저 읽고 기존 구조를 파악한다.
-2. 전략 규칙이 불명확하면 사용자에게 확인한다.
-3. 실거래 경로 변경 전 dry-run, 로그, 테스트 가능성을 확인한다.
-4. 변경 범위를 작게 유지한다.
-5. 기존 state와 설정 파일 호환성을 깨뜨리지 않는다.
-6. 수정 후 가능한 검증 명령을 실행한다.
-7. 실행하지 못한 검증은 명확히 보고한다.
-
-금지:
-
-- 무한매수법 규칙을 임의로 해석해 구현하기
-- 실투자 계좌 기준으로 바로 테스트하기
-- 체결 처리 로직을 단순화하기
-- state 파일을 백업 없이 구조 변경하기
-- 텔레그램 오류가 주문 루프를 멈추게 만들기
-- API 호출 재시도를 무한 루프로 만들기
-
----
-
-## 16. 사용자에게 확인해야 하는 상황
-
-다음은 반드시 확인 후 진행한다.
-
-- 별%, 별지점, 리버스 모드 등 전략 규칙이 코드와 문서에서 충돌할 때
-- KIS 주문 구분 코드가 불명확할 때
-- 실투자/모의투자 환경 설정을 바꿔야 할 때
-- 기존 state schema를 변경해야 할 때
-- 체결 중복 키 생성 기준을 바꿔야 할 때
-- 주문 수량 또는 가격 계산 방식을 변경해야 할 때
-- 액면분할/병합 보정 방식을 변경해야 할 때
-
----
-
-## 17. 최종 목표
-
-이 봇의 목표는 "돌아가는 자동주문 스크립트"가 아니라, 다음 조건을 만족하는 장기 운영 가능한 자동매매 시스템이다.
-
-- 전략 계산이 검증 가능하다.
-- 주문과 체결 반영이 중복 없이 안전하다.
-- 장애가 나도 어디서 멈췄는지 알 수 있다.
-- state를 복구할 수 있다.
-- 다계좌와 다종목을 독립적으로 운영할 수 있다.
-- 사용자는 텔레그램으로 현재 상태와 위험 신호를 확인할 수 있다.
-- AI가 코드를 돕더라도 최종 판단은 전략을 이해한 사용자가 한다.
-
+- 인라인 이벤트 핸들러가 약 3,500개라 `script-src` 에서 `unsafe-inline` 을 아직 못 뺐다.
+  `firebase.json` 에 보고 전용 CSP 를 함께 배포해 두었으니, 위반 로그를 보며
+  생성기 레벨에서 이벤트 위임 방식으로 전환한 뒤 조인다.
+- `coding-standards.html` 이 3.2MB 단일 페이지이고 버튼이 2,700개가 넘는다.
+  표준별, 섹션별 분할과 지연 로드가 필요하다.
+- 수료증 서버 발급으로 전환했으므로, 기존 자가검증 링크(`?d=&h=`)는
+  이행 기간이 끝나면 제거한다.
