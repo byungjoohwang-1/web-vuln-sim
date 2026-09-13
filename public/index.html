@@ -4,262 +4,415 @@
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-i18n="title">보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습</title>
-<meta name="description" content="보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습 · WEB-VULN-SIM 보안 학습 포털">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title data-i18n="title">WEB-VULN-SIM | 산업별 맞춤 보안 실무 교육 플랫폼</title>
+<meta name="description" content="금융, 자동차, 스마트팩토리, 클라우드/AI, 공공인프라, 개인정보보호 등 전 산업군 실무 맞춤형 인터랙티브 보안 교육 플랫폼">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
-<meta property="og:title" content="보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습">
-<meta property="og:description" content="보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습 · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="WEB-VULN-SIM | 산업별 맞춤 보안 실무 교육 플랫폼">
+<meta property="og:description" content="금융, 자동차, 스마트팩토리, 클라우드/AI, 공공인프라, 개인정보보호 전 산업군 맞춤 보안 실무 교육 플랫폼">
 <meta property="og:url" content="https://vuln-sim.web.app/index.html">
 <meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
 <meta name="twitter:card" content="summary">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/platform-tokens.css?v=20260913_fix4">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Lora',serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 55%,#312e81 100%);min-height:100vh;color:#fff;display:flex;flex-direction:column}
-.wrap{max-width:1080px;margin:0 auto;padding:0 22px;width:100%}
-.langbar{display:flex;justify-content:flex-end;padding:16px 0 0}
-.langtoggle{display:inline-flex;border:1px solid rgba(255,255,255,.3);border-radius:30px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:13px}
-.langtoggle button{background:transparent;color:#fff;border:0;padding:7px 16px;cursor:pointer;opacity:.65;transition:.2s;font-family:inherit}
-.langtoggle button.on{background:#fff;color:#1e1b4b;opacity:1;font-weight:700}
-.hero{text-align:center;padding:30px 0 30px}
-.hero .badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:7px 18px;border-radius:30px;font-size:13px;font-family:'JetBrains Mono',monospace;margin-bottom:20px;letter-spacing:.5px}
-.hero h1{font-size:44px;line-height:1.2;margin-bottom:14px;letter-spacing:-1px}
-.hero h1 .g{background:linear-gradient(90deg,#a5b4fc,#f0abfc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:17px;opacity:.85;max-width:680px;margin:0 auto}
-.doors{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:20px 0 50px;flex:1;align-content:start}
-.door{position:relative;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:40px 36px;text-decoration:none;color:#fff;transition:.25s;overflow:hidden;display:flex;flex-direction:column}
-.door:hover{transform:translateY(-6px);background:rgba(255,255,255,.09);box-shadow:0 30px 60px rgba(0,0,0,.4)}
-.door .glow{position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;filter:blur(50px);opacity:.5}
-.door.v1 .glow{background:#ef4444}
-.door.v2 .glow{background:#a855f7}
-.door .ic{font-size:54px;margin-bottom:18px}
-.door .kicker{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;opacity:.7;margin-bottom:6px}
-.door h2{font-size:27px;margin-bottom:12px}
-.door .desc{font-size:15px;opacity:.86;line-height:1.7;margin-bottom:22px;flex:1}
-.door ul{list-style:none;margin-bottom:26px}
-.door li{font-size:14px;opacity:.92;padding:6px 0 6px 26px;position:relative}
-.door li:before{content:'›';position:absolute;left:6px;font-weight:700;color:#a5b4fc}
-.door.v1 li:before{color:#fca5a5}
-.door .enter{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#1e1b4b;font-weight:800;padding:14px 26px;border-radius:30px;font-size:15.5px;align-self:flex-start}
-.door.v1 .enter{color:#7f1d1d}.door.v2 .enter{color:#581c87}
-.foot{text-align:center;padding:26px 0 34px;font-size:12.5px;opacity:.6;line-height:1.8}
-.foot a{color:#c4b5fd}
-@media(max-width:780px){.doors{grid-template-columns:1fr}.hero h1{font-size:32px}.hero{padding:20px 0 20px}}
+html, body{max-width:100%;overflow-x:hidden}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:linear-gradient(135deg,#0b1220 0%,#111a2e 50%,#1e1b4b 100%);min-height:100vh;color:#e2e8f0;display:flex;flex-direction:column}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px;width:100%;box-sizing:border-box}
 
-/* [G05] 홈 시작점 */
-.home-start{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
-.hs-cta{display:inline-flex;align-items:center;min-height:44px;padding:12px 24px;border-radius:12px;
-  background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;text-decoration:none;font-weight:800}
-.hs-cta:hover{filter:brightness(1.12)}
-.hs-alt{display:inline-flex;align-items:center;min-height:44px;padding:12px 20px;border-radius:12px;
-  border:1px solid rgba(255,255,255,.28);color:#e2e8f0;text-decoration:none;font-weight:700}
-.hs-alt:hover{border-color:#38bdf8;color:#7dd3fc}
-.home-resume{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;
-  margin-top:14px;font-size:.86rem;color:#b6c2d4}
+/* 탑 내비게이션 & 언어바 */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:24px}
+.brand{font-size:1.1rem;font-weight:800;color:#fff;text-decoration:none;display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace}
+.brand .mk{color:#38bdf8}
+.brand small{font-size:.65rem;color:#8fa0ba;display:block;font-weight:500}
+.top-links{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 14px;font-size:12.5px;color:#fff;text-decoration:none;background:rgba(255,255,255,.04);transition:.2s}
+.top-btn:hover{background:rgba(255,255,255,.12);border-color:#38bdf8}
+.langtoggle{display:inline-flex;border:1px solid rgba(255,255,255,.25);border-radius:20px;overflow:hidden;font-size:12px;font-family:'JetBrains Mono',monospace}
+.langtoggle button{background:transparent;color:#fff;border:0;padding:5px 12px;cursor:pointer;opacity:.7;transition:.2s}
+.langtoggle button.on{background:#fff;color:#0f172a;opacity:1;font-weight:700}
+@media (max-width: 768px) {
+  .wvs-langbar {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+@media (min-width: 769px) {
+  .wvs-langbar {
+    position: fixed !important;
+    top: 8px !important;
+    bottom: auto !important;
+    right: 14px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    z-index: 9600 !important;
+  }
+}
+
+/* 히어로 섹션 */
+.hero{text-align:center;padding:24px 0 32px}
+.hero .badge{display:inline-block;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.35);color:#7dd3fc;padding:6px 16px;border-radius:30px;font-size:12.5px;font-family:'JetBrains Mono',monospace;margin-bottom:16px;letter-spacing:.5px;font-weight:700}
+.hero h1{font-size:38px;line-height:1.3;margin-bottom:14px;letter-spacing:-.8px;color:#fff;word-break:keep-all}
+.hero h1 .g{background:linear-gradient(90deg,#7dd3fc,#c084fc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:16.5px;color:#94a3b8;max-width:760px;margin:0 auto 22px;line-height:1.7;word-break:keep-all}
+
+/* 시작점 CTA */
+.home-start{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.hs-cta{display:inline-flex;align-items:center;min-height:46px;padding:12px 26px;border-radius:12px;
+  background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;text-decoration:none;font-weight:800;box-shadow:0 4px 16px rgba(37,99,235,.4);transition:.2s}
+.hs-cta:hover{transform:translateY(-2px);filter:brightness(1.12);color:#fff}
+.hs-alt{display:inline-flex;align-items:center;min-height:46px;padding:12px 22px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.25);color:#e2e8f0;text-decoration:none;font-weight:700;background:rgba(255,255,255,.04);transition:.2s}
+.hs-alt:hover{border-color:#38bdf8;color:#7dd3fc;transform:translateY(-2px)}
+.home-resume{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:16px;font-size:.86rem;color:#b6c2d4}
 .home-resume[hidden]{display:none}
 .hr-label{font-weight:800;color:#8fa0ba}
-.hr-link{color:#7dd3fc;font-weight:700}
+.hr-link{color:#7dd3fc;font-weight:700;text-decoration:none}
+.hr-link:hover{text-decoration:underline}
 .hr-meta{color:#8fa0ba;font-size:.78rem}
-@media(max-width:480px){.home-start{flex-direction:column}.hs-cta,.hs-alt{justify-content:center}}
+
+/* 섹션 타이틀 공통 */
+.sec-title{margin:36px 0 16px;display:flex;align-items:baseline;gap:10px}
+.sec-title h2{font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-.3px}
+.sec-title span{font-size:.8rem;color:#8fa0ba;font-family:'JetBrains Mono',monospace}
+
+/* 6대 산업별 트랙 컴포넌트 */
+.industry-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:24px;box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.ind-tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
+.ind-tab{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.1);color:#94a3b8;border-radius:12px;padding:12px 8px;cursor:pointer;font-weight:700;font-size:.86rem;display:flex;flex-direction:column;align-items:center;gap:6px;transition:.2s;text-align:center}
+.ind-tab .ic{font-size:1.5rem}
+.ind-tab:hover{border-color:#38bdf8;color:#e2e8f0;background:rgba(56,189,248,.08)}
+.ind-tab.active{background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(99,102,241,.24));border-color:#38bdf8;color:#fff;box-shadow:0 0 14px rgba(56,189,248,.25)}
+
+.ind-detail{background:#0e172a;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:24px;position:relative}
+.ind-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.ind-title{display:flex;align-items:center;gap:10px}
+.ind-title h3{font-size:1.3rem;font-weight:800;color:#fff;margin:0}
+.ind-badge{background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#7dd3fc;padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:700}
+.ind-std{color:#8fa0ba;font-size:.82rem;margin-bottom:12px}
+.ind-std b{color:#cbd5e1}
+.ind-desc{font-size:.92rem;color:#cbd5e1;line-height:1.7;margin-bottom:20px;word-break:keep-all}
+
+.threat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+.threat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;text-decoration:none;color:#e2e8f0;display:flex;flex-direction:column;gap:6px;transition:.2s}
+.threat-card:hover{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.4);transform:translateY(-2px);color:#fff}
+.threat-card .t-head{font-weight:700;font-size:.9rem;color:#38bdf8;display:flex;justify-content:space-between}
+.threat-card .t-desc{font-size:.78rem;color:#94a3b8;line-height:1.5}
+
+.ind-footer{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);flex-wrap:wrap;gap:12px}
+.ind-role{font-size:.8rem;color:#8fa0ba}
+.ind-role b{color:#cbd5e1}
+.ind-link{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;font-weight:700;font-size:.82rem;padding:9px 18px;border-radius:8px;text-decoration:none;transition:.2s}
+.ind-link:hover{filter:brightness(1.15);color:#fff}
+
+/* 직무별 맞춤 로드맵 */
+.role-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.role-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.role-card .r-icon{font-size:1.8rem;margin-bottom:2px}
+.role-card h3{font-size:1rem;font-weight:800;color:#fff;margin:0}
+.role-card .r-tag{font-size:.7rem;color:#7dd3fc;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:6px;padding:2px 8px;align-self:flex-start}
+.role-card .r-desc{font-size:.78rem;color:#94a3b8;line-height:1.5;margin:0;flex:1}
+.role-card ul{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
+.role-card li a{font-size:.76rem;color:#cbd5e1;text-decoration:none;display:flex;align-items:center;gap:5px;transition:.15s}
+.role-card li a:before{content:'›';color:#38bdf8;font-weight:700}
+.role-card li a:hover{color:#38bdf8;padding-left:2px}
+
+/* 산업 연계 대표 사건 배너 */
+.incident-banner{background:linear-gradient(120deg,#1e1b4b,#31103c);border:1px solid rgba(192,132,252,.3);border-radius:18px;padding:24px 28px;margin-top:36px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.ib-info h3{font-size:1.25rem;font-weight:800;color:#fff;margin:0 0 8px;display:flex;align-items:center;gap:10px}
+.ib-info h3 .ib-badge{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.4);font-size:.68rem;padding:3px 9px;border-radius:99px}
+.ib-info p{font-size:.86rem;color:#d8b4fe;margin:0;line-height:1.6}
+.ib-btn{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#1e1b4b;font-weight:800;padding:12px 22px;border-radius:12px;text-decoration:none;font-size:.9rem;white-space:nowrap;transition:.2s}
+.ib-btn:hover{background:#f3e8ff;transform:translateY(-2px)}
+
+/* 기존 5대 전문 학습관 도어 */
+.doors{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0 40px}
+.door{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px;text-decoration:none;color:#e2e8f0;transition:.2s;display:flex;flex-direction:column;gap:8px}
+.door:hover{transform:translateY(-4px);background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);box-shadow:0 16px 32px rgba(0,0,0,.3)}
+.door .ic{font-size:1.8rem}
+.door .kicker{font-size:.7rem;font-family:'JetBrains Mono',monospace;color:#7dd3fc;letter-spacing:1px}
+.door h3{font-size:1.05rem;font-weight:800;color:#fff;margin:0}
+.door .desc{font-size:.8rem;color:#94a3b8;line-height:1.6;margin:0;flex:1}
+.door .enter{font-size:.78rem;font-weight:700;color:#38bdf8;margin-top:6px}
+
+/* 푸터 */
+.foot{text-align:center;padding:32px 0 40px;font-size:12px;color:#64748b;line-height:1.8;border-top:1px solid rgba(255,255,255,.08);margin-top:20px}
+.foot a{color:#94a3b8;text-decoration:none}
+.foot a:hover{color:#38bdf8}
+
+/* 모바일 반응형 쿼리 (가로 넘침 방지 & 한 손 스와이프 조작성) */
+@media(max-width:980px){
+  .ind-tabs{grid-template-columns:repeat(3,1fr)}
+  .role-grid{grid-template-columns:repeat(2,1fr)}
+  .doors{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:640px){
+  .wrap{
+    padding:0 max(16px, env(safe-area-inset-right, 16px)) calc(var(--wvs-bottom-nav-h, 56px) + var(--wvs-safe-bottom, 14px) + 20px) max(16px, env(safe-area-inset-left, 16px));
+  }
+  .topbar{
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:12px 0;
+    margin-bottom:18px;
+  }
+  .brand{font-size:1rem}
+  .brand small{display:none}
+  .top-links{gap:6px}
+  .top-btn{padding:6px 10px;font-size:11.5px}
+  .langtoggle button{padding:5px 8px;font-size:11px}
+  .hero h1{font-size:26px}
+  .hero p{font-size:14.5px}
+  .home-start{flex-direction:column}
+  .hs-cta, .hs-alt{justify-content:center}
+  /* 6대 산업 탭을 1줄 수평 스와이프 칩으로 전환 */
+  .ind-tabs{
+    display:flex;
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    gap:8px;
+    padding-bottom:6px;
+    margin-bottom:14px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .ind-tabs::-webkit-scrollbar{display:none}
+  .ind-tab{
+    flex:0 0 auto;
+    width:108px;
+    padding:10px 6px;
+    font-size:.78rem;
+    scroll-snap-align:start;
+  }
+  .ind-tab .ic{font-size:1.35rem}
+  .threat-grid{grid-template-columns:1fr}
+  .role-grid{grid-template-columns:1fr}
+  .doors{grid-template-columns:1fr}
+  .incident-banner{flex-direction:column;align-items:stretch}
+  .ib-btn{justify-content:center}
+  .industry-box{padding:14px}
+  .ind-detail{padding:16px 14px}
+  .ind-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .ind-footer{flex-direction:column;align-items:stretch;gap:10px}
+  .ind-link{justify-content:center}
+}
 </style>
 </head>
 <body>
 <div class="wrap" role="main">
-  <div class="langbar" style="justify-content:space-between">
-    <a href="my-progress.html" style="display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.3);border-radius:30px;padding:7px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#fff;text-decoration:none;background:rgba(255,255,255,.06);transition:.2s" onmouseover="this.style.background='rgba(255,255,255,.14)'" onmouseout="this.style.background='rgba(255,255,255,.06)'" data-i18n="myprog">📊 내 학습 현황</a>
-    <div class="langtoggle" role="group" aria-label="Language">
-      <button id="btn-ko" onclick="setLang('ko')">한국어</button>
-      <button id="btn-en" onclick="setLang('en')">English</button>
+
+  <!-- 상단 내비게이션 & 언어 바 -->
+  <header class="topbar">
+    <a href="index.html" class="brand">
+      <span class="mk">⛨</span>
+      <div>
+        <span>WEB-VULN-SIM</span>
+        <small data-i18n="tagline">SECURITY LEARNING PLATFORM</small>
+      </div>
+    </a>
+    <div class="top-links">
+      <a href="my-progress.html" class="top-btn" data-i18n="myprog">📊 내 학습 현황</a>
+      <div class="langtoggle" role="group" aria-label="Language">
+        <button id="btn-ko" onclick="setLang('ko')">한국어</button>
+        <button id="btn-en" onclick="setLang('en')">English</button>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <div class="hero">
-    <div class="badge">🔐 SECURITY LEARNING HUB</div>
-    <h1 data-i18n-html="heroTitle">무엇을 <span class="g">학습</span>할까요?</h1>
-    <p data-i18n="heroDesc">웹·인프라 취약점 체험, 보안약점 진단원 학습, 실전 훈련장, C/C++ 코딩 표준까지 목적에 맞는 학습 트랙을 선택하세요.</p>
+  <!-- 히어로 섹션: B2C 개인 학습자 맞춤 -->
+  <section class="hero">
+    <div class="badge" data-i18n="badge">🔐 INDUSTRY-SPECIFIC SECURITY LEARNING</div>
+    <h1 data-i18n-html="heroTitle">나에게 필요한 보안을, <span class="g">직접 해결</span>하며 공부하세요</h1>
+    <p data-i18n="heroDesc">금융 · 자동차 · 스마트팩토리 · 클라우드/AI · 공공인프라 · 한국 개인정보 실무까지 — 내 산업과 직무에 맞춘 500여 종의 한국어 실무 실습 플랫폼</p>
 
-    <!-- [G05] 홈을 하나의 공식 시작점으로. 처음 온 사람은 '바로 체험', 이어 하던 사람은
-         실제 저장된 진도에서 이어가게 한다. 가짜 수치는 넣지 않고, 기록이 없으면 이 블록을 숨긴다. -->
     <div id="homeStart" class="home-start">
-      <a class="hs-cta" href="vulnlab.html" data-i18n="hsTry">▶ 바로 체험하기 — 취약점 실습장</a>
-      <a class="hs-alt" href="skill-assess.html" data-i18n="hsAssess">내 수준 진단</a>
+      <a class="hs-cta" href="my-progress.html" style="background:linear-gradient(135deg,#0284c7,#2563eb)">🎯 B2C 맞춤 대시보드 — 오늘 15분 학습</a>
+      <a class="hs-alt" href="vulnlab.html">🧪 취약점 실습장 (61종)</a>
+      <a class="hs-alt" href="privacy-breach-72h.html">🚨 72h 개인정보 유출대응</a>
+      <a class="hs-alt" href="industry-tech-protect.html">🏭 국가핵심기술 산기법</a>
+      <a class="hs-alt" href="audit-ismsp-lab.html">📋 ISMS-P 심사원 실습</a>
     </div>
     <div id="homeResume" class="home-resume" hidden>
-      <span class="hr-label" data-i18n="hsResume">이어서 학습</span>
+      <span class="hr-label" data-i18n="hsResume">이어서 학습:</span>
       <a id="homeResumeLink" class="hr-link" href="#"></a>
       <span id="homeResumeMeta" class="hr-meta"></span>
     </div>
-  </div>
+  </section>
 
-  <div class="doors">
-    <!-- 트랙 1: 취약점 학습 -->
-    <a class="door v1" href="vuln-hub.html">
-      <div class="glow"></div>
-      <div class="ic">🛡️</div>
-      <div class="kicker">TRACK 01 · HANDS-ON</div>
-      <h2 data-i18n="t1h">취약점 학습</h2>
-      <div class="desc" data-i18n-html="t1d">공격 시뮬레이터로 취약점이 <b>실제로 어떻게 악용되는지</b> 직접 체험하고, 안전한 코드로 고쳐 보며 원리를 익힙니다.</div>
-      <ul>
-        <li data-i18n="t1l1">483개+ 인터랙티브 공격·방어 실습</li>
-        <li data-i18n="t1l2">시큐어코딩 · 주요정보통신 · 금융 3대 가이드</li>
-        <li data-i18n="t1l3">취약/안전 코드 비교 · 동적 공격 데모</li>
-        <li data-en="🎯 NEW: Burp-style DAST Console + 28 new simulators" style="color:#ff9a76;font-weight:700">🎯 신규: Burp 스타일 DAST 콘솔 + 시뮬레이터 28종</li>
-      </ul>
-      <span class="enter" data-i18n="t1e">시뮬레이터 입장 →</span>
-    </a>
+  <!-- 6대 산업 분야별 학습 트랙 (Industry Tracks) -->
+  <section id="industryTracks">
+    <div class="sec-title">
+      <h2 data-i18n="indSecTitle">산업 분야별 맞춤 트랙</h2>
+      <span>/ industry verticals</span>
+    </div>
+    <div class="industry-box">
+      <!-- 6대 탭 셀렉터 -->
+      <div class="ind-tabs" id="indTabs" role="tablist">
+        <!-- JS 로 렌더링 -->
+      </div>
+      <!-- 선택된 산업 상세 영역 -->
+      <div class="ind-detail" id="indDetail" role="tabpanel">
+        <!-- JS 로 렌더링 -->
+      </div>
+    </div>
+  </section>
 
-    <!-- 트랙 2: 진단원 학습 -->
-    <a class="door v2" href="secure-dev-portal.html">
-      <div class="glow"></div>
-      <div class="ic">🎓</div>
-      <div class="kicker">TRACK 02 · EXAM PREP</div>
-      <h2 data-i18n="t2h">보안약점 진단원 학습</h2>
-      <div class="desc" data-i18n-html="t2d">개발보안 가이드를 바탕으로 <b>시험을 체계적으로 준비</b>합니다. 개념부터 모의고사·코드진단까지 한곳에서.</div>
-      <ul>
-        <li data-i18n="t2l1">49개 보안약점 개념 학습 · 플래시카드</li>
-        <li data-i18n="t2l2">모의고사(타이머·합격선) · 코드진단 실습</li>
-        <li data-i18n="t2l3">오답노트 · 진도 대시보드 (자동 저장)</li>
-      </ul>
-      <span class="enter" data-i18n="t2e">학습 시작 →</span>
-    </a>
+  <!-- 직무별 맞춤 로드맵 (Role-based Pathways) -->
+  <section id="rolePathways">
+    <div class="sec-title">
+      <h2 data-i18n="roleSecTitle">직무별 추천 로드맵</h2>
+      <span>/ role pathways</span>
+    </div>
+    <div class="role-grid" id="roleGrid">
+      <!-- JS 로 렌더링 -->
+    </div>
+  </section>
 
-    <!-- 트랙 3: 실전 훈련장 -->
-    <a class="door v2" href="training-dashboard.html">
-      <div class="glow"></div>
-      <div class="ic">🏟️</div>
-      <div class="kicker">TRACK 03 · TRAINING ARENA</div>
-      <h2 data-i18n="t4h">진단원 실전 훈련장</h2>
-      <div class="desc" data-i18n-html="t4d">무료 공개 문제팩으로 <b>모의고사·코드진단·오답복습</b>을 반복하고, 강의실 모드와 수료 리포트까지 한 번에 관리합니다.</div>
-      <ul>
-        <li data-i18n="t4l1">훈련장 대시보드 · 문제팩 · 모의고사</li>
-        <li data-i18n="t4l2">코드 라인 선택형 진단 · 자동 채점</li>
-        <li data-i18n="t4l3">오답노트 · 클래스 입장 · 수료 리포트</li>
-      </ul>
-      <span class="enter" data-i18n="t4e">훈련장 입장 →</span>
-    </a>
+  <!-- 산업 연계 대표 사건 실습 배너 -->
+  <section class="incident-banner">
+    <div class="ib-info">
+      <h3>
+        <span data-i18n="ibTitle">스마트 모빌리티 &amp; 핀테크 복합 침해사고 대응</span>
+        <span class="ib-badge">4단계 연쇄 대응</span>
+      </h3>
+      <p data-i18n="ibDesc">웹 API 권한 취약점(IDOR) 분석 → 공장 제어망(OT) 접근 통제 → 차량 OTA 서명 검증 → 72시간 개인정보 유출 신고까지 원리로 해결하는 실전 사건 훈련</p>
+    </div>
+    <a href="incident.html" class="ib-btn" data-i18n="ibBtn">사건 대응 훈련 시작 →</a>
+  </section>
 
-    <!-- 트랙 3: C/C++ 코딩 표준 -->
-    <a class="door v1" href="coding-standards.html">
-      <div class="glow"></div>
-      <div class="ic">🛠️</div>
-      <div class="kicker">TRACK 04 · STANDARDS</div>
-      <h2 data-i18n="t3h">C/C++ 코딩 표준</h2>
-      <div class="desc" data-i18n-html="t3d">임베디드·안전필수·보안 C/C++ <b>5대 코딩 표준</b>의 분류 체계와 규칙을 위반/준수 예제로 비교합니다.</div>
-      <ul>
-        <li data-i18n="t3l1">MISRA C:2012 · MISRA C++:2023</li>
-        <li data-i18n="t3l2">CERT C · CERT C++ · AUTOSAR C++14</li>
-        <li data-i18n="t3l3">규칙 500여종 · 위반↔준수 코드 비교</li>
-      </ul>
-      <span class="enter" data-i18n="t3e">레퍼런스 열기 →</span>
-    </a>
+  <!-- 주요 학습관 바로가기 (Doors) -->
+  <section id="mainPortals">
+    <div class="sec-title">
+      <h2 data-i18n="portalSecTitle">주요 전문 학습관</h2>
+      <span>/ major portals</span>
+    </div>
+    <div class="doors">
+      <!-- 취약점 카탈로그 -->
+      <a class="door" href="vuln-hub.html">
+        <div class="ic">🛡️</div>
+        <div class="kicker">CATALOG &amp; ARENA</div>
+        <h3 data-i18n="p1Title">취약점 통합 실습장</h3>
+        <p class="desc" data-i18n="p1Desc">웹·인프라·금융·AI·차량 500여 개 인터랙티브 공격·방어 실습 및 Burp 스타일 DAST 콘솔</p>
+        <span class="enter" data-i18n="enterLab">실습실 입장 →</span>
+      </a>
+      <!-- 보안약점 진단원 포털 -->
+      <a class="door" href="secure-dev-portal.html">
+        <div class="ic">🎓</div>
+        <div class="kicker">KISA EXAM PREP</div>
+        <h3 data-i18n="p2Title">개발보안 진단원 학습</h3>
+        <p class="desc" data-i18n="p2Desc">KISA SW 개발보안 49개 보안약점 개념 학습, 플래시카드, 모의고사 및 코드 진단 실습</p>
+        <span class="enter" data-i18n="enterExam">진단원 포털 →</span>
+      </a>
+      <!-- 실전 훈련장 -->
+      <a class="door" href="training-dashboard.html">
+        <div class="ic">🏟️</div>
+        <div class="kicker">PRACTICE ARENA</div>
+        <h3 data-i18n="p3Title">진단원 실전 훈련장</h3>
+        <p class="desc" data-i18n="p3Desc">공개 문제팩 풀이, 코드 라인 선택형 실전 진단, 자동 채점 및 오답 복습 관리</p>
+        <span class="enter" data-i18n="enterArena">훈련장 입장 →</span>
+      </a>
+      <!-- C/C++ 코딩 표준 -->
+      <a class="door" href="coding-standards.html">
+        <div class="ic">🛠️</div>
+        <div class="kicker">EMBEDDED STANDARDS</div>
+        <h3 data-i18n="p4Title">C/C++ 코딩 표준</h3>
+        <p class="desc" data-i18n="p4Desc">임베디드·안전필수 5대 코딩 표준(MISRA C/C++, CERT C/C++, AUTOSAR C++14) 562룰 비교</p>
+        <span class="enter" data-i18n="enterStd">표준 레퍼런스 →</span>
+      </a>
+      <!-- 개인정보보호 허브 -->
+      <a class="door" href="privacy-hub.html">
+        <div class="ic">🔏</div>
+        <div class="kicker">PRIVACY COMPLIANCE</div>
+        <h3 data-i18n="p5Title">개인정보보호 실무 허브</h3>
+        <p class="desc" data-i18n="p5Desc">개인정보 영향평가(PIA 121항목), 처리방침 24개 조항 자동 점검, k-익명성 가명처리 실습</p>
+        <span class="enter" data-i18n="enterPrivacy">개인정보 학습 →</span>
+      </a>
+      <!-- AI 레드팀 아레나 -->
+      <a class="door" href="redteam.html">
+        <div class="ic">🦹</div>
+        <div class="kicker">AI RED TEAM</div>
+        <h3 data-i18n="p6Title">AI 레드팀 아레나</h3>
+        <p class="desc" data-i18n="p6Desc">AI 공격 에이전트와 직접 대결하며 4단계 침투 체인을 단계별로 방어하는 실전 모의 대전</p>
+        <span class="enter" data-i18n="enterRedteam">아레나 입장 →</span>
+      </a>
+    </div>
+  </section>
 
-    <!-- 트랙 5: 개인정보보호 -->
-    <a class="door v2" href="privacy-hub.html">
-      <div class="glow"></div>
-      <div class="ic">🔏</div>
-      <div class="kicker">TRACK 05 · PRIVACY</div>
-      <h2 data-i18n="t5h">개인정보보호</h2>
-      <div class="desc" data-i18n-html="t5d">「개인정보 보호법」 준수를 <b>도구로 직접 해 보며</b> 익힙니다. 영향평가 자가진단, 처리방침 작성·점검, 가명처리 실습까지.</div>
-      <ul>
-        <li data-i18n="t5l1">영향평가(PIA) 121개 평가항목 자가진단</li>
-        <li data-i18n="t5l2">처리방침 24개 기재사항 작성기 + 자동 점검</li>
-        <li data-i18n="t5l3">가명처리 실습실 · k-익명성 · 재식별 공격</li>
-        <li data-en="🆕 34 privacy simulators incl. AI privacy &amp; public AX" style="color:#ff9a76;font-weight:700">🆕 개인정보 시뮬레이터 34종 (AI 프라이버시·공공 AX 포함)</li>
-      </ul>
-      <span class="enter" data-i18n="t5e">개인정보 학습 →</span>
-    </a>
-  </div>
+  <!-- 푸터 -->
+  <footer class="foot">
+    <span data-i18n="footNote">행정안전부·한국인터넷진흥원(KISA)·금융보안원·개인정보보호위원회 공개 가이드라인을 개념적으로 재구성한 교육용 플랫폼입니다.</span><br>
+    <a href="vuln-hub.html">취약점 실습장</a> · <a href="secure-dev-portal.html">개발보안 포털</a> · <a href="training-dashboard.html">실전 훈련장</a> · <a href="coding-standards.html">C/C++ 코딩 표준</a> · <a href="privacy-hub.html">개인정보보호</a> · <a href="my-progress.html">내 학습 현황</a> · <a href="privacy-policy.html">개인정보 처리방침</a>
+  </footer>
 
-  <div class="foot">
-    <span data-i18n="footNote">행정안전부·한국인터넷진흥원(KISA)·금융보안원 공개 가이드라인을 개념적으로 재구성한 교육용 콘텐츠입니다. 저작권은 해당 기관에 있습니다.</span><br>
-    <a href="vuln-hub.html" data-i18n="footL1">취약점 학습</a> · <a href="secure-dev-portal.html" data-i18n="footL2">개발보안 학습 포털</a> · <a href="secure-dev-academy.html" data-i18n="footL3">진단원 학습 센터</a> · <a href="training-dashboard.html" data-i18n="footL5">실전 훈련장</a> · <a href="coding-standards.html" data-i18n="footL4">C/C++ 코딩 표준</a> · <a href="privacy-hub.html" data-i18n="footL6">개인정보보호</a> · <a href="privacy-policy.html" data-i18n="footPP">개인정보 처리방침</a>
-  </div>
 </div>
 
+<!-- 스크립트 로드 -->
+<script src="/js/industry-tracks-data.js"></script>
 <script>
 const I18N = {
   ko: {
-    title: '보안 학습 허브 | 취약점 학습 · 보안약점 진단원 학습',
-    heroTitle: '무엇을 <span class="g">학습</span>할까요?',
-    hsTry: '▶ 바로 체험하기 — 취약점 실습장', hsAssess: '내 수준 진단', hsResume: '이어서 학습',
-    heroDesc: '웹·인프라 취약점 체험, 보안약점 진단원 학습, 실전 훈련장, C/C++ 코딩 표준까지 목적에 맞는 학습 트랙을 선택하세요.',
-    t1h: '취약점 학습',
-    t1d: '공격 시뮬레이터로 취약점이 <b>실제로 어떻게 악용되는지</b> 직접 체험하고, 안전한 코드로 고쳐 보며 원리를 익힙니다.',
-    t1l1: '483개+ 인터랙티브 공격·방어 실습',
-    t1l2: '시큐어코딩 · 주요정보통신 · 금융 3대 가이드',
-    t1l3: '취약/안전 코드 비교 · 동적 공격 데모',
-    t1e: '시뮬레이터 입장 →',
-    t2h: '보안약점 진단원 학습',
-    t2d: '개발보안 가이드를 바탕으로 <b>시험을 체계적으로 준비</b>합니다. 개념부터 모의고사·코드진단까지 한곳에서.',
-    t2l1: '49개 보안약점 개념 학습 · 플래시카드',
-    t2l2: '모의고사(타이머·합격선) · 코드진단 실습',
-    t2l3: '오답노트 · 진도 대시보드 (자동 저장)',
-    t2e: '학습 시작 →',
-    t4h: '진단원 실전 훈련장',
-    t4d: '무료 공개 문제팩으로 <b>모의고사·코드진단·오답복습</b>을 반복하고, 강의실 모드와 수료 리포트까지 한 번에 관리합니다.',
-    t4l1: '훈련장 대시보드 · 문제팩 · 모의고사',
-    t4l2: '코드 라인 선택형 진단 · 자동 채점',
-    t4l3: '오답노트 · 클래스 입장 · 수료 리포트',
-    t4e: '훈련장 입장 →',
-    t3h: 'C/C++ 코딩 표준',
-    t3d: '임베디드·안전필수·보안 C/C++ <b>5대 코딩 표준</b>의 분류 체계와 규칙을 위반/준수 예제로 비교합니다.',
-    t3l1: 'MISRA C:2012 · MISRA C++:2023',
-    t3l2: 'CERT C · CERT C++ · AUTOSAR C++14',
-    t3l3: '규칙 500여종 · 위반↔준수 코드 비교',
-    t3e: '레퍼런스 열기 →',
-    t5h: '개인정보보호',
-    t5d: '「개인정보 보호법」 준수를 <b>도구로 직접 해 보며</b> 익힙니다. 영향평가 자가진단, 처리방침 작성·점검, 가명처리 실습까지.',
-    t5l1: '영향평가(PIA) 121개 평가항목 자가진단',
-    t5l2: '처리방침 24개 기재사항 작성기 + 자동 점검',
-    t5l3: '가명처리 실습실 · k-익명성 · 재식별 공격',
-    t5e: '개인정보 학습 →',
-    footNote: '행정안전부·한국인터넷진흥원(KISA)·금융보안원·개인정보보호위원회 공개 가이드라인을 개념적으로 재구성한 교육용 콘텐츠입니다. 저작권은 해당 기관에 있습니다.',
-    footL1: '취약점 학습', footL2: '개발보안 학습 포털', footL3: '진단원 학습 센터', footL4: 'C/C++ 코딩 표준', footL5: '실전 훈련장', footL6: '개인정보보호', footPP: '개인정보 처리방침',
-    myprog: '📊 내 학습 현황'
+    title: 'WEB-VULN-SIM | 산업별 맞춤 보안 실무 교육 플랫폼',
+    tagline: 'SECURITY LEARNING PLATFORM',
+    myprog: '📊 내 학습 현황',
+    badge: '🔐 INDUSTRY-SPECIFIC SECURITY LEARNING',
+    heroTitle: '나에게 필요한 보안을, <span class="g">직접 해결</span>하며 공부하세요',
+    heroDesc: '금융 · 자동차 · 스마트팩토리 · 클라우드/AI · 공공인프라 · 한국 개인정보 실무까지 — 내 산업과 직무에 맞춘 500여 종의 한국어 실무 실습 플랫폼',
+    hsTry: '▶ 무료 실습 시작 — 취약점 실습장',
+    hsAssess: '📊 3분 내 수준 진단',
+    hsResume: '이어서 학습:',
+    indSecTitle: '산업 분야별 맞춤 트랙',
+    roleSecTitle: '직무별 추천 로드맵',
+    ibTitle: '스마트 모빌리티 & 핀테크 복합 침해사고 대응',
+    ibDesc: '웹 API 권한 취약점(IDOR) 분석 → 공장 제어망(OT) 접근 통제 → 차량 OTA 서명 검증 → 72시간 개인정보 유출 신고까지 원리로 해결하는 실전 사건 훈련',
+    ibBtn: '사건 대응 훈련 시작 →',
+    portalSecTitle: '주요 전문 학습관',
+    p1Title: '취약점 통합 실습장', p1Desc: '웹·인프라·금융·AI·차량 500여 개 인터랙티브 공격·방어 실습 및 Burp 스타일 DAST 콘솔', enterLab: '실습실 입장 →',
+    p2Title: '개발보안 진단원 학습', p2Desc: 'KISA SW 개발보안 49개 보안약점 개념 학습, 플래시카드, 모의고사 및 코드 진단 실습', enterExam: '진단원 포털 →',
+    p3Title: '진단원 실전 훈련장', p3Desc: '공개 문제팩 풀이, 코드 라인 선택형 실전 진단, 자동 채점 및 오답 복습 관리', enterArena: '훈련장 입장 →',
+    p4Title: 'C/C++ 코딩 표준', p4Desc: '임베디드·안전필수 5대 코딩 표준(MISRA C/C++, CERT C/C++, AUTOSAR C++14) 562룰 비교', enterStd: '표준 레퍼런스 →',
+    p5Title: '개인정보보호 실무 허브', p5Desc: '개인정보 영향평가(PIA 121항목), 처리방침 24개 조항 자동 점검, k-익명성 가명처리 실습', enterPrivacy: '개인정보 학습 →',
+    p6Title: 'AI 레드팀 아레나', p6Desc: 'AI 공격 에이전트와 직접 대결하며 4단계 침투 체인을 단계별로 방어하는 실전 모의 대전', enterRedteam: '아레나 입장 →',
+    footNote: '행정안전부·한국인터넷진흥원(KISA)·금융보안원·개인정보보호위원회 공개 가이드라인을 개념적으로 재구성한 교육용 플랫폼입니다.'
   },
   en: {
-    title: 'Security Learning Hub | Vulnerability Lab · KISA Diagnostician Prep',
-    heroTitle: 'What would you like to <span class="g">learn</span>?',
-    hsTry: '▶ Try it now — Vulnerability Lab', hsAssess: 'Assess my level', hsResume: 'Continue learning',
-    heroDesc: 'Choose the learning track you need: vulnerability labs, diagnostician study, the hands-on training arena, or C/C++ coding standards.',
-    t1h: 'Vulnerability Lab',
-    t1d: 'Use the attack simulator to experience <b>how vulnerabilities are actually exploited</b>, then fix them with secure code to internalize the principles.',
-    t1l1: '319+ interactive attack & defense labs',
-    t1l2: 'Three guides: Secure Coding · Critical Infrastructure · Finance',
-    t1l3: 'Vulnerable vs. secure code comparison · live attack demos',
-    t1e: 'Enter the simulator →',
-    t2h: 'Diagnostician Exam Prep',
-    t2d: 'Systematically <b>prepare for the exam</b> based on the secure development guide — from concepts to mock exams and code diagnosis, all in one place.',
-    t2l1: '49 security-weakness concepts · flashcards',
-    t2l2: 'Mock exams (timer · pass line) · code-diagnosis practice',
-    t2l3: 'Wrong-answer notes · progress dashboard (auto-saved)',
-    t2e: 'Start learning →',
-    t4h: 'Diagnostician Training Arena',
-    t4d: 'Use free public question packs to repeat <b>mock exams, code diagnosis, and wrong-answer review</b>, with classroom mode and completion reports.',
-    t4l1: 'Dashboard · question packs · mock exams',
-    t4l2: 'Line-based code diagnosis · auto grading',
-    t4l3: 'Wrong notes · classroom entry · reports',
-    t4e: 'Enter the arena →',
-    t3h: 'C/C++ Coding Standards',
-    t3d: 'Compare the classification schemes and rules of the <b>five major C/C++ coding standards</b> for embedded, safety-critical, and security work, with violating/compliant examples.',
-    t3l1: 'MISRA C:2012 · MISRA C++:2023',
-    t3l2: 'CERT C · CERT C++ · AUTOSAR C++14',
-    t3l3: '500+ rules · violation ↔ compliance code comparison',
-    t3e: 'Open the reference →',
-    t5h: 'Privacy Protection',
-    t5d: 'Learn compliance with Korea’s Personal Information Protection Act <b>by doing it in real tools</b> — impact-assessment self-check, policy drafting &amp; linting, and a pseudonymization lab.',
-    t5l1: 'PIA self-assessment across all 121 evaluation items',
-    t5l2: 'Privacy-policy builder for 24 required sections + auto checker',
-    t5l3: 'Pseudonymization lab · k-anonymity · linkage attack',
-    t5e: 'Start privacy track →',
-    footNote: 'Educational content conceptually reconstructed from public guidelines of the Ministry of the Interior and Safety, KISA, the Financial Security Institute, and the Personal Information Protection Commission. Copyright belongs to the respective institutions.',
-    footL1: 'Vulnerability Lab', footL2: 'Secure Dev Portal', footL3: 'Diagnostician Center', footL4: 'C/C++ Coding Standards', footL5: 'Training Arena', footL6: 'Privacy', footPP: 'Privacy Policy',
-    myprog: '📊 My Progress'
+    title: 'WEB-VULN-SIM | Industry-Specific Hands-On Security Training Platform',
+    tagline: 'SECURITY LEARNING PLATFORM',
+    myprog: '📊 My Progress',
+    badge: '🔐 INDUSTRY-SPECIFIC SECURITY LEARNING',
+    heroTitle: 'Learn the security you need by <span class="g">solving real problems</span>',
+    heroDesc: 'Finance, Automotive, Smart Factory, Cloud/AI, Critical Infrastructure, and Korean Privacy Compliance — 500+ interactive labs customized for your industry and role.',
+    hsTry: '▶ Start Free Lab — Vulnerability Sandbox',
+    hsAssess: '📊 3-Min Skill Assessment',
+    hsResume: 'Resume Learning:',
+    indSecTitle: 'Industry-Specific Tracks',
+    roleSecTitle: 'Role-Based Learning Pathways',
+    ibTitle: 'Connected Mobility & Fintech Breach Incident Drill',
+    ibDesc: 'Chain reaction scenario: Web API IDOR → Factory OT Boundary → Vehicle OTA Signature → 72-Hour Breach Notification.',
+    ibBtn: 'Start Incident Drill →',
+    portalSecTitle: 'Major Portals',
+    p1Title: 'Vulnerability Lab', p1Desc: '500+ interactive attack & defense labs across Web, Infra, Finance, AI, and Vehicle.', enterLab: 'Enter Lab →',
+    p2Title: 'Diagnostician Prep', p2Desc: 'KISA 49 secure coding weaknesses, flashcards, mock exams, and code diagnosis.', enterExam: 'Assessor Portal →',
+    p3Title: 'Training Arena', p3Desc: 'Free public question packs, line-based code diagnosis, auto grading, and wrong notes.', enterArena: 'Enter Arena →',
+    p4Title: 'C/C++ Coding Standards', p4Desc: '5 major standards for embedded safety-critical systems: MISRA, CERT, AUTOSAR 562 rules.', enterStd: 'View Standards →',
+    p5Title: 'Privacy Compliance', p5Desc: 'Hands-on privacy compliance: 121-item PIA assessment, policy builder, and k-anonymity lab.', enterPrivacy: 'Privacy Hub →',
+    p6Title: 'AI Red Team Arena', p6Desc: 'Battle against AI attack agents to defend a 4-stage penetration chain in real time.', enterRedteam: 'Enter Arena →',
+    footNote: 'Educational platform conceptually reconstructed from guidelines of KISA, FSI, PIPC, and MOIS.'
   }
 };
+
+let currentLang = 'ko';
+let activeTrackId = 'fin';
+
 function applyLang(lang){
+  currentLang = lang;
   const d = I18N[lang] || I18N.ko;
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el=>{
@@ -271,28 +424,110 @@ function applyLang(lang){
   if(d.title) document.title = d.title;
   document.getElementById('btn-ko').classList.toggle('on', lang==='ko');
   document.getElementById('btn-en').classList.toggle('on', lang==='en');
+  renderIndustryTracks();
+  renderRolePathways();
 }
-function setLang(lang){ try{ localStorage.setItem('wvs_lang', lang); }catch(e){} applyLang(lang); }
-(function(){
-  let lang='ko';
-  try{ lang = localStorage.getItem('wvs_lang') || 'ko'; }catch(e){}
-  applyLang(lang);
-})();
-</script>
-<script src="js/bilingual.js"></script>
-<script src="/js/soc-chrome.js" defer></script>
 
-<script>
-/* [G05] 이어서 학습 — 실제 wvs_progress + progress-catalog.json 만 사용한다.
-   기록이 없으면 블록을 숨긴 채로 두고, 없는 수치를 지어내지 않는다. */
+function setLang(lang){
+  try{ localStorage.setItem('wvs_lang', lang); }catch(e){}
+  applyLang(lang);
+}
+
+// 6대 산업 트랙 렌더러
+function renderIndustryTracks(){
+  const tracks = window.WVS_INDUSTRY_TRACKS || [];
+  const tabsEl = document.getElementById('indTabs');
+  const detailEl = document.getElementById('indDetail');
+  if(!tracks.length || !tabsEl || !detailEl) return;
+
+  const isEn = currentLang === 'en';
+
+  // 탭 렌더링
+  tabsEl.innerHTML = tracks.map(t => `
+    <button type="button" class="ind-tab ${t.id === activeTrackId ? 'active' : ''}" onclick="selectTrack('${t.id}')">
+      <span class="ic">${t.icon}</span>
+      <span>${isEn ? t.enName : t.name}</span>
+    </button>
+  `).join('');
+
+  // 활성 트랙 상세 렌더링
+  const cur = tracks.find(t => t.id === activeTrackId) || tracks[0];
+  const threatsHtml = cur.threats.map(th => `
+    <a href="${th.page}" class="threat-card">
+      <div class="t-head">
+        <span>${th.title}</span>
+        <span>→</span>
+      </div>
+      <div class="t-desc">${th.desc}</div>
+    </a>
+  `).join('');
+
+  detailEl.innerHTML = `
+    <div class="ind-header">
+      <div class="ind-title">
+        <span style="font-size:1.8rem">${cur.icon}</span>
+        <h3>${isEn ? cur.enName : cur.name}</h3>
+        <span class="ind-badge">${isEn ? cur.enBadge : cur.badge}</span>
+      </div>
+      <span style="font-family:'JetBrains Mono',monospace;color:#38bdf8;font-size:.85rem;font-weight:700">${cur.totalLabs}</span>
+    </div>
+    <div class="ind-std">
+      <b>${isEn ? 'Standards & Criteria:' : '관련 법령·표준:'}</b> ${isEn ? cur.enStandards : cur.standards}
+    </div>
+    <div class="ind-desc">${isEn ? cur.enDesc : cur.desc}</div>
+    
+    <div style="font-size:.86rem;font-weight:700;color:#cbd5e1;margin-bottom:10px">
+      ${isEn ? 'Key Threat Labs:' : '핵심 위협 실습:'}
+    </div>
+    <div class="threat-grid">
+      ${threatsHtml}
+    </div>
+
+    <div class="ind-footer">
+      <div class="ind-role">
+        <b>${isEn ? 'Target Roles:' : '권장 대상 직무:'}</b> ${cur.role}
+      </div>
+      <a href="vuln-hub.html?ind=${cur.filterTag}" class="ind-link">
+        ${isEn ? 'View All ' + cur.enName + ' Labs →' : cur.name + ' 전체 실습 카탈로그 보기 →'}
+      </a>
+    </div>
+  `;
+}
+
+function selectTrack(id){
+  activeTrackId = id;
+  renderIndustryTracks();
+}
+
+// 직무별 로드맵 렌더러
+function renderRolePathways(){
+  const roles = window.WVS_ROLE_PATHWAYS || [];
+  const grid = document.getElementById('roleGrid');
+  if(!roles.length || !grid) return;
+
+  const isEn = currentLang === 'en';
+
+  grid.innerHTML = roles.map(r => `
+    <div class="role-card">
+      <div class="r-icon">${r.icon}</div>
+      <h3>${isEn ? r.enTitle : r.title}</h3>
+      <span class="r-tag">${isEn ? r.enTag : r.tag}</span>
+      <p class="r-desc">${r.desc}</p>
+      <ul>
+        ${r.curriculum.map(c => `<li><a href="${c.url}">${c.name}</a></li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+}
+
+// 이어서 학습 로직
 (function () {
   function prog() { try { return JSON.parse(localStorage.getItem('wvs_progress')) || {}; } catch (e) { return {}; } }
   var P = prog().items || {};
   var ids = Object.keys(P);
-  if (!ids.length) return;                       /* 신규 사용자 → '바로 체험'만 보여준다 */
+  if (!ids.length) return;
   fetch('js/progress-catalog.json').then(function (r) { return r.json(); }).then(function (cat) {
     var byId = {}; cat.items.forEach(function (x) { byId[x.id] = x; });
-    /* 방문했지만 아직 완료하지 않은 항목 중 가장 최근 것 */
     var best = null, bestTs = -1;
     ids.forEach(function (id) {
       var st = P[id];
@@ -307,8 +542,17 @@ function setLang(lang){ try{ localStorage.setItem('wvs_lang', lang); }catch(e){}
     document.getElementById('homeResumeMeta').textContent =
       best.cat + ' · 완료 ' + done + '/' + cat.items.length;
     document.getElementById('homeResume').hidden = false;
-  }).catch(function () { /* 카탈로그를 못 받으면 조용히 숨긴 채로 둔다 */ });
+  }).catch(function () {});
+})();
+
+// 초기화
+(function(){
+  let lang='ko';
+  try{ lang = localStorage.getItem('wvs_lang') || 'ko'; }catch(e){}
+  applyLang(lang);
 })();
 </script>
+<script src="/js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
 </body>
 </html>

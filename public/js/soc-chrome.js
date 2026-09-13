@@ -56,13 +56,43 @@
   function t(k) { return (T[lang()] || T.ko)[k]; }
 
   var NAV = [
-    { t: '홈', en: 'Home', u: '/vuln-hub.html' },
-    { t: '레드팀 아레나', en: 'Red Team Arena', u: '/redteam.html' },
+    { t: '홈', en: 'Home', u: '/index.html' },
+    { t: '카탈로그', en: 'Catalog', u: '/vuln-hub.html' },
     { t: '취약점 실습장', en: 'Vuln Lab', u: '/vulnlab.html' },
+    { t: '레드팀 아레나', en: 'Red Team Arena', u: '/redteam.html' },
     { t: 'AI 문제 포지', en: 'AI Quiz Forge', u: '/quiz-forge.html' },
-    { t: '카탈로그', en: 'Catalog', u: '/vuln-hub.html#catalog' },
     { t: '내 기록', en: 'My Progress', u: '/my-progress.html' }
   ];
+
+  var BNAV = [
+    { t: '홈', en: 'Home', ic: '🏠', u: '/index.html' },
+    { t: '카탈로그', en: 'Catalog', ic: '🛡️', u: '/vuln-hub.html' },
+    { t: '취약점랩', en: 'Vuln Lab', ic: '🧪', u: '/vulnlab.html' },
+    { t: '레드팀', en: 'Red Team', ic: '🦹', u: '/redteam.html' },
+    { t: '내 기록', en: 'Progress', ic: '📊', u: '/my-progress.html' }
+  ];
+
+  /* 모바일(≤768px)에서는 우상단 고정 언어 바가 본문 제목을 가려 숨긴다(bilingual.js).
+     그렇다고 전환 수단 자체가 사라지면 영어 사용자는 폰에서 언어를 못 바꾼다.
+     그래서 하단 탭바에 전환 버튼을 둔다 — 단, 본문 번역을 실제로 적용할 수 있는
+     bilingual.js 가 있는 페이지에서만. 없으면 크롬만 바뀌어 사용자를 속인다. */
+  function bilingualReady() {
+    return !!(window.WVS_BILINGUAL && typeof window.WVS_BILINGUAL.setLang === 'function');
+  }
+  /* 59개 페이지는 본문 안에 자체 언어 버튼(.langbtn)을 갖고 있다.
+     거기에 탭바 버튼까지 붙이면 같은 기능이 두 개 보여 어느 쪽이 진짜인지 헷갈린다.
+     화면에 실제로 보이는(offsetParent 가 있는) 자체 버튼이 있으면 탭바에는 넣지 않는다. */
+  function hasOwnLangToggle() {
+    var el = document.querySelector('.langbtn, [data-wvs-langtoggle]');
+    return !!(el && el.offsetParent !== null);
+  }
+  function switchLang() {
+    var next = lang() === 'en' ? 'ko' : 'en';
+    if (bilingualReady()) { window.WVS_BILINGUAL.setLang(next); return; }
+    try { localStorage.setItem('wvs_lang', next); } catch (e) { /* no-op */ }
+    document.dispatchEvent(new CustomEvent('wvs:lang', { detail: { lang: next } }));
+  }
+
 
   var GROUP_STYLE = {
     code: ['#38bdf8', 'CODE'], design: ['#38bdf8', 'CODE'], sim: ['#f87171', 'SIM'],
@@ -94,6 +124,19 @@
     '.wvsx-top .wvsx-kbtn .kb{font-size:.65rem;border:1px solid #334155;border-radius:5px;padding:1px 6px;color:#64748b}',
     '@media(max-width:640px){.wvsx-top{gap:10px;padding:0 12px}.wvsx-top .wvsx-kbtn .kb{display:none}',
     '.wvsx-top .wvsx-nav a{padding:5px 8px}}',
+    /* 모바일 하단 탭바 (Bottom Navigation) */
+    '.wvsx-bnav{position:fixed;left:0;right:0;bottom:0;z-index:var(--wvs-z-sticky,100);display:none;',
+    'background:rgba(8,14,26,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);',
+    'border-top:1px solid #1e293b;padding:5px 4px max(6px,env(safe-area-inset-bottom,6px));',
+    'justify-content:space-around;align-items:center;box-shadow:0 -4px 20px rgba(0,0,0,.45);',
+    "font-family:'Segoe UI','Noto Sans KR','Malgun Gothic',sans-serif;box-sizing:border-box}",
+    '@media(max-width:640px){.wvsx-bnav{display:flex}}',
+    '.wvsx-bnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;',
+    'min-width:0;padding:4px 2px;color:#8fa0ba;text-decoration:none;font-size:.67rem;font-weight:600;',
+    'border-radius:8px;transition:color .15s,background .15s;-webkit-tap-highlight-color:transparent}',
+    '.wvsx-bnav a:active{background:rgba(56,189,248,.12)}',
+    '.wvsx-bnav a.on{color:#38bdf8;font-weight:800}',
+    '.wvsx-bnav .ic{font-size:1.15rem;line-height:1.2;margin-bottom:1px}',
     /* 팔레트 */
     '.wvsx-pal{position:fixed;inset:0;z-index:var(--wvs-z-modal,900);display:none;align-items:flex-start;',
     'justify-content:center;padding:12vh 16px 16px;background:rgba(4,8,16,.72);',
@@ -135,7 +178,7 @@
       var lk = document.createElement('link');
       lk.id = 'wvs-tokens';
       lk.rel = 'stylesheet';
-      lk.href = '/css/platform-tokens.css';
+      lk.href = '/css/platform-tokens.css?v=20260913_fix4';
       document.head.appendChild(lk);
     }
     var st = document.createElement('style');
@@ -151,6 +194,7 @@
   function isCurrent(u) {
     var p = currentPath();
     var f = (u.split('/').pop() || '').split('#')[0];
+    if (f === 'index.html' && (p === '/' || p === '' || p.endsWith('/index.html'))) return true;
     if (!f) return false;
     return p === '/' + f || p.slice(-1 - f.length) === '/' + f;
   }
@@ -159,7 +203,7 @@
     var bar = document.createElement('div');
     bar.className = 'wvsx-top';
     bar.id = 'wvsx-topbar';
-    var html = '<a class="wvsx-logo" href="/vuln-hub.html"><span class="mk">⛨</span>WEB-VULN-SIM</a>';
+    var html = '<a class="wvsx-logo" href="/index.html"><span class="mk">⛨</span>WEB-VULN-SIM</a>';
     html += '<nav class="wvsx-nav">';
     var en = lang() === 'en';
     for (var i = 0; i < NAV.length; i++) {
@@ -173,6 +217,36 @@
     else document.body.appendChild(bar);
     document.getElementById('wvsx-kbtn').addEventListener('click', function () { openPalette(); });
   }
+
+  function buildBottomNav() {
+    if (document.getElementById('wvsx-bnav')) return;
+    var bnav = document.createElement('nav');
+    bnav.className = 'wvsx-bnav';
+    bnav.id = 'wvsx-bnav';
+    bnav.setAttribute('aria-label', lang() === 'en' ? 'Mobile navigation' : '모바일 빠른 이동');
+    var en = lang() === 'en';
+    var html = '';
+    for (var i = 0; i < BNAV.length; i++) {
+      var b = BNAV[i];
+      var on = isCurrent(b.u);
+      html += '<a href="' + b.u + '"' + (on ? ' class="on" aria-current="page"' : '') + '>' +
+        '<span class="ic">' + b.ic + '</span>' +
+        '<span>' + (en ? b.en : b.t) + '</span></a>';
+    }
+    if (bilingualReady() && !hasOwnLangToggle()) {
+      html += '<a href="#" id="wvsx-bnav-lang" role="button" aria-label="' +
+        (en ? 'Switch to Korean' : '영어로 전환') + '">' +
+        '<span class="ic">🌐</span><span>' + (en ? '한국어' : 'EN') + '</span></a>';
+    }
+    bnav.innerHTML = html;
+    document.body.appendChild(bnav);
+    var lb = document.getElementById('wvsx-bnav-lang');
+    if (lb) lb.addEventListener('click', function (e) { e.preventDefault(); switchLang(); });
+    /* 하단 탭바가 본문 끝을 가리지 않도록 여백 규칙을 켠다(platform-tokens.css).
+       탭바가 없는 페이지까지 여백이 생기지 않게 클래스로 한정한다. */
+    document.documentElement.classList.add('wvs-has-bnav');
+  }
+
 
   /* ── 커맨드 팔레트 ── */
   /* [G03] 예전에는 INDEX_TRIED 를 세우고 실패해도 되돌리지 않아 같은 페이지에서
@@ -346,7 +420,7 @@
      — pointer-events 는 먹는데 opacity 만 무시되는 현상을 라이브에서도 확인 —
      인라인 스타일로 직접 지정한다. 인라인은 캐스케이드 논쟁 없이 확실하다. */
   function setFloatingHidden(hide) {
-    var els = document.querySelectorAll('.wvs-langbar, #wvs-progress-chip');
+    var els = document.querySelectorAll('.wvs-langbar, #wvs-progress-chip, .wvsx-bnav');
     for (var i = 0; i < els.length; i++) {
       els[i].style.opacity = hide ? '0' : '';
       els[i].style.pointerEvents = hide ? 'none' : '';
@@ -393,7 +467,7 @@
 
   /* ── 부트 ── */
   function boot() {
-    try { injectCss(); buildTopbar(); } catch (e) { /* 어떤 페이지에서도 크래시 없이 */ }
+    try { injectCss(); buildTopbar(); buildBottomNav(); } catch (e) { /* 어떤 페이지에서도 크래시 없이 */ }
     try { bindCollapseKeys(); } catch (eK) { /* no-op */ }
     try { /* 자체 헤더(data-topbar=off) 페이지의 검색 버튼도 팔레트에 연결 */
       var pb = document.getElementById('palBtn');
@@ -407,11 +481,23 @@
         closePalette();
       }
     });
+    /* bilingual.js 가 이 스크립트보다 늦게 실행되는 페이지가 있어(로딩 순서가 제각각),
+       boot 시점엔 언어 버튼 조건이 거짓일 수 있다. load 후 한 번만 다시 확인한다. */
+    window.addEventListener('load', function () {
+      try {
+        if (!bilingualReady() || hasOwnLangToggle()) return;
+        if (document.getElementById('wvsx-bnav-lang')) return;
+        var oldB = document.getElementById('wvsx-bnav');
+        if (oldB) { oldB.remove(); buildBottomNav(); }
+      } catch (eL) { /* no-op */ }
+    });
     /* 언어를 바꾸면 크롬은 이미 그려진 상태이므로 직접 다시 그린다(bilingual.js 가 알림). */
     document.addEventListener('wvs:lang', function () {
       try {
         var old = document.getElementById('wvsx-topbar');
         if (old) { old.remove(); buildTopbar(); }
+        var oldB = document.getElementById('wvsx-bnav');
+        if (oldB) { oldB.remove(); buildBottomNav(); }
         if (palEl) { palEl.remove(); palEl = null; inpEl = null; listEl = null; }
       } catch (e3) { /* no-op */ }
     });
@@ -420,3 +506,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
+

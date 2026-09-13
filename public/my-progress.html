@@ -3,7 +3,7 @@
 <head>
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>내 학습 현황 · WEB-VULN-SIM</title>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
@@ -28,7 +28,7 @@ a{color:inherit;text-decoration:none}
 .topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
 .topbar .sp{margin-left:auto}
 .langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
-.wrap{max-width:1120px;margin:0 auto;padding:22px 16px 90px}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 16px calc(var(--wvs-bottom-nav-h,56px) + var(--wvs-safe-bottom,14px) + 20px)}
 .hero h1{font-size:24px;color:#fff;display:flex;align-items:center;gap:10px}
 .hero .sub{color:var(--muted);font-size:13.5px;margin-top:6px}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;margin:16px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -82,6 +82,44 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
 .mis .sug a{font-size:.76rem;padding:7px 12px;border-radius:8px;border:1px solid #26334d;
  color:#dbe4f0;text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
 .mis .sug a:hover{border-color:#38bdf8;color:#7dd3fc}
+
+/* ── B2C 구독자 대시보드 신규 스타일 ── */
+.domain-chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 14px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.d-chip{background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:7px 14px;color:#cbd5e1;font-size:12.5px;font-weight:600;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+.d-chip:hover{background:#1e293b;color:#38bdf8;border-color:#38bdf8}
+.d-chip.active{background:#0369a1;color:#fff;border-color:#38bdf8}
+
+.daily-mission{background:linear-gradient(135deg,#0c2640 0%,#111a2e 100%);border:1px solid #0284c7;border-radius:16px;padding:20px;margin:16px 0;display:flex;align-items:center;gap:20px;box-shadow:0 8px 30px rgba(2,132,199,.2);flex-wrap:wrap}
+.dm-left{flex:1;min-width:240px}
+.dm-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(56,189,248,.2);color:#38bdf8;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:20px;font-family:var(--mono);margin-bottom:8px}
+.dm-title{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.dm-desc{font-size:13px;color:#94a3b8}
+.dm-btn{background:linear-gradient(135deg,#38bdf8,#2563eb);color:#031326;font-weight:800;font-size:14px;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 15px rgba(56,189,248,.4);white-space:nowrap}
+.dm-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+
+.track-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin:16px 0 12px}
+.t-tab{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;color:#94a3b8;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
+.t-tab:hover{color:#fff;border-color:#38bdf8}
+.t-tab.active{background:#162a45;border-color:#38bdf8;color:#38bdf8}
+
+.track-content{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:18px}
+.tc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.tc-title{font-size:16px;font-weight:700;color:#fff}
+.tc-pct{font-family:var(--mono);font-size:14px;font-weight:800;color:#38bdf8}
+.tc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.tc-item{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;transition:.15s}
+.tc-item:hover{border-color:#38bdf8;background:#17243c}
+.tc-item-t{font-size:13px;font-weight:600;color:#e2e8f0}
+.tc-item-st{font-size:11px;font-family:var(--mono);padding:2px 6px;border-radius:6px}
+.st-done{background:#052e16;color:#4ade80}
+.st-ready{background:#1e293b;color:#94a3b8}
+
+.spaced-review{background:#171d33;border:1px solid #312e81;border-radius:14px;padding:16px;margin:16px 0}
+.sr-header{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#c7d2fe;margin-bottom:10px}
+.sr-list{display:flex;flex-direction:column;gap:8px}
+.sr-item{background:#0d1224;border:1px solid #232d52;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#cbd5e1;font-size:12.5px}
+.sr-item:hover{border-color:#818cf8;color:#fff}
+
 </style>
 </head>
 <body>
@@ -96,6 +134,66 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     <h1>📊 <span data-en="My Learning Progress">내 학습 현황</span></h1>
     <div class="sub" data-en="Your mastery across the entire site — by category and CWE, with a recommended next step.">사이트 전체 학습을 한눈에 — 카테고리·CWE별 숙련도와 다음 학습 추천까지.</div>
   </div>
+
+  <!-- 7대 도메인 퀵 점프 칩 -->
+  <div class="domain-chips" role="navigation" aria-label="7대 도메인 내비게이션">
+    <a href="vulnlab.html" class="d-chip">🌐 웹·API 취약점 (61종)</a>
+    <a href="03_code_sql_injection.html" class="d-chip">💻 시큐어코딩 (49항목)</a>
+    <a href="privacy-breach-72h.html" class="d-chip">🔏 개인정보보호 (2026.9 개정)</a>
+    <a href="industry-tech-protect.html" class="d-chip">🏭 국가핵심기술·산기법</a>
+    <a href="05_linux-u01.html" class="d-chip">🖥️ KISA 주통기 진단</a>
+    <a href="14_auto-auto01.html" class="d-chip">🚗 자동차 사이버보안 (61종)</a>
+    <a href="audit-ismsp-lab.html" class="d-chip">📋 ISMS-P 인증심사 실무</a>
+    <a href="cert-exam.html" class="d-chip">🎓 수료증 시험 센터</a>
+  </div>
+
+  <!-- 오늘 권장 15분 학습 미션 -->
+  <div class="daily-mission" id="dailyMissionCard">
+    <div class="dm-left">
+      <div class="dm-badge">🔥 TODAY'S 15-MIN MISSION</div>
+      <div class="dm-title" id="dmTitle">K-PRV-01: 72시간 개인정보 유출 긴급대응</div>
+      <div class="dm-desc" id="dmDesc">2026.9 개정 기준 인지 시점 판정 및 정보주체 5대 법정 통지문 완성 실습</div>
+    </div>
+    <a href="privacy-breach-72h.html" class="dm-btn" id="dmBtn">▶️ 오늘 미션 시작하기</a>
+  </div>
+
+  <!-- 망각곡선 에빙하우스 복습 큐 -->
+  <div class="spaced-review">
+    <div class="sr-header">🧠 에빙하우스 망각곡선 복습 큐 (Spaced Repetition)</div>
+    <div class="sr-list">
+      <a href="privacy-breach-72h.html" class="sr-item">
+        <span>⏰ <b>[3일 전 학습]</b> 개인정보 유출 시 1천명 이상 판정 및 신고 기한</span>
+        <span style="color:#818cf8;font-weight:700">5분 복습 →</span>
+      </a>
+      <a href="industry-tech-protect.html" class="sr-item">
+        <span>🏭 <b>[신규 추천]</b> 국가핵심기술 산자부 승인 vs 신고 요건 판별</span>
+        <span style="color:#818cf8;font-weight:700">도전하기 →</span>
+      </a>
+      <a href="audit-ismsp-lab.html" class="sr-item">
+        <span>📋 <b>[심사원 실무]</b> ISMS-P 2.3.4 최고관리자 root 원격접속 결함 매핑</span>
+        <span style="color:#818cf8;font-weight:700">실습하기 →</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 커리어 맞춤형 트랙 선택기 -->
+  <h2 class="sec" style="margin-top:24px">🎯 나의 목표 커리어 트랙</h2>
+  <div class="track-tabs" id="trackTabs">
+    <button class="t-tab active" onclick="switchTrack('web')">🛡️ 웹·API 모의해커</button>
+    <button class="t-tab" onclick="switchTrack('code')">💻 보안 개발자</button>
+    <button class="t-tab" onclick="switchTrack('privacy')">🔏 CPO·개인정보보호</button>
+    <button class="t-tab" onclick="switchTrack('industry')">🏭 국가핵심기술·산업보안</button>
+    <button class="t-tab" onclick="switchTrack('auditor')">📋 ISMS-P 심사원</button>
+  </div>
+
+  <div class="track-content" id="trackBox">
+    <div class="tc-header">
+      <div class="tc-title" id="trackTitle">🛡️ 웹·API 모의해킹 전문가 트랙</div>
+      <div class="tc-pct" id="trackPct">진도율: 0%</div>
+    </div>
+    <div class="tc-grid" id="trackGrid"></div>
+  </div>
+
 
   <div class="stats" id="stats"></div>
 
@@ -242,7 +340,7 @@ function renderDynamic(){
     }).join('');
   }
 
-  renderSkillCard();
+  renderSkillCard(); try{renderCareerTrack();}catch(e){}
 }
 function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
 
@@ -320,7 +418,127 @@ function renderMisconceptions(){
   }).join('');
 }
 
+
+// ── 5대 커리어 트랙 데이터 ──
+var CAREER_TRACKS = {
+  web: {
+    title: "🛡️ 웹·API 모의해킹 전문가 트랙",
+    mission: {
+      title: "OWASP Top 10: 최신 BOPLA 및 AI 프롬프트 인젝션 실습",
+      desc: "API 객체 수준 권한 상승 및 AI 에이전트 도구 남용 패킷 분석",
+      link: "vulnlab.html"
+    },
+    items: [
+      { id: "vulnlab.html", title: "API-01: BOLA/BOPLA 권한 상승", link: "vulnlab.html" },
+      { id: "vulnlab.html#ai", title: "AI-01: Agent RAG 데이터 탈취", link: "vulnlab.html" },
+      { id: "vulnlab.html#cloud", title: "CLOUD-01: IMDS 토큰 탈취 SSRF", link: "vulnlab.html" },
+      { id: "vulnlab.html#race", title: "FIN-01: 금융 쿠폰 Race Condition", link: "vulnlab.html" }
+    ]
+  },
+  code: {
+    title: "💻 시큐어코딩 & 보안 개발자 트랙",
+    mission: {
+      title: "행안부 49대 개발보안: SQL Injection & XSS 방어 코딩",
+      desc: "PreparedStatement 및 XSS 방어 인코더 직접 적용 실습",
+      link: "03_code_sql_injection.html"
+    },
+    items: [
+      { id: "03_code_sql_injection.html", title: "SEC-01: SQL 삽입 방어", link: "03_code_sql_injection.html" },
+      { id: "03_code_xss.html", title: "SEC-02: 크로스사이트 스크립트 방어", link: "03_code_xss.html" },
+      { id: "03_code_hardedcode.html", title: "SEC-03: 하드코딩 패스워드 제거", link: "03_code_hardedcode.html" },
+      { id: "03_code_race_condition.html", title: "SEC-04: 레이스 컨디션 동시성 제어", link: "03_code_race_condition.html" }
+    ]
+  },
+  privacy: {
+    title: "🔏 CPO & 개인정보보호 전문가 트랙",
+    mission: {
+      title: "K-PRV-01: 2026.9 개정 72시간 유출 긴급대응 실습",
+      desc: "인지 시점 판정, 1천명/민감정보 신고 요건 및 5대 필수 통지문 작성",
+      link: "privacy-breach-72h.html"
+    },
+    items: [
+      { id: "privacy-breach-72h.html", title: "K-PRV-01: 72시간 유출 긴급대응", link: "privacy-breach-72h.html" },
+      { id: "privacy-data-transfer.html", title: "K-PRV-02: 마이데이터 전송요구권", link: "privacy-data-transfer.html" },
+      { id: "privacy-rights-desk.html", title: "K-PRV-03: 정보주체 권리보장 데스크", link: "privacy-rights-desk.html" },
+      { id: "privacy-hub.html", title: "K-PRV-04: 개인정보 영향평가(PIA)", link: "privacy-hub.html" }
+    ]
+  },
+  industry: {
+    title: "🏭 국가핵심기술 & 산업보안·OT 트랙",
+    mission: {
+      title: "IND-01: 국가핵심기술 판정 & 징벌적 배상(최대 5배) 시뮬레이터",
+      desc: "반도체/배터리 핵심기술 판정, 산자부 수출 사전승인/신고 판별",
+      link: "industry-tech-protect.html"
+    },
+    items: [
+      { id: "industry-tech-protect.html", title: "IND-01: 국가핵심기술 판정 & 배상", link: "industry-tech-protect.html" },
+      { id: "12_ics-ics01.html", title: "ICS-01: PLC/HMI 기본 계정 취약점", link: "12_ics-ics01.html" },
+      { id: "07_fin-fin01.html", title: "FIN-01: 전자금융기반시설 망분리", link: "07_fin-fin01.html" },
+      { id: "14_auto-auto01.html", title: "AUTO-01: CAN 버스 패킷 변조", link: "14_auto-auto01.html" }
+    ]
+  },
+  auditor: {
+    title: "📋 ISMS-P 심사원 & 자격시험 대비 트랙",
+    mission: {
+      title: "EXAM-01: 가상 인증심사 현장 증적 및 결함 도출 실습",
+      desc: "서버/DB/퇴직자 증적 열람, 102개 기준 결함 매핑 및 보고서 작성",
+      link: "audit-ismsp-lab.html"
+    },
+    items: [
+      { id: "audit-ismsp-lab.html", title: "EXAM-01: ISMS-P 가상 인증심사", link: "audit-ismsp-lab.html" },
+      { id: "05_linux-u01.html", title: "JTG-01: Linux root 원격접속 통제", link: "05_linux-u01.html" },
+      { id: "06_db-d01.html", title: "JTG-02: DBMS 기본계정 및 암호화", link: "06_db-d01.html" },
+      { id: "cert-exam.html", title: "CERT: 종합 보안 수료 자격시험", link: "cert-exam.html" }
+    ]
+  }
+};
+
+var currentTrack = 'web';
+
+function switchTrack(trackKey) {
+  currentTrack = trackKey;
+  document.querySelectorAll('.t-tab').forEach(function(btn){
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(trackKey));
+  });
+  renderCareerTrack();
+}
+
+function renderCareerTrack() {
+  var t = CAREER_TRACKS[currentTrack];
+  if(!t) return;
+
+  var dmTitle = document.getElementById('dmTitle');
+  if(dmTitle) dmTitle.textContent = t.mission.title;
+  var dmDesc = document.getElementById('dmDesc');
+  if(dmDesc) dmDesc.textContent = t.mission.desc;
+  var dmBtn = document.getElementById('dmBtn');
+  if(dmBtn) dmBtn.setAttribute('href', t.mission.link);
+
+  var trackTitle = document.getElementById('trackTitle');
+  if(trackTitle) trackTitle.textContent = t.title;
+
+  var P = prog().items || {};
+  var doneCount = 0;
+  var html = '';
+
+  t.items.forEach(function(item){
+    var isDone = P[item.id] && P[item.id].c;
+    if(isDone) doneCount++;
+    html += '<a href="' + item.link + '" class="tc-item">'
+      + '<span class="tc-item-t">' + item.title + '</span>'
+      + '<span class="tc-item-st ' + (isDone ? 'st-done' : 'st-ready') + '">' + (isDone ? '✓ 완료' : '실습하기') + '</span>'
+      + '</a>';
+  });
+
+  var pct = Math.round((doneCount / t.items.length) * 100);
+  var trackPct = document.getElementById('trackPct');
+  if(trackPct) trackPct.textContent = '진도율: ' + pct + '% (' + doneCount + '/' + t.items.length + ')';
+  var trackGrid = document.getElementById('trackGrid');
+  if(trackGrid) trackGrid.innerHTML = html;
+}
+
 function boot(){
+  try{renderCareerTrack();}catch(e){}
   fetch('js/progress-catalog.json').then(function(r){return r.json();}).then(function(d){
     CATALOG=d; applyLang();
   }).catch(function(e){

@@ -185,8 +185,7 @@ function mockServer(req){
       '  <li><a hr'+'ef="/ping?host=127.0.0.1">Network tools</a></li>\n'+
       '  <li><a hr'+'ef="/redirect?url=/dashboard">Continue</a></li>\n'+
       '  <li><a hr'+'ef="/fetch?url=http://example.com">Link preview</a></li>\n'+
-      '</ul>\n<!-- TODO: remove debug endpoint /admin before launch -->\n<script src="/js/progress.js" defer></script>
-</body></html>');
+      '</ul>\n<!-- TODO: remove debug endpoint /admin before launch -->\n</body></html>');
   }
 
   if(path==='/search'){
@@ -335,7 +334,7 @@ function mkReq(method,path,query,body){
 }
 
 /* ============================ state ============================ */
-var history=[]; var hid=0; var selHist=null;
+var reqHistory=[]; var hid=0; var selHist=null;
 var repeater={req: mkReq('GET','/product','id=1',''), res:null};
 var intruder={ template:'GET /product?id=§1§ HTTP/1.1\nHost: vuln-shop.local\nUser-Agent: WVS-DAST/1.0\n\n',
   payloads:"1\n1'\n1 OR 1=1\n1 UNION SELECT 1,2,3\n0/**/OR/**/1=1", results:[] };
@@ -343,7 +342,7 @@ var findings=[];
 
 function sendRequest(req, source){
   var res = mockServer(req);
-  history.push({id:++hid, req:req, res:res, source:source||'manual',
+  reqHistory.push({id:++hid, req:req, res:res, source:source||'manual',
     method:req.method, path:req.path+(req.query?('?'+req.query):''), status:res.status, len:res.body.length, mime:(res.headers['Content-Type']||'').split(';')[0]});
   return res;
 }
@@ -380,7 +379,7 @@ function buildTabs(){
   TABS.forEach(function(t){
     var b=document.createElement('button'); b.className=(t.id===active?'on':''); b.id='tab-'+t.id;
     var cnt = t.id==='scanner'&&findings.length? '<span class="cnt">'+findings.length+'</span>'
-            : t.id==='proxy'&&history.length? '<span class="cnt">'+history.length+'</span>' : '';
+            : t.id==='proxy'&&reqHistory.length? '<span class="cnt">'+reqHistory.length+'</span>' : '';
     b.innerHTML = L(t.ko,t.en)+cnt;
     b.onclick=function(){active=t.id;buildTabs();renderActive();};
     bar.appendChild(b);
@@ -399,7 +398,7 @@ function renderDashboard(){
    '<div class="card"><h3>'+L('대상 개요','Target overview')+'</h3>'+
    '<div class="stat">'+
    '<div class="box"><div class="n">'+Object.keys(sitemap).length+'</div><div class="l">'+L('발견 경로','Discovered paths')+'</div></div>'+
-   '<div class="box"><div class="n">'+history.length+'</div><div class="l">'+L('전송 요청','Requests sent')+'</div></div>'+
+   '<div class="box"><div class="n">'+reqHistory.length+'</div><div class="l">'+L('전송 요청','Requests sent')+'</div></div>'+
    '<div class="box"><div class="n" style="color:var(--bad)">'+findings.length+'</div><div class="l">'+L('탐지 이슈','Issues found')+'</div></div>'+
    '<div class="box"><div class="n" style="color:var(--bad)">'+sev.High+'</div><div class="l">High</div></div>'+
    '<div class="box"><div class="n" style="color:var(--warn)">'+sev.Medium+'</div><div class="l">Medium</div></div>'+
@@ -446,19 +445,19 @@ function toIntruder(p){var e=sitemap[p][0];intruder.template=rawRequest(e.req).r
 
 /* ---------- Proxy / HTTP history ---------- */
 function renderProxy(){
-  var rows=history.map(function(h){
+  var rows=reqHistory.map(function(h){
     return '<tr class="'+(selHist===h.id?'sel':'')+'" onclick="selHist='+h.id+';renderProxy()">'+
       '<td>'+h.id+'</td><td>'+h.method+'</td><td>'+esc(h.path)+'</td>'+
       '<td class="'+statusClass(h.status)+'">'+h.status+'</td><td>'+h.len+'</td><td>'+esc(h.mime||'')+'</td><td class="muted">'+h.source+'</td></tr>';
   }).join('');
-  var sel = history.filter(function(h){return h.id===selHist;})[0];
+  var sel = reqHistory.filter(function(h){return h.id===selHist;})[0];
   var detail = sel ? ('<b class="mono" style="color:var(--accent2)">'+L('요청','Request')+'</b><pre>'+esc(rawRequest(sel.req))+'</pre>'+
     '<b class="mono" style="color:var(--accent2)">'+L('응답','Response')+'</b><pre>'+esc(rawResponse(sel.res))+'</pre>')
     : '<div class="muted" style="padding:20px">'+L('행을 선택하면 요청/응답이 표시됩니다.','Select a row to view request/response.')+'</div>';
   el('v-proxy').innerHTML=
     '<div class="split v" style="height:100%">'+
-    '<div class="pane" style="flex:1"><div class="hd">'+L('HTTP 히스토리','HTTP history')+' ('+history.length+')'+
-      '<span class="sp" style="margin-left:auto"></span><button class="btn alt sm" onclick="history=[];selHist=null;buildTabs();renderProxy()">'+L('지우기','Clear')+'</button></div>'+
+    '<div class="pane" style="flex:1"><div class="hd">'+L('HTTP 히스토리','HTTP history')+' ('+reqHistory.length+')'+
+      '<span class="sp" style="margin-left:auto"></span><button class="btn alt sm" onclick="reqHistory=[];selHist=null;buildTabs();renderProxy()">'+L('지우기','Clear')+'</button></div>'+
       '<div class="bd" style="padding:0"><table><thead><tr><th>#</th><th>'+L('메서드','Method')+'</th><th>'+L('경로','Path')+'</th><th>'+L('상태','Status')+'</th><th>'+L('길이','Len')+'</th><th>MIME</th><th>'+L('출처','Source')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
     '<div class="pane" style="flex:1"><div class="hd">'+L('상세','Detail')+'</div><div class="bd">'+detail+'</div></div>'+
     '</div>';
@@ -666,6 +665,7 @@ window.renderDynamic=function(){ buildTabs(); renderActive(); };
 crawl();
 applyLang();   // builds tabs + renders active (dashboard)
 </script>
+<script src="/js/progress.js" defer></script>
 <script src="/js/soc-chrome.js" defer></script>
 </body>
 </html>

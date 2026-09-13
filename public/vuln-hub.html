@@ -4,8 +4,8 @@
 <meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="preconnect" href="https://cdnjs.cloudflare.com"><link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WEB-VULN-SIM — AI 보안 훈련 플랫폼 | 레드팀 아레나 · 521페이지 학습 허브</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>WEB-VULN-SIM — AI 보안 훈련 플랫폼 | 레드팀 아레나 · 526페이지 학습 허브</title>
 <meta name="description" content="AI 레드팀 에이전트와 방어 대결, 생성-검증 폐루프 출제, 11개 보안 도메인 463페이지 학습 카탈로그. 어디서든 Ctrl+K로 검색.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
@@ -16,6 +16,7 @@
 <meta name="twitter:card" content="summary">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/platform-tokens.css?v=20260913_fix4">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -331,35 +332,59 @@ body.soc a{color:var(--acc)}
 .soc-top .kbtn kbd{font-size:.62rem;border:1px solid #334155;border-radius:5px;padding:1px 6px;color:#64748b;background:none}
 @media(max-width:760px){.soc-top{gap:10px;padding:0 12px}.soc-top .kbtn kbd{display:none}.soc-top nav a{padding:6px 8px}.soc-top .logo small{display:none}}
 
+/* 모바일 및 소형 뷰포트 가로 넘침 원천 차단 */
+html, body.soc { max-width: 100%; overflow-x: hidden; }
+#wrapper, #sidebar-wrapper, .soc-main { max-width: 100%; min-width: 0; box-sizing: border-box; }
+
 .soc-main{max-width:1240px;margin:0 auto;padding:22px 20px 60px}
 
 /* ── 히어로 ── */
 .hero{position:relative;border-radius:18px;overflow:hidden;padding:2.2rem 2.4rem;margin-bottom:18px;
   background:linear-gradient(120deg,#0b1220 0%,#141032 52%,#27102a 100%);border:1px solid var(--line);
-  box-shadow:0 12px 40px rgba(2,6,16,.5)}
+  box-shadow:0 12px 40px rgba(2,6,16,.5);box-sizing:border-box}
 .hero::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(600px 200px at 85% -10%,rgba(239,68,68,.22),transparent 60%),
              radial-gradient(500px 220px at 8% 110%,rgba(167,139,250,.18),transparent 60%)}
-.hero .h-in{position:relative;display:flex;gap:2.2rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.hero .h-in{position:relative;display:flex;gap:2.2rem;align-items:center;justify-content:space-between;flex-wrap:wrap;min-width:0}
 .hero .h-badge{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;font-weight:800;letter-spacing:.4px;
   color:#fca5a5;border:1px solid rgba(239,68,68,.45);background:rgba(239,68,68,.1);border-radius:99px;padding:5px 14px;margin-bottom:12px}
-.hero h1{font-weight:800;font-size:1.85rem;color:#fff;margin:0 0 10px;line-height:1.35}
+.hero h1{font-weight:800;font-size:1.85rem;color:#fff;margin:0 0 10px;line-height:1.35;word-break:keep-all}
 .hero h1 .accent{color:#7dd3fc}
 .hero .h-sub{color:#9fb0ca;font-size:.92rem;line-height:1.75;max-width:600px;margin:0 0 18px}
 .hero .h-sub b{color:#c7d4e8}
 .h-meta{font-size:.78rem;color:#8fa0ba;letter-spacing:.2px}
 .h-meta b{color:#e2e8f0;font-variant-numeric:tabular-nums;font-size:.9rem}
-.h-ctas{display:flex;flex-direction:column;gap:12px;min-width:260px}
-.h-cta{display:flex;align-items:center;gap:13px;text-decoration:none;border-radius:14px;padding:14px 18px;font-weight:800;transition:transform .15s,box-shadow .15s}
+.h-ctas{display:flex;flex-direction:column;gap:12px;min-width:260px;box-sizing:border-box}
+.h-cta{display:flex;align-items:center;gap:13px;text-decoration:none;border-radius:14px;padding:14px 18px;font-weight:800;transition:transform .15s,box-shadow .15s;min-width:0;box-sizing:border-box}
 .h-cta:hover{transform:translateY(-2px);color:#fff}
-.h-cta .ic{font-size:1.7rem}
+.h-cta .ic{font-size:1.7rem;flex-shrink:0}
 .h-cta small{display:block;font-weight:500;font-size:.7rem;opacity:.85;margin-top:3px}
 .h-cta.red{background:linear-gradient(135deg,#dc2626,#7f1d1d);color:#fff;box-shadow:0 6px 18px rgba(220,38,38,.35)}
 .h-cta.violet{background:linear-gradient(135deg,#7c3aed,#312e81);color:#fff;box-shadow:0 6px 18px rgba(124,58,237,.35)}
 .hero .h-term{position:relative;margin-top:16px;background:#060b16;border:1px solid var(--line);border-radius:10px;
-  font-family:'Cascadia Mono',Consolas,monospace;font-size:.76rem;line-height:1.8;padding:10px 14px;color:#7c8aa5;overflow-x:auto;white-space:nowrap}
+  font-family:'Cascadia Mono',Consolas,monospace;font-size:.76rem;line-height:1.8;padding:10px 14px;color:#7c8aa5;overflow-x:auto;white-space:nowrap;max-width:100%;box-sizing:border-box}
 .hero .h-term .p{color:var(--acc)} .hero .h-term .ok{color:var(--green)} .hero .h-term .warn{color:var(--amber)}
-@media(max-width:860px){.hero .h-in{flex-direction:column;align-items:stretch}.h-ctas{flex-direction:row}.h-cta{flex:1}}
+
+@media(max-width:860px){
+  .hero .h-in{flex-direction:column;align-items:stretch}
+  .h-ctas{flex-direction:row}
+  .h-cta{flex:1}
+}
+@media(max-width:540px){
+  .soc-main{padding:14px 12px calc(var(--wvs-bottom-nav-h,56px) + var(--wvs-safe-bottom,14px) + 20px)}
+  .hero{padding:1.4rem 1.1rem;border-radius:14px}
+  .hero h1{font-size:1.35rem}
+  .hero .h-sub{font-size:.84rem}
+  .h-ctas{flex-direction:column !important;width:100%;min-width:0}
+  .h-cta{width:100%}
+  .ops{padding:14px 12px;flex-direction:column;align-items:stretch}
+  .ops .ops-grid{display:grid;grid-template-columns:repeat(2,1fr);width:100%}
+  .ops .ostat{min-width:0}
+  .ops .ops-cta{text-align:center}
+  .d-grid, .m-grid{grid-template-columns:1fr !important}
+  .cat-head{flex-direction:column;align-items:stretch}
+  .cat-head input{width:100%;min-width:0}
+}
 
 /* ── 운영자 콘솔 (내 기록) ── */
 .ops{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:18px;
@@ -446,13 +471,38 @@ body.soc a{color:var(--acc)}
 #catalogBody .no-results{color:var(--sub);text-align:center;padding:30px 10px}
 #catalogBody .no-results i{display:block;margin-bottom:8px;color:#334155}
 
+/* ── 산업 퀵 필터 칩 ── */
+.ind-filter-chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}
+.if-chip{background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--sub);border-radius:20px;padding:6px 14px;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
+.if-chip:hover{border-color:var(--acc);color:#fff;background:rgba(56,189,248,.08)}
+.if-chip.active{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#38bdf8;color:#fff}
+
 /* ── 푸터 ── */
 .soc-foot{border-top:1px solid var(--line);background:var(--panel2);padding:26px 20px;text-align:center}
 .soc-foot .f-logo{font-weight:800;color:#fff;font-size:.9rem;margin-bottom:8px}
 .soc-foot .f-logo span{color:var(--acc)}
 .soc-foot p{font-size:.72rem;color:var(--sub);line-height:1.8;margin:0}
-.soc-foot .f-kbd{font-size:.7rem;color:#64748b;margin-top:6px}
-.soc-foot kbd{border:1px solid #334155;border-radius:5px;padding:1px 6px;font-size:.62rem;color:#94a3b8;background:none}
+/* ── 모바일 언어 선택 바 (wvs-langbar) 세로 늘어짐 원천 차단: 모바일 화면 완전 숨김 ── */
+@media (max-width: 768px) {
+  .wvs-langbar {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+@media (min-width: 769px) {
+  .wvs-langbar {
+    position: fixed !important;
+    top: 8px !important;
+    bottom: auto !important;
+    right: 14px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    z-index: 9600 !important;
+  }
+}
 </style>
 </head>
 <body class="soc">
@@ -535,7 +585,7 @@ body.soc a{color:var(--acc)}
                         <span class="m-go">코치 연결 →</span>
                     </a>
                     <a class="mcard amb" href="vulnlab.html">
-                        <span class="live">51 미션</span>
+                        <span class="live">61 미션</span>
                         <div class="m-ic">🧪</div>
                         <h3>취약점 실습장</h3>
                         <p>버프 스타일 시뮬레이터 — 가상 쇼핑몰 BugPay Mall을 직접 공격·방어 (웹·금융·AI)</p>
@@ -543,6 +593,9 @@ body.soc a{color:var(--acc)}
                     </a>
                 </div>
                 <div class="tool-strip">
+                    <a href="privacy-breach-72h.html">🚨 72시간 유출대응</a>
+                    <a href="industry-tech-protect.html">🏭 국가핵심기술 판정</a>
+                    <a href="audit-ismsp-lab.html">📋 ISMS-P 심사원 실습</a>
                     <a href="ai-grader.html">🎯 AI 채점기</a>
                     <a href="lab-generator.html">♾️ 무한 문제 생성기</a>
                     <a href="skill-assess.html">📊 스킬 레이더</a>
@@ -589,6 +642,15 @@ body.soc a{color:var(--acc)}
                     <h2>전체 카탈로그</h2>
                     <span class="cat-total" id="catTotal">LOADING…</span>
                     <input type="text" id="searchInput" placeholder="🔍 카탈로그 검색 (예: SQL, D-01, root)" data-en-placeholder="🔍 Search catalog (e.g. SQL, D-01, root)">
+                </div>
+                <div class="ind-filter-chips" id="indFilterChips" role="group" aria-label="산업별 퀵 필터">
+                    <button type="button" class="if-chip active" data-filter="all">전체</button>
+                    <button type="button" class="if-chip" data-filter="groupC">🏦 금융·핀테크</button>
+                    <button type="button" class="if-chip" data-filter="groupE">🚗 모빌리티·자동차</button>
+                    <button type="button" class="if-chip" data-filter="groupB">🏭 스마트제조·인프라</button>
+                    <button type="button" class="if-chip" data-filter="groupD">☁️ 클라우드·AI</button>
+                    <button type="button" class="if-chip" data-filter="groupA">🛡️ 시큐어코딩</button>
+                    <button type="button" class="if-chip" data-filter="groupF">🔏 개인정보보호</button>
                 </div>
                 <div class="menu-scroll" id="catalogBody">
                     <div class="list-group list-group-flush">
@@ -2765,6 +2827,50 @@ body.soc a{color:var(--acc)}
     });
   });
 
+  /* ── 4-1. 산업별 퀵 필터 칩 연동 ── */
+  var ifChips = document.querySelectorAll('.if-chip');
+  function applyIndustryFilter(targetGroup) {
+    ifChips.forEach(function(btn){ btn.classList.toggle('active', btn.getAttribute('data-filter') === targetGroup); });
+    var guideGroups = document.querySelectorAll('#catalogBody .guide-group');
+    var guideBodies = document.querySelectorAll('#catalogBody .guide-body');
+    if (targetGroup === 'all') {
+      guideGroups.forEach(function(el){ el.style.display = ''; });
+      guideBodies.forEach(function(el){ el.style.display = ''; });
+      return;
+    }
+    guideGroups.forEach(function(el){
+      var match = el.getAttribute('data-bs-target') === ('#' + targetGroup);
+      el.style.display = match ? '' : 'none';
+    });
+    guideBodies.forEach(function(el){
+      var match = el.id === targetGroup;
+      el.style.display = match ? '' : 'none';
+      if (match) {
+        el.classList.add('show');
+        var head = document.querySelector('.guide-group[data-bs-target="#' + targetGroup + '"]');
+        if (head) head.setAttribute('aria-expanded', 'true');
+      }
+    });
+  }
+  ifChips.forEach(function(btn){
+    btn.addEventListener('click', function(){ applyIndustryFilter(btn.getAttribute('data-filter')); });
+  });
+
+  try {
+    var urlParams = new URLSearchParams(window.location.search);
+    var indParam = urlParams.get('ind');
+    if (indParam) {
+      var mapParam = { fin: 'groupC', auto: 'groupE', ics: 'groupB', cloud_ai: 'groupD', infra: 'groupB', privacy: 'groupF' };
+      if (mapParam[indParam]) {
+        setTimeout(function(){
+          applyIndustryFilter(mapParam[indParam]);
+          var targetEl = document.getElementById(mapParam[indParam]);
+          if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }
+    }
+  } catch(e){}
+
   /* ── 5. 운영자 콘솔: 내 기록 (데이터 없으면 섹션 전체 숨김 — 첫 방문은 깨끗하게) ── */
   function renderOps() {
     var hasLearn = false, hasDef = false;
@@ -2822,7 +2928,7 @@ body.soc a{color:var(--acc)}
 })();
 </script>
 <script src="js/ai-client.js"></script>
-<script src="js/bilingual.js"></script>
-<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="js/bilingual.js?v=20260913_fix4"></script>
+<script src="/js/soc-chrome.js?v=20260913_fix4" data-topbar="off" defer></script>
 </body>
 </html>

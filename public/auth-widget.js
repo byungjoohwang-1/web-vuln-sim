@@ -50,11 +50,22 @@ const _clr = localStorage.clear.bind(localStorage);
 
 // 동기화 대상은 앱 진도/설정 키(sda_/sdq_/wvs_)로 한정한다.
 // Firebase 인증 내부 키(firebase:authUser…)를 동기화하면 원격의 오래된 값이
-// 세션을 덮어써 로그인이 깨지고, wvs_ai_key(개인 API 키)는 절대 업로드하면 안 된다.
+// 세션을 덮어써 로그인이 깨지고, wvs_ai_key(개인 API 키) 및 브라우저 로컬 초안
+// (wvs_policy_builder, wvs_pia_assess 등)은 개인정보보호 원칙에 따라 절대 업로드하지 않는다.
 const SYNC_PREFIXES = ['sda_', 'sdq_', 'wvs_'];
-const SYNC_DENY = new Set(['wvs_ai_key']);
+const SYNC_DENY = new Set([
+  'wvs_ai_key',
+  'wvs_policy_builder',
+  'wvs_pia_assess',
+  'wvs_pia_answers',
+  'wvs_pseudonym_data',
+  'wvs_draft_policy',
+  'wvs_draft_pia'
+]);
 function shouldSync(k){
   if (!k || SYNC_DENY.has(k)) return false;
+  // wvs_draft_ 접두사 패턴 추가 방어
+  if (k.indexOf('wvs_draft_') === 0) return false;
   return SYNC_PREFIXES.some(p => k.indexOf(p) === 0);
 }
 function collectStore(){

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마이데이터 전송요구권 실습실 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="마이데이터 전송요구권 실습실 · WEB-VULN-SIM">
+<meta property="og:description" content="전 분야 마이데이터 전송요구권(본인/제3자 전송, 대상 정보, 수신자, 전송 거절 사유) 인터랙티브 실습">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-data-transfer.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 제35조의2 전송요구권 실습 — 본인/제3자 전송요구, 대상 정보 범위, 수신자 검증, 정당한 거절 사유 판정">
+<link rel="stylesheet" href="/css/platform-tokens.css">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono);text-decoration:none}
+.topbar .sp{margin-left:auto}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 80px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hero p{font-size:13.5px;color:var(--muted);margin-bottom:8px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:12px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px}
+.sc-btn{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:12px;cursor:pointer;color:var(--ink);text-align:left;transition:.2s}
+.sc-btn:hover{background:#172238;border-left-color:#38bdf8}
+.sc-btn.active{background:#162a45;border-color:#38bdf8;border-left-width:4px}
+.sc-btn h3{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:4px}
+.sc-btn p{font-size:11.5px;color:var(--muted);margin:0}
+
+.sim-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.meta-box{background:#090f1d;border:1px solid #1e293b;border-radius:8px;padding:12px;margin-bottom:14px;font-size:12.5px}
+.meta-box b{color:#38bdf8}
+
+.config-group{margin-bottom:14px}
+.config-label{font-size:12.5px;font-weight:700;color:#e2e8f0;margin-bottom:6px;display:block}
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.field-item{display:flex;align-items:center;gap:8px;background:#0d1627;border:1px solid #26354f;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer}
+.field-item input{cursor:pointer}
+.field-item.sensitive{border-color:#7f1d1d;color:#fca5a5}
+
+.act-row{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}
+.act-btn{background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;border:0;border-radius:8px;padding:10px 20px;font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
+.act-btn:hover{filter:brightness(1.15)}
+.act-btn.dgr{background:linear-gradient(135deg,#dc2626,#991b1b)}
+
+.feedback{margin-top:16px;padding:14px;border-radius:10px;font-size:13px;display:none}
+.feedback.good{background:#0f2a18;border:1px solid #14532d;color:#86efac}
+.feedback.bad{background:#3b1418;border:1px solid #7f1d1d;color:#fca5a5}
+.feedback.warn{background:#3a2a09;border:1px solid #78350f;color:#fde047}
+.feedback h4{font-size:14px;font-weight:800;margin-bottom:6px}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 홈</a>
+  <a href="privacy-hub.html">🔏 개인정보 허브</a>
+  <a href="vuln-hub.html">취약점 실습장</a>
+  <span class="sp"></span>
+  <a href="my-progress.html">내 학습 현황</a>
+</div>
+
+<div class="wrap" role="main">
+  <div class="hero">
+    <h1><span>🔄</span> 마이데이터 전송요구권 실습실</h1>
+    <p>「개인정보 보호법」 제35조의2(개인정보의 전송요구)에 따른 본인/제3자 전송요구, 대상 정보 범위, 수신자 적격성, 법정 거절 사유를 인터랙티브하게 검증합니다.</p>
+    <div class="src">출처: 개인정보보호위원회 「전 분야 마이데이터 전송요구권 제도 안내서(2026.6. 개정)」 기준</div>
+  </div>
+
+  <div class="card">
+    <h2>시나리오 선택 (Scenario)</h2>
+    <div class="sc-grid">
+      <div class="sc-btn active" onclick="loadScenario(0)">
+        <h3>1. 본인 전송요구 (다운로드)</h3>
+        <p>내 계정 정보 및 최근 1년 구매이력을 본인 단말로 전송요구</p>
+      </div>
+      <div class="sc-btn" onclick="loadScenario(1)">
+        <h3>2. 공인 제3자 전송 (마이데이터)</h3>
+        <p>자산관리 핀테크(개인정보관리전문기관)로 거래내역 전송요구</p>
+      </div>
+      <div class="sc-btn" onclick="loadScenario(2)">
+        <h3>3. 비인가 제3자 전송 (거절)</h3>
+        <p>인증되지 않은 일반 마케팅 업체로의 전송요구 요청</p>
+      </div>
+      <div class="sc-btn" onclick="loadScenario(3)">
+        <h3>4. 제3자 권리침해 정보 (배제)</h3>
+        <p>공동계좌 상대방의 식별정보가 포함된 거래내역 전송요구</p>
+      </div>
+    </div>
+
+    <!-- 실습 인터페이스 -->
+    <div class="sim-box" id="simBox">
+      <div class="meta-box" id="metaDesc">
+        <!-- JS 로 렌더링 -->
+      </div>
+
+      <div class="config-group">
+        <label class="config-label">1. 전송 유형 (Transfer Type):</label>
+        <div class="field-grid">
+          <label class="field-item"><input type="radio" name="transType" value="self" checked> 본인에게 직접 전송</label>
+          <label class="field-item"><input type="radio" name="transType" value="qualified"> 개인정보관리전문기관 (공인 사업자)</label>
+          <label class="field-item"><input type="radio" name="transType" value="unqualified"> 일반 제3자 (미인증 수신자)</label>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <label class="config-label">2. 전송 대상 정보 선택 (전송 최소화 원칙):</label>
+        <div class="field-grid">
+          <label class="field-item"><input type="checkbox" id="chkProfile" checked> 기본 프로필 (이름, ID, 가입일)</label>
+          <label class="field-item"><input type="checkbox" id="chkOrders" checked> 본인 이용·거래 내역 (최근 1년)</label>
+          <label class="field-item sensitive"><input type="checkbox" id="chkThirdParty"> 타인(상대방) 주민번호 및 결제정보</label>
+          <label class="field-item sensitive"><input type="checkbox" id="chkInternalSecret"> 기업 영업비밀/내부 평가점수 (비전송 대상)</label>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <label class="config-label">3. 보안 및 전송 방식 (Security Protocol):</label>
+        <div class="field-grid">
+          <label class="field-item"><input type="radio" name="proto" value="api" checked> 표준 API + 상호 TLS + 전송구간 암호화</label>
+          <label class="field-item"><input type="radio" name="proto" value="email"> 일반 이메일 첨부파일 전송 (비암호화)</label>
+        </div>
+      </div>
+
+      <div class="act-row">
+        <button type="button" class="act-btn" onclick="evalTransfer()">▶ 전송요구 처리 실행</button>
+        <button type="button" class="act-btn dgr" onclick="evalReject()">✕ 법정 거절/정지 통지</button>
+      </div>
+
+      <div class="feedback" id="feedback">
+        <!-- 결과 피드백 -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/progress.js"></script>
+<script>
+const SCENARIOS = [
+  {
+    title: '시나리오 1: 정보주체의 본인 전송요구',
+    req: '정보주체 홍길동이 본인이 생성·처리된 기본 프로필 및 최근 1년 이용내역을 컴퓨터 판독 가능한 형식(JSON/CSV)으로 본인 단말에 다운로드 요청했습니다.',
+    targetType: 'self',
+    mustInclude: ['chkProfile', 'chkOrders'],
+    mustExclude: ['chkThirdParty', 'chkInternalSecret'],
+    correctAction: 'approve',
+    reason: '정보주체 본인에게 전송하는 경우 컴퓨터 판독 가능한 형태로 안전하게 제공해야 합니다.'
+  },
+  {
+    title: '시나리오 2: 공인 마이데이터 사업자로의 제3자 전송요구',
+    req: '홍길동이 자산관리 전문 핀테크사(개인정보보호위원회 지정 개인정보관리전문기관)로 본인 거래내역 전송을 요청했습니다.',
+    targetType: 'qualified',
+    mustInclude: ['chkProfile', 'chkOrders'],
+    mustExclude: ['chkThirdParty', 'chkInternalSecret'],
+    correctAction: 'approve',
+    reason: '개인정보관리전문기관 또는 시설·기술 기준을 충족한 제3자에게는 표준 API를 통해 전송해야 합니다.'
+  },
+  {
+    title: '시나리오 3: 인증되지 않은 미자격 일반 업체로의 전송요구',
+    req: '보안 기준(ISMS-P, API 표준)을 충족하지 못한 미인증 마케팅 대행사가 이용자 동의서를 첨부하여 대량 데이터 전송을 요구했습니다.',
+    targetType: 'unqualified',
+    mustInclude: [],
+    mustExclude: [],
+    correctAction: 'reject',
+    reason: '법 제35조의2제2항에 따라 안전성 확보 조치 기준을 충족하지 못한 자에게는 전송요구를 거절해야 합니다.'
+  },
+  {
+    title: '시나리오 4: 타인의 권리 침해 우려가 있는 정보 전송요구',
+    req: '공동계좌 이용자가 거래 상대방의 주민등록번호와 금융 비밀번호까지 모두 포함하여 전송해 줄 것을 요구했습니다.',
+    targetType: 'self',
+    mustInclude: [],
+    mustExclude: ['chkThirdParty'],
+    correctAction: 'reject_or_exclude',
+    reason: '제3자의 권익을 부당하게 침해할 우려가 있는 정보나 기업 내부 영업비밀은 전송 대상에서 제외하거나 거절해야 합니다.'
+  }
+];
+
+let curScenIdx = 0;
+
+function loadScenario(idx){
+  curScenIdx = idx;
+  document.querySelectorAll('.sc-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  const sc = SCENARIOS[idx];
+  document.getElementById('metaDesc').innerHTML = `
+    <b>${sc.title}</b><br>
+    ${sc.req}
+  `;
+  document.getElementById('feedback').style.display = 'none';
+
+  // 시나리오별 기본 라디오 세팅
+  const radios = document.getElementsByName('transType');
+  radios.forEach(r => { r.checked = (r.value === sc.targetType); });
+  document.getElementById('chkProfile').checked = true;
+  document.getElementById('chkOrders').checked = true;
+  document.getElementById('chkThirdParty').checked = (idx === 3);
+  document.getElementById('chkInternalSecret').checked = false;
+}
+
+function evalTransfer(){
+  const sc = SCENARIOS[curScenIdx];
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+
+  const transType = document.querySelector('input[name="transType"]:checked').value;
+  const proto = document.querySelector('input[name="proto"]:checked').value;
+  const thirdParty = document.getElementById('chkThirdParty').checked;
+  const internalSecret = document.getElementById('chkInternalSecret').checked;
+
+  if (proto === 'email') {
+    fb.className = 'feedback bad';
+    fb.innerHTML = '<h4>❌ 보안 조치 미흡 (전송 프로토콜 위반)</h4><p>마이데이터 전송은 일반 이메일 첨부파일이 아닌, 상호 인증된 표준 API 및 보안 암호화 통신을 이용해야 합니다 (안내서 제4장).</p>';
+    return;
+  }
+
+  if (thirdParty || internalSecret) {
+    fb.className = 'feedback bad';
+    fb.innerHTML = '<h4>❌ 전송 불가 정보 포함</h4><p>타인의 민감식별정보나 기업의 고유 영업비밀/내부 평가점수는 전송요구 대상에서 제외해야 합니다 (법 제35조의2 단서).</p>';
+    return;
+  }
+
+  if (sc.correctAction === 'reject') {
+    fb.className = 'feedback bad';
+    fb.innerHTML = '<h4>❌ 부적격 수신자에게 전송 승인됨</h4><p>미인증 일반 업체는 마이데이터 수신 자격을 갖추지 못했으므로 전송요구를 <b>거절(Reject)</b>해야 적법합니다.</p>';
+    return;
+  }
+
+  fb.className = 'feedback good';
+  fb.innerHTML = '<h4>✅ 전송요구 처리 성공!</h4><p>표준 API 및 전송 최소화 원칙에 부합하게 안전하게 데이터 전송 처리를 완료했습니다. (안내서 기준 준수 확인)</p>';
+  if (window.WVSProgress) { window.WVSProgress.complete('privacy-data-transfer.html'); }
+}
+
+function evalReject(){
+  const sc = SCENARIOS[curScenIdx];
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+
+  if (sc.correctAction === 'reject' || sc.correctAction === 'reject_or_exclude') {
+    fb.className = 'feedback good';
+    fb.innerHTML = '<h4>✅ 적법한 거절 통지 완료</h4><p>정확합니다! 수신자 자격 미달 또는 제3자 권익 침해 정보에 대해 정당한 법적 근거를 명시하여 거절/정지 통지했습니다 (법 제35조의2제2항).</p>';
+    if (window.WVSProgress) { window.WVSProgress.complete('privacy-data-transfer.html'); }
+  } else {
+    fb.className = 'feedback warn';
+    fb.innerHTML = '<h4>⚠️ 부당한 전송요구 거절</h4><p>적법한 본인/공인 수신자의 전송요구에 대해 정당한 사유 없이 전송을 거절하면 과태료 및 법령 위반에 해당합니다.</p>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => loadScenario(0));
+</script>
+</body>
+</html>

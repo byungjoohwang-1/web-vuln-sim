@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>정보주체 권리보장 처리 데스크 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="정보주체 권리보장 처리 데스크 · WEB-VULN-SIM">
+<meta property="og:description" content="열람·정정·삭제·처리정지 및 자동화된 결정 설명/거부 요구 처리 실무 실습">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-rights-desk.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보 보호법」 제35조~제37조의2에 따른 정보주체 권리보장 데스크 — 법정 기한(10일), 정당한 거절 사유, 최소 본인확인 실습">
+<link rel="stylesheet" href="/css/platform-tokens.css">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono);text-decoration:none}
+.topbar .sp{margin-left:auto}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 80px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hero p{font-size:13.5px;color:var(--muted);margin-bottom:8px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;color:#7dd3fc;margin-bottom:12px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+
+.inbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:16px}
+.mail{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:12px;cursor:pointer;transition:.2s}
+.mail:hover{background:#172238}
+.mail.active{background:#162a45;border-color:#38bdf8;border-left-width:4px}
+.mail h3{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:4px}
+.mail .meta{font-size:11px;color:var(--muted)}
+
+.desk-pane{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:18px}
+.req-header{border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px}
+.req-header b{color:#38bdf8}
+.req-body{background:#090f1d;border:1px solid #1e293b;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;line-height:1.7}
+
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12.5px;font-weight:700;margin-bottom:6px;color:#e2e8f0}
+.form-select, .form-input{background:#0a1120;border:1px solid #26354f;border-radius:8px;color:#fff;padding:8px 12px;font-size:13px;width:100%}
+.chk-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.chk-label{display:flex;align-items:center;gap:6px;font-size:12px;color:#cbd5e1;cursor:pointer}
+
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-submit{background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;border:0;border-radius:8px;padding:10px 22px;font-weight:700;font-size:13px;cursor:pointer}
+.btn-submit:hover{filter:brightness(1.15)}
+
+.feedback{margin-top:16px;padding:14px;border-radius:10px;font-size:13px;display:none}
+.feedback.good{background:#0f2a18;border:1px solid #14532d;color:#86efac}
+.feedback.bad{background:#3b1418;border:1px solid #7f1d1d;color:#fca5a5}
+.feedback.warn{background:#3a2a09;border:1px solid #78350f;color:#fde047}
+.feedback h4{font-size:14px;font-weight:800;margin-bottom:6px}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 홈</a>
+  <a href="privacy-hub.html">🔏 개인정보 허브</a>
+  <a href="vuln-hub.html">취약점 실습장</a>
+  <span class="sp"></span>
+  <a href="my-progress.html">내 학습 현황</a>
+</div>
+
+<div class="wrap" role="main">
+  <div class="hero">
+    <h1><span>📬</span> 정보주체 권리보장 처리 데스크</h1>
+    <p>「개인정보 보호법」 제35조~제37조의2에 규정된 열람, 정정·삭제, 처리정지, 자동화된 결정 설명/거부 요구에 대해 법정 요건과 거절 사유를 판정하고 정당한 통지문을 작성합니다.</p>
+    <div class="src">출처: 「개인정보 보호법」 및 「자동화된 결정에 대한 정보주체의 권리 안내서」 기준</div>
+  </div>
+
+  <div class="card">
+    <h2>접수된 요구서 함 (Inbox)</h2>
+    <div class="inbox">
+      <div class="mail active" onclick="loadCase(0)">
+        <h3>#CASE 1: 상담 녹취록 열람 요구</h3>
+        <div class="meta">접수일: D+1 · 유형: 열람 요구 (제35조)</div>
+      </div>
+      <div class="mail" onclick="loadCase(1)">
+        <h3>#CASE 2: 결제내역 즉시 삭제 요구</h3>
+        <div class="meta">접수일: D+2 · 유형: 삭제 요구 (제36조)</div>
+      </div>
+      <div class="mail" onclick="loadCase(2)">
+        <h3>#CASE 3: 텔레마케팅 처리정지 요구</h3>
+        <div class="meta">접수일: D+1 · 유형: 처리정지 요구 (제37조)</div>
+      </div>
+      <div class="mail" onclick="loadCase(3)">
+        <h3>#CASE 4: AI 대출 심사 설명요구</h3>
+        <div class="meta">접수일: D+3 · 유형: 설명/재심사 (제37조의2)</div>
+      </div>
+    </div>
+
+    <!-- 처리 데스크 뷰 -->
+    <div class="desk-pane">
+      <div class="req-header" id="caseMeta">
+        <!-- JS 로 렌더링 -->
+      </div>
+      <div class="req-body" id="caseContent">
+        <!-- JS 로 렌더링 -->
+      </div>
+
+      <form id="deskForm" onsubmit="event.preventDefault(); evalDecision();">
+        <div class="form-group">
+          <label>1. 처리 결정 (Decision):</label>
+          <select class="form-select" id="decisionSel">
+            <option value="grant">전부 수용 (열람/정정/삭제/정지 허용)</option>
+            <option value="partial">일부 수용 (타인 정보 마스킹 / 일부 항목만 수용)</option>
+            <option value="reject">거절 통지 (법정 예외 사유 또는 법령상 보관 의무 존재)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>2. 법적 근거 및 안전조치 (Checklist):</label>
+          <div class="chk-row">
+            <label class="chk-label"><input type="checkbox" id="chkIdentity" checked> 최소 본인확인 수행 (과도한 신분증 사본 징구 배제)</label>
+            <label class="chk-label"><input type="checkbox" id="chkOtherRights"> 타인(상담원/타인) 권익 침해 방지 (마스킹)</label>
+            <label class="chk-label"><input type="checkbox" id="chkStatutory"> 타 법령(전자상거래법 등) 보관 의무 준수</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>3. 통지 기한 준수 (법정 10일 이내):</label>
+          <div class="chk-row">
+            <label class="chk-label"><input type="radio" name="deadline" value="inTime" checked> 접수일로부터 10일 이내 통지 (적법)</label>
+            <label class="chk-label"><input type="radio" name="deadline" value="late"> 10일 초과 지연 통지 (위반)</label>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button type="submit" class="btn-submit">▶ 처리 결과 확정 및 통지문 발송</button>
+        </div>
+      </form>
+
+      <div class="feedback" id="feedback">
+        <!-- 결과 피드백 -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/progress.js"></script>
+<script>
+const CASES = [
+  {
+    title: 'CASE 1: 고객상담 통화 녹취록 열람 요구',
+    client: '이용자 김철수',
+    content: '지난 3월 15일 고객센터 통화 시 상담원의 안내 착오로 피해를 입었습니다. 당시 통화 녹음 전체를 열람(청취)할 수 있도록 파일 제공을 요구합니다.',
+    correctDecision: 'partial',
+    requiredChecks: ['chkIdentity', 'chkOtherRights'],
+    explanation: '본인의 음성 녹취는 열람 대상이나, 함께 녹음된 상담원의 개인정보(성명, 개인적 발언 등)는 제3자 권익 침해 우려가 있으므로 음성 마스킹 또는 해당 구간 분리 후 일부 수용(partial)해야 합니다 (법 제35조제4항).'
+  },
+  {
+    title: 'CASE 2: 탈퇴 회원의 3년치 결제/주문내역 즉시 삭제 요구',
+    client: '탈퇴 회원 박영희',
+    content: '회원을 탈퇴했으니 회사 DB에 저장된 제 모든 결제내역과 영수증, 배송지 주소를 24시간 내에 완전히 파기해 주십시오.',
+    correctDecision: 'reject',
+    requiredChecks: ['chkIdentity', 'chkStatutory'],
+    explanation: '「전자상거래 등에서의 소비자보호에 관한 법률」 제6조에 따라 계약·청약철회 및 대금결제 기록은 5년간 의무 보존 대상입니다. 법령에 보존 의무가 규정된 경우 삭제 요구를 거절하고 보관 근거를 통지해야 합니다 (법 제36조제1항 단서).'
+  },
+  {
+    title: 'CASE 3: 텔레마케팅(마케팅 목적) 개인정보 처리정지 요구',
+    client: '이용자 최민수',
+    content: '가입 시 선택 동의했던 마케팅 활용 목적의 전화 안내(TM) 및 알림톡 발송을 즉시 중단해 주십시오.',
+    correctDecision: 'grant',
+    requiredChecks: ['chkIdentity'],
+    explanation: '선택 동의에 기반한 마케팅 목적 처리는 정보주체의 처리정지 요구 시 정당한 거절 사유가 없으므로 즉시 수용(grant)하고 처리를 정지해야 합니다 (법 제37조제1항).'
+  },
+  {
+    title: 'CASE 4: AI 대출 신용평가 자동 거절에 대한 설명 요구',
+    client: '신용대출 신청인 정우성',
+    content: '모바일 앱에서 신용대출을 신청했는데 AI 심사 시스템에 의해 즉시 거절되었습니다. 자동화된 결정의 주요 기준을 설명하고 직원의 재심사를 요구합니다.',
+    correctDecision: 'grant',
+    requiredChecks: ['chkIdentity'],
+    explanation: '법 제37조의2(자동화된 결정에 대한 정보주체의 권리)에 따라 완전히 자동화된 시스템에 의한 결정으로 중대한 권리·의무에 영향을 미치는 경우, 기준 설명 및 인적 개입에 의한 재심사를 수용해야 합니다.'
+  }
+];
+
+let curCaseIdx = 0;
+
+function loadCase(idx){
+  curCaseIdx = idx;
+  document.querySelectorAll('.mail').forEach((m, i) => m.classList.toggle('active', i === idx));
+  const c = CASES[idx];
+  document.getElementById('caseMeta').innerHTML = `
+    <b>${c.title}</b> &nbsp;|&nbsp; <span>청구인: ${c.client}</span>
+  `;
+  document.getElementById('caseContent').textContent = c.content;
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('decisionSel').value = 'grant';
+  document.getElementById('chkIdentity').checked = true;
+  document.getElementById('chkOtherRights').checked = false;
+  document.getElementById('chkStatutory').checked = false;
+}
+
+function evalDecision(){
+  const c = CASES[curCaseIdx];
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+
+  const dec = document.getElementById('decisionSel').value;
+  const deadline = document.querySelector('input[name="deadline"]:checked').value;
+  const chkOther = document.getElementById('chkOtherRights').checked;
+  const chkStat = document.getElementById('chkStatutory').checked;
+
+  if (deadline === 'late') {
+    fb.className = 'feedback bad';
+    fb.innerHTML = '<h4>❌ 법정 기한 위반 (10일 초과)</h4><p>정보주체의 권리 요구를 접수한 날부터 10일 이내에 수용/거절 결과를 통지해야 합니다 (법 제35조제3항 등).</p>';
+    return;
+  }
+
+  if (dec !== c.correctDecision) {
+    fb.className = 'feedback bad';
+    fb.innerHTML = `<h4>❌ 잘못된 처리 결정 (${dec} 선택)</h4><p>${c.explanation}</p>`;
+    return;
+  }
+
+  // 체크리스트 검증
+  if (curCaseIdx === 0 && !chkOther) {
+    fb.className = 'feedback warn';
+    fb.innerHTML = '<h4>⚠️ 제3자 권익보호 미흡</h4><p>상담원의 개인정보 마스킹 조치 체크를 확인해 주세요.</p>';
+    return;
+  }
+  if (curCaseIdx === 1 && !chkStat) {
+    fb.className = 'feedback warn';
+    fb.innerHTML = '<h4>⚠️ 법령상 보관 의무 검토 누락</h4><p>전자상거래법 등 타 법령 보관 의무 확인을 체크해 주세요.</p>';
+    return;
+  }
+
+  fb.className = 'feedback good';
+  fb.innerHTML = `<h4>✅ 적법한 권리 처리 완료!</h4><p>${c.explanation}</p>`;
+  if (window.WVSProgress) { window.WVSProgress.complete('privacy-rights-desk.html'); }
+}
+
+document.addEventListener('DOMContentLoaded', () => loadCase(0));
+</script>
+</body>
+</html>

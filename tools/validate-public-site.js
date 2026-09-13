@@ -173,11 +173,63 @@ for (const file of jsFiles) {
   }
 }
 
+/* 인라인 <script> 문법 검사.
+   외부 .js 만 검사하던 탓에, 페이지 전체 스크립트가 죽어 아무것도 안 그려지는
+   HTML 이 게이트를 그대로 통과한 적이 있다(여러 줄 문자열을 "..." 로 써서
+   SyntaxError). 파일 수가 많아 프로세스를 띄우지 않고 new Function 으로 파싱만 한다
+   — 실행하지 않으므로 부작용이 없다. */
+const INLINE_SCRIPT_RE = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+const CHECKABLE_TYPE = /^(?:|text\/javascript|application\/javascript)$/i;
+
+/* 이 사이트는 XSS 교육용이라 <script> 문자열이 본문 곳곳에 예제로 등장한다.
+   그대로 훑으면 다음 두 가지를 진짜 스크립트로 착각한다.
+     1) <textarea> 안의 예제 코드 (HTML 이 raw text 로 취급 → 스크립트 아님)
+     2) onclick="setXSSPayload('<script>alert(1)<\/script>')" 같은 속성값 안
+   1) 은 먼저 지우고, 2) 는 "여는 태그 안쪽인지"를 보고 건너뛴다. */
+function maskRawText(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, (s) => ' '.repeat(s.length))
+    .replace(/<textarea\b[^>]*>[\s\S]*?<\/textarea>/gi, (s) => ' '.repeat(s.length));
+}
+function insideTag(html, idx) {
+  const lt = html.lastIndexOf('<', idx - 1);
+  const gt = html.lastIndexOf('>', idx - 1);
+  return lt > gt;               // 마지막 '<' 가 아직 닫히지 않았다 = 속성값 안
+}
+
+let inlineScriptsChecked = 0;
+for (const file of htmlFiles) {
+  const rel = path.relative(publicDir, file).replace(/\\/g, '/');
+  const html = maskRawText(fs.readFileSync(file, 'utf8'));
+  INLINE_SCRIPT_RE.lastIndex = 0;
+  let m;
+  let n = 0;
+  while ((m = INLINE_SCRIPT_RE.exec(html))) {
+    if (insideTag(html, m.index)) continue;
+    const attrs = m[1] || '';
+    n += 1;
+    if (/\bsrc\s*=/.test(attrs)) continue;                       // 외부 파일은 위에서 검사
+    const typeMatch = attrs.match(/\btype\s*=\s*["']([^"']*)["']/i);
+    const type = typeMatch ? typeMatch[1].trim() : '';
+    if (!CHECKABLE_TYPE.test(type)) continue;                    // module/JSON/템플릿은 제외
+    const body = m[2];
+    if (!body.trim()) continue;
+    inlineScriptsChecked += 1;
+    try {
+      new Function(body); // eslint-disable-line no-new-func
+    } catch (err) {
+      const line = html.slice(0, m.index).split(/\n/).length;
+      failures.push(`${rel}:${line}: inline <script> #${n} syntax error: ${err.message}`);
+    }
+  }
+}
+
 function report() {
   const summary = {
     publicDir,
     htmlFiles: htmlFiles.length,
     jsFiles: jsFiles.length,
+    inlineScriptsChecked,
     requiredPages: requiredPages.length,
     malformedRefs,
     sriDigestsChecked: sriChecked,

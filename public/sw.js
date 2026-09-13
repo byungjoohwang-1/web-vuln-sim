@@ -9,7 +9,7 @@
  *     sync, login and leaderboard keep working exactly as before.
  *   - POST / non-GET: never intercepted.
  */
-var VERSION = 'wvs-bab4dde1cb28';
+var VERSION = 'wvs-75f22783a497';
 var STATIC_CACHE = 'wvs-static-' + VERSION;
 var PAGE_CACHE = 'wvs-pages-' + VERSION;
 
@@ -78,20 +78,20 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // Static assets → stale-while-revalidate.
+  // Static assets → network-first, fallback to cache for offline support.
   if (isStaticAsset(url)) {
     e.respondWith(
-      caches.match(req).then(function (hit) {
-        var net = fetch(req).then(function (res) {
-          if (res && res.status === 200) {
-            var copy = res.clone();
-            caches.open(STATIC_CACHE).then(function (c) { c.put(req, copy); });
-          }
-          return res;
-        }).catch(function () { return hit; });
-        return hit || net;
+      fetch(req).then(function (res) {
+        if (res && res.status === 200) {
+          var copy = res.clone();
+          caches.open(STATIC_CACHE).then(function (c) { c.put(req, copy); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(req);
       })
     );
+    return;
   }
 });
 

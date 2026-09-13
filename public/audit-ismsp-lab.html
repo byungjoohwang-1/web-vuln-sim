@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ISMS-P 가상 인증심사 결함 도출 실습실 (EXAM-01) · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="ISMS-P 가상 인증심사 결함 도출 실습실 (EXAM-01)">
+<meta property="og:description" content="ISMS-P 인증심사원 자격시험 및 실무 대비 — 기업 현장 증적 분석, 결함 조항 매핑, 결함 보고서(Finding/Criteria/Recommendation) 작성 및 실시간 자동 채점">
+<meta property="og:url" content="https://vuln-sim.web.app/audit-ismsp-lab.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="/css/platform-tokens.css">
+<style>
+:root{
+  --bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;
+  --ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;
+  --good:#22c55e;--bad:#ef4444;--warn:#f59e0b;
+  --mono:'JetBrains Mono','Consolas',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono);text-decoration:none}
+.topbar .sp{margin-left:auto}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 80px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hero p{font-size:13.5px;color:var(--muted);margin-bottom:8px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(129,140,248,.15);border:1px solid #818cf8;color:#c7d2fe;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;font-family:var(--mono)}
+.src-info{font-size:12px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+
+.tabs-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px}
+.tab-btn{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:#94a3b8;font-size:12.5px;cursor:pointer;white-space:nowrap;transition:.15s}
+.tab-btn:hover{color:#fff;border-color:#38bdf8}
+.tab-btn.active{background:#162a45;border-color:#38bdf8;color:#7dd3fc;font-weight:700}
+
+.evidence-box{background:#0a101f;border:1px solid #1e293b;border-radius:12px;padding:18px;margin-bottom:18px}
+.ev-header{display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #1e293b;padding-bottom:8px;align-items:center}
+.ev-header h3{font-size:15px;color:#fff}
+.ev-pre{background:#060a14;border:1px solid #17243d;border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;color:#cbd5e1;overflow-x:auto;white-space:pre-wrap;line-height:1.6}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card h2{font-size:16px;color:#7dd3fc;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12.5px;font-weight:700;color:#93c5fd;margin-bottom:4px;font-family:var(--mono)}
+.form-group select, .form-group textarea{width:100%;background:#111b30;border:1px solid #283955;border-radius:8px;color:#f8fafc;padding:9px 12px;font-size:13px;font-family:inherit}
+.form-group select:focus, .form-group textarea:focus{outline:none;border-color:#38bdf8}
+
+.btn{background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;border:0;border-radius:10px;padding:12px 24px;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+
+.eval-res{margin-top:16px;padding:16px;border-radius:12px;font-size:13px;display:none}
+.eval-res.good{background:#082819;border:1px solid #15803d;color:#86efac}
+.eval-res.bad{background:#351319;border:1px solid #b91c1c;color:#fca5a5}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">🏠 홈</a>
+  <a href="cert-exam.html">자격시험 센터</a>
+  <a href="my-progress.html">내 학습 현황</a>
+  <span class="sp"></span>
+  <span style="font-size:12px;color:#94a3b8;font-family:var(--mono)">EXAM-01</span>
+</div>
+
+<div class="wrap" role="main">
+  <div class="hero">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+      <span class="badge">📋 ISMS-P 심사원 실무</span>
+      <span style="font-size:12px;color:#38bdf8;font-family:var(--mono)">인증기준 102개 항목 매핑</span>
+    </div>
+    <h1>ISMS-P 가상 인증심사 결함 도출 실습실</h1>
+    <p>가상 피심사 기업(핀테크/이커머스)의 현장 인터뷰 및 시스템 화면 증적을 검토하고, ISMS-P 인증기준에 따른 결함(Finding) 조항을 매핑하여 결함 보고서를 작성·자동 채점합니다.</p>
+    <div class="src-info">📖 출제 기준: 한국인터넷진흥원(KISA) ISMS-P 인증기준 안내서 및 심사원 실기 기출 유형</div>
+  </div>
+
+  <div class="card">
+    <h2>1. 현장 심사 증적 열람 (Evidence Inspection)</h2>
+    <div class="tabs-row" id="evTabs">
+      <button class="tab-btn active" onclick="selectEv(0)">증적 1: 서버 원격접속 통제</button>
+      <button class="tab-btn" onclick="selectEv(1)">증적 2: DB 개인정보 암호화</button>
+      <button class="tab-btn" onclick="selectEv(2)">증적 3: 퇴직자 권한 회수</button>
+      <button class="tab-btn" onclick="selectEv(3)">증적 4: 접속기록 보관·점검</button>
+    </div>
+
+    <div class="evidence-box">
+      <div class="ev-header">
+        <h3 id="evTitle">증적 1: 리눅스 서버 SSH 설정 파일 및 접속 화면</h3>
+        <span id="evTag" style="font-size:11px;color:#38bdf8;font-family:var(--mono)">EVD-01</span>
+      </div>
+      <div class="ev-pre" id="evPre"></div>
+    </div>
+
+    <h2>2. 결함 보고서(Finding / Criteria / Recommendation) 작성</h2>
+    <div class="form-group">
+      <label>① 위반 인증기준 조항 선택 (Criteria)</label>
+      <select id="selCriteria">
+        <option value="">-- ISMS-P 인증기준 항목을 선택하세요 --</option>
+        <option value="2.3.1">2.3.1 사용자 식별 (사용자 계정 식별 및 개별 계정 부여)</option>
+        <option value="2.3.4">2.3.4 특권 계정 관리 (최고관리자 계정 직접 접속 통제 및 전용 계정 사용)</option>
+        <option value="2.4.1">2.4.1 비밀번호 관리 (비밀번호 복잡도 및 주기적 변경)</option>
+        <option value="2.4.2">2.4.2 접속기록 보관 (1년/2년 보관 및 위변조 방지)</option>
+        <option value="2.4.3">2.4.3 접속기록 점검 (월 1회 이상 이상징후 분석 및 보고)</option>
+        <option value="2.5.1">2.5.1 보안성 검토 및 개발보안 (시큐어코딩)</option>
+        <option value="2.6.2">2.6.2 암호키 관리</option>
+        <option value="2.7.1">2.7.1 암호화 적용 (고유식별정보, 비밀번호, 바이오정보 암호화)</option>
+        <option value="2.2.3">2.2.3 퇴직 및 직무변경 관리 (퇴직 즉시 계정 삭제/차단 및 자산 반납)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>② 결함 내용 요약 (Finding - 현장 확인 사실)</label>
+      <textarea id="txtFinding" rows="3" placeholder="예: 주요 정보처리시스템(웹 서버)의 sshd_config 설정에서 PermitRootLogin이 'yes'로 설정되어 있어..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>③ 개선 권고안 (Recommendation)</label>
+      <textarea id="txtRec" rows="2" placeholder="예: 최고관리자(root) 직접 원격접속을 차단(PermitRootLogin no)하고, 개별 관리자 계정으로 접속 후 su/sudo 권한을..."></textarea>
+    </div>
+
+    <button class="btn" onclick="submitAuditFinding()">결함 보고서 제출 및 심사 채점</button>
+    <div class="eval-res" id="auditRes"></div>
+  </div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+var EVIDENCES = [
+  {
+    title: "증적 1: 리눅스 서버 SSH 설정 파일 및 접속 화면",
+    tag: "인프라 보안",
+    pre: `[심사원 현장 확인 사항]
+- 대상 서버: 운영 DB 서버 (10.0.1.5)
+- /etc/ssh/sshd_config 파일 내용 확인:
+  PermitRootLogin yes
+  PasswordAuthentication yes
+- 심사원 PC에서 root 계정으로 SSH 패스워드 직접 접속이 정상적으로 이루어짐을 확인함.
+- 관리자 인터뷰: '빠른 유지보수를 위해 root 패스워드를 4명의 인프라팀 직원이 공유하여 직접 접속하고 있음'`,
+    targetCriteria: "2.3.4",
+    recKeywords: ["root", "직접", "개별", "차단", "sudo"]
+  },
+  {
+    title: "증적 2: 회원 DB 개인정보 저장 테이블 스키마 및 샘플 데이터",
+    tag: "데이터 보안",
+    pre: `[심사원 현장 확인 사항]
+- 대상 테이블: TB_MEMBER (회원 테이블, 50만 명)
+- SELECT user_id, user_name, rrn, bank_account FROM TB_MEMBER LIMIT 3 실행 결과:
+  홍길동 | 900101-1234567 | 110-123-456789
+  김철수 | 850305-2345678 | 302-000-111222
+- 주민등록번호(고유식별정보) 및 계좌번호가 AES-256 등 안전한 암호화 알고리즘 없이 평문(Plaintext)으로 데이터베이스에 저장되어 있음을 확인.`,
+    targetCriteria: "2.7.1",
+    recKeywords: ["암호화", "주민등록번호", "고유식별정보", "평문", "안전"]
+  },
+  {
+    title: "증적 3: 최근 3개월 퇴직자 명단 및 그룹웨어/VPN 계정 현황",
+    tag: "인적 보안",
+    pre: `[심사원 현장 확인 사항]
+- 인사팀 퇴직자 명단: 2026년 6월 30일자 퇴직자 이모 부장
+- 2026년 9월 10일 심사 당일 방화벽 VPN 및 사내 그룹웨어 접속 계정 확인 결과:
+  이모 부장의 계정이 여전히 'Active(활성)' 상태로 유지되어 있었으며, 8월 15일 재택 IP에서 VPN 접속 성공 로그가 2건 확인됨.`,
+    targetCriteria: "2.2.3",
+    recKeywords: ["퇴직", "즉시", "삭제", "차단", "회수"]
+  },
+  {
+    title: "증적 4: 개인정보처리시스템 접속기록 보관 및 점검 현황",
+    tag: "로그 관리",
+    pre: `[심사원 현장 확인 사항]
+- 고객 정보 조회 웹 콘솔(5만 명 이상 고객 정보 처리)
+- 웹 서버 access log 및 DB 감사 로그 보관 기간 확인:
+  디스크 용량 부족을 이유로 3개월 경과 로그는 자동 영구 삭제되고 있었음.
+- 최근 1년간 개인정보 다운로드 및 비정상 조회에 대한 월별 점검 보고서 또는 소명 절차가 전혀 이행되지 않고 있음을 확인.`,
+    targetCriteria: "2.4.2",
+    recKeywords: ["보관", "1년", "2년", "점검", "기록"]
+  }
+];
+
+var curEv = 0;
+
+function selectEv(idx) {
+  curEv = idx;
+  document.querySelectorAll('.tab-btn').forEach(function(b, i){
+    b.classList.toggle('active', i === idx);
+  });
+  var e = EVIDENCES[idx];
+  document.getElementById('evTitle').textContent = e.title;
+  document.getElementById('evTag').textContent = e.tag;
+  document.getElementById('evPre').textContent = e.pre;
+  document.getElementById('auditRes').style.display = 'none';
+  document.getElementById('selCriteria').value = '';
+  document.getElementById('txtFinding').value = '';
+  document.getElementById('txtRec').value = '';
+}
+
+function submitAuditFinding() {
+  var e = EVIDENCES[curEv];
+  var cr = document.getElementById('selCriteria').value;
+  var f = document.getElementById('txtFinding').value.trim();
+  var r = document.getElementById('txtRec').value.trim();
+
+  if(!cr) { alert("인증기준 조항을 선택하세요."); return; }
+  if(!f || !r) { alert("결함 내용과 개선 권고안을 모두 작성하세요."); return; }
+
+  var res = document.getElementById('auditRes');
+
+  if(cr === e.targetCriteria) {
+    res.className = "eval-res good";
+    res.style.display = "block";
+    res.innerHTML = "<h3>🎯 [적중] ISMS-P 결함 도출 성공 (점수: 100점)</h3>"
+      + "<p>• <b>매핑 조항:</b> " + cr + " 적중!<br>"
+      + "• <b>심사원 코멘트:</b> 현장 확인 사실관계(Finding)와 개선 권고(Recommendation)가 심사원 표준 보고서 서식에 부합합니다.</p>"
+      + "<div style='margin-top:8px;font-weight:700;color:#67e8f9'>🏆 'ISMS-P 인증심사 실무' 완료로 기록했습니다.</div>";
+
+    /* 진도는 반드시 엔진 API 로 기록한다. localStorage 를 직접 쓰면 완료 시각이
+       타임스탬프가 아니게 되고, XP 중복 지급 방지 플래그(x)·연속 학습일·완료 칩
+       갱신 이벤트를 모두 건너뛴다. XP 지급량은 엔진이 정한다(항목당 최초 1회). */
+    try { window.WVSProgress && window.WVSProgress.complete(100, 'audit-ismsp-lab.html'); } catch(err){}
+  } else {
+    res.className = "eval-res bad";
+    res.style.display = "block";
+    res.innerHTML = "<h3>❌ 기준 조항 매핑 오류</h3>"
+      + "<p>선택하신 기준은 본 증적의 주 결함 조항이 아닙니다. 본 건의 핵심 결함 조항은 <b>[" + e.targetCriteria + "]</b>입니다.<br>"
+      + "증적의 핵심 원인(Root Cause)을 다시 분석해 보세요.</p>";
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  selectEv(0);
+});
+</script>
+</body>
+</html>

@@ -35,7 +35,28 @@ TOOLS = [
     ('redteam.html', ('실습 도구', 'B')),
     ('quiz-forge.html', ('실습 도구', 'B')),
     ('incident.html', ('대표 사건 실습', 'E')),   # G08 — 자동차·개인정보를 잇는 4단계 사건
+    ('privacy-data-transfer.html', ('개인정보 실습', 'F')),
+    ('privacy-rights-desk.html', ('개인정보 실습', 'F')),
+    ('privacy-breach-72h.html', ('개인정보 실습', 'F')),
+    # 인증심사·산업기술보호는 기술 취약점이 아니라 관리체계/컴플라이언스 실습이다.
+    ('audit-ismsp-lab.html', ('인증심사 · 관리체계', 'B')),
+    ('industry-tech-protect.html', ('인증심사 · 관리체계', 'B')),
 
+    # [G02 후속] 아래 12개는 예전부터 WVSProgress.complete() 로 완료를 기록해 왔는데
+    # 카탈로그에 없어서 XP 만 오르고 '완료 수'에는 안 잡혔다(정확히 G02 가 없앤 그 어긋남).
+    # tools/test-platform-integration.js 가 이 불일치를 검사한다.
+    ('ai-grader.html', ('실습 도구', 'B')),
+    ('lab-generator.html', ('실습 도구', 'B')),
+    ('skill-assess.html', ('실습 도구', 'B')),
+    ('fin-eval.html', ('금융 · 전자금융', 'C')),
+    ('mp-assessment.html', ('인증심사 · 관리체계', 'B')),
+    ('pia-assessment.html', ('개인정보 실습', 'F')),
+    ('privacy-breach-drill.html', ('개인정보 실습', 'F')),
+    ('privacy-consent-designer.html', ('개인정보 실습', 'F')),
+    ('privacy-policy-builder.html', ('개인정보 실습', 'F')),
+    ('privacy-policy-eval.html', ('개인정보 실습', 'F')),
+    ('privacy-processor-check.html', ('개인정보 실습', 'F')),
+    ('privacy-quiz.html', ('개인정보 실습', 'F')),
 ]
 TITLE_RE = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
 CODE_RE = re.compile(r'^([A-Z]{1,4}-\d{1,3})\s*[:：]\s*(.+)$')

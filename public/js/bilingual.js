@@ -373,8 +373,8 @@
     const style = document.createElement('style');
     style.id = 'wvs-bilingual-style';
     style.textContent = `
-      .wvs-langbar{position:fixed;top:var(--wvs-edge,14px);right:var(--wvs-edge,14px);z-index:var(--wvs-z-float,300);display:flex;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px);transition:opacity .18s ease}
-      .wvs-langbar button,.langbar button{border:0;padding:6px 11px;border-radius:7px;font:700 12px/1 'Malgun Gothic',Arial,sans-serif;cursor:pointer}
+      .wvs-langbar{position:fixed;top:var(--wvs-edge,14px);right:var(--wvs-edge,14px);z-index:var(--wvs-z-float,300);display:flex;align-items:center;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px);transition:opacity .18s ease;height:auto;max-height:36px;box-sizing:border-box}
+      .wvs-langbar button,.langbar button{border:0;padding:5px 11px;border-radius:7px;font:700 12px/1 'Malgun Gothic',Arial,sans-serif;cursor:pointer;white-space:nowrap;height:24px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center}
       .wvs-langbar button{background:transparent;color:#cbd5e1}
       .wvs-langbar button.on,.langbar button.on{background:#2563eb!important;color:#fff!important}
       /* 고정 배치라 스크롤한 본문 위에 계속 떠서 글자를 가린다(예: AI 페이지의 상태 줄).
@@ -384,6 +384,9 @@
          조상인 바에도 :hover 가 걸려 다시 선명해진다. */
       .wvs-langbar.wvs-dim button{pointer-events:auto}
       .wvs-langbar.wvs-dim:hover,.wvs-langbar.wvs-dim:focus-within{opacity:1}
+      @media (max-width:768px){
+        .wvs-langbar{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+      }
       @media (prefers-reduced-motion:reduce){.wvs-langbar{transition:none}}
     `;
     document.head.appendChild(style);
@@ -399,6 +402,8 @@
       });
       return;
     }
+    // 모바일 스마트폰(화면 폭 768px 이하)에서는 화면을 가리는 고정 플로팅 바를 생성하지 않음
+    if (window.innerWidth <= 768) return;
     if (document.querySelector('.wvs-langbar')) return;
     const bar = document.createElement('div');
     bar.className = 'wvs-langbar';
@@ -408,6 +413,9 @@
     ).join('');
     document.body.appendChild(bar);
     bindDim(bar);
+    window.addEventListener('resize', () => {
+      bar.style.display = window.innerWidth <= 768 ? 'none' : 'flex';
+    });
   }
 
   /* 맨 위에서 벗어나면 언어 바를 흐리게 해 본문을 가리지 않도록 한다.

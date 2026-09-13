@@ -85,3 +85,52 @@ body.wvs-modal-open #wvs-progress-chip {
 .soc-main :where(p, li, td, h1, h2, h3) {
   overflow-wrap: anywhere;
 }
+
+/* ── 모바일 스마트폰 특화 최적화 (Thumb Zone, iOS 16px 줌 방지, Safe Area) ── */
+:root {
+  --wvs-safe-bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  --wvs-bottom-nav-h: 56px;
+}
+
+@media (max-width: 640px) {
+  /* iOS Safari 16px 미만 input 터치 시 화면 강제 자동확대(Auto-zoom) 방지 */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* 더블탭 줌 딜레이 제거 및 터치 반응성 향상 */
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+
+  /* 하단 고정 탭바 고려 스크롤 여유 */
+  html {
+    scroll-padding-bottom: calc(var(--wvs-bottom-nav-h) + var(--wvs-safe-bottom) + 16px);
+  }
+
+  /* 플로팅 요소(완료 칩, 설치 배너, 언어바)를 하단 탭바 위로 안전하게 이동 */
+  #wvs-progress-chip {
+    bottom: calc(var(--wvs-bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px) !important;
+  }
+  #wvs-install {
+    bottom: calc(var(--wvs-bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px) !important;
+  }
+  /* 우상단 고정 언어 바는 폰에서 본문 제목을 덮는다. 숨기는 대신 전환 수단은
+     하단 탭바의 🌐 버튼으로 옮겼다(soc-chrome.js). 수단 자체를 없애면 안 된다. */
+  .wvs-langbar {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* 하단 탭바가 본문 마지막 줄·마지막 버튼을 덮지 않도록 여백을 준다.
+     탭바를 실제로 그린 페이지에만 적용되도록 soc-chrome.js 가 붙이는
+     html.wvs-has-bnav 로 한정한다(탭바 없는 페이지에 빈 여백이 생기면 안 된다). */
+  html.wvs-has-bnav body {
+    padding-bottom: calc(var(--wvs-bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+}
+

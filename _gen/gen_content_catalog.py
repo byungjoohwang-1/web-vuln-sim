@@ -56,6 +56,24 @@ TOOL_PAGES = {
     'redteam.html': ('appsec', 'practice_tool'),
     'quiz-forge.html': ('appsec', 'practice_tool'),
     'incident.html': ('automotive', 'guided_incident'),
+    'privacy-data-transfer.html': ('privacy', 'practice_tool'),
+    'privacy-rights-desk.html': ('privacy', 'practice_tool'),
+    'privacy-breach-72h.html': ('privacy', 'guided_incident'),
+    'audit-ismsp-lab.html': ('governance', 'practice_tool'),
+    'industry-tech-protect.html': ('governance', 'practice_tool'),
+    # [G02 후속] 완료를 기록하면서도 카탈로그에 없던 도구들
+    'ai-grader.html': ('appsec', 'practice_tool'),
+    'lab-generator.html': ('appsec', 'practice_tool'),
+    'skill-assess.html': ('appsec', 'practice_tool'),
+    'fin-eval.html': ('financial', 'practice_tool'),
+    'mp-assessment.html': ('governance', 'practice_tool'),
+    'pia-assessment.html': ('privacy', 'practice_tool'),
+    'privacy-breach-drill.html': ('privacy', 'guided_incident'),
+    'privacy-consent-designer.html': ('privacy', 'practice_tool'),
+    'privacy-policy-builder.html': ('privacy', 'practice_tool'),
+    'privacy-policy-eval.html': ('privacy', 'practice_tool'),
+    'privacy-processor-check.html': ('privacy', 'practice_tool'),
+    'privacy-quiz.html': ('privacy', 'practice_tool'),
 }
 
 
