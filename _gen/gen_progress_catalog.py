@@ -26,6 +26,15 @@ PREFIX = [
     ('14_auto', ('자동차 보안', 'E')),
     ('15_privacy', ('개인정보보호', 'F')),
 ]
+
+# 실습 도구 — 접두사 규칙으로는 안 잡히지만 진도·XP 를 기록하는 페이지.
+# 이게 카탈로그에 없으면 도구에서 완료해도 '내 기록'의 완료 수에 안 잡히고
+# XP 만 올라가 수치가 서로 어긋난다(G02).
+TOOLS = [
+    ('vulnlab.html', ('실습 도구', 'B')),
+    ('redteam.html', ('실습 도구', 'B')),
+    ('quiz-forge.html', ('실습 도구', 'B')),
+]
 TITLE_RE = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
 CODE_RE = re.compile(r'^([A-Z]{1,4}-\d{1,3})\s*[:：]\s*(.+)$')
 CWE_RE = re.compile(r'CWE-\d+')
@@ -34,7 +43,12 @@ SUFFIXES = [' | 교육 시뮬레이터', ' - 교육 시뮬레이터', ' - 실습
 PREFIX_STRIP = ['전자금융 보안: ', '전자금융 보안 · ', '전자금융 보안 - ']
 
 
+TOOL_MAP = dict(TOOLS)
+
+
 def category(name):
+    if name in TOOL_MAP:
+        return TOOL_MAP[name]
     for pfx, meta in PREFIX:
         if name.startswith(pfx):
             return meta
@@ -66,6 +80,33 @@ def sim_cwe_map():
     for cwe, fname in re.findall(r"'(CWE-\d+)'\s*:\s*'([\w.\-]+\.html)'", js):
         out[fname] = cwe
     return out
+
+
+def sync_progress_js():
+    """progress.js 의 학습 항목 판별식을 이 파일의 정의에서 다시 생성한다.
+
+    [G02] 두 곳에서 따로 관리하다 어긋난 것이 원인이었으므로 정의를 한 곳으로 모은다.
+    런타임에 카탈로그를 받아오게 하면 모든 페이지에 fetch 가 붙으니, 빌드 시점에 주입한다.
+    """
+    path = os.path.join(PUB, 'js', 'progress.js')
+    with open(path, encoding='utf-8') as f:
+        src = f.read()
+    begin, end = '/* <generated:learnable> */', '/* </generated:learnable> */'
+    i, j = src.find(begin), src.find(end)
+    if i < 0 or j < 0:
+        print('  WARN progress.js 에 생성 마커가 없어 건너뜀')
+        return
+    prefixes = '|'.join(p for p, _ in PREFIX)
+    # 파일명에 정규식 특수문자는 '.' 뿐이라 그것만 이스케이프한다(re.escape 는 '-' 까지 escape 해 지저분해진다)
+    tools = '|'.join(n.replace('.', r'\.') for n, _ in TOOLS)
+    block = (begin + '\n'
+             '  var LEARNABLE = /^(%s)/;\n'
+             '  var TOOLS = /^(%s)$/;\n  ' % (prefixes, tools))
+    new = src[:i] + block + src[j:]
+    if new != src:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(new)
+        print('  progress.js 학습 항목 판별식 갱신')
 
 
 def main():
@@ -106,6 +147,8 @@ def main():
     out_path = os.path.join(PUB, 'js', 'progress-catalog.json')
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(catalog, f, ensure_ascii=False, separators=(',', ':'))
+
+    sync_progress_js()
     # 카테고리별 집계 리포트
     by_cat = {}
     for it in items:

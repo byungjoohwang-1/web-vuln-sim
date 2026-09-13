@@ -50,10 +50,15 @@
     var p = (location.pathname || '').split('/').pop();
     return p || 'index.html';
   }
-  // 학습 항목(칩 노출 대상) 판별 — 넘버드 콘텐츠 + sim 실습
-  var LEARNABLE = /^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai|14_auto)/;
-  // 실습 도구(랩·아레나·출제기)도 동일한 진도·XP 체계에 포함한다.
-  var TOOLS = /^(vulnlab|redteam|quiz-forge)\.html$/;
+  /* 학습 항목(칩 노출 대상) 판별.
+     [G02] 예전에는 이 정규식을 손으로 관리해서 카탈로그 생성기와 어긋났다
+     (15_privacy 는 카탈로그에 있는데 여기 없어 방문 기록이 안 됐고,
+      도구 3종은 여기 있는데 카탈로그에 없어 완료 수와 XP 가 따로 놀았다).
+     아래 블록은 _gen/gen_progress_catalog.py 가 같은 정의에서 생성한다. 직접 고치지 말 것. */
+  /* <generated:learnable> */
+  var LEARNABLE = /^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai|14_auto|15_privacy)/;
+  var TOOLS = /^(vulnlab\.html|redteam\.html|quiz-forge\.html)$/;
+  /* </generated:learnable> */
   function isLearnable(id) { return LEARNABLE.test(id) || /^sim-/.test(id) || TOOLS.test(id); }
 
   var API = {
