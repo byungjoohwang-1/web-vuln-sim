@@ -266,10 +266,24 @@ async function renderServerVerified(id){
   if (!d || !h){
     // No payload — try online lookup by id only.
     if (id){
+      /* [QA N-02] 번호만으로 조회하는 경로도 "온라인 등록됨 = 진위 확인" 으로 적고 있었다.
+         서버 기록이 있다는 것과 서버가 서명했다는 것은 다르다. 응답의 verified 를 그대로 따른다. */
       const rec = await fetchCert(id);
       if (rec){
-        if (String(rec.t||'') === 'WVS-SKILL') renderSkill('✅','v-ok','진위 확인됨 (온라인 등록)','이 자격번호는 발급자가 온라인 등록한 스킬 자격입니다.', rec, '<span class="badge online">☁ 온라인 등록됨</span>');
-        else render('✅','v-ok','진위 확인됨 (온라인 등록)','이 수료번호는 발급자가 온라인 등록한 정식 수료증입니다.', rec, '<span class="badge online">☁ 온라인 등록됨</span>');
+        const c = rec.cert || {};
+        if (rec.legacy){
+          render('⚠️','v-warn','서버가 보증하지 않는 기록',
+            '같은 번호의 기록이 서버에 있으나 서버 서명이 없습니다(구버전 자가 기록). 공식 검증 대상이 아닙니다.',
+            c, '<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 서버 서명 없음</span>');
+        } else if (rec.verified){
+          render('✅','v-ok','발급 확인됨 (서버 기록)',
+            '서버가 발급하고 자기 키로 서명한 수료증입니다. 이름은 일부를 가려 표시합니다.',
+            c, '<span class="badge online">☁ 발급 확인됨 (서버 기록)</span>');
+        } else {
+          render('⚠️','v-warn','서명 검증 실패',
+            '같은 번호의 서버 기록이 있으나 서명이 내용과 맞지 않습니다.',
+            c, '<span class="badge" style="background:#241a05;color:#fde68a;border-color:#5b4708">⚠ 서명 불일치</span>');
+        }
         return;
       }
     }
