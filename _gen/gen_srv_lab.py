@@ -119,7 +119,7 @@ button:disabled{{opacity:.45;cursor:not-allowed}}
   <div class="hostbar">
     <span>대상 호스트 <b id="hostName">-</b></span>
     <span>· 배포판 <b id="hostOs">-</b></span>
-    <span>· 접속 계정 <b>root</b></span>
+    <span>· 접속 계정 <b id="hostUser">root</b></span>
     <span style="margin-left:auto">교육용 가상 호스트 (실제 접속 아님)</span>
   </div>
 
@@ -176,11 +176,12 @@ button:disabled{{opacity:.45;cursor:not-allowed}}
 <script>
 (function(){{
   var L = window.WVS_SRV_LAB, D = window.SRV_LAB_DATA;
-  var fs = new L.FileSystem(D.fs);
-  var sh = new L.Shell(fs, D.host);
+  var fs = new L.FileSystem(D.fs, D.host);
+  var sh = new L.Shell(fs, fs.host);   // 같은 host 객체를 공유해야 조치가 출력에 반영된다
   var missions = D.missions, cur = 0;
   var state = missions.map(function(){{ return {{ tried:false, pass:false, fixed:false }}; }});
 
+  var PROMPT;
   var out = document.getElementById('termOut');
   function print(text, cls){{
     var d = document.createElement('div');
@@ -190,14 +191,17 @@ button:disabled{{opacity:.45;cursor:not-allowed}}
     out.scrollTop = out.scrollHeight;
   }}
   function exec(cmd){{
-    print('[root@' + D.host.name + ' ~]# ' + cmd, 'cmd');
+    print(PROMPT + ' ' + cmd, 'cmd');
     var r = sh.run(cmd);
     if (r) print(r, /No such file|지원하지 않는|잘못된/.test(r) ? 'err' : '');
   }}
 
   document.getElementById('hostName').textContent = D.host.name;
   document.getElementById('hostOs').textContent = D.host.os;
-  document.getElementById('prompt').textContent = '[root@' + D.host.name + ' ~]#';
+  document.getElementById('hostUser').textContent = D.host.platform === 'windows' ? 'Administrator' : 'root';
+  var isWin = D.host.platform === 'windows';
+  PROMPT = isWin ? 'C:\\Windows\\system32>' : '[root@' + D.host.name + ' ~]#';
+  document.getElementById('prompt').textContent = PROMPT;
 
   var inp = document.getElementById('termIn');
   inp.addEventListener('keydown', function(e){{

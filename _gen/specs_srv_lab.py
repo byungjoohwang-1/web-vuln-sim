@@ -117,9 +117,9 @@ REMOTE = {
             'options': ['in.telnetd 프로세스가 실행 중', '23번 포트 LISTEN',
                         'sshd 만 실행 중', '23번 포트 없음'],
             'evidence': ['in.telnetd 프로세스가 실행 중', '23번 포트 LISTEN'],
-            'verdict': "function(fs){return window.SRV_LAB_DATA.host.ports.some(function(p){return p.port===23;})?'vuln':'good';}",
+            'verdict': "function(fs){return fs.host.ports.some(function(p){return p.port===23;})?'vuln':'good';}",
             'why': 'telnet 데몬이 23번 포트로 떠 있습니다. 원격 접속은 SSH 로만 받고 telnet 은 중지해야 합니다.',
-            'fix': "function(fs){var h=window.SRV_LAB_DATA.host;"
+            'fix': "function(fs){var h=fs.host;"
                    "h.ports=h.ports.filter(function(p){return p.port!==23;});"
                    "h.procs=h.procs.filter(function(p){return !/telnet/.test(p.cmd);});}",
             'fixNote': 'telnet 데몬을 중지하고 23번 포트를 닫았습니다.',

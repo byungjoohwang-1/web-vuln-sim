@@ -35,8 +35,13 @@
     return (isDir ? 'd' : '-') + out;
   }
 
-  /* ── 가상 파일시스템 ────────────────────────────────── */
-  function FileSystem(spec) {
+  /* ── 가상 파일시스템 ──────────────────────────────────
+     host 를 같이 들고 있는 이유: Windows 랩은 판정 근거가 파일이 아니라
+     레지스트리·서비스·공유·로컬 정책이다. 판정 함수 시그니처는 verdict(fs) 하나뿐이므로
+     fs.host 로 닿게 해 둔다. 전역(window.SRV_LAB_DATA)을 직접 읽게 하면
+     미션마다 상태를 격리할 수 없어서 앞 미션의 조치가 뒤 미션 판정을 바꾼다. */
+  function FileSystem(spec, host) {
+    this.host = host || {};
     this.files = {};
     for (var p in spec) {
       var f = spec[p];
@@ -88,7 +93,10 @@
      되는 척하면서 빈 출력을 주면 학습자가 "취약이 없구나"로 오해한다. */
   function Shell(fs, host) {
     this.fs = fs;
-    this.host = host || { name: 'fin-app-01', procs: [], ports: [], pkgs: {}, users: [] };
+    /* host 를 따로 주지 않으면 파일시스템이 들고 있는 것을 쓴다.
+       같은 객체를 공유해야 "조치 → 같은 명령의 출력이 바뀐다"가 성립한다. */
+    this.host = host || fs.host ||
+      { name: 'fin-app-01', procs: [], ports: [], pkgs: {}, users: [] };
   }
 
   Shell.prototype.run = function (line) {
@@ -118,9 +126,139 @@
     return hits.join('\n');
   };
 
+  /* ── Windows 호스트 ────────────────────────────────────
+     리눅스와 같은 "설정을 읽어 판정한다"는 흐름을 그대로 쓰되, 확인 수단이 다르다.
+     Windows 는 파일이 아니라 **레지스트리·서비스·공유·로컬 정책**을 본다.
+     host.reg / host.services / host.shares / host.policy 에 상태를 담고,
+     판정 함수는 그 값을 읽는다(그래서 조치를 적용하면 같은 함수가 양호를 돌려준다). */
+  Shell.prototype._win = function (cmd) {
+    var h = this.host, m;
+
+    if ((m = cmd.match(/^reg\s+query\s+"?([^"]+?)"?\s+\/v\s+(\S+)\s*$/i))) {
+      var key = m[1].replace(/\//g, '\\'), name = m[2];
+      var full = (key + '\\' + name).toLowerCase();
+      var hit = null;
+      for (var k in h.reg) { if (k.toLowerCase() === full) { hit = h.reg[k]; break; } }
+      if (hit === null || hit === undefined) {
+        return 'ERROR: 시스템이 지정된 레지스트리 키 또는 값을 찾을 수 없습니다.';
+      }
+      var type = typeof hit === 'number' ? 'REG_DWORD' : 'REG_SZ';
+      var val = typeof hit === 'number' ? '0x' + hit.toString(16) : hit;
+      return key + '\n    ' + name + '    ' + type + '    ' + val;
+    }
+    if ((m = cmd.match(/^reg\s+query\s+"?([^"]+?)"?\s*$/i))) {
+      var base = m[1].replace(/\//g, '\\').toLowerCase();
+      var rows = [];
+      for (var k2 in h.reg) {
+        var i2 = k2.lastIndexOf('\\');
+        if (k2.slice(0, i2).toLowerCase() !== base) continue;
+        var v2 = h.reg[k2];
+        rows.push('    ' + k2.slice(i2 + 1) + '    ' +
+          (typeof v2 === 'number' ? 'REG_DWORD    0x' + v2.toString(16) : 'REG_SZ    ' + v2));
+      }
+      return rows.length ? m[1] + '\n' + rows.join('\n')
+        : 'ERROR: 시스템이 지정된 레지스트리 키 또는 값을 찾을 수 없습니다.';
+    }
+    if ((m = cmd.match(/^sc\s+query\s+(\S+)\s*$/i))) {
+      var svc = (h.services || {})[m[1]];
+      if (!svc) return '[SC] EnumQueryServicesStatus:OpenService 실패 1060:\n\n지정된 서비스가 설치된 서비스가 아닙니다.';
+      return 'SERVICE_NAME: ' + m[1] + '\n        TYPE               : 10  WIN32_OWN_PROCESS\n' +
+        '        STATE              : ' + (svc === 'running' ? '4  RUNNING' : '1  STOPPED');
+    }
+    if (/^net\s+share\s*$/i.test(cmd)) {
+      var sh = h.shares || {};
+      var out = ['공유 이름   리소스                        설명',
+        '-------------------------------------------------------------------------------'];
+      for (var s2 in sh) out.push(s2.padEnd(12) + String(sh[s2].path).padEnd(30) + (sh[s2].note || ''));
+      return out.join('\n') + '\n명령을 잘 실행했습니다.';
+    }
+    if ((m = cmd.match(/^net\s+share\s+(\S+)\s*$/i))) {
+      var one = (h.shares || {})[m[1]];
+      if (!one) return '이 공유 이름을 찾을 수 없습니다.';
+      return '공유 이름        ' + m[1] + '\n경로             ' + one.path +
+        '\n사용 권한        ' + (one.perm || '(설정 없음)');
+    }
+    if ((m = cmd.match(/^net\s+user\s+(\S+)\s*$/i))) {
+      var u = (h.users || {})[m[1]];
+      if (!u) return '사용자 이름을 찾을 수 없습니다.';
+      return '사용자 이름                  ' + m[1] +
+        '\n계정 사용                    ' + (u.enabled ? 'Yes' : 'No') +
+        '\n마지막으로 암호 설정         ' + (u.pwSet || '-') +
+        '\n로컬 그룹 멤버쉽             ' + (u.groups || []).join(', ');
+    }
+    if (/^net\s+user\s*$/i.test(cmd)) {
+      return '\\\\' + h.name + '에 대한 사용자 계정\n\n-------------------------------------------------------------------------------\n' +
+        Object.keys(h.users || {}).join('    ');
+    }
+    if ((m = cmd.match(/^net\s+localgroup\s+(\S+)\s*$/i))) {
+      var g = (h.groups || {})[m[1]];
+      if (!g) return '그룹 이름을 찾을 수 없습니다.';
+      return '별칭 이름     ' + m[1] + '\n\n구성원\n\n-------------------------------------------------------------------------------\n' +
+        g.join('\n') + '\n명령을 잘 실행했습니다.';
+    }
+    if ((m = cmd.match(/^(?:secedit\s+\/export\s+\/cfg\s+\S+|secpol)/i))) {
+      var p = h.policy || {};
+      var lines = ['[System Access]'];
+      for (var pk in p) lines.push(pk + ' = ' + p[pk]);
+      return lines.join('\n');
+    }
+    if (/^schtasks\s*$/i.test(cmd) || /^schtasks\s+\/query/i.test(cmd)) {
+      var t2 = h.tasks || [];
+      return '작업 이름                      다음 실행 시간         실행할 작업\n' +
+        '============================== ====================== ==========================\n' +
+        t2.map(function (x) {
+          return String(x.name).padEnd(30) + ' ' + String(x.next || '-').padEnd(22) + ' ' +
+            (x.cmd || '(확인 불가)') + (x.user ? '   [실행 계정 ' + x.user + ']' : '');
+        }).join('\n');
+    }
+    if ((m = cmd.match(/^(?:cacls|icacls)\s+(\S+)\s*$/i))) {
+      var acl = (h.acl || {})[m[1].replace(/\//g, '\\')];
+      if (!acl) return '지정된 경로를 찾을 수 없습니다.';
+      return m[1] + ' ' + acl.join('\n' + ' '.repeat(m[1].length + 1));
+    }
+    if (/^wmic\s+logicaldisk/i.test(cmd)) {
+      return 'DeviceID  FileSystem  Size\n' +
+        (h.disks || []).map(function (d) { return String(d.id).padEnd(10) + String(d.fs).padEnd(12) + (d.size || ''); }).join('\n');
+    }
+    if (/^wmic\s+os\s+get/i.test(cmd) || /^systeminfo/i.test(cmd)) {
+      var dep = h.dep == null ? 3 : h.dep;
+      var depName = ['모든 프로그램 제외(꺼짐)', '필수 프로그램만', '기본 구성(OS 구성 요소)',
+        '모든 프로그램'][dep] || String(dep);
+      return 'OS 이름:                          ' + h.os +
+        '\n시스템 종류:                      x64-based PC' +
+        (h.today ? '\n현재 시스템 날짜:                 ' + h.today : '') +
+        '\nDataExecutionPrevention_SupportPolicy : ' + dep + '  (' + depName + ')';
+    }
+    if (/^manage-bde(\s|$)/i.test(cmd)) {
+      var ds = h.disks || [];
+      if (!ds.length) return '암호화 대상 볼륨 정보를 가져올 수 없습니다.';
+      return ds.map(function (d) {
+        return '볼륨 ' + d.id + '\n    파일 시스템     ' + d.fs +
+          '\n    변환 상태       ' + (d.enc ? '암호화됨' : '암호화되지 않음') +
+          '\n    키 보호기       ' + (d.enc ? (d.keyProt || 'TPM') : '키 보호기를 찾을 수 없습니다');
+      }).join('\n\n');
+    }
+    if (/^tasklist/i.test(cmd)) {
+      return '이미지 이름                     PID 세션 이름\n' +
+        '========================= ======== ================\n' +
+        (h.procs || []).map(function (p) { return String(p.cmd).padEnd(25) + ' ' + String(p.pid).padStart(8) + ' Services'; }).join('\n');
+    }
+    if ((m = cmd.match(/^dir\s+\/a:h\s+(\S+)/i))) {
+      return (h.hidden || []).join('\n') || '파일을 찾을 수 없습니다.';
+    }
+    return null;   // Windows 명령이 아니면 리눅스 처리로 넘긴다
+  };
+
   Shell.prototype._one = function (cmd) {
     var fs = this.fs, host = this.host;
     var m;
+
+    if (host.platform === 'windows') {
+      var w = this._win(cmd);
+      if (w !== null) return w;
+      if (/^help$|^\?$/.test(cmd)) return this.helpText();
+      return cmd.split(/\s+/)[0] + ': 이 실습에서는 지원하지 않는 명령입니다. help 를 입력해 보세요.';
+    }
 
     if ((m = cmd.match(/^cat\s+(\S+)$/))) {
       var b = fs.read(m[1]);
@@ -217,6 +355,26 @@
   };
 
   Shell.prototype.helpText = function () {
+    if (this.host.platform === 'windows') {
+      return [
+        '이 실습에서 쓸 수 있는 명령 (Windows)',
+        '  reg query <키> /v <값>       레지스트리 값 확인',
+        '  reg query <키>               키 아래 값 목록',
+        '  sc query <서비스>            서비스 실행 상태',
+        '  net share                    공유 목록',
+        '  net share <이름>             공유 권한',
+        '  net user [계정]              계정 목록·상세',
+        '  net localgroup <그룹>        그룹 구성원',
+        '  secedit /export /cfg out.txt 로컬 보안 정책',
+        '  schtasks                     예약 작업 목록',
+        '  cacls <경로>                 파일·폴더 권한',
+        '  wmic logicaldisk             디스크 파일 시스템',
+        '  wmic os get                  OS 정보·메모리 실행 방지 수준',
+        '  manage-bde -status           볼륨 암호화 상태',
+        '  tasklist                     실행 중인 프로세스',
+        '  dir /a:h <경로>              숨김 항목',
+      ].join('\n');
+    }
     return [
       '이 실습에서 쓸 수 있는 명령',
       '  cat <파일>                 파일 내용 보기',

@@ -64,8 +64,11 @@ for (const df of dataFiles) {
   });
 
   for (const m of D.missions) {
-    /* 미션마다 파일시스템을 새로 만든다(앞 미션의 조치가 영향을 주면 안 된다) */
-    const mkFs = () => new L.FileSystem(JSON.parse(JSON.stringify(D.fs)));
+    /* 미션마다 파일시스템과 호스트 상태를 새로 만든다.
+       Windows 랩은 판정 근거가 레지스트리·서비스·공유라서 fix 가 host 를 바꾼다.
+       원본을 공유하면 앞 미션의 조치가 뒤 미션 판정을 조용히 바꿔 검사가 무의미해진다. */
+    const mkFs = () => new L.FileSystem(
+      JSON.parse(JSON.stringify(D.fs)), JSON.parse(JSON.stringify(D.host)));
 
     check(m.id + ' 초기 상태가 취약이다', () => {
       const v = m.verdict(mkFs());
@@ -91,7 +94,8 @@ for (const df of dataFiles) {
     }
 
     check(m.id + ' 권장 명령이 셸에서 동작한다', () => {
-      const sh = new L.Shell(mkFs(), JSON.parse(JSON.stringify(D.host)));
+      const f = mkFs();
+      const sh = new L.Shell(f, f.host);
       const bad = (m.cmds || []).filter((c) => {
         const out = sh.run(c);
         return /지원하지 않는 명령|잘못된 패턴/.test(out);

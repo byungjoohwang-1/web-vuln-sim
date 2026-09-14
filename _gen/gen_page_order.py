@@ -33,7 +33,7 @@ OUT = os.path.join(PUBLIC, 'js', 'page-order.json')
 # 학습 동선 순서. 앞의 것부터 이전-다음으로 이어진다.
 PILLARS = [
     '03_code', '04_design',
-    '05_linux', '06_db', '07_fin', '07_srv', '08_win', '09_net', '10_sec', '11_cloud', '12_ics',
+    '05_linux', '06_db', '07_fin', '07_iss', '07_srv', '08_win', '09_net', '10_sec', '11_cloud', '12_ics',
     '13_ai',
     '14_auto', '15_privacy', '16_zt',
 ]

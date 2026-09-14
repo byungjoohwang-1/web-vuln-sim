@@ -332,11 +332,11 @@ LABS = [{
             'options': ['rpc.mountd 실행 + 111번 포트 LISTEN', 'rpc 프로세스 없음',
                         'sshd 만 실행 중', '2049 포트만 열림'],
             'evidence': ['rpc.mountd 실행 + 111번 포트 LISTEN'],
-            'verdict': "function(fs){var h=window.SRV_LAB_DATA.host;"
+            'verdict': "function(fs){var h=fs.host;"
                        "return h.ports.some(function(p){return p.port===111;})?'vuln':'good';}",
             'why': 'rpcbind(111)와 mountd 가 떠 있습니다. NFS 공유가 정말 필요한지 먼저 확인하고, '
                    '필요 없다면 서비스를 내리는 것이 가장 확실한 조치입니다.',
-            'fix': "function(fs){var h=window.SRV_LAB_DATA.host;"
+            'fix': "function(fs){var h=fs.host;"
                    "h.ports=h.ports.filter(function(p){return p.port!==111&&p.port!==2049;});"
                    "h.procs=h.procs.filter(function(p){return !/rpc\\./.test(p.cmd);});}",
             'fixNote': 'rpcbind·mountd 를 중지하고 111·2049 포트를 닫았습니다.',

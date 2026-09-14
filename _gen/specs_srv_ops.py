@@ -185,12 +185,12 @@ LABS = [{
             'options': ['설치 버전이 9.11.4 로 최신 보안 패치 미적용', '최신 보안 패치가 적용됨',
                         'version 표기가 9.11.36', 'bind 가 설치되지 않음'],
             'evidence': ['설치 버전이 9.11.4 로 최신 보안 패치 미적용'],
-            'verdict': "function(fs){var h=window.SRV_LAB_DATA.host; var v=h.pkgs['bind']||'';"
+            'verdict': "function(fs){var h=fs.host; var v=h.pkgs['bind']||'';"
                        "var m=v.match(/^(\\d+)\\.(\\d+)\\.(\\d+)/); if(!m) return 'vuln';"
                        "return (parseInt(m[3],10)>=26)?'good':'vuln';}",
             'why': '설치된 bind 는 9.11.4 계열인데 설정 파일의 version 표기는 9.11.36 입니다. '
                    '<b>표기와 실제가 다른 것 자체가 신호</b>입니다. 실제 설치 버전을 기준으로 패치 상태를 판단해야 합니다.',
-            'fix': "function(fs){window.SRV_LAB_DATA.host.pkgs['bind']='9.11.36-26.P2.el8';}",
+            'fix': "function(fs){fs.host.pkgs['bind']='9.11.36-26.P2.el8';}",
             'fixNote': 'bind 를 보안 패치가 적용된 버전으로 올렸습니다.',
         },
     ],
