@@ -1,0 +1,98 @@
+/* code-lab.css — 보안약점 '현업 진단' 실습 패널
+   03_code_* 페이지는 페이지마다 CSS 가 제각각이라, 여기서는 전부 .cl- 접두사로 격리한다. */
+
+#wvs-code-lab {
+  max-width: 1200px;
+  margin: 26px auto 0;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .18);
+  overflow: hidden;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  color: #1f2937;
+}
+
+.cl-head { background: linear-gradient(135deg, #0f172a, #1e3a5f); color: #fff; padding: 22px 26px; }
+.cl-head h2 { margin: 0 0 6px; font-size: 21px; font-weight: 700; }
+.cl-sub { margin: 0; font-size: 14px; line-height: 1.7; opacity: .88; }
+
+/* 진행 표시 */
+.cl-steps { display: flex; flex-wrap: wrap; gap: 0; list-style: none; margin: 0; padding: 0; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+.cl-steps li { flex: 1 1 140px; display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 13.5px; font-weight: 700; color: #94a3b8; border-right: 1px solid #e2e8f0; }
+.cl-steps li:last-child { border-right: 0; }
+.cl-steps li b { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #cbd5e1; color: #fff; font-size: 12px; }
+.cl-steps li.on { color: #0f172a; background: #e0f2fe; }
+.cl-steps li.on b { background: #0284c7; }
+
+.cl-sec { padding: 22px 26px; border-bottom: 1px solid #eef2f7; }
+.cl-sec:last-child { border-bottom: 0; }
+.cl-sec h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; font-size: 17px; color: #0f172a; }
+.cl-n { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; background: #0284c7; color: #fff; font-size: 13px; font-weight: 700; flex: none; }
+.cl-hint { margin: 0 0 14px; font-size: 13.5px; line-height: 1.7; color: #64748b; }
+.cl-hint b { color: #0f172a; }
+
+/* 1. 티켓 */
+.cl-card { border: 1px solid #dbeafe; border-left: 5px solid #2563eb; border-radius: 0 12px 12px 0; background: #f8fbff; padding: 16px 18px; }
+.cl-tmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cl-src { background: #1e40af; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: 20px; }
+.cl-id { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; color: #475569; background: #e2e8f0; padding: 4px 10px; border-radius: 6px; }
+.cl-sev { font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: 20px; }
+.cl-sev-high { background: #fee2e2; color: #b91c1c; }
+.cl-sev-mid { background: #fef3c7; color: #92400e; }
+.cl-sev-low { background: #dcfce7; color: #166534; }
+.cl-tbody { font-size: 14.5px; line-height: 1.85; color: #1e293b; white-space: pre-wrap; }
+.cl-tnote { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1; font-size: 13px; color: #64748b; line-height: 1.7; }
+
+/* 2. 증거 */
+.cl-evgrid { display: flex; flex-direction: column; gap: 8px; }
+.cl-evbtn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; cursor: pointer; font-family: inherit; font-size: 14px; color: #1e293b; transition: .15s; }
+.cl-evbtn:hover { background: #f1f5f9; border-color: #94a3b8; }
+.cl-evbtn.open { background: #0f172a; border-color: #0f172a; color: #e2e8f0; }
+.cl-evic { font-size: 17px; flex: none; }
+.cl-evt { font-weight: 700; }
+.cl-evsrc { margin-left: auto; font-size: 12px; opacity: .7; font-family: 'JetBrains Mono', Consolas, monospace; }
+.cl-evout { margin: 0; background: #0a0f1c; color: #cbd5e1; padding: 15px 17px; border-radius: 0 0 10px 10px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12.5px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+.cl-cmd { color: #4ade80; }
+.cl-err { color: #f87171; }
+.cl-warn { color: #fbbf24; }
+.cl-ok { color: #7dd3fc; }
+
+/* 3. 판정 */
+.cl-gate { font-size: 13px; font-weight: 700; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 9px 13px; margin-bottom: 12px; }
+.cl-gate.ready { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+.cl-vopts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.cl-vbtn { text-align: left; background: #fff; border: 2px solid #e2e8f0; border-radius: 11px; padding: 14px; cursor: pointer; font-family: inherit; transition: .15s; }
+.cl-vbtn:hover { border-color: #0284c7; background: #f0f9ff; }
+.cl-vbtn.sel { border-color: #0284c7; background: #e0f2fe; }
+.cl-vbtn b { display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px; }
+.cl-vbtn small { display: block; font-size: 12.5px; color: #64748b; line-height: 1.6; }
+
+/* 4. 조치 */
+.cl-fixopts { display: flex; flex-direction: column; gap: 8px; }
+.cl-fixbtn { display: flex; align-items: center; gap: 11px; text-align: left; background: #fff; border: 2px solid #e2e8f0; border-radius: 10px; padding: 13px 15px; cursor: pointer; font-family: inherit; font-size: 14px; line-height: 1.6; color: #1e293b; transition: .15s; }
+.cl-fixbtn:hover { border-color: #0284c7; background: #f0f9ff; }
+.cl-fixbtn.sel { border-color: #0284c7; background: #e0f2fe; }
+.cl-fixk { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; background: #e2e8f0; color: #475569; font-weight: 700; font-size: 13px; flex: none; }
+.cl-fixbtn.sel .cl-fixk { background: #0284c7; color: #fff; }
+
+/* 피드백 공통 */
+.cl-fb { display: none; margin-top: 14px; border-radius: 11px; padding: 15px 17px; font-size: 14px; line-height: 1.8; }
+.cl-fb.show { display: block; }
+.cl-fb b { display: block; margin-bottom: 7px; font-size: 15px; }
+.cl-fb.right { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+.cl-fb.wrong { background: #fef2f2; border: 1px solid #fecaca; color: #7f1d1d; }
+.cl-trap { display: block; margin-top: 11px; padding-top: 10px; border-top: 1px dashed currentColor; font-size: 13.5px; opacity: .9; }
+.cl-retest { margin: 10px 0; background: #0a0f1c; color: #cbd5e1; padding: 13px 15px; border-radius: 9px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12.5px; line-height: 1.75; white-space: pre-wrap; overflow-x: auto; }
+
+/* 키보드 포커스 — 전역 토큰이 없는 페이지가 섞여 있어 여기서도 보장한다 */
+#wvs-code-lab button:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  #wvs-code-lab { margin: 18px 0 0; border-radius: 12px; }
+  .cl-head { padding: 17px 16px; }
+  .cl-head h2 { font-size: 18px; }
+  .cl-sec { padding: 17px 16px; }
+  .cl-vopts { grid-template-columns: 1fr; }
+  .cl-steps li { flex: 1 1 50%; border-bottom: 1px solid #e2e8f0; }
+  .cl-evsrc { display: none; }
+}

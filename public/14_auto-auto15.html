@@ -37,6 +37,19 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
 .easy { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }
 .easy .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }
 .easy b { color:#c0392b; }
+/* 아키텍처·규제 맥락 패널 (선택 — 데이터가 있는 항목만 렌더) */
+.ctxp { margin-top:28px; border:1px solid #cfd8ff; border-radius:14px; background:linear-gradient(135deg,#f7f9ff,#eef2ff); overflow:hidden; }
+.ctxp > h2 { font-size:19px; color:var(--primary); margin:0; padding:16px 22px; background:#e8edff; border-bottom:1px solid #cfd8ff; display:flex; align-items:center; gap:8px; }
+.ctxp-in { padding:18px 22px 22px; }
+.ctxp-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.ctxp-chips span { display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid #c3cdf5; color:#33407a; font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:20px; }
+.ctxp-chips span i { font-style:normal; opacity:.6; font-weight:600; }
+.ctxp h4 { font-size:14px; color:#4a3fa8; margin:16px 0 7px; letter-spacing:.2px; }
+.ctxp h4:first-child { margin-top:0; }
+.ctxp p { font-size:14.5px; line-height:1.8; color:#2c3350; margin:0; }
+.ctxp .evi { margin-top:16px; background:#fffdf3; border:1px solid #ffe08a; border-left:4px solid #ff9800; border-radius:0 10px 10px 0; padding:12px 16px; font-size:13.5px; line-height:1.7; color:#5a4200; }
+.ctxp .evi b { color:#8a5a00; }
+@media (max-width:640px) { .ctxp-in { padding:14px 16px 18px; } .ctxp > h2 { padding:14px 16px; font-size:17px; } }
 /* 직접 해보기 */
 .lab { border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }
 .lab-toolbar { background:#1c1c33; padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
@@ -119,7 +132,7 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
 #wvs-pager .off{visibility:hidden}
 </style>
 
-<div class="container">
+<div class="container" id="wvs-main" role="main">
   <div class="topbar"><a href="index.html">&larr; cd /index</a></div>
   <div class="header">
     <div class="code-badge">AUTO-15</div>
@@ -175,6 +188,17 @@ body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#7
       <ul class="checklist" id="checklist"><li><span class="box"></span><span>앱 내 장기 키 부재</span></li><li><span class="box"></span><span>서버 측 권한 검증 존재</span></li><li><span class="box"></span><span>비밀 스캐닝 게이트 존재</span></li></ul>
       <div class="kref">점검기준: 앱 보안 — 시크릿 관리</div>
     </div>
+
+    <div class="ctxp">
+      <h2>🏗️ 현대 차량 아키텍처에서의 위치와 규제 대응</h2>
+      <div class="ctxp-in">
+        <div class="ctxp-chips"><span><i>아키텍처</i> 모바일 앱</span><span><i>접근 경로</i> 원격 (앱 분석)</span><span><i>R155 위협 분류</i> 백엔드 서버 (4.3.1)</span><span><i>ISO 21434</i> 제품개발 — 구현</span></div>
+        <h4>SDV·전동화 전환에서 달라지는 점</h4>
+        <p>차량 제어가 앱으로 들어오면서 앱은 <b>사실상의 차량 인터페이스</b>가 되었습니다. 앱 하나를 분해해서 얻은 키가 전 사용자의 차량 API 에 통한다면, 공격자는 차를 만질 필요조차 없습니다. 디지털 키까지 앱에 들어가면 위험은 도난으로 직결됩니다.</p>
+        <div class="evi"><b>인증·심사에서 요구되는 증적</b><br>앱에 비밀값을 두지 않는 설계(토큰 교환 방식)와, 앱 난독화·무결성 점검 적용 내역.</div>
+      </div>
+    </div>
+
   </div>
   <div class="footer">ISO/SAE 21434 · UN R155/R156 · AUTOSAR SecOC 등 공개 표준 기반 · 교육용 재구성</div>
 </div>

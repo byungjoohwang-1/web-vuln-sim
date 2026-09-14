@@ -32,6 +32,11 @@ h1{{font-size:24px;margin-bottom:6px}}
 border:1px solid var(--bd);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-family:var(--mono);font-size:12.5px}}
 .dev b{{color:var(--acc)}}
 .cols{{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}}
+/* 정책 표는 열이 많아 반쪽 폭에서 접힌다. 이런 랩은 한 줄로 세운다. */
+.wrap.wide{{max-width:1500px}}
+.cols.stack{{grid-template-columns:1fr}}
+/* 정책 표는 접으면 못 읽는다. 실제 콘솔처럼 가로 스크롤시킨다. */
+.cols.stack #termOut{{height:360px;white-space:pre;word-break:normal;overflow-x:auto}}
 @media(max-width:1000px){{.cols{{grid-template-columns:1fr}}}}
 .card{{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin-bottom:14px}}
 .card h2{{font-size:15px;color:var(--acc);margin-bottom:8px}}
@@ -81,7 +86,7 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap {widecls}">
 <h1>{title}</h1>
 <div class="sub">{desc}</div>
 
@@ -92,7 +97,7 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
   <span>점검 항목 <b>{count}</b>개</span>
 </div>
 
-<div class="cols">
+<div class="cols {stackcls}">
   <div>
     <div class="term">
       <div class="hd">모의 콘솔 — 이 페이지 안에서만 동작합니다 (실제 장비 아님)</div>
@@ -296,9 +301,11 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
 
 def build(lab):
     data_js = 'iss-lab-%s.js' % lab['key']
+    wide = bool(lab.get('wide'))
     html = PAGE.format(
         title=lab['title'], desc=lab['desc'],
         count=len(lab['missions']), data=data_js,
+        widecls='wide' if wide else '', stackcls='stack' if wide else '',
     )
     with io.open(os.path.join(OUT, lab['file']), 'w', encoding='utf-8') as f:
         f.write(html)
@@ -339,7 +346,7 @@ def build(lab):
 
 def main():
     import importlib
-    mods = [a for a in sys.argv[1:] if not a.startswith('--')] or ['specs_iss_acct', 'specs_iss_ops']
+    mods = [a for a in sys.argv[1:] if not a.startswith('--')] or ['specs_iss_acct', 'specs_iss_ops', 'specs_iss_policy']
     total = 0
     for name in mods:
         for lab in importlib.import_module(name).LABS:

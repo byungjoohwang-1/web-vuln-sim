@@ -52,6 +52,55 @@
   function yesno(v) { return v ? 'yes' : 'no'; }
   function line(ch, n) { var s = ''; for (var i = 0; i < n; i++) s += ch; return s; }
 
+  /* ── 정책(룰) 판정 도우미 ───────────────────────────────
+   * 정책 항목은 한 룰이 여러 항목에 동시에 걸린다. 예를 들어 관리포트를
+   * 대역 단위로 연 룰(ISS-031)이 동시에 양방향(ISS-033)이기도 하다.
+   *
+   * 그래서 각 항목은 **자기 차원 하나만** 본다. 주소 범위는 ISS-031,
+   * 방향은 ISS-033, 서비스 종류는 ISS-036 처럼 나눠 두면, 한 항목의 조치가
+   * 다른 항목의 판정을 건드리지 않는다. 조치는 자기 조건에 걸리는 룰을
+   * 전부 고쳐야 한다 — 한 개만 고치면 자기 판정이 그대로 취약으로 남는다.
+   */
+  var MGMT_PORTS = [20, 21, 22, 23, 69, 135, 136, 137, 138, 139, 445,
+    512, 513, 514, 1433, 1434, 1521, 1522, 3306, 3389];
+  var WEAK_REMOTE = [21, 23, 69, 512, 513, 514];   // FTP · Telnet · TFTP · r-계열
+
+  function svcPorts(svc) {
+    var ports = [], ranges = [];
+    String(svc).split(',').forEach(function (tok) {
+      var r = /(\d+)\s*-\s*(\d+)/.exec(tok);
+      if (r) { ranges.push([+r[1], +r[2]]); return; }
+      var p = /(\d+)/.exec(tok);
+      if (p) ports.push(+p[1]);
+    });
+    return { ports: ports, ranges: ranges };
+  }
+  function svcIsAll(svc) { return /^(ALL|ANY|TCP ALL|UDP ALL)$/i.test(String(svc).trim()); }
+  function svcHits(svc, list) {
+    if (svcIsAll(svc)) return true;
+    var s = svcPorts(svc);
+    return list.some(function (p) {
+      return s.ports.indexOf(p) >= 0 ||
+        s.ranges.some(function (r) { return p >= r[0] && p <= r[1]; });
+    });
+  }
+  function svcHasMgmtPort(svc) { return svcHits(svc, MGMT_PORTS); }
+  function svcHasWeakRemote(svc) { return svcHits(svc, WEAK_REMOTE); }
+  /** ALL/ANY 이거나 100포트를 넘는 범위. "1024-65535 허용"이 전형적이다. */
+  function svcIsBroad(svc) {
+    if (svcIsAll(svc)) return true;
+    return svcPorts(svc).ranges.some(function (r) { return (r[1] - r[0]) >= 100; });
+  }
+  /** ANY 이거나 /24 이상 넓은 대역. 호스트(/32 또는 접두사 없음)는 아니다. */
+  function addrIsBroad(a) {
+    if (String(a).toUpperCase() === 'ANY') return true;
+    var m = /\/(\d+)$/.exec(String(a));
+    return !!m && +m[1] <= 24;
+  }
+  function addrIsCatchAll(a) { return String(a).toUpperCase() === 'ANY'; }
+  /** 넓은 주소를 대표 호스트 하나로 좁힌다. 조치의 공통 동작. */
+  function narrowAddr(a, host) { return addrIsBroad(a) ? host : a; }
+
   /* ── 설정 객체 ──────────────────────────────────────────
      경로 문자열로 읽고 쓴다. 미션의 verdict/fix 가 같은 경로를 쓰므로
      "무엇을 보고 판단했는지"와 "무엇을 고쳤는지"가 코드상에서도 이어진다. */
@@ -214,17 +263,25 @@
       return out.join('\n');
     },
 
+    /* 룰 번호는 저장값이 아니라 **배열 위치**로 찍는다. 순서를 바꾸거나
+       룰을 지우는 조치가 있어서, 저장된 번호를 쓰면 화면이 어긋난다. */
     'show policy': function (c) {
       var r = c.get('rules') || [];
-      var out = ['NO  SOURCE            DESTINATION       SERVICE          ACT    LOG  DIR   HITS      LAST-HIT'];
-      out.push(line('-', 104));
-      r.forEach(function (x) {
-        out.push(pad(x.n, 4) + pad(x.src, 18) + pad(x.dst, 18) + pad(x.svc, 17) +
-          pad(x.action, 7) + pad(yesno(x.log), 5) + pad(x.bidir ? 'both' : '->', 6) +
+      var out = ['NO  SOURCE                  DESTINATION             SPORT     SERVICE             ACT     LOG  DIR   HITS      LAST-HIT'];
+      out.push(line('-', 128));
+      r.forEach(function (x, i) {
+        out.push(pad(i + 1, 4) +
+          pad(x.srcZone + ':' + x.src, 24) +
+          pad(x.dstZone + ':' + x.dst, 24) +
+          pad(x.sport || 'any', 10) +
+          pad(x.svc, 20) +
+          pad(x.action, 8) + pad(yesno(x.log), 5) +
+          pad(x.bidir ? 'both' : '->', 6) +
           pad(x.hits, 10) + (x.lastHit || 'never'));
       });
       out.push('');
       out.push('Default policy : ' + (c.get('policyDefault') || 'deny'));
+      out.push('Zones          : ' + (c.get('zoneNote') || '-'));
       return out.join('\n');
     },
 
@@ -403,5 +460,17 @@
     applies: applies,
     esc: esc,
     views: VIEWS,
+    /* 정책 항목의 verdict 와 fix 가 같은 조건을 쓰도록 공유한다 */
+    rule: {
+      MGMT_PORTS: MGMT_PORTS,
+      WEAK_REMOTE: WEAK_REMOTE,
+      svcIsAll: svcIsAll,
+      svcHasMgmtPort: svcHasMgmtPort,
+      svcHasWeakRemote: svcHasWeakRemote,
+      svcIsBroad: svcIsBroad,
+      addrIsBroad: addrIsBroad,
+      addrIsCatchAll: addrIsCatchAll,
+      narrowAddr: narrowAddr,
+    },
   };
 })();

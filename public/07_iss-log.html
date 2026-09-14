@@ -18,6 +18,11 @@ h1{font-size:24px;margin-bottom:6px}
 border:1px solid var(--bd);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-family:var(--mono);font-size:12.5px}
 .dev b{color:var(--acc)}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+/* 정책 표는 열이 많아 반쪽 폭에서 접힌다. 이런 랩은 한 줄로 세운다. */
+.wrap.wide{max-width:1500px}
+.cols.stack{grid-template-columns:1fr}
+/* 정책 표는 접으면 못 읽는다. 실제 콘솔처럼 가로 스크롤시킨다. */
+.cols.stack #termOut{height:360px;white-space:pre;word-break:normal;overflow-x:auto}
 @media(max-width:1000px){.cols{grid-template-columns:1fr}}
 .card{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin-bottom:14px}
 .card h2{font-size:15px;color:var(--acc);margin-bottom:8px}
@@ -87,7 +92,7 @@ code{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1px
 #wvs-pager .off{visibility:hidden}
 </style>
 
-<div class="wrap">
+<div class="wrap ">
 <h1>정보보호시스템 진단 실습: 로그·백업·시각</h1>
 <div class="sub">로그를 어디에 얼마나 남기는지, 정책을 복구할 수 있는지, 시계가 맞는지 점검합니다.</div>
 
@@ -98,7 +103,7 @@ code{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1px
   <span>점검 항목 <b>4</b>개</span>
 </div>
 
-<div class="cols">
+<div class="cols ">
   <div>
     <div class="term">
       <div class="hd">모의 콘솔 — 이 페이지 안에서만 동작합니다 (실제 장비 아님)</div>
