@@ -374,7 +374,8 @@ def build(lab):
 def main():
     import importlib
     mods = sys.argv[1:] or ['specs_srv_lab', 'specs_srv_acct', 'specs_srv_perm',
-                            'specs_srv_svc', 'specs_srv_ops']
+                            'specs_srv_svc', 'specs_srv_ops', 'specs_srv_daemon',
+                            'specs_srv_win']
     total = 0
     for name in mods:
         for lab in importlib.import_module(name).LABS:

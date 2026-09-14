@@ -159,8 +159,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script>
 (function(){
   var L = window.WVS_SRV_LAB, D = window.SRV_LAB_DATA;
-  var fs = new L.FileSystem(D.fs);
-  var sh = new L.Shell(fs, D.host);
+  var fs = new L.FileSystem(D.fs, D.host);
+  var sh = new L.Shell(fs, fs.host);   // 같은 host 객체를 공유해야 조치가 출력에 반영된다
   var missions = D.missions, cur = 0;
   var state = missions.map(function(){ return { tried:false, pass:false, fixed:false }; });
 

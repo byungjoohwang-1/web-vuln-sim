@@ -27,12 +27,14 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
-  function modeToRwx(mode, isDir) {
+  /* dev 는 'c'(문자 장치)·'b'(블록 장치). 장치 경로 점검에서 "장치 파일이 아닌 항목"을
+     가려내려면 일반 파일과 장치 노드를 화면에서 구분할 수 있어야 한다. */
+  function modeToRwx(mode, isDir, dev) {
     var m = String(mode).slice(-3);
     var map = ['---', '--x', '-w-', '-wx', 'r--', 'r-x', 'rw-', 'rwx'];
     var out = '';
     for (var i = 0; i < 3; i++) out += map[parseInt(m[i], 10) || 0];
-    return (isDir ? 'd' : '-') + out;
+    return (dev ? dev : (isDir ? 'd' : '-')) + out;
   }
 
   /* ── 가상 파일시스템 ──────────────────────────────────
@@ -51,6 +53,7 @@
         owner: f.owner || 'root',
         group: f.group || 'root',
         dir: !!f.dir,
+        dev: f.dev || false,        // 'c' | 'b' 면 장치 노드
         missing: !!f.missing,       // "이 경로에 파일이 없다"를 표현(점검 항목이 됨)
       };
     }
@@ -65,6 +68,11 @@
     if (!this.files[p]) this.files[p] = { mode: '0644', owner: 'root', group: 'root', dir: false };
     this.files[p].body = body;
     this.files[p].missing = false;
+  };
+  /* 파일을 지운다. 목록·읽기에서 사라지되 "원래 있었다"는 사실은 남긴다
+     (재점검에서 같은 명령을 다시 돌려 없어진 것을 확인할 수 있어야 한다). */
+  FileSystem.prototype.remove = function (p) {
+    if (this.files[p]) this.files[p].missing = true;
   };
   FileSystem.prototype.chmod = function (p, mode) {
     if (this.files[p]) this.files[p].mode = mode;
@@ -306,6 +314,9 @@
     if ((m = cmd.match(/^find\s+(\S+)\s+.*-(nouser|nogroup)/))) {
       return this._findNoUser(m[1], m[2]);
     }
+    if ((m = cmd.match(/^find\s+(\S+)\s+.*-type\s+f/))) {
+      return this._findType(m[1]);
+    }
     if (/^help$|^\?$/.test(cmd)) return this.helpText();
     return cmd.split(/\s+/)[0] + ': 이 실습에서는 지원하지 않는 명령입니다. help 를 입력해 보세요.';
   };
@@ -315,14 +326,14 @@
     var f = fs.files[path];
     if (f && !f.missing && !f.dir) {
       if (!long) return path;
-      return modeToRwx(f.mode, false) + ' 1 ' + f.owner + ' ' + f.group + '  ' +
+      return modeToRwx(f.mode, false, f.dev) + ' 1 ' + f.owner + ' ' + f.group + '  ' +
         String(f.body.length).padStart(6) + ' Sep 14 09:12 ' + path;
     }
     var items = fs.list(path);
     if (!items.length && !(f && f.dir)) return 'ls: cannot access ' + path + ': No such file or directory';
     if (!long) return items.map(function (i) { return i.name; }).join('  ');
     return items.map(function (i) {
-      return modeToRwx(i.f.mode, i.f.dir) + ' 1 ' + i.f.owner + ' ' + i.f.group + '  ' +
+      return modeToRwx(i.f.mode, i.f.dir, i.f.dev) + ' 1 ' + i.f.owner + ' ' + i.f.group + '  ' +
         String(i.f.body.length).padStart(6) + ' Sep 14 09:12 ' + i.name;
     }).join('\n');
   };
@@ -340,6 +351,19 @@
       }
     }
     return out.join('\n');
+  };
+
+  /* find <경로> -type f — 장치 노드와 디렉터리를 뺀 "보통 파일"만 돌려준다.
+     장치 경로에 장치가 아닌 것이 섞여 있는지 보는 점검에 쓴다. */
+  Shell.prototype._findType = function (base) {
+    var fs = this.fs, out = [];
+    for (var p in fs.files) {
+      var f = fs.files[p];
+      if (f.missing || f.dir || f.dev) continue;
+      if (p.indexOf(base === '/' ? '/' : base) !== 0) continue;
+      out.push(p);
+    }
+    return out.sort().join('\n');
   };
 
   Shell.prototype._findNoUser = function (base, kind) {
@@ -386,6 +410,7 @@
       '  rpm -q <패키지>            설치 버전',
       '  find <경로> -perm -4000    특정 권한 파일 찾기',
       '  find <경로> -nouser        소유자 없는 파일 찾기',
+      '  find <경로> -type f        장치·디렉터리를 뺀 보통 파일 찾기',
       '  <명령> | grep <패턴>       파이프는 grep 한 단계까지',
     ].join('\n');
   };
