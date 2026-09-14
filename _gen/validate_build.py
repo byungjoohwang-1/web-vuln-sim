@@ -20,6 +20,7 @@
 """
 import json
 import os
+import posixpath
 import re
 import sys
 
@@ -133,9 +134,26 @@ def check_links():
     for name in html_files():
         s = read(name)
         for m in re.finditer(r'href="(?!https?:|mailto:|#|data:)([^"#?]+\.html)"', s):
-            target = m.group(1).lstrip('/')
+            target = normalize_link(m.group(1))
+            if target is None:
+                continue
             if target not in existing:
-                err('DEAD-LINK', '%s -> %s (대상 파일 없음)' % (name, target))
+                err('DEAD-LINK', '%s -> %s (대상 파일 없음)' % (name, m.group(1)))
+
+
+def normalize_link(href):
+    """href 를 public 기준 파일명으로 바꾼다. 못 정하면 None(검사 제외).
+
+    예전에는 lstrip('/') 만 해서 './page.html' 이 그대로 남아 실제로 존재하는
+    파일을 '없음'으로 보고했다. 게이트가 헛경보를 내면 진짜 경고까지 무시하게 된다.
+    하위 디렉터리나 public 밖으로 나가는 경로는 이 검사의 대상이 아니므로 건너뛴다.
+    """
+    p = posixpath.normpath(href.lstrip('/'))
+    if p.startswith('..'):
+        return None          # public 밖 — 여기서 판단하지 않는다
+    if '/' in p:
+        return None          # 하위 디렉터리 페이지는 목록(os.listdir)에 없다
+    return p
 
 
 # ------------------------------------------------------------------ #
