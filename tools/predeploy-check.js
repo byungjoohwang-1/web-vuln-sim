@@ -9,7 +9,8 @@
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const TOOLS = ['stamp-build.js', 'enrich-hub-keywords.js', 'eval-coach.js'];
+const TOOLS = ['stamp-build.js', 'enrich-hub-keywords.js', 'eval-coach.js',
+  'test-experience-stability.js'];
 /* 인자 없이 도는 검사기들. firebase predeploy 가 Windows 에서 명령줄을 제대로
    못 쪼개는 일이 있어(아래 NOARG 참고) 한 진입점으로 모아 둔다. */
 const NOARG = ['validate-public-site.js', 'test-platform-integration.js', 'test-a11y.js'];
