@@ -432,8 +432,20 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
   function askCoach() {
     if (!window.WVS_COACH) return;
     var st = load(); st._hints = (st._hints || 0) + 1; save(st);
-    $('coachOut').innerHTML = '<div class="coach-out">코치가 지금 상태를 확인하는 중…</div>';
+    /* [C05] 공유 AI 가 막혀 있으면 폴백까지 몇 초가 걸린다. 그동안 아무 설명 없는
+       로딩만 보이면 멈춘 것처럼 읽힌다. 무엇을 기다리는지, 안 되면 어떻게 되는지
+       를 단계적으로 알린다. */
+    $('coachOut').innerHTML = '<div class="coach-out" id="coachWait">코치가 지금 상태를 확인하는 중…</div>';
+    var waitTimer = setTimeout(function () {
+      var w = $('coachWait');
+      if (w) {
+        w.innerHTML = '코치가 지금 상태를 확인하는 중…' +
+          '<div class="muted" style="font-size:.76rem;margin-top:6px">' +
+          'AI 응답이 늦어지고 있습니다. 연결되지 않으면 기본 도움말로 이어집니다.</div>';
+      }
+    }, 1500);
     window.WVS_COACH.ask(coachCtx()).then(function (r) {
+      clearTimeout(waitTimer);
       var c = r.coach;
       $('coachOut').innerHTML = '<div class="coach-out">' +
         '<div><b>관찰</b> ' + esc(c.observation) + '</div>' +
