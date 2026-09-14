@@ -114,7 +114,12 @@
   }
 
   /* ---------- 5. 이전/다음 이동 ---------- */
-  var ORDER_PREFIX = /^(03_code|04_design|05_linux|06_db|07_fin|08_win|09_net|10_sec|11_cloud|12_ics|13_ai)/;
+  /* 기둥 이름을 하나하나 적으면 기둥이 늘 때마다 낡는다. 실제로 14_auto(61),
+     15_privacy(34), 16_zt(8) 이 빠져 103개 페이지에서 이전-다음이 뜨지 않았다.
+     번호 접두사 규칙으로 바꿔 새 기둥이 자동으로 포함되게 한다.
+     최종 판정은 renderPager 의 indexOf 가 하므로, 여기서는 카탈로그를
+     불러올 가치가 있는 페이지인지만 거른다. */
+  var ORDER_PREFIX = /^(\d{2}_|ai-hub\.html|ai-guardrail-lab\.html)/;
   function addPager() {
     if (isBare || !ORDER_PREFIX.test(page)) return;
     if (window.WVS_PAGE_ORDER) return renderPager(window.WVS_PAGE_ORDER);

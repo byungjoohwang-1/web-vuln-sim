@@ -164,6 +164,13 @@
         .list-group-item i { width: 18px; margin-right: 10px; text-align: center; font-size: 0.8rem; }
         .list-group-item .item-number { font-size: 0.7rem; color: #64748b; margin-left: auto; }
 
+        /* W-03 커버리지 표기: 계획 번호 대비 실제 수록분과 미수록 목록 */
+        .wvs-cov { padding: 8px 20px 2px 25px; }
+        .wvs-cov .badge { font-size: 0.68rem; font-weight: 700; letter-spacing: .2px; }
+        .wvs-cov .badge[data-full="1"] { background: #166534 !important; }
+        .wvs-missing { padding: 0 20px 8px 25px; font-size: 0.68rem; line-height: 1.6; color: #94a3b8; }
+        .wvs-missing:empty { display: none; }
+
         /* 메뉴 구분 헤더 (Sub-header) */
         .menu-subheader {
             padding: 10px 20px 5px 25px;
@@ -1245,12 +1252,16 @@ html, body.soc { max-width: 100%; overflow-x: hidden; }
                         <span><i class="fa-solid fa-tasks"></i> <span data-en="Process Validation">프로세스 검증</span></span><span class="item-number">+</span></a>
                 </div>
 
-                                <!-- 5. UNIX 서버 보안 (완전 구성: U-01~U-61 41개) -->
+                                <!-- 5. UNIX 서버 보안 (U-01~U-61 계획 중 실제 수록분. 커버리지는 레지스트리에서 읽는다) -->
                 <div role="button" tabindex="0" class="menu-category mt-1" data-bs-toggle="collapse" data-bs-target="#menu5" aria-expanded="false">
                     <span data-en="<i class='fa-brands fa-linux me-2'></i> B-2. UNIX Server"><i class="fa-brands fa-linux me-2"></i> B-2. UNIX 서버</span>
                     <span><span class="badge bg-secondary" id="badge-menu5">41</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
                 </div>
                 <div class="collapse" id="menu5">
+                    <!-- W-03: 없는 항목을 없다고 표시한다. 번호가 U-61 까지 이어지는데
+                         실제 수록은 그보다 적어서, 빠진 번호를 찾다 헤매지 않도록 드러낸다. -->
+                    <div class="wvs-cov"><span class="badge bg-dark" data-wvs-coverage="linux">39/61 수록 (64%)</span></div>
+                    <div class="wvs-missing" data-wvs-missing="linux"></div>
                       <!-- 0. 실습 시뮬레이터 (2개) -->
                     <div class="menu-subheader"><i class="fa-solid fa-users me-1"></i> 0. 시뮬레이터 (2개)</div>
                     <a href="05_linux-sim01.html" class="list-group-item list-group-item-action" data-keywords="1. 계정 관리 unix linux 리눅스 유닉스 서버 server u-01">
@@ -2207,6 +2218,13 @@ html, body.soc { max-width: 100%; overflow-x: hidden; }
                     <span><span class="badge bg-info" id="badge-menuAI">26</span><span class="badge bg-success ms-1">NEW</span><i class="fa-solid fa-chevron-down fa-xs ms-2"></i></span>
                 </div>
                 <div class="collapse" id="menuAI">
+                    <div class="menu-subheader"><i class="fa-solid fa-door-open me-1"></i> 0. 트랙 진입점</div>
+                    <a href="ai-hub.html" class="list-group-item list-group-item-action" data-keywords="ai hub 허브 트랙 학습경로 모듈 선수개념 track">
+                        <span><i class="fa-solid fa-compass"></i> AI 보안 트랙 허브</span><span class="item-number">HUB</span>
+                    </a>
+                    <a href="ai-guardrail-lab.html" class="list-group-item list-group-item-action" data-keywords="guardrail 가드레일 연습장 미션 채점 거부 힌트 시크릿 프롬프트주입 lab">
+                        <span><i class="fa-solid fa-shield-heart"></i> AI 가드레일 연습장</span><span class="item-number">LAB</span>
+                    </a>
                     <div class="menu-subheader"><i class="fa-solid fa-shield-halved me-1"></i> A. OWASP LLM Top 10 (11개)</div>
                     <a href="13_ai-ai01.html" class="list-group-item list-group-item-action" data-keywords="prompt injection direct 직접 프롬프트 인젝션 llm01 ai 인공지능 llm 생성형 머신러닝 딥페이크 ai-01">
                         <span><i class="fa-solid fa-syringe"></i> 직접 프롬프트 인젝션</span><span class="item-number">AI-01</span>
@@ -2995,5 +3013,6 @@ html, body.soc { max-width: 100%; overflow-x: hidden; }
 <script src="js/bilingual.js?v=20260913_fix4"></script>
 <script src="/js/soc-chrome.js?v=20260913_fix4" data-topbar="off" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/registry.js" defer></script>
 </body>
 </html>
