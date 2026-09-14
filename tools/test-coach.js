@@ -66,8 +66,13 @@ const ok = (n) => { console.log('  PASS  ' + n); pass++; };
     fullPageHtml: '<html>...</html>',
   });
   const keys = Object.keys(ctx).sort();
+  /* C02 로 계약이 넓어졌다. ID 만 보내면 모델이 실패를 진단할 수 없어서,
+     목표·전제·성공조건·현재 정책·증거 요약·실패의 의미까지 함께 보낸다.
+     그래도 "계약에 있는 것만" 이라는 원칙은 같다. 목록을 갱신해 고정한다. */
   assert.deepStrictEqual(keys,
-    ['activityId', 'contentVersion', 'evidenceIds', 'failedTests', 'hintsUsed', 'note', 'step'],
+    ['activityId', 'contentVersion', 'evidence', 'evidenceIds', 'failedChecks', 'failedTests',
+      'givens', 'hintLevel', 'hintsUsed', 'learnerPolicy', 'learningGoal', 'note',
+      'passedSummary', 'step', 'successCondition'],
     '계약에 정의된 필드만 남아야 함: ' + keys.join(','));
   assert.ok(!JSON.stringify(ctx).includes('user-123'), 'uid 유출');
   assert.ok(!JSON.stringify(ctx).includes('me@example.com'), '이메일 유출');
@@ -169,6 +174,69 @@ const ok = (n) => { console.log('  PASS  ' + n); pass++; };
   assert.strictEqual(log.length, 1, '공개하면 기록이 남아야 함');
   assert.strictEqual(log[0].id, '14-auto-auto01');
   ok('정답 공개는 명시적 호출로만, 기록 남김');
+
+  /* ── C02: 코치 입력이 실패를 진단할 만큼의 의미를 담는가 ── */
+  const rich = COACH.buildContext({
+    activityId: 'incident:api-authz',
+    step: 'verify',
+    learningGoal: '차주 본인과 점검 담당자만 차량 정보를 볼 수 있게 만든다.',
+    givens: ['모든 요청은 이미 로그인 검사를 통과했다.'],
+    successCondition: '정상 3건 허용, 비인가 3건 거부',
+    learnerPolicy: { join: 'or', conds: [{ left: 'true', op: '==', right: 'true' }] },
+    evidence: [{ id: 'ev-req-other', label: '타인 차량 조회', summary: 'u-1002 가 u-1001 차량을 조회했는데 200 으로 성공했다.' }],
+    failedChecks: [{ id: 's1-other-read', desc: '타인이 남의 차량 조회', expected: '거부', actual: '허용',
+      meaning: '거부돼야 하는 요청이 아직 허용된다.' }],
+    passedSummary: '통과한 검사 3건',
+    hintsUsed: 0, hintLevel: 1,
+    /* 아래는 코치가 절대 받으면 안 되는 것들 */
+    answerKey: { join: 'and', conds: [{ left: 'req.userId', op: '==', right: 'vehicle.ownerId' }] },
+    correctPolicy: 'req.userId == vehicle.ownerId',
+    score: 100,
+  });
+  assert.strictEqual(rich.answerKey, undefined, '정답 정책이 코치 입력에 실려서는 안 됨');
+  assert.strictEqual(rich.correctPolicy, undefined, '정답 문자열이 실려서는 안 됨');
+  assert.strictEqual(rich.score, undefined, '점수가 실려서는 안 됨');
+  assert.ok(rich.learningGoal.includes('차주'), '과제 목표 전달');
+  assert.ok(rich.successCondition.includes('정상'), '정상 동작 조건 전달 — 없으면 "전부 차단"이 정답이 된다');
+  assert.strictEqual(rich.learnerPolicy.join, 'or', '학습자가 구성한 정책 전달');
+  assert.strictEqual(rich.failedChecks[0].actual, '허용', '실패의 실제값 전달');
+  assert.ok(rich.failedChecks[0].meaning.length > 0, '실패의 의미 전달');
+  assert.ok(rich.evidence[0].summary.length > 0, '증거 요약 전달');
+  ok('C02 — 코치 입력에 의미가 실리고 정답·점수는 분리됨');
+
+  /* 힌트 단계는 1~3 으로 묶인다 (1 관찰 → 2 비교 → 3 접근법) */
+  assert.strictEqual(COACH.buildContext({ hintLevel: 0 }).hintLevel, 1, 'hintLevel 하한');
+  assert.strictEqual(COACH.buildContext({ hintLevel: 99 }).hintLevel, 3, 'hintLevel 상한');
+  assert.strictEqual(COACH.buildContext({ hintsUsed: 1 }).hintLevel, 2, 'hintsUsed 로부터 유도');
+  ok('C02 — 힌트 단계 1~3 범위 유지');
+
+  /* 맥락이 있으면 폴백도 그만큼 구체적이지만, 모델 판단이 아니라고 표시한다 */
+  const sc = COACH.staticCoach(rich);
+  assert.ok(/아직 허용/.test(sc.observation), '폴백이 실패 종류를 반영');
+  assert.ok(sc.observation.includes('타인이 남의 차량 조회'), '폴백이 실패한 검사를 지목');
+  assert.ok(/기본 도움말/.test(sc.uncertainty), '폴백임을 표시');
+  assert.strictEqual(sc.mode, 'static');
+  ok('C02 — 기본 도움말도 맥락 반영, 실시간 AI 와 구분 표시');
+
+  /* 과허용과 과차단은 서로 다른 실패다. 문장이 아니라 기대값/실제값으로 세야 한다.
+     "허용돼야 하는 요청이 차단됐다" 에도 '허용' 이 들어 있어 실제로 오분류가 났었다. */
+  const overBlocked = COACH.staticCoach(COACH.buildContext({
+    failedChecks: [
+      { id: 'a', desc: '본인 조회', expected: '허용', actual: '거부', meaning: '허용돼야 하는 정상 요청이 차단됐다.' },
+      { id: 'b', desc: '담당자 조회', expected: '허용', actual: '거부', meaning: '허용돼야 하는 정상 요청이 차단됐다.' },
+    ],
+  }));
+  assert.ok(/정상 요청 2건이 차단/.test(overBlocked.observation),
+    '과차단을 과차단으로 세야 함: ' + overBlocked.observation);
+  assert.ok(!/아직 허용/.test(overBlocked.observation),
+    '과차단인데 과허용으로도 세면 안 됨: ' + overBlocked.observation);
+  ok('C02 — 과허용/과차단을 구조화 필드로 정확히 구분');
+
+  /* 증거·실패 목록이 없어도 예전 호출부(ID 배열)가 계속 동작해야 한다 */
+  const legacy = COACH.buildContext({ evidenceIds: ['ev-a', 'ev-b'], failedTests: ['t-1'] });
+  assert.deepStrictEqual(legacy.evidenceIds, ['ev-a', 'ev-b'], '구 호출부 호환');
+  assert.deepStrictEqual(legacy.failedTests, ['t-1'], '구 호출부 호환');
+  ok('C02 — 기존 ID 기반 호출부와 호환');
 
   console.log(`\nALL ${pass} CHECKS PASSED`);
 })().catch((e) => {

@@ -136,6 +136,106 @@
   ];
 
   /* ─────────────────────────────────────────────────────────────
+   * 증거 자료 (C01/C02)
+   *
+   * 예전에는 단계마다 'ev-req-own' 같은 **식별자만** 있었다. 화면에는 그 코드가
+   * 그대로 찍혔고, 코치에게도 ID 문자열만 전달됐다. 학습자는 비교할 자료가 없고
+   * 모델은 근거 없이 추측하게 된다.
+   *
+   * 그래서 증거마다 다음을 함께 둔다.
+   *   label   — 화면에 보이는 한국어 제목 (내부 ID 는 상세에서만 노출)
+   *   summary — 코치에게 보내는 한 줄 의미 (원문 전체를 보내지 않는다)
+   *   body    — 학습자가 읽고 비교하는 실제 내용 (합성)
+   *
+   * 정답(어떤 조건을 써야 하는가)은 여기 담지 않는다. 코치 입력에서 정답을
+   * 분리하기 위해서다.
+   * ───────────────────────────────────────────────────────────── */
+  var EVIDENCE = {
+    'ev-req-own': {
+      label: '본인 차량 조회 요청과 응답',
+      summary: '차주 u-1001 이 자기 차량(DEMO-VIN-0001)을 조회했고 200 으로 성공했다. 이 요청은 계속 허용돼야 하는 정상 동작이다.',
+      body: [
+        'GET /api/v1/vehicles/DEMO-VIN-0001  HTTP/1.1',
+        'Authorization: Bearer <로그인 완료된 세션>',
+        '  요청자 userId = u-1001 · role = user',
+        '',
+        '→ 200 OK',
+        '   { "vin": "DEMO-VIN-0001", "ownerId": "u-1001", "location": {...} }',
+      ],
+    },
+    'ev-req-other': {
+      label: '타인 차량 조회 요청과 응답',
+      summary: '다른 사용자 u-1002 가 u-1001 의 차량(DEMO-VIN-0001)을 조회했는데 같은 200 으로 성공했다. 이 요청은 거부돼야 한다.',
+      body: [
+        'GET /api/v1/vehicles/DEMO-VIN-0001  HTTP/1.1',
+        'Authorization: Bearer <로그인 완료된 세션>',
+        '  요청자 userId = u-1002 · role = user',
+        '',
+        '→ 200 OK   ← 본인 요청과 응답이 같다',
+        '   { "vin": "DEMO-VIN-0001", "ownerId": "u-1001", "location": {...} }',
+      ],
+    },
+    'ev-resp-diff': {
+      label: '두 응답의 차이 대조',
+      summary: '두 요청은 요청자만 다르고 응답은 동일하다. 즉 현재 경로는 로그인 여부만 보고 자원의 소유 관계를 보지 않는다.',
+      body: [
+        '            본인 요청(u-1001)      타인 요청(u-1002)',
+        '  상태코드   200                    200',
+        '  본문       차량 전체 정보          차량 전체 정보',
+        '  차이       없음                    없음',
+        '',
+        '  * 응답에 담긴 ownerId 는 u-1001 로 동일하다.',
+      ],
+    },
+    'ev-pkg-manifest': {
+      label: '업데이트 패키지 목록',
+      summary: '네 개의 패키지가 있다. 서명 유효 여부, 버전(현재 v7), 대상 차종·지역이 서로 다르다.',
+      body: [
+        '현재 차량: 버전 v7 · 차종 M3 · 지역 KR',
+        '',
+        '  p-ok            서명 유효   v8   M3/KR',
+        '  p-tampered      서명 불일치 v8   M3/KR',
+        '  p-downgrade     서명 유효   v5   M3/KR',
+        '  p-wrong-target  서명 유효   v8   X5/JP',
+      ],
+    },
+    'ev-sig-log': {
+      label: '서명 검증 로그',
+      summary: '변조 패키지에서만 서명 해시가 어긋난다. 되돌리기와 대상 불일치 패키지는 서명 자체는 정상이라 서명 검사만으로는 걸러지지 않는다.',
+      body: [
+        'p-ok           signature=OK    digest 일치',
+        'p-tampered     signature=FAIL  digest 불일치 (본문 변조)',
+        'p-downgrade    signature=OK    digest 일치',
+        'p-wrong-target signature=OK    digest 일치',
+        '',
+        '* 서명이 유효하다는 것은 "누가 만들었는지"만 말해 준다.',
+        '  그 패키지를 지금 이 차량에 설치해도 되는지는 말해 주지 않는다.',
+      ],
+    },
+    'ev-access-log': {
+      label: '차량 데이터 접근 로그',
+      summary: '접근 4건 중 3건이 비인가(ok=false)다. 비인가 접근이 닿은 차량과 조회된 정보 항목을 세는 것이 이 단계의 과제다.',
+      body: ACCESS_LOG.map(function (e) {
+        return (e.ok ? '  정상  ' : '  비인가 ') + e.ts + '  actor=' + e.actor +
+          '  vin=' + e.vin + '  조회항목=[' + e.fields.join(', ') + ']';
+      }),
+    },
+    'ev-booking-schema': {
+      label: '정비 예약 자원 구조',
+      summary: '예약 자원에도 소유자 필드(ownerId)가 있다. 차량과 자원 종류는 다르지만 소유 관계를 대조한다는 점은 같다.',
+      body: [
+        'GET /api/v1/bookings/{bookingId}',
+        '',
+        '예약 자원:',
+        '  { "bookingId": "BK-7781", "ownerId": "u-1001",',
+        '    "vin": "DEMO-VIN-0001", "slot": "2026-09-20T10:00Z" }',
+        '',
+        '* 요청자 userId 와 예약의 ownerId 가 비교 대상이다.',
+      ],
+    },
+  };
+
+  /* ─────────────────────────────────────────────────────────────
    * 단계 정의 — givens 로 "무엇을 가정하는지"를 반드시 밝힌다.
    * ───────────────────────────────────────────────────────────── */
   var STAGES = [
@@ -231,8 +331,37 @@
     };
   }
 
+  /**
+   * 검사 결과 한 건이 "무슨 뜻인지" 한국어로 만든다 (C02).
+   * 화면과 코치 입력이 같은 문장을 쓰도록 엔진에 둔다. 두 곳에서 따로 쓰면
+   * 학습자가 보는 설명과 모델이 받는 설명이 갈라진다.
+   * 정답(어떤 조건을 써야 하는가)은 말하지 않는다. 관찰된 사실만 적는다.
+   */
+  function explainResult(r) {
+    if (!r) return '';
+    if (r.pass) {
+      return r.kind === 'unauthorized'
+        ? '비인가 요청이 의도대로 거부됐다.'
+        : '정상 요청이 의도대로 허용됐다.';
+    }
+    if (r.kind === 'unauthorized') return '거부돼야 하는 요청이 아직 허용된다.';
+    if (typeof r.expect === 'boolean') return '허용돼야 하는 정상 요청이 차단됐다.';
+    /* 3단계처럼 값 비교인 경우 */
+    return '입력한 값(' + r.got + ')이 로그에서 센 값과 다르다.';
+  }
+
+  /** 증거 한 건을 돌려준다. 없으면 null. */
+  function evidence(id) {
+    var e = EVIDENCE[id];
+    if (!e) return null;
+    return { id: id, label: e.label, summary: e.summary, body: e.body.slice() };
+  }
+
   var API = {
     stages: STAGES,
+    evidence: evidence,
+    evidenceIds: Object.keys(EVIDENCE),
+    explainResult: explainResult,
     vehicles: VEHICLES,
     accessLog: ACCESS_LOG,
     packages: PKGS,

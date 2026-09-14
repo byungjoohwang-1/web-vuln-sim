@@ -44,6 +44,18 @@ a{color:var(--acc)}
  padding:9px 12px;margin-bottom:6px;color:var(--txt);font-size:.78rem;cursor:pointer;font-family:inherit;min-height:44px}
 .ev:hover{border-color:var(--acc)}
 .ev.sel{border-color:var(--acc);background:rgba(56,189,248,.08)}
+/* [C01] 증거를 읽을 수 있는 자료로 보여준다 */
+.evwrap{margin-bottom:10px}
+.ev-label{display:block;font-weight:800;color:#e2e8f0;font-size:.9rem}
+.ev-sum{display:block;margin-top:4px;font-size:.79rem;line-height:1.6;color:#9fb0c6;white-space:normal;word-break:keep-all}
+.ev.sel .ev-label{color:#7dd3fc}
+.ev-detail{margin:4px 0 0 2px}
+.ev-detail>summary{cursor:pointer;font-size:.76rem;color:#8fa0ba;padding:4px 2px}
+.ev-detail>summary:hover{color:#7dd3fc}
+.ev-body{margin:6px 0 0;padding:10px 12px;background:#06101f;border:1px solid var(--line);border-radius:8px;
+  font-family:'JetBrains Mono','Consolas',monospace;font-size:.74rem;line-height:1.75;color:#cbd5e1;
+  white-space:pre-wrap;word-break:break-word;overflow-x:auto}
+.ev-id{margin:6px 0 0;font-size:.7rem;color:#64748b;font-family:'JetBrains Mono',monospace}
 pre{background:#060b16;border:1px solid var(--line);border-radius:9px;padding:11px 13px;overflow-x:auto;
  font-family:'Cascadia Mono',Consolas,monospace;font-size:.76rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
 select,input[type=number]{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);border-radius:8px;
@@ -222,9 +234,25 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
     $('goalText').textContent = s.goal;
     $('givens').innerHTML = s.givens.map(function (g) { return '<div class="given">' + esc(g) + '</div>'; }).join('');
     $('successText').textContent = s.success;
-    $('evList').innerHTML = s.evidenceIds.map(function (e) {
-      return '<button type="button" class="ev' + (selectedEv[e] ? ' sel' : '') + '" data-ev="' + esc(e) + '">' +
-        esc(e) + '</button>';
+    /* [C01] 예전에는 'ev-req-own' 같은 내부 ID 를 그대로 찍었다. 학습자가 비교할
+       자료가 있어야 할 자리를 구현 식별자가 차지하고 있었다. 이제 한국어 제목과
+       실제 본문을 보여주고, 내부 ID 는 접어 둔 상세에만 남긴다. */
+    $('evList').innerHTML = s.evidenceIds.map(function (id) {
+      var e = INC.evidence ? INC.evidence(id) : null;
+      var on = selectedEv[id] ? ' sel' : '';
+      if (!e) {
+        return '<button type="button" class="ev' + on + '" data-ev="' + esc(id) + '">' + esc(id) + '</button>';
+      }
+      return '<div class="evwrap">' +
+        '<button type="button" class="ev' + on + '" data-ev="' + esc(id) + '" aria-pressed="' +
+          (selectedEv[id] ? 'true' : 'false') + '">' +
+          '<span class="ev-label">' + esc(e.label) + '</span>' +
+          '<span class="ev-sum">' + esc(e.summary) + '</span>' +
+        '</button>' +
+        '<details class="ev-detail"><summary>자료 보기</summary>' +
+          '<pre class="ev-body">' + esc(e.body.join('\n')) + '</pre>' +
+          '<p class="ev-id">자료 번호 ' + esc(id) + ' · 합성 데이터</p>' +
+        '</details></div>';
     }).join('');
 
     var w = $('workArea');
@@ -345,14 +373,56 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
   }
 
   /* ── 코치 ── */
+  /* [C02] 코치에게 ID 가 아니라 "의미"를 보낸다.
+     목표·전제·성공 조건·지금 정책·증거 요약·실패한 검사의 기대/실제/뜻까지 함께 넘긴다.
+     정답 조건식은 넣지 않는다 — 코치 입력과 채점 정답을 분리해 둔다. */
+  /* 코치 맥락을 만들다가 입력 폼이 아직 없으면 예외로 실습이 멈추면 안 된다. */
+  function safeAnswer() {
+    try { return answer(); } catch (e) { return null; }
+  }
   function coachCtx() {
     var s = INC.stages[cur];
+    var picked = Object.keys(selectedEv).filter(function (k) { return selectedEv[k]; });
+    /* 아무것도 안 골랐으면 그 단계의 증거를 기본으로 준다. 빈 맥락보다 낫다. */
+    var evIds = picked.length ? picked : s.evidenceIds;
+    var hints = (load()._hints || 0);
+
+    var failedChecks = [];
+    var passedSummary = '';
+    if (lastResult && lastResult.results) {
+      failedChecks = lastResult.results.filter(function (r) { return !r.pass; }).map(function (r) {
+        return {
+          id: r.id,
+          desc: r.desc,
+          expected: typeof r.expect === 'boolean' ? (r.expect ? '허용' : '거부') : String(r.expect),
+          actual: typeof r.got === 'boolean' ? (r.got ? '허용' : '거부') : String(r.got),
+          meaning: INC.explainResult ? INC.explainResult(r) : '',
+        };
+      });
+      var ok = lastResult.results.filter(function (r) { return r.pass; });
+      passedSummary = ok.length
+        ? '통과한 검사 ' + ok.length + '건: ' + ok.slice(0, 3).map(function (r) { return r.desc; }).join(' / ')
+        : '아직 통과한 검사가 없습니다.';
+    }
+
     return {
       activityId: 'incident:' + s.id,
       step: lastResult ? 'verify' : 'evidence',
-      evidenceIds: Object.keys(selectedEv).filter(function (k) { return selectedEv[k]; }),
+      learningGoal: s.goal,
+      givens: s.givens,
+      successCondition: s.success,
+      learnerPolicy: safeAnswer(),
+      evidence: evIds.map(function (id) {
+        var e = INC.evidence ? INC.evidence(id) : null;
+        return e ? { id: e.id, label: e.label, summary: e.summary } : { id: id };
+      }),
+      failedChecks: failedChecks,
+      passedSummary: passedSummary,
+      hintsUsed: hints,
+      hintLevel: Math.min(3, hints + 1),
+      /* 호환 유지 */
+      evidenceIds: evIds,
       failedTests: lastResult ? lastResult.failedTests : [],
-      hintsUsed: (load()._hints || 0),
     };
   }
   function askCoach() {
@@ -380,7 +450,13 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
     var sb = t.closest('.stepbtn');
     if (sb) { cur = +sb.getAttribute('data-i'); renderSteps(); renderWork(); return; }
     var ev = t.closest('.ev');
-    if (ev) { var id = ev.getAttribute('data-ev'); selectedEv[id] = !selectedEv[id]; ev.classList.toggle('sel'); return; }
+    if (ev) {
+      var id = ev.getAttribute('data-ev');
+      selectedEv[id] = !selectedEv[id];
+      ev.classList.toggle('sel');
+      ev.setAttribute('aria-pressed', selectedEv[id] ? 'true' : 'false');
+      return;
+    }
     var tab = t.closest('.tabs button');
     if (tab) {
       document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('on'); });
