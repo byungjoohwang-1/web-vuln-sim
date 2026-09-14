@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>분야·공식 자료 탐색 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="분야·공식 자료 탐색 · WEB-VULN-SIM">
+<meta property="og:description" content="분야·공식 자료 탐색 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/explore.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="기술 분야·산업 분야·공식 자료 세 가지 관점으로 학습 항목을 찾습니다. 진도는 어느 경로로 들어와도 하나로 기록됩니다.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--line:#1e293b;--ink:#e2e8f0;
+  --muted:#94a3b8;--acc:#38bdf8;--ok:#22c55e;--mono:'JetBrains Mono','Consolas',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;gap:14px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:#0b1220;z-index:50}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 90px}
+h1{font-size:22px;color:#fff;margin-bottom:6px}
+.lede{color:var(--muted);font-size:13.5px;margin-bottom:18px;word-break:keep-all}
+.lenses{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.lens{background:var(--panel2);border:1px solid var(--line);color:#cbd5e1;border-radius:10px;
+  padding:9px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.lens[aria-pressed="true"]{background:linear-gradient(135deg,rgba(56,189,248,.2),rgba(99,102,241,.24));
+  border-color:var(--acc);color:#fff}
+.lens:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-left-width:4px;border-radius:12px;
+  padding:14px 15px;cursor:pointer;transition:.15s;text-align:left;font:inherit;color:inherit;width:100%}
+.card:hover{transform:translateY(-2px);border-color:#334155}
+.card:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.card .nm{font-size:14px;font-weight:800;color:#e2e8f0}
+.card .ct{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px}
+.card .bar{height:7px;border-radius:99px;background:#1e293b;overflow:hidden;margin-top:8px}
+.card .bar>i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#4ade80)}
+.card .src{font-size:11.5px;color:#8fa0ba;margin-top:6px;line-height:1.5}
+.scope{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:99px;
+  border:1px solid #78350f;background:rgba(251,191,36,.1);color:#fcd34d;margin-left:5px}
+h2.sec{font-size:14px;color:#7dd3fc;font-family:var(--mono);margin:22px 2px 10px}
+.items{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.item{display:flex;gap:10px;align-items:center;background:var(--panel2);border:1px solid var(--line);
+  border-radius:9px;padding:9px 12px;font-size:13.5px}
+.item .st{flex:0 0 auto;font-size:11px;font-weight:800;font-family:var(--mono);width:38px}
+.item .st.done{color:#86efac}.item .st.seen{color:#7dd3fc}.item .st.none{color:#64748b}
+.item a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e2e8f0}
+.item a:hover{color:#7dd3fc}
+.note{background:var(--panel2);border-left:3px solid var(--acc);border-radius:8px;padding:12px 14px;
+  font-size:12.8px;color:#cbd5e1;margin-top:20px;word-break:keep-all}
+.note b{color:#fff}
+.note code{font-family:var(--mono);font-size:12px;color:#7dd3fc}
+.back{margin-top:14px;font-size:13px;color:#7dd3fc;cursor:pointer;background:none;border:0;font-family:inherit;padding:6px 0}
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
+<nav class="topbar" aria-label="주요 메뉴">
+  <a href="index.html">← 홈</a>
+  <a href="vuln-hub.html">학습 허브</a>
+  <a href="incident.html">대표 사건 실습</a>
+</nav>
+<main class="wrap" id="wvs-main">
+  <h1>분야·공식 자료 탐색</h1>
+  <p class="lede">
+    같은 학습 항목을 <b>기술 분야</b>·<b>산업 분야</b>·<b>공식 자료</b> 세 방향에서 찾을 수 있습니다.
+    어느 경로로 들어와도 <b>진도는 페이지 하나에 한 번만</b> 기록됩니다.
+  </p>
+
+  <div class="lenses" role="group" aria-label="탐색 관점">
+    <button type="button" class="lens" data-lens="tech" aria-pressed="true">기술 분야</button>
+    <button type="button" class="lens" data-lens="industry" aria-pressed="false">산업 분야</button>
+    <button type="button" class="lens" data-lens="source" aria-pressed="false">공식 자료</button>
+  </div>
+
+  <div id="view" aria-live="polite"><p class="lede">불러오는 중…</p></div>
+
+  <div class="note" id="counting"></div>
+</main>
+
+<script src="/js/progress.js" defer></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+
+  /* 기술 / 산업 관점의 도메인 배치.
+     카탈로그의 domains 값을 그대로 쓴다. 여기서 새 분류를 만들지 않는다. */
+  var TECH = { appsec: '웹·API·앱', infra: '시스템·네트워크', ai: 'AI 보안',
+    zerotrust: '제로트러스트', governance: '거버넌스' };
+  var IND = { financial: '금융', automotive: '자동차', ot: 'OT·제어시스템', privacy: '개인정보' };
+  var COLOR = { appsec: '#34d399', infra: '#60a5fa', ai: '#22d3ee', zerotrust: '#a78bfa',
+    governance: '#f472b6', financial: '#fbbf24', automotive: '#fb7185', ot: '#f97316', privacy: '#818cf8' };
+
+  var CAT = null, SRC = null, lens = 'tech', openKey = null;
+
+  function progressOf(page) {
+    try {
+      var p = window.WVSProgress ? window.WVSProgress.get() : null;
+      var it = p && p.items && p.items[page];
+      if (!it) return 'none';
+      return it.c ? 'done' : (it.v ? 'seen' : 'none');
+    } catch (e) { return 'none'; }
+  }
+
+  function itemsFor(key) {
+    if (lens === 'source') {
+      var ids = (SRC.links || []).filter(function (l) { return l.sourceId === key; })
+        .map(function (l) { return l.contentId.split(':')[0]; });
+      return CAT.items.filter(function (i) { return ids.indexOf(i.id) >= 0; });
+    }
+    return CAT.items.filter(function (i) { return (i.domains || []).indexOf(key) >= 0; });
+  }
+
+  function stat(list) {
+    var done = 0, seen = 0;
+    list.forEach(function (i) {
+      var s = progressOf(i.page);
+      if (s === 'done') done++; else if (s === 'seen') seen++;
+    });
+    return { total: list.length, done: done, seen: seen };
+  }
+
+  function renderCards() {
+    var map = lens === 'tech' ? TECH : lens === 'industry' ? IND : null;
+    var html = '';
+    if (map) {
+      html = '<div class="grid">' + Object.keys(map).map(function (k) {
+        var s = stat(itemsFor(k));
+        if (!s.total) return '';
+        var pct = Math.round(s.done / s.total * 100);
+        return '<button type="button" class="card" data-open="' + k + '" style="border-left-color:' + COLOR[k] + '">' +
+          '<div class="nm">' + esc(map[k]) + '</div>' +
+          '<div class="ct">' + s.total + '개 · 완료 ' + s.done + ' · 탐색 ' + s.seen + '</div>' +
+          '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+          '</button>';
+      }).join('') + '</div>';
+    } else {
+      var srcs = SRC.sources || [];
+      html = !srcs.length
+        ? '<p class="lede">등록된 공식 자료가 없습니다.</p>'
+        : '<div class="grid">' + srcs.map(function (s) {
+          var list = itemsFor(s.id);
+          var st = stat(list);
+          var verified = (SRC.links || []).some(function (l) {
+            return l.sourceId === s.id && l.reviewStatus === 'section-verified'; });
+          return '<button type="button" class="card" data-open="' + esc(s.id) + '" style="border-left-color:#94a3b8">' +
+            '<div class="nm">' + esc(s.org) + '</div>' +
+            '<div class="src">' + esc(s.title) + ' <span class="muted">(' + esc(s.version) + ')</span>' +
+            '<span class="scope">' + (verified ? '절까지 대조' : '문서만 특정') + '</span></div>' +
+            '<div class="ct">연결된 학습 항목 ' + st.total + '개 · 완료 ' + st.done + '</div>' +
+            '</button>';
+        }).join('') + '</div>';
+    }
+    return html;
+  }
+
+  function renderOpen(key) {
+    var map = lens === 'tech' ? TECH : lens === 'industry' ? IND : null;
+    var list = itemsFor(key);
+    var title = map ? map[key] : (SRC.sources.filter(function (s) { return s.id === key; })[0] || {}).title || key;
+    var head = '<h2 class="sec">' + esc(title) + ' — ' + list.length + '개</h2>';
+    if (!map) {
+      var s = SRC.sources.filter(function (x) { return x.id === key; })[0];
+      var link = (SRC.links || []).filter(function (l) { return l.sourceId === key; })[0];
+      if (s) {
+        head += '<p class="lede">' + esc(s.org) + ' · <a href="' + esc(s.url) +
+          '" target="_blank" rel="noopener" style="color:#7dd3fc">원문 보기</a>' +
+          '<span class="scope">' + (link && link.reviewStatus === 'section-verified' ? '절까지 대조' : '문서만 특정 · 절 대조 안 함') + '</span>' +
+          (link ? '<br>' + esc(link.why) : '') + '</p>';
+      }
+    }
+    var rows = list.map(function (i) {
+      var st = progressOf(i.page);
+      var label = st === 'done' ? '완료' : st === 'seen' ? '탐색' : '—';
+      return '<div class="item"><span class="st ' + st + '">' + label + '</span>' +
+        '<a href="' + esc(i.page) + '">' + esc(i.title) + '</a></div>';
+    }).join('');
+    return head + '<div class="items">' + rows + '</div>' +
+      '<button type="button" class="back" data-open="">← 분야 목록으로</button>';
+  }
+
+  function render() {
+    $('view').innerHTML = openKey ? renderOpen(openKey) : renderCards();
+    renderCounting();
+  }
+
+  /* [C07 / §3.1] 수치의 분모와 생성 경로를 화면에서 밝힌다.
+     개수가 서로 다른 것 자체는 버그가 아니다. 같은 뜻인 것처럼 보이는 것이 문제다. */
+  function renderCounting() {
+    var uniq = {}, techN = 0, indN = 0, srcN = 0;
+    CAT.items.forEach(function (i) {
+      var d = (i.domains || [])[0];
+      if (TECH[d]) techN++;
+      if (IND[d]) indN++;
+      uniq[i.page] = 1;
+    });
+    var srcPages = {};
+    (SRC.links || []).forEach(function (l) {
+      var id = l.contentId.split(':')[0];
+      CAT.items.forEach(function (i) { if (i.id === id) srcPages[i.page] = 1; });
+    });
+    srcN = Object.keys(srcPages).length;
+
+    $('counting').innerHTML =
+      '<b>이 화면의 수치가 뜻하는 것</b><br>' +
+      '기술 분야 ' + techN + '개 + 산업 분야 ' + indN + '개 = ' + (techN + indN) +
+      '개이고, 고유 학습 항목은 <b>' + Object.keys(uniq).length + '개</b>입니다. ' +
+      '두 관점은 서로 겹치지 않습니다(항목마다 분야가 하나).<br>' +
+      '공식 자료 관점의 ' + srcN + '개는 <b>위 항목들과 겹칩니다.</b> ' +
+      '같은 항목을 다른 경로에서 다시 만나는 것이며 새로 늘어난 항목이 아닙니다.<br>' +
+      '진도는 분야가 아니라 페이지 파일명 하나를 키로 기록합니다(<code>wvs_progress</code>). ' +
+      '어느 경로로 들어와도 같은 항목은 한 번만 셉니다.<br>' +
+      '<span class="muted">출처: <code>data/content-catalog.json</code> · <code>data/sources.json</code> · ' +
+      '진도 엔진 <code>js/progress.js</code></span>';
+  }
+
+  Promise.all([
+    fetch('/data/content-catalog.json').then(function (r) { return r.json(); }),
+    fetch('/data/sources.json').then(function (r) { return r.ok ? r.json() : { sources: [], links: [] }; })
+      .catch(function () { return { sources: [], links: [] }; }),
+  ]).then(function (res) {
+    CAT = res[0]; SRC = res[1];
+    render();
+  }).catch(function (e) {
+    $('view').innerHTML = '<p class="lede">카탈로그를 불러오지 못했습니다 (' + esc(e.message) + ').</p>';
+  });
+
+  document.addEventListener('click', function (e) {
+    var l = e.target.closest ? e.target.closest('.lens') : null;
+    if (l) {
+      lens = l.getAttribute('data-lens'); openKey = null;
+      document.querySelectorAll('.lens').forEach(function (b) {
+        b.setAttribute('aria-pressed', b === l ? 'true' : 'false');
+      });
+      render();
+      return;
+    }
+    var o = e.target.closest ? e.target.closest('[data-open]') : null;
+    if (o) { openKey = o.getAttribute('data-open') || null; render(); }
+  });
+})();
+</script>
+<script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+</body>
+</html>
