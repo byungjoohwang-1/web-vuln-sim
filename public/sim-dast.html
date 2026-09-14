@@ -83,6 +83,9 @@
     .detail code{background:#0e0c0a;border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:var(--mono)}
     .pos{background:var(--accent);color:#0e0c0a;font-weight:700;border-radius:3px;padding:0 2px}
     .legend{font-size:11px;color:var(--muted);font-family:var(--mono)}
+    pre.cmp{font-size:11.5px;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+    mark.d-del{background:#5a1a1e;color:#ffb4b7;border-radius:2px;padding:0 1px}
+    mark.d-add{background:#0f3d20;color:#8ff0a6;border-radius:2px;padding:0 1px}
     .disc{font-size:11px;color:var(--muted);padding:6px 14px;border-top:1px solid var(--border);background:#0e0c0a;flex:0 0 auto}
     body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     @media(max-width:820px){.split{flex-direction:column}}
@@ -129,6 +132,7 @@
     <div class="view" id="v-scanner"></div>
     <div class="view" id="v-collab"></div>
     <div class="view" id="v-sequencer"></div>
+    <div class="view" id="v-comparer"></div>
     <div class="view" id="v-decoder"></div>
   </div>
 
@@ -530,7 +534,8 @@ var SEED = ['/','/search?q=test','/product?id=1','/login','/download?file=manual
   '/api/account?id=1001','/ping?host=127.0.0.1','/redirect?url=/x','/fetch?url=http://example.com',
   '/admin','/robots.txt','/.git/config','/backup.sql','/import',
   /* 블라인드 계열 — 응답만 보면 정상이라 사이트맵에 있어도 눈에 띄지 않는다 */
-  '/api/webhook?url=http://example.com/hook','/api/report?name=weekly','/import-oob'];
+  '/api/webhook?url=http://example.com/hook','/api/report?name=weekly','/import-oob',
+  '/recover?user=alice'];
 var sitemap={};
 function crawl(){
   SEED.forEach(function(t){
@@ -553,6 +558,7 @@ var TABS = [
   {id:'scanner',   ko:'Scanner',   en:'Scanner'},
   {id:'collab',    ko:'Collaborator', en:'Collaborator'},
   {id:'sequencer', ko:'Sequencer', en:'Sequencer'},
+  {id:'comparer',  ko:'Comparer', en:'Comparer'},
   {id:'decoder',   ko:'Decoder',   en:'Decoder'}
 ];
 var active='dashboard';
@@ -571,7 +577,7 @@ function renderActive(){
   TABS.forEach(function(t){el('v-'+t.id).classList.toggle('on',t.id===active);});
   ({dashboard:renderDashboard,target:renderTarget,proxy:renderProxy,repeater:renderRepeater,
     intruder:renderIntruder,scanner:renderScanner,collab:renderCollab,
-    sequencer:renderSequencer,decoder:renderDecoder})[active]();
+    sequencer:renderSequencer,comparer:renderComparer,decoder:renderDecoder})[active]();
 }
 
 /* ---------- Dashboard ---------- */
@@ -593,7 +599,10 @@ function renderDashboard(){
    '<p>3. <b>Repeater</b> — '+L('단일 요청을 손으로 수정·재전송하며 응답 변화를 관찰합니다.','Hand-edit and replay a single request, observe the response.')+'</p>'+
    '<p>4. <b>Intruder</b> — '+L('§위치§에 페이로드를 자동 대입해 퍼징/무차별 대입합니다.','Automate payloads into §positions§ for fuzzing/brute-force.')+'</p>'+
    '<p>5. <b>Scanner</b> — '+L('자동 점검으로 취약점을 탐지하고 심각도/신뢰도와 함께 보고합니다.','Run automated audits; findings reported with severity/confidence.')+'</p>'+
-   '<p>6. <b>Decoder</b> — '+L('URL/Base64/HTML/Hex 인코딩·디코딩.','Encode/decode URL/Base64/HTML/Hex.')+'</p>'+
+   '<p>6. <b>Collaborator</b> — '+L('응답에 아무것도 안 나오는 블라인드 취약점을 서버의 외부 접속 기록으로 잡습니다.','Catch blind vulnerabilities — ones that leave no trace in the response — via the server\'s outbound interactions.')+'</p>'+
+   '<p>7. <b>Sequencer</b> — '+L('세션 토큰을 많이 모아 예측 가능한지 분석합니다.','Collect many session tokens and analyse whether they are predictable.')+'</p>'+
+   '<p>8. <b>Comparer</b> — '+L('두 응답을 맞춰 놓고 다른 곳만 봅니다. 상태·길이가 같아도 다를 수 있습니다.','Align two responses and look only at what differs — same status and length can still hide a change.')+'</p>'+
+   '<p>9. <b>Decoder</b> — '+L('URL/Base64/HTML/Hex 인코딩·디코딩.','Encode/decode URL/Base64/HTML/Hex.')+'</p>'+
    '</div></div>'+
    '<div class="card"><h3>'+L('빠른 시작','Quick start')+'</h3>'+
    '<div class="kbar"><button class="btn go" onclick="active=\'scanner\';buildTabs();renderActive();setTimeout(runScan,30)">▶ '+L('전체 자동 스캔 실행','Run full automated scan')+'</button>'+
@@ -855,6 +864,19 @@ var CHECKS=[
    req:function(){return mkReq('GET','/fetch','url='+encodeURIComponent('http://169.254.169.254/latest/meta-data/'));},
    det:function(res){return /AccessKeyId|SSRF/.test(res.body);},
    rem:{ko:'URL 허용목록, 내부 IP 대역 차단, 메타데이터 차단.',en:'URL allow-list, block internal ranges, block metadata endpoint.'}},
+  /* 응답 본문 하나만 봐서는 판정할 수 없는 점검. 있는 계정과 없는 계정으로
+     각각 물어보고 두 응답이 다른지를 본다. 상태도 길이도 같아서 차이를
+     비교해야만 드러난다 — Comparer 가 하는 일을 점검으로 옮긴 것이다. */
+  {name:'사용자 계정 열거 (응답 차이)',sev:'Medium',conf:'Firm',cwe:'CWE-204',
+   req:function(){return mkReq('GET','/recover','user=alice');},
+   det:function(res){
+     var other=sendRequest(mkReq('GET','/recover','user=nosuchuser'),'scanner');
+     return res.status===other.status
+         && res.body.length===other.body.length
+         && res.body!==other.body;
+   },
+   rem:{ko:'계정 존재 여부와 무관하게 같은 응답을 준다. 숨은 필드·헤더·응답 시간까지 같게 맞춘다.',
+        en:'Return an identical response regardless of whether the account exists — including hidden fields, headers and timing.'}},
   {name:'Open Redirect',sev:'Medium',conf:'Firm',cwe:'CWE-601',
    req:function(){return mkReq('GET','/redirect','url='+encodeURIComponent('https://evil.example'));},
    det:function(res){return res.headers['X-Redirect-External']==='YES';},
@@ -1266,6 +1288,180 @@ function renderSequencer(){
    '<p>· '+L('토큰이 무작위여도 전송·저장·만료가 잘못되면 세션은 여전히 털립니다. 무작위성은 필요조건이지 충분조건이 아닙니다.',
        'Even a random token is stolen if transport, storage, or expiry is wrong. Randomness is necessary, not sufficient.')+'</p>'+
    '</div></div>';
+}
+
+/* ============================ Comparer ============================
+ * Burp Pro 의 Comparer 를 재현한다. 두 항목을 낱말 단위 또는 바이트 단위로
+ * 맞춰 놓고 다른 곳만 칠해 준다.
+ *
+ * 왜 필요한가
+ *   응답이 "같아 보이는데 다른" 경우가 실무에 자주 있다. 계정이 있는지
+ *   없는지, 참인지 거짓인지가 한두 바이트 차이로만 드러나는 식이다.
+ *   상태 코드도 같고 길이도 같으면 눈으로는 절대 못 찾는다.
+ *
+ * 맞추는 방법
+ *   앞뒤로 같은 부분을 먼저 잘라내고, 남은 가운데만 최장 공통 부분수열로
+ *   맞춘다. 거의 같은 두 응답이면 가운데가 몇 토큰밖에 안 남아서 빠르다.
+ * ================================================================= */
+var comparer={ a:{label:'', text:''}, b:{label:'', text:''}, mode:'words' };
+
+function cmpTokenize(s, mode){
+  if(mode==='bytes') return String(s).split('');
+  return String(s).match(/\s+|[^\s]+/g) || [];
+}
+/** 같은 종류가 이어지면 한 덩어리로 합친다. */
+function cmpPush(out, t, v){
+  if(out.length && out[out.length-1].t===t) out[out.length-1].v.push(v);
+  else out.push({t:t, v:[v]});
+}
+function cmpDiff(a, b){
+  var n=a.length, m=b.length, pre=0, suf=0, i, j;
+  while(pre<n && pre<m && a[pre]===b[pre]) pre++;
+  while(suf < n-pre && suf < m-pre && a[n-1-suf]===b[m-1-suf]) suf++;
+  var A=a.slice(pre, n-suf), B=b.slice(pre, m-suf);
+  var out=[];
+  if(pre) out.push({t:'same', v:a.slice(0,pre)});
+  var na=A.length, nb=B.length;
+  if(na*nb > 4000000){
+    /* 가운데가 너무 크면 최장 공통 부분수열을 포기하고 통째로 교체로 본다.
+       정확도보다 화면이 멈추지 않는 쪽을 택한다. 화면에 그렇다고 적는다. */
+    if(na) out.push({t:'del', v:A});
+    if(nb) out.push({t:'add', v:B});
+    out.truncated=true;
+  } else if(na||nb){
+    var W=nb+1, Lt=new Int32Array((na+1)*W);
+    for(i=na-1;i>=0;i--) for(j=nb-1;j>=0;j--)
+      Lt[i*W+j] = A[i]===B[j] ? Lt[(i+1)*W+(j+1)]+1
+                              : Math.max(Lt[(i+1)*W+j], Lt[i*W+(j+1)]);
+    var mid=[]; i=0; j=0;
+    while(i<na && j<nb){
+      if(A[i]===B[j]){ cmpPush(mid,'same',A[i]); i++; j++; }
+      else if(Lt[(i+1)*W+j] >= Lt[i*W+(j+1)]){ cmpPush(mid,'del',A[i]); i++; }
+      else { cmpPush(mid,'add',B[j]); j++; }
+    }
+    while(i<na){ cmpPush(mid,'del',A[i]); i++; }
+    while(j<nb){ cmpPush(mid,'add',B[j]); j++; }
+    out=out.concat(mid);
+  }
+  if(suf) out.push({t:'same', v:a.slice(n-suf)});
+  return out;
+}
+/** Burp 와 같은 용어로 센다. 삭제 바로 옆에 추가가 붙어 있으면 '수정'이다. */
+function cmpCount(d){
+  var mod=0, del=0, add=0;
+  for(var i=0;i<d.length;i++){
+    if(d[i].t==='same') continue;
+    var pairs = (d[i].t==='del' && d[i+1] && d[i+1].t==='add');
+    if(pairs){ mod++; i++; }
+    else if(d[i].t==='del') del++;
+    else add++;
+  }
+  return {mod:mod, del:del, add:add};
+}
+
+function cmpLoadPair(kind){
+  var ra, rb;
+  if(kind==='enum'){
+    ra=mkReq('GET','/recover','user=alice');          /* 있는 계정 */
+    rb=mkReq('GET','/recover','user=nosuchuser');     /* 없는 계정 */
+    comparer.a={label:L('/recover · 있는 계정','/recover · existing account'), text:rawResponse(sendRequest(ra,'comparer'))};
+    comparer.b={label:L('/recover · 없는 계정','/recover · unknown account'), text:rawResponse(sendRequest(rb,'comparer'))};
+    comparer.mode='bytes';   /* 한 글자 차이라 바이트 단위로 봐야 보인다 */
+  } else {
+    ra=mkReq('POST','/login','','user=alice&pass=wrongpass');
+    rb=mkReq('POST','/login','','user='+encodeURIComponent("' OR '1'='1")+'&pass=x');
+    comparer.a={label:L('/login · 그냥 실패','/login · plain failure'), text:rawResponse(sendRequest(ra,'comparer'))};
+    comparer.b={label:L('/login · SQLi 우회','/login · SQLi bypass'), text:rawResponse(sendRequest(rb,'comparer'))};
+    comparer.mode='words';
+  }
+  buildTabs(); renderComparer();
+}
+function cmpLoadHistory(slot, id){
+  var h=reqHistory.filter(function(x){return String(x.id)===String(id);})[0];
+  if(!h) return;
+  comparer[slot]={label:'#'+h.id+' '+h.method+' '+h.path+' → '+h.status, text:rawResponse(h.res)};
+  renderComparer();
+}
+function cmpSetMode(m){ comparer.mode=m; renderComparer(); }
+function cmpSwap(){ var t=comparer.a; comparer.a=comparer.b; comparer.b=t; renderComparer(); }
+function cmpClear(){ comparer.a={label:'',text:''}; comparer.b={label:'',text:''}; renderComparer(); }
+
+function renderComparer(){
+  var opts = reqHistory.slice(-60).reverse().map(function(h){
+    return '<option value="'+h.id+'">#'+h.id+' '+esc(h.method)+' '+esc(h.path.slice(0,46))+' → '+h.status+'</option>';
+  }).join('');
+  var picker =
+   '<div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">'+
+     '<label class="legend">A <select id="cmpSelA" onchange="cmpLoadHistory(\'a\',this.value)">'+
+       '<option value="">'+L('Proxy 히스토리에서…','from Proxy history…')+'</option>'+opts+'</select></label>'+
+     '<label class="legend">B <select id="cmpSelB" onchange="cmpLoadHistory(\'b\',this.value)">'+
+       '<option value="">'+L('Proxy 히스토리에서…','from Proxy history…')+'</option>'+opts+'</select></label>'+
+     '<button class="btn alt sm" onclick="cmpSwap()">'+L('A↔B 바꾸기','Swap')+'</button>'+
+     '<button class="btn alt sm" onclick="cmpClear()">'+L('비우기','Clear')+'</button>'+
+   '</div>';
+
+  var head =
+   '<div class="card"><h3>Comparer — '+L('두 응답의 차이만 보기','Diff two items')+'</h3>'+
+   '<p class="legend" style="line-height:1.7">'+
+   L('상태 코드도 같고 길이도 같은데 내용이 다른 경우가 있습니다. 계정이 있는지 없는지, 조건이 참인지 거짓인지가 '
+     +'한두 바이트로만 드러나는 식입니다. 눈으로는 못 찾습니다.',
+     'Two responses can share a status code and a length and still differ. Whether an account exists, whether a condition '
+     +'was true — it can come down to a byte or two. You will not spot that by eye.')+'</p>'+
+   '<div class="legend" style="margin-top:12px">'+L('바로 해 보기','Try one')+'</div>'+
+   '<div class="row" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'+
+     '<button class="btn go sm" onclick="cmpLoadPair(\'enum\')">'+L('계정 열거 — 1바이트 차이','Account enumeration — one byte')+'</button>'+
+     '<button class="btn alt sm" onclick="cmpLoadPair(\'sqli\')">'+L('로그인 실패 vs SQLi 우회','Login failure vs SQLi bypass')+'</button>'+
+   '</div>'+
+   picker+
+   '<div class="row" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">'+
+     '<span class="legend">'+L('비교 단위','Compare by')+'</span>'+
+     '<button class="btn '+(comparer.mode==='words'?'go':'alt')+' sm" onclick="cmpSetMode(\'words\')">'+L('낱말','Words')+'</button>'+
+     '<button class="btn '+(comparer.mode==='bytes'?'go':'alt')+' sm" onclick="cmpSetMode(\'bytes\')">'+L('바이트','Bytes')+'</button>'+
+   '</div></div>';
+
+  if(!comparer.a.text || !comparer.b.text){
+    el('v-comparer').innerHTML = head +
+     '<div class="card"><div class="muted" style="padding:12px">'+
+     L('비교할 항목 두 개를 고르세요. 위의 "바로 해 보기" 가 가장 빠릅니다.',
+       'Pick two items to compare. The shortcuts above are the quickest way in.')+'</div></div>';
+    return;
+  }
+
+  var ta=cmpTokenize(comparer.a.text, comparer.mode),
+      tb=cmpTokenize(comparer.b.text, comparer.mode);
+  var d=cmpDiff(ta,tb), c=cmpCount(d);
+  var join = comparer.mode==='bytes' ? '' : '';
+  function side(which){
+    var html='';
+    d.forEach(function(seg){
+      if(seg.t==='same') html+=esc(seg.v.join(join));
+      else if(seg.t==='del' && which==='a') html+='<mark class="d-del">'+esc(seg.v.join(join))+'</mark>';
+      else if(seg.t==='add' && which==='b') html+='<mark class="d-add">'+esc(seg.v.join(join))+'</mark>';
+    });
+    return html;
+  }
+  var lenNote = (comparer.a.text.length===comparer.b.text.length)
+    ? '<span class="hl-bad">'+L('길이가 같습니다 — 길이로는 구별되지 않습니다','Same length — length tells you nothing')+'</span>'
+    : L('길이 ','lengths ')+comparer.a.text.length+' vs '+comparer.b.text.length;
+
+  el('v-comparer').innerHTML = head +
+   '<div class="card"><h3>'+L('차이','Differences')+'</h3>'+
+   '<div class="row" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">'+
+     '<span><b class="mono" style="font-size:17px">'+c.mod+'</b> <span class="legend">'+L('수정','modified')+'</span></span>'+
+     '<span><b class="mono" style="font-size:17px">'+c.del+'</b> <span class="legend">'+L('삭제','deleted')+'</span></span>'+
+     '<span><b class="mono" style="font-size:17px">'+c.add+'</b> <span class="legend">'+L('추가','added')+'</span></span>'+
+     '<span class="legend" style="margin-left:auto">'+lenNote+'</span>'+
+   '</div>'+
+   (d.truncated ? '<p class="legend" style="color:var(--warn);margin-top:8px">⚠ '+
+     L('다른 구간이 너무 커서 낱낱이 맞추지 않고 통째로 교체된 것으로 표시했습니다.',
+       'The differing region was too large to align token by token; it is shown as a wholesale replacement.')+'</p>' : '')+
+   '</div>'+
+   '<div class="split" style="align-items:stretch">'+
+   '<div class="pane" style="flex:1"><div class="hd">A — '+esc(comparer.a.label||'(A)')+'</div>'+
+     '<div class="bd"><pre class="cmp">'+side('a')+'</pre></div></div>'+
+   '<div class="pane" style="flex:1"><div class="hd">B — '+esc(comparer.b.label||'(B)')+'</div>'+
+     '<div class="bd"><pre class="cmp">'+side('b')+'</pre></div></div>'+
+   '</div>';
 }
 
 var selFinding=null;
