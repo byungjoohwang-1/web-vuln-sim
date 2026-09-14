@@ -268,6 +268,65 @@ def check_counts():
 
 
 # ------------------------------------------------------------------ #
+# 8-2. 학습 순서 카탈로그와 기둥 목록 동기화
+# ------------------------------------------------------------------ #
+def check_page_order():
+    """이전-다음 내비게이션이 새 기둥에서 조용히 사라지는 것을 막는다.
+
+    이 저장소는 기둥 목록(03_code, 04_design, ...)을 여러 파일에 따로 적어 두는
+    습관이 있었고, 기둥이 늘 때마다 한 곳씩 낡았다. 실제로 자동차 61종,
+    개인정보 34종, 제로트러스트 8종이 page-order.json 에서 빠져 103개 페이지에서
+    이전-다음이 뜨지 않았고, shell.js 의 ORDER_PREFIX 도 13_ai 에서 멈춰 있었다.
+    둘 다 화면에 오류를 내지 않고 기능만 사라져서 눈에 띄지 않는다.
+    """
+    order_path = os.path.join(PUB, 'js', 'page-order.json')
+    if not os.path.exists(order_path):
+        err('NO-PAGE-ORDER', 'js/page-order.json 이 없다. python _gen/gen_page_order.py')
+        return
+    try:
+        with open(order_path, encoding='utf-8') as fh:
+            order = json.load(fh)
+    except (OSError, ValueError) as exc:
+        err('PAGE-ORDER-BROKEN', 'page-order.json 을 읽을 수 없다: %s' % exc)
+        return
+
+    names = set(html_files())
+    listed = set(order)
+
+    ghost = sorted(n for n in listed if n not in names)
+    if ghost:
+        err('PAGE-ORDER-STALE',
+            '카탈로그에 있으나 실제로 없는 페이지: %s' % ghost[:5])
+
+    # 번호 기둥(NN_xxx) 페이지는 모두 카탈로그에 있어야 한다.
+    pillar = sorted(n for n in names if re.match(r'^\d{2}_', n))
+    missing = [n for n in pillar if n not in listed]
+    if missing:
+        err('PAGE-ORDER-STALE',
+            '카탈로그에 빠진 학습 페이지 %d개 (예: %s). python _gen/gen_page_order.py'
+            % (len(missing), ', '.join(missing[:4])))
+
+    # shell.js 가 그 페이지에서 카탈로그를 불러오기는 하는지.
+    shell_path = os.path.join(PUB, 'js', 'shell.js')
+    if os.path.exists(shell_path):
+        with open(shell_path, encoding='utf-8', errors='replace') as fh:
+            shell = fh.read()
+        m = re.search(r'var ORDER_PREFIX\s*=\s*/([^/]+)/', shell)
+        if m:
+            try:
+                rx = re.compile(m.group(1).replace('\\\\', '\\'))
+            except re.error:
+                rx = None
+            if rx is not None:
+                blocked = [n for n in pillar if not rx.match(n)]
+                if blocked:
+                    err('PAGER-PREFIX-STALE',
+                        'shell.js ORDER_PREFIX 가 %d개 페이지를 걸러낸다 (예: %s). '
+                        '기둥 이름을 나열하지 말고 번호 규칙으로 받는다.'
+                        % (len(blocked), ', '.join(blocked[:3])))
+
+
+# ------------------------------------------------------------------ #
 # 9. 콘텐츠 레지스트리 (QA W-06)
 # ------------------------------------------------------------------ #
 def check_registry():
@@ -340,7 +399,7 @@ def main():
     strict = '--strict' in sys.argv
     for fn in (check_script_blocks, check_injected_tags, check_links, check_backdoors,
                check_text_quality, check_a11y, check_sri, check_counts,
-               check_registry):
+               check_page_order, check_registry):
         fn()
 
     print('=' * 62)
