@@ -62,7 +62,13 @@ const DEMO_PAGES = [
   global.fetch = async () => ({ ok: true, json: async () => ({ items: [] }) });
 
   const INC = require(path.join(PUB, 'js', 'incident-engine.js'));
-  assert.strictEqual(INC.stages.length, 4, '단계 4개');
+  /* 단계 수를 못 박으면 과제를 늘릴 때마다 검사가 막는다. 최소 개수와
+     각 단계가 성립하는지를 본다. */
+  assert.ok(INC.stages.length >= 4, '단계가 4개 미만: ' + INC.stages.length);
+  INC.stages.forEach((s) => {
+    assert.ok(s.goal && s.success && s.evidenceIds.length,
+      s.id + ': 목표·성공조건·증거 중 빠진 것이 있다');
+  });
   /* 아무 입력도 없는 상태에서 채점해도 예외가 나면 안 된다 */
   INC.stages.forEach((s) => {
     const r = INC.grade(s.id, null);

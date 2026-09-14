@@ -136,6 +136,53 @@
   ];
 
   /* ─────────────────────────────────────────────────────────────
+   * 5단계 — 금융 전이 (C06)
+   *
+   * 왜 별도 과제인가
+   *   1단계에서 배운 것은 "요청자와 자원의 소유 관계를 서버에서 대조한다" 다.
+   *   그 역량은 그대로 쓰이지만 **전제가 다르다**. 차량은 차주가 한 명이지만
+   *   계좌에는 정당한 접근자가 여럿이고(공동명의·법인 담당자), 위임에는
+   *   유효 기간이 있다.
+   *
+   *   그래서 1단계의 "userId == ownerId" 를 그대로 옮기면 공동명의자와
+   *   법인 담당자가 막힌다. 반대로 전부 인정하면 만료된 위임이 통과한다.
+   *   전이 과제는 "같은 원리, 다른 성공 조건" 을 확인하는 자리다.
+   *
+   *   통제 원리가 같다고 법적 의무까지 같아지지는 않는다. 이 실습은 접근 통제
+   *   구성만 다루며 전자금융거래법상 의무 판단을 대신하지 않는다.
+   * ───────────────────────────────────────────────────────────── */
+  var FIN_TESTS = [
+    { id: 'f-owner', desc: '예금주 본인이 자기 계좌 거래내역 조회',
+      req: { userId: 'c-01', isOwner: true }, expect: true, kind: 'normal' },
+    { id: 'f-joint', desc: '공동명의자가 같은 계좌 조회',
+      req: { userId: 'c-02', isJoint: true }, expect: true, kind: 'normal' },
+    { id: 'f-corp', desc: '법인 계좌의 지정 담당자가 자기 법인 계좌 조회',
+      req: { userId: 'e-11', isCorpOfficer: true, corpMatch: true }, expect: true, kind: 'normal' },
+    { id: 'f-agent-valid', desc: '유효 기간 안의 위임 대리인이 조회',
+      req: { userId: 'a-21', isDelegate: true, delegationActive: true }, expect: true, kind: 'normal' },
+    { id: 'f-other', desc: '아무 관계 없는 사람이 조회 시도',
+      req: { userId: 'c-99' }, expect: false, kind: 'unauthorized' },
+    { id: 'f-agent-expired', desc: '위임 기간이 끝난 대리인이 조회 시도',
+      req: { userId: 'a-22', isDelegate: true, delegationActive: false }, expect: false, kind: 'unauthorized' },
+    { id: 'f-corp-other', desc: '다른 법인의 담당자가 조회 시도',
+      req: { userId: 'e-77', isCorpOfficer: true, corpMatch: false }, expect: false, kind: 'unauthorized' },
+  ];
+
+  /**
+   * 정책 = 어떤 관계를 인정할지 + 위임 기간을 확인할지.
+   * 전부 켜는 것이 정답이 아니다. 기간 확인을 빼면 만료된 위임이 통과한다.
+   */
+  function finAllows(p, r) {
+    p = p || {};
+    if (p.ownerMatch && r.isOwner) return true;
+    if (p.includeJoint && r.isJoint) return true;
+    /* 법인 담당자는 "그 계좌의 법인" 인지까지 봐야 한다. */
+    if (p.includeCorpOfficer && r.isCorpOfficer && (!p.checkCorpScope || r.corpMatch)) return true;
+    if (p.includeDelegate && r.isDelegate && (!p.checkDelegationExpiry || r.delegationActive)) return true;
+    return false;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
    * 증거 자료 (C01/C02)
    *
    * 예전에는 단계마다 'ev-req-own' 같은 **식별자만** 있었다. 화면에는 그 코드가
@@ -220,6 +267,27 @@
           '  vin=' + e.vin + '  조회항목=[' + e.fields.join(', ') + ']';
       }),
     },
+    'ev-fin-account': {
+      label: '계좌에 연결된 사람들',
+      summary: '계좌 하나에 정당한 접근자가 여럿이다. 예금주 1명, 공동명의자 1명, 법인 계좌의 지정 담당자, 기간이 정해진 위임 대리인이 있다.',
+      body: [
+        '계좌 ACC-4410 (개인) — 예금주 c-01 · 공동명의자 c-02',
+        '계좌 ACC-8890 (법인) — 지정 담당자 e-11 (소속 법인 일치)',
+        '',
+        '위임 등록부',
+        '  a-21  대상 ACC-4410  기간 2026-09-01 ~ 2026-12-31   상태 유효',
+        '  a-22  대상 ACC-4410  기간 2026-01-01 ~ 2026-06-30   상태 만료',
+        '',
+        '* 차량은 차주가 한 명이었지만, 계좌는 그렇지 않다.',
+      ],
+    },
+    'ev-fin-attempts': {
+      label: '조회 시도 기록',
+      summary: '7건의 조회 시도 중 4건은 정당하고 3건은 막혀야 한다. 만료된 위임과 다른 법인 담당자가 섞여 있다.',
+      body: FIN_TESTS.map(function (t) {
+        return (t.kind === 'normal' ? '  허용돼야 함  ' : '  거부돼야 함  ') + t.desc;
+      }),
+    },
     'ev-booking-schema': {
       label: '정비 예약 자원 구조',
       summary: '예약 자원에도 소유자 필드(ownerId)가 있다. 차량과 자원 종류는 다르지만 소유 관계를 대조한다는 점은 같다.',
@@ -276,6 +344,18 @@
       success: '정상 1건 허용, 비인가 2건 거부.',
       evidenceIds: ['ev-booking-schema'],
     },
+    {
+      id: 'finance-transfer',
+      title: '5. 다른 분야에서 다시 풀기 — 금융 거래 조회',
+      goal: '계좌 거래내역을 조회할 수 있는 사람을 정한다. 정당한 접근자는 모두 통과시키고 그 밖은 막는다.',
+      givens: ['모든 요청은 이미 로그인 검사를 통과했다.',
+        '앞 단계와 같은 역량(소유·업무 권한 대조)을 쓰지만 전제가 다르다. ' +
+        '계좌에는 정당한 접근자가 여럿이고, 위임에는 기간이 있다.',
+        '이 실습은 접근 통제 구성만 다룬다. 전자금융거래법상 의무 판단을 대신하지 않는다.'],
+      success: '정상 4건(예금주·공동명의자·법인 담당자·유효 위임)이 모두 허용되고, '
+        + '비인가 3건(타인·만료 위임·다른 법인 담당자)이 모두 거부되어야 한다.',
+      evidenceIds: ['ev-fin-account', 'ev-fin-attempts'],
+    },
   ];
 
   /* ── 채점 (고정 검사기) ── */
@@ -307,6 +387,11 @@
     } else if (stageId === 'transfer') {
       results = S4_TESTS.map(function (t) {
         var got = !!(answer && answer.checkOwner && t.req.userId && t.req.userId === t.req.ownerId);
+        return { id: t.id, desc: t.desc, kind: t.kind, expect: t.expect, got: got, pass: got === t.expect };
+      });
+    } else if (stageId === 'finance-transfer') {
+      results = FIN_TESTS.map(function (t) {
+        var got = finAllows(answer, t.req);
         return { id: t.id, desc: t.desc, kind: t.kind, expect: t.expect, got: got, pass: got === t.expect };
       });
     }
@@ -369,6 +454,7 @@
     s1Fields: Object.keys(S1_FIELDS),
     s1Tests: S1_TESTS,
     s4Tests: S4_TESTS,
+    finTests: FIN_TESTS,
     truth: s3Truth,
     grade: gradeStage,
     isDemoData: true,

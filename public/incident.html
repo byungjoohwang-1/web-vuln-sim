@@ -69,6 +69,11 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
 .btn.primary:hover{filter:brightness(1.15);color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 /* 검증 결과 */
+/* [C06] 전이 과제 안내 — 같은 역량, 다른 전제 */
+.transfer-cta{margin-top:14px;padding:14px 16px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(99,102,241,.12));
+  border:1px solid rgba(56,189,248,.4);font-size:.88rem;color:#e2e8f0}
+.transfer-cta[hidden]{display:none}
 .verdict{border-radius:10px;padding:12px 14px;margin:10px 0;font-size:.85rem;font-weight:700;display:none}
 .verdict.show{display:block}
 .verdict.ok{background:rgba(74,222,128,.1);border:1px solid #14532d;color:#86efac}
@@ -167,6 +172,7 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
       <div class="verdict" id="verdict" role="status"></div>
       <div class="axes" id="axes"></div>
       <div class="tests" id="tests"></div>
+      <div class="transfer-cta" id="transferCta" hidden></div>
     </div>
 
     <!-- 우: 코치 -->
@@ -287,6 +293,23 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
         '<label><input type="checkbox" id="k_sig"> 서명을 검증한다</label><br>' +
         '<label><input type="checkbox" id="k_ver"> 현재보다 낮거나 같은 버전을 거부한다</label><br>' +
         '<label><input type="checkbox" id="k_tgt"> 차종·지역이 맞는지 확인한다</label>';
+    } else if (s.id === 'finance-transfer') {
+      /* [C06] 같은 역량, 다른 전제. 1단계식 "소유자 한 명 대조" 를 그대로 옮기면
+         공동명의자와 법인 담당자가 막힌다. 전부 인정하면 만료 위임이 통과한다. */
+      w.innerHTML =
+        '<p class="muted">계좌 거래내역을 볼 수 있는 사람을 정하세요. ' +
+        '차량과 달리 <b>정당한 접근자가 여럿</b>이고 위임에는 <b>기간</b>이 있습니다.</p>' +
+        '<pre>' + esc(INC.finTests.map(function (t) {
+          return (t.kind === 'normal' ? '허용돼야 함  ' : '거부돼야 함  ') + t.desc;
+        }).join('\n')) + '</pre>' +
+        '<p class="muted" style="margin-top:10px"><b>인정할 관계</b></p>' +
+        '<label><input type="checkbox" id="f_own"> 예금주 본인</label><br>' +
+        '<label><input type="checkbox" id="f_joint"> 공동명의자</label><br>' +
+        '<label><input type="checkbox" id="f_corp"> 법인 계좌의 지정 담당자</label><br>' +
+        '<label><input type="checkbox" id="f_dele"> 위임 대리인</label>' +
+        '<p class="muted" style="margin-top:10px"><b>추가로 확인할 것</b></p>' +
+        '<label><input type="checkbox" id="f_exp"> 위임 기간이 아직 유효한지 확인한다</label><br>' +
+        '<label><input type="checkbox" id="f_scope"> 담당자가 그 계좌의 법인 소속인지 확인한다</label>';
     } else if (s.id === 'privacy-scope') {
       w.innerHTML =
         '<p class="muted">아래 합성 접근 로그에서 <b>비인가 접근</b>만 세어 범위를 정리하세요.</p>' +
@@ -315,6 +338,11 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
       return { join: $('join').value, conds: conds };
     }
     if (s.id === 'ota-verify') return { signature: $('k_sig').checked, version: $('k_ver').checked, target: $('k_tgt').checked };
+    if (s.id === 'finance-transfer') return {
+      ownerMatch: $('f_own').checked, includeJoint: $('f_joint').checked,
+      includeCorpOfficer: $('f_corp').checked, includeDelegate: $('f_dele').checked,
+      checkDelegationExpiry: $('f_exp').checked, checkCorpScope: $('f_scope').checked,
+    };
     if (s.id === 'privacy-scope') {
       return { affectedVehicles: Number($('p_count').value),
         fields: [].slice.call(document.querySelectorAll('.p_f:checked')).map(function (c) { return c.value; }) };
@@ -333,6 +361,10 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
         if (a.conds[1]) { $('c2l').value = a.conds[1].left; $('c2o').value = a.conds[1].op; $('c2r').value = a.conds[1].right; }
       } else if (s.id === 'ota-verify') {
         $('k_sig').checked = !!a.signature; $('k_ver').checked = !!a.version; $('k_tgt').checked = !!a.target;
+      } else if (s.id === 'finance-transfer') {
+        $('f_own').checked = !!a.ownerMatch; $('f_joint').checked = !!a.includeJoint;
+        $('f_corp').checked = !!a.includeCorpOfficer; $('f_dele').checked = !!a.includeDelegate;
+        $('f_exp').checked = !!a.checkDelegationExpiry; $('f_scope').checked = !!a.checkCorpScope;
       } else if (s.id === 'privacy-scope') {
         $('p_count').value = a.affectedVehicles || 0;
         [].slice.call(document.querySelectorAll('.p_f')).forEach(function (c) {
@@ -355,6 +387,27 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
         '<span class="k ' + r.kind + '">' + (r.kind === 'normal' ? '정상' : '비인가') + '</span>' +
         '<span>' + esc(r.desc) + '<br><span class="muted">기대 ' + esc(r.expect) + ' · 실제 ' + esc(r.got) + '</span></span></div>';
     }).join('');
+
+    /* [C06] 1단계를 통과하면 "다른 분야에서 다시 풀기" 로 잇는다.
+       같은 역량을 쓰지만 전제가 달라지는 과제라는 것을 함께 밝힌다.
+       통제 원리가 같다고 법적 의무까지 같아지지는 않는다(§7.1). */
+    var next = $('transferCta');
+    if (next) {
+      var isS1 = INC.stages[cur].id === 'api-authz';
+      var fin = -1;
+      INC.stages.forEach(function (s, i) { if (s.id === 'finance-transfer') fin = i; });
+      if (res.passed && isS1 && fin >= 0) {
+        next.hidden = false;
+        next.innerHTML =
+          '<b>같은 원리를 금융에서도 적용해 보세요</b>' +
+          '<p class="muted" style="margin:6px 0 10px;font-size:.8rem">' +
+          '요청자와 자원의 관계를 대조한다는 역량은 같습니다. 다만 계좌에는 ' +
+          '정당한 접근자가 여럿이고 위임에는 기간이 있어 <b>성공 조건이 다릅니다</b>.</p>' +
+          '<button type="button" class="btn" data-goto="' + fin + '">금융 거래 조회 과제 열기 →</button>';
+      } else {
+        next.hidden = true;
+      }
+    }
   }
 
   function run(record) {
@@ -482,6 +535,16 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
       $(map[tab.getAttribute('data-pane')]).classList.add('active');
       return;
     }
+    /* [C06] 전이 과제로 이동. jump() 와 달리 앞 단계를 통과 처리하지 않는다.
+       학습자가 실제로 푼 것과 발표용 예시 상태를 섞지 않기 위해서다. */
+    var gt = t.closest('[data-goto]');
+    if (gt) {
+      cur = Number(gt.getAttribute('data-goto')) || 0;
+      selectedEv = {}; lastResult = null;
+      renderSteps(); renderWork();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     var jb = t.closest('[data-jump]');
     if (jb) { jump(jb.getAttribute('data-jump')); return; }
   });
@@ -513,6 +576,9 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
           { left: 'req.role', op: '==', right: "'admin'" }] },
         'ota-verify': { signature: true, version: true, target: true },
         'privacy-scope': INC.truth(),
+        'transfer': { checkOwner: true },
+        'finance-transfer': { ownerMatch: true, includeJoint: true, includeCorpOfficer: true,
+          includeDelegate: true, checkDelegationExpiry: true, checkCorpScope: true },
       };
       for (var i = 0; i < n - 1; i++) {
         var id = INC.stages[i].id;
