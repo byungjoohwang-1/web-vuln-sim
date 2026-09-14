@@ -186,3 +186,9 @@ C('AUTO-20', 'VSOC 차량 보안 관제 부재', '🖥️', '프로세스·규�
 import specs_auto_p2  # noqa: E402
 
 SPECS += specs_auto_p2.build(C)
+
+# 확장 16종(AUTO-62~77): EV 충전 인프라, 국내·글로벌 규제, SDV 존 아키텍처,
+# 암호 전환(PQC), 디지털 키. 동일하게 C 헬퍼를 주입한다.
+import specs_auto_p3  # noqa: E402
+
+SPECS += specs_auto_p3.build(C)

@@ -173,7 +173,7 @@ ALTER SYSTEM SET audit_trail=DB,EXTENDED SCOPE=SPFILE;
       <div class="kref">점검기준: 데이터베이스 &gt; 감사 기능 활성화</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# audit_trail=NONE — 모든 행위가 기록되지 않음`], [`prompt`, `attacker$ sqlplus APPUSER/leaked@10.0.0.5`], [``, `SQL&gt; GRANT SELECT ANY TABLE TO APPUSER;`], [``, `SQL&gt; SELECT ssn FROM hr.customer;  -- 전 고객 조회`], [`bad`, `&gt;&gt; 권한 변경·대량 조회가 감사 로그에 안 남음`], [`bad`, `&gt;&gt; 유출 후에도 누가 무엇을 봤는지 추적 불가`]], secure: [[`cmt`, `# 동일하게 권한 변경·대량 조회를 시도`], [`prompt`, `SQL&gt; GRANT SELECT ANY TABLE TO APPUSER;`], [``, `SQL&gt; SELECT ssn FROM hr.customer;`], [`good`, `&gt;&gt; audit_trail=DB,EXTENDED 로 모든 행위 기록`], [`warn`, `&gt;&gt; dba_audit_trail 에 GRANT·SELECT 기록 → 탐지/추적`]] };

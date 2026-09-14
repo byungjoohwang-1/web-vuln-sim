@@ -339,7 +339,7 @@ def build(lab):
 
 def main():
     import importlib
-    mods = [a for a in sys.argv[1:] if not a.startswith('--')] or ['specs_iss_acct']
+    mods = [a for a in sys.argv[1:] if not a.startswith('--')] or ['specs_iss_acct', 'specs_iss_ops']
     total = 0
     for name in mods:
         for lab in importlib.import_module(name).LABS:

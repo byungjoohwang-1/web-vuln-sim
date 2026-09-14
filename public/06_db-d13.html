@@ -173,7 +173,7 @@ ALTER SYSTEM SET O7_DICTIONARY_ACCESSIBILITY=FALSE SCOPE=SPFILE;
       <div class="kref">점검기준: 데이터베이스 &gt; 데이터 딕셔너리 접근 제한</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# O7_DICTIONARY_ACCESSIBILITY=TRUE 라 SYS 객체 노출`], [`prompt`, `attacker$ sqlplus APPUSER/leaked@10.0.0.5`], [``, `SQL&gt; SELECT name, spare4 FROM SYS.USER$;`], [``, `APPUSER 는 SELECT ANY TABLE 만 보유`], [`bad`, `&gt;&gt; SYS  S:A1B2...  H:9F8E...  (전 계정 해시 덤프)`], [`bad`, `&gt;&gt; 해시 오프라인 크랙 → SYS 비밀번호 획득`]], secure: [[`cmt`, `# 동일하게 딕셔너리 테이블 덤프를 시도`], [`prompt`, `attacker$ sqlplus APPUSER/leaked@10.0.0.5`], [``, `SQL&gt; SELECT name, spare4 FROM SYS.USER$;`], [`good`, `&gt;&gt; O7_DICTIONARY_ACCESSIBILITY=FALSE 로 SYS 보호`], [`warn`, `&gt;&gt; ORA-00942: table or view does not exist`]] };

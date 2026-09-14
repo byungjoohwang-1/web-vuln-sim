@@ -95,7 +95,7 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
       <div class="kref">점검기준: {kisa_ref}</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const VULN_TERM = {vuln_term_js};

@@ -38,6 +38,19 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
 .easy {{ background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }}
 .easy .tag {{ display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }}
 .easy b {{ color:#c0392b; }}
+/* 아키텍처·규제 맥락 패널 (선택 — 데이터가 있는 항목만 렌더) */
+.ctxp {{ margin-top:28px; border:1px solid #cfd8ff; border-radius:14px; background:linear-gradient(135deg,#f7f9ff,#eef2ff); overflow:hidden; }}
+.ctxp > h2 {{ font-size:19px; color:var(--primary); margin:0; padding:16px 22px; background:#e8edff; border-bottom:1px solid #cfd8ff; display:flex; align-items:center; gap:8px; }}
+.ctxp-in {{ padding:18px 22px 22px; }}
+.ctxp-chips {{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }}
+.ctxp-chips span {{ display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid #c3cdf5; color:#33407a; font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:20px; }}
+.ctxp-chips span i {{ font-style:normal; opacity:.6; font-weight:600; }}
+.ctxp h4 {{ font-size:14px; color:#4a3fa8; margin:16px 0 7px; letter-spacing:.2px; }}
+.ctxp h4:first-child {{ margin-top:0; }}
+.ctxp p {{ font-size:14.5px; line-height:1.8; color:#2c3350; margin:0; }}
+.ctxp .evi {{ margin-top:16px; background:#fffdf3; border:1px solid #ffe08a; border-left:4px solid #ff9800; border-radius:0 10px 10px 0; padding:12px 16px; font-size:13.5px; line-height:1.7; color:#5a4200; }}
+.ctxp .evi b {{ color:#8a5a00; }}
+@media (max-width:640px) {{ .ctxp-in {{ padding:14px 16px 18px; }} .ctxp > h2 {{ padding:14px 16px; font-size:17px; }} }}
 /* 직접 해보기 */
 .lab {{ border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }}
 .lab-toolbar {{ background:#1c1c33; padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }}
@@ -100,7 +113,7 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
 </style>
 </head>
 <body>
-<div class="container">
+<div class="container" id="wvs-main" role="main">
   <div class="topbar"><a href="index.html">&larr; cd /index</a></div>
   <div class="header">
     <div class="code-badge">{code}</div>
@@ -150,6 +163,7 @@ body {{ font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#
       <ul class="checklist" id="checklist">{checklist}</ul>
       <div class="kref">점검기준: {kisa_ref}</div>
     </div>
+{context_block}
   </div>
   <div class="footer">{footer_note}</div>
 </div>
@@ -363,6 +377,39 @@ def ai_lab_block(s):
     return html_part, js_part
 
 
+def context_block(s):
+    """아키텍처·규제 맥락 패널. 스펙에 'context' 가 없으면 도메인별 보강 모듈에서 찾는다.
+
+    선택 필드다 — 데이터가 없는 도메인/항목은 패널 자체가 렌더되지 않는다.
+    (전자금융 43종의 fin_modern.MODERN 과 같은 방식으로 스펙 파일을 흩뜨리지 않으려고 분리)
+    """
+    c = s.get('context')
+    if not c:
+        try:
+            from auto_modern import MODERN
+            c = MODERN.get(s['code'])
+        except ImportError:
+            c = None
+    if not c:
+        return ''
+    chips = ''.join(
+        '<span><i>%s</i> %s</span>' % (esc(k), esc(v))
+        for k, v in (('아키텍처', c.get('arch')), ('접근 경로', c.get('access')),
+                     ('R155 위협 분류', c.get('r155')), ('ISO 21434', c.get('iso')))
+        if v)
+    evi = ('<div class="evi"><b>인증·심사에서 요구되는 증적</b><br>%s</div>' % c['evi']) if c.get('evi') else ''
+    return (
+        '\n    <div class="ctxp">\n'
+        '      <h2>🏗️ 현대 차량 아키텍처에서의 위치와 규제 대응</h2>\n'
+        '      <div class="ctxp-in">\n'
+        '        <div class="ctxp-chips">%s</div>\n'
+        '        <h4>SDV·전동화 전환에서 달라지는 점</h4>\n'
+        '        <p>%s</p>\n'
+        '        %s\n'
+        '      </div>\n'
+        '    </div>\n' % (chips, c.get('sdv', ''), evi))
+
+
 def render(s):
     fix = ''.join('<li>%s</li>' % f for f in s['fix_steps'])
     chk = ''.join('<li><span class="box"></span><span>%s</span></li>' % esc(c) for c in s['checklist'])
@@ -375,8 +422,9 @@ def render(s):
         outcome_vuln_js=js_outcome(s['outcome_vuln']), outcome_secure_js=js_outcome(s['outcome_secure']),
         vuln_term=term_html(s['vuln_term']), secure_term=term_html(s['secure_term']),
         fix_steps=fix, checklist=chk, kisa_ref=esc(s['kisa_ref']),
-        footer_note=esc(s.get('footer_note', '주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성')),
+        footer_note=esc(s.get('footer_note', 'KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다')),
         ai_lab_html=ai_html, ai_lab_js=ai_js,
+        context_block=context_block(s),
     )
 
 

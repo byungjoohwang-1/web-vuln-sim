@@ -173,7 +173,7 @@ GRANT app_read TO APPUSER;
       <div class="kref">점검기준: 데이터베이스 &gt; 최소 권한 원칙</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# APPUSER 에 ANY 권한이 직접 부여됨`], [`prompt`, `attacker$ sqlplus APPUSER/leaked@10.0.0.5`], [``, `SQL&gt; SELECT * FROM dba_sys_privs WHERE grantee='APPUSER';`], [``, `SELECT ANY TABLE / CREATE ANY PROCEDURE`], [`bad`, `SQL&gt; SELECT ssn FROM hr.customer;  -- 타 스키마 조회`], [`bad`, `&gt;&gt; 모든 스키마 열람·악성 프로시저 생성 가능`]], secure: [[`cmt`, `# 동일하게 타 스키마 조회를 시도`], [`prompt`, `attacker$ sqlplus APPUSER/leaked@10.0.0.5`], [``, `SQL&gt; SELECT ssn FROM hr.customer;`], [`good`, `&gt;&gt; ANY 권한 회수, app_read 업무 Role 만 부여`], [`warn`, `&gt;&gt; ORA-00942: table or view does not exist`]] };

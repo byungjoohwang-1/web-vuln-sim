@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0ea5e9">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.json">
+<title>AUTO-71: 이동형 영상정보처리기기 운영 기준 위반 | 교육 시뮬레이터</title>
+<meta name="description" content="AUTO-71: 이동형 영상정보처리기기 운영 기준 위반 | 교육 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="AUTO-71: 이동형 영상정보처리기기 운영 기준 위반 | 교육 시뮬레이터">
+<meta property="og:description" content="AUTO-71: 이동형 영상정보처리기기 운영 기준 위반 | 교육 시뮬레이터 · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/14_auto-auto71.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --primary:#667eea; --danger:#f44336; --success:#4caf50; --warning:#ff9800; --dark:#16162a; --text:#2c3e50; --muted:#7f8c8d; --border:#e6e6ef; }
+body { font-family:'Lora',serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:40px 20px; color:var(--text); }
+.container { max-width:1200px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,.3); overflow:hidden; }
+.topbar { background:#0f0f1e; padding:10px 24px; }
+.topbar a { color:#9aa6ff; text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:38px 40px; text-align:center; }
+.header .code-badge { display:inline-block; background:rgba(255,255,255,.2); padding:6px 16px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-weight:700; margin-bottom:12px; letter-spacing:1px; }
+.header h1 { font-size:30px; margin-bottom:8px; }
+.header p { opacity:.9; font-size:15px; }
+.sev { display:inline-block; margin-top:12px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.sev-상 { background:var(--danger); } .sev-중 { background:var(--warning); } .sev-하 { background:var(--success); }
+.body { padding:34px 40px; }
+.section { margin-bottom:28px; }
+.section h2 { font-size:20px; color:var(--primary); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid #eef0ff; display:flex; align-items:center; gap:8px; }
+.easy { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:18px 20px; font-size:16px; line-height:1.75; }
+.easy .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:8px; font-family:'Lora',serif; }
+.easy b { color:#c0392b; }
+/* 직접 해보기 */
+.lab { border:2px solid #2a2a45; border-radius:14px; overflow:hidden; }
+.lab-toolbar { background:#1c1c33; padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.state-switch { display:flex; background:#0d0d1c; border-radius:10px; padding:4px; gap:4px; }
+.state-switch button { border:none; background:transparent; color:#9aa6c0; font-family:'Lora',serif; font-weight:700; font-size:14px; padding:9px 16px; border-radius:8px; cursor:pointer; transition:.2s; }
+.state-switch button.on.vuln { background:var(--danger); color:white; }
+.state-switch button.on.secure { background:var(--success); color:white; }
+.run-btn { margin-left:auto; background:var(--primary); color:white; border:none; padding:11px 22px; border-radius:10px; font-family:'Lora',serif; font-weight:700; font-size:15px; cursor:pointer; transition:.2s; box-shadow:0 4px 12px rgba(102,126,234,.4); }
+.run-btn:hover { transform:translateY(-1px); }
+.run-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.state-hint { color:#cfd3e6; font-size:13px; }
+.hackterm { background:#0a0a14; min-height:230px; padding:18px 20px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.85; color:#d4d4d4; white-space:pre-wrap; }
+.hackterm .role { color:#ff7b7b; font-weight:700; } .hackterm .sys { color:#7aa2ff; }
+.cur { display:inline-block; width:9px; height:16px; background:#7CFC00; vertical-align:-3px; animation:blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.outcome { display:none; padding:16px 20px; font-size:15px; font-weight:700; align-items:center; gap:12px; }
+.outcome.breach { display:flex; background:#2a0e0e; color:#ff9b9b; border-top:2px solid var(--danger); }
+.outcome.blocked { display:flex; background:#0e2a14; color:#9bffb0; border-top:2px solid var(--success); }
+.outcome .big { font-size:30px; }
+.outcome small { display:block; font-weight:400; opacity:.85; margin-top:3px; }
+.prompt { color:#27c93f; } .cmt { color:#6a9955; } .bad { color:#ff6b6b; } .good { color:#73d13d; } .warn { color:#ffd166; }
+.cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.cmp .card { border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.cmp .ct { padding:9px 14px; font-weight:700; font-size:13px; color:white; font-family:'JetBrains Mono',monospace; }
+.cmp .ct.v { background:var(--danger); } .cmp .ct.s { background:var(--success); }
+.cmp .cb { background:var(--dark); padding:14px; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#d4d4d4; white-space:pre-wrap; min-height:120px; }
+.fix-steps { counter-reset:step; list-style:none; }
+.fix-steps li { position:relative; padding:14px 16px 14px 52px; margin-bottom:12px; background:#f7f8ff; border-radius:10px; line-height:1.6; }
+.fix-steps li::before { counter-increment:step; content:counter(step); position:absolute; left:14px; top:14px; width:26px; height:26px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
+.fix-steps code, .inline-code { font-family:'JetBrains Mono',monospace; background:#1a1a2e; color:#9cdcfe; padding:2px 7px; border-radius:5px; font-size:13px; }
+.checklist { list-style:none; }
+.checklist li { padding:12px 16px; margin-bottom:10px; background:#fafbff; border:1px solid var(--border); border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:.2s; }
+.checklist li:hover { background:#f0f2ff; }
+.checklist li.done { background:#f1f8f1; border-color:#c8e6c9; }
+.checklist .box { width:22px; height:22px; border:2px solid var(--primary); border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; }
+.checklist li.done .box { background:var(--success); border-color:var(--success); }
+.kref { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:#f5f5f5; padding:12px 16px; border-radius:8px; margin-top:10px; }
+/* AI 코치 (BYO 키 하이브리드) */
+.ai-lab { border:2px solid #4c3d8f; border-radius:14px; padding:18px 20px; background:linear-gradient(135deg,#f8f7ff,#f0edff); }
+.ai-setup { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.ai-setup input[type=password] { flex:1; min-width:200px; padding:10px 12px; border:1px solid #cfc7f0; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.ai-setup select { padding:10px; border:1px solid #cfc7f0; border-radius:8px; font-size:13px; background:white; }
+.ai-btn { background:#5a4db0; color:white; border:none; padding:10px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; }
+.ai-btn.ghost { background:white; color:#5a4db0; border:1px solid #5a4db0; }
+.ai-status { font-size:12.5px; color:#5a4db0; margin-bottom:10px; font-weight:700; }
+.ai-quick { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.chip { background:#ede9ff; border:1px solid #cfc7f0; color:#4c3d8f; border-radius:20px; padding:8px 14px; font-size:13px; cursor:pointer; transition:.15s; font-family:'Lora',serif; }
+.chip:hover { background:#ddd6ff; }
+#aiQuestion { width:100%; min-height:64px; padding:12px; border:1px solid #cfc7f0; border-radius:10px; font-family:'Lora',serif; font-size:14px; resize:vertical; margin-bottom:10px; }
+.ask-btn { background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; padding:11px 22px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; }
+.ai-answer { margin-top:14px; }
+.ai-demo-tag, .ai-live-tag { display:inline-block; font-size:12px; font-weight:700; padding:4px 10px; border-radius:14px; margin-bottom:8px; }
+.ai-demo-tag { background:#fff3d6; color:#916500; }
+.ai-live-tag { background:#dcfce7; color:#166534; }
+.ai-text { background:white; border:1px solid #e6e2fa; border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.7; white-space:pre-wrap; }
+.ai-err { background:#fdeaea; color:#a12622; border:1px solid #f5c6c6; border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; }
+.ai-loading { color:#5a4db0; font-weight:700; font-size:14px; padding:10px; }
+.footer { text-align:center; padding:22px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+@media (max-width:740px) { .cmp { grid-template-columns:1fr; } .run-btn { margin-left:0; } }
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
+<div class="container">
+  <div class="topbar"><a href="index.html">&larr; cd /index</a></div>
+  <div class="header">
+    <div class="code-badge">AUTO-71</div>
+    <h1>📷 이동형 영상정보처리기기 운영 기준 위반</h1>
+    <p>자동차 보안 · 국내 규제</p>
+    <span class="sev sev-상">위험도: 상</span>
+  </div>
+  <div class="body">
+
+    <div class="section">
+      <div class="easy"><span class="tag">💡 쉽게 말하면</span><br>자율주행차 카메라는 <b>동네를 하루 종일 도는 CCTV</b>입니다. 차가 잘 달리는 것과, 찍힌 사람들의 얼굴을 어떤 근거로 보관하고 쓰느냐는 완전히 다른 문제입니다.</div>
+    </div>
+
+    <div class="section">
+      <h2>🎯 직접 해보기 — 공격을 실행해 보세요</h2>
+      <p style="color:#555; margin-bottom:14px; line-height:1.6;">아래에서 시스템 상태를 <b style="color:#c0392b">취약</b> 또는 <b style="color:#2e7d32">안전(조치 적용)</b>으로 바꾼 뒤 <b>공격 실행</b>을 눌러, 같은 공격이 어떻게 다르게 끝나는지 직접 확인하세요.</p>
+      <div class="lab">
+        <div class="lab-toolbar">
+          <div class="state-switch">
+            <button id="btnVuln" class="on vuln" onclick="setState('vuln')">⚠️ 취약한 설정</button>
+            <button id="btnSecure" class="secure" onclick="setState('secure')">🛡️ 보안 조치 적용</button>
+          </div>
+          <span class="state-hint" id="stateHint">현재: 취약한 설정 — 공격이 통할까요?</span>
+          <button class="run-btn" id="runBtn" onclick="runAttack()">▶ 공격 실행</button>
+        </div>
+        <div class="hackterm" id="hackTerm"><span class="cmt"># 주행 영상 원본을 학습 데이터로 반출해 본다</span>
+<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span></div>
+        <div class="outcome" id="outcome"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📋 설정 비교 (왜 막혔나?)</h2>
+      <div class="cmp">
+        <div class="card"><div class="ct v">✗ 취약한 설정</div><div class="cb"><span class="cmt"># 주행 영상 원본을 학습셋으로 반출</span>
+<span class="prompt">fleet$ export raw_video -&gt; ai-training</span>
+<span class="bad">&gt;&gt; 보행자 얼굴·번호판 원본 포함</span>
+<span class="warn">→ 촬영 표시·처리 근거 미비</span></div></div>
+        <div class="card"><div class="ct s">✓ 안전한 설정</div><div class="cb"><span class="cmt"># 표시 + 비식별 + 근거 확보</span>
+<span class="prompt">fleet$ mask faces/plates; log basis</span>
+<span class="good">&gt;&gt; 식별요소 비식별 처리 후 활용</span>
+<span class="good">→ 처리 근거·보유기간 문서화</span></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔧 조치 방법</h2>
+      <ol class="fix-steps"><li>촬영 사실을 정보주체가 알 수 있도록 표시하는 방법을 운영 절차에 포함합니다.</li><li>얼굴·번호판 등 식별요소를 수집 즉시 비식별 처리하는 경로를 기본값으로 둡니다.</li><li>원본 활용이 필요한 경우 처리 근거와 안전조치를 문서화하고 보유기간을 정합니다.</li><li>영상 접근 권한을 최소화하고 반출 이력을 남깁니다.</li></ol>
+    </div>
+
+    <div class="section">
+      <h2>✅ 점검 체크리스트</h2>
+      <ul class="checklist" id="checklist"><li><span class="box"></span><span>촬영 표시 방법 운영</span></li><li><span class="box"></span><span>식별요소 비식별 처리 기본 적용</span></li><li><span class="box"></span><span>원본 활용 근거·보유기간 문서화</span></li></ul>
+      <div class="kref">점검기준: 개인정보 보호법 제25조의2 (이동형 영상정보처리기기)</div>
+    </div>
+  </div>
+  <div class="footer">ISO/SAE 21434 · UN R155/R156 · AUTOSAR SecOC 등 공개 표준 기반 · 교육용 재구성</div>
+</div>
+<script>
+const ATTACK = { vuln: [[`cmt`, `# 수집 영상 원본 그대로 반출`], [`prompt`, `fleet$ export raw_video -&gt; ai-training`], [`bad`, `&gt;&gt; 보행자 얼굴·차량 번호판 원본 포함`], [`bad`, `&gt;&gt; 촬영 표시·처리 근거·보유기간 미비`]], secure: [[`cmt`, `# 촬영 표시 + 수집 즉시 비식별 + 근거 문서화`], [`prompt`, `fleet$ mask faces/plates; log basis`], [`good`, `&gt;&gt; 식별요소 제거 후 활용`], [`warn`, `&gt;&gt; 원본 필요 시 근거·보유기간·반출 이력 기록`]] };
+const OUTCOME = { vuln: {emoji: `📷`, title: `근거 없는 처리 — 기술이 아닌 절차의 위반`, desc: `수집은 주행을 위해 정당해도, 학습 활용은 별도의 근거가 필요합니다. 두 가지는 자동으로 이어지지 않습니다.`}, secure: {emoji: `🛡️`, title: `적법 처리 — 비식별을 기본값으로`, desc: `예외로 원본을 쓰는 것과, 기본이 원본인 것은 사고 시 결과가 완전히 다릅니다.`} };
+let state = 'vuln', running = false, timer = null;
+
+function setState(s){
+  if(running) return;
+  state = s;
+  document.getElementById('btnVuln').classList.toggle('on', s==='vuln');
+  document.getElementById('btnSecure').classList.toggle('on', s==='secure');
+  document.getElementById('stateHint').textContent = (s==='vuln')
+    ? '현재: 취약한 설정 — 공격이 통할까요?' : '현재: 보안 조치 적용 — 공격을 막을 수 있을까요?';
+  resetTerm();
+}
+function resetTerm(){
+  document.getElementById('outcome').className = 'outcome';
+  document.getElementById('hackTerm').innerHTML =
+    '<span class="cmt"># 주행 영상 원본을 학습 데이터로 반출해 본다</span>\n<span style="color:#777"># [공격 실행] 버튼을 누르면 시작합니다.</span>';
+}
+function runAttack(){
+  if(running) return;
+  running = true;
+  const term = document.getElementById('hackTerm');
+  const out = document.getElementById('outcome');
+  out.className = 'outcome';
+  term.innerHTML = '';
+  document.getElementById('runBtn').disabled = true;
+  const lines = ATTACK[state];
+  let i = 0;
+  function step(){
+    if(i < lines.length){
+      const [cls, text] = lines[i];
+      const span = cls ? `<span class="${cls}">${text}</span>` : text;
+      term.innerHTML += (i? '\n':'') + span + ' <span class="cur"></span>';
+      term.innerHTML = term.innerHTML.replace(/ <span class="cur"><\/span>(?=[\s\S]*<span class="cur">)/,'');
+      i++;
+      timer = setTimeout(step, 620);
+    } else {
+      term.innerHTML = term.innerHTML.replace(/ ?<span class="cur"><\/span>/g,'');
+      const o = OUTCOME[state];
+      out.className = 'outcome ' + (state==='vuln' ? 'breach':'blocked');
+      out.innerHTML = `<span class="big">${o.emoji}</span><div><div>${o.title}</div><small>${o.desc}</small></div>`;
+      document.getElementById('runBtn').disabled = false;
+      running = false;
+    }
+  }
+  step();
+}
+document.querySelectorAll('#checklist li').forEach(li=>li.addEventListener('click',()=>{
+  li.classList.toggle('done');
+  li.querySelector('.box').textContent = li.classList.contains('done')?'✓':'';
+}));
+
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/pwa.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</body>
+</html>

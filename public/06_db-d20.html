@@ -173,7 +173,7 @@ ALTER TABLE customer MODIFY (ssn ENCRYPT);
       <div class="kref">점검기준: 데이터베이스 &gt; 중요정보 암호화 저장</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# 중요정보가 평문 저장 — 파일만 빼내면 노출`], [`prompt`, `attacker$ scp 10.0.0.5:/oradata/customer.dbf .`], [`prompt`, `attacker$ strings customer.dbf | grep -E "[0-9]{6}-"`], [``, `TDE 미적용 — 데이터파일에 원문 그대로 저장`], [`bad`, `&gt;&gt; 900101-1234567  900203-2345678  ... (평문 주민번호)`], [`bad`, `&gt;&gt; 백업 한 개로 전 고객 주민번호 유출`]], secure: [[`cmt`, `# 동일하게 데이터파일에서 주민번호 추출을 시도`], [`prompt`, `attacker$ strings customer.dbf | grep -E "[0-9]{6}-"`], [`good`, `&gt;&gt; ssn 컬럼은 TDE 로 암호화 저장됨`], [`warn`, `&gt;&gt; 7F3A 9C01 D5...  (Wallet 없이는 복호화 불가)`]] };

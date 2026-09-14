@@ -173,7 +173,7 @@ cat /etc/cron.allow
       <div class="kref">점검기준: 서비스 관리 &gt; cron 접근 제어</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# 권한 없는 사용자가 cron에 작업 등록`], [`prompt`, `user$ crontab -e   (제한 없음)`], [``, `* * * * * cp /bin/sh /tmp/s; chmod 4755 /tmp/s`], [`bad`, `&gt;&gt; 작업이 정상 등록됨 (no restriction)`], [`bad`, `&gt;&gt; /tmp/s 실행 → root 권한 획득`]], secure: [[`cmt`, `# 동일하게 일반 사용자가 cron 등록 시도`], [`prompt`, `user$ crontab -e`], [`good`, `&gt;&gt; You are not allowed to use this program`], [`warn`, `&gt;&gt; cron.allow에 없어 작업 등록 불가`]] };

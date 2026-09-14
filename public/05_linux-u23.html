@@ -174,7 +174,7 @@ chmod u-s /usr/bin/old-backup &amp;&amp; rm /tmp/collector
       <div class="kref">점검기준: 파일 및 디렉터리 관리 &gt; SUID/SGID/Sticky bit 점검</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# SUID 파일 목록 확인`], [`prompt`, `attacker$ find / -perm -4000 -type f 2&gt;/dev/null`], [`bad`, `/usr/bin/old-backup  (root SUID — 사용 중단 도구)`], [`bad`, `/tmp/collector      (root SUID — 권한 버그 있음)`], [`bad`, `&gt;&gt; old-backup의 경로 조작 버그로 root 셸 획득`]], secure: [[`cmt`, `# 동일한 검색 — 승인 목록과 비교`], [`prompt`, `# find / -perm -4000 -type f | diff approved.txt -`], [`good`, `(차이 없음 — 승인된 SUID만 존재)`], [`good`, `&gt;&gt; 새 SUID 생성 시 즉시 알림 발생`]] };

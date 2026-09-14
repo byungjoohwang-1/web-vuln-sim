@@ -173,7 +173,7 @@ ALTER PROFILE DEFAULT LIMIT IDLE_TIME 15;  -- 15분
       <div class="kref">점검기준: 데이터베이스 &gt; 세션 타임아웃</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# 유휴 세션 확인 (IDLE_TIME 무제한)`], [`prompt`, `attacker$ SELECT sid, last_call_et FROM v$session WHERE username='HR';`], [``, `SID 142 — last_call_et 86400초 (1일 방치)`], [`bad`, `&gt;&gt; 화면 잠김 없는 세션 탈취`], [`bad`, `&gt;&gt; SELECT * FROM salary; → 자료 유출`]], secure: [[`cmt`, `# 동일한 세션 상태 확인`], [`prompt`, `attacker$ SELECT sid, last_call_et FROM v$session WHERE username='HR';`], [`good`, `&gt;&gt; 15분 경과 세션은 자동 종료(IDLE_TIME=15)`], [`good`, `&gt;&gt; 접속이 끊겨 탈취 불가`]] };

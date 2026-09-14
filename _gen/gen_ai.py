@@ -22,7 +22,7 @@ PRECONNECT = (
 # 인프라 전용 문구를 AI 도메인 문구로 치환 + 공통 자산 주입한 템플릿
 PAGE = (gen_infra.PAGE
     .replace(
-        '주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성',
+        'KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다',
         'OWASP LLM Top 10 (2025) · 적대적 ML · 딥페이크 · PQC · AI 거버넌스 기반 · 교육용 재구성')
     .replace('점검기준: {kisa_ref}', '참고 기준: {kisa_ref}')
     .replace('<head>\n<meta charset="UTF-8">', '<head>\n' + HEAD_ASSETS + '\n<meta charset="UTF-8">')

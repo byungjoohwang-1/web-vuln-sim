@@ -173,7 +173,7 @@ chmod 644 /etc/services
       <div class="kref">점검기준: 파일 및 디렉터리 관리 &gt; /etc/services 권한</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# services 파일 변조`], [`prompt`, `attacker$ echo "www 8443/tcp  # redirected" &gt;&gt; /etc/services`], [`bad`, `-rw-rw-rw- 1 root root /etc/services`], [`bad`, `&gt;&gt; 서비스-포트 매핑이 바뀌어 방화벽 정책 우회`], [`bad`, `&gt;&gt; 일부 프로그램이 공격자 포트로 통신`]], secure: [[`cmt`, `# 동일한 변조 시도`], [`prompt`, `attacker$ vi /etc/services`], [`good`, `-rw-r--r-- 1 root root (644)`], [`good`, `&gt;&gt; Permission denied — root만 수정`]] };

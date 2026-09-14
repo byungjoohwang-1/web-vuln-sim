@@ -173,7 +173,7 @@ REVOKE DBA FROM APPUSER;
       <div class="kref">점검기준: 데이터베이스 &gt; 관리자 권한 최소화</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# 웹앱에서 탈취한 평범한 APPUSER 계정으로 접속`], [`prompt`, `attacker$ sqlplus APPUSER/leaked@10.0.0.5`], [``, `SQL&gt; SELECT * FROM dba_role_privs WHERE grantee=USER;`], [``, `APPUSER 에게 DBA 롤이 부여되어 있음`], [`bad`, `SQL&gt; GRANT DBA TO hacker; CREATE USER hacker ...`], [`bad`, `&gt;&gt; 모든 스키마 조회/변경 가능 — 전체 DB 장악`]], secure: [[`cmt`, `# 동일 APPUSER 계정으로 권한 상승을 시도`], [`prompt`, `attacker$ sqlplus APPUSER/leaked@10.0.0.5`], [``, `SQL&gt; SELECT * FROM hr.salary;`], [`good`, `&gt;&gt; APPUSER 는 app_read 롤만 보유 (DBA 회수됨)`], [`warn`, `&gt;&gt; ORA-00942: table or view does not exist`]] };

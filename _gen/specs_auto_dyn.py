@@ -369,3 +369,8 @@ DYN = {
 from specs_auto_dyn_p2 import DYN2  # noqa: E402
 
 DYN.update(DYN2)
+
+# 확장 16종(AUTO-62~77) 동적 데모 병합
+from specs_auto_dyn_p3 import DYN3  # noqa: E402
+
+DYN.update(DYN3)

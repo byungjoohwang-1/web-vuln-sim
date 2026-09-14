@@ -29,6 +29,8 @@ function load(dataFile) {
 const LABS = [
   { data: 'iss-lab-acct.js', page: '07_iss-account.html', label: '계정·인증' },
   { data: 'iss-lab-access.js', page: '07_iss-access.html', label: '접근 통제' },
+  { data: 'iss-lab-log.js', page: '07_iss-log.html', label: '로그·백업·시각' },
+  { data: 'iss-lab-ops.js', page: '07_iss-ops.html', label: '운영·패치' },
 ];
 
 console.log('\n정보보호시스템 진단 실습 검증\n');

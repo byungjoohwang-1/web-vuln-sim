@@ -173,7 +173,7 @@ chmod 640 /etc/rsyslog.conf
       <div class="kref">점검기준: 파일 및 디렉터리 관리 &gt; rsyslog 설정 파일 권한</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# 로그 설정 변조 후 침입`], [`prompt`, `attacker$ sed -i "s/^*.info/#&amp;/" /etc/rsyslog.conf`], [`bad`, `-rw-rw-rw- 1 root root /etc/rsyslog.conf`], [`bad`, `&gt;&gt; info 레벨 로깅 중단 — 이후 작업 기록 안 남음`], [`bad`, `&gt;&gt; rm /var/log/secure — 흔적 삭제 후 로그아웃`]], secure: [[`cmt`, `# 동일한 변조 시도`], [`prompt`, `attacker$ vi /etc/rsyslog.conf`], [`good`, `-rw-r----- 1 root root (640)`], [`good`, `&gt;&gt; Permission denied — 설정 변경 불가`], [`good`, `&gt;&gt; 모든 작업이 원격 로그 서버에도 실시간 전송됨`]] };

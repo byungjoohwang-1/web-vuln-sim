@@ -173,7 +173,7 @@ chmod 640 /etc/inetd.conf
       <div class="kref">점검기준: 파일 및 디렉터리 관리 &gt; inetd 설정 파일 권한</div>
     </div>
   </div>
-  <div class="footer">주요정보통신기반시설 기술적 취약점 분석·평가 가이드(KISA) 기반 · 교육용 재구성</div>
+  <div class="footer">KISA 공개 가이드의 점검 항목 구성을 참고한 교육용 재구성 · 항목 번호는 이 사이트의 자체 번호이며 공식 고시의 항목 번호와 다릅니다</div>
 </div>
 <script>
 const ATTACK = { vuln: [[`cmt`, `# inetd.conf 변조 시도`], [`prompt`, `attacker$ echo "backdoor stream tcp nowait root /bin/sh sh -i" &gt;&gt; /etc/inetd.conf`], [`bad`, `-rw-rw-rw- 1 root root /etc/inetd.conf`], [`bad`, `&gt;&gt; 설정에 root 셸 서비스 등록 성공`], [`bad`, `&gt;&gt; inetd 재시작 후 4444포트로 root 셸 접속 가능`]], secure: [[`cmt`, `# 동일한 등록 시도`], [`prompt`, `attacker$ echo "backdoor ..." &gt;&gt; /etc/inetd.conf`], [`good`, `-rw-r----- 1 root root (640)`], [`good`, `&gt;&gt; Permission denied — 등록 불가`]] };
