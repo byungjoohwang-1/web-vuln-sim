@@ -127,6 +127,7 @@
     <div class="view" id="v-repeater"></div>
     <div class="view" id="v-intruder"></div>
     <div class="view" id="v-scanner"></div>
+    <div class="view" id="v-collab"></div>
     <div class="view" id="v-decoder"></div>
   </div>
 
@@ -177,6 +178,42 @@ var AWS_META = '{"Code":"Success","AccessKeyId":"AKIA' + 'EXAMPLE7F4K9",\n "Secr
 
 /* ============================ mock HTTP server ============================ */
 /* returns {status, reason, headers:{}, body, time} */
+/* ============================ Collaborator (OAST) ============================
+ * Burp Pro 의 Collaborator 를 개념 수준으로 재현한다.
+ *
+ * 왜 필요한가
+ *   지금까지 이 모의 앱의 취약점은 전부 "응답에 보이는" 것이었다. 실무에서
+ *   위험한 상당수는 응답에 아무것도 나오지 않는다. 서버가 외부로 나간 흔적을
+ *   따로 관측해야만 알 수 있다. 그 관측 지점이 Collaborator 다.
+ *
+ *   Community 판에는 없고 Pro 에만 있는 기능이라, 이걸 넣기 전에는 블라인드
+ *   SSRF·XXE·명령 삽입을 가르칠 방법이 없었다.
+ *
+ * 어떻게 흉내 내나
+ *   실제 DNS/HTTP 서버를 띄우지 않는다. 페이로드에 이 세션의 고유 도메인이
+ *   들어 있으면 모의 서버가 "상호작용이 발생했다"고 기록한다. 학습자는
+ *   응답이 아니라 그 기록을 보고 판단한다.
+ * ========================================================================= */
+var OAST = { id:'', domain:'', log:[], seq:0 };
+function oastNew(){
+  var s='abcdefghijklmnopqrstuvwxyz0123456789';
+  var id=''; for(var i=0;i<12;i++) id+=s[Math.floor(Math.random()*s.length)];
+  OAST.id=id; OAST.domain=id+'.oast.wvs-sim.local'; OAST.log=[]; OAST.seq=0;
+  return OAST.domain;
+}
+/** 페이로드 어딘가에 이 세션 도메인이 있으면 상호작용으로 남긴다. */
+function oastCheck(text, kind, from){
+  if(!OAST.domain || !text) return false;
+  if(String(text).indexOf(OAST.id)<0) return false;
+  OAST.log.push({
+    n:++OAST.seq, kind:kind, at:nowMs(),
+    src:'203.0.113.' + (10 + (OAST.seq % 40)),   /* 모의 서버의 이그레스 IP */
+    from:from, detail:String(text).slice(0,160)
+  });
+  return true;
+}
+function oastSince(n){ return OAST.log.filter(function(x){return x.n>n;}); }
+
 function mockServer(req){
   var t0 = 18 + (req.path.length % 23);
   var headers = {
@@ -307,6 +344,35 @@ function mockServer(req){
     return R(200,'OK','<html><body><h2>ADMIN PANEL</h2>\nusers: '+DB.users.length+', revenue: $4.2M\n[no authentication required]</body></html>');
   }
 
+  /* ── 블라인드 계열 (Collaborator 로만 드러난다) ────────────────────────
+     세 엔드포인트 모두 응답에 단서를 주지 않는다. 일부러 그렇게 만들었다.
+     응답만 보면 "정상 동작" 으로 보이는 것이 이 취약점들의 핵심이다. */
+
+  if(path==='/api/webhook'){
+    /* 블라인드 SSRF — 등록한 URL 로 서버가 나중에 요청을 보낸다.
+       응답은 언제나 202 다. 나갔는지 여부는 응답으로 알 수 없다. */
+    var hook = q.url || '';
+    oastCheck(hook, 'HTTP', '/api/webhook (server-side fetch)');
+    return R(202,'Accepted', JSON.stringify({queued:true, id:'wh-'+(1000+(hook.length%900))}),
+      {'Content-Type':'application/json'});
+  }
+
+  if(path==='/api/report'){
+    /* 블라인드 명령 삽입 — 리포트를 만들어 보관만 하고 출력하지 않는다.
+       세미콜론 뒤 명령이 실행되지만 결과는 응답 어디에도 없다. */
+    var name = q.name || 'weekly';
+    var inj = /[;|`]|\$\(/.test(name);
+    if(inj) oastCheck(name, 'DNS', '/api/report (shell metacharacter)');
+    return R(200,'OK','<html><body><h2>Report queued</h2><p>파일이 서버에 저장됩니다.</p></body></html>');
+  }
+
+  if(path==='/import-oob'){
+    /* 블라인드 XXE — 파서가 외부 엔터티를 가져오지만 본문에 실지 않는다. */
+    oastCheck(req.body||'', 'HTTP', '/import-oob (XML external entity)');
+    return R(200,'OK', JSON.stringify({imported:0, status:'processed'}),
+      {'Content-Type':'application/json'});
+  }
+
   if(path==='/robots.txt') return R(200,'OK','User-agent: *\nDisallow: /admin\nDisallow: /backup.sql',{'Content-Type':'text/plain'});
   if(path==='/.git/config') return R(200,'OK','[core]\n  repositoryformatversion = 0\n[remote "origin"]\n  url = git@github.com:vuln-shop/app.git',{'Content-Type':'text/plain'});
   if(path==='/backup.sql') return R(200,'OK','-- MySQL dump\nINSERT INTO users VALUES (1,\'admin\',\'S3cr3t!Admin\');',{'Content-Type':'text/plain'});
@@ -357,7 +423,8 @@ function mkReq(method,path,query,body){
 var reqHistory=[]; var hid=0; var selHist=null;
 var repeater={req: mkReq('GET','/product','id=1',''), res:null};
 var intruder={ template:'GET /product?id=§1§ HTTP/1.1\nHost: vuln-shop.local\nUser-Agent: WVS-DAST/1.0\n\n',
-  payloads:"1\n1'\n1 OR 1=1\n1 UNION SELECT 1,2,3\n0/**/OR/**/1=1", results:[] };
+  payloads:"1\n1'\n1 OR 1=1\n1 UNION SELECT 1,2,3\n0/**/OR/**/1=1",
+  payloads2:"", type:'sniper', results:[] };
 var findings=[];
 
 function sendRequest(req, source){
@@ -370,7 +437,9 @@ function sendRequest(req, source){
 /* ============================ crawl / site map ============================ */
 var SEED = ['/','/search?q=test','/product?id=1','/login','/download?file=manual.pdf',
   '/api/account?id=1001','/ping?host=127.0.0.1','/redirect?url=/x','/fetch?url=http://example.com',
-  '/admin','/robots.txt','/.git/config','/backup.sql','/import'];
+  '/admin','/robots.txt','/.git/config','/backup.sql','/import',
+  /* 블라인드 계열 — 응답만 보면 정상이라 사이트맵에 있어도 눈에 띄지 않는다 */
+  '/api/webhook?url=http://example.com/hook','/api/report?name=weekly','/import-oob'];
 var sitemap={};
 function crawl(){
   SEED.forEach(function(t){
@@ -391,6 +460,7 @@ var TABS = [
   {id:'repeater',  ko:'Repeater',  en:'Repeater'},
   {id:'intruder',  ko:'Intruder',  en:'Intruder'},
   {id:'scanner',   ko:'Scanner',   en:'Scanner'},
+  {id:'collab',    ko:'Collaborator', en:'Collaborator'},
   {id:'decoder',   ko:'Decoder',   en:'Decoder'}
 ];
 var active='dashboard';
@@ -408,7 +478,7 @@ function buildTabs(){
 function renderActive(){
   TABS.forEach(function(t){el('v-'+t.id).classList.toggle('on',t.id===active);});
   ({dashboard:renderDashboard,target:renderTarget,proxy:renderProxy,repeater:renderRepeater,
-    intruder:renderIntruder,scanner:renderScanner,decoder:renderDecoder})[active]();
+    intruder:renderIntruder,scanner:renderScanner,collab:renderCollab,decoder:renderDecoder})[active]();
 }
 
 /* ---------- Dashboard ---------- */
@@ -505,6 +575,20 @@ function repSend(){
 }
 
 /* ---------- Intruder ---------- */
+var ATK_TYPES=[
+  {id:'sniper', name:'Sniper',
+   ko:'위치를 한 곳씩 차례로 공격. 나머지는 원래 값. 위치×목록1',
+   en:'One position at a time, others left as-is. positions x set1'},
+  {id:'battering', name:'Battering ram',
+   ko:'모든 위치에 같은 값을 동시에 넣음. 목록1',
+   en:'Same value in every position at once. set1'},
+  {id:'pitchfork', name:'Pitchfork',
+   ko:'위치별 목록을 1:1로 나란히. 짧은 쪽 길이만큼',
+   en:'Sets advance in lockstep, 1:1. length of shorter set'},
+  {id:'cluster', name:'Cluster bomb',
+   ko:'모든 조합(곱집합). 목록1×목록2 — 계정/비번 대입에 쓰임',
+   en:'Every combination. set1 x set2 - used for credential stuffing'}
+];
 function renderIntruder(){
   var rows=intruder.results.map(function(r,i){
     var flag = r.flag? '<span class="hl-bad">'+r.flag+'</span>':'';
@@ -515,16 +599,26 @@ function renderIntruder(){
    '<div class="pane" style="flex:0 0 auto"><div class="hd">'+L('요청 템플릿 — 페이로드 위치를 §...§ 로 표시','Request template — mark positions with §...§')+'</div>'+
      '<div class="bd" style="height:150px;padding:0"><textarea id="intTpl" aria-label="Intruder 요청 템플릿">'+esc(intruder.template)+'</textarea></div></div>'+
    '<div class="split" style="flex:0 0 auto;gap:12px">'+
-     '<div class="pane" style="flex:1"><div class="hd">'+L('페이로드 (한 줄에 하나)','Payloads (one per line)')+'</div>'+
-       '<div class="bd" style="height:130px;padding:0"><textarea id="intPay" aria-label="Intruder 페이로드 목록">'+esc(intruder.payloads)+'</textarea></div></div>'+
-     '<div class="pane" style="flex:0 0 220px"><div class="hd">'+L('공격','Attack')+'</div><div class="bd">'+
-       '<div class="legend">'+L('유형: Sniper (위치 1곳 순차 대입)','Type: Sniper (single position)')+'</div>'+
+     '<div class="pane" style="flex:1"><div class="hd">'+L('페이로드 목록 1 (한 줄에 하나)','Payload set 1 (one per line)')+'</div>'+
+       '<div class="bd" style="height:130px;padding:0"><textarea id="intPay" aria-label="Intruder 페이로드 목록 1">'+esc(intruder.payloads)+'</textarea></div></div>'+
+     '<div class="pane" style="flex:1"><div class="hd">'+L('페이로드 목록 2 (Pitchfork·Cluster bomb 용)','Payload set 2 (Pitchfork / Cluster bomb)')+'</div>'+
+       '<div class="bd" style="height:130px;padding:0"><textarea id="intPay2" aria-label="Intruder 페이로드 목록 2">'+esc(intruder.payloads2||'')+'</textarea></div></div>'+
+     '<div class="pane" style="flex:0 0 250px"><div class="hd">'+L('공격','Attack')+'</div><div class="bd">'+
+       '<div class="legend">'+L('공격 유형','Attack type')+'</div>'+
+       ATK_TYPES.map(function(t){
+         return '<label style="display:block;margin-top:5px;font-size:12px;cursor:pointer">'+
+           '<input type="radio" name="atk" value="'+t.id+'"'+((intruder.type||'sniper')===t.id?' checked':'')+
+           ' onchange="intSetType(\''+t.id+'\')"> <b>'+t.name+'</b>'+
+           '<div class="legend" style="margin-left:18px;line-height:1.5">'+L(t.ko,t.en)+'</div></label>';
+       }).join('')+
        '<button class="btn go" style="margin-top:10px;width:100%" onclick="intStart()">▶ '+L('공격 시작','Start attack')+'</button>'+
        '<div class="legend" style="margin-top:10px">'+L('빠른 페이로드:','Quick payloads:')+'</div>'+
        '<button class="btn alt sm" style="margin-top:6px" onclick="intLoad(\'sqli\')">SQLi</button> '+
        '<button class="btn alt sm" onclick="intLoad(\'xss\')">XSS</button> '+
        '<button class="btn alt sm" onclick="intLoad(\'trav\')">Traversal</button> '+
-       '<button class="btn alt sm" onclick="intLoad(\'creds\')">'+L('비밀번호','Passwords')+'</button>'+
+       '<button class="btn alt sm" onclick="intLoad(\'creds\')">'+L('비밀번호','Passwords')+'</button> '+
+       '<button class="btn alt sm" onclick="intLoad(\'oast\')">'+L('대역 외','Out-of-band')+'</button> '+
+       '<button class="btn alt sm" onclick="intLoad(\'cluster\')">'+L('계정×비번','User x pass')+'</button>'+
      '</div></div>'+
    '</div>'+
    '<div class="pane" style="flex:1"><div class="hd">'+L('결과','Results')+' <span class="legend" style="margin-left:auto">'+L('길이/상태 이상은 강조 표시','length/status anomalies highlighted')+'</span></div>'+
@@ -537,28 +631,104 @@ function intLoad(kind){
     xss:"test\n<script>alert(1)<\\/script>\n\"><svg onload=alert(1)>\n'><img src=x onerror=alert(1)>",
     trav:"manual.pdf\n../../../../etc/passwd\n..%2f..%2f..%2fetc%2fpasswd\n....//....//etc/passwd",
     creds:"123456\npassword\nadmin\nletmein\nqwerty\nS3cr3t!Admin" };
+  /* 대역 외 페이로드는 이 세션의 Collaborator 주소를 써야 의미가 있다. */
+  if(kind==='oast'){
+    if(!OAST.domain) oastNew();
+    var d=OAST.domain;
+    el('intTpl').value='GET /api/webhook?url=§http://example.com§ HTTP/1.1\nHost: vuln-shop.local\n\n';
+    intruder.template=el('intTpl').value;
+    P.oast='http://example.com\nhttp://'+d+'/a\nhttp://127.0.0.1:8080/\nhttp://169.254.169.254/latest/meta-data/';
+  }
+  /* Cluster bomb 실습: 위치 2곳(계정·비번)에 목록 2개를 곱한다. */
+  if(kind==='cluster'){
+    el('intTpl').value='POST /login HTTP/1.1\nHost: vuln-shop.local\nContent-Type: application/x-www-form-urlencoded\n\nuser=§admin§&pass=§x§';
+    intruder.template=el('intTpl').value;
+    intruder.type='cluster';
+    P.cluster='admin\nalice\nbob';
+    if(el('intPay2')){ el('intPay2').value='123456\npassword\nS3cr3t!Admin'; intruder.payloads2=el('intPay2').value; }
+  }
   el('intPay').value=P[kind]; intruder.payloads=P[kind];
+  if(kind==='cluster'||kind==='oast') renderIntruder();
 }
+/* 위치 § 마다 어떤 페이로드를 넣을지 조합을 만든다.
+ * Burp 의 네 가지 공격 유형을 그대로 따른다.
+ *   sniper      위치 1곳씩 차례로. 나머지 위치는 원래 값 유지. 요청 = 위치수 × 목록1
+ *   battering   모든 위치에 같은 값을 동시에. 요청 = 목록1
+ *   pitchfork   위치별 목록을 나란히 진행(1:1). 요청 = 가장 짧은 목록 길이
+ *   cluster     모든 조합(곱집합). 요청 = 목록1 × 목록2
+ * 위치가 1곳이면 네 유형이 사실상 같아진다 — 화면에서 그 점을 알려 준다.
+ */
+function intBuildJobs(type, origs, p1, p2){
+  var n=origs.length, jobs=[];
+  if(type==='sniper'){
+    for(var i=0;i<n;i++) p1.forEach(function(v){
+      var vals=origs.slice(); vals[i]=v;
+      jobs.push({vals:vals, label:'pos'+(i+1)+'='+v});
+    });
+  } else if(type==='battering'){
+    p1.forEach(function(v){
+      var vals=[]; for(var i=0;i<n;i++) vals.push(v);
+      jobs.push({vals:vals, label:'all='+v});
+    });
+  } else if(type==='pitchfork'){
+    var len=Math.min(p1.length, n>1? p2.length : p1.length);
+    for(var k=0;k<len;k++){
+      var vals=origs.slice(); vals[0]=p1[k]; if(n>1) vals[1]=p2[k];
+      jobs.push({vals:vals, label:p1[k]+(n>1?' / '+p2[k]:'')});
+    }
+  } else { /* cluster bomb */
+    p1.forEach(function(a){
+      (n>1? p2 : ['']).forEach(function(b){
+        var vals=origs.slice(); vals[0]=a; if(n>1) vals[1]=b;
+        jobs.push({vals:vals, label:a+(n>1?' / '+b:'')});
+      });
+    });
+  }
+  return jobs;
+}
+
 function intStart(){
-  intruder.template=el('intTpl').value; intruder.payloads=el('intPay').value;
-  var tpl=intruder.template; var m=tpl.match(/§([^§]*)§/);
-  if(!m){ el('v-intruder'); alert(L('템플릿에 §위치§ 표시가 없습니다.','No §position§ marker in template.')); return; }
-  var pays=intruder.payloads.split('\n').filter(function(x){return x.length;});
+  intruder.template=el('intTpl').value;
+  intruder.payloads=el('intPay').value;
+  if(el('intPay2')) intruder.payloads2=el('intPay2').value;
+  var tpl=intruder.template;
+  var origs=[], re=/§([^§]*)§/g, mm;
+  while((mm=re.exec(tpl))!==null) origs.push(mm[1]);
+  if(!origs.length){ alert(L('템플릿에 §위치§ 표시가 없습니다.','No §position§ marker in template.')); return; }
+
+  var p1=intruder.payloads.split('\n').filter(function(x){return x.length;});
+  var p2=(intruder.payloads2||'').split('\n').filter(function(x){return x.length;});
+  var type=intruder.type||'sniper';
+  if((type==='pitchfork'||type==='cluster') && origs.length>1 && !p2.length){
+    alert(L('이 유형은 위치가 2곳 이상이면 페이로드 목록 2도 필요합니다.',
+            'This attack type needs payload set 2 when there is more than one position.'));
+    return;
+  }
+
+  var jobs=intBuildJobs(type, origs, p1, p2);
+  if(jobs.length>400){
+    if(!confirm(L('요청이 '+jobs.length+'건입니다. 계속할까요?','This will send '+jobs.length+' requests. Continue?'))) return;
+  }
+
   var baseLen=null; intruder.results=[];
-  pays.forEach(function(pl){
-    var raw=tpl.replace(/§[^§]*§/, pl);
+  jobs.forEach(function(job){
+    var i=0;
+    var raw=tpl.replace(/§[^§]*§/g, function(){ return job.vals[i++]; });
+    var before=OAST.seq;
     var req=parseRaw(raw); var res=sendRequest(req,'intruder');
     if(baseLen===null) baseLen=res.body.length;
     var flag='';
-    if(res.status>=500||/SQL error|syntax/i.test(res.body)) flag='SQL error';
+    if(OAST.seq>before) flag=L('대역 외 반응','out-of-band hit');   /* 응답이 멀쩡해도 잡아낸다 */
+    else if(res.status>=500||/SQL error|syntax/i.test(res.body)) flag='SQL error';
     else if(/uid=0\(root\)|root:x:0:0/.test(res.body)) flag=L('명령/파일 유출','cmd/file leak');
     else if(/auth":"ok".*admin|SQLi auth bypass/.test(res.body)) flag=L('인증 우회','auth bypass');
     else if(res.status===200 && baseLen!==null && Math.abs(res.body.length-baseLen)>40) flag=L('길이 이상','len anomaly');
-    intruder.results.push({payload:pl, status:res.status, len:res.body.length, time:res.time, flag:flag, raw:rawResponse(res)});
+    intruder.results.push({payload:job.label, status:res.status, len:res.body.length, time:res.time, flag:flag, raw:rawResponse(res)});
   });
   renderIntruder();
-  el('intDetail').textContent=L('완료: ','done: ')+pays.length+L(' 요청','requests');
+  el('intDetail').textContent=L('완료: ','done: ')+jobs.length+L(' 요청 · 위치 ','requests · positions ')+origs.length;
 }
+function intSetType(t){ intruder.type=t; renderIntruder(); }
 function intShow(i){ el('intDetail').className=''; el('intDetail').textContent=intruder.results[i].raw; }
 
 /* ---------- Scanner ---------- */
@@ -615,14 +785,90 @@ var CHECKS=[
   {name:'Server Version Disclosure',sev:'Info',conf:'Certain',cwe:'CWE-200',
    req:function(){return mkReq('GET','/','');},
    det:function(res){return /X-Powered-By|nginx\/\d/.test(rawResponse(res));},
-   rem:{ko:'Server/X-Powered-By 헤더 숨김.',en:'Suppress Server / X-Powered-By headers.'}}
+   rem:{ko:'Server/X-Powered-By 헤더 숨김.',en:'Suppress Server / X-Powered-By headers.'}},
+
+  /* ── 대역 외(OAST) 점검 ──────────────────────────────────────────────
+     응답을 봐서는 판정할 수 없는 것들이다. oast:true 인 점검은 요청을 보낸 뒤
+     Collaborator 에 상호작용이 새로 찍혔는지로 판정한다. */
+  {name:'Blind SSRF (out-of-band)',sev:'High',conf:'Firm',cwe:'CWE-918',oast:true,
+   req:function(){return mkReq('GET','/api/webhook','url='+encodeURIComponent('http://'+OAST.domain+'/scan'));},
+   rem:{ko:'아웃바운드 목적지 허용목록, 내부 대역 차단, 리다이렉트 재검증.',
+        en:'Allow-list outbound destinations, block internal ranges, re-validate redirects.'}},
+  {name:'Blind OS Command Injection (out-of-band)',sev:'High',conf:'Firm',cwe:'CWE-78',oast:true,
+   req:function(){return mkReq('GET','/api/report','name='+encodeURIComponent('weekly; nslookup '+OAST.domain));},
+   rem:{ko:'셸 호출 제거, 인자 배열 전달, 메타문자 차단.',
+        en:'Avoid the shell, pass argument arrays, reject shell metacharacters.'}},
+  {name:'Blind XXE (out-of-band)',sev:'High',conf:'Firm',cwe:'CWE-611',oast:true,
+   req:function(){return mkReq('POST','/import-oob','',
+     '<?xml version="1.0"?><!DOCTYPE r [<!ENTITY x SYSTEM "http://'+OAST.domain+'/e">]><r>&x;</r>');},
+   rem:{ko:'외부 엔터티/DTD 비활성화. 응답에 안 보여도 파서는 나간다.',
+        en:'Disable external entities/DTDs. The parser still fetches even when nothing is echoed.'}}
 ];
+/* ---------- Collaborator ---------- */
+var collabSeen=0;
+function collabNew(){ oastNew(); collabSeen=0; renderCollab(); }
+function collabPoll(){ collabSeen=0; renderCollab(); }
+function collabCopy(){
+  try{ navigator.clipboard.writeText(OAST.domain); }catch(e){}
+}
+function collabSend(kind){
+  /* 학습자가 직접 쏴 볼 수 있게 세 가지 블라인드 페이로드를 준비해 둔다. */
+  var d=OAST.domain, r;
+  if(kind==='ssrf') r=mkReq('GET','/api/webhook','url='+encodeURIComponent('http://'+d+'/hook'));
+  else if(kind==='cmd') r=mkReq('GET','/api/report','name='+encodeURIComponent('weekly; nslookup '+d));
+  else r=mkReq('POST','/import-oob','',
+    '<?xml version="1.0"?><!DOCTYPE r [<!ENTITY x SYSTEM "http://'+d+'/x">]><r>&x;</r>');
+  sendRequest(r,'collaborator');
+  renderCollab();
+}
+function renderCollab(){
+  if(!OAST.domain) oastNew();
+  var rows = OAST.log.length ? OAST.log.map(function(x){
+    return '<tr><td>'+x.n+'</td><td><b class="mono">'+esc(x.kind)+'</b></td><td>'+esc(x.src)+'</td>'+
+      '<td>'+esc(x.from)+'</td><td class="mono" style="font-size:11px">'+esc(x.detail)+'</td></tr>';
+  }).join('') : '';
+  el('v-collab').innerHTML =
+   '<div class="card"><h3>Collaborator — '+L('대역 외(OAST) 관측','Out-of-band interactions')+'</h3>'+
+   '<p class="legend" style="line-height:1.7">'+
+   L('응답에 아무것도 나오지 않아도 서버가 밖으로 나가면 취약합니다. 아래 주소를 페이로드에 넣고, '
+     +'서버가 그 주소로 접속했는지를 여기서 확인합니다. 판단 근거가 <b>응답이 아니라 관측 기록</b>이라는 점이 핵심입니다.',
+     'A response can look perfectly normal while the server still reaches out. Put the address below in a payload, '
+     +'then check here whether the server contacted it. The evidence is the interaction log, not the response.')+'</p>'+
+   '<div class="row" style="margin-top:10px;align-items:center;gap:8px;flex-wrap:wrap">'+
+     '<code class="mono" style="background:var(--panel2);padding:8px 12px;border-radius:8px;font-size:13px">'+esc(OAST.domain)+'</code>'+
+     '<button class="btn alt sm" onclick="collabCopy()">'+L('복사','Copy')+'</button>'+
+     '<button class="btn alt sm" onclick="collabNew()">'+L('새 주소','New address')+'</button>'+
+     '<button class="btn go sm" onclick="collabPoll()">'+L('지금 조회','Poll now')+'</button>'+
+   '</div>'+
+   '<div class="legend" style="margin-top:12px">'+L('직접 쏴 보기 (블라인드 3종)','Try a blind payload')+'</div>'+
+   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">'+
+     '<button class="btn alt sm" onclick="collabSend(\'ssrf\')">'+L('블라인드 SSRF','Blind SSRF')+'</button>'+
+     '<button class="btn alt sm" onclick="collabSend(\'cmd\')">'+L('블라인드 명령 삽입','Blind cmd injection')+'</button>'+
+     '<button class="btn alt sm" onclick="collabSend(\'xxe\')">'+L('블라인드 XXE','Blind XXE')+'</button>'+
+   '</div>'+
+   '</div>'+
+   '<div class="pane" style="margin-top:12px"><div class="hd">'+L('상호작용 기록','Interactions')+
+     ' <span class="legend" style="margin-left:auto">'+OAST.log.length+L('건','')+'</span></div>'+
+   '<div class="bd" style="padding:0">'+
+   (rows ? '<table><thead><tr><th>#</th><th>'+L('종류','Type')+'</th><th>'+L('출발지','Source')+'</th>'+
+     '<th>'+L('유발 지점','Triggered by')+'</th><th>'+L('내용','Detail')+'</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    : '<div class="muted" style="padding:20px">'+
+      L('아직 관측된 상호작용이 없습니다. 위 버튼으로 페이로드를 보내거나, 스캐너를 돌려 보세요.',
+        'No interactions yet. Send a payload above, or run the scanner.')+'</div>')+
+   '</div></div>';
+}
+
 var selFinding=null;
 function runScan(){
   findings=[];
+  if(!OAST.domain) oastNew();
   CHECKS.forEach(function(c){
+    /* 요청을 보내기 전의 관측 수를 기억해 둔다. 보낸 뒤 늘었으면 서버가 밖으로 나간 것이다. */
+    var before = OAST.seq;
     var req=c.req(); var res=sendRequest(req,'scanner');
-    var hit=c.det(res);
+    /* oast 점검은 응답이 아니라 상호작용 기록으로 판정한다. 실제 Collaborator 와 같다.
+       이 엔드포인트들의 응답은 202/200 으로 멀쩡해 보이므로 본문을 봐서는 영영 못 찾는다. */
+    var hit = c.oast ? (OAST.seq > before) : c.det(res);
     var evReq=req, evRes=res;
     if(!hit && c.reqU){ var r2=c.reqU(); var s2=sendRequest(r2,'scanner'); if(/admin|:S3cr3t|root:x/.test(s2.body)){hit=true;evReq=r2;evRes=s2;} }
     if(hit) findings.push({name:c.name,severity:c.sev,confidence:c.conf,cwe:c.cwe,
