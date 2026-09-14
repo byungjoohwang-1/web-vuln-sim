@@ -25,7 +25,7 @@ PREFIX_GROUP = [
     ('03_code_', 'code'), ('04_design', 'design'), ('05_linux', 'unix'),
     ('06_db', 'db'), ('07_fin', 'fin'), ('08_win', 'win'), ('09_net', 'net'),
     ('10_sec', 'sec'), ('11_cloud', 'cloud'), ('12_ics', 'ics'),
-    ('13_ai', 'ai'), ('14_auto', 'auto'), ('15_privacy', 'privacy'),
+    ('07_srv', 'fin'), ('13_ai', 'ai'), ('14_auto', 'auto'), ('15_privacy', 'privacy'),
     ('16_zt', 'zt'),
     ('sim-', 'sim'), ('guide-', 'guide'),
 ]

@@ -60,6 +60,20 @@ MIN_HITS = 1          # 최소 일치 키워드 수
 MAX_LINKS = 2         # 항목당 최대 연결 수(너무 많으면 고르기가 더 어려워진다)
 
 
+# 서버(SRV) 항목은 전용 진단 실습이 있다. 주제어 추측 대신 **항목 ID 로 정확히** 연결한다.
+# 이 표는 _gen/srv-lab-index.json 이 생성물에서 직접 읽어 만든 것이라 손으로 관리하지 않는다.
+def _srv_index():
+    path = os.path.join(BASE, 'srv-lab-index.json')
+    try:
+        with io.open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+SRV_LABS = _srv_index()
+
+
 def existing(page):
     return os.path.exists(os.path.join(PUB, page))
 
@@ -83,11 +97,21 @@ def link_file(rel, text_fields):
     linked = 0
     for it in items:
         text = ' '.join(str(it.get(k, '')) for k in text_fields)
-        hits = match(text)
-        if not hits:
+        sims = []
+        lab = SRV_LABS.get(str(it.get('id', '')))
+        if lab and existing(lab['p']):
+            # 이 항목을 그대로 다루는 실습이 있으면 그것을 맨 앞에 둔다(추측이 아니라 ID 일치)
+            sims.append({'p': lab['p'], 'n': lab['n'], 'w': [str(it.get('id'))]})
+        for _, p, label, words in match(text):
+            if any(s['p'] == p for s in sims):
+                continue
+            sims.append({'p': p, 'n': label, 'w': words})
+            if len(sims) >= MAX_LINKS + 1:
+                break
+        if not sims:
             it.pop('sims', None)
             continue
-        it['sims'] = [{'p': p, 'n': label, 'w': words} for _, p, label, words in hits]
+        it['sims'] = sims
         linked += 1
     data['simLinkNote'] = ('항목 본문의 주제어가 실습 페이지 주제와 겹칠 때만 연결한다. '
                            '연결은 참고용이며 해당 실습이 항목 점검을 대신하지 않는다.')

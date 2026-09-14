@@ -1,0 +1,197 @@
+# -*- coding: utf-8 -*-
+"""금융 서버 진단 실습 — 이름 조회·로그·패치 랩."""
+
+FS = {
+    '/etc/named.conf': {'mode': '0644', 'body': (
+        'options {\n'
+        '    directory "/var/named";\n'
+        '    version "BIND 9.11.36-RedHat";\n'
+        '    recursion yes;\n'
+        '    allow-transfer { any; };\n'
+        '    allow-update { any; };\n'
+        '};\n'
+        'zone "fin.example" IN {\n'
+        '    type master;\n'
+        '    file "fin.example.zone";\n'
+        '};\n'
+    )},
+    '/etc/rsyslog.conf': {'mode': '0644', 'body': (
+        '*.info;mail.none;news.none    /var/log/messages\n'
+        '# authpriv 기록 없음\n'
+        '# cron 기록 없음\n'
+        '# 원격 로그 서버 전송 없음\n'
+    )},
+    '/etc/chrony.conf': {'mode': '0644', 'body': (
+        '# server 지시자 없음 — 시각 동기화 미설정\n'
+        'driftfile /var/lib/chrony/drift\n'
+        'makestep 1.0 3\n'
+    )},
+    '/var/log/messages': {'mode': '0640', 'body': (
+        'Sep 14 09:01:22 fin-dns-05 named[1710]: zone fin.example/IN: loaded serial 2026091401\n'
+    )},
+}
+
+HOST = {'name': 'fin-dns-05', 'os': 'Red Hat Enterprise Linux 8.8',
+        'procs': [{'pid': 1001, 'cmd': '/usr/sbin/sshd -D'},
+                  {'pid': 1710, 'cmd': '/usr/sbin/named -u named'},
+                  {'pid': 1820, 'cmd': '/usr/sbin/rsyslogd -n'}],
+        'ports': [{'port': 22, 'svc': 'sshd'}, {'port': 53, 'svc': 'named'}],
+        'pkgs': {'bind': '9.11.4-26.P2.el8', 'chrony': '4.1-2.el8'}}
+
+LABS = [{
+    'key': 'ops', 'file': '07_srv-ops.html', 'code': 'SRV-OPS',
+    'title': '이름 조회·로그·시각',
+    'desc': 'DNS 설정의 재귀 질의·영역 전송·동적 갱신 범위와 로그 기록·시각 동기화 설정을 '
+            '직접 확인하고 판정·조치하는 실습입니다.',
+    'host': HOST, 'fs': FS,
+    'missions': [
+        {
+            'id': 'SRV-062', 'risk': 3, 'title': '재귀 질의 허용 범위 제한',
+            'brief': '재귀 질의를 <b>아무에게나 열어 두면</b> 외부에서 이 서버를 통해 인터넷 도메인을 조회할 수 있습니다. '
+                     '응답 증폭을 이용한 공격에 동원되거나, 캐시에 거짓 정보를 심는 시도의 대상이 됩니다.',
+            'where': '/etc/named.conf 의 recursion',
+            'hint': 'recursion 값과 그것을 제한하는 allow-recursion 이 있는지 보세요.',
+            'cmds': ['grep -i recursion /etc/named.conf', 'cat /etc/named.conf'],
+            'options': ['recursion yes 이고 출발지 제한이 없음', 'recursion no',
+                        'allow-recursion 으로 제한됨', 'type master 존재'],
+            'evidence': ['recursion yes 이고 출발지 제한이 없음'],
+            'verdict': "function(fs){var b=fs.read('/etc/named.conf')||'';"
+                       "if(/^\\s*recursion\\s+no\\s*;/mi.test(b)) return 'good';"
+                       "return /allow-recursion\\s*\\{/i.test(b)?'good':'vuln';}",
+            'why': '재귀 질의가 켜져 있는데 출발지 제한이 없습니다. 권한 있는 영역만 응답하는 서버라면 '
+                   'recursion 을 끄고, 내부 질의를 받아야 한다면 allow-recursion 으로 대역을 제한합니다.',
+            'fix': "function(fs){var b=fs.read('/etc/named.conf');"
+                   "fs.write('/etc/named.conf', b.replace('recursion yes;','recursion no;'));}",
+            'fixNote': '권한 있는 영역 전용 서버이므로 recursion 을 no 로 바꿨습니다.',
+        },
+        {
+            'id': 'SRV-064', 'risk': 4, 'title': '영역 정보 일괄 전송 대상 제한',
+            'brief': '영역 전송(zone transfer)은 <b>도메인의 모든 레코드를 통째로</b> 넘겨줍니다. '
+                     '누구에게나 열려 있으면 내부 호스트 이름과 주소 목록이 그대로 나갑니다.',
+            'where': '/etc/named.conf 의 allow-transfer',
+            'hint': 'allow-transfer 안에 무엇이 들어 있는지 보세요.',
+            'cmds': ['grep -i transfer /etc/named.conf'],
+            'options': ['allow-transfer { any; } (전체 허용)', 'allow-transfer 가 보조 서버로 제한',
+                        'allow-update { any; }', 'recursion yes'],
+            'evidence': ['allow-transfer { any; } (전체 허용)'],
+            'verdict': "function(fs){var b=fs.read('/etc/named.conf')||'';"
+                       "return /allow-transfer\\s*\\{\\s*any\\s*;/i.test(b)?'vuln':'good';}",
+            'why': '영역 전송이 any 로 열려 있어 내부 호스트 목록이 통째로 노출됩니다. '
+                   '보조(secondary) 네임서버 주소만 허용해야 합니다.',
+            'fix': "function(fs){var b=fs.read('/etc/named.conf');"
+                   "fs.write('/etc/named.conf', b.replace('allow-transfer { any; };','allow-transfer { 10.20.30.6; };'));}",
+            'fixNote': '영역 전송 대상을 보조 네임서버 한 대로 제한했습니다.',
+        },
+        {
+            'id': 'SRV-065', 'risk': 3, 'title': '동적 갱신 허용 범위 제한',
+            'brief': '동적 갱신이 <b>any</b> 로 열려 있으면 외부에서 레코드를 추가·변경할 수 있습니다. '
+                     '도메인이 공격자 서버를 가리키게 만들 수 있다는 뜻입니다.',
+            'where': '/etc/named.conf 의 allow-update',
+            'hint': 'allow-update 값을 보세요.',
+            'cmds': ['grep -i update /etc/named.conf'],
+            'options': ['allow-update { any; } (누구나 레코드 변경 가능)', 'allow-update { none; }',
+                        'allow-transfer { any; }', 'version 표기가 있음'],
+            'evidence': ['allow-update { any; } (누구나 레코드 변경 가능)'],
+            'verdict': "function(fs){var b=fs.read('/etc/named.conf')||'';"
+                       "return /allow-update\\s*\\{\\s*any\\s*;/i.test(b)?'vuln':'good';}",
+            'why': '동적 갱신이 any 로 열려 있습니다. 동적 갱신이 필요 없다면 none 으로 두고, '
+                   '필요하다면 키(TSIG) 기반으로 제한해야 합니다.',
+            'fix': "function(fs){var b=fs.read('/etc/named.conf');"
+                   "fs.write('/etc/named.conf', b.replace('allow-update { any; };','allow-update { none; };'));}",
+            'fixNote': '동적 갱신을 none 으로 막았습니다.',
+        },
+        {
+            'id': 'SRV-061', 'risk': 1, 'title': '이름 조회 서비스의 버전 정보 숨김',
+            'brief': 'DNS 서버는 <code>version.bind</code> 질의에 <b>자기 버전을 그대로 답</b>합니다. '
+                     '설정에 버전 문자열이 적혀 있으면 그것이 노출됩니다.',
+            'where': '/etc/named.conf 의 version',
+            'hint': 'version 지시자에 무엇이 적혀 있는지 보세요.',
+            'cmds': ['grep -i version /etc/named.conf', 'rpm -q bind'],
+            'options': ['version 에 BIND 9.11.36 이 노출됨', 'version "not disclosed"',
+                        'recursion yes', 'directory 설정됨'],
+            'evidence': ['version 에 BIND 9.11.36 이 노출됨'],
+            'verdict': "function(fs){var b=fs.read('/etc/named.conf')||'';"
+                       "var m=b.match(/^\\s*version\\s+\"([^\"]*)\"/mi); if(!m) return 'vuln';"
+                       "return /\\d+\\.\\d+/.test(m[1])?'vuln':'good';}",
+            'why': 'version 지시자에 실제 버전이 적혀 있어 질의로 확인할 수 있습니다. '
+                   '버전을 숨긴다고 취약점이 사라지지는 않지만, 공격자가 대상을 고르는 비용은 올라갑니다.',
+            'fix': "function(fs){var b=fs.read('/etc/named.conf');"
+                   "fs.write('/etc/named.conf', b.replace(/version\\s+\"[^\"]*\"/i,'version \"not disclosed\"'));}",
+            'fixNote': 'version 응답을 고정 문자열로 바꿨습니다.',
+        },
+        {
+            'id': 'SRV-100', 'risk': 3, 'title': '주요 보안 이벤트 기록 설정',
+            'brief': '인증 관련 기록(authpriv)이 빠져 있으면 <b>로그인 성공·실패가 남지 않습니다</b>. '
+                     '사고가 났을 때 "언제 누가 들어왔는가"를 답할 수 없게 됩니다.',
+            'where': '/etc/rsyslog.conf',
+            'hint': 'authpriv 항목이 있는지 보세요.',
+            'cmds': ['cat /etc/rsyslog.conf'],
+            'options': ['authpriv 기록 설정이 없음', 'authpriv.* 가 설정됨',
+                        '*.info 가 messages 로 감', 'cron 기록이 있음'],
+            'evidence': ['authpriv 기록 설정이 없음'],
+            'verdict': "function(fs){var b=fs.read('/etc/rsyslog.conf')||'';"
+                       "return /^\\s*authpriv\\.\\*/m.test(b)?'good':'vuln';}",
+            'why': 'authpriv 기록이 없어 인증 이벤트가 남지 않습니다. 로그인 시도·su·sudo 기록은 '
+                   '침해 조사에서 가장 먼저 보는 자료입니다.',
+            'fix': "function(fs){var b=fs.read('/etc/rsyslog.conf');"
+                   "fs.write('/etc/rsyslog.conf', b.replace('# authpriv 기록 없음','authpriv.*    /var/log/secure')"
+                   ".replace('# cron 기록 없음','cron.*        /var/log/cron'));}",
+            'fixNote': 'authpriv·cron 기록을 각각 /var/log/secure, /var/log/cron 으로 남기도록 했습니다.',
+        },
+        {
+            'id': 'SRV-070', 'risk': 2, 'title': '주기 작업 실행 기록 확보',
+            'brief': '예약 작업 기록이 없으면 <b>누가 어떤 배치를 언제 돌렸는지</b> 알 수 없습니다. '
+                     '공격자가 심어 둔 작업도 흔적 없이 돌아갑니다.',
+            'where': '/etc/rsyslog.conf 의 cron 항목',
+            'hint': 'cron 관련 기록 설정이 있는지 보세요.',
+            'cmds': ['grep -i cron /etc/rsyslog.conf', 'cat /etc/rsyslog.conf'],
+            'options': ['cron 기록 설정이 없음', 'cron.* 가 설정됨',
+                        'authpriv 가 설정됨', '*.info 만 있음'],
+            'evidence': ['cron 기록 설정이 없음'],
+            'verdict': "function(fs){var b=fs.read('/etc/rsyslog.conf')||'';"
+                       "return /^\\s*cron\\.\\*/m.test(b)?'good':'vuln';}",
+            'why': 'cron 실행 기록 설정이 없습니다. 배치가 많은 금융 서버에서는 실행 이력 자체가 '
+                   '장애 원인 추적과 침해 판단의 근거가 됩니다.',
+            'fix': "function(fs){var b=fs.read('/etc/rsyslog.conf');"
+                   "fs.write('/etc/rsyslog.conf', b.replace('# cron 기록 없음','cron.*        /var/log/cron'));}",
+            'fixNote': 'cron 실행 기록을 /var/log/cron 으로 남기도록 했습니다.',
+        },
+        {
+            'id': 'SRV-102', 'risk': 2, 'title': '시각 동기화 적용',
+            'brief': '서버 시각이 어긋나면 <b>여러 장비의 로그를 시간순으로 맞출 수 없습니다</b>. '
+                     '사고 조사에서 순서를 못 세우면 원인 추적이 사실상 불가능해집니다.',
+            'where': '/etc/chrony.conf',
+            'hint': 'server 또는 pool 지시자가 있는지 보세요.',
+            'cmds': ['cat /etc/chrony.conf', 'rpm -q chrony'],
+            'options': ['시각 서버(server/pool) 지시자가 없음', 'server 가 설정됨',
+                        'driftfile 이 있음', 'makestep 이 있음'],
+            'evidence': ['시각 서버(server/pool) 지시자가 없음'],
+            'verdict': "function(fs){var b=fs.read('/etc/chrony.conf')||'';"
+                       "return /^\\s*(server|pool)\\s+\\S+/m.test(b)?'good':'vuln';}",
+            'why': '시각 서버가 지정돼 있지 않아 동기화가 되지 않습니다. 내부 NTP 서버를 지정하면 '
+                   '모든 장비의 로그 시각 기준이 하나로 맞춰집니다.',
+            'fix': "function(fs){var b=fs.read('/etc/chrony.conf');"
+                   "fs.write('/etc/chrony.conf', b.replace('# server 지시자 없음 — 시각 동기화 미설정',"
+                   "'server 10.20.30.1 iburst\\nserver 10.20.30.2 iburst'));}",
+            'fixNote': '내부 NTP 서버 두 대를 지정했습니다.',
+        },
+        {
+            'id': 'SRV-063', 'risk': 5, 'title': '이름 조회 서비스 취약점 조치 상태',
+            'brief': '설치된 패키지 버전이 <b>알려진 취약점이 고쳐진 버전인지</b> 확인해야 합니다. '
+                     '설정을 아무리 조여도 구현 자체에 결함이 있으면 막을 수 없습니다.',
+            'where': '설치된 bind 패키지 버전',
+            'hint': 'rpm -q 로 버전을 확인하고, 설정의 version 표기와 실제가 다른지도 보세요.',
+            'cmds': ['rpm -q bind', 'grep -i version /etc/named.conf'],
+            'options': ['설치 버전이 9.11.4 로 최신 보안 패치 미적용', '최신 보안 패치가 적용됨',
+                        'version 표기가 9.11.36', 'bind 가 설치되지 않음'],
+            'evidence': ['설치 버전이 9.11.4 로 최신 보안 패치 미적용'],
+            'verdict': "function(fs){var h=window.SRV_LAB_DATA.host; var v=h.pkgs['bind']||'';"
+                       "var m=v.match(/^(\\d+)\\.(\\d+)\\.(\\d+)/); if(!m) return 'vuln';"
+                       "return (parseInt(m[3],10)>=26)?'good':'vuln';}",
+            'why': '설치된 bind 는 9.11.4 계열인데 설정 파일의 version 표기는 9.11.36 입니다. '
+                   '<b>표기와 실제가 다른 것 자체가 신호</b>입니다. 실제 설치 버전을 기준으로 패치 상태를 판단해야 합니다.',
+            'fix': "function(fs){window.SRV_LAB_DATA.host.pkgs['bind']='9.11.36-26.P2.el8';}",
+            'fixNote': 'bind 를 보안 패치가 적용된 버전으로 올렸습니다.',
+        },
+    ],
+}]

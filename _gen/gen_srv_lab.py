@@ -97,8 +97,10 @@ button:disabled{{opacity:.45;cursor:not-allowed}}
 <script src="/js/{data}"></script>
 <script src="/js/progress.js" defer></script>
 <script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/shell.js" defer></script>
 </head>
 <body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
 <div class="topbar">
   <a href="index.html">🏠 홈</a>
   <a href="fin-eval.html">전자금융 점검 학습</a>
@@ -108,7 +110,7 @@ button:disabled{{opacity:.45;cursor:not-allowed}}
   <span style="font-size:12px;color:#94a3b8;font-family:var(--mono)">{code}</span>
 </div>
 
-<div class="wrap" role="main">
+<div class="wrap" id="wvs-main" tabindex="-1" role="main">
   <div class="hero">
     <h1>🖥️ 금융 서버 진단 실습 <span>· {title}</span> <span class="badge">{count}개 점검</span></h1>
     <p>{desc}</p>
@@ -367,7 +369,8 @@ def build(lab):
 
 def main():
     import importlib
-    mods = sys.argv[1:] or ['specs_srv_lab']
+    mods = sys.argv[1:] or ['specs_srv_lab', 'specs_srv_acct', 'specs_srv_perm',
+                            'specs_srv_svc', 'specs_srv_ops']
     total = 0
     for name in mods:
         for lab in importlib.import_module(name).LABS:

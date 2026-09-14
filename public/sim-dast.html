@@ -350,6 +350,31 @@ function mockServer(req){
     return R(401,'Unauthorized','{"auth":"fail"}',{'Content-Type':'application/json'});
   }
 
+  /* ── 비밀번호 재설정 — 계정 열거(Comparer 학습용) ───────────────────
+     상태 200, 길이 동일, 화면에 보이는 문구도 완전히 같다. 숨은 필드
+     rc 의 값 한 글자만 다르다. 눈으로 두 응답을 번갈아 봐도 찾을 수 없고,
+     Content-Length 로도 구별되지 않는다. 그래서 diff 도구가 필요하다.
+     실제 서비스가 계정 존재 여부를 흘리는 방식이기도 하다. */
+  if(path==='/recover'){
+    var ru = q.user||'';
+    var rexists = DB.users.some(function(x){return x.user===ru;});
+    var rbody =
+     '<!DOCTYPE html>\n<html lang="ko">\n<head>\n  <meta charset="utf-8">\n'+
+     '  <title>비밀번호 재설정 · vuln-shop</title>\n</head>\n<body>\n'+
+     '  <div class="wrap">\n    <h1>비밀번호 재설정</h1>\n'+
+     '    <p class="msg">입력하신 주소로 재설정 링크를 보냈습니다.</p>\n'+
+     '    <p class="sub">메일이 오지 않으면 스팸함을 확인해 주세요.</p>\n'+
+     '    <form method="post" action="/recover/confirm">\n'+
+     '      <input type="hidden" name="rc" value="'+(rexists?'1':'0')+'">\n'+
+     '      <input type="hidden" name="ts" value="1757800000">\n'+
+     '      <label>인증 코드<input type="text" name="code" maxlength="6"></label>\n'+
+     '      <button type="submit">확인</button>\n'+
+     '    </form>\n'+
+     '    <p class="help"><a hr'+'ef="/login">로그인으로 돌아가기</a></p>\n'+
+     '  </div>\n</body>\n</html>';
+    return R(200,'OK',rbody);
+  }
+
   if(path==='/ping'){
     var host=q.host||'';
     if(/[;|&`]|\$\(/.test(host)){

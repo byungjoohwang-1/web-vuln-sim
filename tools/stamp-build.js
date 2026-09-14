@@ -29,7 +29,7 @@ const CHECK = process.argv.includes('--check');
 const GROUPS = {
   A: ['menu3', 'menu4', 'menuTime', 'menuErr', 'menuCode', 'menuEncap', 'menuApi', 'menuDesign', 'menu2'],
   B: ['menu1', 'menu5', 'menu9', 'menu6', 'menu10', 'menu11', 'menu12', 'menu13'],
-  C: ['menu7'],
+  C: ['menu7', 'menuSrvLab'],
   D: ['menuAI'],
   E: ['menuAuto'],
   F: ['menuPrivacy'],

@@ -41,6 +41,7 @@ DOMAIN_RULES = [
     ('05_linux', 'infra', 'concept_simulation'),
     ('06_db', 'infra', 'concept_simulation'),
     ('07_fin', 'financial', 'concept_simulation'),
+    ('07_srv', 'financial', 'practice_tool'),
     ('08_win', 'infra', 'concept_simulation'),
     ('09_net', 'infra', 'concept_simulation'),
     ('10_sec', 'infra', 'concept_simulation'),
