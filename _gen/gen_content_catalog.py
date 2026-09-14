@@ -99,6 +99,34 @@ def slug(page):
     return base.replace('_', '-').replace('.', '-')
 
 
+PRESERVE_FIELDS = ('sourceIds', 'reviewStatus')
+
+
+def _keep_reviewed(items):
+    """기존 카탈로그에 사람이 넣은 값이 있으면 그대로 살린다.
+
+    생성기는 파일을 통째로 다시 쓴다. 그래서 손으로 검토해 넣은 출처 연결이
+    다음 생성에서 조용히 사라졌다(배포 게이트가 drift 로 잡아냈다).
+    기본값(빈 배열 / 'unreviewed')이 아닌 값만 보존한다.
+    """
+    path = OUT
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, encoding='utf-8') as fh:
+            prev = {x['id']: x for x in json.load(fh).get('items', [])}
+    except (OSError, ValueError, KeyError):
+        return
+    for it in items:
+        old = prev.get(it['id'])
+        if not old:
+            continue
+        if old.get('sourceIds'):
+            it['sourceIds'] = old['sourceIds']
+        if old.get('reviewStatus') and old['reviewStatus'] != 'unreviewed':
+            it['reviewStatus'] = old['reviewStatus']
+
+
 def main():
     progress = load(os.path.join('js', 'progress-catalog.json'))
     search = load(os.path.join('data', 'search-index.json'))
@@ -145,6 +173,11 @@ def main():
             'reviewStatus': 'unreviewed',      # 사람이 검토한 적 없음
             'sourceIds': [],
         })
+
+    # 사람이 검토해 넣은 값은 생성기가 덮어쓰지 않는다.
+    # sourceIds/reviewStatus 는 _gen/source-links.json 에서 사람이 정하고
+    # gen_sources.py 가 반영한다. 여기서 매번 비우면 그 작업이 사라진다.
+    _keep_reviewed(items)
 
     items.sort(key=lambda x: x['id'])
     payload = {

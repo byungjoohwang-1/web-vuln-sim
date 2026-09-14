@@ -345,6 +345,47 @@ def check_page_order():
 
 
 # ------------------------------------------------------------------ #
+# 9-2. 출처 연결 정합성 (C03)
+# ------------------------------------------------------------------ #
+def check_sources():
+    """출처를 실제보다 강하게 주장하지 못하게 막는다.
+
+    게시문까지만 본 자료를 "절까지 대조함" 으로 표시하거나, 대조하지 않은
+    절 번호를 적는 것이 가장 흔한 과장이다. 사람이 손으로 적는 파일이라
+    기계가 대신 지켜야 한다.
+    """
+    path = os.path.join(PUB, 'data', 'sources.json')
+    if not os.path.exists(path):
+        return                      # 아직 안 만들었으면 검사 대상 아님
+    try:
+        with open(path, encoding='utf-8') as fh:
+            d = json.load(fh)
+    except (OSError, ValueError) as exc:
+        err('SOURCES-BROKEN', 'data/sources.json 을 읽을 수 없다: %s' % exc)
+        return
+
+    scope = {s['id']: s.get('verifiedScope') for s in d.get('sources', [])}
+    for s in d.get('sources', []):
+        if not s.get('checkedAt') or not s.get('checkedBy'):
+            err('SOURCE-PROVENANCE', '%s: 누가 언제 확인했는지가 없다' % s.get('id'))
+        if s.get('verifiedScope') == 'not-verified':
+            err('SOURCE-UNVERIFIED', '%s: 확인하지 않은 자료가 등록부에 있다' % s.get('id'))
+
+    for l in d.get('links', []):
+        cid, sid, st = l.get('contentId'), l.get('sourceId'), l.get('reviewStatus')
+        if sid not in scope:
+            err('SOURCE-MISSING', '%s: 등록부에 없는 출처(%s)' % (cid, sid))
+            continue
+        if l.get('section') and st != 'section-verified':
+            err('SOURCE-OVERCLAIM',
+                '%s: 대조하지 않은 절 번호를 적었다(reviewStatus=%s)' % (cid, st))
+        if st == 'section-verified' and scope[sid] != 'full-text':
+            err('SOURCE-OVERCLAIM',
+                '%s: 절까지 대조했다고 하는데 출처 %s 는 게시문까지만 확인돼 있다' % (cid, sid))
+        if not l.get('why'):
+            err('SOURCE-NO-REASON', '%s: 근거로 삼는 이유가 비어 있다' % cid)
+
+# ------------------------------------------------------------------ #
 # 9. 콘텐츠 레지스트리 (QA W-06)
 # ------------------------------------------------------------------ #
 def check_registry():
@@ -417,7 +458,7 @@ def main():
     strict = '--strict' in sys.argv
     for fn in (check_script_blocks, check_injected_tags, check_links, check_backdoors,
                check_text_quality, check_a11y, check_sri, check_counts,
-               check_page_order, check_registry):
+               check_page_order, check_sources, check_registry):
         fn()
 
     print('=' * 62)
