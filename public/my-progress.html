@@ -103,6 +103,19 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
 .t-tab.active{background:#162a45;border-color:#38bdf8;color:#38bdf8}
 
 .track-content{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:18px}
+
+/* 폰에서는 칩·탭을 가로 스크롤 대신 여러 줄로 흘린다.
+   360px 기준 도메인 칩은 1408px 중 328px, 트랙 탭은 774px 중 328px 만 보여
+   나머지 항목이 있다는 사실 자체를 알기 어려웠다(스크롤바도 숨겨져 있다).
+   칩 하나하나는 가장 긴 것도 190px 남짓이라 줄바꿈만 허용하면 다 들어온다. */
+@media(max-width:640px){
+  /* 칩 폭이 145~204px 라 328px 안에 2개가 들어가지 않아 그냥 wrap 시키면 6줄이 된다.
+     2열 그리드로 고정하고 칩 안에서 줄바꿈을 허용하면 4줄로 줄고 열도 맞는다. */
+  .domain-chips{display:grid;grid-template-columns:repeat(2,1fr);overflow-x:visible;padding-bottom:10px}
+  .d-chip{white-space:normal;justify-content:center;text-align:center;padding:8px 10px;font-size:12px;line-height:1.35}
+  .track-tabs{flex-wrap:wrap;overflow-x:visible;padding-bottom:4px}
+  .t-tab{padding:9px 13px;font-size:12.5px}
+}
 .tc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 .tc-title{font-size:16px;font-weight:700;color:#fff}
 .tc-pct{font-family:var(--mono);font-size:14px;font-weight:800;color:#38bdf8}

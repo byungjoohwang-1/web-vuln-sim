@@ -12,6 +12,10 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'public')
 PAGE = r'''<!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
+<script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>전자금융 보안: {title}</title>
@@ -60,6 +64,20 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
 .kisa-ref {{ font-size:14px; line-height:1.7; color:#444; }}
 .kisa-ref h4 {{ color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }}
 .kisa-ref ul {{ margin-left:18px; }}
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel {{ border-left:6px solid #7c3aed; }}
+.modern-panel .panel-title {{ color:#5b21b6; }}
+.modern-stack {{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }}
+.modern-stack span {{ background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }}
+.modern-body {{ font-size:14px; line-height:1.75; color:#444; }}
+.modern-body h4 {{ color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }}
+.modern-body ul {{ margin-left:19px; }}
+.modern-body li {{ margin:4px 0; }}
+.modern-body code {{ background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }}
+.modern-body pre {{ background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }}
+.modern-body .warn {{ background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }}
+@media (max-width:900px) {{ .grid-container {{ grid-template-columns:1fr; }} }}
 .easybox {{ background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }}
 .easybox .tag {{ display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }}
 .easybox b {{ color:#c0392b; }}
@@ -67,7 +85,7 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
 </style>
 </head>
 <body>
-<div class="container">
+<div class="container" role="main">
   <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>{icon}</span> 전자금융 보안 모의해킹 &middot; {title}</h1>
@@ -97,7 +115,9 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
-          <textarea class="req-box" id="reqBox" spellcheck="false">{normal_req}</textarea>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
+          <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">{normal_req}</textarea>
           <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
           <div class="result-card" id="resultCard"></div>
         </div>
@@ -127,7 +147,7 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
       <div class="panel">
         <div class="panel-title">🛡️ 대응 코드/설정 실습</div>
         <p style="font-size:14px; color:#555; margin-bottom:15px;">{defense_intro}</p>
-        <textarea id="codeEditor" class="code-editor">{vuln_code}</textarea>
+        <textarea id="codeEditor" class="code-editor" aria-label="취약 코드 편집기">{vuln_code}</textarea>
         <div style="margin-top:15px; display:flex; gap:10px;">
           <button onclick="verifyCode()" class="btn-submit" style="width:auto; background:var(--success); margin-top:0;">코드 검증</button>
           <button onclick="showHint()" style="padding:15px; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer;">힌트(정답) 보기</button>
@@ -139,6 +159,7 @@ body {{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robo
         <div class="kisa-ref">{kisa_ref}</div>
       </div>
     </div>
+{modern_block}
   </div>
 </div>
 
@@ -212,6 +233,7 @@ function verifyCode(){{
 }}
 function showHint(){{ document.getElementById('codeEditor').value=SECURE_HINT; }}
 </script>
+<script src="js/bilingual.js"></script>
 </body>
 </html>
 '''
@@ -229,9 +251,41 @@ def esc(s):
     return html.escape(s, quote=False)
 
 
+MODERN_TPL = '''    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack">%s</div>
+      <div class="modern-body">%s</div>
+    </div>
+'''
+
+
+def modern_block(s):
+    """선택 필드. 없으면 빈 문자열이라 미작성 항목은 기존 페이지 그대로다.
+
+    평가기준(제2026-1호)은 웹·모바일앱·HTS 3계층을 전제로 서술돼 있는데, 현장은
+    API 게이트웨이·MSA·컨테이너·오픈뱅킹/마이데이터로 옮겨 갔다. 같은 취약점이
+    그 환경에서 어떤 모습으로 나타나고 무엇으로 막는지를 따로 붙인다.
+
+    내용은 스펙에 직접 넣어도 되고, 파일명 키로 fin_modern.MODERN 에 두어도 된다
+    (easy_text.EASY 와 같은 방식 — 스펙 9개 파일을 흩뜨리지 않으려고 분리했다).
+    """
+    m = s.get('modern')
+    if not m:
+        try:
+            from fin_modern import MODERN
+            m = MODERN.get(s['file'])
+        except ImportError:
+            m = None
+    if not m:
+        return ''
+    stack = ''.join('<span>%s</span>' % esc(t) for t in m.get('stack', []))
+    return MODERN_TPL % (stack, m['html'])
+
+
 def render(s):
     from easy_text import EASY
     return PAGE.format(
+        modern_block=modern_block(s),
         easy=s.get('easy', EASY.get(s['file'], '')),
         title=esc(s['title']), icon=s['icon'], target=esc(s['target']), risk=s['risk'],
         item_code=esc(s['item_code']),

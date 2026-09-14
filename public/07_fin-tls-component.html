@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🩸</span> 전자금융 보안 모의해킹 &middot; 취약한 HTTPS 컴포넌트 제거</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">openssl version
 # 기대: OpenSSL 3.x (최신 패치 적용)</textarea>
           <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
@@ -163,6 +181,28 @@ RUN apt-get install -y openssl=1.0.1f</textarea>
         <div class="kisa-ref"><h4>1. 점검 항목</h4>서버 보안 &gt; <b>취약한 HTTPS 컴포넌트 제거</b><h4>2. 위험 분석</h4><ul><li>취약 OpenSSL(Heartbleed)로 서버 메모리 누출</li><li>개인키·세션·자격증명 탈취</li></ul><h4>3. 조치 방법</h4><ul><li>TLS 라이브러리 <b>최신 패치 버전</b>으로 갱신</li><li>알려진 취약점(CVE) <b>지속 점검·패치</b></li><li>유출 의심 시 <b>인증서·키 재발급</b></li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>컨테이너 이미지</span><span>SBOM</span><span>이미지 스캔</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>OpenSSL 은 더 이상 서버에 <code>yum update</code> 로 패치하는 대상이 아닙니다.
+<b>컨테이너 베이스 이미지에 박혀서 배포</b>되므로, 취약점 대응은 <b>이미지 재빌드 + 재배포</b> 입니다.
+그리고 실행 중인 컨테이너를 패치해도 <u>다음 배포에 되돌아갑니다.</u></p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li><b>SBOM 을 생성·보관</b>합니다(Syft·CycloneDX). Heartbleed 급 취약점이 나왔을 때 <u>어느 이미지에 무슨 버전이 들어 있는지</u>를 몇 분 안에 답할 수 있어야 합니다.</li>
+<li>CI 에 <b>이미지 취약점 스캔</b>(Trivy·ECR 스캔)을 걸고, 기준 초과 시 배포를 막습니다.</li>
+<li>베이스 이미지를 <b>정기 재빌드</b>합니다. 코드가 안 바뀌어도 베이스는 늙습니다.</li>
+</ul>
+<pre># CI — 취약점이 있으면 배포 중단
+$ syft fin-core:1.42 -o cyclonedx-json &gt; sbom.json
+$ trivy image --severity HIGH,CRITICAL --exit-code 1 fin-core:1.42
+  openssl  3.0.11  CVE-2024-XXXX  HIGH  → fixed in 3.0.13
+$ echo "build failed"   # 게이트가 없으면 스캔은 장식이다</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>애플리케이션이 정적 링크한 TLS 라이브러리</b>는 OS 패키지 목록에 안 잡힙니다.
+Go 바이너리나 번들된 Node 모듈 안의 취약 버전은 SBOM 으로만 보입니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -247,8 +287,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

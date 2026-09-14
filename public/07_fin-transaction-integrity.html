@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🧾</span> 전자금융 보안 모의해킹 &middot; 거래정보 무결성 검증 (전문 변조)</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">{
   "from": "110-392-102931",
   "to":   "220-771-559010",
@@ -168,6 +186,34 @@ public void transfer(TxnRequest req) {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>운영 관리 &gt; 공개서버 보안 &gt; <b>거래정보 무결성 검증</b><h4>2. 위험 분석</h4><ul><li>이체금액·수취계좌 변조로 직접적 금전 피해</li><li>유료 인증서 발급비용 변조 등 파생 악용</li></ul><h4>3. 조치 방법</h4><ul><li>거래정보에 대한 <b>전자서명/HMAC</b> 적용 및 서버 검증</li><li>예비거래와 본거래 거래정보 <b>일치 여부</b> 확인</li><li>금액 등 핵심 값은 서버 보관 값을 기준으로 처리</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>API Gateway</span><span>MSA</span><span>mTLS</span><span>Kafka</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>모놀리식에서는 전문이 한 프로세스 안에서 끝났지만, MSA 에서는 <code>api-gw → txn-orchestrator → ledger-service</code> 처럼
+여러 홉을 지납니다. <b>게이트웨이에서만 HMAC 을 검증하고 내부 구간은 "내부망이니까" 신뢰하는 설계</b>가 가장 흔한 구멍입니다.
+내부 서비스 하나가 SSRF 로 뚫리면 그 뒤는 검증 없이 통과합니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li><b>서명은 종단 간(end-to-end)으로.</b> 게이트웨이가 검증한 뒤 <u>다시 서명해서</u> 내부로 넘기거나, 원 서명을 그대로 전달해 최종 처리 서비스가 검증합니다.</li>
+<li>서비스 간 채널은 <b>mTLS + SPIFFE/SPIRE</b> 로 신원을 증명합니다. 네트워크 위치(내부망)를 신원으로 쓰지 않습니다.</li>
+<li>이벤트 기반이라면 <b>메시지 자체에 서명</b>합니다. Kafka 토픽에 올라간 이체 이벤트는 컨슈머가 여럿이고, 재처리도 됩니다.</li>
+</ul>
+<pre>// 게이트웨이 통과 후에도 최종 서비스에서 다시 검증
+@PostMapping("/internal/transfer")
+public void transfer(@RequestHeader("X-Txn-Signature") String sig,
+                     @RequestHeader("X-Spiffe-Id") String caller,
+                     @RequestBody TxnRequest req) {
+    if (!allowedCallers.contains(caller))          // 누가 불렀는지
+        throw new SecurityException("unknown caller");
+    if (!hmacValid(sig, req.canonical()))          // 무엇을 보냈는지
+        throw new SecurityException("tampered payload");
+    ...
+}</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>서비스 메시(Istio)의 mTLS 는 "누가 불렀는지"만 증명합니다.</b>
+전문 내용이 바뀌지 않았음은 증명하지 못합니다. 두 가지는 대체재가 아니라 함께 써야 합니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -265,8 +311,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>⬆️</span> 전자금융 보안 모의해킹 &middot; 보안프로그램 구동 시 최신 업데이트 수행</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">launch security-module v2.1.0   # 최신 여부 점검 안 함</textarea>
           <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
           <div class="result-card" id="resultCard"></div>
@@ -161,6 +179,27 @@ public void launchSecurityModule() {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>단말 보안 &gt; <b>보안프로그램 구동 시 최신 업데이트</b><h4>2. 위험 분석</h4><ul><li>구버전 보안모듈의 공개 취약점으로 키보드보안·백신 무력화</li></ul><h4>3. 조치 방법</h4><ul><li>구동 시 <b>서버 최신 버전과 비교</b></li><li>최신이 아니면 <b>강제 업데이트</b> 후 서비스 시작</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>자동 업데이트</span><span>서명 검증</span><span>공급망</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>업데이트 채널은 <b>가장 매력적인 공급망 공격 경로</b>입니다.
+관리자 권한으로 실행되는 모듈에 &ldquo;정상 업데이트&rdquo;로 위장한 코드를 밀어 넣으면 전 고객 단말이 한 번에 감염됩니다.
+실제로 국내에서 <b>업데이트 서버를 경유한 대규모 침해</b>가 발생한 전례가 있습니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li>업데이트 패키지는 <b>코드 서명 검증 후에만</b> 설치합니다. TLS 로 받았다는 것과 내용이 정품인 것은 다릅니다.</li>
+<li>버전 <b>다운그레이드를 거부</b>합니다(롤백 공격 방지). 서명이 유효해도 과거 취약 버전이면 막습니다.</li>
+<li>업데이트 서버·빌드 파이프라인에 <b>SLSA 수준의 공급망 통제</b>를 적용하고, 서명 키는 <b>HSM</b> 에 둡니다.</li>
+</ul>
+<pre># 검증 순서: 서명 → 버전 → 설치
+verify_signature(pkg, pubkey=HSM_PUBKEY) or abort("서명 불일치")
+assert pkg.version > installed.version, "다운그레이드 거부"
+install(pkg)</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>업데이트 실패 시 구버전으로 계속 동작</b>하면 패치가 영영 적용되지 않습니다.
+&ldquo;최신 여부&rdquo;를 서버가 확인하고, 일정 기간 미갱신 단말은 <u>거래를 제한</u>해야 실효가 있습니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -246,8 +285,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

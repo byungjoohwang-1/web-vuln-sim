@@ -1,0 +1,364 @@
+# -*- coding: utf-8 -*-
+"""금융 서버 진단 실습 — 서비스 하드닝·파일 전송 랩.
+
+"쓰지 않는 서비스가 떠 있다"는 항목은 프로세스·포트를 직접 보게 하고,
+"설정이 느슨하다"는 항목은 해당 설정 파일을 읽게 한다.
+"""
+
+FS = {
+    '/etc/snmp/snmpd.conf': {'mode': '0644', 'body': (
+        '# 모니터링 수집용\n'
+        'rocommunity public  default\n'
+        'rwcommunity private 10.20.30.0/24\n'
+        'sysLocation IDC-A Rack 12\n'
+        'sysContact  noc@example\n'
+    )},
+    '/etc/postfix/main.cf': {'mode': '0644', 'body': (
+        'myhostname = fin-mail-04\n'
+        'smtpd_banner = $myhostname ESMTP Postfix 3.5.8 (RHEL 8.8)\n'
+        'disable_vrfy_command = no\n'
+        'smtpd_relay_restrictions = permit_mynetworks, permit\n'
+        'message_size_limit = 0\n'
+        'debug_peer_level = 0\n'
+    )},
+    '/etc/vsftpd/vsftpd.conf': {'mode': '0644', 'body': (
+        'listen=YES\n'
+        'anonymous_enable=YES\n'
+        'local_enable=YES\n'
+        'write_enable=YES\n'
+        'ssl_enable=NO\n'
+        'ftpd_banner=vsftpd 3.0.3 ready on fin-mail-04\n'
+    )},
+    '/etc/vsftpd/ftpusers': {'mode': '0666', 'body': '# root 미등록\nbin\ndaemon\n'},
+    '/root/.netrc': {'mode': '0600', 'body': (
+        'machine batch-svr01\nlogin svcftp\npassword Fin#2026!svc\n'
+    )},
+    '/etc/exports': {'mode': '0644', 'body': (
+        '/data/share *(rw,no_root_squash)\n'
+    )},
+    '/var/ftp/pub': {'mode': '0777', 'dir': True, 'body': ''},
+    '/etc/xinetd.d/echo': {'mode': '0644', 'body': (
+        'service echo\n{\n    disable = no\n    socket_type = stream\n    wait = no\n    user = root\n}\n'
+    )},
+}
+
+HOST = {'name': 'fin-mail-04', 'os': 'Red Hat Enterprise Linux 8.8',
+        'procs': [
+            {'pid': 1001, 'cmd': '/usr/sbin/sshd -D'},
+            {'pid': 1310, 'cmd': '/usr/sbin/snmpd -LS0-6d -f'},
+            {'pid': 1422, 'cmd': '/usr/libexec/postfix/master -w'},
+            {'pid': 1560, 'cmd': '/usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf'},
+            {'pid': 1601, 'cmd': '/usr/sbin/rpc.mountd'},
+            {'pid': 1655, 'cmd': 'xinetd -stayalive'},
+        ],
+        'ports': [
+            {'port': 22, 'svc': 'sshd'},
+            {'port': 21, 'svc': 'vsftpd'},
+            {'port': 25, 'svc': 'master'},
+            {'port': 111, 'svc': 'rpcbind'},
+            {'port': 161, 'svc': 'snmpd'},
+            {'port': 2049, 'svc': 'nfsd'},
+        ],
+        'pkgs': {'postfix': '3.5.8-7.el8', 'vsftpd': '3.0.3-35.el8'}}
+
+LABS = [{
+    'key': 'svc', 'file': '07_srv-service.html', 'code': 'SRV-SERVICE',
+    'title': '서비스 하드닝·파일 전송',
+    'desc': '모니터링·메일·파일 전송·원격 공유 서비스가 어떤 설정으로 떠 있는지 프로세스와 설정 파일로 '
+            '직접 확인하고, 불필요하거나 위험한 설정을 판정·조치하는 실습입니다.',
+    'host': HOST, 'fs': FS,
+    'missions': [
+        {
+            'id': 'SRV-001', 'risk': 3, 'title': '관리용 조회 서비스의 community 기본값 사용',
+            'brief': 'SNMP 의 community 문자열은 사실상 <b>비밀번호 역할</b>을 합니다. '
+                     '<code>public</code>·<code>private</code> 은 널리 알려진 기본값이라 '
+                     '누구나 장비 정보를 읽거나 쓸 수 있습니다.',
+            'where': '/etc/snmp/snmpd.conf',
+            'hint': 'rocommunity·rwcommunity 뒤에 오는 문자열을 보세요.',
+            'cmds': ['cat /etc/snmp/snmpd.conf', 'grep community /etc/snmp/snmpd.conf'],
+            'options': ['community 가 public/private 기본값', 'community 가 임의 문자열',
+                        'sysLocation 이 설정됨', '10.20.30.0/24 로 제한됨'],
+            'evidence': ['community 가 public/private 기본값'],
+            'verdict': "function(fs){var b=fs.read('/etc/snmp/snmpd.conf')||'';"
+                       "return /^\\s*(ro|rw)community\\s+(public|private)\\b/mi.test(b)?'vuln':'good';}",
+            'why': 'community 가 public/private 기본값입니다. 특히 rwcommunity 는 <b>설정 변경</b>까지 '
+                   '가능하므로, 추측 불가능한 값으로 바꾸거나 SNMPv3 인증·암호화로 옮겨야 합니다.',
+            'fix': "function(fs){var b=fs.read('/etc/snmp/snmpd.conf');"
+                   "fs.write('/etc/snmp/snmpd.conf', b.replace('rocommunity public  default','rocommunity Fn7x2Qd9Rz 10.20.30.5')"
+                   ".replace('rwcommunity private 10.20.30.0/24','# rwcommunity 제거(읽기 전용으로 운영)'));}",
+            'fixNote': 'community 를 추측 불가능한 값으로 바꾸고 쓰기 community 를 제거했습니다.',
+        },
+        {
+            'id': 'SRV-002', 'risk': 3, 'title': '관리용 조회 서비스 접근 주체 제한',
+            'brief': '읽기 community 에 <code>default</code> 가 붙어 있으면 <b>출발지를 가리지 않습니다</b>. '
+                     '수집 서버 주소만 허용해야 합니다.',
+            'where': '/etc/snmp/snmpd.conf 의 community 뒤 출발지',
+            'hint': 'rocommunity 줄의 마지막 칸을 보세요.',
+            'cmds': ['grep rocommunity /etc/snmp/snmpd.conf'],
+            'options': ['rocommunity 의 출발지가 default (전체 허용)', '수집 서버 IP 로 제한됨',
+                        'rwcommunity 가 있음', 'sysContact 가 설정됨'],
+            'evidence': ['rocommunity 의 출발지가 default (전체 허용)'],
+            'verdict': "function(fs){var b=fs.read('/etc/snmp/snmpd.conf')||'';"
+                       "return /^\\s*rocommunity\\s+\\S+\\s+default\\b/mi.test(b)?'vuln':'good';}",
+            'why': '출발지가 default 라 어느 주소에서든 조회할 수 있습니다. 모니터링 수집 서버 주소만 '
+                   '적어 두면 같은 기능을 유지하면서 범위를 크게 줄일 수 있습니다.',
+            'fix': "function(fs){var b=fs.read('/etc/snmp/snmpd.conf');"
+                   "fs.write('/etc/snmp/snmpd.conf', b.replace(/(rocommunity\\s+\\S+\\s+)default/i,'$1 10.20.30.5'));}",
+            'fixNote': 'rocommunity 의 허용 출발지를 수집 서버 한 대로 좁혔습니다.',
+        },
+        {
+            'id': 'SRV-005', 'risk': 3, 'title': '메일 서비스의 계정 조회 명령 차단',
+            'brief': 'SMTP 의 <code>VRFY</code> 명령은 <b>그 계정이 존재하는지</b> 알려 줍니다. '
+                     '공격자는 이걸로 유효한 계정 목록을 먼저 만든 뒤 비밀번호를 시도합니다.',
+            'where': '/etc/postfix/main.cf 의 disable_vrfy_command',
+            'hint': 'disable_vrfy_command 값이 yes 인지 no 인지 보세요.',
+            'cmds': ['grep vrfy /etc/postfix/main.cf', 'cat /etc/postfix/main.cf'],
+            'options': ['disable_vrfy_command = no (VRFY 허용)', 'disable_vrfy_command = yes',
+                        'smtpd_banner 에 버전 표기', 'message_size_limit = 0'],
+            'evidence': ['disable_vrfy_command = no (VRFY 허용)'],
+            'verdict': "function(fs){var b=fs.read('/etc/postfix/main.cf')||'';"
+                       "return /^\\s*disable_vrfy_command\\s*=\\s*yes/mi.test(b)?'good':'vuln';}",
+            'why': 'VRFY 가 열려 있어 계정 존재 여부를 확인해 줍니다. 메일 수신에는 필요 없는 기능이므로 '
+                   'yes 로 막는 것이 기본입니다.',
+            'fix': "function(fs){var b=fs.read('/etc/postfix/main.cf');"
+                   "fs.write('/etc/postfix/main.cf', b.replace('disable_vrfy_command = no','disable_vrfy_command = yes'));}",
+            'fixNote': 'disable_vrfy_command 를 yes 로 바꿨습니다.',
+        },
+        {
+            'id': 'SRV-009', 'risk': 4, 'title': '외부 메일 중계 차단',
+            'brief': '중계 제한이 <code>permit</code> 로 끝나면 <b>아무나 이 서버를 통해 메일을 보낼 수 있습니다</b>. '
+                     '스팸 발송지로 쓰이면 회사 도메인 전체가 차단 목록에 오를 수 있습니다.',
+            'where': '/etc/postfix/main.cf 의 smtpd_relay_restrictions',
+            'hint': '제한 목록의 마지막 항목이 무엇인지 보세요.',
+            'cmds': ['grep relay /etc/postfix/main.cf'],
+            'options': ['relay 제한이 permit 으로 끝남 (개방 중계)', 'reject_unauth_destination 이 있음',
+                        'permit_mynetworks 만 있음', 'myhostname 이 설정됨'],
+            'evidence': ['relay 제한이 permit 으로 끝남 (개방 중계)'],
+            'verdict': "function(fs){var b=fs.read('/etc/postfix/main.cf')||'';"
+                       "var m=b.match(/^\\s*smtpd_relay_restrictions\\s*=\\s*(.+)$/mi); if(!m) return 'vuln';"
+                       "return /reject_unauth_destination/.test(m[1])?'good':'vuln';}",
+            'why': '중계 제한이 <code>permit</code> 으로 끝나 모든 목적지로의 중계를 허용합니다. '
+                   '마지막에 <code>reject_unauth_destination</code> 을 두어 인가되지 않은 목적지를 거부해야 합니다.',
+            'fix': "function(fs){var b=fs.read('/etc/postfix/main.cf');"
+                   "fs.write('/etc/postfix/main.cf', b.replace('smtpd_relay_restrictions = permit_mynetworks, permit',"
+                   "'smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination'));}",
+            'fixNote': '중계 제한 마지막을 reject_unauth_destination 으로 바꿨습니다.',
+        },
+        {
+            'id': 'SRV-011', 'risk': 1, 'title': '메일 서비스 배너의 버전 정보 숨김',
+            'brief': '배너에 <b>제품명과 버전</b>이 그대로 있으면 공격자가 적용 가능한 공개 취약점을 바로 좁힙니다.',
+            'where': '/etc/postfix/main.cf 의 smtpd_banner',
+            'hint': '배너 문자열에 버전 번호가 들어 있는지 보세요.',
+            'cmds': ['grep banner /etc/postfix/main.cf'],
+            'options': ['배너에 Postfix 3.5.8 과 OS 버전 노출', '배너가 호스트명만 표시',
+                        'myhostname 설정됨', 'ESMTP 표기만 있음'],
+            'evidence': ['배너에 Postfix 3.5.8 과 OS 버전 노출'],
+            'verdict': "function(fs){var b=fs.read('/etc/postfix/main.cf')||'';"
+                       "var m=b.match(/^\\s*smtpd_banner\\s*=\\s*(.+)$/mi); if(!m) return 'good';"
+                       "return /\\d+\\.\\d+/.test(m[1])?'vuln':'good';}",
+            'why': '배너가 Postfix 버전과 배포판 버전을 함께 노출합니다. 호스트명과 ESMTP 표기만 남기면 '
+                   '메일 송수신에는 아무 영향이 없습니다.',
+            'fix': "function(fs){var b=fs.read('/etc/postfix/main.cf');"
+                   "fs.write('/etc/postfix/main.cf', b.replace(/smtpd_banner\\s*=.*/i,'smtpd_banner = $myhostname ESMTP'));}",
+            'fixNote': '배너에서 제품·OS 버전 표기를 제거했습니다.',
+        },
+        {
+            'id': 'SRV-008', 'risk': 1, 'title': '메일 서비스 과부하 방어 설정',
+            'brief': '메시지 크기 제한이 <code>0</code> 이면 <b>무제한</b>입니다. 큰 메일 몇 통으로 '
+                     '디스크와 대기열을 채워 서비스를 멈출 수 있습니다.',
+            'where': '/etc/postfix/main.cf 의 message_size_limit',
+            'hint': '0 은 무제한이라는 뜻입니다.',
+            'cmds': ['grep size_limit /etc/postfix/main.cf'],
+            'options': ['message_size_limit = 0 (무제한)', 'message_size_limit = 20480000',
+                        'debug_peer_level = 0', 'myhostname 설정됨'],
+            'evidence': ['message_size_limit = 0 (무제한)'],
+            'verdict': "function(fs){var b=fs.read('/etc/postfix/main.cf')||'';"
+                       "var m=b.match(/^\\s*message_size_limit\\s*=\\s*(\\d+)/mi);"
+                       "return (m&&parseInt(m[1],10)>0)?'good':'vuln';}",
+            'why': 'message_size_limit 이 0 이라 크기 제한이 없습니다. 업무에 필요한 최대 크기를 정해 '
+                   '상한을 두어야 대기열이 한 번에 넘치지 않습니다.',
+            'fix': "function(fs){var b=fs.read('/etc/postfix/main.cf');"
+                   "fs.write('/etc/postfix/main.cf', b.replace('message_size_limit = 0','message_size_limit = 20480000'));}",
+            'fixNote': 'message_size_limit 을 약 20MB 로 설정했습니다.',
+        },
+        {
+            'id': 'SRV-014', 'risk': 5, 'title': '익명 파일 전송 접속 차단',
+            'brief': '익명 FTP 가 열려 있으면 <b>계정 없이도 접속</b>할 수 있습니다. 쓰기까지 가능하면 '
+                     '공격 도구를 올려 두는 창고로 쓰입니다.',
+            'where': '/etc/vsftpd/vsftpd.conf 의 anonymous_enable',
+            'hint': 'anonymous_enable 값을 보세요.',
+            'cmds': ['grep -i anonymous /etc/vsftpd/vsftpd.conf', 'cat /etc/vsftpd/vsftpd.conf'],
+            'options': ['anonymous_enable=YES', 'anonymous_enable=NO',
+                        'local_enable=YES', 'listen=YES'],
+            'evidence': ['anonymous_enable=YES'],
+            'verdict': "function(fs){var b=fs.read('/etc/vsftpd/vsftpd.conf')||'';"
+                       "return /^\\s*anonymous_enable\\s*=\\s*YES/mi.test(b)?'vuln':'good';}",
+            'why': '익명 접속이 허용돼 있고 write_enable 도 YES 라 익명 사용자가 파일을 올릴 수도 있습니다. '
+                   '업무상 필요가 없다면 반드시 NO 로 둡니다.',
+            'fix': "function(fs){var b=fs.read('/etc/vsftpd/vsftpd.conf');"
+                   "fs.write('/etc/vsftpd/vsftpd.conf', b.replace(/anonymous_enable\\s*=\\s*YES/i,'anonymous_enable=NO'));}",
+            'fixNote': 'anonymous_enable 을 NO 로 바꿨습니다.',
+        },
+        {
+            'id': 'SRV-016', 'risk': 3, 'title': '평문 전송 방식의 파일 전송 서비스 중지',
+            'brief': 'FTP 는 아이디·비밀번호와 파일 내용을 <b>암호화 없이</b> 보냅니다. '
+                     '금융 업무 데이터가 그대로 구간에 노출됩니다.',
+            'where': '/etc/vsftpd/vsftpd.conf 의 ssl_enable',
+            'hint': 'ssl_enable 값을 보세요.',
+            'cmds': ['grep -i ssl /etc/vsftpd/vsftpd.conf', 'netstat -an | grep 21'],
+            'options': ['ssl_enable=NO (평문 전송)', 'ssl_enable=YES',
+                        '21번 포트 LISTEN', 'listen=YES'],
+            'evidence': ['ssl_enable=NO (평문 전송)'],
+            'verdict': "function(fs){var b=fs.read('/etc/vsftpd/vsftpd.conf')||'';"
+                       "return /^\\s*ssl_enable\\s*=\\s*YES/mi.test(b)?'good':'vuln';}",
+            'why': 'ssl_enable 이 NO 라 평문으로 전송됩니다. SFTP 로 옮기는 것이 가장 깔끔하고, '
+                   'FTP 를 유지해야 한다면 최소한 FTPS(ssl_enable=YES)를 적용해야 합니다.',
+            'fix': "function(fs){var b=fs.read('/etc/vsftpd/vsftpd.conf');"
+                   "fs.write('/etc/vsftpd/vsftpd.conf', b.replace(/ssl_enable\\s*=\\s*NO/i,'ssl_enable=YES'));}",
+            'fixNote': 'ssl_enable 을 YES 로 바꿔 전송 구간을 암호화했습니다.',
+        },
+        {
+            'id': 'SRV-012', 'risk': 3, 'title': '관리자 계정의 파일 전송 서비스 접속 차단',
+            'brief': 'ftpusers 는 <b>FTP 접속을 막을 계정 목록</b>입니다. 여기에 root 가 없으면 '
+                     '평문 프로토콜로 관리자 계정이 그대로 오갑니다.',
+            'where': '/etc/vsftpd/ftpusers',
+            'hint': '목록에 root 가 있는지 보세요.',
+            'cmds': ['cat /etc/vsftpd/ftpusers'],
+            'options': ['ftpusers 에 root 가 없음', 'ftpusers 에 root 가 있음',
+                        'bin·daemon 은 등록됨', '파일 권한이 0666'],
+            'evidence': ['ftpusers 에 root 가 없음'],
+            'verdict': "function(fs){var b=fs.read('/etc/vsftpd/ftpusers')||'';"
+                       "return /^root\\s*$/m.test(b)?'good':'vuln';}",
+            'why': 'ftpusers 에 root 가 등록돼 있지 않아 root 로 FTP 접속을 시도할 수 있습니다. '
+                   '관리자 계정은 이 목록에 반드시 넣어야 합니다.',
+            'fix': "function(fs){var b=fs.read('/etc/vsftpd/ftpusers');"
+                   "fs.write('/etc/vsftpd/ftpusers', b.replace('# root 미등록','root'));}",
+            'fixNote': 'ftpusers 에 root 를 등록했습니다.',
+        },
+        {
+            'id': 'SRV-018', 'risk': 3, 'title': '전송 서비스 접속 제한 파일의 권한 보호',
+            'brief': '접속 차단 목록 파일을 <b>누구나 고칠 수 있으면</b> 목록에서 자기 계정을 빼면 그만입니다. '
+                     '통제 파일 자체의 권한이 통제의 일부입니다.',
+            'where': '/etc/vsftpd/ftpusers 의 권한',
+            'hint': 'others 쓰기 권한이 있는지 보세요.',
+            'cmds': ['ls -al /etc/vsftpd/ftpusers'],
+            'options': ['ftpusers 가 0666 (전체 쓰기 가능)', 'ftpusers 가 0640',
+                        '소유자가 root', 'bin·daemon 이 등록됨'],
+            'evidence': ['ftpusers 가 0666 (전체 쓰기 가능)'],
+            'verdict': "function(fs){var f=fs.files['/etc/vsftpd/ftpusers']; if(!f) return 'good';"
+                       "var m=String(f.mode);"
+                       "return ((parseInt(m.slice(-1),10)&2)||(parseInt(m.slice(-2,-1),10)&2))?'vuln':'good';}",
+            'why': 'ftpusers 가 0666 이라 차단 목록을 누구나 수정할 수 있습니다. 0640 이하로 좁혀야 합니다.',
+            'fix': "function(fs){fs.chmod('/etc/vsftpd/ftpusers','0640');}",
+            'fixNote': 'ftpusers 권한을 0640 으로 바꿨습니다.',
+        },
+        {
+            'id': 'SRV-013', 'risk': 4, 'title': '자동 로그인 설정 파일의 자격 증명 저장 금지',
+            'brief': '.netrc 는 자동 로그인을 위해 <b>비밀번호를 평문으로</b> 담습니다. '
+                     '파일 권한이 0600 이어도 root 나 백업본을 통해 그대로 읽힙니다.',
+            'where': '/root/.netrc',
+            'hint': '파일 안에 password 줄이 있는지 보세요.',
+            'cmds': ['cat /root/.netrc', 'ls -al /root/.netrc'],
+            'options': ['.netrc 에 비밀번호가 평문으로 저장됨', '.netrc 가 비어 있음',
+                        '권한이 0600', 'machine 항목만 있음'],
+            'evidence': ['.netrc 에 비밀번호가 평문으로 저장됨'],
+            'verdict': "function(fs){var b=fs.read('/root/.netrc')||'';"
+                       "return /^\\s*password\\s+\\S+/mi.test(b)?'vuln':'good';}",
+            'why': '.netrc 에 비밀번호가 평문으로 있습니다. 자동화가 필요하면 키 기반 인증(SFTP 키)이나 '
+                   '자격 증명 관리 도구를 쓰고, 이 파일에는 비밀번호를 두지 않아야 합니다.',
+            'fix': "function(fs){fs.write('/root/.netrc','# 자격 증명 제거 — SFTP 키 인증으로 전환\\n');}",
+            'fixNote': '.netrc 의 평문 비밀번호를 제거했습니다(키 인증으로 전환).',
+        },
+        {
+            'id': 'SRV-017', 'risk': 4, 'title': '파일 전송 영역의 디렉터리 권한 통제',
+            'brief': '전송 영역이 <b>전체 쓰기 가능</b>하면 누구나 파일을 올리고 지울 수 있습니다. '
+                     '익명 접속과 겹치면 곧바로 악성 파일 보관소가 됩니다.',
+            'where': '/var/ftp/pub 의 권한',
+            'hint': '디렉터리 권한의 마지막 자리를 보세요.',
+            'cmds': ['ls -al /var/ftp/pub', 'ls -l /var/ftp/pub'],
+            'options': ['/var/ftp/pub 이 0777', '/var/ftp/pub 이 0755',
+                        '소유자가 root', '익명 접속이 허용됨'],
+            'evidence': ['/var/ftp/pub 이 0777'],
+            'verdict': "function(fs){var f=fs.files['/var/ftp/pub']; if(!f) return 'good';"
+                       "return (parseInt(String(f.mode).slice(-1),10)&2)?'vuln':'good';}",
+            'why': '전송 영역이 0777 입니다. 업로드가 필요하더라도 별도 디렉터리로 분리하고 '
+                   '읽기 영역과 쓰기 영역의 권한을 다르게 두어야 합니다.',
+            'fix': "function(fs){fs.chmod('/var/ftp/pub','0755');}",
+            'fixNote': '/var/ftp/pub 권한을 0755 로 바꿨습니다.',
+        },
+        {
+            'id': 'SRV-020', 'risk': 5, 'title': '원격 파일 공유 대상 범위 제한',
+            'brief': '<code>*</code> 는 <b>모든 호스트</b>에 공유한다는 뜻이고, '
+                     '<code>no_root_squash</code> 는 <b>원격 root 를 로컬 root 로 인정</b>한다는 뜻입니다. '
+                     '둘이 겹치면 누구나 이 서버의 파일을 root 권한으로 다룰 수 있습니다.',
+            'where': '/etc/exports',
+            'hint': '공유 대상과 옵션을 함께 보세요.',
+            'cmds': ['cat /etc/exports'],
+            'options': ['* 로 전체 공개 + no_root_squash', '특정 대역만 공유',
+                        'root_squash 적용', 'ro 로 읽기 전용'],
+            'evidence': ['* 로 전체 공개 + no_root_squash'],
+            'verdict': "function(fs){var b=fs.read('/etc/exports')||'';"
+                       "return (/^\\s*\\S+\\s+\\*\\(/m.test(b)||/no_root_squash/.test(b))?'vuln':'good';}",
+            'why': '공유 대상이 <code>*</code> 이고 no_root_squash 까지 걸려 있습니다. '
+                   '대상을 필요한 호스트로 좁히고 root_squash 를 적용해야 합니다.',
+            'fix': "function(fs){fs.write('/etc/exports','/data/share 10.20.30.0/24(ro,root_squash)\\n');}",
+            'fixNote': '공유 대상을 업무 대역으로 좁히고 읽기 전용·root_squash 를 적용했습니다.',
+        },
+        {
+            'id': 'SRV-057', 'risk': 5, 'title': '안전성이 확보되지 않은 구형 서비스 중지',
+            'brief': 'echo·discard·chargen 같은 구형 서비스는 <b>지금 쓸 일이 거의 없고</b>, '
+                     '트래픽 증폭 공격에 이용되기도 합니다. 켜져 있다면 대개 "그냥 기본값"입니다.',
+            'where': '/etc/xinetd.d/echo 의 disable',
+            'hint': 'disable 값이 no 이면 활성 상태입니다.',
+            'cmds': ['cat /etc/xinetd.d/echo', 'ps -ef | grep xinetd'],
+            'options': ['echo 서비스가 disable = no (활성)', 'echo 서비스가 disable = yes',
+                        'xinetd 가 실행 중', 'user = root'],
+            'evidence': ['echo 서비스가 disable = no (활성)'],
+            'verdict': "function(fs){var b=fs.read('/etc/xinetd.d/echo')||'';"
+                       "return /^\\s*disable\\s*=\\s*yes/mi.test(b)?'good':'vuln';}",
+            'why': 'echo 서비스가 활성 상태입니다. 업무에서 쓰지 않는 구형 서비스는 disable = yes 로 '
+                   '꺼 두어야 공격 표면이 줄어듭니다.',
+            'fix': "function(fs){var b=fs.read('/etc/xinetd.d/echo');"
+                   "fs.write('/etc/xinetd.d/echo', b.replace('disable = no','disable = yes'));}",
+            'fixNote': 'echo 서비스를 disable = yes 로 껐습니다.',
+        },
+        {
+            'id': 'SRV-022', 'risk': 4, 'title': '불필요한 원격 프로시저 호출 서비스 중지',
+            'brief': 'RPC 계열(rpcbind/mountd)은 <b>NFS 를 쓰지 않으면 필요 없습니다</b>. '
+                     '떠 있으면 내부 정찰의 출발점이 됩니다.',
+            'where': '실행 중인 프로세스와 111번 포트',
+            'hint': 'rpc 관련 프로세스와 111 포트를 보세요.',
+            'cmds': ['ps -ef | grep rpc', 'netstat -an | grep 111'],
+            'options': ['rpc.mountd 실행 + 111번 포트 LISTEN', 'rpc 프로세스 없음',
+                        'sshd 만 실행 중', '2049 포트만 열림'],
+            'evidence': ['rpc.mountd 실행 + 111번 포트 LISTEN'],
+            'verdict': "function(fs){var h=window.SRV_LAB_DATA.host;"
+                       "return h.ports.some(function(p){return p.port===111;})?'vuln':'good';}",
+            'why': 'rpcbind(111)와 mountd 가 떠 있습니다. NFS 공유가 정말 필요한지 먼저 확인하고, '
+                   '필요 없다면 서비스를 내리는 것이 가장 확실한 조치입니다.',
+            'fix': "function(fs){var h=window.SRV_LAB_DATA.host;"
+                   "h.ports=h.ports.filter(function(p){return p.port!==111&&p.port!==2049;});"
+                   "h.procs=h.procs.filter(function(p){return !/rpc\\./.test(p.cmd);});}",
+            'fixNote': 'rpcbind·mountd 를 중지하고 111·2049 포트를 닫았습니다.',
+        },
+        {
+            'id': 'SRV-019', 'risk': 1, 'title': '파일 전송 서비스 배너의 버전 정보 숨김',
+            'brief': 'FTP 접속 배너도 같은 문제입니다. <b>제품·버전이 그대로 보이면</b> '
+                     '그 버전의 알려진 취약점부터 시도하게 됩니다.',
+            'where': '/etc/vsftpd/vsftpd.conf 의 ftpd_banner',
+            'hint': '배너에 버전 번호가 있는지 보세요.',
+            'cmds': ['grep banner /etc/vsftpd/vsftpd.conf'],
+            'options': ['배너에 vsftpd 3.0.3 버전 노출', '배너가 경고 문구만 표시',
+                        'listen=YES', 'local_enable=YES'],
+            'evidence': ['배너에 vsftpd 3.0.3 버전 노출'],
+            'verdict': "function(fs){var b=fs.read('/etc/vsftpd/vsftpd.conf')||'';"
+                       "var m=b.match(/^\\s*ftpd_banner\\s*=\\s*(.+)$/mi); if(!m) return 'good';"
+                       "return /\\d+\\.\\d+/.test(m[1])?'vuln':'good';}",
+            'why': '배너가 vsftpd 버전을 노출합니다. 경고 문구만 남기면 서비스 동작에는 영향이 없습니다.',
+            'fix': "function(fs){var b=fs.read('/etc/vsftpd/vsftpd.conf');"
+                   "fs.write('/etc/vsftpd/vsftpd.conf', b.replace(/ftpd_banner\\s*=.*/i,"
+                   "'ftpd_banner=허가된 사용자만 이용할 수 있습니다.'));}",
+            'fixNote': 'FTP 배너에서 버전 표기를 제거했습니다.',
+        },
+    ],
+}]

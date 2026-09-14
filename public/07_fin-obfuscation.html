@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🧬</span> 전자금융 보안 모의해킹 &middot; 소스코드 난독화 적용</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">$ jadx app-release.apk -d out/   # 난독화된 앱</textarea>
           <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
           <div class="result-card" id="resultCard"></div>
@@ -163,6 +181,26 @@ public class PayClient {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>단말 보안 &gt; <b>소스코드 난독화 적용</b><h4>2. 위험 분석</h4><ul><li>디컴파일(jadx/apktool)로 평문에 가까운 소스 복원</li><li>하드코딩된 키·로직 노출 → 위·변조, 키 탈취</li></ul><h4>3. 조치 방법</h4><ul><li>R8/ProGuard/DexGuard 등 <b>난독화 적용</b></li><li>키·시크릿 <b>코드 분리</b>(KeyStore/서버 발급)</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>R8 / ProGuard</span><span>매핑 파일</span><span>Flutter·RN</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>Android 는 <b>R8</b> 이 기본 축약·난독화기입니다. 그런데 <b>크로스플랫폼 프레임워크가 늘면서</b>
+난독화 범위가 애매해졌습니다 — <b>React Native 의 JS 번들</b>과 <b>Flutter 의 Dart 스냅샷</b>은
+R8 이 건드리지 않으므로, 자바 계층만 난독화하고 정작 비즈니스 로직은 평문인 경우가 많습니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li>RN 은 <b>Hermes 바이트코드 + 별도 JS 난독화</b>, Flutter 는 <code>--obfuscate --split-debug-info</code> 로 심볼을 분리합니다.</li>
+<li><b>매핑 파일(mapping.txt)</b> 은 난독화 해제 열쇠입니다 — 소스 저장소가 아니라 <b>접근 통제된 별도 저장소</b>에 보관하고 빌드별로 버전 관리합니다.</li>
+<li>난독화는 <b>지연 수단이지 보호 수단이 아닙니다.</b> 비밀값은 어차피 빼내집니다 — 서버에 두는 것이 원칙입니다.</li>
+</ul>
+<pre># Flutter — 심볼을 빼서 따로 보관
+$ flutter build apk --obfuscate --split-debug-info=build/symbols
+# 크래시 리포트 복원은 이 심볼로만 가능하므로 유실 주의</pre>
+<div class="warn">놓치기 쉬운 곳 — 난독화를 켜면 <b>리플렉션·JSON 역직렬화가 조용히 깨집니다.</b>
+<code>-keep</code> 규칙을 넣다가 결국 핵심 클래스를 전부 예외 처리해 난독화가 무력해지는 일이 흔합니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -247,8 +285,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

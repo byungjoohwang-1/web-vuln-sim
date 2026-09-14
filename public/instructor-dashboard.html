@@ -224,6 +224,17 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
 #wvs-pager a.wvs-pg:hover{background:#334155}
 #wvs-pager .pos{color:#94a3b8;font-weight:400}
 #wvs-pager .off{visibility:hidden}
+
+/* [모바일 오버레이 충돌 수정] 페이지 전용 내비(.nav-links)가 height:70px 인 헤더 안에서
+   nowrap 으로 한 줄에 몰려 173px 로 부풀고, align-items:center 때문에 위아래로 넘쳐
+   공통 상단 바(soc-chrome .wvsx-top)의 🔍검색 버튼을 덮어 클릭을 가로챘다.
+   training-dashboard.html 에 이미 적용돼 있던 것과 같은 처리다. */
+@media (max-width: 900px) {
+  header { position: static; }
+  header .wrap { flex-direction: column; align-items: stretch; height: auto; gap: 8px; padding: 10px 16px; }
+  .nav-links { flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .nav-btn { font-size: 12.5px; padding: 6px 10px; }
+}
 </style>
 
 

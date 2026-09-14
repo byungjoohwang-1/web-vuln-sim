@@ -100,6 +100,8 @@ TOOL_ALIAS = {
                                  '처리방침 평가제 적정성 가독성 접근성 제30조의2 고시 2024-3 평가대상 개선권고 스크롤 클릭 실측 policy evaluation'),
     'privacy-penalty-calc.html': ('개인정보 과징금 산정 구조 시뮬레이터',
                                   '과징금 산정 부과기준 제64조의2 별표1의5 관련매출액 부과기준율 중대성 위반기간 가중 감경 절사 징벌적 매출액 10% penalty fine'),
+    'fincloud-hub.html': ('금융 클라우드 보안 진단 시뮬레이터 · AWS CLI 실습 22종',
+                          '금융 클라우드 aws 진단 평가기준 pism 퍼블릭 클라우드 관리체계 취약점 cli 콘솔 s3 ec2 rds iam lambda cloudtrail 보안그룹 kms 암호화 mfa 액세스키 imdsv2 ebs 스냅샷 ami 코드서명 cloudshell 최소권한 terraform iac fincloud'),
     'privacy-pseudonym-process.html': ('가명처리 5단계 절차 · 위험도 판정기 (2026.3 개정)',
                                        '가명처리 절차 5단계 사전준비 위험성 검토 적정성 검토 안전한 관리 위험도 저위험 중위험 고위험 판정 검토위원회 내부심의 담당자 검토 서식 10종 위험성 검토서 가명처리 계획서 결과서 관리대장 결합전문기관 데이터전문기관 이노베이션 존 비정형데이터 반복 유사 활용 통계작성 과학적 연구 공익적 기록보존 제28조의2 제28조의4 가명정보 가이드라인 pseudonymization risk tier'),
     'privacy-basis-check.html': ('개인정보 적법 처리근거 판단기 · 수집·제공·목적 외',

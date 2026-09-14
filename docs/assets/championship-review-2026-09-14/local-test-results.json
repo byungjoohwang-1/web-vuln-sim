@@ -1,0 +1,56 @@
+{
+  "date": "2026-09-14",
+  "scope": "Local deterministic and mocked tests. No live model effectiveness evaluation.",
+  "results": [
+    {
+      "command": "node tools/test-incident.js",
+      "result": {
+        "chunk_id": "982991",
+        "wall_time_seconds": 1.2798647,
+        "exit_code": 0,
+        "original_token_count": 334,
+        "output": "  PASS  1단계 — 올바른 인가 정책(본인 또는 admin)이 통과\n  PASS  1단계 — 전부 허용은 실패 + 이유가 \"비인가가 아직 허용됨\"\n  PASS  1단계 — 전부 거부는 실패 (R-05: 서비스를 죽이고 합격할 수 없다)\n  PASS  1단계 — 빈 정책(기본 거부)도 실패\n  PASS  1단계 — admin 누락 시 실패하고 깨진 테스트를 지목\n  PASS  1단계 — 역할만 검사하는 실수는 타인 조회로 잡힘\n  PASS  2단계 — 서명·버전·대상 3검사 모두 켜면 통과\n  PASS  2단계 — 검사를 모두 끄면 변조·되돌리기·오대상이 통과(실패)\n  PASS  2단계 — 버전 검사 누락 시 되돌리기 공격이 잡힘\n  PASS  2단계 — 대상 검사 누락 시 다른 차종용 패키지가 설치됨\n  PASS  3단계 — 영향 범위를 정확히 세면 통과 (차량 3대, 항목 location/ownerName/phone)\n  PASS  3단계 — 정상 접근(ok=true)까지 포함해 세면 실패\n  PASS  3단계 — 영향 항목을 빠뜨리면 실패\n  PASS  4단계 — 같은 소유 대조 원리를 적용하면 통과\n  PASS  4단계 — 원리를 적용하지 않으면 실패\n  PASS  모든 단계가 가정(givens)과 성공 조건을 명시 · 단계 연결을 과장하지 않음\n  PASS  합성(데모) 데이터 표시\n\nALL 17 CHECKS PASSED\n"
+      }
+    },
+    {
+      "command": "node tools/test-coach.js",
+      "result": {
+        "chunk_id": "b6f26a",
+        "wall_time_seconds": 1.2941047,
+        "exit_code": 0,
+        "original_token_count": 165,
+        "output": "  PASS  민감정보 마스킹 (키·JWT·주민번호·카드·메일·비밀번호)\n  PASS  최소 전송 — 계약 밖 필드 제거 + note 마스킹\n  PASS  전송량 상한 (길이·개수)\n  PASS  전송 미리보기 제공 (마스킹 반영)\n  PASS  권한/점수/정답 조작 필드 거부 + 기록 (6건)\n  PASS  출처 검증 — 지어낸 출처 제거, 허용된 것만 유지\n  PASS  프롬프트 인젝션 — 문서 속 지시를 따르지 않고 결과를 걸러냄\n  PASS  정적 폴백 5종 (AI없음·호출실패·잘못된JSON·이상한모양·예외)\n  PASS  정답 공개는 명시적 호출로만, 기록 남김\n\nALL 9 CHECKS PASSED\n"
+      }
+    },
+    {
+      "command": "node tools/test-misconception.js",
+      "result": {
+        "chunk_id": "08526f",
+        "wall_time_seconds": 1.2646321999999999,
+        "exit_code": 0,
+        "original_token_count": 212,
+        "output": "  PASS  통과한 단계는 오개념 근거가 되지 않음\n  PASS  최종 통과 시 중간 실패 흔적을 오개념으로 삼지 않음\n  PASS  1회 실패는 single (한 번 틀린 것을 오개념으로 부풀리지 않음)\n  PASS  같은 오개념이 다른 단계에서 반복되면 observed + 근거 누적\n  PASS  과차단(정상 동작을 막음)도 오개념으로 기록 — R-05 의 반대편\n  PASS  레드팀 기록은 반복 실패 + 성공보다 많을 때만 포함\n  PASS  모든 오개념 항목이 근거·설명·확신 수준을 가짐\n  PASS  복습 제안 — 오개념의 기술(CWE)이 맞는 항목을 우선\n  PASS  이미 완료한 항목은 복습 제안에서 제외\n  PASS  관련 근거가 없으면 제안을 만들지 않음\n  PASS  기록이 없으면 아무 주장도 하지 않음\n\nALL 11 CHECKS PASSED\n"
+      }
+    },
+    {
+      "command": "node tools/test-forge-verifier.js",
+      "result": {
+        "chunk_id": "80f159",
+        "wall_time_seconds": 1.2326178,
+        "exit_code": 0,
+        "original_token_count": 409,
+        "output": "quiz-forge 형식 검사기 고정 평가\n\n  통과        정상 문항                      \n  검출        선택지 3개                     형식: 선택지 구성: 선택지 4개 아님(3)\n  검출        선택지 문자열 중복                 형식: 선택지 구성: 선택지 문자열 중복\n  검출        answer 인덱스 범위 초과           형식: 선택지 구성: answer 인덱스 범위 위반\n  검출        answer 누락                  형식: 선택지 구성: answer 인덱스 범위 위반\n  검출        해설 지나치게 짧음                 형식: 해설 분량: explanation 40자 미만\n  검출        title 없음                   형식: 필수 항목: title 부족\n  검출        vuln_class 없음              형식: 필수 항목: vuln_class 없음\n  검출        question 지나치게 짧음           형식: 필수 항목: question 부족\n  통과        코드에 위험 패턴 없음(주의만)          \n  통과        정답이 둘 이상(의미상 모호)           \n  통과        해설 내용이 사실과 다름              \n  통과        정답 인덱스가 틀린 보기를 가리킴         \n\n  검출 8 · 정상통과 5 · 누락 0 · 오탐 0\n\n  [알려진 한계] 형식 검사기가 통과시키는 의미 오류 4건:\n    - 코드에 위험 패턴 없음(주의만) → 통과\n    - 정답이 둘 이상(의미상 모호) → 통과\n    - 해설 내용이 사실과 다름 → 통과\n    - 정답 인덱스가 틀린 보기를 가리킴 → 통과\n  → 이래서 UI 배지를 \"형식 검사 통과\"로만 표기한다(내용 정확성은 미검증).\n"
+      }
+    },
+    {
+      "command": "node tools/test-platform-integration.js",
+      "result": {
+        "chunk_id": "130a2f",
+        "wall_time_seconds": 1.6969379,
+        "exit_code": 0,
+        "original_token_count": 431,
+        "output": "\n[1] 진도 기록 경로\n  PASS  wvs_progress 를 localStorage 로 직접 쓰는 페이지가 없다 (엔진 API 경유)\n  PASS  진도를 기록하는 페이지는 progress.js 를 싣는다\n  PASS  WVSProgress.complete 의 페이지 ID 는 자기 파일명과 일치한다\n\n[2] 전역 크롬(탑바·Ctrl+K·모바일 하단 탭바)\n  PASS  모든 페이지가 soc-chrome.js 를 싣는다 (명시 예외 제외)\n  PASS  예외 목록에 적힌 페이지는 실제로 존재한다 (죽은 예외 방지)\n        (참고) 자체 헤더 + 공용 탑바 동시 노출 가능: 335개\n  PASS  자체 헤더가 있는 페이지는 data-topbar=\"off\" 로 탑바 중복을 피한다\n\n[3] 하단 탭바 여백 / 언어 전환\n  PASS  soc-chrome 이 붙이는 클래스와 CSS 여백 규칙의 이름이 일치한다\n  PASS  하단 탭바 여백이 탭바 높이 토큰과 safe-area 를 함께 쓴다\n  PASS  모바일에서 언어 바를 숨기면 대체 전환 수단이 있어야 한다\n  PASS  언어 전환 버튼은 본문 번역이 가능한 페이지에서만 노출한다\n  PASS  자체 언어 버튼이 있는 페이지에는 탭바 언어 버튼을 중복 노출하지 않는다\n\n[4] 카탈로그 ↔ 실제 파일\n  PASS  progress-catalog 의 모든 항목 파일이 실제로 있다\n  PASS  content-catalog 의 모든 항목 파일이 실제로 있다\n  PASS  content-catalog 는 progress-catalog 의 부분집합이다 (진도 없는 항목을 진도로 세지 않음)\n  PASS  완료를 기록하는 실습 페이지는 카탈로그에 등록돼 있다 (완료 수 ↔ XP 어긋남 방지)\n  PASS  progress.js 의 학습 항목 판별식이 카탈로그의 도구 목록을 모두 포함한다\n\nALL 16 CHECKS PASSED\n\n"
+      }
+    }
+  ]
+}

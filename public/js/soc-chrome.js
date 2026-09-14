@@ -123,8 +123,14 @@
     "font-family:inherit}",
     '.wvsx-top .wvsx-kbtn:hover{border-color:#38bdf8;color:#7dd3fc}',
     '.wvsx-top .wvsx-kbtn .kb{font-size:.65rem;border:1px solid #334155;border-radius:5px;padding:1px 6px;color:#64748b}',
+    /* 좁은 화면에서는 상단 내비를 숨긴다.
+       로고와 검색 버튼 사이에 남는 폭이 360px 기준 113px 뿐인데 링크 6개(411px)를 넣어
+       두었더니 "홈 카탈로그 취" 처럼 글자 중간에서 잘리고, 나머지는 가로로 밀어야 보였다.
+       같은 링크를 아래 .wvsx-bnav(하단 탭바)가 ≤640px 에서 이미 제공하고(buildTopbar 와
+       buildBottomNav 는 항상 같이 호출된다), 탭바에 없는 quiz-forge 는 카탈로그와
+       검색 팔레트로 닿는다. 숨기는 대신 검색 버튼을 오른쪽 끝으로 민다. */
     '@media(max-width:640px){.wvsx-top{gap:10px;padding:0 12px}.wvsx-top .wvsx-kbtn .kb{display:none}',
-    '.wvsx-top .wvsx-nav a{padding:5px 8px}}',
+    '.wvsx-top .wvsx-nav{display:none}.wvsx-top .wvsx-kbtn{margin-left:auto}}',
     /* 모바일 하단 탭바 (Bottom Navigation) */
     '.wvsx-bnav{position:fixed;left:0;right:0;bottom:0;z-index:var(--wvs-z-sticky,100);display:none;',
     'background:rgba(8,14,26,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);',
@@ -222,6 +228,32 @@
     if (document.body.firstChild) document.body.insertBefore(bar, document.body.firstChild);
     else document.body.appendChild(bar);
     document.getElementById('wvsx-kbtn').addEventListener('click', function () { openPalette(); });
+    /* 다른 고정 요소가 이 바를 피해 갈 수 있도록 실제 높이를 변수로 내보낸다.
+       auth-widget.js 의 #authWidget 이 top:12px 로 붙어 있어 이 바의 검색 버튼을
+       z-index 100000 으로 덮고 있었다(17개 페이지 전부, 폭 무관). 상수 42px 를
+       양쪽에 하드코딩하면 한쪽만 바뀔 때 다시 어긋나므로 잰 값을 쓴다. */
+    syncTopbarOffset();
+    window.addEventListener('load', syncTopbarOffset);
+    window.addEventListener('resize', syncTopbarOffset);
+    document.documentElement.classList.add('wvs-has-topbar');
+  }
+
+  /* 이 바를 피해야 하는 고정 오버레이(auth-widget 의 #authWidget, bilingual 의 .wvs-langbar)가
+     쓸 세로 여유를 --wvs-topbar-h 로 내보낸다.
+
+     바는 sticky(top:0) 이므로 스크롤하면 0..42 로 올라붙지만, body 에 padding-top 이 있는
+     페이지(certificate.html 40px)에서는 스크롤 전에 그만큼 내려와 있다. 그래서
+     '문서 기준 바 윗변 + 높이' 를 쓴다.
+     build 시점에 한 번만 재면 폰트·비동기 콘텐츠 때문에 엉뚱한 값이 잡힌다(실제로 82 대신
+     클램프 상한 160 이 나왔다). load/resize 에서 다시 잰다. */
+  function syncTopbarOffset() {
+    var bar = document.getElementById('wvsx-topbar');
+    if (!bar) return;
+    var h = bar.offsetHeight || 42;
+    var topInDoc = bar.getBoundingClientRect().top + (window.pageYOffset || 0);
+    var v = Math.round(h + Math.max(0, topInDoc));
+    if (!(v > 0) || v > 160) v = Math.min(160, h);
+    document.documentElement.style.setProperty('--wvs-topbar-h', v + 'px');
   }
 
   /* ── 본문 랜드마크 + 건너뛰기 링크 (QA-P2-03 / P1-06) ──

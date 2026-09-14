@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>📩</span> 전자금융 보안 모의해킹 &middot; 고정·유추가능 인증코드 (SMS/ARS)</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">POST /verify/sms
 {
   "phone": "010-1234-5678",
@@ -165,6 +183,29 @@ smsService.send(phone, code);</textarea>
         <div class="kisa-ref"><h4>1. 점검 항목</h4>이용자 인증 &gt; <b>고정된 인증정보 이용 방지</b><h4>2. 위험 분석</h4><ul><li>고정·규칙적 코드로 타인 본인확인 우회</li><li>무차별 대입으로 인증코드 추측</li></ul><h4>3. 조치 방법</h4><ul><li><b>SecureRandom</b> 등 안전한 난수로 매번 생성</li><li>코드 <b>유효시간</b> 및 <b>시도횟수</b> 제한</li><li>주민번호·전화번호 등 유추 가능 정보 사용 금지</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>SMS 대체</span><span>레이트리밋</span><span>Redis</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>SMS 인증코드는 <b>SIM 스와핑·문자 가로채기</b>에 취약해 국제적으로 권고 등급이 낮아졌습니다(NIST SP 800-63B 는
+SMS 를 &ldquo;restricted&rdquo; 로 분류). 국내는 본인확인 제도상 SMS 의존이 크지만, <b>앱 푸시·패스키를 1순위로 두고
+SMS 는 대체 수단</b>으로 내리는 것이 현재 방향입니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li>코드는 <b>서버에서 CSPRNG 로 생성</b>하고 절대 클라이언트로 내려보내지 않습니다(응답 본문·로그·에러 메시지 포함).</li>
+<li><b>시도 횟수 제한</b>(예: 5회 후 무효화)과 <b>발급 레이트리밋</b>을 분산 저장소로 구현합니다 — 파드마다 세면 의미가 없습니다.</li>
+<li>코드 검증은 <b>상수 시간 비교</b>로. 문자열 <code>equals</code> 는 타이밍 정보를 흘립니다.</li>
+</ul>
+<pre># 발급·검증 모두 서버 상태로 (TTL + 시도 횟수)
+key = f"authcode:{user_id}"
+code = secrets.randbelow(1_000_000)            # CSPRNG
+redis.hset(key, mapping={"code": hash(code), "tries": 0})
+redis.expire(key, 180)                          # 3분
+# 검증 시 tries 증가, 5회 초과면 삭제 후 재발급 요구</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>APM·로그 수집기가 요청 본문을 통째로 저장</b>하면 인증코드가 로그에 남습니다.
+Datadog·Sentry 등에 마스킹 규칙을 넣었는지 확인하세요.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -253,8 +294,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

@@ -23,7 +23,12 @@ const provider = new GoogleAuthProvider();
 
 // ===== 스타일 =====
 const css = `
-#authWidget{position:fixed;top:12px;right:12px;z-index:100000;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+/* 공통 상단 바(soc-chrome.js 의 .wvsx-top)가 있으면 그 아래로 내려간다.
+   예전에는 top:12px 고정이라 z-index 100000 인 이 위젯이 상단 바 우측의 🔍검색 버튼을
+   그대로 덮어, 검색을 누르면 로그인 버튼이 눌렸다(이 스크립트를 쓰는 17개 페이지 전부).
+   --wvs-topbar-h 는 soc-chrome 이 바를 실제로 만든 뒤 잰 높이를 넣어 준다.
+   바가 없는 페이지(data-topbar="off" 등)에서는 변수가 없어 0px 로 떨어지므로 종전과 같다. */
+#authWidget{position:fixed;top:calc(var(--wvs-topbar-h, 0px) + 12px);right:12px;z-index:100000;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
 #authWidget .aw-btn{cursor:pointer;border:none;border-radius:10px;font-weight:700;font-size:13px;padding:9px 14px;display:flex;align-items:center;gap:8px;box-shadow:0 3px 12px rgba(0,0,0,.28);transition:transform .15s}
 #authWidget .aw-btn:hover{transform:translateY(-1px)}
 #authWidget .aw-in{background:#fff;color:#3c4043;border:1px solid #dadce0}
@@ -36,7 +41,7 @@ const css = `
 #authWidget .aw-meta span{font-size:10.5px;color:#86efac}
 #authWidget .aw-out{background:rgba(255,255,255,.16);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer}
 #authWidget .aw-out:hover{background:rgba(255,255,255,.28)}
-@media(max-width:560px){#authWidget{top:8px;right:8px}#authWidget .aw-meta b{max-width:84px}#authWidget .aw-meta span{display:none}}
+@media(max-width:560px){#authWidget{top:calc(var(--wvs-topbar-h, 0px) + 8px);right:8px}#authWidget .aw-meta b{max-width:84px}#authWidget .aw-meta span{display:none}}
 `;
 const style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
 const box = document.createElement('div'); box.id = 'authWidget';

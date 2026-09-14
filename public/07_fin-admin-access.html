@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🛡️</span> 전자금융 보안 모의해킹 &middot; 관리자 페이지 접근 통제</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">GET /admin HTTP/1.1
 Host: bank.example.com
 # 정상: 인증·권한·허용 IP 검사 후에만 접근</textarea>
@@ -165,6 +183,30 @@ public String adminConsole(HttpServletRequest req) {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>접근 통제 &gt; <b>관리자 페이지 접근 통제</b><h4>2. 위험 분석</h4><ul><li>추측 가능한 경로로 관리자 페이지 노출</li><li>기본계정·무차별 대입으로 무단 접근</li><li>관리 기능을 통한 계정·거래 조작</li></ul><h4>3. 조치 방법</h4><ul><li>진입 시 <b>인증·관리자 권한 검사</b> 강제</li><li>접근 <b>허용 IP 대역 제한</b></li><li><b>경로 추측 방지</b> 및 기본계정 제거</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>제로트러스트</span><span>IdP SSO</span><span>Private ALB</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>&ldquo;관리자 페이지는 내부망에서만&rdquo;이라는 전제가 <b>재택근무와 클라우드로 무너졌습니다.</b>
+IP 허용목록은 VPN·사무실 IP 를 계속 추가하다 결국 넓어지고, 클라우드에서는 관리 콘솔 자체가 인터넷에 있습니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li>관리 평면을 <b>인터넷에서 분리</b>: 내부 전용 ALB + PrivateLink, 또는 <b>제로트러스트 프록시</b>(IAP·Cloudflare Access 류)로 IdP 인증을 먼저 통과시킵니다.</li>
+<li>접근에 <b>MFA 를 강제</b>하고, 관리자 행위는 <b>별도 감사 로그</b>로 남깁니다. 일반 트래픽 로그에 섞으면 사후 추적이 어렵습니다.</li>
+<li>상시 권한 대신 <b>Just-In-Time 권한</b>(승인 후 N시간)으로 부여합니다.</li>
+</ul>
+<pre># K8s Ingress — 관리 경로를 별도 인그레스로 분리하고 인증을 앞단에 둔다
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "https://idp.internal/oauth2/auth"
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.40.0.0/16"
+spec:
+  rules:
+    - host: admin.fin.internal        # 공개 도메인과 분리</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>액추에이터·메트릭·스웨거</b>가 관리자 페이지와 같은 부류입니다.
+<code>/actuator/env</code> 는 환경변수를, <code>/swagger-ui</code> 는 전체 API 구조를 그대로 보여 줍니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -259,8 +301,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

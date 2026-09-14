@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🔗</span> 전자금융 보안 모의해킹 &middot; 모바일 DeepLink 도용</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">bankapp://open/notice?id=2026-1
 (정상: 공지 화면만 표시)</textarea>
           <button class="btn-submit" id="sendBtn" onclick="sendRequest()">요청 전송</button>
@@ -164,6 +182,27 @@ override fun onNewIntent(intent: Intent) {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>모바일 보안 &gt; <b>DeepLink 도용 방지</b><h4>2. 위험 분석</h4><ul><li>위조 링크로 피싱 화면·세션 탈취</li><li>이체 등 민감 화면 자동 실행(임의 동작)</li></ul><h4>3. 조치 방법</h4><ul><li>수신 경로·파라미터 <b>허용목록(allowlist)</b> 검증</li><li>민감 동작은 <b>인증·사용자 확인</b> 강제</li><li>커스텀 스킴 대신 <b>검증된 App Link</b> 사용 권장</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>App Links</span><span>Universal Links</span><span>PKCE</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p><b>커스텀 스킴(<code>mybank://</code>)은 누구나 선점할 수 있습니다.</b> 악성 앱이 같은 스킴을 등록하면
+OS 가 선택 창을 띄우거나 그쪽으로 보내 버립니다. 그래서 <b>검증된 딥링크</b>
+(Android <b>App Links</b>, iOS <b>Universal Links</b>)가 표준이 되었습니다 — 도메인 소유 증명이 필요해 선점이 불가능합니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li><code>assetlinks.json</code> / <code>apple-app-site-association</code> 을 도메인에 게시하고 <b>autoVerify</b> 를 켭니다.</li>
+<li>딥링크 파라미터는 <b>전부 신뢰할 수 없는 입력</b>입니다. 이체 금액·수취계좌를 딥링크로 받아 화면에 미리 채우는 설계는 피싱에 직결됩니다.</li>
+<li>OAuth 리다이렉트에는 <b>PKCE</b> 를 적용합니다. 인가코드가 탈취돼도 <code>code_verifier</code> 없이는 못 씁니다.</li>
+</ul>
+<pre>&lt;!-- 검증된 App Link — 스킴이 아니라 도메인 소유로 증명한다 --&gt;
+&lt;intent-filter android:autoVerify="true"&gt;
+  &lt;data android:scheme="https" android:host="m.bank.example" /&gt;
+&lt;/intent-filter&gt;</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>App Links 를 켜도 커스텀 스킴을 같이 남겨 두면</b> 우회 경로가 유지됩니다.
+레거시 호환 때문에 남긴 스킴이 실제 공격 경로가 됩니다 — 기한을 정해 제거하세요.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -253,8 +292,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

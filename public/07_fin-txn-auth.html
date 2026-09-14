@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🔐</span> 전자금융 보안 모의해킹 &middot; 거래 인증수단 검증 (OTP/보안카드 우회)</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">POST /transfer/confirm
 {
   "txnId": "T-90021",
@@ -168,6 +186,30 @@ public void confirm(TxnReq req) {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>거래 인증 &gt; <b>거래 인증수단 검증</b><h4>2. 위험 분석</h4><ul><li>잘못된/폐기된 인증정보로 정상 거래 가능</li><li>인증 유효시간 미제한으로 탈취 인증정보 재사용</li></ul><h4>3. 조치 방법</h4><ul><li>인증 검증은 <b>서버 사이드</b>에서 수행</li><li>OTP/보안카드 <b>유효시간·폐기여부</b> 확인</li><li>클라이언트 스크립트로 인증 처리 금지</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>FIDO2 / 패스키</span><span>푸시 승인</span><span>Transaction Signing</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>OTP·보안카드는 <b>공유 비밀</b> 방식이라 피싱·중계 공격에 약합니다. 국내외 금융권은
+<b>FIDO2/패스키(공개키 기반)</b> 와 <b>앱 푸시 승인</b> 으로 옮겨 가고 있습니다. 다만 인증 방식이 바뀌어도
+<b>취약점의 본질은 그대로</b>입니다 — "2차 인증을 통과했다"는 사실을 <u>누가 서버에 알려 주는가</u>.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li>클라이언트가 <code>{"otpVerified": true}</code> 를 보내는 구조는 방식과 무관하게 위험합니다. <b>서버가 인증 상태를 보관</b>해야 합니다.</li>
+<li><b>거래 단위 서명(Transaction Signing)</b>: 인증 대상에 <u>수취계좌·금액</u>을 포함시켜 서명받습니다. "로그인 승인"과 "5천만원 이체 승인"이 구분됩니다.</li>
+<li>FIDO2 라면 <code>challenge</code> 에 거래 해시를 넣고, 응답의 <code>clientDataJSON</code> 에서 그 값을 서버가 대조합니다.</li>
+</ul>
+<pre>// 푸시 승인 화면에 반드시 거래 내용을 띄운다 — "무엇을 승인하는지" 모르면 의미가 없다
+{
+  "title": "이체 승인",
+  "amount": "50,000,000원",
+  "to": "국민 123-45-6789 홍길동",
+  "challenge": "sha256(txnId|to|amount|nonce)"
+}</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>승인 화면에 거래 내용을 안 띄우면 중계 공격이 그대로 성립</b>합니다.
+공격자가 유도한 이체를 사용자가 "로그인인 줄 알고" 승인합니다. 이를 <b>거래 내용 확인(WYSIWYS)</b> 이라 부릅니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -261,8 +303,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

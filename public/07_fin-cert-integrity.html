@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🪪</span> 전자금융 보안 모의해킹 &middot; 서버 인증서 무결성 검증</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">POST https://bank.example.com/transfer
 # 정상: 신뢰체인 검증 + 인증서 핀 일치
 Server Cert: CN=bank.example.com (DigiCert 발급, pin 일치)
@@ -173,6 +191,29 @@ val client = OkHttpClient.Builder()
         <div class="kisa-ref"><h4>1. 점검 항목</h4>통신 보안 &gt; <b>서버 인증서 무결성 검증</b><h4>2. 위험 분석</h4><ul><li>인증서 미검증 시 MITM 프록시 인증서 수용</li><li>거래정보·자격증명 탈취 및 변조</li></ul><h4>3. 조치 방법</h4><ul><li>기본 <b>신뢰체인·호스트명 검증</b> 유지</li><li><b>Certificate Pinning</b>으로 인증서 고정</li><li>모든 인증서를 신뢰하는 <b>TrustManager 무력화 금지</b></li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>인증서 피닝</span><span>ACME 자동갱신</span><span>CT 로그</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>인증서 <b>자동 갱신(ACME/ACM)</b>이 표준이 되면서 피닝과 충돌이 생겼습니다.
+90일마다 인증서가 바뀌는데 앱에 고정 핀을 박아 두면 <b>갱신 시점에 앱이 통째로 죽습니다.</b>
+실제로 이 사고로 서비스가 중단된 금융 앱 사례가 여럿 있습니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li><b>리프 인증서가 아니라 중간 CA 또는 공개키(SPKI)에 피닝</b>합니다. 갱신되어도 키가 유지되면 핀이 살아 있습니다.</li>
+<li><b>백업 핀을 반드시 포함</b>합니다(차기 키). 핀이 하나뿐이면 되돌릴 방법이 없습니다.</li>
+<li>Android 는 <b>Network Security Configuration</b>, iOS 는 <b>ATS + 코드 피닝</b>으로 선언합니다. 서버 측은 <b>CT(인증서 투명성) 로그 모니터링</b>으로 오발급을 탐지합니다.</li>
+</ul>
+<pre>&lt;!-- Android: 핀 2개(현재+백업)와 만료일을 함께 --&gt;
+&lt;pin-set expiration="2027-06-30"&gt;
+  &lt;pin digest="SHA-256"&gt;k3rNk9bT1r8p...=&lt;/pin&gt;  &lt;!-- 현재 --&gt;
+  &lt;pin digest="SHA-256"&gt;Q2xVd8mZ4fA1...=&lt;/pin&gt;  &lt;!-- 백업 --&gt;
+&lt;/pin-set&gt;</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>피닝은 앱 업데이트 없이 못 고칩니다.</b>
+앱 심사·배포에 며칠이 걸리므로, 핀 만료일은 인증서 갱신 주기보다 <u>넉넉히</u> 잡고
+원격 설정으로 피닝을 끌 수 있는 킬스위치를 두는 팀도 많습니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -268,8 +309,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

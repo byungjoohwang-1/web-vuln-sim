@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🧠</span> 전자금융 보안 모의해킹 &middot; 메모리 내 중요정보 노출 방지</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">// 거래 중 메모리 상태 (힙)
 password = "********"   (String, 잔존)
 sessionKey = "********" (String, 잔존)</textarea>
@@ -165,6 +183,29 @@ public void login(PinView view) {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>모바일 단말 보호 &gt; <b>메모리 내 중요정보 노출 방지</b><h4>2. 위험 분석</h4><ul><li>불변 String은 GC 전까지 평문 잔존</li><li>Frida·gdb 메모리 덤프로 비밀번호·세션키 추출</li></ul><h4>3. 조치 방법</h4><ul><li>중요정보를 <b>char[]</b>로 처리</li><li>사용 직후 <b>Arrays.fill()</b>로 소거</li><li>가능 시 보안 키 저장소 활용</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>Keystore/Enclave</span><span>GC 언어 한계</span><span>TEE</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>Java·Kotlin·Swift 같은 <b>GC 언어에서는 메모리를 확실히 지울 수 없습니다.</b>
+<code>String</code> 은 불변이고 GC 가 언제 회수할지 모릅니다. 그래서 &ldquo;사용 후 즉시 삭제&rdquo;라는 조치는
+<b>구현 가능한 범위</b>를 정확히 알고 접근해야 합니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li>비밀값은 <b><code>char[]</code>·<code>ByteArray</code></b> 로 다루고 사용 후 <b>명시적으로 0 으로 채웁니다</b>. <code>String</code> 은 피합니다.</li>
+<li>가장 좋은 방법은 <b>평문을 앱 메모리에 올리지 않는 것</b>입니다 — <b>Android Keystore / iOS Secure Enclave</b> 안에서 서명·복호화를 수행하고 결과만 받습니다. 키는 하드웨어 밖으로 나오지 않습니다.</li>
+<li>생체인증 연동 시 <code>setUserAuthenticationRequired(true)</code> 로 키 사용 자체를 인증에 묶습니다.</li>
+</ul>
+<pre>// 키가 앱 메모리에 존재하지 않는 구조
+KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder("txn-sign",
+        KeyProperties.PURPOSE_SIGN)
+    .setUserAuthenticationRequired(true)       // 생체인증 후에만 사용
+    .setIsStrongBoxBacked(true)                // 하드웨어 보안 모듈
+    .build();</pre>
+<div class="warn">놓치기 쉬운 곳 — <b>크래시 덤프와 힙 스냅샷</b>에 비밀값이 그대로 담깁니다.
+Firebase Crashlytics 같은 도구가 덤프를 외부로 보내므로, 수집 범위를 확인해야 합니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -256,8 +297,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>

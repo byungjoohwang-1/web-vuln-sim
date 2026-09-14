@@ -373,7 +373,11 @@
     const style = document.createElement('style');
     style.id = 'wvs-bilingual-style';
     style.textContent = `
-      .wvs-langbar{position:fixed;top:var(--wvs-edge,14px);right:var(--wvs-edge,14px);z-index:var(--wvs-z-float,300);display:flex;align-items:center;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px);transition:opacity .18s ease;height:auto;max-height:36px;box-sizing:border-box}
+      /* 공통 상단 바(soc-chrome .wvsx-top)가 있으면 그 아래로 내려간다. 예전에는 top 이
+         --wvs-edge(14px) 라 바 우측의 🔍검색 버튼 위에 그대로 얹혀서 검색을 누르면
+         언어 버튼이 눌렸다(데스크톱에서 재현). --wvs-topbar-h 는 바가 실제로 만들어진
+         뒤 soc-chrome 이 채우며, 바가 없는 페이지에서는 0px 로 떨어져 종전과 같다. */
+      .wvs-langbar{position:fixed;top:calc(var(--wvs-topbar-h, 0px) + var(--wvs-edge,14px));right:var(--wvs-edge,14px);z-index:var(--wvs-z-float,300);display:flex;align-items:center;gap:4px;background:rgba(20,20,30,.78);padding:4px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.32);backdrop-filter:blur(8px);transition:opacity .18s ease;height:auto;max-height:36px;box-sizing:border-box}
       .wvs-langbar button,.langbar button{border:0;padding:5px 11px;border-radius:7px;font:700 12px/1 'Malgun Gothic',Arial,sans-serif;cursor:pointer;white-space:nowrap;height:24px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center}
       .wvs-langbar button{background:transparent;color:#cbd5e1}
       .wvs-langbar button.on,.langbar button.on{background:#2563eb!important;color:#fff!important}

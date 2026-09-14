@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#232f3e"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>금융 클라우드 보안 진단 시뮬레이터 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="금융 클라우드 보안 진단 시뮬레이터 · WEB-VULN-SIM">
+<meta property="og:description" content="클라우드 관리체계 보안 취약점 평가기준(PISM) 기반 AWS 진단 실습 — 실제 CLI 명령을 실행하고 양호/취약을 판정한 뒤 조치까지">
+<meta property="og:url" content="https://vuln-sim.web.app/fincloud-hub.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="금융권 클라우드 관리체계 보안 취약점 평가기준(퍼블릭 클라우드) PISM 항목을 실제 AWS CLI 진단 절차로 실습합니다. S3 암호화·퍼블릭 액세스·보안그룹·CloudTrail·EBS/RDS 암호화·IAM MFA·액세스 키·IMDSv2 등 22개 항목.">
+<style>
+:root{--aws-navy:#232f3e;--aws-orange:#ff9900;--aws-blue:#0972d3;--bg:#f2f3f3;--panel:#fff;--line:#d5dbdb;--ink:#16191f;--muted:#5f6b7a;--bad:#d13212;--good:#037f0c;--warn:#8d6605;--mono:'Consolas','Menlo','JetBrains Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Amazon Ember','Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.awsbar{background:var(--aws-navy);color:#fff;display:flex;align-items:center;gap:16px;padding:9px 18px;flex-wrap:wrap;font-size:13px}
+.awsbar .logo{font-weight:800} .awsbar .logo i{color:var(--aws-orange);font-style:normal}
+.awsbar a{color:#d5dbdb;font-size:12.5px} .awsbar a:hover{color:#fff}
+.awsbar .sp{margin-left:auto}
+.awsbar .acct{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.08);border-radius:4px;padding:3px 9px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 80px}
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.hero h1{font-size:23px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero p{font-size:14px;color:#414d5c;margin-top:10px;max-width:900px}
+.hero .src{font-family:var(--mono);font-size:11.5px;color:var(--aws-blue);margin-top:9px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.stat{background:#f7f8f8;border:1px solid var(--line);border-radius:9px;padding:10px 15px;min-width:112px}
+.stat b{display:block;font-size:21px;font-family:var(--mono)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.how{background:#eef6ff;border-left:4px solid var(--aws-blue);border-radius:8px;padding:13px 15px;font-size:13.5px;color:#0b3c63;margin:16px 0}
+.how ol{margin:8px 0 0 19px} .how li{margin:3px 0}
+.warnbox{background:#fdf3e2;border-left:4px solid var(--warn);border-radius:8px;padding:12px 15px;font-size:13px;color:#5c4405;margin:16px 0}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0 12px}
+.fbtn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;font-size:12.5px;font-weight:700;color:#414d5c;font-family:inherit}
+.fbtn.on{background:var(--aws-navy);border-color:var(--aws-navy);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:15px 17px;display:block;transition:.15s;border-left:5px solid var(--line)}
+.card:hover{border-color:var(--aws-blue);border-left-color:var(--aws-blue);box-shadow:0 3px 12px rgba(0,0,0,.08);transform:translateY(-2px)}
+.card.r5{border-left-color:var(--bad)} .card.r4{border-left-color:var(--warn)} .card.r3{border-left-color:var(--aws-blue)}
+.card .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+.card .pid{font-family:var(--mono);font-size:11.5px;background:var(--aws-navy);color:#fff;border-radius:4px;padding:2px 8px;font-weight:700}
+.card .rk{font-size:11px;font-weight:800;border-radius:20px;padding:2px 9px}
+.card .rk.r5{background:#fdecea;color:var(--bad)} .card .rk.r4{background:#fdf3e2;color:var(--warn)} .card .rk.r3{background:#eef6ff;color:var(--aws-blue)}
+.card h3{font-size:14.5px;line-height:1.45;margin-bottom:6px}
+.card .svc{font-family:var(--mono);font-size:11.5px;color:var(--aws-orange);font-weight:700;margin-bottom:6px}
+.card p{font-size:12.5px;color:var(--muted);line-height:1.6}
+.card .go{font-size:12.5px;color:var(--aws-blue);font-weight:700;margin-top:9px;display:inline-block}
+.sec{font-size:16px;font-weight:800;margin:26px 0 10px;display:flex;align-items:baseline;gap:9px}
+.sec span{font-size:12px;color:var(--muted);font-family:var(--mono);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);margin-top:9px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+th{background:#f2f3f3;font-size:12.5px}
+.disc{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:12px;margin-top:22px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
+<div class="awsbar">
+  <span class="logo"><i>aws</i> &nbsp;금융 클라우드 진단</span>
+  <a href="index.html">홈</a>
+  <a href="vuln-hub.html">카탈로그</a>
+  <a href="11_cloud-c01.html">클라우드 개념 시뮬</a>
+  <span class="sp"></span>
+  <span class="acct">ap-northeast-2 · 3820-1174-9265</span>
+</div>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>☁️ 금융 클라우드 보안 진단 시뮬레이터</h1>
+    <p><b>평가기준을 읽는 실습이 아니라, 실제로 진단해 보는 실습입니다.</b> 평가기준의 &lsquo;평가방법&rsquo;에 적힌 AWS CLI 명령을
+       모의 터미널에서 그대로 실행하고, <b>실제 AWS 응답 형식의 출력</b>을 읽어 양호/취약을 직접 판정한 뒤 조치까지 수행합니다.
+       계정 ID·ARN·리소스 ID 는 형식만 실제와 같게 만든 가상 값이며, 어떤 AWS 환경에도 접속하지 않습니다.</p>
+    <div class="src">📕 근거: 「클라우드 관리체계 보안 취약점 평가기준 (퍼블릭 클라우드)」 — 교육용 재구성</div>
+    <div class="stats">
+      <div class="stat"><b>22</b><span>구현 진단 항목</span></div>
+      <div class="stat"><b>16</b><span>위험도 5</span></div>
+      <div class="stat"><b>73</b><span>AWS CLI 명령</span></div>
+      <div class="stat"><b>73</b><span>평가기준 전체 항목</span></div>
+    </div>
+  </div>
+
+  <div class="how">
+    <b>진행 방식</b>
+    <ol>
+      <li><b>점검 대상 확인</b> — 콘솔 경로와 평가항목의 상세설명을 읽습니다.</li>
+      <li><b>CLI 진단</b> — 등록된 명령을 눌러 실행하거나 직접 입력합니다. 출력은 실제 AWS 응답 형식입니다.</li>
+      <li><b>양호/취약 판정</b> — <b>명령을 실행하지 않으면 판정할 수 없습니다.</b> 출력을 근거로 스스로 판단합니다.</li>
+      <li><b>조치·재확인</b> — 조치 CLI 와 IaC(Terraform)를 확인하고, 조치 후 결과를 봅니다.</li>
+    </ol>
+  </div>
+
+  <div class="warnbox">
+    ⚠️ 이 시뮬레이터는 평가기준 <b>전체 73개 항목 중 22개</b>를 다룹니다. AWS CLI 로 기계적 확인이 가능한
+    <b>스크립트 평가 항목</b>을 우선 구현했습니다. 나머지는 정책 문서·인터뷰·현장 확인이 필요한 <b>관리체계 평가 항목</b>이라
+    터미널 실습으로 재현하면 오히려 실제 평가를 오도할 수 있어 포함하지 않았습니다.
+    또한 평가기준·AWS 사양은 개정되므로, 실제 평가에서는 <b>최신 원문과 AWS 공식 문서</b>를 따르십시오.
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="fbtn on" data-f="all">전체 22</button>
+    <button class="fbtn" data-f="r5">위험도 5</button>
+    <button class="fbtn" data-f="enc">암호화</button>
+    <button class="fbtn" data-f="iam">계정·권한</button>
+    <button class="fbtn" data-f="net">네트워크</button>
+    <button class="fbtn" data-f="log">로그·추적</button>
+  </div>
+
+  <div class="grid" id="grid">
+    <a class="card r5" data-tags="r5 enc net" href="07_fincloud-pism001.html">
+      <div class="top"><span class="pid">PISM-001</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">S3</div>
+      <h3>통신구간 암호화 적용 여부</h3>
+      <p>HTTP 요청을 허용할 경우 중요정보가 평문으로 노출될 위협이 존재하므로, HTTP 요청 거부 설정을 활성화하여 통신구간 암호화 적용 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 net" href="07_fincloud-pism005.html">
+      <div class="top"><span class="pid">PISM-005</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">S3 · EC2 · RDS</div>
+      <h3>가상자원에 대한 퍼블릭 액세스 허용</h3>
+      <p>가상자원에 대한 퍼블릭 액세스를 차단하지 않을 경우 중요정보 노출 등의 위협이 존재하므로 가상자원의 퍼블릭 액세스 차단 설정 활성화 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 iam net" href="07_fincloud-pism007.html">
+      <div class="top"><span class="pid">PISM-007</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">Security Group</div>
+      <h3>네트워크 접근 제어 설정의 최소 권한 적용</h3>
+      <p>기본 네트워크 보안 설정(방화벽, 보안그룹 등)이 최소 권한 원칙을 준수하도록 구성되어 있는지, 과도한 접근 권한이 허용되지 않도록 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 log" href="07_fincloud-pism013.html">
+      <div class="top"><span class="pid">PISM-013</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">CloudTrail</div>
+      <h3>접근 로그 수집 기능 활성화 여부</h3>
+      <p>시스템 또는 네트워크 경계에서 수집되는 접근 로그 기능이 활성화되어 있으며, 사용자 요청 이력 및 행동 추적이 가능한지 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 enc" href="07_fincloud-pism017.html">
+      <div class="top"><span class="pid">PISM-017</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">S3</div>
+      <h3>삭제된 저장소 내 데이터 복원 기능 활성화 여부</h3>
+      <p>중요 정보가 저장된 저장소가 의도치 않게 삭제된 경우 데이터를 복원할 수 있도록 복원 기능의 활성화 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r3" data-tags="r3" href="07_fincloud-pism023.html">
+      <div class="top"><span class="pid">PISM-023</span><span class="rk r3">위험도 3</span></div>
+      <div class="svc">EC2 · S3 · RDS · Lambda</div>
+      <h3>업무상 불필요한 가상자원 존재</h3>
+      <p>업무상 불필요하거나 장기간 사용되지 않은 가상자원이 남아있을 경우, 이를 통해 비인가자가 의도되지 않은 행위를 수행할 위협이 존재하므로 업무상 불필요한 가상자원이 존재하는지 여부를 점검합니…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5" href="07_fincloud-pism025.html">
+      <div class="top"><span class="pid">PISM-025</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">Lambda</div>
+      <h3>서비스 지원이 종료된(EoS) 런타임 교체 여부</h3>
+      <p>서비스 지원이 종료된(EoS) 버전을 사용하는 경우, 알려진 취약점 또는 신규로 발견되는 취약점으로부터 발생하는 보안위협에 대처할 수 없는 위협이 존재하므로 서비스 지원이 종료된 버전의 런…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r3" data-tags="r3 enc" href="07_fincloud-pism030.html">
+      <div class="top"><span class="pid">PISM-030</span><span class="rk r3">위험도 3</span></div>
+      <div class="svc">EC2 · EBS</div>
+      <h3>디스크 볼륨 생성 시 암호화 설정 여부</h3>
+      <p>디스크 볼륨 암호화 설정이 비활성화되어 있는 경우 새로 생성되는 볼륨이 암호화 미적용 상태로 생성되어 중요 정보가 유출될 위협이 존재하므로, 디스크 볼륨 생성 시 암호화 적용 설정의 활성화…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 enc" href="07_fincloud-pism031.html">
+      <div class="top"><span class="pid">PISM-031</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">EC2 · EBS</div>
+      <h3>디스크 볼륨 암호화 적용 여부</h3>
+      <p>디스크 볼륨이 암호화되지 않은 경우 비인가자에 의해 복원되어 중요 정보가 유출될 수 있는 위협이 존재하므로, 디스크 볼륨의 암호화 적용 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 enc" href="07_fincloud-pism032.html">
+      <div class="top"><span class="pid">PISM-032</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">EC2 · EBS</div>
+      <h3>스냅샷 암호화 적용 여부</h3>
+      <p>스냅샷이 암호화되지 않은 경우 타 계정 또는 비인가자에 의해 복원되어 저장된 데이터가 유출될 수 있는 위협이 존재하므로, 스냅샷의 암호화 적용 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 enc" href="07_fincloud-pism033.html">
+      <div class="top"><span class="pid">PISM-033</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">EC2 · AMI</div>
+      <h3>이미지 암호화 적용 여부</h3>
+      <p>이미지가 암호화되지 않은 경우 해당 이미지를 기반으로 생성되는 인스턴스 또는 디스크에 포함된 데이터가 비인가자에게 노출될 수 있는 위협이 존재하므로, 이미지의 암호화 적용 여부를 점검합니다…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 enc" href="07_fincloud-pism034.html">
+      <div class="top"><span class="pid">PISM-034</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">RDS · Aurora</div>
+      <h3>DB 인스턴스 암호화 적용 여부</h3>
+      <p>DB 인스턴스에 대한 암호화를 적용하지 않을 경우 스토리지에 직접 접근을 통한 데이터 유출 등의 위협이 있으므로, DB 인스턴스에 대한 암호화 적용 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 enc" href="07_fincloud-pism036.html">
+      <div class="top"><span class="pid">PISM-036</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">Lambda</div>
+      <h3>환경변수 내 중요정보 암호화 적용 여부</h3>
+      <p>가상자원의 환경변수 내에 비밀번호, API Key 등 중요정보가 암호화되지 않은 평문 형태로 저장되어 있는 경우, 중요정보가 외부로 유출될 수 있는 위협이 존재하므로 중요정보를 암호화하여 …</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 iam log" href="07_fincloud-pism037.html">
+      <div class="top"><span class="pid">PISM-037</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">IAM</div>
+      <h3>비밀번호 정책 수립 및 로그인 제한 설정</h3>
+      <p>계정의 비밀번호가 취약하게 설정되어 있거나 복잡도 정책이 미흡한 경우, 비인가자가 비밀번호를 유추하거나 무작위 대입 공격을 통해 계정을 탈취하여 가상자원 또는 관리 시스템에 접근할 수 있는…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 iam" href="07_fincloud-pism039.html">
+      <div class="top"><span class="pid">PISM-039</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">IAM</div>
+      <h3>클라우드 자원에 접근 가능한 계정에 추가인증수단 적용 여부</h3>
+      <p>클라우드 자원에 접근 가능한 계정(관리자 계정 포함)에 대한 추가 인증 수단이 적용되지 않으면 계정이 탈취될 경우 공격자가 클라우드 자원에 접근할 수 있는 위협이 존재하므로, OTP·이메일…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5 iam" href="07_fincloud-pism041.html">
+      <div class="top"><span class="pid">PISM-041</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">IAM</div>
+      <h3>관리자 계정의 액세스 키 삭제 여부</h3>
+      <p>관리자 계정(root)의 액세스 키가 유출될 경우 프로그래밍 방식으로 접근하여 제약 없이 가상자원에 대한 제어가 가능해지는 위협이 존재하므로 관리자 계정의 액세스 키 삭제 여부를 점검합니다…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r3" data-tags="r3 iam" href="07_fincloud-pism042.html">
+      <div class="top"><span class="pid">PISM-042</span><span class="rk r3">위험도 3</span></div>
+      <div class="svc">IAM</div>
+      <h3>API 자격 증명 다중 발급 방지 여부</h3>
+      <p>API 자격 증명(AWS Access Key 등)을 안전하게 관리하기 위해 API 자격 증명을 다중 보유한 식별자(계정, 애플리케이션 등) 존재 유무를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r3" data-tags="r3 iam" href="07_fincloud-pism043.html">
+      <div class="top"><span class="pid">PISM-043</span><span class="rk r3">위험도 3</span></div>
+      <div class="svc">IAM</div>
+      <h3>API 자격 증명의 정기적 갱신 이행 여부</h3>
+      <p>API 자격 증명이 유출된 경우 악용될 위험을 줄이기 위해 API 자격 증명의 정기적 갱신 정책을 수립하고 이행 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r3" data-tags="r3 iam" href="07_fincloud-pism045.html">
+      <div class="top"><span class="pid">PISM-045</span><span class="rk r3">위험도 3</span></div>
+      <div class="svc">IAM · Lambda · EC2</div>
+      <h3>그룹 및 속성 기반 권한 부여 및 최소 권한 정책 적용</h3>
+      <p>사용자 그룹과 속성을 기반으로 접근 권한을 설정하여 개별 사용자 정책이 아닌 일괄적인 권한 관리가 이루어지며, 그룹 및 속성 기반 정책이 최소 권한 원칙을 효과적으로 구현하도록 설정되어 있…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r4" data-tags="r4 iam" href="07_fincloud-pism046.html">
+      <div class="top"><span class="pid">PISM-046</span><span class="rk r4">위험도 4</span></div>
+      <div class="svc">CloudShell · IAM</div>
+      <h3>웹 기반 쉘 환경 권한 통제 여부</h3>
+      <p>클라우드에서 제공되는 웹 기반 쉘 환경은 인터넷 접근, 인스턴스에 파일 업로드 및 다운로드 등이 가능하여 사용자 정보가 유출되거나 다른 공격에 활용될 수 있으므로, 웹 기반 쉘 환경에 대한…</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5" href="07_fincloud-pism060.html">
+      <div class="top"><span class="pid">PISM-060</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">Lambda</div>
+      <h3>실행 코드 무결성 검증 절차 운용 여부</h3>
+      <p>인가되지 않은 실행 코드가 포함되지 않도록, 서명 기능을 활용한 가상자원 실행 코드의 무결성 검증 절차를 구축하여 운용하고 있는지 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+    <a class="card r5" data-tags="r5" href="07_fincloud-pism064.html">
+      <div class="top"><span class="pid">PISM-064</span><span class="rk r5">위험도 5</span></div>
+      <div class="svc">EC2</div>
+      <h3>컴퓨팅 인스턴스에서 IMDSv1 비활성화 여부</h3>
+      <p>IMDSv1 은 별도의 인증을 요구하지 않아 SSRF(Server-Side Request Forgery)를 통해 자격증명 탈취 위협 등이 존재하므로 IMDSv2 활성화 여부를 점검합니다.</p>
+      <span class="go">진단 시작 →</span>
+    </a>
+  </div>
+
+  <div class="sec">📊 통제분야별 분포 <span>/ coverage</span></div>
+  <table>
+    <tr><th>통제분야</th><th>구현 항목</th><th>대상 서비스</th></tr>
+    <tr><td>5. 운영 관리</td><td>16개</td><td>AMI, Aurora, CloudTrail, EBS, EC2, IAM, Lambda, RDS, S3, Security Group</td></tr>
+    <tr><td>6. 접근통제</td><td>5개</td><td>CloudShell, IAM</td></tr>
+    <tr><td>7. IT도입･개발･유지보수 관리</td><td>1개</td><td>Lambda</td></tr>
+
+  </table>
+
+  <div class="sec">🔗 함께 보면 좋은 것 <span>/ related</span></div>
+  <table>
+    <tr><th>콘텐츠</th><th>차이</th></tr>
+    <tr><td><a href="11_cloud-c01.html" style="color:var(--aws-blue);font-weight:700">클라우드 보안 개념 시뮬 (C-01~20)</a></td>
+        <td>같은 주제를 <b>개념 중심</b>으로 설명합니다. 이 페이지는 <b>AWS 진단 절차</b>가 중심입니다.</td></tr>
+    <tr><td><a href="07_fin-transaction-integrity.html" style="color:var(--aws-blue);font-weight:700">전자금융 보안 시뮬 (43종)</a></td>
+        <td>전자금융기반시설 평가기준 기반의 <b>애플리케이션 계층</b> 취약점 실습입니다.</td></tr>
+    <tr><td><a href="privacy-hub.html" style="color:var(--aws-blue);font-weight:700">개인정보보호 트랙</a></td>
+        <td>암호화·접속기록·파기 요건의 <b>법적 근거</b>(개인정보 보호법)를 다룹니다.</td></tr>
+  </table>
+
+  <div class="disc">
+    「클라우드 관리체계 보안 취약점 평가기준(퍼블릭 클라우드)」의 평가항목을 교육 목적으로 재구성한 시뮬레이터입니다.
+    원문을 복제하지 않으며, 모든 명령 출력은 학습용으로 작성한 가상 데이터입니다.
+    실제 진단·평가에는 기관이 배포한 최신 평가기준과 스크립트를 사용하십시오.
+  </div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script>
+document.getElementById('filters').addEventListener('click', function (e) {
+  var b = e.target.closest('.fbtn');
+  if (!b) return;
+  document.querySelectorAll('.fbtn').forEach(function (x) { x.classList.remove('on'); });
+  b.classList.add('on');
+  var f = b.getAttribute('data-f');
+  document.querySelectorAll('#grid .card').forEach(function (c) {
+    c.style.display = (f === 'all' || c.getAttribute('data-tags').indexOf(f) >= 0) ? '' : 'none';
+  });
+});
+try { if (window.WVSProgress) window.WVSProgress.markVisited('fincloud-hub.html'); } catch (e) {}
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/shell.js" defer></script>
+</body>
+</html>

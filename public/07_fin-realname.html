@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 아래 3줄(PWA·manifest·favicon)은 예전에 inject_* 후처리로만 붙어 있었다.
+     재생성하면 사라져 43개 페이지에서 한꺼번에 유실됐다(2026-09-14). 템플릿에 고정한다. -->
 <meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
 <script src="/js/pwa.js" defer></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -59,6 +61,20 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 .kisa-ref { font-size:14px; line-height:1.7; color:#444; }
 .kisa-ref h4 { color:var(--bank-primary); margin:14px 0 6px; font-size:15px; }
 .kisa-ref ul { margin-left:18px; }
+/* 현대 금융 IT 환경 패널 — 평가기준은 웹/모바일/HTS 3계층을 전제로 쓰였는데,
+   실제 현장은 API 게이트웨이·MSA·클라우드·오픈뱅킹으로 옮겨 갔다. 그 간극을 메운다. */
+.modern-panel { border-left:6px solid #7c3aed; }
+.modern-panel .panel-title { color:#5b21b6; }
+.modern-stack { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.modern-stack span { background:#ede9fe; color:#5b21b6; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; }
+.modern-body { font-size:14px; line-height:1.75; color:#444; }
+.modern-body h4 { color:#5b21b6; margin:16px 0 6px; font-size:14.5px; }
+.modern-body ul { margin-left:19px; }
+.modern-body li { margin:4px 0; }
+.modern-body code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-family:'Consolas',monospace; font-size:12.5px; color:#9a3412; }
+.modern-body pre { background:#0d1b2a; color:#9fd4ff; padding:14px; border-radius:8px; overflow-x:auto; font-family:'Consolas',monospace; font-size:12.5px; line-height:1.6; margin:9px 0; }
+.modern-body .warn { background:#fff7ed; border-left:4px solid #ea580c; padding:11px 13px; border-radius:6px; margin:12px 0; font-size:13.5px; color:#7c2d12; }
+@media (max-width:900px) { .grid-container { grid-template-columns:1fr; } }
 .easybox { background:linear-gradient(135deg,#fff8e6,#fff3d6); border:1px solid #ffe08a; border-radius:12px; padding:16px 20px; margin-bottom:22px; font-size:15.5px; line-height:1.75; }
 .easybox .tag { display:inline-block; background:#ff9800; color:#0b1220; font-size:13px; font-weight:700; padding:3px 12px; border-radius:20px; margin-bottom:6px; }
 .easybox b { color:#c0392b; }
@@ -87,7 +103,7 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
 </style>
 
 <div class="container" role="main">
-  <div class="top-nav" role="navigation"><a href="index.html">&larr; 메인으로</a></div>
+  <div class="top-nav"><a href="index.html">&larr; 메인으로</a></div>
   <div class="header">
     <h1><span>🪪</span> 전자금융 보안 모의해킹 &middot; 접근매체 발급 실명확인</h1>
     <div style="text-align:right; font-size:13px; color:#555;">
@@ -116,6 +132,8 @@ body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Robot
             </div>
           </div>
           <label class="req-label">📡 거래/인증 요청 (가로채어 변조 가능)</label>
+          <!-- aria-label 은 반드시 템플릿에 둔다. 예전에 후처리로만 붙여 두었다가
+               재생성 때 사라져 접근성 게이트가 43개 파일을 잡았다(2026-09-14). -->
           <textarea class="req-box" id="reqBox" spellcheck="false" aria-label="HTTP 요청 편집기">POST /access-media/issue
 {
   "type": "OTP",
@@ -168,6 +186,24 @@ public AccessMedia issue(IssueReq req) {
         <div class="kisa-ref"><h4>1. 점검 항목</h4>접근매체 관리 &gt; <b>발급 시 실명확인</b><h4>2. 위험 분석</h4><ul><li>실명확인 미흡 시 타인 명의 접근매체 비인가 발급</li><li>발급된 접근매체로 명의도용·부정거래 확대</li></ul><h4>3. 조치 방법</h4><ul><li>발급 시 <b>본인확인기관(CI/DI)</b> 통한 실명확인 수행</li><li><b>신청 명의자와 실명확인 결과 일치</b> 검증</li><li>발급 이력·다중 발급 이상징후 모니터링</li></ul></div>
       </div>
     </div>
+    <div class="panel modern-panel">
+      <div class="panel-title">🏗️ 현대 금융 IT 환경에서의 변형</div>
+      <div class="modern-stack"><span>비대면 실명확인</span><span>eKYC</span><span>딥페이크</span></div>
+      <div class="modern-body"><h4>어디가 달라졌나</h4>
+<p>접근매체 발급이 <b>비대면(eKYC)</b> 으로 옮겨 가면서 실명확인의 무게중심이 바뀌었습니다.
+신분증 사본 제출 → <b>신분증 진위확인 API + 얼굴 대조 + 계좌 인증</b> 의 다중 확인 구조입니다.
+그리고 <b>생성형 AI 로 만든 위조 신분증·딥페이크 영상</b>이 새로운 위협으로 올라왔습니다.</p>
+<h4>현대 스택에서의 조치</h4>
+<ul>
+<li>신분증은 OCR 로 읽는 데 그치지 말고 <b>발급기관 진위확인</b>(정부24·금융결제원 등)을 거칩니다. 사본 위조는 OCR 을 통과합니다.</li>
+<li>얼굴 대조에는 <b>라이브니스 검사(수동/능동)</b> 를 넣습니다. 사진·영상 재생·딥페이크를 거르는 핵심 단계입니다.</li>
+<li>확인 결과와 근거는 <b>보존 의무 기간 동안 증적으로</b> 남깁니다 — 분쟁 시 실명확인 이행을 증명해야 합니다.</li>
+</ul>
+<div class="warn">놓치기 쉬운 곳 — <b>수집한 신분증 이미지와 얼굴 정보는 민감정보·고유식별정보</b>입니다.
+개인정보 보호법상 <u>별도 동의와 암호화 저장</u>이 필요하고, 목적 달성 후 파기해야 합니다.
+eKYC 를 도입하며 개인정보 처리방침을 갱신하지 않는 실수가 흔합니다.</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -265,8 +301,8 @@ function showHint(){ document.getElementById('codeEditor').value=SECURE_HINT; }
 </script>
 <script src="js/bilingual.js"></script>
 <script src="/js/progress.js" defer></script>
-<script src="/js/vuln-anim.js" defer></script>
-<script src="/js/soc-chrome.js" defer></script>
 <script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/vuln-anim.js" defer></script>
 </body>
 </html>
