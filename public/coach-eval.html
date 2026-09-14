@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AI 코치 평가 리포트 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="AI 코치 평가 리포트 · WEB-VULN-SIM">
+<meta property="og:description" content="AI 코치 평가 리포트 · WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:url" content="https://vuln-sim.web.app/coach-eval.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="AI 코치가 무엇을 보장하고 무엇을 아직 측정하지 않았는지 — 계약 평가 결과와 한계">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--line:#1e293b;--ink:#e2e8f0;
+  --muted:#94a3b8;--acc:#38bdf8;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;
+  --mono:'JetBrains Mono','Consolas',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+a{color:#7dd3fc}
+.topbar{display:flex;gap:14px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:#0b1220;z-index:50}
+.topbar a{font-size:13px;font-family:var(--mono);text-decoration:none}
+.wrap{max-width:900px;margin:0 auto;padding:26px 16px 90px}
+h1{font-size:23px;color:#fff;margin-bottom:8px}
+.lede{color:var(--muted);font-size:14px;margin-bottom:22px;word-break:keep-all}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+.card h2{font-size:15px;color:#7dd3fc;font-family:var(--mono);margin-bottom:10px;display:flex;
+  align-items:center;gap:8px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;border:1px solid;font-family:var(--mono)}
+.tag.measured{color:#86efac;border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.1)}
+.tag.unmeasured{color:#fcd34d;border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.1)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:700;font-size:12px}
+td.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+.zero{color:#86efac}.nonzero{color:#fca5a5;font-weight:800}
+.null{color:#64748b;font-family:var(--mono)}
+.note{background:var(--panel2);border-left:3px solid var(--acc);border-radius:8px;padding:11px 13px;
+  font-size:13px;color:#cbd5e1;margin-top:12px;word-break:keep-all}
+.warnbox{border-left-color:var(--warn)}
+ul{margin:8px 0 0 18px}li{margin:4px 0;font-size:13.5px;color:#cbd5e1;word-break:keep-all}
+.meta{font-family:var(--mono);font-size:11.5px;color:#64748b;margin-top:14px}
+.err{color:#fca5a5;font-size:13.5px}
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+#wvs-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;max-width:1080px;margin:22px auto 0;padding:0 16px}
+#wvs-pager .wvs-pg{flex:0 0 auto;font:600 13.5px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:10px 16px;border-radius:9px;text-decoration:none}
+#wvs-pager a.wvs-pg{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+#wvs-pager a.wvs-pg:hover{background:#334155}
+#wvs-pager .pos{color:#94a3b8;font-weight:400}
+#wvs-pager .off{visibility:hidden}
+</style>
+
+<nav class="topbar" aria-label="주요 메뉴">
+  <a href="index.html">← 홈</a>
+  <a href="incident.html">대표 사건 실습</a>
+</nav>
+<main class="wrap" id="wvs-main">
+  <h1>AI 코치 평가 리포트</h1>
+  <p class="lede">
+    이 페이지는 AI 코치가 <b>무엇을 보장하는지</b>와 <b>아직 무엇을 측정하지 않았는지</b>를 함께 적습니다.
+    돌리지 않은 평가는 수치를 지어내지 않고 <span class="null">미측정</span>으로 남깁니다.
+  </p>
+
+  <div class="card">
+    <h2>1. 오프라인 계약 평가 <span class="tag measured" id="tagOffline">측정함</span></h2>
+    <p class="lede" style="margin-bottom:6px">
+      고정 픽스처로 <b>파이프라인이 계약을 지키는지</b>를 봅니다.
+      모델 답변의 교육적 정확성을 보증하지 않습니다.
+    </p>
+    <div id="offlineBox"><p class="lede">불러오는 중…</p></div>
+  </div>
+
+  <div class="card">
+    <h2>2. 실제 모델 평가 <span class="tag unmeasured" id="tagModel">미측정</span></h2>
+    <p class="lede" style="margin-bottom:6px">
+      유료 모델을 실제로 호출해 근거 일치·정답 노출·지연·비용을 재는 항목입니다.
+    </p>
+    <div id="modelBox"><p class="lede">불러오는 중…</p></div>
+  </div>
+
+  <div class="card">
+    <h2>3. 이 평가가 보증하지 않는 것</h2>
+    <ul>
+      <li>오프라인 통과는 <b>계약 준수</b>를 뜻합니다. 모델이 교육적으로 옳은 답을 한다는 뜻이 아닙니다.</li>
+      <li>합성 데이터 기반의 고정 검사 결과이며, 실제 장비·배포 코드의 보안을 보증하지 않습니다.</li>
+      <li>실제 사용자 학습 효과는 별도 실험이 필요하며 아직 수행하지 않았습니다.</li>
+      <li>출처 ID 가 존재한다는 확인은 인용 <b>내용</b>이 정확하다는 검증이 아닙니다.</li>
+    </ul>
+  </div>
+
+  <p class="meta" id="meta"></p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+
+  var LABELS = {
+    contractViolations: '계약 밖 필드 전송',
+    leakedInFallback: '기본 도움말의 정답 노출',
+    sourceMistakes: '출처 필터 오류',
+    privilegeMisses: '권한 필드 미차단',
+    fallbackMisses: '폴백 복구 실패',
+    misclassified: '실패 종류 오분류',
+  };
+  var METRIC_LABELS = {
+    validNextAction: '유효한 다음 행동',
+    ungroundedClaims: '근거 불일치',
+    earlyAnswerLeak: '이른 정답 노출',
+    sourceAccuracy: '출처 정확성',
+    latencyMsMedian: '지연 중앙값(ms)',
+    latencyMsP95: '지연 p95(ms)',
+    costPerSessionKrw: '세션당 비용(원)',
+    failureRecovery: '실패 복구',
+  };
+
+  fetch('/data/coach-eval-report.json', { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error('report ' + r.status); return r.json(); })
+    .then(render)
+    .catch(function (e) {
+      document.getElementById('offlineBox').innerHTML =
+        '<p class="err">리포트를 불러오지 못했습니다(' + esc(e.message) + '). ' +
+        '<code>node tools/eval-coach.js</code> 로 생성합니다.</p>';
+      document.getElementById('modelBox').innerHTML = '';
+    });
+
+  function render(d) {
+    var o = d.offline || {}, m = d.realModel || {};
+
+    var rows = Object.keys(LABELS).map(function (k) {
+      var v = (o.counters || {})[k];
+      var cls = v === 0 ? 'zero' : 'nonzero';
+      return '<tr><td>' + esc(LABELS[k]) + '</td><td class="num ' + cls + '">' + esc(v) + '</td></tr>';
+    }).join('');
+
+    document.getElementById('offlineBox').innerHTML =
+      '<table><thead><tr><th>검사 항목</th><th style="text-align:right">위반 건수</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
+      '<div class="note">픽스처 <b>' + esc(o.fixtures) + '</b>개 중 통과 <b>' + esc(o.passed) +
+      '</b> · 실패 <b>' + esc(o.failed) + '</b>. 범위: ' + esc(o.scope) + '<br>' +
+      '코치에게 실제로 전달되는 입력 길이 — 중앙값 ' + esc((o.inputChars || {}).median) +
+      '자 · 최대 ' + esc((o.inputChars || {}).max) + '자</div>';
+
+    var mrows = Object.keys(METRIC_LABELS).map(function (k) {
+      var v = (m.metrics || {})[k];
+      return '<tr><td>' + esc(METRIC_LABELS[k]) + '</td><td class="num">' +
+        (v === null || v === undefined ? '<span class="null">미측정</span>' : esc(v)) + '</td></tr>';
+    }).join('');
+
+    document.getElementById('tagModel').className = 'tag ' + (m.measured ? 'measured' : 'unmeasured');
+    document.getElementById('tagModel').textContent = m.measured ? '측정함' : '미측정';
+    document.getElementById('modelBox').innerHTML =
+      '<table><thead><tr><th>지표</th><th style="text-align:right">값</th></tr></thead>' +
+      '<tbody>' + mrows + '</tbody></table>' +
+      '<div class="note warnbox">' + esc(m.reason) +
+      '<br>표본 수 ' + esc(m.sampleSize) + '. 비교 조건 A(고정 도움말)만 오프라인으로 확인했고, ' +
+      'B(일반 질문 AI)·C(구조화된 코치)는 아직 실행하지 않았습니다.</div>';
+
+    document.getElementById('meta').textContent =
+      '생성 ' + (d.generatedAt || '') + ' · ' + (d.generator || '') + ' · 프롬프트 ' + (d.promptVersion || '');
+  }
+})();
+</script>
+<script src="/js/shell.js" defer></script>
+<script src="/js/soc-chrome.js" defer></script>
+</body>
+</html>
