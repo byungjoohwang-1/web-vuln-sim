@@ -128,6 +128,7 @@
     <div class="view" id="v-intruder"></div>
     <div class="view" id="v-scanner"></div>
     <div class="view" id="v-collab"></div>
+    <div class="view" id="v-sequencer"></div>
     <div class="view" id="v-decoder"></div>
   </div>
 
@@ -214,6 +215,69 @@ function oastCheck(text, kind, from){
 }
 function oastSince(n){ return OAST.log.filter(function(x){return x.n>n;}); }
 
+/* ============================ 세션 토큰 발급기 ============================
+ * Sequencer 가 분석할 대상이다. 모의 앱이 로그인 성공 시 내려주는 세션 토큰을
+ * 네 가지 방식 중 하나로 만든다. 학습자가 방식을 바꿔 가며 같은 분석을 돌려
+ * "무엇이 랜덤을 랜덤답게 만드는가"를 직접 비교하게 하는 것이 목적이다.
+ *
+ *   counter — 순번을 그대로 인코딩. 다음 값이 자명하다.
+ *   clock   — 발급 시각(ms) + 3자리 난수. 길어 보이지만 탐색 공간이 좁다.
+ *   hash    — (사용자명 + 발급 시각) 해시. 32자리 16진수라 눈으로는 난수와
+ *             구별되지 않고 통계 검정도 대부분 통과한다. 그런데 입력을 아는
+ *             공격자에게는 그냥 계산 대상이다. 이 경우가 이 탭의 핵심이다.
+ *   csprng  — crypto.getRandomValues 16바이트.
+ *
+ * 가상 시계(tokClock)는 요청마다 1~40ms 씩 흐른다. 실제 앱의 발급 간격을
+ * 흉내 내기 위한 것이며, 브라우저가 루프를 너무 빨리 돌아 모든 타임스탬프가
+ * 같아지는 것을 막는다.
+ * ====================================================================== */
+var TOKGEN = 'counter';
+var tokSeq = 40000;
+var tokClock = Date.now();
+function tokAdvance(){ tokClock += 1 + Math.floor(Math.random()*40); return tokClock; }
+/** FNV-1a 32비트. 문자열을 32비트 씨앗으로 줄인다. */
+function fnv1a(s){ var h=0x811c9dc5; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=(h*0x01000193)>>>0; } return h>>>0; }
+/** 32자리 16진수 토큰. mulberry32 스텝을 4번 돌려 만든다.
+ *
+ *  확산이 좋은 함수를 일부러 골랐다. 처음엔 FNV 를 이어 붙여 썼는데, 그렇게
+ *  만든 토큰은 Sequencer 의 통계 검정에 그대로 걸렸다. 그러면 이 탭이 가르치려는
+ *  것 — "검정을 다 통과해도 예측 가능할 수 있다" — 을 보여 줄 수 없다.
+ *  실제 앱이 쓰는 MD5/SHA 기반 토큰도 검정은 멀쩡히 통과한다. 그 상황을 맞춰야
+ *  공격자 모델만이 잡아낸다는 사실이 드러난다.
+ *
+ *  내부 상태는 32비트뿐이고 씨앗이 공개 입력에서 나온다. 128비트짜리로 보이는
+ *  토큰의 실제 불확실성이 0에 가깝다는 것이 이 방식의 결함이다. */
+function tokHash(seed){
+  var a=fnv1a(String(seed))|0, out='', t, i;
+  for(i=0;i<4;i++){
+    a = (a + 0x6d2b79f5)|0;
+    t = Math.imul(a ^ (a>>>15), 1 | a);
+    t = (t + Math.imul(t ^ (t>>>7), 61 | t)) ^ t;
+    out += ('00000000' + ((t ^ (t>>>14))>>>0).toString(16)).slice(-8);
+  }
+  return out;
+}
+function b64e(s){ try{ return btoa(s).replace(/=+$/,''); }catch(e){ return s; } }
+function b64d(s){ try{ return atob(s + '==='.slice(0,(4 - s.length%4)%4)); }catch(e){ return null; } }
+function randHex(n){
+  var out='', i;
+  if(window.crypto && crypto.getRandomValues){
+    var a=new Uint8Array(n/2); crypto.getRandomValues(a);
+    for(i=0;i<a.length;i++) out+=('0'+a[i].toString(16)).slice(-2);
+    return out;
+  }
+  for(i=0;i<n;i++) out+='0123456789abcdef'[Math.floor(Math.random()*16)];
+  return out;
+}
+var tokLastMs = 0;   /* 직전 토큰의 발급 시각. 수집기가 표본에 같이 적는다. */
+function issueToken(user){
+  var ms = tokAdvance(); tokLastMs = ms;
+  if(TOKGEN==='counter') return b64e('SESS-'+(tokSeq++));
+  if(TOKGEN==='clock')   return b64e(ms + '.' + ('00'+Math.floor(Math.random()*1000)).slice(-3));
+  if(TOKGEN==='hash')    return tokHash(user + ':' + ms);
+  return randHex(32);
+}
+
 function mockServer(req){
   var t0 = 18 + (req.path.length % 23);
   var headers = {
@@ -280,7 +344,9 @@ function mockServer(req){
       return R(200,'OK','{"auth":"ok","user":"admin","role":"admin","token":"eyJhbGciOiJub25lIn0.ADMIN.","note":"SQLi auth bypass"}\n[query] '+sql,{'Content-Type':'application/json'});
     }
     var hit = DB.users.filter(function(x){return x.user===u && x.pass===pw;})[0];
-    if(hit) return R(200,'OK','{"auth":"ok","user":"'+hit.user+'","role":"'+hit.role+'"}',{'Content-Type':'application/json'});
+    if(hit) return R(200,'OK','{"auth":"ok","user":"'+hit.user+'","role":"'+hit.role+'"}',
+      {'Content-Type':'application/json',
+       'Set-Cookie':'SESSIONID='+issueToken(hit.user)+'; Path=/'});   /* Sequencer 분석 대상 */
     return R(401,'Unauthorized','{"auth":"fail"}',{'Content-Type':'application/json'});
   }
 
@@ -461,6 +527,7 @@ var TABS = [
   {id:'intruder',  ko:'Intruder',  en:'Intruder'},
   {id:'scanner',   ko:'Scanner',   en:'Scanner'},
   {id:'collab',    ko:'Collaborator', en:'Collaborator'},
+  {id:'sequencer', ko:'Sequencer', en:'Sequencer'},
   {id:'decoder',   ko:'Decoder',   en:'Decoder'}
 ];
 var active='dashboard';
@@ -478,7 +545,8 @@ function buildTabs(){
 function renderActive(){
   TABS.forEach(function(t){el('v-'+t.id).classList.toggle('on',t.id===active);});
   ({dashboard:renderDashboard,target:renderTarget,proxy:renderProxy,repeater:renderRepeater,
-    intruder:renderIntruder,scanner:renderScanner,collab:renderCollab,decoder:renderDecoder})[active]();
+    intruder:renderIntruder,scanner:renderScanner,collab:renderCollab,
+    sequencer:renderSequencer,decoder:renderDecoder})[active]();
 }
 
 /* ---------- Dashboard ---------- */
@@ -855,6 +923,323 @@ function renderCollab(){
     : '<div class="muted" style="padding:20px">'+
       L('아직 관측된 상호작용이 없습니다. 위 버튼으로 페이로드를 보내거나, 스캐너를 돌려 보세요.',
         'No interactions yet. Send a payload above, or run the scanner.')+'</div>')+
+   '</div></div>';
+}
+
+/* ============================ Sequencer ============================
+ * Burp Pro 의 Sequencer 를 개념 수준으로 재현한다.
+ *
+ * 왜 필요한가
+ *   세션 토큰이 예측 가능하면 다른 취약점이 하나도 없어도 남의 세션을 가져갈
+ *   수 있다. 그런데 이건 요청 하나를 보고는 절대 알 수 없다. 많이 모아서
+ *   분포를 봐야 한다. 그래서 별도 도구가 필요하고, Community 판에는 없다.
+ *
+ * 여기서 내는 수치는 전부 수집한 표본에서 실제로 계산한 값이다. 추정이 섞인
+ * 항목(위치별 엔트로피)은 화면에서 상한과 함께 표시하고, 통계 검정이
+ * 보증하지 않는 범위는 맨 아래에 따로 적는다.
+ * ================================================================== */
+var seqSamples=[];      /* {tok, ms, user} */
+var seqReport=null;
+var seqBusy=false;
+var CLOCK_W=120;        /* 공격자가 훑는다고 가정한 시간 창 (ms) */
+
+/* ---- 문자 집합 판별과 비트 변환 ---- */
+var B64A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function tokCharset(toks){
+  var all=toks.join('');
+  if(/^[0-9a-f]+$/.test(all))
+    return {name:'hex', bits:4, size:16, map:function(c){return parseInt(c,16);}};
+  if(/^[A-Za-z0-9+/]+$/.test(all))
+    return {name:'base64', bits:6, size:64, map:function(c){var i=B64A.indexOf(c);return i<0?0:i;}};
+  return {name:'ascii', bits:8, size:256, map:function(c){return c.charCodeAt(0)&0xff;}};
+}
+function toBits(toks, cs){
+  var bits=[], i, b, t, k;
+  for(k=0;k<toks.length;k++){ t=toks[k];
+    for(i=0;i<t.length;i++){ var v=cs.map(t.charAt(i));
+      for(b=cs.bits-1;b>=0;b--) bits.push((v>>b)&1); } }
+  return bits;
+}
+
+/* ---- 비트 수준 통계 검정 ----
+ * FIPS 140-2 의 검정을 표본 크기에 맞춰 표준 통계량으로 바꿔 쓴다. FIPS 는
+ * 20,000비트 고정 임계값을 쓰는데 우리 표본은 그보다 작을 수 있어서, 고정
+ * 임계값을 그대로 들이대면 틀린 판정이 나온다. 그래서 z / 카이제곱으로 낸다. */
+function tMonobit(bits){
+  var n=bits.length, ones=0, i;
+  for(i=0;i<n;i++) ones+=bits[i];
+  var z=(ones - n/2)/(Math.sqrt(n)/2);
+  return {id:'monobit', ko:'모노비트 — 0과 1의 균형', en:'Monobit — balance of 0s and 1s',
+    stat:'z = '+z.toFixed(2), crit:'|z| < 2.576 (99%)', pass:Math.abs(z)<2.576,
+    note:'1 '+ones+' / '+n+'비트'};
+}
+function tRuns(bits){
+  var n=bits.length, n1=0, i;
+  for(i=0;i<n;i++) n1+=bits[i];
+  var n0=n-n1;
+  if(n0===0||n1===0) return {id:'runs', ko:'런 — 연속 구간의 개수', en:'Runs — number of streaks',
+    stat:'—', crit:'|z| < 2.576 (99%)', pass:false, note:'한쪽 값만 나와 검정 불가'};
+  var R=1; for(i=1;i<n;i++) if(bits[i]!==bits[i-1]) R++;
+  var mu=2*n1*n0/n + 1;
+  var va=(mu-1)*(mu-2)/(n-1);
+  var z=(R-mu)/Math.sqrt(va);
+  return {id:'runs', ko:'런 — 연속 구간의 개수', en:'Runs — number of streaks',
+    stat:'z = '+z.toFixed(2), crit:'|z| < 2.576 (99%)', pass:Math.abs(z)<2.576,
+    note:R+'개 관측 / '+mu.toFixed(0)+'개 기대'};
+}
+function tPoker(bits){
+  var k=Math.floor(bits.length/4), c=[], i;
+  for(i=0;i<16;i++) c.push(0);
+  for(i=0;i<k;i++) c[(bits[4*i]<<3)|(bits[4*i+1]<<2)|(bits[4*i+2]<<1)|bits[4*i+3]]++;
+  var s=0; for(i=0;i<16;i++) s+=c[i]*c[i];
+  var x2=(16/k)*s - k;
+  return {id:'poker', ko:'포커 — 4비트 조각 16종의 분포', en:'Poker — distribution of 4-bit chunks',
+    stat:'χ² = '+x2.toFixed(1), crit:'χ² < 30.58 (df=15, 99%)', pass:x2<30.578,
+    note:k+'조각'};
+}
+function tLongRun(bits){
+  var best=0, cur=0, i;
+  for(i=0;i<bits.length;i++){ if(bits[i]===1){cur++; if(cur>best)best=cur;} else cur=0; }
+  var exp=Math.log(bits.length)/Math.LN2;
+  return {id:'longrun', ko:'최장 1 연속', en:'Longest run of 1s', info:true,
+    stat:best+'비트', crit:'≈ '+exp.toFixed(1)+'비트 기대', pass:null,
+    note:'판정 없이 참고용으로만 보여 줍니다'};
+}
+
+/* ---- 위치별 엔트로피 ----
+ * 각 문자 위치에서 관측된 값의 분포로 섀넌 엔트로피를 낸다. 표본이 N개면
+ * 한 위치에서 볼 수 있는 서로 다른 값이 최대 N개이므로, 이 추정치는 구조상
+ * log2(N) 을 넘을 수 없다. 이 상한을 같이 보여 주지 않으면 "충분히 무작위"
+ * 라는 잘못된 결론을 내기 쉽다. Burp 를 쓰는 사람들이 실제로 자주 틀리는 곳이다. */
+function posEntropy(toks, cs){
+  var N=toks.length, len=toks[0].length, i, k;
+  for(i=1;i<toks.length;i++) if(toks[i].length<len) len=toks[i].length;
+  var ceil=Math.log(N)/Math.LN2;                 /* 표본이 만드는 상한 */
+  var alphaBits=Math.log(cs.size)/Math.LN2;      /* 문자 집합이 만드는 상한 */
+  var rows=[], total=0, capped=0;
+  for(i=0;i<len;i++){
+    var m={}, distinct=0, h=0;
+    for(k=0;k<N;k++){ var ch=toks[k].charAt(i); m[ch]=(m[ch]||0)+1; }
+    for(var c in m){ if(!m.hasOwnProperty(c)) continue; distinct++;
+      var p=m[c]/N; h -= p*Math.log(p)/Math.LN2; }
+    if(h > ceil-0.5) capped++;                   /* 상한에 붙었다 = 표본이 모자라 더 못 잰다 */
+    rows.push({i:i, distinct:distinct, h:h});
+    total += h;
+  }
+  return {rows:rows, total:total, perPosCeil:ceil, alphaBits:alphaBits, len:len,
+    capped:capped, sampleLimited: ceil < alphaBits};
+}
+
+/* ---- 공격자 모델 ----
+ * 통계 검정과 완전히 다른 질문을 던진다. "이전 토큰만 보고 다음 토큰을 후보
+ * 몇 개로 좁힐 수 있는가." 각 모델은 표본에서 실제로 맞춰 본 횟수를 센다.
+ * 추정이 아니라 재현이다. */
+var PREDICTORS=[
+ {id:'seq', needs:2, space:1,
+  ko:'연속값 — 이전 토큰 + 일정한 증가분', en:'Sequential — previous token plus a fixed delta',
+  assumeKo:'토큰 두 개를 연달아 받아 봤다고 가정합니다.',
+  assumeEn:'Assumes the attacker obtained two consecutive tokens.',
+  fn:function(S,i){
+    var a=b64d(S[i-2].tok), b=b64d(S[i-1].tok);
+    if(a===null||b===null) return false;
+    var ma=/^(.*?)(\d+)$/.exec(a), mb=/^(.*?)(\d+)$/.exec(b);
+    if(!ma||!mb||ma[1]!==mb[1]) return false;
+    var d=parseInt(mb[2],10)-parseInt(ma[2],10);
+    var nx=String(parseInt(mb[2],10)+d);
+    while(nx.length<mb[2].length) nx='0'+nx;
+    return b64e(mb[1]+nx)===S[i].tok;
+  }},
+ {id:'clock', needs:1, space:(CLOCK_W*1000),
+  ko:'발급 시각 + 짧은 난수 — 시간 창을 통째로 훑기', en:'Issue time plus short random — sweep the time window',
+  assumeKo:'자기 토큰 하나를 받아 형식을 파악했고, 시간 창 '+CLOCK_W+'ms 안을 전부 시도한다고 가정합니다.',
+  assumeEn:'Assumes the attacker holds one token, knows the format, and sweeps a '+CLOCK_W+'ms window.',
+  fn:function(S,i){
+    var p=b64d(S[i-1].tok), c=b64d(S[i].tok);
+    if(p===null||c===null) return false;
+    var mp=/^(\d{13})\.(\d{1,4})$/.exec(p), mc=/^(\d{13})\.(\d{1,4})$/.exec(c);
+    if(!mp||!mc) return false;
+    var dt=parseInt(mc[1],10)-parseInt(mp[1],10);
+    return dt>0 && dt<=CLOCK_W;      /* 난수 부분은 후보 수에 이미 반영했다 */
+  }},
+ {id:'derive', needs:1, space:(CLOCK_W+6),
+  ko:'알려진 스킴으로 파생 — 사용자명 + 발급 시각 해시', en:'Derive from a known scheme — hash of username and issue time',
+  assumeKo:'스킴을 알고, 대상 사용자명을 알고, 자기 토큰의 발급 시각을 자기 시계로 ±5ms 안에 안다고 가정합니다.',
+  assumeEn:'Assumes the scheme and target username are known, and the attacker knows their own issue time to ±5ms.',
+  fn:function(S,i){
+    var t0=S[i-1].ms;
+    for(var d=-5; d<=CLOCK_W; d++) if(tokHash(S[i].user+':'+(t0+d))===S[i].tok) return true;
+    return false;
+  }}
+];
+
+var TOKGENS=[
+  {id:'counter', ko:'순번 인코딩',        en:'Encoded counter'},
+  {id:'clock',   ko:'발급 시각 + 난수 3자리', en:'Issue time + 3 random digits'},
+  {id:'hash',    ko:'사용자명+시각 해시 (32자리 16진수)', en:'Hash of username+time (32 hex)'},
+  {id:'csprng',  ko:'CSPRNG 16바이트',    en:'CSPRNG, 16 bytes'}
+];
+function seqSetGen(id){ TOKGEN=id; seqSamples=[]; seqReport=null; renderSequencer(); }
+
+/** 로그인 요청을 n번 보내 Set-Cookie 의 세션 토큰을 모은다. */
+function seqCollect(n){
+  seqBusy=true; renderSequencer();
+  setTimeout(function(){
+    seqSamples=[];
+    for(var i=0;i<n;i++){
+      var r=mkReq('POST','/login','','user=alice&pass=alice123');
+      var res=sendRequest(r,'sequencer');
+      var sc=res.headers['Set-Cookie']||'';
+      var m=/SESSIONID=([^;]+)/.exec(sc);
+      if(m) seqSamples.push({tok:m[1], ms:tokLastMs, user:'alice'});
+    }
+    seqAnalyze();
+    seqBusy=false; buildTabs(); renderSequencer();
+  }, 20);
+}
+function seqAnalyze(){
+  if(seqSamples.length<20){ seqReport=null; return; }
+  var toks=seqSamples.map(function(s){return s.tok;});
+  var cs=tokCharset(toks);
+  var bits=toBits(toks, cs);
+  var tests=[tMonobit(bits), tRuns(bits), tPoker(bits), tLongRun(bits)];
+  var ent=posEntropy(toks, cs);
+  var preds=PREDICTORS.map(function(P){
+    var trials=0, hits=0;
+    for(var i=P.needs;i<seqSamples.length;i++){ trials++; if(P.fn(seqSamples,i)) hits++; }
+    return {p:P, trials:trials, hits:hits, rate: trials? hits/trials : 0};
+  });
+  var broken=preds.filter(function(x){return x.rate>=0.5;});
+  var failed=tests.filter(function(t){return t.pass===false;});
+  seqReport={
+    n:seqSamples.length, charset:cs, len:ent.len, bitCount:bits.length,
+    tests:tests, ent:ent, preds:preds,
+    statFail:failed.length, broken:broken
+  };
+}
+function seqVerdict(){
+  var r=seqReport; if(!r) return null;
+  if(r.broken.length) return {cls:'High', ko:'예측 가능 — 세션 탈취에 쓸 수 있습니다', en:'Predictable — usable for session hijacking'};
+  if(r.statFail)      return {cls:'Medium', ko:'분포에 치우침이 있습니다', en:'Distribution is skewed'};
+  return {cls:'Info', ko:'이 표본에서는 깨지지 않았습니다', en:'Not broken by this sample'};
+}
+
+function renderSequencer(){
+  var genBtns=TOKGENS.map(function(g){
+    return '<button class="btn '+(TOKGEN===g.id?'go':'alt')+' sm" onclick="seqSetGen(\''+g.id+'\')">'+esc(L(g.ko,g.en))+'</button>';
+  }).join(' ');
+
+  var head =
+   '<div class="card"><h3>Sequencer — '+L('세션 토큰 무작위성 분석','Session token randomness')+'</h3>'+
+   '<p class="legend" style="line-height:1.7">'+
+   L('세션 토큰이 예측 가능하면 다른 취약점이 하나도 없어도 남의 세션을 가져갈 수 있습니다. '
+     +'이건 요청 하나를 봐서는 알 수 없고, 많이 모아서 분포를 봐야 합니다. '
+     +'모의 앱의 토큰 생성 방식을 바꿔 가며 같은 분석을 돌려 보세요.',
+     'A predictable session token lets an attacker take over a session even when nothing else is broken. '
+     +'You cannot see it in a single response — you have to collect many and look at the distribution. '
+     +'Switch the mock app\'s token generator and re-run the same analysis.')+'</p>'+
+   '<div class="legend" style="margin-top:12px">'+L('모의 앱의 토큰 생성 방식','Mock app token generator')+'</div>'+
+   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap;display:flex">'+genBtns+'</div>'+
+   '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap;display:flex;align-items:center">'+
+     '<button class="btn go" onclick="seqCollect(200)"'+(seqBusy?' disabled':'')+'>▶ '+
+       (seqBusy?L('수집 중…','Collecting…'):L('표본 200개 수집','Capture 200 tokens'))+'</button>'+
+     '<button class="btn alt sm" onclick="seqCollect(50)"'+(seqBusy?' disabled':'')+'>'+L('50개만','Only 50')+'</button>'+
+     '<span class="legend">'+L('수집은 실제 로그인 요청을 그 횟수만큼 발생시킵니다 — Proxy 히스토리에 그대로 남습니다.',
+                               'Capturing sends that many real login requests — they all show up in Proxy history.')+'</span>'+
+   '</div></div>';
+
+  if(!seqReport){
+    el('v-sequencer').innerHTML = head +
+     '<div class="card"><div class="muted" style="padding:12px">'+
+     L('아직 표본이 없습니다. 위에서 수집을 실행하세요. (분석에는 최소 20개가 필요합니다)',
+       'No samples yet. Capture some above. (At least 20 are needed to analyse.)')+'</div></div>';
+    return;
+  }
+
+  var r=seqReport, v=seqVerdict();
+  var sample = seqSamples.slice(0,6).map(function(s){return esc(s.tok);}).join('\n');
+
+  var testRows = r.tests.map(function(t){
+    var badge = t.pass===null ? '<span class="pill">'+L('참고','info')+'</span>'
+      : t.pass ? '<span class="hl-good">'+L('통과','pass')+'</span>'
+               : '<span class="hl-bad">'+L('실패','fail')+'</span>';
+    return '<tr><td>'+esc(L(t.ko,t.en))+'</td><td class="mono">'+esc(t.stat)+'</td>'+
+      '<td class="mono muted">'+esc(t.crit)+'</td><td>'+badge+'</td>'+
+      '<td class="muted" style="white-space:normal">'+esc(t.note)+'</td></tr>';
+  }).join('');
+
+  var eRows = r.ent.rows.map(function(x){
+    var pct=Math.max(0, Math.min(100, x.h/r.ent.perPosCeil*100));
+    return '<tr><td>'+x.i+'</td><td>'+x.distinct+'</td><td class="mono">'+x.h.toFixed(2)+'</td>'+
+      '<td style="width:160px"><div style="background:var(--panel3);border-radius:3px;height:9px">'+
+      '<div style="width:'+pct.toFixed(0)+'%;height:9px;border-radius:3px;background:'+
+      (x.h<1?'var(--bad)':x.h<3?'var(--warn)':'var(--good)')+'"></div></div></td></tr>';
+  }).join('');
+
+  var pRows = r.preds.map(function(x){
+    var hot = x.rate>=0.5;
+    return '<tr><td style="white-space:normal">'+esc(L(x.p.ko,x.p.en))+
+      '<div class="legend" style="white-space:normal;margin-top:2px">'+esc(L(x.p.assumeKo,x.p.assumeEn))+'</div></td>'+
+      '<td class="mono">'+x.p.space.toLocaleString()+'</td>'+
+      '<td class="mono '+(hot?'hl-bad':'hl-good')+'">'+(x.rate*100).toFixed(0)+'%</td>'+
+      '<td class="mono muted">'+x.hits+' / '+x.trials+'</td></tr>';
+  }).join('');
+
+  el('v-sequencer').innerHTML = head +
+   '<div class="card"><h3>'+L('종합 판단','Verdict')+'</h3>'+
+   '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
+     '<span class="sev '+v.cls+'">'+v.cls+'</span>'+
+     '<b style="font-size:14px">'+esc(L(v.ko,v.en))+'</b></div>'+
+   '<div class="legend" style="margin-top:10px">'+
+     L('표본','Samples')+' '+r.n+' · '+L('문자 집합','Charset')+' '+r.charset.name+
+     ' ('+r.charset.bits+L('비트/문자',' bits/char')+') · '+L('길이','Length')+' '+r.len+
+     ' · '+L('분석 비트','Bits analysed')+' '+r.bitCount.toLocaleString()+'</div>'+
+   '<h4 class="legend" style="margin-top:12px">'+L('수집한 토큰 (앞 6개)','Captured tokens (first 6)')+'</h4>'+
+   '<pre style="background:#0e0c0a;border:1px solid var(--border);border-radius:6px;padding:8px;margin-top:4px;font-size:11.5px">'+sample+'</pre>'+
+   '</div>'+
+
+   '<div class="card"><h3>'+L('1. 비트 수준 통계 검정','1. Bit-level statistical tests')+'</h3>'+
+   '<p class="legend">'+L('토큰을 이어 붙여 비트열로 만든 뒤, 무작위 비트열이라면 나올 법한 범위 안에 있는지 봅니다.',
+     'Tokens are concatenated into a bitstream and checked against what a random stream would look like.')+'</p>'+
+   '<table style="margin-top:8px"><thead><tr><th>'+L('검정','Test')+'</th><th>'+L('통계량','Statistic')+'</th>'+
+   '<th>'+L('기준','Threshold')+'</th><th>'+L('판정','Result')+'</th><th>'+L('비고','Note')+'</th></tr></thead>'+
+   '<tbody>'+testRows+'</tbody></table></div>'+
+
+   '<div class="card"><h3>'+L('2. 위치별 엔트로피 추정','2. Per-position entropy estimate')+'</h3>'+
+   '<p class="legend">'+L('합계 <b>'+r.ent.total.toFixed(1)+'비트</b> · 위치당 상한 log2('+r.n+') = <b>'+r.ent.perPosCeil.toFixed(2)+'비트</b>',
+     'Total <b>'+r.ent.total.toFixed(1)+' bits</b> · per-position ceiling log2('+r.n+') = <b>'+r.ent.perPosCeil.toFixed(2)+' bits</b>')+'</p>'+
+   (r.ent.sampleLimited ?
+     '<p class="legend" style="color:var(--warn);margin-top:6px">⚠ '+
+     L('표본 '+r.n+'개로는 위치당 '+r.ent.perPosCeil.toFixed(2)+'비트까지만 잴 수 있는데, 이 토큰의 문자 집합('+r.charset.name
+       +')은 위치당 '+r.ent.alphaBits.toFixed(0)+'비트를 담을 수 있습니다. 표본이 문자 집합보다 작아 끝까지 재지 못한 상태입니다.',
+       'With '+r.n+' samples the estimate cannot exceed '+r.ent.perPosCeil.toFixed(2)+' bits per position, but this charset ('
+       +r.charset.name+') holds '+r.ent.alphaBits.toFixed(0)+' bits per position. The sample is smaller than the alphabet, so the measurement is cut short.')+'</p>' : '')+
+   (r.ent.capped ?
+     '<p class="legend" style="color:var(--warn);margin-top:6px">⚠ '+
+     L(r.ent.capped+'개 위치가 상한에 붙어 있습니다. 그 위치의 실제 엔트로피는 이 값보다 클 수 있고, 표본이 부족해 더는 구별되지 않습니다. 합계를 그대로 "토큰의 강도"로 읽으면 안 됩니다.',
+       r.ent.capped+' position(s) sit at the ceiling. Their true entropy may be higher; this sample cannot tell. Do not read the total as the token\'s strength.')+'</p>' : '')+
+   '<div style="max-height:220px;overflow:auto;margin-top:8px">'+
+   '<table><thead><tr><th>'+L('위치','Pos')+'</th><th>'+L('관측된 값 수','Distinct')+'</th>'+
+   '<th>'+L('엔트로피(비트)','Entropy (bits)')+'</th><th></th></tr></thead><tbody>'+eRows+'</tbody></table></div></div>'+
+
+   '<div class="card"><h3>'+L('3. 공격자 모델 — 실제로 맞춰 본 결과','3. Attacker models — actually replayed')+'</h3>'+
+   '<p class="legend">'+L('통계 검정과는 다른 질문입니다. "이전 토큰만 보고 다음 토큰을 후보 몇 개로 좁힐 수 있는가." '
+     +'아래 적중률은 추정이 아니라 이 표본에서 실제로 맞춘 횟수입니다.',
+     'A different question from the statistics: how few candidates does the next token collapse to? '
+     +'The rates below are actual replays against this sample, not estimates.')+'</p>'+
+   '<table style="margin-top:8px"><thead><tr><th style="white-space:normal">'+L('모델과 가정','Model and assumptions')+'</th>'+
+   '<th>'+L('후보 수','Candidates')+'</th><th>'+L('적중률','Hit rate')+'</th><th>'+L('적중/시도','Hits/trials')+'</th></tr></thead>'+
+   '<tbody>'+pRows+'</tbody></table></div>'+
+
+   '<div class="card"><h3>'+L('이 분석이 보증하지 않는 것','What this analysis does not prove')+'</h3>'+
+   '<div class="detail muted" style="line-height:1.8">'+
+   '<p>· '+L('통계 검정을 모두 통과해도 안전하다는 뜻이 아닙니다. 해시 방식을 골라 보면, 32자리 16진수라 검정은 대부분 통과하지만 공격자 모델은 그대로 뚫립니다. <b>무작위처럼 보이는 것과 예측 불가한 것은 다릅니다.</b>',
+       'Passing every statistical test does not mean safe. Try the hash generator: 32 hex characters pass most tests, yet the attacker model still walks through it. <b>Looking random and being unpredictable are different things.</b>')+'</p>'+
+   '<p>· '+L('위치별 엔트로피는 표본에서 센 값이라 log2(표본 수)를 넘을 수 없습니다. 표본을 늘리지 않고 "엔트로피가 충분하다"고 결론 내릴 수 없습니다.',
+       'Per-position entropy is counted from the sample, so it cannot exceed log2(sample size). You cannot conclude "enough entropy" without enlarging the sample.')+'</p>'+
+   '<p>· '+L('공격자 모델은 세 가지만 시도합니다. 여기서 안 뚫렸다는 것은 이 세 가지에 안 뚫렸다는 뜻일 뿐입니다.',
+       'Only three attacker models are tried. Surviving them means surviving those three, nothing more.')+'</p>'+
+   '<p>· '+L('토큰이 무작위여도 전송·저장·만료가 잘못되면 세션은 여전히 털립니다. 무작위성은 필요조건이지 충분조건이 아닙니다.',
+       'Even a random token is stolen if transport, storage, or expiry is wrong. Randomness is necessary, not sufficient.')+'</p>'+
    '</div></div>';
 }
 
