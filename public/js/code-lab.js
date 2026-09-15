@@ -221,6 +221,7 @@
       esc(v.why || '') +
       (v.trap ? '<span class="cl-trap">⚠️ 자주 틀리는 지점 — ' + esc(v.trap) + '</span>' : '');
     this.verdictDone = true;
+    this.verdictCorrect = ok;   // 완료 판정은 '맞게' 판정했을 때만 인정한다
     this.mark(3);
   };
 
@@ -259,11 +260,16 @@
     for (var i = 0; i < all.length; i++) all[i].classList.remove('sel');
     btn.classList.add('sel');
 
+    var done = o.ok && this.verdictCorrect;
     this.ffb.className = 'cl-fb show ' + (o.ok ? 'right' : 'wrong');
     this.ffb.innerHTML =
       '<b>' + (o.ok ? '✅ 차단됨' : '❌ 여전히 통합니다') + '</b>' +
       '<pre class="cl-retest">' + renderLog(o.retest || '') + '</pre>' +
-      esc(o.why || '');
+      esc(o.why || '') +
+      (done ? '<span class="cl-done">🎓 4단계를 모두 마쳤습니다 — 이 항목이 완료로 기록됐습니다.</span>'
+            : (o.ok && this.verdictDone
+                ? '<span class="cl-trap">판정을 다시 맞혀야 완료로 기록됩니다. 3단계로 돌아가 보세요.</span>'
+                : ''));
     if (o.ok) {
       this.fixDone = true;
       this.mark(4);
@@ -271,13 +277,27 @@
     }
   };
 
-  /* 진도 기록 — 엔진 API 경유(직접 localStorage 를 쓰지 않는다) */
+  /* 진도 기록 — 엔진 API 경유(직접 localStorage 를 쓰지 않는다)
+   *
+   * markVisited 를 부르면 안 된다. progress.js 가 이미 4초 체류만으로 방문을 기록하므로,
+   * 4단계를 다 끝낸 학습자와 페이지를 열어만 둔 학습자가 똑같이 취급된다.
+   * 이 50개 페이지에는 원래 완료를 기록하는 경로가 아예 없었다(코드 에디터 채점은
+   * 진도 엔진과 연결돼 있지 않다). 이 실습이 그 유일한 완료 조건이 된다.
+   *
+   * 인정 기준: 판정을 맞게 하고(verdictCorrect) + 올바른 조치를 고른 경우만.
+   * 찍어서 통과하는 것을 막기 위해 둘 다 요구한다.
+   */
   Lab.prototype.complete = function () {
+    if (!this.verdictCorrect) return;
     try {
-      if (window.WVSProgress && typeof window.WVSProgress.markVisited === 'function') {
-        window.WVSProgress.markVisited();
+      if (window.WVSProgress && typeof window.WVSProgress.complete === 'function') {
+        window.WVSProgress.complete(undefined, this.pageId());
       }
     } catch (e) { /* 진도 기록 실패가 실습을 막지 않는다 */ }
+  };
+
+  Lab.prototype.pageId = function () {
+    return (location.pathname || '').split('/').pop() || undefined;
   };
 
   /* ---------------- 부팅 ---------------- */

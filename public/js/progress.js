@@ -218,6 +218,13 @@
     document.body.appendChild(wrap);
     render();
 
+    /* 칩은 원래 자기 클릭에만 다시 그렸다. 그래서 페이지 안의 실습이
+       complete() 로 완료를 기록해도 새로고침 전까지 '이 항목 완료'로 남아 있었다.
+       (07_fincloud, 03_code 의 현업 진단 실습이 모두 이 경로를 쓴다) */
+    window.addEventListener('wvs:progress', function (e) {
+      if (!e || !e.detail || e.detail.id === id) render();
+    });
+
     function flashXp() {
       var f = document.createElement('div');
       f.textContent = '+' + XP_PER + ' XP';

@@ -140,6 +140,53 @@ def title_of(html):
     return t
 
 
+def _load_code_lab():
+    """03_code_* 의 '현업 진단 실습' 시나리오에서 검색어를 뽑는다.
+
+    이게 없으면 시나리오를 49개 써 놓고도 '크리덴셜 스터핑'·'웹쉘'·'오탐' 같은
+    말로는 아무것도 찾지 못한다. 페이지 제목에는 그런 낱말이 없기 때문이다.
+    """
+    path = os.path.join(BASE, 'data', 'code-lab.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            scen = json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+    out = {}
+    for key, d in scen.items():
+        words = []
+        t = d.get('ticket') or {}
+        words.append(t.get('source', ''))                 # 접수 경로(운영팀 장애 보고 등)
+        for e in d.get('evidence') or []:
+            words.append(e.get('label', ''))              # 증거 종류(웹 서버 접근 로그 등)
+            words.append(e.get('source', ''))             # 도구명(semgrep, modsecurity …)
+        ans = (d.get('verdict') or {}).get('answer')
+        words.append({'true': '정탐', 'false': '오탐 false positive',
+                      'more': '추가확인'}.get(ans, ''))
+        words.append('현업 진단 티켓 증거 판정 조치')
+        seen, uniq = set(), []
+        for w in ' '.join(words).replace('·', ' ').replace('(', ' ').replace(')', ' ').split():
+            lw = w.lower()
+            if lw not in seen:
+                seen.add(lw)
+                uniq.append(w)
+        out['03_code_%s.html' % key] = ' '.join(uniq)
+    return out
+
+
+_CODE_LAB = None
+
+
+def lab_kw(fn):
+    global _CODE_LAB
+    if _CODE_LAB is None:
+        _CODE_LAB = _load_code_lab()
+    return _CODE_LAB.get(fn, '')
+
+
 def main():
     pages = []
     for fn in sorted(os.listdir(BASE)):
@@ -163,7 +210,7 @@ def main():
         fn_kw = fn.replace('.html', '').replace('_', ' ').replace('-', ' ')
         # [G03] 그룹 동의어. 이게 없어서 '자동차'/'쿠버네티스' 검색이 0건이었다
         # (14_auto-* 61개가 있는데도 k 값이 '14 auto auto01' 뿐이라 한글로는 안 잡혔다).
-        kw = ' '.join(x for x in (k, fn_kw, GROUP_SYNONYMS.get(g, '')) if x).strip()
+        kw = ' '.join(x for x in (k, fn_kw, GROUP_SYNONYMS.get(g, ''), lab_kw(fn)) if x).strip()
         pages.append({'t': t[:80], 'u': fn, 'g': g, 'k': kw[:220]})
 
     # 대표 도구를 앞으로 정렬(동점 점수 시 안정적)

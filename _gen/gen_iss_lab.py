@@ -359,9 +359,10 @@ border-radius:8px;padding:7px 14px;font-family:var(--mono);font-size:12.5px;curs
 
 
 def mission_js(m):
-    return ('{id:%s,risk:%d,appliesTo:%s,title:%s,brief:%s,where:%s,hint:%s,why:%s,'
+    return ('{id:%s,expectRules:%s,risk:%d,appliesTo:%s,title:%s,brief:%s,where:%s,hint:%s,why:%s,'
             'cmds:%s,options:%s,evidence:%s,verdict:%s,fix:%s,fixNote:%s}' % (
-                json.dumps(m['id'], ensure_ascii=False), m['risk'],
+                json.dumps(m['id'], ensure_ascii=False),
+                json.dumps(m.get('expectRules'), ensure_ascii=False), m['risk'],
                 json.dumps(m.get('appliesTo', []), ensure_ascii=False),
                 json.dumps(m['title'], ensure_ascii=False),
                 json.dumps(m['brief'], ensure_ascii=False),
@@ -380,8 +381,12 @@ def mission_js(m):
 def units_of(lab):
     """장비 하나짜리 랩도 유닛 하나로 통일한다."""
     if lab.get('units'):
-        return lab['units']
-    return [{'device': lab['device'], 'cfg': lab['cfg'], 'missions': lab['missions']}]
+        units = lab['units']
+    else:
+        units = [{'device': lab['device'], 'cfg': lab['cfg'], 'missions': lab['missions']}]
+    if lab.get('neverFlagged') and units:
+        units[0] = dict(units[0], neverFlagged=lab['neverFlagged'])
+    return units
 
 
 def build(lab):
@@ -400,8 +405,9 @@ def build(lab):
     for u in units:
         body = ',\n    '.join(mission_js(m) for m in u['missions'])
         ujs.append(
-            '{device: %s,\n   cfg: %s,\n   missions: [\n    %s\n   ]}' % (
+            '{device: %s,\n   neverFlagged: %s,\n   cfg: %s,\n   missions: [\n    %s\n   ]}' % (
                 json.dumps(u['device'], ensure_ascii=False),
+                json.dumps(u.get('neverFlagged'), ensure_ascii=False),
                 json.dumps(u['cfg'], ensure_ascii=False, indent=1),
                 body,
             ))

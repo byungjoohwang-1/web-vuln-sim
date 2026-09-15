@@ -94,7 +94,7 @@ P = 'window.WVS_ISS_LAB.rule'
 
 MISSIONS = [
     {
-        'id': 'ISS-030', 'risk': 5, 'appliesTo': FW_VPN,
+        'id': 'ISS-030', 'expectRules': [13], 'risk': 5, 'appliesTo': FW_VPN,
         'title': '모든 목적지 및 서비스로의 허용 정책 금지 여부',
         'brief': '출발지·목적지·서비스가 전부 ANY 인 룰 하나면 <b>방화벽이 사실상 없는 것</b>과 같습니다. '
                  '아래쪽에 있어도 그 위에서 막히지 않은 것은 전부 통과합니다.',
@@ -118,7 +118,7 @@ MISSIONS = [
         'fixNote': '전체 허용 룰을 삭제했습니다. 이제 기본 정책 deny 가 실제로 동작합니다.',
     },
     {
-        'id': 'ISS-031', 'risk': 5, 'appliesTo': FW_VPN,
+        'id': 'ISS-031', 'expectRules': [2, 6, 8, 11], 'risk': 5, 'appliesTo': FW_VPN,
         'title': '취약한 서비스의 네트워크 대역 단위 허용 금지 여부',
         'brief': '관리용 포트를 <b>대역 단위로</b> 열면, 그 대역 안의 아무 장비나 서버 관리 포트에 '
                  '닿습니다. 한 대만 뚫려도 전부에 닿습니다.',
@@ -148,7 +148,7 @@ MISSIONS = [
         'fixNote': '관리 포트를 여는 룰의 출발지·목적지를 지정 호스트로 좁혔습니다.',
     },
     {
-        'id': 'ISS-032', 'risk': 5, 'appliesTo': FW_VPN,
+        'id': 'ISS-032', 'expectRules': [5], 'risk': 5, 'appliesTo': FW_VPN,
         'title': '서비스 포트 허용 정책 적정성',
         'brief': '<code>1024-65535</code> 같은 범위 허용은 <b>사실상 전부 허용</b>입니다. '
                  '포트를 적어 놨을 뿐 좁힌 게 아닙니다.',
@@ -173,7 +173,7 @@ MISSIONS = [
         'fixNote': '범위 허용을 실제 사용 포트(TCP/8081)로 좁혔습니다.',
     },
     {
-        'id': 'ISS-033', 'risk': 4, 'appliesTo': FW_VPN,
+        'id': 'ISS-033', 'expectRules': [6], 'risk': 4, 'appliesTo': FW_VPN,
         'title': '불필요한 양방향 정책 금지 여부',
         'brief': '양방향으로 열면 <b>서버가 단말로 먼저 접속하는 것도</b> 허용됩니다. '
                  '서버가 장악됐을 때 내부로 돌아 나오는 길이 됩니다.',
@@ -195,7 +195,7 @@ MISSIONS = [
         'fixNote': '양방향 설정을 단방향으로 바꿨습니다.',
     },
     {
-        'id': 'ISS-034', 'risk': 4, 'appliesTo': FW_VPN,
+        'id': 'ISS-034', 'expectRules': [3, 4], 'risk': 4, 'appliesTo': FW_VPN,
         'title': '정책 적용 순서의 적절성',
         'brief': '방화벽은 <b>위에서부터 먼저 걸리는 룰</b>을 씁니다. 차단 정책이 허용 정책 아래에 있으면 '
                  '설정은 있는데 동작하지 않습니다.',
@@ -223,7 +223,7 @@ MISSIONS = [
         'fixNote': '차단 룰을 같은 목적지의 허용 룰보다 위로 올렸습니다.',
     },
     {
-        'id': 'ISS-035', 'risk': 5, 'appliesTo': FW_VPN,
+        'id': 'ISS-035', 'expectRules': [7], 'risk': 5, 'appliesTo': FW_VPN,
         'title': '출발지 포트 기반의 정책 금지 여부',
         'brief': '출발지 포트는 <b>보내는 쪽이 마음대로 정합니다</b>. 그걸 신뢰 근거로 쓰면 '
                  '공격자가 그 번호를 그대로 흉내 내 통과합니다.',
@@ -246,7 +246,7 @@ MISSIONS = [
         'fixNote': '출발지 포트 조건을 없애고 해당 룰의 로그를 켰습니다.',
     },
     {
-        'id': 'ISS-036', 'risk': 5, 'appliesTo': FW_VPN,
+        'id': 'ISS-036', 'expectRules': [8], 'risk': 5, 'appliesTo': FW_VPN,
         'title': '취약한 원격 서비스 금지 여부',
         'brief': 'r-계열(512-514)과 TFTP(69)는 <b>비밀번호 없이</b> 접속하거나 파일을 가져갈 수 있게 '
                  '설계된 옛 프로토콜입니다.',
@@ -271,7 +271,7 @@ MISSIONS = [
         'fixNote': '취약한 원격 서비스 허용 룰을 삭제했습니다. (업무는 SSH·SFTP 로 전환)',
     },
     {
-        'id': 'ISS-037', 'risk': 4, 'appliesTo': FW_VPN,
+        'id': 'ISS-037', 'expectRules': [9], 'risk': 4, 'appliesTo': FW_VPN,
         'title': '불필요한 정책 제거 여부',
         'brief': '아무도 안 쓰는 룰은 <b>지울 근거가 없어서</b> 계속 남습니다. '
                  '그 사이 그 경로가 열려 있다는 사실은 잊힙니다.',
@@ -295,7 +295,7 @@ MISSIONS = [
         'fixNote': '6개월 이상 사용되지 않은 허용 룰을 삭제했습니다. (삭제 전 사용 부서 확인 필요)',
     },
     {
-        'id': 'ISS-038', 'risk': 5, 'appliesTo': FW_VPN,
+        'id': 'ISS-038', 'expectRules': [10], 'risk': 5, 'appliesTo': FW_VPN,
         'title': '서버간 관리포트 허용 금지 여부',
         'brief': '서버끼리 관리 포트로 닿으면, <b>한 대가 뚫렸을 때 옆 서버로 바로 넘어갑니다</b>. '
                  '내부 확산 경로가 미리 열려 있는 셈입니다.',
@@ -319,7 +319,7 @@ MISSIONS = [
         'fixNote': '서버간 관리포트 허용 룰을 삭제했습니다. (관리는 관리 단말에서만)',
     },
     {
-        'id': 'ISS-039', 'risk': 5, 'appliesTo': FW_VPN,
+        'id': 'ISS-039', 'expectRules': [11], 'risk': 5, 'appliesTo': FW_VPN,
         'title': '단말과 서버간 접근통제를 우회한 접속 금지 여부',
         'brief': '접근통제시스템을 두는 이유는 <b>누가 언제 무엇을 했는지 남기기 위해서</b>입니다. '
                  '그걸 건너뛰는 길이 있으면 시스템을 둔 의미가 없습니다.',
@@ -348,7 +348,7 @@ MISSIONS = [
         'fixNote': '단말→서버 직접 경로를 없애고, 단말→접근통제시스템→서버 두 단계로 나눴습니다.',
     },
     {
-        'id': 'ISS-041', 'risk': 4, 'appliesTo': FW_VPN,
+        'id': 'ISS-041', 'expectRules': [7, 9, 12], 'risk': 4, 'appliesTo': FW_VPN,
         'title': '불필요한 네트워크 대역 단위 설정 금지 여부',
         'brief': '출발지와 목적지가 <b>둘 다 대역</b>이면, 그 안의 모든 조합이 열립니다. '
                  '필요한 것은 보통 그중 몇 개뿐입니다.',
@@ -387,6 +387,9 @@ LABS = [
         'desc': '방화벽 정책 13개를 놓고 11개 항목을 점검합니다. 한 룰이 여러 항목에 걸리므로, '
                 '항목마다 무엇을 보는지(주소 범위·서비스·방향·순서·존)를 구분하는 것이 핵심입니다.',
         'wide': True,
+        # 이 룰만 있는 설정에서는 어떤 항목도 취약이 아니다 — 정상 룰이다.
+        # 1번 내부→DMZ 443, 3번 공개 웹. 3번은 ISS-034 에서 '가리는 쪽'으로만 나온다.
+        'neverFlagged': [1, 3],
         'device': POLICY_DEVICE,
         'cfg': POLICY_CFG,
         'missions': MISSIONS,

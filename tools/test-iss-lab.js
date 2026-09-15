@@ -128,6 +128,60 @@ for (const lab of LABS) {
     ok('모든 조치를 적용하면 모든 항목이 양호가 된다 (조치 간 간섭 없음)');
   }
 
+  // 11b. 항목이 '어떤 룰'을 잡는지 고정한다.
+  //
+  //   위 검사들은 취약→양호로 바뀌는지만 본다. 엉뚱한 룰을 잡아도 통과한다.
+  //   정상 룰을 취약으로 몰거나, 의도한 룰을 놓치는 것을 잡으려면 대상 룰 자체를
+  //   확인해야 한다. 스펙의 expectRules 가 손으로 확인한 결과를 고정한 값이다.
+  //
+  //   관련 룰 = 그 룰을 빼면 판정이 양호가 되는 룰(단독 원인).
+  //             단독 원인이 없으면(여러 룰이 각각 독립적으로 걸리면)
+  //             그 룰만 남겼을 때 취약이 되는 룰.
+  if (D.cfg.rules && D.cfg.rules.length) {
+    const base = D.cfg.rules;
+    const involvedOf = (m) => {
+      const sole = [];
+      for (let i = 0; i < base.length; i++) {
+        const c = new L.Config(D.cfg);
+        const rr = c.get('rules'); rr.splice(i, 1); c.set('rules', rr);
+        if (m.verdict(c) === 'good') sole.push(i + 1);
+      }
+      if (sole.length) return sole;
+      const alone = [];
+      for (let i = 0; i < base.length; i++) {
+        const c = new L.Config(D.cfg);
+        c.set('rules', [base[i]]);
+        if (m.verdict(c) === 'vuln') alone.push(i + 1);
+      }
+      return alone;
+    };
+
+    let bad = [];
+    for (const m of D.missions) {
+      if (!m.expectRules) continue;
+      const got = involvedOf(m);
+      const same = got.length === m.expectRules.length &&
+        got.every((x, k) => x === m.expectRules[k]);
+      if (!same) bad.push(`${m.id} 기대 [${m.expectRules}] 실제 [${got}]`);
+    }
+    if (bad.length) no(`항목이 잡는 룰이 기대와 다르다:\n        ${bad.join('\n        ')}`);
+    else if (D.missions.some((m) => m.expectRules)) ok('각 항목이 의도한 룰만 잡는다');
+
+    // 정상 룰은 단독으로 어떤 항목도 취약으로 만들지 않아야 한다.
+    // 전부 취약해 보이는 표에서 정상을 정상이라고 두는 것이 이 랩의 목표다.
+    if (D.neverFlagged) {
+      const wrong = [];
+      for (const n of D.neverFlagged) {
+        const c = new L.Config(D.cfg);
+        c.set('rules', [base[n - 1]]);
+        const hit = D.missions.filter((m) => m.verdict(c) === 'vuln').map((m) => m.id);
+        if (hit.length) wrong.push(`룰 ${n} → ${hit.join(', ')}`);
+      }
+      if (wrong.length) no(`정상 룰이 취약으로 잡힌다: ${wrong.join(' / ')}`);
+      else ok(`정상 룰 ${D.neverFlagged.length}개가 어떤 항목에도 단독으로 걸리지 않는다`);
+    }
+  }
+
   // 12. running-config 가 모든 단면을 담아야 한다
   const rc = new L.Cli(new L.Config(D.cfg), D.device).run('show running-config');
   const sections = ['ADMIN', 'PASSWORD-POLICY', 'MANAGEMENT', 'SNMP', 'LOGGING', 'POLICY'];
