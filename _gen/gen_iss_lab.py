@@ -83,6 +83,13 @@ color:var(--muted);font-size:13px;margin-top:10px}}
 code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:12.5px}}
 .note{{color:var(--muted);font-size:12.5px;margin-top:20px;border-top:1px solid var(--bd);padding-top:14px}}
 .prog{{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}}
+/* 한 랩이 장비 여러 대를 볼 수 있다. 평가대상이 장비 종류별로 다르기 때문이다. */
+.devpick{{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}}
+.devpick button{{background:var(--panel2);border:1px solid var(--bd);color:var(--ink);
+border-radius:8px;padding:7px 14px;font-family:var(--mono);font-size:12.5px;cursor:pointer}}
+.devpick button:hover{{border-color:var(--acc)}}
+.devpick button.on{{border-color:var(--acc);background:#16304d;color:var(--acc)}}
+.devpick .na{{font-size:11px;color:var(--muted);margin:0;padding:0;background:none;border:none}}
 </style>
 </head>
 <body>
@@ -90,11 +97,13 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
 <h1>{title}</h1>
 <div class="sub">{desc}</div>
 
+<div id="devPick" class="devpick"></div>
+
 <div class="dev">
   <span>장비 <b id="devName"></b></span><span>·</span>
   <span>종류 <b id="devType"></b></span><span>·</span>
   <span>모델 <b id="devModel"></b></span><span>·</span>
-  <span>점검 항목 <b>{count}</b>개</span>
+  <span>점검 항목 <b id="devCount"></b>개</span>
 </div>
 
 <div class="cols {stackcls}">
@@ -134,11 +143,26 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
 <script>
 (function(){{
   var L = window.WVS_ISS_LAB, D = window.ISS_LAB_DATA;
-  var cfg = new L.Config(D.cfg);
-  var cli = new L.Cli(cfg, D.device);
-  var missions = D.missions, cur = 0;
-  var state = missions.map(function(){{ return {{ tried:false, pass:false, fixed:false }}; }});
-  var PROMPT = D.device.name + '> ';
+
+  /* 한 랩이 장비 여러 대를 본다. 평가대상이 장비 종류마다 달라서, 같은 항목도
+     어떤 장비에서는 점검 대상이고 어떤 장비에서는 해당없음이 되기 때문이다.
+     장비를 바꾸면 설정·콘솔·항목이 통째로 바뀌되, 이미 한 판정은 남는다. */
+  var units = D.units.map(function(u){{
+    return {{
+      device: u.device, cfg: new L.Config(u.cfg), missions: u.missions,
+      state: u.missions.map(function(){{ return {{ tried:false, pass:false, fixed:false }}; }}),
+      cur: 0, log: []
+    }};
+  }});
+  var ui = 0;
+  var U, cfg, cli, missions, state, PROMPT;
+  function useUnit(i){{
+    ui = i; U = units[i];
+    cfg = U.cfg; missions = U.missions; state = U.state;
+    cli = new L.Cli(cfg, U.device);
+    PROMPT = U.device.name + '> ';
+  }}
+  useUnit(0);
 
   var out = document.getElementById('termOut');
   function print(text, cls){{
@@ -154,10 +178,45 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
     if (r) print(r, /^%/.test(r) ? 'err' : '');
   }}
 
-  document.getElementById('devName').textContent = D.device.name;
-  document.getElementById('devType').textContent = D.device.typeLabel;
-  document.getElementById('devModel').textContent = D.cfg.system.model;
-  document.getElementById('prompt').textContent = PROMPT;
+  function renderDevPick(){{
+    var w = document.getElementById('devPick');
+    if (units.length < 2) {{ w.style.display = 'none'; return; }}
+    w.innerHTML = '';
+    units.forEach(function(u, i){{
+      var done = u.state.filter(function(x){{ return x.pass; }}).length;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = (i === ui ? 'on' : '');
+      b.textContent = u.device.name + ' (' + u.device.type + ') · ' + done + '/' + u.missions.length;
+      b.addEventListener('click', function(){{ switchUnit(i); }});
+      w.appendChild(b);
+    }});
+  }}
+  function renderDevInfo(){{
+    document.getElementById('devName').textContent = U.device.name;
+    document.getElementById('devType').textContent = U.device.typeLabel;
+    document.getElementById('devModel').textContent = U.cfg.get('system.model');
+    document.getElementById('devCount').textContent = U.missions.length;
+    document.getElementById('prompt').textContent = PROMPT;
+  }}
+  function renderQuick(){{
+    var quick = document.getElementById('quick');
+    quick.innerHTML = '';
+    cli.commands().forEach(function(c){{
+      var b = document.createElement('button');
+      b.className = 'qbtn'; b.type = 'button'; b.textContent = c;
+      b.addEventListener('click', function(){{ exec(c); }});
+      quick.appendChild(b);
+    }});
+  }}
+  function switchUnit(i){{
+    units[ui].log = out.innerHTML;          /* 장비별 콘솔 기록을 남긴다 */
+    useUnit(i);
+    out.innerHTML = units[i].log || '';
+    renderDevPick(); renderDevInfo(); renderQuick();
+    if (!out.innerHTML) exec('show version');
+    render();
+  }}
 
   var inp = document.getElementById('termIn');
   inp.addEventListener('keydown', function(e){{
@@ -169,15 +228,9 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
     exec(v);
   }});
 
-  var quick = document.getElementById('quick');
-  cli.commands().forEach(function(c){{
-    var b = document.createElement('button');
-    b.className = 'qbtn'; b.type = 'button'; b.textContent = c;
-    b.addEventListener('click', function(){{ exec(c); }});
-    quick.appendChild(b);
-  }});
 
   function renderList(){{
+    renderDevPick();
     var done = state.filter(function(s){{ return s.pass; }}).length;
     document.getElementById('prog').textContent =
       '판정 완료 ' + done + ' / ' + missions.length +
@@ -186,7 +239,7 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
     ul.innerHTML = '';
     missions.forEach(function(m, i){{
       var li = document.createElement('li');
-      li.className = i === cur ? 'on' : '';
+      li.className = i === U.cur ? 'on' : '';
       var st = state[i].pass ? (state[i].fixed ? '조치완료' : '판정완료')
              : (state[i].tried ? '다시' : '미점검');
       var col = state[i].pass ? 'var(--good)' : (state[i].tried ? 'var(--bad)' : 'var(--muted)');
@@ -194,25 +247,30 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
         '<span class="tt">' + L.esc(m.title) + '</span>' +
         '<span class="risk">위험 ' + m.risk + '</span>' +
         '<span class="st" style="color:' + col + '">' + st + '</span>';
-      li.addEventListener('click', function(){{ cur = i; render(); }});
+      li.addEventListener('click', function(){{ U.cur = i; render(); }});
       ul.appendChild(li);
     }});
   }}
 
   function render(){{
     renderList();
-    var m = missions[cur], s = state[cur];
+    var m = missions[U.cur], s = state[U.cur];
     var d = document.getElementById('detail');
 
-    if (!L.applies(m, D.device.type)) {{
+    if (!L.applies(m, U.device.type)) {{
       d.innerHTML = '<h2>' + m.id + ' · ' + L.esc(m.title) + '</h2>' +
-        '<div class="na">이 항목은 <b>' + D.device.typeLabel + '</b> 의 평가대상이 아닙니다 — 해당없음(N/A).' +
+        '<div class="na">이 항목은 <b>' + U.device.typeLabel + '</b> 의 평가대상이 아닙니다 — 해당없음(N/A).' +
         '<br>평가대상: ' + (m.appliesTo || []).join(', ') + '</div>';
       return;
     }}
 
     var h = '<h2>' + m.id + ' · ' + L.esc(m.title) + '</h2>';
-    h += '<p>' + m.brief + '</p>';
+    /* 평가대상을 항상 보여 준다. 같은 항목이라도 장비 종류에 따라 해당없음이
+       되는데, 그 범위를 화면에서 못 보면 배울 수가 없다. */
+    h += '<p class="hint" style="margin-top:0">평가대상 ' +
+      ((m.appliesTo || []).length === 6 ? '전체 장비' : (m.appliesTo || []).join(' · ')) +
+      '  ·  위험도 ' + m.risk + '</p>';
+    h += '<p style="margin-top:8px">' + m.brief + '</p>';
     h += '<p class="hint">어디를 보나 — ' + L.esc(m.where) + '</p>';
     h += '<div style="margin:10px 0">';
     m.cmds.forEach(function(c){{
@@ -256,13 +314,13 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
       if (!chosenV) {{ document.getElementById('res').innerHTML =
         '<div class="res no">먼저 양호/취약을 고르세요.</div>'; return; }}
       var g = L.grade(m, cfg, chosenV, ev);
-      state[cur].tried = true;
-      state[cur].pass = g.pass;
+      state[U.cur].tried = true;
+      state[U.cur].pass = g.pass;
       if (g.pass) {{
         /* 조치 버튼은 통과한 뒤에만 나온다. 상세 패널을 다시 그리지 않으면
            버튼이 영영 생기지 않아 조치를 할 수 없다. 다시 그린 뒤 결과를 넣는다. */
         var okHtml = '<div class="res ok"><b>통과</b> — 판정과 근거가 모두 맞습니다.<br><br>' +
-          m.why + (m.fix && !state[cur].fixed
+          m.why + (m.fix && !state[U.cur].fixed
             ? '<br><br>아래 <b>조치 적용</b>을 누른 뒤 같은 명령을 다시 쳐 보세요. 출력이 바뀝니다.' : '') +
           '</div>';
         render();
@@ -280,7 +338,7 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
     var fb = document.getElementById('dofix');
     if (fb) fb.addEventListener('click', function(){{
       m.fix(cfg);
-      state[cur].fixed = true;
+      state[U.cur].fixed = true;
       print('[조치 적용] ' + m.fixNote, 'cmd');
       render();
       document.getElementById('res').innerHTML =
@@ -290,6 +348,7 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
 
   }}
 
+  renderDevPick(); renderDevInfo(); renderQuick();
   exec('show version');
   render();
 }})();
@@ -299,21 +358,8 @@ code{{background:#050a14;border:1px solid var(--bd);border-radius:4px;padding:1p
 '''
 
 
-def build(lab):
-    data_js = 'iss-lab-%s.js' % lab['key']
-    wide = bool(lab.get('wide'))
-    html = PAGE.format(
-        title=lab['title'], desc=lab['desc'],
-        count=len(lab['missions']), data=data_js,
-        widecls='wide' if wide else '', stackcls='stack' if wide else '',
-    )
-    with io.open(os.path.join(OUT, lab['file']), 'w', encoding='utf-8') as f:
-        f.write(html)
-
-    ms = []
-    for m in lab['missions']:
-        ms.append(
-            '{id:%s,risk:%d,appliesTo:%s,title:%s,brief:%s,where:%s,hint:%s,why:%s,'
+def mission_js(m):
+    return ('{id:%s,risk:%d,appliesTo:%s,title:%s,brief:%s,where:%s,hint:%s,why:%s,'
             'cmds:%s,options:%s,evidence:%s,verdict:%s,fix:%s,fixNote:%s}' % (
                 json.dumps(m['id'], ensure_ascii=False), m['risk'],
                 json.dumps(m.get('appliesTo', []), ensure_ascii=False),
@@ -328,25 +374,49 @@ def build(lab):
                 m['verdict'],
                 m.get('fix', 'null') or 'null',
                 json.dumps(m.get('fixNote', ''), ensure_ascii=False),
-            )
-        )
+            ))
+
+
+def units_of(lab):
+    """장비 하나짜리 랩도 유닛 하나로 통일한다."""
+    if lab.get('units'):
+        return lab['units']
+    return [{'device': lab['device'], 'cfg': lab['cfg'], 'missions': lab['missions']}]
+
+
+def build(lab):
+    data_js = 'iss-lab-%s.js' % lab['key']
+    wide = bool(lab.get('wide'))
+    units = units_of(lab)
+    total = sum(len(u['missions']) for u in units)
+    html = PAGE.format(
+        title=lab['title'], desc=lab['desc'], data=data_js,
+        widecls='wide' if wide else '', stackcls='stack' if wide else '',
+    )
+    with io.open(os.path.join(OUT, lab['file']), 'w', encoding='utf-8') as f:
+        f.write(html)
+
+    ujs = []
+    for u in units:
+        body = ',\n    '.join(mission_js(m) for m in u['missions'])
+        ujs.append(
+            '{device: %s,\n   cfg: %s,\n   missions: [\n    %s\n   ]}' % (
+                json.dumps(u['device'], ensure_ascii=False),
+                json.dumps(u['cfg'], ensure_ascii=False, indent=1),
+                body,
+            ))
     js = ('/* 생성물 — _gen/gen_iss_lab.py 가 만든다. 직접 고치지 말 것. */\n'
-          'window.ISS_LAB_DATA = {\n'
-          '  device: %s,\n'
-          '  cfg: %s,\n'
-          '  missions: [\n    %s\n  ]\n};\n' % (
-              json.dumps(lab['device'], ensure_ascii=False),
-              json.dumps(lab['cfg'], ensure_ascii=False, indent=1),
-              ',\n    '.join(ms),
-          ))
+          'window.ISS_LAB_DATA = {\n  units: [\n  %s\n  ]\n};\n'
+          % ',\n  '.join(ujs))
     with io.open(os.path.join(OUT, 'js', data_js), 'w', encoding='utf-8') as f:
         f.write(js)
-    return lab['file'], len(lab['missions'])
+    return lab['file'], total
 
 
 def main():
     import importlib
-    mods = [a for a in sys.argv[1:] if not a.startswith('--')] or ['specs_iss_acct', 'specs_iss_ops', 'specs_iss_policy']
+    mods = [a for a in sys.argv[1:] if not a.startswith('--')] or ['specs_iss_acct', 'specs_iss_ops', 'specs_iss_policy',
+                                        'specs_iss_detect', 'specs_iss_net']
     total = 0
     for name in mods:
         for lab in importlib.import_module(name).LABS:

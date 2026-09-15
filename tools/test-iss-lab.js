@@ -23,7 +23,7 @@ function load(dataFile) {
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(path.join(PUBLIC, 'js', 'iss-lab.js'), 'utf8'), sandbox);
   vm.runInContext(fs.readFileSync(path.join(PUBLIC, 'js', dataFile), 'utf8'), sandbox);
-  return { L: sandbox.window.WVS_ISS_LAB, D: sandbox.window.ISS_LAB_DATA };
+  return { L: sandbox.window.WVS_ISS_LAB, DATA: sandbox.window.ISS_LAB_DATA };
 }
 
 const LABS = [
@@ -32,6 +32,8 @@ const LABS = [
   { data: 'iss-lab-log.js', page: '07_iss-log.html', label: '로그·백업·시각' },
   { data: 'iss-lab-ops.js', page: '07_iss-ops.html', label: '운영·패치' },
   { data: 'iss-lab-policy.js', page: '07_iss-policy.html', label: '정책 관리' },
+  { data: 'iss-lab-detect.js', page: '07_iss-detect.html', label: '탐지·차단' },
+  { data: 'iss-lab-net.js', page: '07_iss-network.html', label: '네트워크 구성' },
 ];
 
 console.log('\n정보보호시스템 진단 실습 검증\n');
@@ -40,11 +42,13 @@ let totalMissions = 0;
 const seenIds = new Set();
 
 for (const lab of LABS) {
-  const { L, D } = load(lab.data);
+  const { L, DATA } = load(lab.data);
+  if (!fs.existsSync(path.join(PUBLIC, lab.page))) no(`${lab.page} 가 없다`);
+
+  // 한 랩이 장비 여러 대를 가질 수 있다. 유닛마다 같은 검사를 돌린다.
+  for (const D of DATA.units) {
   console.log(`[${lab.data}] ${D.missions.length}개 항목 · 장비 ${D.device.name} (${D.device.type})`);
   totalMissions += D.missions.length;
-
-  if (!fs.existsSync(path.join(PUBLIC, lab.page))) no(`${lab.page} 가 없다`);
 
   const cli0 = new L.Cli(new L.Config(D.cfg), D.device);
   const valid = new Set(cli0.commands());
@@ -106,7 +110,7 @@ for (const lab of LABS) {
     }
 
     // 9. 항목 ID 중복 금지
-    const key = lab.data + '::' + m.id;
+    const key = lab.data + '::' + D.device.name + '::' + m.id;
     if (seenIds.has(key)) no(`${tag} — 같은 랩에 ID 가 중복된다`);
     seenIds.add(key);
 
@@ -185,6 +189,7 @@ for (const lab of LABS) {
   else ok('정의되지 않은 명령을 거절한다');
 
   console.log('');
+  }
 }
 
 // 15. 평가대상(N/A) 처리

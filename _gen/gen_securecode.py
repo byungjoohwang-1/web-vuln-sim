@@ -83,6 +83,10 @@ PAGE = r'''<!DOCTYPE html>
         .easybox b {{ color:#c0392b; }}
         @media (max-width: 1200px) {{ .main-content {{ grid-template-columns: 1fr; }} }}
     </style>
+    <!-- 모바일 가로 넘침 교정. 1열로 접어도 코드 블록의 min-content 폭이
+         그리드 항목(min-width:auto)을 밀어내므로 별도 시트로 끊는다.
+         후처리(inject_code_mobile.py)로만 두면 재생성 때 사라져서 템플릿에 고정한다. -->
+    <link rel="stylesheet" href="/css/code-page-mobile.css">
 </head>
 <body>
     <div class="container">

@@ -95,6 +95,7 @@ INJECTED = [
     '<script src="/js/vuln-anim.js" defer></script>',
     '<script src="/js/shell.js" defer></script>',
     '<script src="/js/boot-guard.js" defer></script>',
+    '<script src="/js/code-lab.js" defer></script>',
 ]
 
 
@@ -454,11 +455,75 @@ def check_registry():
                     % (name, path, shown.strip(), want))
 
 
+# ------------------------------------------------------------------ #
+# 12. 현업 진단 실습 패널 (inject_code_lab.py 산출물)
+# ------------------------------------------------------------------ #
+def check_code_lab():
+    """패널 주입과 시나리오 데이터가 서로 어긋나지 않는지 본다.
+
+    페이지에는 패널이 있는데 데이터에 키가 없으면 학습자에게 빈 영역이 보이고,
+    반대면 만들어 둔 시나리오가 아무 데서도 안 보인다. 둘 다 조용히 실패한다.
+    """
+    data_path = os.path.join(PUB, 'data', 'code-lab.json')
+    if not os.path.exists(data_path):
+        warn('CODELAB-NODATA', 'public/data/code-lab.json 이 없다. python _gen/gen_code_lab.py 를 실행한다.')
+        return
+    with open(data_path, encoding='utf-8') as f:
+        scen = json.load(f)
+
+    injected = {}
+    for name in html_files():
+        if not name.startswith('03_code_'):
+            continue
+        s = read(name)
+        m = re.search(r'id="wvs-code-lab"\s+data-lab-key="([^"]+)"', s)
+        if m:
+            injected[name] = m.group(1)
+            if '/js/code-lab.js' not in s or '/css/code-lab.css' not in s:
+                err('CODELAB-ASSET', '%s: 패널은 있는데 code-lab.js/css 가 빠져 있다.' % name)
+            if s.count('id="wvs-code-lab"') > 1:
+                err('CODELAB-DUP', '%s: 패널이 %d번 주입됐다.' % (name, s.count('id="wvs-code-lab"')))
+
+    for name, key in sorted(injected.items()):
+        if key not in scen:
+            err('CODELAB-ORPHAN', '%s: data-lab-key=%r 에 해당하는 시나리오가 없다(빈 패널).' % (name, key))
+        if name != '03_code_%s.html' % key:
+            err('CODELAB-KEY', '%s: data-lab-key(%r)가 파일명과 어긋난다.' % (name, key))
+
+    for key in sorted(scen):
+        page = '03_code_%s.html' % key
+        if injected.get(page) != key:
+            err('CODELAB-MISSING',
+                '%s: 시나리오는 있는데 패널이 주입되지 않았다. python _gen/inject_code_lab.py 를 실행한다.' % page)
+
+
+# ------------------------------------------------------------------ #
+# 13. 03_code_* 모바일 교정 시트 (inject_code_mobile.py 산출물)
+# ------------------------------------------------------------------ #
+def check_code_mobile():
+    """이 시트가 빠지면 360px 에서 문서 폭이 642~721px 로 벌어진다.
+
+    원인은 코드 블록(white-space:pre)의 min-content 폭이 그리드 항목의
+    min-width:auto 를 타고 올라가 칸을 밀어내는 것이고, 화면상으로는
+    "옆으로 밀어야 보이는" 증상으로 나타난다. 조용히 사라지면 알아채기 어렵다.
+    """
+    sheet = os.path.join(PUB, 'css', 'code-page-mobile.css')
+    if not os.path.exists(sheet):
+        err('CODEMOBILE-NOCSS', 'public/css/code-page-mobile.css 가 없다.')
+        return
+    missing = [n for n in html_files()
+               if n.startswith('03_code_') and 'code-page-mobile.css' not in read(n)]
+    if missing:
+        err('CODEMOBILE-MISSING',
+            '%d개 페이지에 모바일 교정 시트가 없다(%s…). python _gen/inject_code_mobile.py 를 실행한다.'
+            % (len(missing), ', '.join(missing[:3])))
+
+
 def main():
     strict = '--strict' in sys.argv
     for fn in (check_script_blocks, check_injected_tags, check_links, check_backdoors,
                check_text_quality, check_a11y, check_sri, check_counts,
-               check_page_order, check_sources, check_registry):
+               check_page_order, check_sources, check_registry, check_code_lab, check_code_mobile):
         fn()
 
     print('=' * 62)
