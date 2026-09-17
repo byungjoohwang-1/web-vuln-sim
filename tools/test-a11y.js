@@ -183,12 +183,31 @@ console.log('\n[3] 문서 구조');
      (b) 공용 크롬(soc-chrome.js)이 h1 을 담은 블록에 런타임으로 role="main" 을 붙인다
    519개 페이지의 서로 다른 레이아웃을 일괄 수정하는 것보다 (b)가 깨질 위험이 작다.
    그래서 여기서는 "둘 중 하나가 보장되는가"를 본다 — h1 이 없으면 (b)도 못 한다. */
+/* 이 사이트는 자바스크립트 문자열 안에 모의 HTML 을 잔뜩 들고 있다(공격 시연용).
+   원본을 그대로 정규식으로 보면 그 문자열 속 <h1> 까지 '있다'고 세어 버린다.
+   실제로 sim-dast.html 이 그 경우였다 — 소스에 <h1> 이 2개 있지만 둘 다
+   모의 쇼핑몰 응답을 만드는 JS 문자열 안이라, 렌더된 페이지에는 제목이 없었는데도
+   이 검사는 계속 통과했다. 그래서 <script> 블록을 걷어낸 뒤에 판정한다. */
+function markupOnly(s) {
+  let out = '', pos = 0;
+  for (;;) {
+    const m = /<script\b[^>]*>/i.exec(s.slice(pos));
+    if (!m) { out += s.slice(pos); break; }
+    // 여는 태그는 남긴다 — src="/js/soc-chrome.js" 를 아래에서 확인해야 하므로
+    // 태그까지 지우면 '공용 크롬 없음'으로 잘못 판정된다.
+    out += s.slice(pos, pos + m.index) + m[0];
+    const end = s.indexOf('</script>', pos + m.index + m[0].length);
+    if (end < 0) break;
+    pos = end + 9;
+  }
+  return out;
+}
 const noMain = htmlFiles.filter((f) => {
-  const s = fs.readFileSync(path.join(PUB, f), 'utf8');
+  const s = markupOnly(fs.readFileSync(path.join(PUB, f), 'utf8'));
   if (/<main[\s>]/i.test(s) || /role\s*=\s*["']main["']/i.test(s)) return false;
   return !(/soc-chrome\.js/.test(s) && /<h1[\s>]/i.test(s));
 });
-const noH1 = htmlFiles.filter((f) => !/<h1[\s>]/i.test(fs.readFileSync(path.join(PUB, f), 'utf8')));
+const noH1 = htmlFiles.filter((f) => !/<h1[\s>]/i.test(markupOnly(fs.readFileSync(path.join(PUB, f), 'utf8'))));
 check('모든 페이지에 본문 랜드마크가 보장된다 (<main>/role=main 또는 공용 크롬 + h1)', () => noMain.length === 0
   || noMain.length + '개 — ' + noMain.slice(0, 5).join(', '));
 check('모든 페이지에 <h1> 이 있다', () => noH1.length === 0

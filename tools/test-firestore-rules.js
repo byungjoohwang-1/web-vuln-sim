@@ -82,10 +82,23 @@ const denied = (r) => r.status === 403 || r.status === 401;
   check('certSessions 쓰기 거부(세션 재개봉 차단)', denied(r), `status=${r.status}`);
 
   // 5) 자가 기록(selfCerts)은 본인 uid + kind:'self' 로만 생성 가능
-  r = await req('PATCH', 'selfCerts/SELF-001', {
-    uid: UID, fields: { uid: S(UID), kind: S('self'), name: S('학습자'), certId: S('SELF-001'), score: I(80) },
+  //
+  //    문서 ID 를 고정값(SELF-001)으로 쓰면 안 된다. 규칙이 create 만 허용하고
+  //    update 는 막으므로, 처음 한 번은 create 로 통과하지만 두 번째부터는
+  //    '이미 있는 문서 수정' 이 되어 403 이 된다. 규칙은 정상인데 테스트만 실패하는
+  //    상태가 되고, 그러면 사람들이 이 실패를 '원래 그런 것' 으로 넘기게 된다.
+  //    (에뮬레이터를 새로 띄우면 14/14, 그대로 재실행하면 13/14 로 갈렸다)
+  const selfId = `SELF-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  r = await req('PATCH', `selfCerts/${selfId}`, {
+    uid: UID, fields: { uid: S(UID), kind: S('self'), name: S('학습자'), certId: S(selfId), score: I(80) },
   });
   check('selfCerts 자가 기록 생성 허용', r.status === 200, `status=${r.status}`);
+
+  // 생성한 문서를 다시 쓰려는 시도는 막혀야 한다(자가 기록 점수 덮어쓰기 차단).
+  r = await req('PATCH', `selfCerts/${selfId}`, {
+    uid: UID, fields: { uid: S(UID), kind: S('self'), certId: S(selfId), score: I(100) },
+  });
+  check('selfCerts 생성 후 점수 덮어쓰기 거부', denied(r), `status=${r.status}`);
 
   r = await req('PATCH', 'selfCerts/SELF-002', {
     uid: UID, fields: { uid: S('someone-else'), kind: S('self'), certId: S('SELF-002') },
