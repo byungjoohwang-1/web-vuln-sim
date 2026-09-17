@@ -19,6 +19,9 @@ PAGE = u'''<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} | 교육 시뮬레이터</title>
 <meta name="description" content="{desc}">
+<!-- PWA/오프라인. 형제 생성기(gen_srv_lab.py)에는 있는데 여기만 빠져 있었다.
+     pwa.js 는 전용 주입기가 없어 각 생성기 템플릿이 직접 넣어야 한다. -->
+<script src="/js/pwa.js" defer></script>
 <style>
 :root{{--bg:#0b1220;--panel:#111b2e;--panel2:#16233c;--bd:#22314f;--ink:#e6edf7;
 --muted:#93a4c0;--acc:#38bdf8;--good:#3fb950;--bad:#f85149;--warn:#e3a008;
@@ -38,6 +41,15 @@ border:1px solid var(--bd);border-radius:10px;padding:10px 14px;margin-bottom:16
 /* 정책 표는 접으면 못 읽는다. 실제 콘솔처럼 가로 스크롤시킨다. */
 .cols.stack #termOut{{height:360px;white-space:pre;word-break:normal;overflow-x:auto}}
 @media(max-width:1000px){{.cols{{grid-template-columns:1fr}}}}
+/* 좁은 화면 가로 넘침 방지.
+   1열로 접어도 그리드 항목의 min-width 기본값이 auto 라, 터미널·코드 블록의
+   가장 긴 줄(min-content)이 칸을 밀어내 화면 밖으로 나간다.
+   320px 에서 실제로 넘쳤다(srv 37px, iss 5px). 전파를 끊고 코드는 자기 상자에서 스크롤. */
+@media(max-width:640px){{
+  .wrap,.cols,.cols>*,.card,.term{{min-width:0}}
+  .term,.term pre,.card pre{{max-width:100%;overflow-x:auto}}
+  .card h2{{flex-wrap:wrap;word-break:keep-all}}
+}}
 .card{{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin-bottom:14px}}
 .card h2{{font-size:15px;color:var(--acc);margin-bottom:8px}}
 .term{{background:#050a14;border:1px solid var(--bd);border-radius:10px;padding:0;overflow:hidden}}

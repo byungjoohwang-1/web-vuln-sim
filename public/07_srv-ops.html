@@ -32,6 +32,15 @@ a{color:#7dd3fc;text-decoration:none}
 .hostbar b{color:#7dd3fc}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 @media(max-width:1000px){.cols{grid-template-columns:1fr}}
+/* 좁은 화면 가로 넘침 방지.
+   1열로 접어도 그리드 항목의 min-width 기본값이 auto 라, 터미널·코드 블록의
+   가장 긴 줄(min-content)이 칸을 밀어내 화면 밖으로 나간다.
+   320px 에서 실제로 넘쳤다(srv 37px, iss 5px). 전파를 끊고 코드는 자기 상자에서 스크롤. */
+@media(max-width:640px){
+  .wrap,.cols,.cols>*,.card,.term{min-width:0}
+  .term,.term pre,.card pre{max-width:100%;overflow-x:auto}
+  .card h2{flex-wrap:wrap;word-break:keep-all}
+}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px 17px;margin-bottom:14px}
 .card h2{font-size:14px;color:#7dd3fc;font-family:var(--mono);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 /* 터미널 */
