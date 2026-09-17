@@ -166,13 +166,15 @@ def _load_code_lab():
         ans = (d.get('verdict') or {}).get('answer')
         words.append({'true': '정탐', 'false': '오탐 false positive',
                       'more': '추가확인'}.get(ans, ''))
-        words.append('현업 진단 티켓 증거 판정 조치')
         seen, uniq = set(), []
         for w in ' '.join(words).replace('·', ' ').replace('(', ' ').replace(')', ' ').split():
             lw = w.lower()
             if lw not in seen:
                 seen.add(lw)
                 uniq.append(w)
+        # 고정 문구는 중복 제거 뒤에 붙인다. 앞에서 같이 돌렸더니 '진단'이
+        # 다른 낱말(점검/진단 서버 등)과 겹쳐 지워지면서 '현업 티켓...'으로 깨졌다(49개 중 6개).
+        uniq.append('현업 진단 티켓 증거 판정 조치')
         out['03_code_%s.html' % key] = ' '.join(uniq)
     return out
 
@@ -210,7 +212,9 @@ def main():
         fn_kw = fn.replace('.html', '').replace('_', ' ').replace('-', ' ')
         # [G03] 그룹 동의어. 이게 없어서 '자동차'/'쿠버네티스' 검색이 0건이었다
         # (14_auto-* 61개가 있는데도 k 값이 '14 auto auto01' 뿐이라 한글로는 안 잡혔다).
-        kw = ' '.join(x for x in (k, fn_kw, GROUP_SYNONYMS.get(g, ''), lab_kw(fn)) if x).strip()
+        # lab_kw 를 그룹 동의어보다 앞에 둔다. 뒤에 두었더니 k[:220] 잘림에 걸려
+        # 49개 중 6개가 '현업 진단'으로 검색되지 않았다(43/49). 페이지 고유어가 먼저다.
+        kw = ' '.join(x for x in (k, fn_kw, lab_kw(fn), GROUP_SYNONYMS.get(g, '')) if x).strip()
         pages.append({'t': t[:80], 'u': fn, 'g': g, 'k': kw[:220]})
 
     # 대표 도구를 앞으로 정렬(동점 점수 시 안정적)

@@ -81,6 +81,7 @@
     this.root.appendChild(this.ticketBlock());
     this.root.appendChild(this.evidenceBlock());
     this.root.appendChild(this.verdictBlock());
+    this.root.appendChild(this.coachBlock());
     this.root.appendChild(this.fixBlock());
 
     this.mark(1);
@@ -222,11 +223,94 @@
       (v.trap ? '<span class="cl-trap">⚠️ 자주 틀리는 지점 — ' + esc(v.trap) + '</span>' : '');
     this.verdictDone = true;
     this.verdictCorrect = ok;   // 완료 판정은 '맞게' 판정했을 때만 인정한다
+    this.chosenVerdict = labelOf(choice);   // 코치 컨텍스트용(화면에 이미 표시된 값)
     this.mark(3);
   };
 
   function labelOf(k) {
     return k === 'true' ? '정탐' : k === 'false' ? '오탐' : '추가 확인 필요';
+  }
+
+  /* ---------------- AI 코치 (KISA 49종 현업진단 랩 연결) ----------------
+   *
+   * 설계 원칙 — 코치에게는 화면에 이미 보이는 것만 보낸다:
+   *   판정 전에는 verdict.answer/why/trap 를 컨텍스트에 만들지 않고,
+   *   판정 후에는 이미 UI 에 공개된 설명만 함께 보낸다.
+   *   "전송 내용 보기"로 학습자가 그대로 확인할 수 있어야 신뢰가 생긴다.
+   *   coach.js 의 buildContext 화이트리스트가 최종 방어선이지만, 여기서부터
+   *   정답을 만들지 않는 것이 원칙이다.
+   */
+  function buildCoachCtx(d, st) {
+    var t = d.ticket || {};
+    var opened = st.opened || [];
+    var evs = [];
+    (d.evidence || []).forEach(function (ev, i) {
+      if (opened.indexOf(i) < 0) return;
+      evs.push({
+        id: 'ev-' + (i + 1),
+        label: ev.label,
+        summary: String(ev.output || '').split('\n').slice(0, 6).join('\n').slice(0, 300),
+      });
+    });
+    var failed = [];
+    if (st.verdictDone && !st.verdictCorrect) {
+      failed.push({
+        id: 'verdict',
+        desc: '보안약점 판정 — ' + (st.chosenVerdict || '미선택') + '을(를) 골랐다',
+        expected: '증거에서 읽히는 판정',
+        actual: st.chosenVerdict || '미선택',
+        /* 판정 직후 화면에 이미 공개된 설명이다(판정 전에는 넣지 않는다) */
+        meaning: '화면에 표시된 해설: ' + String(st.verdictWhy || '').slice(0, 200),
+      });
+    }
+    if (st.lastFix && !st.lastFix.ok) {
+      failed.push({
+        id: 'fix-retest',
+        desc: '조치 후 회귀 재현',
+        expected: '같은 공격이 차단됨',
+        actual: '여전히 통과함',
+        meaning: '고른 조치: ' + String(st.lastFix.label || '').slice(0, 120),
+      });
+    }
+    return {
+      activityId: 'codelab:' + (st.key || ''),
+      step: st.verdictDone ? 'fix' : 'verdict',
+      learningGoal: '진단 티켓(' + (t.severity || '등급미정') + ')을 근거 증거로 판정하고 재현으로 확인되는 조치를 고른다. 약점 키: ' + (st.key || ''),
+      givens: [
+        '모든 증거는 페이지 내부 mock 이다',
+        '티켓 출처: ' + (t.source || '미표기'),
+        '증거를 ' + opened.length + '건 확인했다',
+      ],
+      successCondition: '증거에 근거해 정탐/오탐/추가확인 중 하나로 판정하고, 조치 선택 후 회귀 재현에서 실제로 차단되는 안을 고른다',
+      evidence: evs,
+      failedChecks: failed,
+      hintLevel: Math.min(3, Math.max(1, st.hintLevel || 1)),
+    };
+  }
+
+  /* 코치 스크립트는 처음 물을 때만 불러온다(50개 페이지 전부에 정적 태그를
+     심지 않는다). 불러오지 못하면 coach.js 폴백 안내로 끝난다 — 실습은 멈추지 않는다. */
+  var coachLoader = null;
+  function loadCoach() {
+    if (window.WVS_COACH) return Promise.resolve(true);
+    if (coachLoader) return coachLoader;
+    coachLoader = new Promise(function (resolve) {
+      var left = 2, settled = false;
+      function done() {
+        if (settled) return;
+        if (left === 0 || window.WVS_COACH) { settled = true; resolve(true); }
+      }
+      ['/js/ai-client.js', '/js/coach.js'].forEach(function (src) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = function () { left -= 1; done(); };
+        s.onerror = function () { if (!settled) { settled = true; resolve(false); } };
+        document.head.appendChild(s);
+      });
+      /* 둘 중 하나만 로드돼도 coach.js 가 있으면 진행한다 */
+      setTimeout(function () { if (!settled) { settled = true; resolve(!!window.WVS_COACH); } }, 8000);
+    });
+    return coachLoader;
   }
 
   /* 4. 조치·회귀 */
@@ -275,6 +359,95 @@
       this.mark(4);
       this.complete();
     }
+    /* 코치 컨텍스트용 — 방금 화면에 보여준 조치 시도(실패한 경우만 의미가 있다) */
+    this.lastFix = { label: o.label, ok: !!o.ok };
+  };
+
+  /* 3.5 AI 코치 — 증거를 읽고 다음 관찰을 제안 (KISA 49종 전체에 공통 연결) */
+  Lab.prototype.coachBlock = function () {
+    var self = this;
+    var box = el('section', 'cl-sec cl-coach-sec');
+    box.innerHTML =
+      '<h3>🤖 AI 코치 — 다음에 무엇을 볼까</h3>' +
+      '<p class="cl-hint">지금까지 연 증거와 판정 시도를 근거로 다음 관찰을 제안받습니다. ' +
+      '정답을 달라고 해도 주지 않습니다 — 어디를 볼지를 안내합니다. ' +
+      '<button type="button" class="cl-linkbtn" data-cl="preview">전송 내용 보기</button></p>';
+
+    var row = el('div', 'cl-coach-row');
+    var ask = el('button', 'cl-coach-ask');
+    ask.type = 'button';
+    ask.textContent = '코치에게 묻기';
+    row.appendChild(ask);
+    box.appendChild(row);
+
+    this.coachOut = el('div', 'cl-coach-out');
+    this.coachOut.setAttribute('role', 'status');
+    this.coachOut.setAttribute('aria-live', 'polite');
+    box.appendChild(this.coachOut);
+
+    ask.addEventListener('click', function () { self.askCoach(); });
+    box.querySelector('[data-cl="preview"]').addEventListener('click', function () { self.previewCoach(); });
+    return box;
+  };
+
+  Lab.prototype.coachState = function () {
+    return {
+      key: this.key,
+      opened: Object.keys(this.opened).map(function (k) { return +k; }),
+      verdictDone: !!this.verdictDone,
+      verdictCorrect: !!this.verdictCorrect,
+      chosenVerdict: this.chosenVerdict || null,
+      verdictWhy: this.verdictDone ? (this.d.verdict || {}).why : null,
+      lastFix: this.lastFix || null,
+      hintLevel: Math.min(3, (this.coachN || 0) + 1),
+    };
+  };
+
+  Lab.prototype.askCoach = function () {
+    var self = this;
+    this.coachN = (this.coachN || 0) + 1;
+    var out = this.coachOut;
+    if (this.openedCount() < MIN_EVIDENCE) {
+      out.innerHTML = '<div class="cl-coach-card cl-muted">증거를 ' + MIN_EVIDENCE + '건 이상 연 뒤에 물어보세요. ' +
+        '증거 없이 묻는 코치는 증거 없이 판정하는 진단원과 같습니다.</div>';
+      return;
+    }
+    out.innerHTML = '<div class="cl-coach-card">코치가 증거를 확인하는 중…</div>';
+    loadCoach().then(function (ok) {
+      if (!ok || !window.WVS_COACH) {
+        out.innerHTML = '<div class="cl-coach-card cl-muted">코치를 불러올 수 없습니다. 실습 자체는 계속 진행할 수 있습니다.</div>';
+        return;
+      }
+      window.WVS_COACH.ask(buildCoachCtx(self.d, self.coachState())).then(function (r) {
+        self.renderCoach(r, out);
+      });
+    });
+  };
+
+  Lab.prototype.previewCoach = function () {
+    var self = this;
+    var out = this.coachOut;
+    loadCoach().then(function (ok) {
+      if (!ok || !window.WVS_COACH) {
+        out.innerHTML = '<div class="cl-coach-card cl-muted">코치 구성요소를 불러올 수 없습니다.</div>';
+        return;
+      }
+      out.innerHTML = '<div class="cl-coach-card"><b>코치에게 전송되는 내용</b>' +
+        '<pre class="cl-coach-prev">' + esc(window.WVS_COACH.preview(buildCoachCtx(self.d, self.coachState()))) + '</pre></div>';
+    });
+  };
+
+  Lab.prototype.renderCoach = function (r, out) {
+    var c = r.coach;
+    out.innerHTML = '<div class="cl-coach-card">' +
+      '<div><b>관찰</b> ' + esc(c.observation) + '</div>' +
+      '<div class="cl-coach-gap"><b>다음 확인</b> ' + esc(c.nextAction) + '</div>' +
+      (c.hint ? '<div class="cl-coach-gap"><b>힌트</b> ' + esc(c.hint) + '</div>' : '') +
+      (c.sources && c.sources.length ? '<div class="cl-coach-gap cl-muted">참조: ' + esc(c.sources.join(', ')) + '</div>' : '') +
+      (c.uncertainty ? '<div class="cl-coach-gap cl-muted">⚠ ' + esc(c.uncertainty) + '</div>' : '') +
+      '<div class="cl-coach-gap cl-muted">모드: ' + (c.mode === 'ai' ? 'AI' : 'AI 미연결 — 일반 지침') +
+      (r.fellBack ? ' · 이유: ' + esc(String(r.fellBack).slice(0, 120)) : '') + '</div>' +
+      '</div>';
   };
 
   /* 진도 기록 — 엔진 API 경유(직접 localStorage 를 쓰지 않는다)
@@ -323,4 +496,8 @@
   } else {
     boot();
   }
+
+  /* 테스트 노출 — buildCoachCtx 는 순수 함수다. 판정 전 컨텍스트에 정답 해설이
+   * 들어가지 않는지를 tools/test-code-lab.js 가 여기로 검증한다. */
+  window.WVSCodeLab = { buildCoachCtx: buildCoachCtx };
 })();
