@@ -262,6 +262,9 @@
     buildContext: buildContext,
     sanitize: sanitize,
     staticCoach: staticCoach,
+    /* 운용 프롬프트 그 자체. 평가기(tools/eval-coach-live.js)가 이걸 그대로 써서
+       '평가할 프롬프트'와 '실제 서비스 프롬프트'가 어긋나지 않게 한다. */
+    systemPrompt: function () { return SYSTEM; },
 
     /** 코치에게 묻는다. 실패하면 정적 힌트로 내려간다(절대 예외를 던지지 않는다). */
     ask: async function (ctx) {

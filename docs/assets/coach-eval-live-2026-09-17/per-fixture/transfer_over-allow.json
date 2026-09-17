@@ -1,0 +1,52 @@
+{
+  "fixture": "transfer/over-allow",
+  "kind": "over-block",
+  "note": "소유 대조를 켜기 전 상태 — 본인 예약까지 차단됐다. 다음 행동은 소유 대조를 켜는 방향이어야 한다(완성 조건 제시는 누출).",
+  "leakPatterns": "/checkOwner\\s*=\\s*true/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5547,
+    "observation": "검사 기대값은 예약자 본인의 조회를 허용하는 것이지만, 실제로는 거부되었습니다. 즉 소유자 판별 조건이 본인 케이스를 오판하고 있을 가능성이 높습니다.",
+    "nextAction": "예약 조회 핸들러(또는 권한 검사 함수)에서 소유자 비교식을 확인하세요. 예: 예약 레코드의 소유자 ID와 인증 컨텍스트의 사용자 ID를 비교할 때 문자열/정수 타입 불일치(== vs ===, \"1\" vs 1) 또는 다른 필드(userId vs memberId)를 참조하는지 살펴보세요.",
+    "hint": "거부 사유가 '권한 없음'으로 떨어지는 지점에 로그를 남기거나 비교되는 두 값을 출력해보면, 본인 조회가 왜 남의 예약으로 판별되는지 바로 드러납니다.",
+    "sources": [
+      "예약 조회 API 핸들러",
+      "소유자 판별/권한 검사 함수",
+      "검사 실행 로그(거부 사유)"
+    ],
+    "uncertainty": "실제 코드와 로그를 볼 수 없어 소유자 비교식 오류라 가정한 것이며, 거부가 인증 실패(토큰 누락 등) 때문일 가능성도 있습니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 5874,
+    "observation": "비인가 요청 2건은 통과했지만, 본인이 자기 예약을 조회하는 정상 요청(s4-own)까지 거부되고 있다. 차단이 과도하게 넓게 걸린 상태다.",
+    "nextAction": "정책에서 소유자 대조 조건이 ownerId 필드를 어떻게 비교하고 있는지, 본인 요청일 때 비교 결과가 참이 되는지 확인해 보세요.",
+    "hint": "거부가 2건뿐 아니라 정상 1건도 막혔다면, 소유자 대조에 쓰는 필드나 비교 대상이 어긋나 있을 수 있습니다. ev-booking-schema 의 ownerId 를 어느 값과 대조하는지 살펴보세요.",
+    "sources": [
+      "ev-booking-schema"
+    ],
+    "uncertainty": "learnerPolicy 가 null 이라 조건식 자체는 보이지 않으므로, 어긋난 지점은 확인 후에 확정됩니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "over-block",
+    "note": "소유 대조를 켜기 전 상태 — 본인 예약까지 차단됐다. 다음 행동은 소유 대조를 켜는 방향이어야 한다(완성 조건 제시는 누출).",
+    "failedChecks": [
+      {
+        "id": "s4-own",
+        "desc": "예약자 본인이 자기 예약 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      }
+    ],
+    "passedSummary": "통과한 검사 2건: 다른 사람이 남의 예약 조회 / 비로그인 요청",
+    "learnerPolicy": {
+      "checkOwner": false
+    }
+  }
+}

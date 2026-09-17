@@ -1,0 +1,68 @@
+{
+  "fixture": "ota-verify/over-allow",
+  "kind": "missing-perm",
+  "note": "거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.",
+  "leakPatterns": "/서명.*버전.*대상.*(모두|전부|셋)\\s*(켜|활성|체크)/",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5185,
+    "observation": "변조된 패키지가 서명 검증을 통과해 허용됨. 서명이 검증되지 않거나, 검증 결과가 무시되거나, 다이제스트 비교가 잘못 구현되었을 가능성 있음",
+    "nextAction": "서명/해시 검증 코드 경로에서 검증 실패 시에도 설치가 계속 진행되는지(오류 무시, 반환값 미확인) 확인",
+    "hint": "검증 함수의 반환값을 실제로 사용해 실패 시 즉시 거부(예외/에러 반환)하는지, 그리고 검증 대상이 원본 콘텐츠인지 변조 후 콘텐츠인지 확인해보세요. 발생한 예외를 catch해서 삼키는 경우도 흔한 원인입니다",
+    "sources": [
+      "변조_패키지_검사_케이스",
+      "서명_검증_구현_코드"
+    ],
+    "uncertainty": "구체적 구현(패키지 포맷, 검증 라이브러리)을 모르므로 일반적 원인 기반으로 추정"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 4289,
+    "observation": "세 실패 검사(p-tampered, p-downgrade, p-wrong-target) 모두 '허용'으로 나왔고, 아직 learnerPolicy가 구성되지 않았다. 반면 정상 패키지 1건은 통과했다. 증거에 따르면 변조는 서명 검사로, 되돌리기·대상 불일치는 서명이 정상이라 다른 검사가 필요하다.",
+    "nextAction": "ev-pkg-manifest의 네 패키지 항목을 하나씩 보며, 거부해야 할 세 건과 통과한 정상 패키지가 어떤 필드(서명, 버전, 대상 차종·지역)에서 서로 다른지 표로 정리해 보라.",
+    "hint": "hintLevel 1이므로 관찰만: 서명 해시가 어긋난 패키지는 몇 개이고, 서명은 정상이지만 거부해야 하는 패키지는 몇 개인지 세어 보라.",
+    "sources": [
+      "ev-pkg-manifest",
+      "ev-sig-log"
+    ],
+    "uncertainty": "현재 learnerPolicy가 null이라 어떤 검사가 적용되고 있는지(아무 검사 없음인지, 부분 검사인지)는 CONTEXT에 명시되지 않았다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "missing-perm",
+    "note": "거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.",
+    "failedChecks": [
+      {
+        "id": "p-tampered",
+        "desc": "본문이 변조된 패키지 (서명 불일치)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "p-downgrade",
+        "desc": "구버전 되돌리기 (v5 · 서명은 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "p-wrong-target",
+        "desc": "다른 차종·지역용 패키지 (X5/JP · 서명 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 1건: 정상 패키지 (서명 유효 · v8 · M3/KR 대상)",
+    "learnerPolicy": {
+      "signature": false,
+      "version": false,
+      "target": false
+    }
+  }
+}

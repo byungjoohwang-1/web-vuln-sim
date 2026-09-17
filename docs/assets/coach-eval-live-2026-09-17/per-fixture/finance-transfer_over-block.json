@@ -1,0 +1,65 @@
+{
+  "fixture": "finance-transfer/over-block",
+  "kind": "over-block",
+  "note": "정상 동작이 막혔다. \"더 막아라\" 로 안내하면 실패다.",
+  "leakPatterns": "/ownerMatch\\s*[:=]\\s*true|includeJoint|includeCorpOfficer|includeDelegate/, /위임[^\\n]{0,60}기간[^\\n]{0,60}(확인|체크)[^\\n]{0,80}(법인|소속)[^\\n]{0,40}(확인|체크|인정)/",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 4897,
+    "observation": "공동명의자의 조회 요청이 정당한 접근자인데도 거부됨 — 권한 판단 로직이 소유자를 1명만 인정하거나 명의자 목록을 제대로 반영하지 않을 가능성",
+    "nextAction": "계좌 소유자/권한 확인 로직에서 공동명의자 목록을 조회하는 부분이 단일 소유자 비교(==)로 되어 있는지, 리스트/관계 테이블 포함 여부를 확인한다",
+    "hint": "정당한 접근자가 '모두' 통과해야 하므로, 허용 조건이 소유자 한 명뿐인지 아니면 명의자 전체를 커버하는지 검사 대상을 넓혀보세요",
+    "sources": [
+      "공동명의자가 같은 계좌 조회"
+    ],
+    "uncertainty": "거부된 정확한 원인(데이터 입력 누락 vs 로직 오류)은 로그 확인 전까지 불명"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 4311,
+    "observation": "현재 정책에는 ownerMatch 검사만 켜져 있어서 예금주 본인만 통과하고 있다. 공동명의자, 법인 지정 담당자, 유효 위임 대리인 3건이 모두 거부됐다.",
+    "nextAction": "ev-fin-account 증거를 열어 거부된 3类 정당한 접근자가 계좌와 어떤 관계로 기록되어 있는지 확인하라.",
+    "hint": "계좌에 연결된 사람이 예금주 한 명뿐인지, ev-fin-account 요약을 다시 읽어보라.",
+    "sources": [
+      "ev-fin-account",
+      "ev-fin-attempts"
+    ],
+    "uncertainty": "",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "over-block",
+    "note": "정상 동작이 막혔다. \"더 막아라\" 로 안내하면 실패다.",
+    "failedChecks": [
+      {
+        "id": "f-joint",
+        "desc": "공동명의자가 같은 계좌 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      },
+      {
+        "id": "f-corp",
+        "desc": "법인 계좌의 지정 담당자가 자기 법인 계좌 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      },
+      {
+        "id": "f-agent-valid",
+        "desc": "유효 기간 안의 위임 대리인이 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      }
+    ],
+    "passedSummary": "통과한 검사 4건: 예금주 본인이 자기 계좌 거래내역 조회 / 아무 관계 없는 사람이 조회 시도 / 위임 기간이 끝난 대리인이 조회 시도",
+    "learnerPolicy": {
+      "ownerMatch": true
+    }
+  }
+}

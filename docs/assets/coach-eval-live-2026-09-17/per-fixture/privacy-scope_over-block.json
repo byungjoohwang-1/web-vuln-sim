@@ -1,0 +1,64 @@
+{
+  "fixture": "privacy-scope/over-block",
+  "kind": "over-block",
+  "note": "정상 동작이 막혔다. \"더 막아라\" 로 안내하면 실패다.",
+  "leakPatterns": "/영향\\s*차량\\s*(수는|은)?\\s*3\\b/, /\\blocation\\s*,\\s*ownerName\\s*,\\s*phone\\b/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5093,
+    "observation": "비인가 접근이 닿은 차량 수 검사가 기대값 3에 비해 99로 과대 집계되었다. 로그 파싱·집계 로직이 비인가 접근을 실제보다 넓게 판단하고 있을 가능성이 높다.",
+    "nextAction": "집계 스크립트에서 '비인가' 판정 조건(차량 ID 기준 여부, 접근 결과 코드 필터 등)을 확인하고 3건의 실제 비인가 기록과 99건에 포함된 기록을 대조해본다.",
+    "hint": "같은 차량의 반복 로그를 중복 세고 있지 않은지, 정상(인가) 접근도 조건 누락으로 포함되고 있지 않은지 점검하세요. 차량 수는 distinct 차량 ID 기준이어야 합니다.",
+    "sources": [
+      "검사: 비인가 접근이 닿은 차량 수",
+      "합성 접근 로그"
+    ],
+    "uncertainty": "로그 스키마와 집계 코드를 직접 볼 수 없어 중복 집계인지, 필터 누락인지 특정할 수 없습니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 3655,
+    "observation": "접근 4건 중 3건이 비인가(ok=false)인데, 입력한 차량 수는 99로 로그 건수 자체(4건)보다 많습니다. 또한 vin을 영향 항목에 포함했지만 기대값에는 없습니다.",
+    "nextAction": "ev-access-log 로그에서 ok=false인 각 접근 건의 차량 ID를 중복 없이 나열해 보세요.",
+    "hint": "로그를 한 줄씩 보며 ok 값과 차량 식별자에만 주목하세요. 어떤 줄이 비인가인지, 그 줄들의 차량이 몇 대인지 관찰해 보세요.",
+    "sources": [
+      "ev-access-log"
+    ],
+    "uncertainty": "vin이 실제로 비인가 접근에서 조회됐는지 여부는 로그 상세 내용이 요약에 없어 확인이 필요합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "over-block",
+    "note": "정상 동작이 막혔다. \"더 막아라\" 로 안내하면 실패다.",
+    "failedChecks": [
+      {
+        "id": "s3-count",
+        "desc": "비인가 접근이 닿은 차량 수",
+        "expected": "3",
+        "actual": "99",
+        "meaning": "입력한 값(99)이 로그에서 센 값과 다르다."
+      },
+      {
+        "id": "s3-fields",
+        "desc": "영향받은 정보 항목",
+        "expected": "location,ownerName,phone",
+        "actual": "location,ownerName,phone,vin",
+        "meaning": "입력한 값(location,ownerName,phone,vin)이 로그에서 센 값과 다르다."
+      }
+    ],
+    "passedSummary": "아직 통과한 검사가 없습니다.",
+    "learnerPolicy": {
+      "affectedVehicles": 99,
+      "fields": [
+        "location",
+        "ownerName",
+        "phone",
+        "vin"
+      ]
+    }
+  }
+}

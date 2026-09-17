@@ -558,7 +558,8 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
         (c.sources && c.sources.length ? '<div style="margin-top:6px" class="muted">참조: ' + esc(c.sources.join(', ')) + '</div>' : '') +
         (c.uncertainty ? '<div style="margin-top:6px" class="muted">⚠ ' + esc(c.uncertainty) + '</div>' : '') +
         (c.refused && c.refused.length ? '<div style="margin-top:6px" class="muted">ⓘ 점수·정답·권한 관련 ' + c.refused.length + '개 항목은 규칙상 사용하지 않았습니다.</div>' : '') +
-        '<div style="margin-top:6px" class="muted">모드: ' + (c.mode === 'ai' ? 'AI' : 'AI 미연결 — 일반 지침') + '</div>' +
+        '<div style="margin-top:6px" class="muted">모드: ' + (c.mode === 'ai' ? 'AI' : 'AI 미연결 — 일반 지침') +
+        (r.fellBack ? ' · 이유: ' + esc(String(r.fellBack).slice(0, 120)) : '') + '</div>' +
         '</div>';
     });
   }

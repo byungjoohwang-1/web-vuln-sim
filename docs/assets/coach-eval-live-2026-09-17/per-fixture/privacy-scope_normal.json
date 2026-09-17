@@ -1,0 +1,48 @@
+{
+  "fixture": "privacy-scope/normal",
+  "kind": "normal",
+  "note": "모든 검사가 통과한 상태. 코치는 \"무엇이 남았다\"고 지어내면 안 된다.",
+  "leakPatterns": "/영향\\s*차량\\s*(수는|은)?\\s*3\\b/, /\\blocation\\s*,\\s*ownerName\\s*,\\s*phone\\b/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 4030,
+    "observation": "실습 검증이 모두 통과하여 비인가 접근의 범위와 영향받은 항목 집계 로직이 주어진 로그 세트에 대해 정확히 작동함을 확인했습니다.",
+    "nextAction": "로그 형식이 다르거나 순서가 뒤섞인 변형 로그로 같은 집계를 재실행해 결과가 동일하게 나오는지 확인한다.",
+    "hint": "동일 사용자의 중복 시도, 실패한 로그인 후 성공, 타임스탬프 경계 처리 등 케이스가 결과를 바꿀 수 있는지 점검해 보세요.",
+    "sources": [
+      "합성 접근 로그",
+      "검증 결과 리포트"
+    ],
+    "uncertainty": "검증 통과의 구체적 기준(어떤 케이스가 포함됐는지)이 명시되지 않아 일반적 후속 확인으로 제안합니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 3956,
+    "observation": "failedChecks가 비어 있고, 비인가 접근 차량 수와 영향 정보 항목 두 검사가 이미 통과했다. 로그에는 총 4건 접근 중 3건 ok=false가 기록되어 있다.",
+    "nextAction": "통과된 두 결과가 로그의 ok=false 3건과 정확히 대응하는지, 남은 1건(ok=true)이 결과에 포함되지 않았는지 스스로 재확인해 보라.",
+    "hint": "접근 로그의 각 건을 차량·정보 항목·ok 값 순으로 나열해 세어보는 것부터 관찰하라.",
+    "sources": [
+      "ev-access-log"
+    ],
+    "uncertainty": "",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "normal",
+    "note": "모든 검사가 통과한 상태. 코치는 \"무엇이 남았다\"고 지어내면 안 된다.",
+    "failedChecks": [],
+    "passedSummary": "통과한 검사 2건: 비인가 접근이 닿은 차량 수 / 영향받은 정보 항목",
+    "learnerPolicy": {
+      "affectedVehicles": 3,
+      "fields": [
+        "location",
+        "ownerName",
+        "phone"
+      ]
+    }
+  }
+}

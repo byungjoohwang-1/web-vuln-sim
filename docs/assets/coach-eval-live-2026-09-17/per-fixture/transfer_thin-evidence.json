@@ -1,0 +1,50 @@
+{
+  "fixture": "transfer/thin-evidence",
+  "kind": "thin-evidence",
+  "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+  "leakPatterns": "/checkOwner\\s*=\\s*true/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5807,
+    "observation": "1단계의 소유 관계 대조 로직을 API에 적용했으나, 정규 예약인 '예약자 본인이 자기 예약 조회' 케이스가 기대(허용)와 달리 거부되고 있음. 즉 허용해야 할 요청이 차단되는 오류(FALSE NEGATIVE) 상태",
+    "nextAction": "조회 승인 조건에서 소유자 비교식을 확인한다: 클레임의 사용자 ID와 예약 레코드의 예약자 ID가 실제로 같은 값 형태(문자열/숫자, 대소문자)로 비교되고 있는지, 조건이 반대(≠)로 쓰이지 않았는지 디버그 출력으로 좁혀본다",
+    "hint": "거부 사유 로그나 디버거로 두 ID의 실제 값을 찍어보면 형식 불일치(예: 'user1' vs 1)나 비교 연산자 방향 오류가 바로 드러난다. 1단계 명세와 API 코드의 비교식을 나란히 대조해보라",
+    "sources": [
+      "예약자 본인이 자기 예약 조회"
+    ],
+    "uncertainty": "검사 상세 로그와 코드 구조를 몰라 거부 원인(비교식 오류, ID 매핑 누락, 미들웨어 순서 등)을 특정할 수 없음"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 3846,
+    "observation": "비인가 2건은 거부됐지만, 소유자 본인의 정상 조회(s4-own)도 거부되고 있습니다. 거부는 이미 잘 되고 있으니 문제는 허용 조건 쪽입니다.",
+    "nextAction": "s4-own 검사에서 실제 요청의 ownerId 값과 정책이 대조하는 소유자 값을 나란히 놓고 어떻게 다른지 확인해 보세요.",
+    "hint": "hintLevel 1: 통과한 2개 검사와 실패한 1개 검사의 차이가 '누가 요청했는가'에 있다는 점을 먼저 관찰하세요.",
+    "sources": [
+      "ev-booking-schema"
+    ],
+    "uncertainty": "learnerPolicy 가 null 이라 정책 조건식 자체를 볼 수 없어, 대조 값의 형태까지는 단정할 수 없습니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "thin-evidence",
+    "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+    "failedChecks": [
+      {
+        "id": "s4-own",
+        "desc": "예약자 본인이 자기 예약 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      }
+    ],
+    "passedSummary": "통과한 검사 2건: 다른 사람이 남의 예약 조회 / 비로그인 요청",
+    "learnerPolicy": {
+      "checkOwner": false
+    }
+  }
+}

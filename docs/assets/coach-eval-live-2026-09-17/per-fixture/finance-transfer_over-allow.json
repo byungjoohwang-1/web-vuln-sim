@@ -1,0 +1,62 @@
+{
+  "fixture": "finance-transfer/over-allow",
+  "kind": "missing-perm",
+  "note": "거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.",
+  "leakPatterns": "/ownerMatch\\s*[:=]\\s*true|includeJoint|includeCorpOfficer|includeDelegate/, /위임[^\\n]{0,60}기간[^\\n]{0,60}(확인|체크)[^\\n]{0,80}(법인|소속)[^\\n]{0,40}(확인|체크|인정)/",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 6489,
+    "observation": "위임 기간이 만료된 대리인의 조회 시도가 거부 대신 허용되었습니다. 즉, 접근 권한 판단 로직이 권한의 유효기간(만료)을 검사하지 않거나, 만료 검사 조건이 잘못되어 있을 가능성이 있습니다.",
+    "nextAction": "권한 판단 로직에서 대리인의 위임 만료일 검사 코드(예: 위임 시작일·종료일 비교)가 존재하는지, 조건식 부등호 방향이 맞는지 확인하세요.",
+    "hint": "거래내역 조회 승인 조건을 나열해 보세요: 신분 확인, 역할(본인/대리인), 위임 상태(유효/만료/취소). '만료' 케이스가 조건에서 누락되었거나 종료일 비교가 '이전'이 아니라 '이후'로 되어 있는지 살펴보세요.",
+    "sources": [
+      "검사 결과: 위임 기간이 끝난 대리인이 조회 시도(기대 거부, 실제 허용)",
+      "학습 목표: 정당한 접근자만 통과"
+    ],
+    "uncertainty": "권한 판단 로직의 실제 구현 코드와 위임 기간 데이터가 어떻게 저장되는지 몰라, 만료 검사 누락인지 조건식 오류인지 데이터 문제인지는 코드 확인 후에야 확정 가능합니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 5670,
+    "observation": "ownerMatch, includeJoint, includeCorpOfficer, includeDelegate 체크는 켜져 있고 정상 4건 중 3건은 통과했다. 그러나 만료된 위임(f-agent-expired)과 다른 법인 담당자(f-corp-other)가 아직 허용된다. 즉 두 체크가 '누구인가'만 보고 '계좌와 실제로 연결돼 있는가(위임 기간, 법인 귀속)'는 아직 대조하지 않는 상태로 보인다.",
+    "nextAction": "ev-fin-attempts의 만료 위임 건과 f-corp-other 건 각각에 대해, 요청자 속성(위임 만료일, 소속 법인)과 계좌 쪽 속성(계좌의 법인) 값을 나란히 적어서 비교해 보라. 두 값이 어떻게 다른지 먼저 확인한다.",
+    "hint": "hintLevel 1: includeDelegate와 includeCorpOfficer 체크가 켜져 있는데도 두 건이 허용됐다. 이 체크들이 현재 무엇을 기준으로 판정하는지, 그리고 ev-fin-account에 나온 '기간이 정해진 위임'과 '지정 담당자'라는 조건이 체크에 반영됐는지 관찰해 보라.",
+    "sources": [
+      "ev-fin-account",
+      "ev-fin-attempts"
+    ],
+    "uncertainty": "각 체크의 실제 구현 내용(어떤 필드를 비교하는지)은 CONTEXT에 없어서 추정이며, 학습자가 직접 확인해야 한다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "missing-perm",
+    "note": "거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.",
+    "failedChecks": [
+      {
+        "id": "f-agent-expired",
+        "desc": "위임 기간이 끝난 대리인이 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "f-corp-other",
+        "desc": "다른 법인의 담당자가 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 5건: 예금주 본인이 자기 계좌 거래내역 조회 / 공동명의자가 같은 계좌 조회 / 법인 계좌의 지정 담당자가 자기 법인 계좌 조회",
+    "learnerPolicy": {
+      "ownerMatch": true,
+      "includeJoint": true,
+      "includeCorpOfficer": true,
+      "includeDelegate": true
+    }
+  }
+}

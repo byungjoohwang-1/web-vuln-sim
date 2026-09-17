@@ -1,0 +1,74 @@
+{
+  "fixture": "api-authz/misleading",
+  "kind": "misleading",
+  "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+  "leakPatterns": "/req\\.userId\\s*==\\s*vehicle\\.ownerId/i, /userId\\s*===?\\s*ownerId/i",
+  "hintLevel": 3,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5411,
+    "observation": "타인(u-1002)이 DEMO-VIN-0001 차량을 조회했을 때 거부되어야 하는데 허용되었습니다. 즉, 소유자/점검담당자 외 접근을 막는 권한 검사가 동작하지 않거나 누락된 상태입니다.",
+    "nextAction": "차량 조회 API의 권한 확인 로직(인가 정책 또는 서비스 계층)에서 요청자 ID가 차주 또는 점검 담당자인지 검사하는 코드가 실제로 적용되고 있는지 확인하세요.",
+    "hint": "인증(로그인)은 통과했지만 인가(권한) 검사가 빠졌을 가능성이 높습니다. 컨트롤러에서 서비스의 조회 메서드를 호출할 때 소유자·담당자 비교 조건이 있는지, 조건이 있다면 반대로 작성(=u-1002 같은 타인도 통과)되지 않았는지 살펴보세요.",
+    "sources": [
+      "DEMO-VIN-0001",
+      "u-1002"
+    ],
+    "uncertainty": "차량 조회 구현 방식(DB 정책, 애플리케이션 코드, 프레임워크 인가 설정 등)을 모르므로 구체적 수정 위치는 코드 확인 후에야 알 수 있습니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 6432,
+    "observation": "현재 정책은 true==true 조건 하나로 사실상 모든 요청을 허용하고 있습니다. 그 결과 본인 조회 3건은 통과했지만, 타인 조회 2건과 비로그인 조회 1건이 모두 허용되어 실패했습니다. 증거 ev-resp-diff 에 따르면 요청자가 달라도 응답이 동일하므로, 현재 경로는 요청자와 자원의 소유 관계를 전혀 비교하지 않습니다.",
+    "nextAction": "증거 ev-req-own 과 ev-req-other 를 나란히 놓고, 두 요청에서 실제로 달라지는 값을 하나 찾아 그 값을 정책 조건의 좌변으로 쓸 수 있는지 확인하세요. 검사기가 잘못된 것이 아니라, givens 의 '로그인 검사 통과 후 도달' 가정과 s1-anon-read 가 허용된 실제 결과가 서로 모순되는지도 함께 점검하세요.",
+    "hint": "접근 방법: 1) 정책 조건의 좌변에 '요청한 사용자의 id', 우변에 '이 차량의 차주 id(원장에서 조회)' 를 비교하는 구조를 만들고, 2) 점검 담당자(admin) 와 비로그인 케이스가 이 조건에서 어떻게 판정될지 각각 확인하세요. 단, 비로그인이 여전히 허용된다면 이 지점 앞에 인증 게이트가 실제로 동작 중인지 별도로 확인해야 합니다.",
+    "sources": [
+      "ev-req-own",
+      "ev-req-other",
+      "ev-resp-diff"
+    ],
+    "uncertainty": "s1-anon-read 가 허용된 것은 givens(모든 요청은 로그인 후 도달)와 어긋나므로, 비로그인 요청이 이 지점에 도달하는 경로가 실제로 존재하는지는 학습자가 직접 확인해야 합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "misleading",
+    "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+    "failedChecks": [
+      {
+        "id": "s1-other-read",
+        "desc": "타인 u-1002 가 DEMO-VIN-0001 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "s1-other-read-2",
+        "desc": "타인 u-1003 이 DEMO-VIN-0002 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "s1-anon-read",
+        "desc": "비로그인 요청이 DEMO-VIN-0001 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 3건: 차주 u-1001 이 본인 차량 DEMO-VIN-0001 조회 / 차주 u-1002 가 본인 차량 DEMO-VIN-0002 조회 / 점검 담당자(admin) 가 DEMO-VIN-0003 조회",
+    "learnerPolicy": {
+      "join": "or",
+      "conds": [
+        {
+          "left": "true",
+          "op": "==",
+          "right": "true"
+        }
+      ]
+    }
+  }
+}

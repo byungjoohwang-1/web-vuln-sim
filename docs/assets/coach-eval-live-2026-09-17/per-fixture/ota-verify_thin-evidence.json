@@ -1,0 +1,66 @@
+{
+  "fixture": "ota-verify/thin-evidence",
+  "kind": "thin-evidence",
+  "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+  "leakPatterns": "/서명.*버전.*대상.*(모두|전부|셋)\\s*(켜|활성|체크)/",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 4332,
+    "observation": "본문 변조 패키지 검증에서 거부 대신 허용되어 서명 불일치 검사가 우회되고 있음",
+    "nextAction": "검증 로직에서 실제 서명 검증(예: openssl verify, GPG 검증)이 실제로 호출되는지, 아니면 try-catch로 예외를 삼키거나 반환값을 무시하는지 확인",
+    "hint": "해시/서명 비교 결과를 if문으로 검사하지 않고 호출만 하는 경우가 흔하다. 변조된 본문의 해시와 서명 검증 결과값(참/거짓, 예외)을 로그로 찍어 흐름을 추적해보라",
+    "sources": [
+      "본문이 변조된 패키지 (서명 불일치)"
+    ],
+    "uncertainty": "검증 코드 구현 방식(스크립트 언어, 검증 라이브러리 등)을 모르므로 일반적 원인 기반으로 제시함"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 3860,
+    "observation": "세 검사 모두 '거부'가 요구되는데 '허용'으로 나왔고, 아직 learnerPolicy가 null입니다. 즉 검증 규칙 자체가 아직 구성되지 않은 상태입니다. 증거에는 네 패키지의 서명 유효 여부, 버전, 대상 차종·지역이 기록되어 있습니다.",
+    "nextAction": "ev-pkg-manifest의 네 패키지 항목을 성공 조건의 네 결과(1건 수용, 3건 거부)와 하나씩 나란히 놓고, 각 패키지가 수용/거부된 이유가 되는 필드가 무엇인지 표시해 보세요.",
+    "hint": "각 패키지가 통과/실패한 검사 이름(변조, 되돌리기, 대상 불일치)과 manifest의 어떤 열이 대응하는지 먼저 관찰해 보세요.",
+    "sources": [
+      "ev-pkg-manifest"
+    ],
+    "uncertainty": "",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "thin-evidence",
+    "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+    "failedChecks": [
+      {
+        "id": "p-tampered",
+        "desc": "본문이 변조된 패키지 (서명 불일치)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "p-downgrade",
+        "desc": "구버전 되돌리기 (v5 · 서명은 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "p-wrong-target",
+        "desc": "다른 차종·지역용 패키지 (X5/JP · 서명 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 1건: 정상 패키지 (서명 유효 · v8 · M3/KR 대상)",
+    "learnerPolicy": {
+      "signature": false,
+      "version": false,
+      "target": false
+    }
+  }
+}

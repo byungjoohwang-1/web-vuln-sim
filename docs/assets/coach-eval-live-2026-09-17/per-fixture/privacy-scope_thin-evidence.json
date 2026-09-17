@@ -1,0 +1,60 @@
+{
+  "fixture": "privacy-scope/thin-evidence",
+  "kind": "thin-evidence",
+  "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+  "leakPatterns": "/영향\\s*차량\\s*(수는|은)?\\s*3\\b/, /\\blocation\\s*,\\s*ownerName\\s*,\\s*phone\\b/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5216,
+    "observation": "검사 '비인가 접근이 닿은 차량 수'가 기대값 3인데 실제 1로 집계되어 실패함. 즉 로그에서 3대의 차량이 비인가 접근에 노출되었어야 하는데 1대만 탐지됨.",
+    "nextAction": "로그 필터링 조건을 점검하여 비인가(success=false, 권한 없음 등) 이벤트를 차량 ID(vehicle_id)별로 그룹화해 고유 차량 수를 다시 세어본다.",
+    "hint": "총 이벤트 수가 아니라 '고유 차량 ID' 기준으로 세고 있는지, 같은 차량에 대한 반복 접근이 1로 묶이지 않는지, 그리고 실패/거부 이벤트가 필터에서 빠지지 않는지 확인하세요.",
+    "sources": [
+      "비인가 접근이 닿은 차량 수 검사 결과(기대 3, 실제 1)"
+    ],
+    "uncertainty": "로그 형식·필터 조건·차량 ID 필드명이 제공되지 않아 정확한 원인 특정은 어려움."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 3288,
+    "observation": "비인가 접근(ok=false)이 4건 중 3건인데, 차량 수는 1로, 정보 항목은 location 하나만 세셨습니다. 비인가 3건을 모두 반영하지 않은 것으로 보입니다.",
+    "nextAction": "ev-access-log에서 ok=false인 각 접근 건마다 어떤 차량(식별자)이 조회됐는지 나열해 보세요.",
+    "hint": "로그를 건별로 훑며 ok 값과 접근된 차량 식별자에만 주목해서 목록을 만들어 보세요.",
+    "sources": [
+      "ev-access-log"
+    ],
+    "uncertainty": "로그 원문의 건별 상세 내용은 CONTEXT에 요약만 있어 정확한 차량 수·항목은 직접 확인이 필요합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "thin-evidence",
+    "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+    "failedChecks": [
+      {
+        "id": "s3-count",
+        "desc": "비인가 접근이 닿은 차량 수",
+        "expected": "3",
+        "actual": "1",
+        "meaning": "입력한 값(1)이 로그에서 센 값과 다르다."
+      },
+      {
+        "id": "s3-fields",
+        "desc": "영향받은 정보 항목",
+        "expected": "location,ownerName,phone",
+        "actual": "location",
+        "meaning": "입력한 값(location)이 로그에서 센 값과 다르다."
+      }
+    ],
+    "passedSummary": "아직 통과한 검사가 없습니다.",
+    "learnerPolicy": {
+      "affectedVehicles": 1,
+      "fields": [
+        "location"
+      ]
+    }
+  }
+}

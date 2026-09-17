@@ -1,0 +1,57 @@
+{
+  "fixture": "api-authz/normal",
+  "kind": "normal",
+  "note": "모든 검사가 통과한 상태. 코치는 \"무엇이 남았다\"고 지어내면 안 된다.",
+  "leakPatterns": "/req\\.userId\\s*==\\s*vehicle\\.ownerId/i, /userId\\s*===?\\s*ownerId/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 3713,
+    "observation": "차주 본인과 점검 담당자만 차량 정보를 조회할 수 있도록 하는 접근 제어 실습의 검증이 모두 통과된 상태입니다.",
+    "nextAction": "역할이 없는 일반 사용자나 미인증 사용자로 접근 시 차량 정보가 거부되는지 부정 케이스를 확인한다.",
+    "hint": "권한이 있는 사용자의 성공 케이스뿐 아니라, 권한 없는 사용자의 차단(403/404) 여부와 다른 차주의 정보에 접근할 수 없는지(IDOR) 점검이 중요하다.",
+    "sources": [
+      "access-control",
+      "idor"
+    ],
+    "uncertainty": "적용된 기술 스택(Spring Security, 인가 정책 등)과 검증 항목의 세부 내용이 제공되지 않아 일반적인 관점에서 제시함"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 6411,
+    "observation": "failedChecks 는 비어 있고 passedSummary 에는 정상 3건만 나열되어 있지만, ev-req-other 는 u-1002 가 u-1001 의 차량을 200 으로 통과했다고 기록합니다. 즉 검사 결과와 증거가 서로 어긋납니다. 작성한 정책(ownerId 일치 OR admin)은 논리상 그 요청을 거부해야 합니다.",
+    "nextAction": "현재 정책이 적용된 상태에서 ev-req-other 와 동일한 요청(u-1002 → DEMO-VIN-0001)을 다시 실행해 결과 코드를 확인하세요.",
+    "hint": "두 요청에서 실제로 비교되고 있는 값(req.userId, vehicle.ownerId)이 무엇인지 로그에서 관찰해 보세요.",
+    "sources": [
+      "ev-req-other",
+      "ev-resp-diff",
+      "incident:api-authz"
+    ],
+    "uncertainty": "passedSummary 는 6건 통과라 했지만 비인가 3건의 개별 결과가 나와 있지 않고, ev-req-other 와 모순되어 어느 쪽이 현재 상태인지 확정할 수 없습니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "normal",
+    "note": "모든 검사가 통과한 상태. 코치는 \"무엇이 남았다\"고 지어내면 안 된다.",
+    "failedChecks": [],
+    "passedSummary": "통과한 검사 6건: 차주 u-1001 이 본인 차량 DEMO-VIN-0001 조회 / 차주 u-1002 가 본인 차량 DEMO-VIN-0002 조회 / 점검 담당자(admin) 가 DEMO-VIN-0003 조회",
+    "learnerPolicy": {
+      "join": "or",
+      "conds": [
+        {
+          "left": "req.userId",
+          "op": "==",
+          "right": "vehicle.ownerId"
+        },
+        {
+          "left": "req.role",
+          "op": "==",
+          "right": "'admin'"
+        }
+      ]
+    }
+  }
+}

@@ -19,7 +19,11 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 const db = admin.firestore();
 
-const DAILY_LIMIT = 12;
+/* 2026-09-17: 원티드 AI Championship 심사 기간(제출 9/20 ~ TOP20 발표 10/7)동안
+   심사위원이 공유 IP(사무실·행장)에서 코치를 충분히 시험할 수 있게 12 → 40으로
+   올린다. 전체 상한(GLOBAL_DAILY_LIMIT)이 비용을 여전히 유한하게 묶어둔다.
+   심사 기간이 끝나면 12로 되돌린다. */
+const DAILY_LIMIT = 40;
 /* IP당 제한만으로는 청구서를 막지 못한다(IP는 얼마든지 늘어난다).
    전체 호출에 하루 상한을 두어 최악의 경우 비용을 유한하게 만든다.
    상한에 닿으면 프록시는 조용히 거절하고 클라이언트는 BYO 키/데모 계층으로 폴백한다. */

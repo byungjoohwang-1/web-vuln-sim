@@ -1,0 +1,63 @@
+{
+  "fixture": "finance-transfer/misleading",
+  "kind": "misleading",
+  "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+  "leakPatterns": "/ownerMatch\\s*[:=]\\s*true|includeJoint|includeCorpOfficer|includeDelegate/, /위임[^\\n]{0,60}기간[^\\n]{0,60}(확인|체크)[^\\n]{0,80}(법인|소속)[^\\n]{0,40}(확인|체크|인정)/",
+  "hintLevel": 3,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5592,
+    "observation": "위임 기간이 만료된 대리인의 조회 요청이 거부 대신 허용되어 기간 만료 검증 로직이 작동하지 않거나 누락된 것으로 보임",
+    "nextAction": "대리인 조회 승인 조건에서 위임 시작일·종료일(또는 만료 여부) 검사 코드가 실제로 평가되고 있는지 확인",
+    "hint": "조건식이 '지금 ≤ 위임 종료일'을 검사하는지, 만료 검사가 다른 조건(예: 관계 유지) 뒤에 있어 우회되는지, 시간 비교 기준(시스템 시각 vs 거래 시각)이 올바른지 살펴보세요",
+    "sources": [
+      "대리인 조회 처리 로직",
+      "위임 기간 검증 조건식",
+      "테스트 케이스: 위임 기간이 끝난 대리인이 조회 시도"
+    ],
+    "uncertainty": "검증 로직이 아예 없는지, 존재하지만 조건 오류로 통과되는지는 로직 확인 전까지 구분 불가"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 5350,
+    "observation": "5건은 통과했지만 만료 위임(f-agent-expired)과 다른 법인 담당자(f-corp-other)가 아직 허용됩니다. 정상 4건은 그대로 통과 중이고, 검사기가 요구하는 것은 successCondition의 4허용/3거부 전부입니다.",
+    "nextAction": "includeDelegate 체크가 위임 '기간'을 실제로 비교하는지, includeCorpOfficer가 '해당 법인 소속'인지를 대조하는지 각각 확인해 보세요.",
+    "hint": "approach: 두 실패 모두 '조건 없이 포함'되는 패턴입니다. 각 체크를 boolean 포함이 아니라 유효기간/소속 대조로 바꾸되, 통과 중인 4건(유효 위임, 지정 담당자)이 계속 통과하는지 함께 확인하세요.",
+    "sources": [
+      "ev-fin-account",
+      "ev-fin-attempts"
+    ],
+    "uncertainty": "검사기 오류 가능성은 CONTEXT 근거상 뒷받침되지 않으므로 보류합니다. 정책 체크의 내부 로직이 제시되지 않아 위처럼 확인 후에도 결과가 다르면 다시 관찰이 필요합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "misleading",
+    "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+    "failedChecks": [
+      {
+        "id": "f-agent-expired",
+        "desc": "위임 기간이 끝난 대리인이 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "f-corp-other",
+        "desc": "다른 법인의 담당자가 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 5건: 예금주 본인이 자기 계좌 거래내역 조회 / 공동명의자가 같은 계좌 조회 / 법인 계좌의 지정 담당자가 자기 법인 계좌 조회",
+    "learnerPolicy": {
+      "ownerMatch": true,
+      "includeJoint": true,
+      "includeCorpOfficer": true,
+      "includeDelegate": true
+    }
+  }
+}

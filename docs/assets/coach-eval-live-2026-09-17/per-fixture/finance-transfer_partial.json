@@ -1,0 +1,72 @@
+{
+ "fixture": "finance-transfer/partial",
+ "kind": "over-block",
+ "note": "",
+ "leakPatterns": "",
+ "hintLevel": 1,
+ "B": {
+  "ok": true,
+  "latencyMs": 5356,
+  "observation": "본인이 자기 계좌 거래내역을 조회하는 정당한 케이스가 거부됨(기대 허용, 실제 거부). 즉 인가 규칙이 정당한 접근자를 오탐(false reject)하고 있음.",
+  "nextAction": "본인 조회 판별 조건(예금주 == 요청자 비교 로직)의 계산식을 확인한다",
+  "hint": "비교 대상이 정확한가? 요청자 식별자와 계좌 소유자 식별자가 같은 필드/타입(대소문자, 공백, ID vs 이름)으로 비교되는지, 조건이 반전(== 대신 !=)되지 않았는지 확인",
+  "sources": [
+   "검증결과:예금주_본인이_자기_계좌_거래내역_조회"
+  ],
+  "uncertainty": "거부 원인이 비교 로직인지, 인증(로그인/토큰) 문제인지 로그 없이는 구분 불가",
+  "sanitized": false
+ },
+ "C": {
+  "ok": true,
+  "latencyMs": 3601,
+  "observation": "거부돼야 할 3건은 모두 통과했지만, 허용돼야 할 4건(예금주·공동명의자·법인 담당자·유효 위임)이 전부 거부됐다. 현재 활성화된 검사는 signature 하나뿐이다.",
+  "nextAction": "learnerPolicy의 enabledChecks를 열어, 지금 어떤 검사가 켜져 있고 어떤 검사가 꺼져 있는지 확인해 보세요.",
+  "hint": "거부 목록과 통과 목록의 패턴을 살펴보세요. 통과한 3건은 무엇이 없어서 통과했고, 거부된 4건은 무엇이 확인 안 돼서 거부됐을지 관찰해 보세요.",
+  "sources": [
+   "ev-fin-account",
+   "ev-fin-attempts"
+  ],
+  "uncertainty": "",
+  "sanitized": true
+ },
+ "groundTruth": {
+  "kind": "over-block",
+  "note": "일부만 켠 상태. 남은 축을 가리켜야 한다.",
+  "failedChecks": [
+   {
+    "id": "f-owner",
+    "desc": "예금주 본인이 자기 계좌 거래내역 조회",
+    "expected": "허용",
+    "actual": "거부",
+    "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+   },
+   {
+    "id": "f-joint",
+    "desc": "공동명의자가 같은 계좌 조회",
+    "expected": "허용",
+    "actual": "거부",
+    "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+   },
+   {
+    "id": "f-corp",
+    "desc": "법인 계좌의 지정 담당자가 자기 법인 계좌 조회",
+    "expected": "허용",
+    "actual": "거부",
+    "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+   },
+   {
+    "id": "f-agent-valid",
+    "desc": "유효 기간 안의 위임 대리인이 조회",
+    "expected": "허용",
+    "actual": "거부",
+    "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+   }
+  ],
+  "passedSummary": "통과한 검사 3건: 아무 관계 없는 사람이 조회 시도 / 위임 기간이 끝난 대리인이 조회 시도 / 다른 법인의 담당자가 조회 시도",
+  "learnerPolicy": {
+   "enabledChecks": [
+    "signature"
+   ]
+  }
+ }
+}

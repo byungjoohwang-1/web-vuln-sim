@@ -1,0 +1,72 @@
+{
+  "fixture": "api-authz/thin-evidence",
+  "kind": "thin-evidence",
+  "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+  "leakPatterns": "/req\\.userId\\s*==\\s*vehicle\\.ownerId/i, /userId\\s*===?\\s*ownerId/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 6131,
+    "observation": "u-1002가 DEMO-VIN-0001을 조회했을 때 접근이 허용되어 격리 정책(차주 본인·점검 담당자만)이 실제로 적용되지 않았습니다. 즉, 인가(authorization) 계층이 해당 요청을 차단하지 못했습니다.",
+    "nextAction": "차량 상세 엔드포인트의 권한 검사 로직에서 요청자 식별자와 대상 VIN의 관계(차주/점검 담당자 매핑)를 실제로 조회하는지, 실패 케이스에서 거부(403)를 반환하는지 확인합니다.",
+    "hint": "거부 결정은 '기본 거부(deny by default)' 방식으로 설계해야 합니다. u-1002가 DEMO-VIN-0001의 차주도 담당자도 아니라면 조회 직전 단계에서 예외/에러를 발생시켜야 하는데, 그 분기가 누락되었거나 조건이 반대로 작성되었을 가능성이 높습니다. 모의 요청에 사용된 사용자 컨텍스트가 필터/인터셉터까지 전달되는지도 점검하세요.",
+    "sources": [
+      "u-1002",
+      "DEMO-VIN-0001"
+    ],
+    "uncertainty": "실제 구현 언어·프레임워크와 엔드포인트 구조를 모르므로 권한 검사 위치(컨트롤러, 서비스, 필터)는 추정입니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 4014,
+    "observation": "현재 정책은 true == true 조건 하나뿐이라 모든 요청을 허용하고 있습니다. 그 결과 정상 3건은 통과했지만 타인 조회 2건과 비로그인 요청 1건이 모두 허용되었습니다.",
+    "nextAction": "본인 차량 조회 요청(ev-req-own)과 실패한 타인 조회 요청의 사용자 ID와 차량 VIN 값을 나란히 놓고, 어떤 값이 서로 같고 다른지 비교해 보세요.",
+    "hint": "hintLevel 1: 증거의 성공 요청과 failedChecks 의 요청 각각에서 '요청한 사용자'와 '차량의 차주'에 해당하는 값을 찾아 관찰해 보세요.",
+    "sources": [
+      "ev-req-own"
+    ],
+    "uncertainty": "비로그인 요청(s1-anon-read)이 이 지점에서 실제로 어떤 사용자 값으로 표현되는지 CONTEXT에 명시되어 있지 않아, 그 값의 형태는 직접 확인이 필요합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "thin-evidence",
+    "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+    "failedChecks": [
+      {
+        "id": "s1-other-read",
+        "desc": "타인 u-1002 가 DEMO-VIN-0001 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "s1-other-read-2",
+        "desc": "타인 u-1003 이 DEMO-VIN-0002 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "s1-anon-read",
+        "desc": "비로그인 요청이 DEMO-VIN-0001 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 3건: 차주 u-1001 이 본인 차량 DEMO-VIN-0001 조회 / 차주 u-1002 가 본인 차량 DEMO-VIN-0002 조회 / 점검 담당자(admin) 가 DEMO-VIN-0003 조회",
+    "learnerPolicy": {
+      "join": "or",
+      "conds": [
+        {
+          "left": "true",
+          "op": "==",
+          "right": "true"
+        }
+      ]
+    }
+  }
+}

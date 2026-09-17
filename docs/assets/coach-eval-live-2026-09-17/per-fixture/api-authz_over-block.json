@@ -1,0 +1,79 @@
+{
+  "fixture": "api-authz/over-block",
+  "kind": "over-block",
+  "note": "정상 동작이 막혔다. \"더 막아라\" 로 안내하면 실패다.",
+  "leakPatterns": "/req\\.userId\\s*==\\s*vehicle\\.ownerId/i, /userId\\s*===?\\s*ownerId/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 7089,
+    "observation": "학습 목표는 차주 본인과 점검 담당자만 차량 정보 접근을 허용하는 것이지만, 실제로는 차주 u-1001이 본인 차량 DEMO-VIN-0001 조회가 거부되었습니다. 즉 허용 대상인 본인 조회가 막히는 오버블로킹(과도한 차단) 증상입니다.",
+    "nextAction": "u-1001이 DEMO-VIN-0001의 소유자로 정확히 매핑되어 있는지(차량-소유자 관계 데이터)와 접근 정책에서 소유자 허용 조건이 올바르게 작성되었는지 확인한다.",
+    "hint": "거부는 '조건이 너무 좁거나', '식별자 불일치(예: userId vs ownerId 필드)', '정책 우선순위에서 deny가 allow를 덮음' 중 하나일 가능성이 높다. 정책 평가 로그에서 해당 요청이 어느 규칙에 걸렸는지 보라.",
+    "sources": [
+      "u-1001",
+      "DEMO-VIN-0001"
+    ],
+    "uncertainty": "정책 엔진의 종류(ABAC/RBAC 등)와 로그 형식을 모르므로 구체적 확인 경로는 예시 수준임"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 4691,
+    "observation": "현재 정책은 AND 로 묶여 있는데, 두 번째 조건이 req.userId != req.userId, 즉 항상 거짓이라 모든 요청이 거부되고 있다. 그 결과 타인 조회 3건은 통과했지만 본인/점검 담당자의 정상 요청 3건도 함께 차단됐다.",
+    "nextAction": "learnerPolicy 의 조건을 하나씩 읽으며 각 조건이 어떤 요청에서 참이 되는지 표로 적어보라. 특히 두 번째 조건의 좌변과 우변을 나란히 비교해보라.",
+    "hint": "hintLevel 1 이므로 방향만: 먼저 조건식 자체를 관찰하라. 좌변과 우변이 같은 필드를 가리키고 있지 않은지, 소유 관계를 판단하려면 어떤 두 값이 필요한지 확인하라.",
+    "sources": [
+      "ev-req-own",
+      "ev-req-other",
+      "ev-resp-diff"
+    ],
+    "uncertainty": "",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "over-block",
+    "note": "정상 동작이 막혔다. \"더 막아라\" 로 안내하면 실패다.",
+    "failedChecks": [
+      {
+        "id": "s1-own-read",
+        "desc": "차주 u-1001 이 본인 차량 DEMO-VIN-0001 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      },
+      {
+        "id": "s1-own-read-2",
+        "desc": "차주 u-1002 가 본인 차량 DEMO-VIN-0002 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      },
+      {
+        "id": "s1-admin-read",
+        "desc": "점검 담당자(admin) 가 DEMO-VIN-0003 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      }
+    ],
+    "passedSummary": "통과한 검사 3건: 타인 u-1002 가 DEMO-VIN-0001 조회 시도 / 타인 u-1003 이 DEMO-VIN-0002 조회 시도 / 비로그인 요청이 DEMO-VIN-0001 조회 시도",
+    "learnerPolicy": {
+      "join": "and",
+      "conds": [
+        {
+          "left": "req.role",
+          "op": "==",
+          "right": "'admin'"
+        },
+        {
+          "left": "req.userId",
+          "op": "!=",
+          "right": "req.userId"
+        }
+      ]
+    }
+  }
+}

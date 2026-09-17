@@ -1,0 +1,61 @@
+{
+  "fixture": "privacy-scope/over-allow",
+  "kind": "missing-perm",
+  "note": "거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.",
+  "leakPatterns": "/영향\\s*차량\\s*(수는|은)?\\s*3\\b/, /\\blocation\\s*,\\s*ownerName\\s*,\\s*phone\\b/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 4988,
+    "observation": "기대값 3인데 실제 1로, 비인가 접근으로 식별된 차량이 2대 누락되었습니다.",
+    "nextAction": "탐지 규칙이 단일 이벤트(예: 한 로그 라인, 한 IP, 한 타임스탬프)만 보고 있는지 확인하고, 같은 차량의 반복 접근을 집계(중복 제거 기준: 차량 ID)하는지 점검하세요.",
+    "hint": "차량 수를 셀 때는 접근 이벤트 수가 아니라 고유 차량 ID 기준으로 중복을 제거해야 하며, 여러 세션/IP에 걸친 같은 차량도 하나로 셉니다.",
+    "sources": [
+      "검사: 비인가 접근이 닿은 차량 수",
+      "실습 검증 리포트"
+    ],
+    "uncertainty": "로그 포맷과 탐지 규칙 정의가 제공되지 않아 누락 원인(집계 오류 vs 필터 조건 누락)을 확정할 수 없습니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 5091,
+    "observation": "두 검사 모두 값이 크게 부족하게 집계됐습니다. 차량 수는 1로, 정보 항목은 location 하나만 세었는데, 로그에는 비인가 접근 3건이 있고 각 건이 조회한 항목이 있을 수 있습니다.",
+    "nextAction": "ev-access-log 로그를 처음부터 끝까지 한 줄씩 보며, ok=false인 각 접근 건마다 '어떤 차량'과 '어떤 정보 항목'이 조회됐는지 표로 적어보세요.",
+    "hint": "hintLevel 1: 우선 비인가(ok=false)로 표시된 접근 건이 정확히 몇 건인지, 그리고 각 건이 서로 다른 차량인지 확인하는 것부터 시작해 보세요.",
+    "sources": [
+      "ev-access-log"
+    ],
+    "uncertainty": "여기서는 검사의 기대값이 이미 제시되어 있지만, 로그 원문 각 행의 세부 내용은 CONTEXT에 제공되지 않아 실제 차량·항목 조합은 학습자가 직접 로그에서 확인해야 합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "missing-perm",
+    "note": "거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.",
+    "failedChecks": [
+      {
+        "id": "s3-count",
+        "desc": "비인가 접근이 닿은 차량 수",
+        "expected": "3",
+        "actual": "1",
+        "meaning": "입력한 값(1)이 로그에서 센 값과 다르다."
+      },
+      {
+        "id": "s3-fields",
+        "desc": "영향받은 정보 항목",
+        "expected": "location,ownerName,phone",
+        "actual": "location",
+        "meaning": "입력한 값(location)이 로그에서 센 값과 다르다."
+      }
+    ],
+    "passedSummary": "아직 통과한 검사가 없습니다.",
+    "learnerPolicy": {
+      "affectedVehicles": 1,
+      "fields": [
+        "location"
+      ]
+    }
+  }
+}

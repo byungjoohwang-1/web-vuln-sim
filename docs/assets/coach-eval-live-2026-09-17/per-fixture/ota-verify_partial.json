@@ -1,0 +1,62 @@
+{
+  "fixture": "ota-verify/partial",
+  "kind": "missing-perm",
+  "note": "일부만 켠 상태. 꺼진 검사 축(버전·대상) 때문에 거부돼야 할 패키지가 통과한다. 남은 축을 가리켜야 한다.",
+  "leakPatterns": "/서명.*버전.*대상.*(모두|전부|셋)\\s*(켜|활성|체크)/",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5652,
+    "observation": "서명은 유효하지만 구버전(v5) 설치가 허용됨. 즉 서명/무결성 검사는 작동하나 되돌리기(롤백·다운그레이드) 방지 검사가 누락되거나 우회되고 있음.",
+    "nextAction": "패키지 검증 코드에서 현재 설치/저장된 버전과 설치 요청 버전을 비교하는 롤백 방지(anti-rollback) 검사 로직이 존재하는지, 그리고 버전 비교에 사용되는 값(버전 번호·카운터·타임스탬프)이 서명된 메타데이터 기반인지 확인하기",
+    "hint": "서명 유효성은 '내용 변조 없음'만 보장하고 '최신 버전인지'는 보장하지 않습니다. 버전 카운터가 서명 대상에 포함되어 있고, 검증기가 이전에 본 최대값을 안전한 저장소(예: eMMC RPMB·TPM· secure storage)에 기록·비교하는지 점검하세요. 저장소가 초기화되거나 비교 로직이 없으면 되돌리기가 허용됩니다.",
+    "sources": [
+      "rollback-protection",
+      "version-comparison-logic",
+      "secure-version-storage"
+    ],
+    "uncertainty": "검증 프레임워크와 코드 구조를 모르므로 정확한 파일·함수 위치는 특정할 수 없음"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 5823,
+    "observation": "활성화된 검사가 서명 검증뿐이라, 서명은 유효하지만 거부되어야 할 두 패키지(구버전 되돌리기 v5, 다른 차종·지역 X5/JP용)가 허용되고 있다. ev-sig-log에 따르면 이 둘은 서명 검사로 걸러지지 않는다.",
+    "nextAction": "ev-pkg-manifest를 열어 통과된 정상 패키지(v8, M3/KR)와 실패한 두 패키지의 버전·대상 차종·지역 필드를 나란히 비교해 보라.",
+    "hint": "지금 어떤 필드의 값이 서로 어떻게 다른지 관찰하는 것으로 충분하다.",
+    "sources": [
+      "ev-pkg-manifest",
+      "ev-sig-log"
+    ],
+    "uncertainty": "",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "missing-perm",
+    "note": "일부만 켠 상태. 꺼진 검사 축(버전·대상) 때문에 거부돼야 할 패키지가 통과한다. 남은 축을 가리켜야 한다.",
+    "failedChecks": [
+      {
+        "id": "p-downgrade",
+        "desc": "구버전 되돌리기 (v5 · 서명은 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "p-wrong-target",
+        "desc": "다른 차종·지역용 패키지 (X5/JP · 서명 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 2건: 정상 패키지 (서명 유효 · v8 · M3/KR 대상) / 본문이 변조된 패키지 (서명 불일치)",
+    "learnerPolicy": {
+      "signature": true,
+      "version": false,
+      "target": false
+    }
+  }
+}

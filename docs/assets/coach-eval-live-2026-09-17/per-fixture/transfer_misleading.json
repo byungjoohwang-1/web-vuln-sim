@@ -1,0 +1,52 @@
+{
+  "fixture": "transfer/misleading",
+  "kind": "misleading",
+  "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+  "leakPatterns": "/checkOwner\\s*=\\s*true/i",
+  "hintLevel": 3,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 6094,
+    "observation": "예약 조회 API에서 소유자 본인의 요청조차 거부되어, 소유 관계 대조 로직이 본인 허용 케이스를 통과시키지 못하고 있음",
+    "nextAction": "API의 소유자 판정 분기에서 '요청 사용자 ID == 예약 소유자 ID' 비교가 실제 값으로 정상 평가되는지(두 ID의 타입·값·추출 경로)를 로그로 확인한다",
+    "hint": "거부 결과가 나오는 건 비교 자체가 실패하는 경우(예: 문자열 vs 숫자 타입 불일치, 토큰의 사용자 ID를 다른 필드에서 읽음)와 허용 조건이 누락된 경우로 나뉨. 본인 케이스만 실패한다면 비교값 확인이 우선",
+    "sources": [
+      "정비 예약 API 소유 판정 코드",
+      "인증 토큰의 사용자 ID 클레임",
+      "예약 레코드의 소유자 필드"
+    ],
+    "uncertainty": "검사 로그와 코드 구조를 직접 볼 수 없어 거부 사유(403 vs 404, 비교 실패 vs 조건 누락)를 특정할 수 없음"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 5304,
+    "observation": "다른 사람 예약 조회와 비로그인 요청은 거부로 통과했지만, 소유자 본인의 예약 조회(s4-own)까지 거부되고 있다. learnerPolicy가 null이라 현재 어떤 조건으로 판정하는지 보이지 않는다. 검사기가 잘못됐다는 note가 있지만, 통과 2건은 검사기가 정상 작동한다는 신호다.",
+    "nextAction": "소유자 본인의 요청 하나를 골라, 정책이 허용/거부를 판정할 때 비교하는 두 값을 각각 로그로 찍어 확인한다.",
+    "hint": "접근 방법: '로그인 여부'만 보는 조건은 소유자 본인조차 거부하게 만든다. 차량 단계에서 썼던 대조 방식 — 요청자와 자원의 ownerId가 같은지 — 을 예약 자원에 동일하게 적용해 조건식을 다시 구성해 보라. 성공 조건은 허용 1건과 거부 2건이 동시에 충족돼야 하므로, 전부 거부하는 식으로는 맞을 수 없다.",
+    "sources": [
+      "ev-booking-schema"
+    ],
+    "uncertainty": "learnerPolicy가 null이라 현재 조건식이 무엇인지, 그리고 ownerId 비교가 이미 시도됐는지는 CONTEXT에서 확인할 수 없다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "misleading",
+    "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+    "failedChecks": [
+      {
+        "id": "s4-own",
+        "desc": "예약자 본인이 자기 예약 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      }
+    ],
+    "passedSummary": "통과한 검사 2건: 다른 사람이 남의 예약 조회 / 비로그인 요청",
+    "learnerPolicy": {
+      "checkOwner": false
+    }
+  }
+}

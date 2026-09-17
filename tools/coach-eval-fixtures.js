@@ -25,13 +25,29 @@ const SOLUTIONS = {
   'ota-verify': { signature: true, version: true, target: true },
   'privacy-scope': null,   /* 값 입력형 — 아래에서 따로 만든다 */
   'transfer': { checkOwner: true },
+  /* 5단계 정답: 네 관계를 모두 인정하되 위임 기간·법인 소속 확인을 함께 켠다.
+     finAllows 와 대조 — 두 가드가 빠지면 만료 위임·다른 법인 담당자가 통과한다. */
+  'finance-transfer': {
+    ownerMatch: true, includeJoint: true,
+    includeCorpOfficer: true, checkCorpScope: true,
+    includeDelegate: true, checkDelegationExpiry: true,
+  },
 };
 
 /* 과허용(비인가가 통과) / 과차단(정상이 막힘) 구성 */
 const OVER_ALLOW = {
   'api-authz': { join: 'or', conds: [{ left: 'true', op: '==', right: 'true' }] },
   'ota-verify': { signature: false, version: false, target: false },
+  /* transfer 는 검사기 구조상 과허용 상태를 만들 수 없다(s4Allows 가 소유 일치만
+     허용). checkOwner:false 는 "전부 거부"=과차단이므로 아래 OVER_ALLOW_LABEL 에서
+     라벨을 바로잡는다. */
   'transfer': { checkOwner: false },
+  /* 4단계 과허용: 관계는 다 인정하되 두 가드(위임 기간·법인 소속)를 끈다.
+     만료 위임(f-agent-expired)과 다른 법인 담당자(f-corp-other)가 통과한다. */
+  'finance-transfer': {
+    ownerMatch: true, includeJoint: true,
+    includeCorpOfficer: true, includeDelegate: true,
+  },
 };
 const OVER_BLOCK = {
   'api-authz': { join: 'and', conds: [
@@ -39,6 +55,32 @@ const OVER_BLOCK = {
     { left: 'req.userId', op: '!=', right: 'req.userId' }] },
   'ota-verify': null,      /* 2단계는 과차단 구성이 자연스럽지 않다 — 아래에서 제외 처리 */
   'transfer': null,
+  /* 5단계 과차단: 예금주만 인정 → 공동명의자·법인 담당자·위임 대리인이 막힌다. */
+  'finance-transfer': { ownerMatch: true },
+};
+
+/* 라벨 교정 — 상태가 라벨과 어긋나는 단계. kind 는 판정 루브릭을 고르므로
+   데이터와 일치해야 한다. 2026-09-17 실측 리뷰에서 반전 3건을 확인해 고쳤다. */
+const OVER_ALLOW_LABEL = {
+  'transfer': {
+    kind: 'over-block',
+    note: '소유 대조를 켜기 전 상태 — 본인 예약까지 차단됐다. '
+      + '다음 행동은 소유 대조를 켜는 방향이어야 한다(완성 조건 제시는 누출).',
+  },
+};
+
+/* over-block 구성이 자연스럽지 않은 단계의 대체 픽스처(/partial) */
+const PARTIAL = {
+  'ota-verify': {
+    kind: 'missing-perm',
+    note: '일부만 켠 상태. 꺼진 검사 축(버전·대상) 때문에 거부돼야 할 패키지가 통과한다. 남은 축을 가리켜야 한다.',
+    cfg: { signature: true, version: false, target: false },
+  },
+  'transfer': {
+    kind: 'over-block',
+    note: '소유 대조 없이 전부 거부 — 본인 예약이 차단됐다.',
+    cfg: { checkOwner: false },
+  },
 };
 
 /* 완성된 정답 조건식이 힌트에 그대로 나오면 누출로 본다. */
@@ -47,6 +89,11 @@ const LEAK_PATTERNS = {
   'ota-verify': [/서명.*버전.*대상.*(모두|전부|셋)\s*(켜|활성|체크)/],
   'privacy-scope': [/영향\s*차량\s*(수는|은)?\s*3\b/, /\blocation\s*,\s*ownerName\s*,\s*phone\b/i],
   'transfer': [/checkOwner\s*=\s*true/i],
+  /* 5단계 완성 답 = 네 관계 + 두 가드. 방향("기간을 확인해 보라")만은 누출이 아니다. */
+  'finance-transfer': [
+    /ownerMatch\s*[:=]\s*true|includeJoint|includeCorpOfficer|includeDelegate/,
+    /위임[^\n]{0,60}기간[^\n]{0,60}(확인|체크)[^\n]{0,80}(법인|소속)[^\n]{0,40}(확인|체크|인정)/,
+  ],
 };
 
 function stage(id) {
@@ -110,15 +157,16 @@ INC.stages.forEach(function (s) {
     note: '모든 검사가 통과한 상태. 코치는 "무엇이 남았다"고 지어내면 안 된다.',
     ctx: baseCtx(s, solved) });
 
-  /* (b) 권한 누락 — 비인가가 아직 통과 */
+  /* (b) 권한 누락 — 비인가가 아직 통과 (단계에 따라 실제 상태와 라벨이 다르면 교정) */
   const over = s.id === 'privacy-scope'
     ? { affectedVehicles: 1, fields: ['location'] }
     : OVER_ALLOW[s.id];
-  add({ id: s.id + '/over-allow', stage: s.id, kind: 'missing-perm', leaks,
-    note: '거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.',
+  const oaFix = OVER_ALLOW_LABEL[s.id] || {};
+  add({ id: s.id + '/over-allow', stage: s.id, kind: oaFix.kind || 'missing-perm', leaks,
+    note: oaFix.note || '거부돼야 할 요청이 아직 허용된다. 다음 행동이 그 지점을 향해야 한다.',
     ctx: baseCtx(s, over) });
 
-  /* (c) 과차단 — 정상까지 막힘. 없으면 값 오류로 대체 */
+  /* (c) 과차단 — 정상까지 막힘. 없으면 단계별 대체 구성으로 */
   const blockCfg = s.id === 'privacy-scope'
     ? { affectedVehicles: 99, fields: ['location', 'ownerName', 'phone', 'vin'] }
     : OVER_BLOCK[s.id];
@@ -127,9 +175,10 @@ INC.stages.forEach(function (s) {
       note: '정상 동작이 막혔다. "더 막아라" 로 안내하면 실패다.',
       ctx: baseCtx(s, blockCfg) });
   } else {
-    add({ id: s.id + '/partial', stage: s.id, kind: 'over-block', leaks,
-      note: '일부만 켠 상태. 남은 축을 가리켜야 한다.',
-      ctx: baseCtx(s, { signature: true, version: false, target: false }) });
+    const p = PARTIAL[s.id];
+    add({ id: s.id + '/partial', stage: s.id, kind: p.kind, leaks,
+      note: p.note,
+      ctx: baseCtx(s, p.cfg) });
   }
 
   /* (d) 증거 부족 — 증거를 고르지 않은 채 물었을 때 */

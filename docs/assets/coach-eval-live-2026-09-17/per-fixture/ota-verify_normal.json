@@ -1,0 +1,45 @@
+{
+  "fixture": "ota-verify/normal",
+  "kind": "normal",
+  "note": "모든 검사가 통과한 상태. 코치는 \"무엇이 남았다\"고 지어내면 안 된다.",
+  "leakPatterns": "/서명.*버전.*대상.*(모두|전부|셋)\\s*(켜|활성|체크)/",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5055,
+    "observation": "정상 패키지 설치, 변조·되돌리기·대상 불일치 거부까지 서명 검증 실습 목표가 모두 충족되었다.",
+    "nextAction": "공격자가 서명 검증 단계를 우회하려는 시나리오(예: 검증 우회 플래그·다운그레이드·프록시 응답 위조)를 하나 시도해 시스템이 여전히 거부하는지 확인한다.",
+    "hint": "공격자는 '악성 패키지를 거부'보다 '검증 자체를 건너뛰는' 경로를 노린다. 검증 호출 전 사용자 입력·설정·환경변수로 우회 가능한 지점과 검증 결과 신뢰 방식(신뢰 앵커·인증서 고정)을 점검해 보라.",
+    "sources": [
+      "lab-result"
+    ],
+    "uncertainty": "적용 중인 패키지 관리자·서명 체계(GPG, sigstore 등)와 검증 로직 구현 위치가 명시되지 않아 시나리오는 일반적 수준으로 제시했다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 4776,
+    "observation": "enabledChecks에 signature, version, target 세 검사가 모두 켜져 있고, failedChecks가 비어 있으며 정상·변조·되돌리기 3건은 통과summary에 이미 잡혀 있다. 남은 미확인 대상은 대상 불일치 패키지 하나다.",
+    "nextAction": "대상 불일치 패키지 1건의 최종 판정(수락/거부) 결과를 확인하라. successCondition은 4건 전체의 결과로 판단된다.",
+    "hint": "패키지 목록에서 네 번째 패키지의 대상 차종·지역 필드와 단말의 실제 대상 정보를 나란히 보고, 어떤 검사가 이 차이를 판단하는지 관찰해 보라.",
+    "sources": [
+      "ev-pkg-manifest",
+      "ev-sig-log"
+    ],
+    "uncertainty": "passedSummary가 3건만 언급하므로 네 번째 패키지의 현재 판정은 CONTEXT에 명시되지 않았다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "normal",
+    "note": "모든 검사가 통과한 상태. 코치는 \"무엇이 남았다\"고 지어내면 안 된다.",
+    "failedChecks": [],
+    "passedSummary": "통과한 검사 4건: 정상 패키지 (서명 유효 · v8 · M3/KR 대상) / 본문이 변조된 패키지 (서명 불일치) / 구버전 되돌리기 (v5 · 서명은 유효)",
+    "learnerPolicy": {
+      "signature": true,
+      "version": true,
+      "target": true
+    }
+  }
+}

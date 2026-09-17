@@ -1,0 +1,52 @@
+{
+  "fixture": "transfer/partial",
+  "kind": "over-block",
+  "note": "소유 대조 없이 전부 거부 — 본인 예약이 차단됐다.",
+  "leakPatterns": "/checkOwner\\s*=\\s*true/i",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 5764,
+    "observation": "정비 예약 API에 소유 관계 대조를 적용했는데, '예약자 본인이 자기 예약 조회' 검사가 기대와 달리 거부되었다. 즉 본인 소유 예약인데도 소유 불일치로 판단되고 있다.",
+    "nextAction": "토큰/세션에서 추출한 사용자 식별자(예: user_id, sub 클레임)와 예약 레코드의 소유자 식별자가 같은 값 타입·형식으로 비교되고 있는지 디버깅 로그로 확인한다.",
+    "hint": "1단계 대조 로직이 통과한 경우와 실패한 경우의 두 식별자 실제 값을 찍어 비교해 보세요. 타입 불일치(int vs str), 토큰 파싱 누락, 또는 조회 경로에서 인증 컨텍스트가 전달되지 않아 기본값(null/0)과 비교하는 경우가 흔합니다.",
+    "sources": [
+      "검사 결과: 예약자 본인이 자기 예약 조회",
+      "1단계 소유 관계 대조 로직",
+      "정비 예약 API 엔드포인트"
+    ],
+    "uncertainty": "로그나 코드 위치 정보가 없어 어느 계층(인증 파싱, 대조 조건, 라우팅)에서 어긋나는지 특정할 수 없습니다."
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 3643,
+    "observation": "비인가 2건(타인 조회, 비로그인)은 거부되어 통과했지만, 정상 요청인 '예약자 본인의 자기 예약 조회'까지 거부되고 있습니다. 현재 활성화된 검사는 signature 하나입니다.",
+    "nextAction": "ev-booking-schema 를 다시 보고, 예약 자원의 ownerId 필드가 현재 정책 어디에서도 사용되고 있는지 확인해 보세요.",
+    "hint": "실패한 s4-own 검사의 expected 와 actual 값을 나란히 놓고, '누구의 자원인지'를 판단하는 근거가 정책에 있는지 살펴보세요.",
+    "sources": [
+      "ev-booking-schema"
+    ],
+    "uncertainty": "CONTEXT 에 활성화 가능한 검사 목록 전체가 제시되지 않아, 어떤 검사를 추가할 수 있는지는 학습자가 확인해야 합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "over-block",
+    "note": "소유 대조 없이 전부 거부 — 본인 예약이 차단됐다.",
+    "failedChecks": [
+      {
+        "id": "s4-own",
+        "desc": "예약자 본인이 자기 예약 조회",
+        "expected": "허용",
+        "actual": "거부",
+        "meaning": "허용돼야 하는 정상 요청이 차단됐다."
+      }
+    ],
+    "passedSummary": "통과한 검사 2건: 다른 사람이 남의 예약 조회 / 비로그인 요청",
+    "learnerPolicy": {
+      "checkOwner": false
+    }
+  }
+}

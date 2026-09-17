@@ -1,0 +1,62 @@
+{
+  "fixture": "privacy-scope/misleading",
+  "kind": "misleading",
+  "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+  "leakPatterns": "/영향\\s*차량\\s*(수는|은)?\\s*3\\b/, /\\blocation\\s*,\\s*ownerName\\s*,\\s*phone\\b/i",
+  "hintLevel": 3,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 6063,
+    "observation": "검사 기대값은 3인데 실제 계산 결과가 1로, 비인가 접근으로 판정된 차량이 2대 부족하게 집계됨",
+    "nextAction": "로그에서 비인가로 판정된 그 1대의 레코드와 비인가가 아닌 것으로 분류된 인접 레코드를 나란히 비교해 분류 조건(예: 인증 실패·권한 없음 코드)이 누락된 패턴이 있는지 확인",
+    "hint": "비인가를 판단하는 기준이 하나의 오류 코드나 상태값만 보고 있으면, 다른 형태의 실패(다른 상태코드, 리소스 식별자 형식 차이)를 가진 접근이 빠질 수 있음",
+    "sources": [
+      "vehicle_id",
+      "status_code",
+      "timestamp"
+    ],
+    "uncertainty": "실제 로그 스키마와 비인가 판정 규칙을 모르므로 확인해야 할 필드명은 추정임"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 5989,
+    "observation": "두 검사 모두 실제값(expected보다)이 작습니다: 차량 1 vs 3, 항목 location 1개 vs 3개. 로그는 총 4건에 ok=false 3건이며, 로그가 완전하다는 전제가 주어졌습니다.",
+    "nextAction": "ev-access-log에서 ok=false인 접근 3건을 한 건씩 펼쳐, 각 건의 차량 식별자와 조회된 필드(항목)를 표로 나열해 보세요. login/인증 성공 여부만 보면 접근 1건만 남게 되어 지금 actual(1, location)과 같은 결과가 나옵니다.",
+    "hint": "접근 3(hintLevel 3): 로그의 각 행에서 ok 값으로 인가 여부를 판별하고, 그 행에 기록된 차량 ID와 필드 목록을 그대로 집계하세요. 인증(누가 로그인했는가)과 인가(그 접근이 허용됐는가)는 다른 축입니다.",
+    "sources": [
+      "ev-access-log"
+    ],
+    "uncertainty": "검사기 오류 여부는 로그 원본 행을 직접 대조하기 전까지 단정할 수 없지만, givens에 '로그는 완전하다'는 전제가 있어 누락 가설은 보류합니다.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "misleading",
+    "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+    "failedChecks": [
+      {
+        "id": "s3-count",
+        "desc": "비인가 접근이 닿은 차량 수",
+        "expected": "3",
+        "actual": "1",
+        "meaning": "입력한 값(1)이 로그에서 센 값과 다르다."
+      },
+      {
+        "id": "s3-fields",
+        "desc": "영향받은 정보 항목",
+        "expected": "location,ownerName,phone",
+        "actual": "location",
+        "meaning": "입력한 값(location)이 로그에서 센 값과 다르다."
+      }
+    ],
+    "passedSummary": "아직 통과한 검사가 없습니다.",
+    "learnerPolicy": {
+      "affectedVehicles": 1,
+      "fields": [
+        "location"
+      ]
+    }
+  }
+}

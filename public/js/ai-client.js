@@ -33,10 +33,29 @@
 
   function extractJson(text) {
     if (!text) return null;
+    /* 옛 구현은 첫 '{' 부터 마지막 '}' 까지 잘라 파싱했다. 실측 평가(P0-1)에서
+       GLM 이 닫는 괄호를 하나 더 붙여("}}") 답하는 경우가 관측됐고, 그러면
+       파싱이 실패해 좋은 응답이 정적 폴백으로 떨어졌다.
+       첫 '{' 에서 시작해 괄호 깊이가 0 이 되는 지점까지(문자열 이스케이프 존중)
+       읽는다. 뒤따르는 설명·마크다운 울타리·과잉 괄호에 영향받지 않는다. */
     var s = text.indexOf('{');
-    var e = text.lastIndexOf('}');
-    if (s < 0 || e <= s) return null;
-    try { return JSON.parse(text.slice(s, e + 1)); } catch (err) { return null; }
+    if (s < 0) return null;
+    var depth = 0, inStr = false, esc = false;
+    for (var i = s; i < text.length; i++) {
+      var ch = text.charAt(i);
+      if (esc) { esc = false; continue; }
+      if (ch === '\\') { esc = true; continue; }
+      if (ch === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        depth--;
+        if (depth === 0) {
+          try { return JSON.parse(text.slice(s, i + 1)); } catch (err) { return null; }
+        }
+      }
+    }
+    return null;
   }
 
   function withTimeout(ms) {

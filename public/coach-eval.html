@@ -140,6 +140,7 @@ ul{margin:8px 0 0 18px}li{margin:4px 0;font-size:13.5px;color:#cbd5e1;word-break
     latencyMsP95: '지연 p95(ms)',
     costPerSessionKrw: '세션당 비용(원)',
     failureRecovery: '실패 복구',
+    injectionResistance: '주입 저항(지시문 혼입)',
   };
 
   fetch('/data/coach-eval-report.json', { cache: 'no-cache' })
@@ -169,20 +170,50 @@ ul{margin:8px 0 0 18px}li{margin:4px 0;font-size:13.5px;color:#cbd5e1;word-break
       '코치에게 실제로 전달되는 입력 길이 — 중앙값 ' + esc((o.inputChars || {}).median) +
       '자 · 최대 ' + esc((o.inputChars || {}).max) + '자</div>';
 
+    /* 지표 값이 {B:..,C:..} 형태면 두 조건을 나란히 놓는다 — 측정 안 된 것은
+       여전히 '미측정'으로 보여준다. 돌리지 않은 평가를 수치로 대신 쓰지 않는다. */
+    function fmt(v) {
+      if (v === null || v === undefined) return '<span class="null">미측정</span>';
+      if (typeof v === 'object') return '';
+      return esc(v);
+    }
+    var hasBC = Object.keys(METRIC_LABELS).some(function (k) {
+      var v = (m.metrics || {})[k];
+      return v && typeof v === 'object';
+    });
     var mrows = Object.keys(METRIC_LABELS).map(function (k) {
       var v = (m.metrics || {})[k];
-      return '<tr><td>' + esc(METRIC_LABELS[k]) + '</td><td class="num">' +
-        (v === null || v === undefined ? '<span class="null">미측정</span>' : esc(v)) + '</td></tr>';
+      if (hasBC && v && typeof v === 'object') {
+        return '<tr><td>' + esc(METRIC_LABELS[k]) + '</td>' +
+          '<td class="num">' + (fmt(v.B)) + '</td>' +
+          '<td class="num">' + (fmt(v.C)) + '</td></tr>';
+      }
+      return '<tr><td>' + esc(METRIC_LABELS[k]) + '</td>' +
+        (hasBC ? '<td class="num" colspan="2">' + fmt(v) + '</td>' : '<td class="num">' + fmt(v) + '</td>') + '</tr>';
     }).join('');
 
     document.getElementById('tagModel').className = 'tag ' + (m.measured ? 'measured' : 'unmeasured');
     document.getElementById('tagModel').textContent = m.measured ? '측정함' : '미측정';
     document.getElementById('modelBox').innerHTML =
-      '<table><thead><tr><th>지표</th><th style="text-align:right">값</th></tr></thead>' +
+      '<table><thead><tr><th>지표</th>' + (hasBC
+        ? '<th style="text-align:right">B — 일반 질문 AI</th><th style="text-align:right">C — 구조화된 코치</th>'
+        : '<th style="text-align:right">값</th>') + '</tr></thead>' +
       '<tbody>' + mrows + '</tbody></table>' +
-      '<div class="note warnbox">' + esc(m.reason) +
-      '<br>표본 수 ' + esc(m.sampleSize) + '. 비교 조건 A(고정 도움말)만 오프라인으로 확인했고, ' +
-      'B(일반 질문 AI)·C(구조화된 코치)는 아직 실행하지 않았습니다.</div>';
+      '<div class="note warnbox">' + (m.measured
+        ? '<b>조건 B</b>: ' + esc((m.conditions || {}).B || '—') + '<br>' +
+          '<b>조건 C</b>: ' + esc((m.conditions || {}).C || '—') +
+          '<br>표본 ' + esc(m.sampleSize) + ' · 모델 ' + esc(m.model || '—') +
+          (m.reason ? '<br>' + esc(m.reason) : '')
+        : esc(m.reason) +
+          '<br>표본 수 ' + esc(m.sampleSize) + '. 비교 조건 A(고정 도움말)만 오프라인으로 확인했고, ' +
+          'B(일반 질문 AI)·C(구조화된 코치)는 아직 실행하지 않았습니다.') + '</div>' +
+      ((m.notes || []).length
+        ? '<ul class="note" style="margin-top:10px">' + m.notes.map(function (n) {
+            return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>'
+        : '') +
+      ((m.quotes || []).length        ? '<details class="note" style="margin-top:10px"><summary><b>실제 응답 발췌</b> (판정관이 고른 원문 인용)</summary>'          + m.quotes.map(function (q) {              return '<p style="margin:8px 0 2px"><code>' + esc(q.fixture) + '</code> — ' + esc(q.quote) + '</p>'                + (q.why ? '<p style="margin:0 0 8px;color:#555">' + esc(q.why) + '</p>' : '');            }).join('') + '</details>'        : '') +      ((m.limitations || []).length
+        ? '<div class="note">아직 측정하지 못한 것: ' + esc(m.limitations.join(' · ')) + '</div>'
+        : '');
 
     document.getElementById('meta').textContent =
       '생성 ' + (d.generatedAt || '') + ' · ' + (d.generator || '') + ' · 프롬프트 ' + (d.promptVersion || '');

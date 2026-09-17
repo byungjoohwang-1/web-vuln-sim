@@ -1,0 +1,61 @@
+{
+  "fixture": "finance-transfer/thin-evidence",
+  "kind": "thin-evidence",
+  "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+  "leakPatterns": "/ownerMatch\\s*[:=]\\s*true|includeJoint|includeCorpOfficer|includeDelegate/, /위임[^\\n]{0,60}기간[^\\n]{0,60}(확인|체크)[^\\n]{0,80}(법인|소속)[^\\n]{0,40}(확인|체크|인정)/",
+  "hintLevel": 1,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 4860,
+    "observation": "위임 기간 만료 후 대리인의 조회가 거부 대신 허용됨. 즉, 시스템이 위임 만료 여부를 검사하지 않거나 만료 판정 로직이 틀림",
+    "nextAction": "계좌 조회 권한 판정 코드에서 위임(delegation) 유효기간 검사 부분을 확인: 만료일 비교 로직이 있는지, 비교 방향/시점(현재 시각 기준)이 올바른지 점검",
+    "hint": "권한 체크가 '대리인 여부'만 보고 '유효 기간 내'인지는 생략했을 가능성이 높다. 만료일 < 현재일(시각)이면 거부하도록 조건을 점검하라",
+    "sources": [
+      "delegation.validUntil",
+      "access-check:agent-delegation"
+    ],
+    "uncertainty": "실제 구현 구조(권한 체크 위치, 시간 비교 단위)를 모르므로 확인 지점은 추정"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 3597,
+    "observation": "includeDelegate과 includeCorpOfficer이 켜져 있어 정상 4건은 통과했지만, 만료된 위임 대리인(f-agent-expired)과 다른 법인 담당자(f-corp-other)도 함께 허용되고 있다.",
+    "nextAction": "위임 대리인과 법인 담당자 조건이 '지금 유효한가, 자기 계좌/법인인가'를 검사하는지, 그냥 역할 자격만 보는지 각 확인해 보자.",
+    "hint": "ev-fin-account 요약에서 위임에는 '기간이 정해진'이라는 표현에 주목하고, 두 실패가 각각 어떤 조건의 부재인지 관찰해 보세요.",
+    "sources": [
+      "ev-fin-account"
+    ],
+    "uncertainty": "",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "thin-evidence",
+    "note": "증거가 1건뿐이다. 없는 자료를 본 것처럼 말하면 근거 불일치다.",
+    "failedChecks": [
+      {
+        "id": "f-agent-expired",
+        "desc": "위임 기간이 끝난 대리인이 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "f-corp-other",
+        "desc": "다른 법인의 담당자가 조회 시도",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 5건: 예금주 본인이 자기 계좌 거래내역 조회 / 공동명의자가 같은 계좌 조회 / 법인 계좌의 지정 담당자가 자기 법인 계좌 조회",
+    "learnerPolicy": {
+      "ownerMatch": true,
+      "includeJoint": true,
+      "includeCorpOfficer": true,
+      "includeDelegate": true
+    }
+  }
+}

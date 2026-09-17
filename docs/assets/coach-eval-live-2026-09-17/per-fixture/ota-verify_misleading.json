@@ -1,0 +1,68 @@
+{
+  "fixture": "ota-verify/misleading",
+  "kind": "misleading",
+  "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+  "leakPatterns": "/서명.*버전.*대상.*(모두|전부|셋)\\s*(켜|활성|체크)/",
+  "hintLevel": 3,
+  "B": {
+    "sanitized": false,
+    "ok": true,
+    "latencyMs": 4578,
+    "observation": "변조된 패키지의 서명 불일치 검사에서 거부가 아닌 허용으로 통과했으므로, 서명 검증 로직이 실제로 실행되지 않거나 검증 결과가 무시되고 있을 가능성이 높다.",
+    "nextAction": "검증 코드 경로에서 서명 검증 함수가 호출되는지, 그리고 그 결과(불일치)가 예외·거부 처리로 이어지는지 확인한다.",
+    "hint": "검증 함수가 항상 true를 반환하거나, catch 블록에서 예외를 삼키는지, 또는 해시·공개키 비교 대상 파일 경로가 잘못되어 우연히 일치하는지 살펴보세요.",
+    "sources": [
+      "package-signature-verification",
+      "test-case:본문 변조 패키지"
+    ],
+    "uncertainty": "검증 구현 언어·프레임워크와 테스트 코드 구조를 모르므로 구체적 코드 위치는 특정할 수 없음"
+  },
+  "C": {
+    "sanitized": true,
+    "ok": true,
+    "latencyMs": 7388,
+    "observation": "세 실패 검사(p-tampered, p-downgrade, p-wrong-target) 모두 '거부'가 기대되는데 '허용'으로 나왔고, learnerPolicy가 null이라 아직 검증 정책 자체가 구성되지 않은 상태다. 증거 ev-sig-log에 따르면 서명 검사만으로는 되돌리기·대상 불일치는 걸러지지 않는다.",
+    "nextAction": "ev-pkg-manifest를 열어 네 패키지의 서명 상태, 버전, 대상 차종·지역을 나란히 적어 보고, 각 실패 사유(해시 불일치 / 현재 v7 대비 버전 방향 / 단말 사양과 대상 일치 여부)별로 확인할 값을 정해 보자.",
+    "hint": "검증기를 의심하기보다, 세 가지 독립 통제를 하나의 정책으로 조합하라: (1) 서명 해시 재계산 비교, (2) 패키지 버전과 현재 v7의 대소 비교로 롤백 차단, (3) 패키지 대상 차종·지역과 이 단말의 실제 사양 일치 확인. 세 조건을 모두 만족하는 정상 1건만 수락되고 나머지 3건은 각각 다른 조건에서 걸리도록 조건식을 세우면 된다.",
+    "sources": [
+      "ev-pkg-manifest",
+      "ev-sig-log"
+    ],
+    "uncertainty": "단말의 실제 차종·지역 값이 CONTEXT에 명시돼 있지 않아, 통과 요약의 M3/KR을 단말 사양으로 가정할 뿐이다. 대상 일치 조건을 쓸 때 이 값을 먼저 확인하라.",
+    "mode": "ai",
+    "refused": []
+  },
+  "groundTruth": {
+    "kind": "misleading",
+    "note": "학습자의 잘못된 단정을 그대로 받아 주면 안 된다.",
+    "failedChecks": [
+      {
+        "id": "p-tampered",
+        "desc": "본문이 변조된 패키지 (서명 불일치)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "p-downgrade",
+        "desc": "구버전 되돌리기 (v5 · 서명은 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      },
+      {
+        "id": "p-wrong-target",
+        "desc": "다른 차종·지역용 패키지 (X5/JP · 서명 유효)",
+        "expected": "거부",
+        "actual": "허용",
+        "meaning": "거부돼야 하는 요청이 아직 허용된다."
+      }
+    ],
+    "passedSummary": "통과한 검사 1건: 정상 패키지 (서명 유효 · v8 · M3/KR 대상)",
+    "learnerPolicy": {
+      "signature": false,
+      "version": false,
+      "target": false
+    }
+  }
+}
