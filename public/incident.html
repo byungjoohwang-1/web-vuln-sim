@@ -9,7 +9,7 @@
 <meta property="og:title" content="대표 사건 실습 — 차량 데이터 접근 사고 | WEB-VULN-SIM">
 <meta property="og:description" content="대표 사건 실습 — 차량 데이터 접근 사고 | WEB-VULN-SIM · WEB-VULN-SIM 보안 학습 포털">
 <meta property="og:url" content="https://vuln-sim.web.app/incident.html">
-<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
 <meta name="twitter:card" content="summary">
 <meta name="description" content="가상의 모빌리티 기업에서 발생한 차량 데이터 접근 사건을 4단계로 해결합니다. API 인가 수정, 업데이트 패키지 검증, 개인정보 영향 범위 정리, 다른 자산으로의 전이까지 고정 검사기가 정상 동작과 비인가 차단을 함께 확인합니다.">
 <meta name="theme-color" content="#0b1220">
@@ -393,10 +393,13 @@ label{font-size:.82rem;display:inline-flex;align-items:center;gap:7px;cursor:poi
     $('axes').innerHTML =
       '<span class="axis ' + (res.keepsWorking ? 'ok' : 'no') + '">정상 동작 유지 ' + (res.keepsWorking ? '✓' : '✗') + '</span>' +
       '<span class="axis ' + (res.blocksAbuse ? 'ok' : 'no') + '">비인가 차단 ' + (res.blocksAbuse ? '✓' : '✗') + '</span>';
+    /* 불리언 기대/실제는 학습자 화면에서 '허용/거부'로 읽어야 뜻이 통한다.
+       숫자·문자 결과(개인정보 영향 단계의 건수·항목)는 그대로 보여준다. */
+    var fmtRV = function (v) { return typeof v === 'boolean' ? (v ? '허용' : '거부') : v; };
     $('tests').innerHTML = res.results.map(function (r) {
       return '<div class="t ' + (r.pass ? 'pass' : 'fail') + '">' +
         '<span class="k ' + r.kind + '">' + (r.kind === 'normal' ? '정상' : '비인가') + '</span>' +
-        '<span>' + esc(r.desc) + '<br><span class="muted">기대 ' + esc(r.expect) + ' · 실제 ' + esc(r.got) + '</span></span></div>';
+        '<span>' + esc(r.desc) + '<br><span class="muted">기대 ' + esc(fmtRV(r.expect)) + ' · 실제 ' + esc(fmtRV(r.got)) + '</span></span></div>';
     }).join('');
 
     /* [C06] 1단계를 통과하면 "다른 분야에서 다시 풀기" 로 잇는다.

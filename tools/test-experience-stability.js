@@ -174,12 +174,29 @@ const DEMO_PAGES = [
     '평가 리포트가 public 안에 없다. docs/ 에 두면 심사 중 화면이 빈다.');
   const rep = JSON.parse(read('data/coach-eval-report.json'));
   assert.strictEqual(rep.offline.measured, true, '오프라인 평가가 측정됨으로 기록되지 않음');
-  assert.strictEqual(rep.realModel.measured, false, '실제 모델 평가를 측정함으로 표시하면 안 됨');
-  Object.keys(rep.realModel.metrics).forEach((k) => {
-    assert.strictEqual(rep.realModel.metrics[k], null,
-      '실행하지 않은 지표 ' + k + ' 에 값이 들어 있다');
-  });
-  ok('평가 리포트 — 배포 경로에 있고 미측정 항목이 null 로 남아 있음');
+  const rm = rep.realModel;
+  /* 정직성 가드. 실측 전에는 "아무 지표도 수치로 지어내지 않는다".
+     실측 후에는 "정확히 재현되는 집행 지표만 수치로 싣고, 회차마다 변동하는
+     주관적 품질 지표는 null 로 두고 방향성은 notes 로만 기술한다".
+     (실측 수치가 3벌로 갈려 정본이 없었기에, 단일 퍼센트를 박는 것을 금지한다.) */
+  const SOFT = ['validNextAction', 'ungroundedClaims', 'earlyAnswerLeak',
+    'sourceAccuracy', 'costPerSessionKrw', 'failureRecovery'];
+  if (rm.measured === false) {
+    Object.keys(rm.metrics).forEach((k) => {
+      assert.strictEqual(rm.metrics[k], null, '실행하지 않은 지표 ' + k + ' 에 값이 들어 있다');
+    });
+    ok('평가 리포트 — 미측정 상태이고 지표가 null 로 남아 있음');
+  } else {
+    SOFT.forEach((k) => {
+      assert.strictEqual(rm.metrics[k], null,
+        '재현 불가한 품질 지표 ' + k + ' 에 단일 수치가 박혀 있다(방향성은 notes 로만 기술).');
+    });
+    assert.ok(typeof rm.sampleSize === 'string' && rm.sampleSize.length > 0,
+      '실측 표시인데 표본(sampleSize) 이 비어 있다');
+    assert.ok(Array.isArray(rm.limitations) && rm.limitations.length >= 3,
+      '실측 표시인데 한계(limitations) 가 3건 미만이다');
+    ok('평가 리포트 — 실측 표시이고 집행 지표만 수치·주관 품질 지표는 null·한계 명시');
+  }
 
   console.log(`\nALL ${pass} CHECKS PASSED`);
 })().catch((e) => {
