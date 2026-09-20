@@ -36,6 +36,7 @@ const SUITE = [
   ['보안약점 현업진단 랩', process.execPath, ['tools/test-code-lab.js']],
   ['금융 서버 진단 랩', process.execPath, ['tools/test-srv-lab.js']],
   ['정보보호시스템 진단 랩', process.execPath, ['tools/test-iss-lab.js']],
+  ['펌웨어·IoT 진단 랩', process.execPath, ['tools/test-fw-lab.js']],
 
   // 채점·판정 로직
   ['AI 코치 계약', process.execPath, ['tools/eval-coach.js', '--check']],

@@ -35,7 +35,7 @@ PILLARS = [
     '03_code', '04_design',
     '05_linux', '06_db', '07_fin', '07_iss', '07_srv', '08_win', '09_net', '10_sec', '11_cloud', '12_ics',
     '13_ai',
-    '14_auto', '15_privacy', '16_zt',
+    '14_auto', '15_privacy', '16_zt', '17_fw',
 ]
 
 # 기둥에 속하지 않지만 동선에 포함하는 페이지. (기둥 접두사, 그 뒤에 붙일 파일들)

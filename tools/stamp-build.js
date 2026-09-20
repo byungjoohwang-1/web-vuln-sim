@@ -28,7 +28,7 @@ const CHECK = process.argv.includes('--check');
 /* 허브 스크립트의 그룹 정의와 동일하게 유지할 것 (vuln-hub.html 의 sums). */
 const GROUPS = {
   A: ['menu3', 'menu4', 'menuTime', 'menuErr', 'menuCode', 'menuEncap', 'menuApi', 'menuDesign', 'menu2'],
-  B: ['menu1', 'menu5', 'menu9', 'menu6', 'menu10', 'menu11', 'menu12', 'menu13'],
+  B: ['menu1', 'menu5', 'menu9', 'menu6', 'menu10', 'menu11', 'menu12', 'menu13', 'menuFwLab'],
   C: ['menu7', 'menuSrvLab'],
   D: ['menuAI'],
   E: ['menuAuto'],

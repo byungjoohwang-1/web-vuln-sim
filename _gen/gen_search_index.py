@@ -26,7 +26,7 @@ PREFIX_GROUP = [
     ('06_db', 'db'), ('07_fin', 'fin'), ('08_win', 'win'), ('09_net', 'net'),
     ('10_sec', 'sec'), ('11_cloud', 'cloud'), ('12_ics', 'ics'),
     ('07_srv', 'fin'), ('13_ai', 'ai'), ('14_auto', 'auto'), ('15_privacy', 'privacy'),
-    ('16_zt', 'zt'),
+    ('16_zt', 'zt'), ('17_fw', 'fw'),
     ('sim-', 'sim'), ('guide-', 'guide'),
 ]
 
@@ -47,6 +47,7 @@ GROUP_SYNONYMS = {
     'auto': '자동차 차량 모빌리티 automotive vehicle can ecu uds ota misra',
     'privacy': '개인정보 프라이버시 가명처리 영향평가 privacy pia 보호법',
     'zt': '제로트러스트 zero trust 성숙도 maturity 암묵적신뢰 최소권한 마이크로세그멘테이션 지속인증 pam dlp',
+    'fw': '펌웨어 firmware iot 임베디드 embedded binwalk squashfs 공유기 라우터 router ip 카메라 camera 리버싱 uart',
     'sim': '시뮬레이터 실습 체험 simulator',
     'guide': '가이드 안내 개념 guide',
 }

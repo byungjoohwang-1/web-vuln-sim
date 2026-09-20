@@ -48,6 +48,7 @@ DOMAIN_RULES = [
     ('10_sec', 'infra', 'concept_simulation'),
     ('11_cloud', 'infra', 'concept_simulation'),
     ('12_ics', 'ot', 'concept_simulation'),
+    ('17_fw', 'infra', 'practice_tool'),
     ('13_ai', 'ai', 'concept_simulation'),
     ('14_auto', 'automotive', 'concept_simulation'),
     ('15_privacy', 'privacy', 'concept_simulation'),
