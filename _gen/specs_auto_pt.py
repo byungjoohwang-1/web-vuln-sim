@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-"""자동차 모의 해킹 실습(sim-auto-*) 미션 명세.
+"""자동차 모의 해킹 실습(sim-auto-*) 미션 명세. [고도화판]
 
 UN R155 Annex 5 Part A(공개 규정)의 위협 분류(Threat 1~32, 공격수법 A#.#)만 구조로 참고하고,
-차량 시나리오·설정·해설·판정 로직은 전부 새로 썼다. 차량 브랜드는 가상(HANARO)이다.
-AutoCrypt 독자 체크리스트 번호·제품명·NDA 자료 본문은 쓰지 않는다.
+차량 시나리오·설정·해설·판정 로직은 전부 새로 썼다. 차량 브랜드는 가상(HANARO), VIN 프리픽스도
+실제 제조사 WMI 가 아닌 완전 가상(Z9H…)이다. 상용 제품명·비공개 점검표는 쓰지 않는다.
 
 verdict/fix 는 브라우저에서 실행되는 JS 소스 문자열이다(가상 차량 veh 를 읽고 판정/방어한다).
-판정을 하드코딩하지 않는 것이 핵심: verdict 는 **현재 차량 설정**을 보고 결정하므로,
-방어(fix)를 적용하면 같은 함수가 '양호'를 돌려주고 재점검이 의미를 가진다.
-
-한 페이지의 미션들은 같은 veh 인스턴스를 공유하므로, 미션마다 **서로 다른 플래그/ECU**를
-겨냥해 앞 미션의 방어가 뒤 미션 판정을 바꾸지 않도록 설계했다.
+verdict 는 현재 차량 설정을 보고 결정하므로, 방어(fix)를 적용하면 같은 함수가 '양호'를 돌려주고
+재점검이 의미를 가진다. 한 페이지의 미션들은 같은 veh 를 공유하므로, 미션마다 서로 다른
+플래그/ECU 를 겨냥해 앞 미션의 방어가 뒤 미션 판정을 바꾸지 않게 설계했다.
 """
 
 
@@ -18,75 +16,91 @@ def _frame(bus, fid, data, desc):
     return {'bus': bus, 'id': fid, 'data': data, 'desc': desc}
 
 
+def _ecu(name, bus, req, res, **kw):
+    d = {'name': name, 'bus': bus, 'reqId': req, 'resId': res,
+         'session': 'default', 'unlocked': False,
+         'secAccess': {'present': False, 'algo': 'none'},
+         'guarded': {'wdbi': True, 'rmba': True, 'wmba': True},
+         'secureBoot': True, 'secureFlash': True, 'signedFw': True,
+         'dids': {}, 'mem': {}, 'fwStrings': []}
+    d.update(kw)
+    return d
+
+
 # ═══════════════════════════════════════════════════════════════
-# LAB 1 — CAN 버스 공격 (통신채널: T4 스푸핑 / T5 인젝션 / T11 악성 내부 메시지)
-#   주제: 내부 버스에 메시지 인증(SecOC)이 없으면 어떤 프레임이든 위조·주입된다.
-#   각 미션은 서로 다른 버스를 겨냥한다 → secoc[BUS] 플래그가 독립적.
+# LAB 1 — CAN 버스 공격 (통신채널: T4 스푸핑 / T5 인젝션 / T6 리플레이 / T8 DoS / T11 악성 메시지)
+#   기법 다양화: 위조 주입(SecOC-MAC), 리플레이(프레시니스), 버스오프 DoS(부하제한),
+#   게이트웨이 도메인 우회(gateway filter), IDS 탐지 — 각 미션이 서로 다른 플래그를 겨냥.
 # ═══════════════════════════════════════════════════════════════
 CAN_VEHICLE = {
     'brand': 'HANARO', 'model': 'EV9 (가상 차량)',
-    'vin': 'KMHXX00XXP0000001',
+    'vin': 'Z9HAN00XXP0000001',
     'buses': {
-        'PT': {'name': '파워트레인 CAN', 'speed': '500kbps'},
-        'CH': {'name': '섀시 CAN(제동·조향)', 'speed': '500kbps'},
-        'BODY': {'name': '바디 CAN(도어·램프)', 'speed': '125kbps'},
+        'PT': {'name': '파워트레인 CAN', 'speed': '500kbps', 'iface': 'can0'},
+        'CH': {'name': '섀시 CAN(제동·조향)', 'speed': '500kbps', 'iface': 'can1'},
+        'BODY': {'name': '바디 CAN(도어·램프)', 'speed': '125kbps', 'iface': 'can2'},
+        'ADAS': {'name': 'ADAS/센서 CAN', 'speed': '500kbps', 'iface': 'can3'},
     },
-    'secoc': {'PT': False, 'CH': False, 'BODY': False},
+    'secoc': {'PT': False, 'CH': False, 'BODY': False, 'ADAS': False},
+    'freshness': {'PT': False, 'CH': False, 'BODY': False, 'ADAS': False},
+    'rateLimit': {'PT': False, 'CH': False, 'BODY': False, 'ADAS': False},
+    'gateway': {'filtered': False},
+    'ids': {'enabled': False},
     'frames': [
         _frame('PT', '0x1A0', '00 32 00 00', '차속(km/h)'),
-        _frame('PT', '0x0C9', '10 00 00 00', 'RPM'),
+        _frame('PT', '0x0C9', '1A 00 00 00', 'RPM'),
+        _frame('PT', '0x120', '00 00 10 00', '가속페달'),
         _frame('CH', '0x2B0', '00 00 00 00', '제동 요청'),
         _frame('CH', '0x2C1', '80 00 00 00', '조향 토크'),
-        _frame('BODY', '0x3F0', '00 00 00 00', '도어 잠금 상태'),
-        _frame('BODY', '0x3F1', '01 00 00 00', '실내등'),
+        _frame('BODY', '0x3F0', '01 00 00 00', '도어 잠금 상태'),
+        _frame('BODY', '0x3F1', '00 00 00 00', '실내등'),
+        _frame('ADAS', '0x410', '00 40 00 00', '전방 레이더 거리'),
     ],
     'ecus': {},
-    'obd': {'open': True, 'secureDebug': False},
+    'obd': {'present': True, 'gatewayFiltered': False},
 }
 
 CAN_LAB = {
     'key': 'can', 'file': 'sim-auto-can.html', 'code': 'AUTO-PT-CAN',
     'title': 'CAN 버스 공격', 'r155cat': 'R155 Annex5 · 통신채널',
-    'desc': '차량 내부 CAN 버스에 붙어 프레임을 관측(candump)하고 위조 프레임을 주입(cansend)해 '
-            '계기·제동·도어를 조작해 봅니다. 메시지 인증(SecOC)이 없으면 어떤 신호든 위조된다는 것을 '
-            '직접 확인하고, 버스별로 인증을 적용해 방어합니다.',
+    'desc': '차량 내부 CAN 버스에 붙어 프레임을 캡처(candump)하고, 위조 주입(cansend)·리플레이(canreplay)·'
+            '버스오프 DoS(canflood)·게이트웨이 우회(obd inject)를 직접 실행합니다. 기법마다 방어가 다르다는 것을 '
+            '메시지 인증(SecOC)·프레시니스·부하 제한·도메인 분리·IDS 로 확인합니다.',
     'vehicle': CAN_VEHICLE,
     'missions': [
         {
-            'id': 'CAN-01', 'risk': 4, 'title': '차속 계기 스푸핑 (메시지 위장)',
+            'id': 'CAN-01', 'risk': 4, 'title': '차속 계기 스푸핑 (위조 프레임 주입)',
             'r155': 'R155 Annex5 통신채널 · T4 메시지 스푸핑 (A4.1 위장)',
             'brief': '파워트레인 버스의 차속 프레임을 흉내 낸 프레임을 주입하면, 수신 ECU가 '
                      '<b>진짜 센서 값 대신 공격자 값</b>을 믿습니다. 계기판·주행보조가 잘못된 속도로 동작합니다.',
-            'try': 'candump PT → cansend PT 0x1A0#00F0',
-            'hint': 'cansend 결과에 "인증 없이" 가 있으면 취약, "MAC/SecOC 검증"이면 양호.',
-            'cmds': ['candump PT', 'cansend PT 0x1A0#00F0'],
+            'try': 'candump PT → cansend PT 0x1A0#00F00000',
+            'hint': 'cansend 결과가 "주입 성공"이면 취약, "MAC 검증 실패 → 폐기"면 양호.',
+            'cmds': ['candump PT', 'cansend PT 0x1A0#00F00000'],
             'options': [
                 '주입 성공 — 수신 ECU가 인증 없이 위조 프레임을 신뢰',
-                '거부됨 — 수신 ECU가 메시지 인증(MAC/SecOC)으로 폐기',
+                'MAC 검증 실패 → 프레임 폐기(SecOC)',
                 '버스를 찾을 수 없음',
                 '프레임이 관측되지 않음',
             ],
             'evidence': ['주입 성공 — 수신 ECU가 인증 없이 위조 프레임을 신뢰'],
             'verdict': "function(v){return v.secoc.PT?'good':'vuln';}",
             'why': '파워트레인 버스에 메시지 인증이 없어 위조 차속 프레임이 그대로 수용됩니다. '
-                   'CAN 은 원래 인증·암호화가 없는 프로토콜이라, 붙을 수만 있으면 어떤 값도 위조됩니다.',
+                   'CAN 은 원래 발신자 인증·암호화가 없는 프로토콜이라, 붙을 수만 있으면 어떤 값도 위조됩니다.',
             'ez': 'CAN 은 발신자를 확인하지 않는 사내 방송 같아서, 아무나 "지금 시속 0" 이라고 방송하면 모두가 믿는다.',
-            'defense': '안전 관련 프레임에 메시지 인증(SecOC = 메시지별 MAC + 프레시니스 카운터)을 적용하고, '
-                       '게이트웨이에서 도메인 간 프레임을 필터링한다.',
+            'defense': '안전 관련 프레임에 메시지 인증(SecOC = 메시지별 MAC)을 적용한다. 위조 프레임은 MAC 검증에서 폐기된다.',
             'fix': "function(v){v.secoc.PT=true;}",
-            'fixNote': 'PT(파워트레인) 버스에 SecOC 메시지 인증을 적용했습니다.',
+            'fixNote': 'PT(파워트레인) 버스에 SecOC 메시지 인증(MAC)을 적용했습니다.',
         },
         {
             'id': 'CAN-02', 'risk': 5, 'title': '도어 언락 명령 주입 (코드/명령 인젝션)',
             'r155': 'R155 Annex5 통신채널 · T5 무단 조작 (A5.1 코드 인젝션)',
-            'brief': '바디 버스의 도어 잠금 프레임을 주입하면 <b>키 없이 문을 열 수</b> 있습니다. '
-                     '차량 절도·내부 침입의 출발점입니다.',
-            'try': 'candump BODY → cansend BODY 0x3F0#00',
+            'brief': '바디 버스의 도어 잠금 프레임을 주입하면 <b>키 없이 문을 열 수</b> 있습니다. 차량 절도·내부 침입의 출발점입니다.',
+            'try': 'candump BODY → cansend BODY 0x3F0#00000000',
             'hint': '바디 버스(BODY)의 cansend 결과를 보세요.',
-            'cmds': ['candump BODY', 'cansend BODY 0x3F0#00'],
+            'cmds': ['candump BODY', 'cansend BODY 0x3F0#00000000'],
             'options': [
                 '주입 성공 — 수신 ECU가 인증 없이 위조 프레임을 신뢰',
-                '거부됨 — 수신 ECU가 메시지 인증(MAC/SecOC)으로 폐기',
+                'MAC 검증 실패 → 프레임 폐기(SecOC)',
                 '도어 ECU가 응답하지 않음',
                 'OBD 포트가 잠겨 있음',
             ],
@@ -94,32 +108,119 @@ CAN_LAB = {
             'verdict': "function(v){return v.secoc.BODY?'good':'vuln';}",
             'why': '바디 버스에 인증이 없어 위조 도어 명령이 수용됩니다. 편의 기능 버스라도 도난과 직결됩니다.',
             'ez': '현관 인터폰에 "문 열어" 라고 방송하면 확인 없이 열리는 셈이다.',
-            'defense': '도어·이모빌라이저 관련 명령에 메시지 인증을 적용하고, 물리 접근(OBD)에서 오는 프레임을 '
-                       '게이트웨이가 차단한다.',
+            'defense': '도어·이모빌라이저 관련 명령에 메시지 인증을 적용하고, 외부(OBD)에서 오는 프레임은 게이트웨이가 차단한다.',
             'fix': "function(v){v.secoc.BODY=true;}",
             'fixNote': 'BODY(바디) 버스에 SecOC 메시지 인증을 적용했습니다.',
         },
         {
             'id': 'CAN-03', 'risk': 5, 'title': '제동·조향 신호 위조 (악성 내부 메시지)',
             'r155': 'R155 Annex5 통신채널 · T11 악성 메시지 (A11.1 내부 메시지)',
-            'brief': '섀시 버스의 제동/조향 프레임을 위조하면 <b>주행 중 안전에 직접</b> 영향을 줄 수 있습니다. '
-                     '가장 위험한 등급입니다.',
-            'try': 'candump CH → cansend CH 0x2B0#FF',
+            'brief': '섀시 버스의 제동/조향 프레임을 위조하면 <b>주행 중 안전에 직접</b> 영향을 줄 수 있습니다. 가장 위험한 등급입니다.',
+            'try': 'candump CH → cansend CH 0x2B0#FF000000',
             'hint': '섀시 버스(CH)의 주입 결과를 보세요.',
-            'cmds': ['candump CH', 'cansend CH 0x2B0#FF'],
+            'cmds': ['candump CH', 'cansend CH 0x2B0#FF000000'],
             'options': [
                 '주입 성공 — 수신 ECU가 인증 없이 위조 프레임을 신뢰',
-                '거부됨 — 수신 ECU가 메시지 인증(MAC/SecOC)으로 폐기',
+                'MAC 검증 실패 → 프레임 폐기(SecOC)',
                 '섀시 버스가 없음',
                 '프레임이 관측되지 않음',
             ],
             'evidence': ['주입 성공 — 수신 ECU가 인증 없이 위조 프레임을 신뢰'],
             'verdict': "function(v){return v.secoc.CH?'good':'vuln';}",
-            'why': '섀시 버스에 인증이 없어 위조 제동/조향 프레임이 수용됩니다. 안전 관련 버스는 인증이 필수입니다.',
+            'why': '섀시 버스에 인증이 없어 위조 제동/조향 프레임이 수용됩니다. 안전 무결성이 높은 버스는 인증이 필수입니다.',
             'ez': '브레이크에게 "밟아/놓아" 라고 아무나 명령할 수 있으면 운전자가 통제를 잃는다.',
-            'defense': '안전 무결성이 높은 섀시 도메인은 메시지 인증에 더해 도메인 분리·침입탐지(IDS)로 이중 방어한다.',
+            'defense': '섀시 도메인은 메시지 인증에 더해 도메인 분리·침입탐지(IDS)로 이중 방어한다.',
             'fix': "function(v){v.secoc.CH=true;}",
             'fixNote': 'CH(섀시) 버스에 SecOC 메시지 인증을 적용했습니다.',
+        },
+        {
+            'id': 'CAN-04', 'risk': 4, 'title': '리플레이 공격 (프레시니스 부재)',
+            'r155': 'R155 Annex5 통신채널 · T6 리플레이 (A6.3)',
+            'brief': '메시지 인증(MAC)이 있어도 <b>프레시니스(재전송 방지 카운터)</b>가 없으면, 캡처한 정상 프레임을 '
+                     '그대로 재전송해 같은 동작(예: 도어 해제)을 재현할 수 있습니다. MAC 만으로는 리플레이를 못 막습니다.',
+            'try': 'candump BODY → canreplay BODY 0x3F0',
+            'hint': 'canreplay 결과가 "재전송 성공"이면 취약, "프레시니스가 만료 처리"면 양호.',
+            'cmds': ['candump BODY', 'canreplay BODY 0x3F0'],
+            'options': [
+                '재전송 성공 — 프레시니스(재전송 방지)가 없어 옛 프레임 재사용',
+                '거부됨 — 프레시니스 카운터가 옛 프레임을 만료 처리',
+                '프레임이 관측되지 않음',
+                'MAC 검증 실패',
+            ],
+            'evidence': ['재전송 성공 — 프레시니스(재전송 방지)가 없어 옛 프레임 재사용'],
+            'verdict': "function(v){return v.freshness.BODY?'good':'vuln';}",
+            'why': '바디 버스에 프레시니스 카운터가 없어 캡처한 정상 프레임을 재전송하면 그대로 통합니다. '
+                   'MAC(위조 방지)와 프레시니스(재전송 방지)는 별개로 둘 다 필요합니다.',
+            'ez': '한 번 통과된 정품 출입증을 복사해 다시 쓰면 통과되는 셈. 매번 바뀌는 번호가 있어야 재사용을 막는다.',
+            'defense': 'SecOC 에 프레시니스(단조 증가 카운터/논스)를 포함해 재전송된 옛 메시지를 거부한다.',
+            'fix': "function(v){v.freshness.BODY=true;}",
+            'fixNote': 'BODY 버스 SecOC 에 프레시니스(재전송 방지 카운터)를 추가했습니다.',
+        },
+        {
+            'id': 'CAN-05', 'risk': 4, 'title': '버스오프 DoS (고우선순위 프레임 폭주)',
+            'r155': 'R155 Annex5 통신채널 · T8 서비스 거부 (A8.1 가비지 폭주)',
+            'brief': '고우선순위 CAN ID 를 <b>고속으로 쏟아부으면</b> 버스를 독점해 정상 ECU 통신이 끊깁니다(버스오프). '
+                     '계기·제어 신호가 마비됩니다.',
+            'try': 'canflood PT 0x000',
+            'hint': 'canflood 결과가 "버스오프"면 취약, "완화됨"이면 양호.',
+            'cmds': ['canflood PT 0x000'],
+            'options': [
+                '버스오프 성공 — 부하 제한이 없어 버스가 마비됨',
+                '완화됨 — 부하 제한/필터로 통신 유지',
+                '버스를 찾을 수 없음',
+                'MAC 검증 실패',
+            ],
+            'evidence': ['버스오프 성공 — 부하 제한이 없어 버스가 마비됨'],
+            'verdict': "function(v){return v.rateLimit.PT?'good':'vuln';}",
+            'why': '파워트레인 버스에 부하 제한이 없어 폭주 프레임이 버스를 독점합니다. 가용성(availability) 위협입니다.',
+            'ez': '한 사람이 회의에서 쉬지 않고 큰 소리로 떠들면 아무도 말을 못 하는 것과 같다.',
+            'defense': '버스 부하 제한/속도 제한, 게이트웨이의 프레임율 필터링, 그리고 이상 프레임율을 잡는 IDS 로 대응한다.',
+            'fix': "function(v){v.rateLimit.PT=true;}",
+            'fixNote': 'PT 버스에 부하 제한/프레임율 필터를 적용했습니다.',
+        },
+        {
+            'id': 'CAN-06', 'risk': 5, 'title': '게이트웨이 도메인 우회 (OBD→제어망 직접 주입)',
+            'r155': 'R155 Annex5 · T18 OBD 진단 접근 / T29 네트워크 분리 (A18.3/A29.2)',
+            'brief': 'OBD 포트에서 넣은 프레임이 게이트웨이에 <b>걸러지지 않고 제어망으로 그대로 전달</b>되면, '
+                     '동글 하나로 안전 관련 버스에 직접 프레임을 주입할 수 있습니다.',
+            'try': 'obd connect → obd inject ADAS 0x410#00000000',
+            'hint': 'obd inject 결과가 "주입 성공"이면 취약, "게이트웨이 차단"이면 양호.',
+            'cmds': ['obd connect', 'obd inject ADAS 0x410#00000000'],
+            'options': [
+                '게이트웨이 우회 성공 — OBD에서 제어망 버스에 직접 도달',
+                '게이트웨이 차단 — 도메인 필터가 외부 프레임을 막음',
+                'OBD 포트 없음',
+                '버스를 찾을 수 없음',
+            ],
+            'evidence': ['게이트웨이 우회 성공 — OBD에서 제어망 버스에 직접 도달'],
+            'verdict': "function(v){return v.gateway.filtered?'good':'vuln';}",
+            'why': '게이트웨이가 OBD/진단 구간과 내부 제어망 사이를 필터링하지 않아, 물리 접근만으로 제어망에 프레임이 닿습니다.',
+            'ez': '정비용 점검구가 사실은 건물 전체로 통하는 뒷문이면, 점검한다며 아무 방에나 들어갈 수 있다.',
+            'defense': '게이트웨이가 도메인 간 프레임을 화이트리스트로 필터링·인증하고, 진단 요청은 세션·보안 접근으로 통제한다.',
+            'fix': "function(v){v.gateway.filtered=true;}",
+            'fixNote': '게이트웨이에 도메인 간 프레임 필터링을 적용했습니다.',
+        },
+        {
+            'id': 'CAN-07', 'risk': 3, 'title': '무탐지 공격 (IDS 부재)',
+            'r155': 'R155 Annex5 · 탐지·대응 (M-controls, 침입탐지)',
+            'brief': '프레임 주입·리플레이·DoS 가 <b>아무 경보 없이</b> 성공하면, 공격이 일어나도 아무도 모릅니다. '
+                     '차량 IDS(침입탐지)가 있어야 이상 프레임/주기 이탈을 잡아냅니다.',
+            'try': 'cansend ADAS 0x410#FFFFFFFF (IDS 경보 여부 확인)',
+            'hint': 'cansend 결과에 "IDS 경보 없음"이면 취약, "IDS 경보 발생"이면 양호.',
+            'cmds': ['cansend ADAS 0x410#FFFFFFFF'],
+            'options': [
+                '공격이 탐지되지 않음 — IDS 경보 없음',
+                'IDS 경보 발생 — 이상 프레임 탐지됨',
+                '버스를 찾을 수 없음',
+                'MAC 검증 실패',
+            ],
+            'evidence': ['공격이 탐지되지 않음 — IDS 경보 없음'],
+            'verdict': "function(v){return v.ids.enabled?'good':'vuln';}",
+            'why': '차량에 침입탐지(IDS)가 없어 프레임 주입이 경보 없이 성공합니다. 예방(인증)이 뚫려도 탐지가 있으면 대응할 수 있습니다.',
+            'ez': 'CCTV 가 없으면 도둑이 들어와도 아무도 모른다. 자물쇠(예방)와 CCTV(탐지)는 둘 다 필요하다.',
+            'defense': '차량 IDS/IDPS 로 이상 프레임·주기 이탈·비인가 ID 를 탐지하고, SOC/텔레매틱스로 경보를 올린다(탐지는 예방의 보완책).',
+            'fix': "function(v){v.ids.enabled=true;}",
+            'fixNote': '차량 침입탐지(IDS)를 활성화했습니다.',
         },
     ],
 }
@@ -127,21 +228,11 @@ CAN_LAB = {
 
 # ═══════════════════════════════════════════════════════════════
 # LAB 2 — 진단(UDS) 공격 (T5/T9/T19/T20/T21)
-#   미션마다 ECU 를 달리해 상태 격리. ISO 14229 표준 서비스만 사용.
 # ═══════════════════════════════════════════════════════════════
-def _ecu(name, bus, req, res, **kw):
-    d = {'name': name, 'bus': bus, 'reqId': req, 'resId': res,
-         'session': 'default', 'unlocked': False,
-         'secAccess': {'present': False, 'algo': 'none'},
-         'guarded': {'wdbi': True, 'rmba': True, 'wmba': True},
-         'secureBoot': True, 'secureFlash': True, 'dids': {}, 'mem': {}, 'fwStrings': []}
-    d.update(kw)
-    return d
-
 UDS_VEHICLE = {
     'brand': 'HANARO', 'model': 'EV9 (가상 차량)',
-    'vin': 'KMHXX00XXP0000002',
-    'buses': {'DIAG': {'name': '진단 CAN', 'speed': '500kbps'}},
+    'vin': 'Z9HAN00XXP0000002',
+    'buses': {'DIAG': {'name': '진단 CAN', 'speed': '500kbps', 'iface': 'can0'}},
     'secoc': {'DIAG': False},
     'frames': [],
     'ecus': {
@@ -164,9 +255,9 @@ UDS_VEHICLE = {
 UDS_LAB = {
     'key': 'uds', 'file': 'sim-auto-uds.html', 'code': 'AUTO-PT-UDS',
     'title': '진단(UDS) 공격', 'r155cat': 'R155 Annex5 · 데이터/코드',
-    'desc': 'ISO 14229 진단 프로토콜(UDS)로 ECU 를 두드립니다. 보안 접근(0x27) 우회, VIN·주행거리 '
-            '위변조(0x2E), 임의 메모리 읽기·쓰기(0x23/0x3D), 로그 삭제(0x31)를 직접 시도하고, '
-            '세션·보안접근·쓰기보호로 방어합니다.',
+    'desc': 'ISO 14229 진단 프로토콜(UDS)로 ECU 를 두드립니다. 세션 전환(0x10), 보안 접근(0x27 seed/key 왕복) 우회, '
+            'VIN·주행거리 위변조(0x2E), 임의 메모리 읽기·쓰기(0x23/0x3D), 로그 삭제(0x31)를 직접 시도하고, '
+            '세션·보안접근·쓰기보호로 방어합니다. 응답은 긍정 SID·부정응답 NRC·ISO-TP 다중프레임으로 사실적으로 표시됩니다.',
     'vehicle': UDS_VEHICLE,
     'missions': [
         {
@@ -175,7 +266,7 @@ UDS_LAB = {
             'brief': '진단 보안 접근은 seed 를 받아 key 를 되돌려주는 절차입니다. key 계산이 <b>고정 상수·XOR</b>처럼 '
                      '약하면, 공격자가 seed 만으로 key 를 만들어 위험 서비스를 엽니다.',
             'try': 'uds GW session 03 → uds GW secaccess',
-            'hint': 'secaccess 결과가 "성공(unlocked)"이면 취약, "실패(HSM)"면 양호.',
+            'hint': 'secaccess 결과가 "긍정응답(unlocked)"이면 취약, "invalidKey(HSM)"면 양호.',
             'cmds': ['uds GW session 03', 'uds GW secaccess'],
             'options': [
                 '보안 접근 성공 — seed 로부터 key 를 즉시 계산(약한 알고리즘)',
@@ -187,9 +278,9 @@ UDS_LAB = {
             'verdict': "function(v){var a=v.ecus.GW.secAccess.algo;return (a==='aes'||a==='hsm')?'good':'vuln';}",
             'why': '게이트웨이의 seed/key 알고리즘이 약해(XOR 상수) seed 만으로 key 를 계산할 수 있습니다. '
                    '보안 접근이 뚫리면 그 뒤의 메모리·플래시 서비스가 전부 노출됩니다.',
-            'ez': '자물쇠가 "숫자에 1 더하기" 규칙이면, 받은 숫자를 보고 누구나 열쇠를 만든다.',
-            'defense': 'seed/key 를 HSM 안에서 강한 알고리즘(예: AES 기반 챌린지-응답)으로 계산하고, '
-                       '실패 지연·시도 제한을 둔다. 키는 ECU 밖으로 나오지 않는다.',
+            'ez': '자물쇠가 "받은 숫자에 규칙 하나만 적용" 이면, 받은 숫자를 보고 누구나 열쇠를 만든다.',
+            'defense': 'seed/key 를 HSM 안에서 강한 알고리즘(AES 기반 챌린지-응답)으로 계산하고, 실패 지연·시도 제한을 둔다. '
+                       '키는 ECU 밖으로 나오지 않는다.',
             'fix': "function(v){v.ecus.GW.secAccess.algo='hsm';}",
             'fixNote': '게이트웨이 보안 접근을 HSM 기반 강한 알고리즘으로 교체했습니다.',
         },
@@ -198,9 +289,9 @@ UDS_LAB = {
             'r155': 'R155 Annex5 · T20 데이터 조작 (A20.1 전자 ID 변경)',
             'brief': 'VIN(차대번호, DID F190)을 보안 접근 없이 덮어쓸 수 있으면 <b>차량 신원을 위조</b>할 수 있습니다. '
                      '도난 차량 세탁·통행료 회피 등에 악용됩니다.',
-            'try': 'uds IMMO read F190 → uds IMMO write F190 HACKEDVIN00000000',
+            'try': 'uds IMMO read F190 → uds IMMO write F190 Z9HACKED000000000',
             'hint': 'write 결과가 "긍정응답(변경됨)"이면 취약, "securityAccessDenied"면 양호.',
-            'cmds': ['uds IMMO read F190', 'uds IMMO write F190 HACKEDVIN00000000'],
+            'cmds': ['uds IMMO read F190', 'uds IMMO write F190 Z9HACKED000000000'],
             'options': [
                 'VIN 쓰기 성공 — 보안 접근 없이 F190 이 변경됨',
                 'VIN 쓰기 거부 — securityAccessDenied(먼저 보안 접근 필요)',
@@ -232,7 +323,7 @@ UDS_LAB = {
             ],
             'evidence': ['주행거리 쓰기 성공 — 보안 접근 없이 F121 이 변경됨'],
             'verdict': "function(v){return v.ecus.CLU.guarded.wdbi?'good':'vuln';}",
-            'why': '계기 ECU 가 주행거리 쓰기를 보안 접근 없이 허용합니다. 주행 데이터는 여러 소스와 대조·서명해 위조를 막아야 합니다.',
+            'why': '계기 ECU 가 주행거리 쓰기를 보안 접근 없이 허용합니다. 주행 데이터는 여러 ECU 값과 대조·서명해 위조를 막아야 합니다.',
             'ez': '자동차의 "이만큼 달렸다"는 기록을 아무나 되돌려 쓸 수 있는 셈이다.',
             'defense': '주행거리 쓰기는 보안 접근 이후로 제한하고, 여러 ECU 값과 교차 검증하며 이력에 서명을 남긴다.',
             'fix': "function(v){v.ecus.CLU.guarded.wdbi=true;}",
@@ -242,7 +333,7 @@ UDS_LAB = {
             'id': 'UDS-04', 'risk': 4, 'title': '임의 메모리 읽기 (ReadMemoryByAddress 0x23)',
             'r155': 'R155 Annex5 · T19 데이터 추출 (A19.2 개인정보 / A19.3 키 추출)',
             'brief': '임의 주소 메모리를 보안 접근 없이 읽을 수 있으면 <b>개인정보·암호키</b>가 그대로 유출됩니다.',
-            'try': 'uds ECM rmba 0x6872',
+            'try': 'uds ECM session 03 → uds ECM rmba 0x6872',
             'hint': 'rmba 결과가 실제 메모리 값을 내놓으면 취약, "securityAccessDenied"면 양호.',
             'cmds': ['uds ECM session 03', 'uds ECM rmba 0x6872'],
             'options': [
@@ -274,8 +365,7 @@ UDS_LAB = {
             ],
             'evidence': ['로그/메모리 삭제 성공 — 보안 접근 없이 흔적 삭제 가능'],
             'verdict': "function(v){return v.ecus.TCU.guarded.wmba?'good':'vuln';}",
-            'why': '텔레매틱스 ECU 가 메모리 쓰기·삭제 루틴을 보안 접근 없이 허용해 로그를 지울 수 있습니다. '
-                   '침해 대응·포렌식이 무력화됩니다.',
+            'why': '텔레매틱스 ECU 가 메모리 쓰기·삭제 루틴을 보안 접근 없이 허용해 로그를 지울 수 있습니다. 침해 대응·포렌식이 무력화됩니다.',
             'ez': 'CCTV 녹화본을 아무나 지울 수 있으면 무슨 일이 있었는지 아무도 모른다.',
             'defense': '쓰기·삭제 루틴은 보안 접근 뒤에만 허용하고, 이벤트 로그는 추가전용(append-only)·원격 백업으로 보존한다.',
             'fix': "function(v){v.ecus.TCU.guarded.wmba=true;}",
@@ -290,7 +380,7 @@ UDS_LAB = {
 # ═══════════════════════════════════════════════════════════════
 RF_VEHICLE = {
     'brand': 'HANARO', 'model': 'EV9 (가상 차량)',
-    'vin': 'KMHXX00XXP0000003',
+    'vin': 'Z9HAN00XXP0000003',
     'buses': {}, 'secoc': {}, 'frames': [], 'ecus': {},
     'keyfob': {'type': 'fixed', 'pke': True, 'distanceBound': False},
     'gps': {'plausibility': False},
@@ -373,7 +463,7 @@ RF_LAB = {
             'id': 'RF-04', 'risk': 4, 'title': '텔레매틱스 원격 명령 무인증',
             'r155': 'R155 Annex5 · T16 원격 조작 (A16.1 원격키/텔레매틱스)',
             'brief': '앱·서버를 거치는 원격 잠금해제/시동이 <b>소유자 인증을 제대로 하지 않으면</b>, 공격자가 원격으로 차량을 조작합니다.',
-            'try': 'remote unlock',
+            'try': 'remote unlock → remote start',
             'hint': 'remote 결과가 "성공(무인증)"이면 취약, "거부(인증 검증)"면 양호.',
             'cmds': ['remote unlock', 'remote start'],
             'options': [
@@ -399,17 +489,17 @@ RF_LAB = {
 # ═══════════════════════════════════════════════════════════════
 ECU_VEHICLE = {
     'brand': 'HANARO', 'model': 'EV9 (가상 차량)',
-    'vin': 'KMHXX00XXP0000004',
-    'buses': {'DIAG': {'name': '진단 CAN', 'speed': '500kbps'}},
+    'vin': 'Z9HAN00XXP0000004',
+    'buses': {'DIAG': {'name': '진단 CAN', 'speed': '500kbps', 'iface': 'can0'}},
     'secoc': {'DIAG': False},
     'frames': [],
     'ecus': {
         'IVI': _ecu('인포테인먼트', 'DIAG', '0x760', '0x768',
                     secureBoot=True, secureFlash=False, signedFw=False,
-                    fwStrings=['fw build 2023.11', 'WIFI_PSK=hanaro1234',
+                    fwStrings=['fw build 2023.11', 'WIFI_PSK=hanaro-demo-psk',
                                'AES_KEY=00112233445566778899aabbccddeeff']),
     },
-    'obd': {'open': True, 'secureDebug': False},
+    'obd': {'present': True, 'gatewayFiltered': False},
     'jtag': {'present': True, 'secureDebug': False},
     'usb': {'autorun': True, 'mountExec': True, 'inputValidated': False},
     'bt': {'version': '4.2', 'oneDayPatched': False, 'nameSanitized': False},
@@ -418,7 +508,7 @@ ECU_VEHICLE = {
 ECU_LAB = {
     'key': 'ecu', 'file': 'sim-auto-ecu.html', 'code': 'AUTO-PT-ECU',
     'title': 'ECU 물리·펌웨어 공격', 'r155cat': 'R155 Annex5 · 외부/업데이트/잠재취약',
-    'desc': 'ECU 하드웨어와 펌웨어를 시험합니다. JTAG/OBD 디버그 포트, secure flash 부재로 인한 위조 펌웨어, '
+    'desc': 'ECU 하드웨어와 펌웨어를 시험합니다. JTAG/OBD 디버그·게이트웨이, secure flash 부재로 인한 위조 펌웨어, '
             '펌웨어 하드코딩 키 노출, USB 실행/퍼징, Bluetooth 취약점을 직접 다루고 secure boot/flash·HSM·'
             '입력검증으로 방어합니다.',
     'vehicle': ECU_VEHICLE,
@@ -445,26 +535,26 @@ ECU_LAB = {
             'fixNote': 'JTAG 에 secure debug(인증 필요)를 적용했습니다.',
         },
         {
-            'id': 'ECU-02', 'risk': 4, 'title': 'OBD 무보호 진단 접근',
+            'id': 'ECU-02', 'risk': 4, 'title': 'OBD 무보호 진단 접근(게이트웨이 미필터)',
             'r155': 'R155 Annex5 · T18 진단 접근 (A18.3 OBD 동글)',
             'brief': 'OBD 포트의 진단 요청이 게이트웨이에서 걸러지지 않고 <b>내부망으로 무제한 전달</b>되면, '
                      '동글 하나로 제어망까지 도달합니다.',
             'try': 'obd connect',
-            'hint': 'obd 결과가 "무제한 전달"이면 취약, "진단만 가능"이면 양호.',
+            'hint': 'obd 결과가 "무제한 전달"이면 취약, "필터링·인증"이면 양호.',
             'cmds': ['obd connect'],
             'options': [
                 'OBD 진단 요청이 제어망으로 무제한 전달됨',
-                'OBD 는 진단만 가능(위험 서비스는 보안 접근 뒤)',
+                'OBD 는 필터링·인증됨(위험 서비스는 보안 접근 뒤)',
                 'OBD 포트 없음',
                 'JTAG 잠김',
             ],
             'evidence': ['OBD 진단 요청이 제어망으로 무제한 전달됨'],
-            'verdict': "function(v){return v.obd.secureDebug?'good':'vuln';}",
+            'verdict': "function(v){return v.obd.gatewayFiltered?'good':'vuln';}",
             'why': 'OBD 진단 접근을 게이트웨이가 통제하지 않아 물리 접근만으로 제어망에 닿습니다.',
             'ez': '정비용 점검구가 사실은 건물 전체로 통하는 뒷문이면, 점검한다며 아무 데나 들어갈 수 있다.',
             'defense': 'OBD↔내부망 사이 게이트웨이가 진단 메시지를 필터링·인증하고, 위험 서비스는 보안 접근 뒤에만 연다.',
-            'fix': "function(v){v.obd.secureDebug=true;}",
-            'fixNote': 'OBD 진단 접근에 게이트웨이 통제·보안 접근을 적용했습니다.',
+            'fix': "function(v){v.obd.gatewayFiltered=true;}",
+            'fixNote': 'OBD 진단 접근에 게이트웨이 필터링·인증을 적용했습니다.',
         },
         {
             'id': 'ECU-03', 'risk': 5, 'title': 'Secure Flash 부재 — 위조 펌웨어 기록',
@@ -483,7 +573,7 @@ ECU_LAB = {
             'verdict': "function(v){var e=v.ecus.IVI;return (e.secureFlash||(e.secureBoot&&e.signedFw))?'good':'vuln';}",
             'why': '인포테인먼트 ECU 가 서명 검증 없이 펌웨어를 기록합니다. 위조 펌웨어가 그대로 실행됩니다.',
             'ez': '누가 보낸 건지 확인 안 하고 받은 앱을 그대로 설치하는 것과 같다.',
-            'defense': 'secure flash(서명·무결성 검증)와 secure boot(부팅 시 서명 검증)를 함께 적용하고, 서명 키는 HSM 에 둔다.',
+            'defense': 'secure flash(플래시 시 서명·무결성 검증)와 secure boot(부팅 시 서명 검증)를 함께 적용하고, 서명 키는 HSM 에 둔다.',
             'fix': "function(v){v.ecus.IVI.secureFlash=true;}",
             'fixNote': '인포테인먼트 ECU 에 secure flash 서명·무결성 검증을 적용했습니다.',
         },
@@ -580,7 +670,7 @@ ECU_LAB = {
 # ═══════════════════════════════════════════════════════════════
 BE_VEHICLE = {
     'brand': 'HANARO', 'model': 'Connected Cloud (가상 백엔드)',
-    'vin': 'KMHXX00XXP0000005',
+    'vin': 'Z9HAN00XXP0000005',
     'buses': {}, 'secoc': {}, 'frames': [], 'ecus': {},
     'backend': {'reachable': True, 'openPorts': ['22/ssh(불필요)', '443/https', '8080/http(관리)'],
                 'sqli': True, 'dosProtected': False, 'segmented': False, 'firmwareExposed': True},
@@ -634,7 +724,7 @@ BE_LAB = {
             'verdict': "function(v){return v.ota.signed?'good':'vuln';}",
             'why': 'OTA 펌웨어를 서명 검증 없이 설치해 위조 이미지가 통합니다. 업데이트 경로는 가장 강하게 지켜야 합니다.',
             'ez': '누가 보냈는지 확인 안 하는 자동 업데이트는, 사칭한 사람이 보낸 것도 그대로 깔아 버린다.',
-            'defense': 'OTA 이미지에 공급자 서명·무결성 검증(secure update)을 적용하고, 서명 키는 HSM 에 두며 롤백·버전 다운그레이드를 막는다.',
+            'defense': 'OTA 이미지에 공급자 서명·무결성 검증(secure update)을 적용하고, 서명 키는 HSM 에 두며 버전 다운그레이드를 막는다.',
             'fix': "function(v){v.ota.signed=true;}",
             'fixNote': 'OTA 에 서명·무결성 검증을 적용했습니다.',
         },
@@ -726,4 +816,182 @@ BE_LAB = {
 }
 
 
-LABS = [CAN_LAB, UDS_LAB, RF_LAB, ECU_LAB, BE_LAB]
+# ═══════════════════════════════════════════════════════════════
+# LAB 6 — 실전 공격 체인 시나리오 (킬체인 · 심층 방어)
+#   하나의 표적 차량을 단계적으로 침투한다. 각 단계는 킬체인의 한 고리이고,
+#   어느 한 고리만 끊어도(방어) 다음 단계로 못 넘어가 전체 공격이 무너진다.
+#   각 단계는 서로 다른 플래그를 겨냥해 독립적으로 판정된다.
+# ═══════════════════════════════════════════════════════════════
+CHAIN_VEHICLE = {
+    'brand': 'HANARO', 'model': 'EV9 표적 (가상 차량)',
+    'vin': 'Z9HAN00XXP0000009',
+    'buses': {
+        'PT': {'name': '파워트레인 CAN', 'speed': '500kbps', 'iface': 'can0'},
+        'CH': {'name': '섀시 CAN', 'speed': '500kbps', 'iface': 'can1'},
+    },
+    'secoc': {'PT': False, 'CH': False},
+    'freshness': {'PT': False, 'CH': False},
+    'rateLimit': {'PT': False, 'CH': False},
+    'gateway': {'filtered': False},
+    'ids': {'enabled': False},
+    'frames': [
+        _frame('PT', '0x1A0', '00 32 00 00', '차속(km/h)'),
+        _frame('CH', '0x2B0', '00 00 00 00', '제동 요청'),
+    ],
+    'ecus': {
+        'GW': _ecu('중앙 게이트웨이', 'CH', '0x710', '0x718',
+                   secAccess={'present': True, 'algo': 'fixed', 'seed': 'DEADBEEF'}),
+        'IVI': _ecu('인포테인먼트(외부연결)', 'CH', '0x760', '0x768',
+                    secureBoot=True, secureFlash=False, signedFw=False),
+        'TCU': _ecu('텔레매틱스 제어', 'CH', '0x740', '0x748',
+                    guarded={'wdbi': True, 'rmba': True, 'wmba': False}),
+    },
+    'obd': {'present': True, 'gatewayFiltered': False},
+    'telematics': {'authRemote': False},
+}
+
+CHAIN_LAB = {
+    'key': 'chain', 'file': 'sim-auto-chain.html', 'code': 'AUTO-PT-CHAIN',
+    'title': '실전 공격 체인 시나리오', 'r155cat': 'R155 Annex5 · 킬체인·심층 방어',
+    'desc': '하나의 표적 차량을 정찰→초기 접근→권한 상승→횡적 이동→목표 달성→흔적 제거 순서로 침투하는 '
+            '실전 공격 체인입니다. 각 단계가 킬체인의 한 고리이고, 어느 한 고리만 방어해도 다음으로 못 넘어가 '
+            '전체 공격이 무너집니다(심층 방어). 단계마다 취약/양호를 판정하고 방어를 적용해 고리를 끊어 보세요.',
+    'vehicle': CHAIN_VEHICLE,
+    'missions': [
+        {
+            'id': 'CHAIN-01', 'risk': 5, 'title': '① 초기 접근 — OBD→제어망 게이트웨이 우회',
+            'r155': 'R155 Annex5 · T18/T29 (초기 접근: 물리 진단→제어망)',
+            'brief': '킬체인 1단계. 정비소 대기 중 OBD 포트에 동글을 꽂았다고 가정합니다. 게이트웨이가 진단 구간을 '
+                     '<b>필터링하지 않으면</b>, OBD 에서 넣은 프레임이 파워트레인 제어망까지 그대로 도달합니다.',
+            'try': 'recon → obd connect → obd inject PT 0x1A0#00F00000',
+            'hint': 'obd inject 결과가 "주입 성공"이면 취약, "게이트웨이 차단"이면 양호.',
+            'cmds': ['obd connect', 'obd inject PT 0x1A0#00F00000'],
+            'options': [
+                '초기 접근 성공 — OBD에서 제어망에 직접 프레임 도달(게이트웨이 미필터)',
+                '게이트웨이 차단 — 진단 구간 프레임이 제어망으로 못 넘어감',
+                'OBD 포트 없음',
+                '버스를 찾을 수 없음',
+            ],
+            'evidence': ['초기 접근 성공 — OBD에서 제어망에 직접 프레임 도달(게이트웨이 미필터)'],
+            'verdict': "function(v){return v.gateway.filtered?'good':'vuln';}",
+            'why': '게이트웨이가 진단/외부 구간과 제어망을 분리하지 않아, 물리 접근만으로 제어망에 발을 들입니다. 킬체인의 첫 고리입니다.',
+            'ez': '건물 안내데스크(OBD)가 사실 모든 사무실로 통하면, 방문객이 곧장 어디든 들어간다.',
+            'defense': '게이트웨이가 도메인 간 프레임을 화이트리스트로 필터링·인증한다. 이 고리만 끊어도 이후 단계가 막힌다.',
+            'fix': "function(v){v.gateway.filtered=true;}",
+            'fixNote': '게이트웨이 도메인 필터링을 적용해 초기 접근 고리를 끊었습니다.',
+        },
+        {
+            'id': 'CHAIN-02', 'risk': 5, 'title': '② 권한 상승 — 게이트웨이 보안 접근 우회',
+            'r155': 'R155 Annex5 · T9 권한 상승 (보안 접근 우회)',
+            'brief': '킬체인 2단계. 게이트웨이 ECU 의 보안 접근(0x27)이 <b>고정 key</b>를 쓰면, seed 를 받아 고정 key 를 '
+                     '되보내 위험 서비스 권한을 얻습니다.',
+            'try': 'uds GW session 03 → uds GW secaccess',
+            'hint': 'secaccess 가 "긍정응답(unlocked)"이면 취약, "invalidKey"면 양호.',
+            'cmds': ['uds GW session 03', 'uds GW secaccess'],
+            'options': [
+                '권한 상승 성공 — 고정 key 로 보안 접근 해제',
+                '권한 상승 실패 — key 를 알 수 없음(HSM)',
+                '세션 진입 실패',
+                'ECU 응답 없음',
+            ],
+            'evidence': ['권한 상승 성공 — 고정 key 로 보안 접근 해제'],
+            'verdict': "function(v){var a=v.ecus.GW.secAccess.algo;return (a==='aes'||a==='hsm')?'good':'vuln';}",
+            'why': '게이트웨이 보안 접근이 고정 key 라 seed 만 받으면 바로 뚫립니다. 권한을 얻으면 이후 플래시·삭제 서비스로 확장됩니다.',
+            'ez': '모든 방의 마스터키가 "항상 같은 열쇠"라면, 한 번 알아내면 어디든 연다.',
+            'defense': '보안 접근을 HSM 기반 강한 챌린지-응답으로 바꾸고 시도 제한을 둔다. 이 고리를 끊으면 권한 상승이 막힌다.',
+            'fix': "function(v){v.ecus.GW.secAccess.algo='hsm';}",
+            'fixNote': '게이트웨이 보안 접근을 HSM 강한 알고리즘으로 교체했습니다.',
+        },
+        {
+            'id': 'CHAIN-03', 'risk': 5, 'title': '③ 횡적 이동 — 안전 버스에 위조 프레임 주입',
+            'r155': 'R155 Annex5 · T5/T11 (횡적 이동: 제어 프레임 주입)',
+            'brief': '킬체인 3단계. 확보한 접근으로 <b>섀시(안전) 버스</b>에 위조 제동 프레임을 주입합니다. '
+                     '메시지 인증이 없으면 그대로 수용됩니다.',
+            'try': 'cansend CH 0x2B0#FF000000',
+            'hint': 'cansend 결과가 "주입 성공"이면 취약, "MAC 폐기"면 양호.',
+            'cmds': ['cansend CH 0x2B0#FF000000'],
+            'options': [
+                '횡적 이동 성공 — 섀시 버스가 위조 프레임을 인증 없이 수용',
+                'MAC 검증 실패 → 폐기(SecOC)',
+                '섀시 버스 없음',
+                '프레임 관측 안 됨',
+            ],
+            'evidence': ['횡적 이동 성공 — 섀시 버스가 위조 프레임을 인증 없이 수용'],
+            'verdict': "function(v){return v.secoc.CH?'good':'vuln';}",
+            'why': '안전 무결성이 높은 섀시 버스에 메시지 인증이 없어 위조 제어 프레임이 수용됩니다. 킬체인이 안전 도메인으로 번집니다.',
+            'ez': '한 부서에 들어온 사람이 아무 확인 없이 옆 부서 결재까지 찍을 수 있는 셈이다.',
+            'defense': '안전 버스에 SecOC 메시지 인증을 적용한다. 이 고리를 끊으면 초기 접근이 있어도 안전 도메인은 지켜진다.',
+            'fix': "function(v){v.secoc.CH=true;}",
+            'fixNote': '섀시(CH) 버스에 SecOC 메시지 인증을 적용했습니다.',
+        },
+        {
+            'id': 'CHAIN-04', 'risk': 4, 'title': '④ 지속성 — 위조 펌웨어 설치',
+            'r155': 'R155 Annex5 · T12/T23 (지속성: 펌웨어 변조)',
+            'brief': '킬체인 4단계. 재부팅해도 살아남도록 인포테인먼트 ECU 에 <b>위조 펌웨어</b>를 심습니다. '
+                     'secure flash 가 없으면 서명 검증 없이 기록됩니다.',
+            'try': 'uds IVI flash',
+            'hint': 'flash 가 "성공"이면 취약, "secure flash 거부"면 양호.',
+            'cmds': ['uds IVI flash'],
+            'options': [
+                '지속성 확보 — 서명 검증 없이 위조 펌웨어 설치됨',
+                '거부됨 — secure flash 서명·무결성 검증',
+                'ECU 없음',
+                '보안 접근 필요',
+            ],
+            'evidence': ['지속성 확보 — 서명 검증 없이 위조 펌웨어 설치됨'],
+            'verdict': "function(v){var e=v.ecus.IVI;return (e.secureFlash||(e.secureBoot&&e.signedFw))?'good':'vuln';}",
+            'why': '인포테인먼트 ECU 에 secure flash 가 없어 위조 펌웨어가 설치됩니다. 공격자가 재부팅 후에도 지속적으로 자리 잡습니다.',
+            'ez': '집 열쇠를 복사해 숨겨두면, 쫓겨나도 다시 들어올 수 있는 셈이다.',
+            'defense': 'secure boot/flash 로 서명된 펌웨어만 실행·기록하고 서명 키는 HSM 에 둔다. 이 고리를 끊으면 지속성 확보가 막힌다.',
+            'fix': "function(v){v.ecus.IVI.secureFlash=true;}",
+            'fixNote': '인포테인먼트 ECU 에 secure flash 를 적용했습니다.',
+        },
+        {
+            'id': 'CHAIN-05', 'risk': 5, 'title': '⑤ 목표 달성 — 원격 도어/시동 탈취',
+            'r155': 'R155 Annex5 · T16 (목표: 원격 제어 탈취)',
+            'brief': '킬체인 5단계(목표). 텔레매틱스 원격 명령이 <b>소유자 인증 없이</b> 처리되면, 원격으로 문을 열고 시동을 걸어 '
+                     '차량을 탈취합니다.',
+            'try': 'remote unlock → remote start',
+            'hint': 'remote 가 "성공(무인증)"이면 취약, "거부(인증)"면 양호.',
+            'cmds': ['remote unlock', 'remote start'],
+            'options': [
+                '목표 달성 — 인증 없이 원격 잠금해제·시동',
+                '거부됨 — 소유자 인증·토큰 검증',
+                '텔레매틱스 정보 없음',
+                '네트워크 분리됨',
+            ],
+            'evidence': ['목표 달성 — 인증 없이 원격 잠금해제·시동'],
+            'verdict': "function(v){return v.telematics.authRemote?'good':'vuln';}",
+            'why': '텔레매틱스 원격 명령이 소유자 인증 없이 처리돼 최종 목표(차량 탈취)가 달성됩니다.',
+            'ez': '현관을 여는 앱에 본인확인이 없으면, 남이 원격으로 문을 열고 들어온다.',
+            'defense': '원격 명령마다 강한 소유자 인증(토큰·MFA)·상호 인증·명령 서명을 적용한다. 이 고리를 끊으면 목표 달성이 막힌다.',
+            'fix': "function(v){v.telematics.authRemote=true;}",
+            'fixNote': '텔레매틱스 원격 명령에 소유자 인증·토큰 검증을 적용했습니다.',
+        },
+        {
+            'id': 'CHAIN-06', 'risk': 3, 'title': '⑥ 흔적 제거 — 이벤트 로그 삭제',
+            'r155': 'R155 Annex5 · T21 (흔적 제거: 로그 삭제)',
+            'brief': '킬체인 마지막. 텔레매틱스 ECU 의 삭제 루틴이 <b>보안 접근 없이</b> 열려 있으면, 공격 흔적(이벤트 로그)을 '
+                     '지워 탐지·포렌식을 무력화합니다.',
+            'try': 'uds TCU erase',
+            'hint': 'erase 가 "성공"이면 취약, "securityAccessDenied"면 양호.',
+            'cmds': ['uds TCU erase'],
+            'options': [
+                '흔적 제거 성공 — 보안 접근 없이 이벤트 로그 삭제',
+                '삭제 거부 — securityAccessDenied',
+                '루틴 없음',
+                'ECU 응답 없음',
+            ],
+            'evidence': ['흔적 제거 성공 — 보안 접근 없이 이벤트 로그 삭제'],
+            'verdict': "function(v){return v.ecus.TCU.guarded.wmba?'good':'vuln';}",
+            'why': '삭제 루틴이 보안 접근 없이 열려 있어 공격 흔적을 지웁니다. 로그 보존이 없으면 사고 원인도, 대응도 어렵습니다.',
+            'ez': '침입자가 CCTV 녹화까지 지우고 나가면 무슨 일이 있었는지 아무도 모른다.',
+            'defense': '삭제 루틴은 보안 접근 뒤에만, 이벤트 로그는 추가전용·원격 백업으로 보존해 지울 수 없게 한다.',
+            'fix': "function(v){v.ecus.TCU.guarded.wmba=true;}",
+            'fixNote': '삭제 루틴에 보안 접근 요구를 걸고 로그를 보존 처리했습니다.',
+        },
+    ],
+}
+
+
+LABS = [CAN_LAB, UDS_LAB, RF_LAB, ECU_LAB, BE_LAB, CHAIN_LAB]

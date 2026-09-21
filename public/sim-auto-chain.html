@@ -4,13 +4,13 @@
 <meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>자동차 모의 해킹 실습: CAN 버스 공격 · WEB-VULN-SIM</title>
-<meta name="description" content="차량 내부 CAN 버스에 붙어 프레임을 캡처(candump)하고, 위조 주입(cansend)·리플레이(canreplay)·버스오프 DoS(canflood)·게이트웨이 우회(obd inject)를 직접 실행합니다. 기법마다 방어가 다르다는 것을 메시지 인증(SecOC)·프레시니스·부하 제한·도메인 분리·IDS 로 확인합니다.">
+<title>자동차 모의 해킹 실습: 실전 공격 체인 시나리오 · WEB-VULN-SIM</title>
+<meta name="description" content="하나의 표적 차량을 정찰→초기 접근→권한 상승→횡적 이동→목표 달성→흔적 제거 순서로 침투하는 실전 공격 체인입니다. 각 단계가 킬체인의 한 고리이고, 어느 한 고리만 방어해도 다음으로 못 넘어가 전체 공격이 무너집니다(심층 방어). 단계마다 취약/양호를 판정하고 방어를 적용해 고리를 끊어 보세요.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
-<meta property="og:title" content="자동차 모의 해킹 실습: CAN 버스 공격">
-<meta property="og:description" content="차량 내부 CAN 버스에 붙어 프레임을 캡처(candump)하고, 위조 주입(cansend)·리플레이(canreplay)·버스오프 DoS(canflood)·게이트웨이 우회(obd inject)를 직접 실행합니다. 기법마다 방어가 다르다는 것을 메시지 인증(SecOC)·프레시니스·부하 제한·도메인 분리·IDS 로 확인합니다.">
-<meta property="og:url" content="https://vuln-sim.web.app/sim-auto-can.html">
+<meta property="og:title" content="자동차 모의 해킹 실습: 실전 공격 체인 시나리오">
+<meta property="og:description" content="하나의 표적 차량을 정찰→초기 접근→권한 상승→횡적 이동→목표 달성→흔적 제거 순서로 침투하는 실전 공격 체인입니다. 각 단계가 킬체인의 한 고리이고, 어느 한 고리만 방어해도 다음으로 못 넘어가 전체 공격이 무너집니다(심층 방어). 단계마다 취약/양호를 판정하고 방어를 적용해 고리를 끊어 보세요.">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-auto-chain.html">
 <meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="/css/platform-tokens.css">
@@ -84,7 +84,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
 </style>
 <script src="/js/auto-pentest.js"></script>
-<script src="/js/auto-lab-can.js"></script>
+<script src="/js/auto-lab-chain.js"></script>
 <script src="/js/progress.js" defer></script>
 <script src="/js/soc-chrome.js" data-topbar="off" defer></script>
 <script src="/js/shell.js" defer></script>
@@ -97,24 +97,24 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <a href="vuln-hub.html">취약점 실습장</a>
   <a href="my-progress.html">내 학습 현황</a>
   <span class="sp"></span>
-  <span style="font-size:12px;color:#94a3b8;font-family:var(--mono)">AUTO-PT-CAN</span>
+  <span style="font-size:12px;color:#94a3b8;font-family:var(--mono)">AUTO-PT-CHAIN</span>
 </div>
 
 <div class="wrap" id="wvs-main" tabindex="-1" role="main">
   <div class="hero">
-    <h1>🚗 자동차 모의 해킹 실습 <span>· CAN 버스 공격</span> <span class="badge">7개 시험</span> <span class="r155">R155 Annex5 · 통신채널</span></h1>
-    <p>차량 내부 CAN 버스에 붙어 프레임을 캡처(candump)하고, 위조 주입(cansend)·리플레이(canreplay)·버스오프 DoS(canflood)·게이트웨이 우회(obd inject)를 직접 실행합니다. 기법마다 방어가 다르다는 것을 메시지 인증(SecOC)·프레시니스·부하 제한·도메인 분리·IDS 로 확인합니다.</p>
+    <h1>🚗 자동차 모의 해킹 실습 <span>· 실전 공격 체인 시나리오</span> <span class="badge">6개 시험</span> <span class="r155">R155 Annex5 · 킬체인·심층 방어</span></h1>
+    <p>하나의 표적 차량을 정찰→초기 접근→권한 상승→횡적 이동→목표 달성→흔적 제거 순서로 침투하는 실전 공격 체인입니다. 각 단계가 킬체인의 한 고리이고, 어느 한 고리만 방어해도 다음으로 못 넘어가 전체 공격이 무너집니다(심층 방어). 단계마다 취약/양호를 판정하고 방어를 적용해 고리를 끊어 보세요.</p>
   </div>
 
   <div class="hostbar">
     <span>대상 차량 <b id="hostName">-</b></span>
     <span>· VIN <b id="hostVin">-</b></span>
-    <span>· 시험 범위 <b>R155 Annex5 · 통신채널</b></span>
+    <span>· 시험 범위 <b>R155 Annex5 · 킬체인·심층 방어</b></span>
     <span style="margin-left:auto">교육용 가상 차량 (실제 차량 접속 아님)</span>
   </div>
 
   <div class="prog">
-    <span>진행</span><span class="bar"><i id="pbar"></i></span><span id="ptext">0 / 7</span>
+    <span>진행</span><span class="bar"><i id="pbar"></i></span><span id="ptext">0 / 6</span>
   </div>
 
   <div class="cols" style="margin-top:14px">
@@ -212,7 +212,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     document.getElementById('pbar').style.width = Math.round(done / missions.length * 100) + '%';
     document.getElementById('ptext').textContent = done + ' / ' + missions.length;
     if (done === missions.length) {
-      try { window.WVSProgress && window.WVSProgress.complete(100, 'sim-auto-can.html'); } catch(e){}
+      try { window.WVSProgress && window.WVSProgress.complete(100, 'sim-auto-chain.html'); } catch(e){}
     }
   }
 
