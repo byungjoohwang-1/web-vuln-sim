@@ -84,6 +84,16 @@
     '✅ 정상 거래': '✅ Normal Transaction',
     '❌ 여전히 취약함 (Vulnerable)': '❌ Still Vulnerable',
     '✅ 보안 조치 완료 (Secure)': '✅ Hardening Complete (Secure)',
+    /* 14_auto 개념 카드 → 자동차 모의 해킹 실습 상호링크 (inject_auto_lab_link.py) */
+    '🚗 이 위협을 직접 공격·방어해 보기': '🚗 Attack & defend this threat hands-on',
+    '모의 침투 콘솔에서 실제로 공격을 실행하고, 방어를 적용해 다시 확인합니다.':
+      'Run the attack in a mock pentest console, then apply a defense and re-check.',
+    'CAN 버스 공격 실습 →': 'CAN Bus Attack Lab →',
+    '진단(UDS) 공격 실습 →': 'Diagnostics (UDS) Attack Lab →',
+    '무선·원격 공격 실습 →': 'Wireless / Remote Attack Lab →',
+    'ECU 물리·펌웨어 공격 실습 →': 'ECU Physical / Firmware Attack Lab →',
+    '백엔드·OTA·개인정보 실습 →': 'Backend / OTA / Privacy Lab →',
+    '자동차 모의 해킹 실습장 →': 'Automotive Pentest Lab →',
   }));
 
   const terms = [
