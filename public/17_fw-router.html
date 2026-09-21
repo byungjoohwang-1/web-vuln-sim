@@ -78,6 +78,26 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .prog .bar{flex:1;height:8px;background:#1e293b;border-radius:99px;overflow:hidden;min-width:120px}
 .prog .bar>i{display:block;height:100%;background:var(--good);width:0}
 .disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+/* 가이드 사건 브리핑 */
+.brief-inc{background:#0e1a10;border:1px solid #1f5132;border-radius:12px;padding:13px 15px;margin:14px 0}
+.brief-inc h2{font-size:14px;color:#86efac;font-family:var(--mono);margin-bottom:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.brief-inc p{font-size:13px;color:#cbd5e1;line-height:1.7}
+.stages{display:flex;flex-direction:column;gap:7px;margin-top:11px}
+.stage b{color:#7dd3fc;font-family:var(--mono);font-size:12.5px}
+.stage .ids{display:inline-flex;gap:5px;flex-wrap:wrap;margin-left:6px}
+.stage .ids button{cursor:pointer;background:#0e1626;border:1px solid #26334d;color:#9fb0ca;border-radius:6px;padding:2px 8px;font-size:11px;font-family:var(--mono);min-height:26px}
+.stage .ids button:hover{border-color:#38bdf8;color:#7dd3fc}
+/* AI 코치 */
+.coach{margin-top:14px;border-top:1px dashed #334155;padding-top:12px}
+.coach h3{font-size:13px;color:#a78bfa;font-family:var(--mono);margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.coach .cbtns{display:flex;gap:8px;flex-wrap:wrap}
+.coach button{cursor:pointer;border-radius:8px;padding:8px 13px;font-size:12.5px;font-family:var(--mono);min-height:38px;border:0}
+.coach .cask{background:#6d28d9;color:#ede9fe}
+.coach .cprev{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+.coach .cout{margin-top:10px;font-size:12.5px;line-height:1.7;color:#cbd5e1;white-space:pre-wrap;display:none}
+.coach .cout.on{display:block}
+.coach .cout .lab{color:#a78bfa;font-weight:800}
+.coach .cout pre{background:#05080f;border:1px solid #334155;border-radius:8px;padding:10px;overflow:auto;font-size:11.5px;color:#9fb0ca;white-space:pre-wrap;word-break:break-word}
 </style>
 <script src="/js/fw-lab.js"></script>
 <script src="/js/fw-lab-router.js"></script>
@@ -113,6 +133,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <span>진행</span><span class="bar"><i id="pbar"></i></span><span id="ptext">0 / 10</span>
   </div>
 
+  <div class="brief-inc" id="incCard" style="display:none">
+    <h2>🕵️ 사건 브리핑 <span style="font-weight:400;color:#64748b;font-size:11px">— 판정은 고정 검사기가, 막히면 AI 코치가 다음 행동을 제안합니다</span></h2>
+    <p id="incStory"></p>
+    <div class="stages" id="incStages"></div>
+  </div>
+
   <div class="cols" style="margin-top:14px">
     <div>
       <div class="card">
@@ -136,6 +162,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
           <button type="button" class="act ghost" id="btnRecheck" disabled>재점검</button>
         </div>
         <div class="res" id="res"></div>
+
+        <div class="coach" id="coach">
+          <h3>🧭 AI 코치 <span style="font-weight:400;color:#64748b;font-size:11px">— 정답을 알려주지 않고, 다음 확인 행동 하나를 제안합니다</span></h3>
+          <div class="cbtns">
+            <button type="button" class="cask" id="btnCoach">코치에게 묻기</button>
+            <button type="button" class="cprev" id="btnCoachPrev">전송 내용 보기</button>
+          </div>
+          <div class="cout" id="coachOut" role="status" aria-live="polite"></div>
+        </div>
       </div>
     </div>
 
@@ -271,7 +306,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
       box.innerHTML = '<h3>❌ 다시 보세요</h3>' +
         (!g.verdictOk ? '판정이 다릅니다. ' : '판정은 맞았지만 <b>근거</b>가 다릅니다. ') +
         '이미지의 어느 파일·어느 줄이 이 판정을 만드는지 워크벤치에서 확인해 보세요.<br>' +
-        '<div style="margin-top:7px;color:#fca5a5">힌트: ' + L.esc(m.hint) + '</div>';
+        '<div style="margin-top:7px;color:#fca5a5">힌트: ' + L.esc(m.hint) + '</div>' +
+        '<div style="margin-top:6px;color:#a78bfa">막혔다면 아래 <b>🧭 AI 코치</b>에게 물어보세요.</div>';
     }
     renderList();
   });
@@ -304,6 +340,88 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   print('펌웨어·IoT 진단 실습 — ' + (D.host.device || D.host.name) + ' (' + (D.host.arch || '') + ')');
   print('help 를 입력하면 쓸 수 있는 명령을 볼 수 있습니다.\n');
+
+  var FILE = '17_fw-router.html';
+  function stripTags(s){ return String(s == null ? '' : s).replace(/<[^>]+>/g, ''); }
+
+  /* ── 가이드 사건 브리핑 — 미션을 조사 단계로 엮는다(판정은 그대로 고정 검사기) ── */
+  (function renderIncident(){
+    var inc = D.host.incident;
+    if (!inc) return;
+    document.getElementById('incStory').textContent = inc.story;
+    var byId = {}; missions.forEach(function(m, i){ byId[m.id] = i; });
+    var stagesEl = document.getElementById('incStages');
+    stagesEl.innerHTML = (inc.stages || []).map(function(st){
+      var chips = (st.ids || []).filter(function(id){ return byId[id] != null; }).map(function(id){
+        return '<button type="button" data-go="' + byId[id] + '">' + L.esc(id) + '</button>';
+      }).join('');
+      return '<div class="stage"><b>' + L.esc(st.label) + '</b><span class="ids">' + chips + '</span></div>';
+    }).join('');
+    document.getElementById('incCard').style.display = 'block';
+    stagesEl.addEventListener('click', function(e){
+      var b = e.target.closest('[data-go]'); if (!b) return;
+      cur = Number(b.getAttribute('data-go')); renderMission();
+      document.getElementById('brief').scrollIntoView({ behavior:'smooth', block:'center' });
+    });
+  })();
+
+  /* ── AI 코치 — coach.js 계약 재사용. 화면에 이미 있는 것만 보내고 정답은 만들지 않는다 ── */
+  var hintsUsed = 0, coachLoading = null;
+  function loadCoach(){
+    if (window.WVS_COACH) return Promise.resolve(true);
+    if (coachLoading) return coachLoading;
+    coachLoading = new Promise(function(resolve){
+      var left = 2, done = false;
+      function tick(){ left--; if ((left <= 0 || window.WVS_COACH) && !done){ done = true; resolve(!!window.WVS_COACH); } }
+      ['/js/ai-client.js', '/js/coach.js'].forEach(function(src){
+        var s = document.createElement('script'); s.src = src; s.onload = tick; s.onerror = tick; document.head.appendChild(s);
+      });
+      setTimeout(function(){ if (!done){ done = true; resolve(!!window.WVS_COACH); } }, 8000);
+    });
+    return coachLoading;
+  }
+  function coachCtx(){
+    var m = missions[cur];
+    var v = document.getElementById('selVerdict').value;
+    var ev = document.getElementById('selEvidence').value;
+    return {
+      activityId: FILE, step: m.id,
+      learningGoal: stripTags(m.title) + ' — 취약/양호를 판정하고 그 근거를 찾는다',
+      givens: ['확인할 곳: ' + m.where, '쓸 수 있는 명령: ' + (m.cmds || []).join(', ')],
+      successCondition: '판정과 근거가 모두 정확해야 통과합니다',
+      evidence: (m.options || []).map(function(o, i){ return { id:'opt-' + (i+1), label:String(o).slice(0,80) }; }),
+      failedChecks: [{ id:m.id, desc:stripTags(m.title), expected:'', actual:('제출 ' + (v||'-') + ' / ' + (ev||'-')).slice(0,40), meaning:stripTags(m.brief).slice(0,200) }],
+      hintsUsed: hintsUsed
+    };
+  }
+  document.getElementById('btnCoachPrev').addEventListener('click', function(){
+    var out = document.getElementById('coachOut'); out.classList.add('on');
+    out.innerHTML = '전송 내용을 준비 중…';
+    loadCoach().then(function(){
+      out.innerHTML = window.WVS_COACH
+        ? '<span class="lab">전송될 내용 (정답 조건식은 포함되지 않습니다)</span><pre>' + L.esc(window.WVS_COACH.preview(coachCtx())) + '</pre>'
+        : '코치 모듈을 불러오지 못했습니다.';
+    });
+  });
+  document.getElementById('btnCoach').addEventListener('click', function(){
+    var out = document.getElementById('coachOut'); out.classList.add('on');
+    out.innerHTML = '코치가 지금 상태를 확인하는 중…';
+    hintsUsed++;
+    loadCoach().then(function(ok){
+      if (!ok || !window.WVS_COACH){ out.innerHTML = '코치를 불러오지 못했습니다. 잠시 후 다시 시도하세요. (실습은 계속 진행됩니다)'; return; }
+      Promise.resolve(window.WVS_COACH.ask(coachCtx())).then(function(r){
+        var c = (r && r.coach) || {};
+        var html = '';
+        if (c.observation) html += '<div><span class="lab">관찰</span> ' + L.esc(c.observation) + '</div>';
+        if (c.nextAction) html += '<div style="margin-top:5px"><span class="lab">다음 확인</span> ' + L.esc(c.nextAction) + '</div>';
+        if (c.hint) html += '<div style="margin-top:5px"><span class="lab">힌트</span> ' + L.esc(c.hint) + '</div>';
+        if (c.uncertainty) html += '<div style="margin-top:5px;color:#94a3b8">⚠ ' + L.esc(c.uncertainty) + '</div>';
+        html += '<div style="margin-top:6px;color:#64748b">모드: ' + (c.mode === 'ai' ? 'AI' : 'AI 미연결 — 일반 지침') + '</div>';
+        out.innerHTML = html || '응답을 받지 못했습니다.';
+      }).catch(function(){ out.innerHTML = '코치 호출 중 오류가 발생했습니다. 실습은 계속하세요.'; });
+    });
+  });
+
   renderMission();
 })();
 </script>
