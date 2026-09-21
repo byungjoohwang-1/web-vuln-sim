@@ -5,11 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>펌웨어·IoT 진단 실습: 홈 공유기 펌웨어 (GaonNet GN-7000) · WEB-VULN-SIM</title>
-<meta name="description" content="가정용 공유기의 배포 펌웨어 이미지를 binwalk 로 추출하고, rootfs 의 계정·키·CGI·업데이트 설정에서 실무에서 가장 먼저 확인하는 결함 8가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.">
+<meta name="description" content="가정용 공유기의 배포 펌웨어 이미지를 실제로 스캔·추출하고, rootfs 의 계정·키·CGI·업데이트 설정, U-Boot 부트로더, 그리고 부팅 후 동적 상태까지 결함 10가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
 <meta property="og:title" content="펌웨어·IoT 진단 실습: 홈 공유기 펌웨어 (GaonNet GN-7000)">
-<meta property="og:description" content="가정용 공유기의 배포 펌웨어 이미지를 binwalk 로 추출하고, rootfs 의 계정·키·CGI·업데이트 설정에서 실무에서 가장 먼저 확인하는 결함 8가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.">
+<meta property="og:description" content="가정용 공유기의 배포 펌웨어 이미지를 실제로 스캔·추출하고, rootfs 의 계정·키·CGI·업데이트 설정, U-Boot 부트로더, 그리고 부팅 후 동적 상태까지 결함 10가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.">
 <meta property="og:url" content="https://vuln-sim.web.app/17_fw-router.html">
 <meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
 <meta name="twitter:card" content="summary">
@@ -98,8 +98,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <div class="wrap" id="wvs-main" tabindex="-1" role="main">
   <div class="hero">
-    <h1>📟 펌웨어·IoT 진단 실습 <span>· 홈 공유기 펌웨어 (GaonNet GN-7000)</span> <span class="badge">8개 점검</span></h1>
-    <p>가정용 공유기의 배포 펌웨어 이미지를 binwalk 로 추출하고, rootfs 의 계정·키·CGI·업데이트 설정에서 실무에서 가장 먼저 확인하는 결함 8가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.</p>
+    <h1>📟 펌웨어·IoT 진단 실습 <span>· 홈 공유기 펌웨어 (GaonNet GN-7000)</span> <span class="badge">10개 점검</span></h1>
+    <p>가정용 공유기의 배포 펌웨어 이미지를 실제로 스캔·추출하고, rootfs 의 계정·키·CGI·업데이트 설정, U-Boot 부트로더, 그리고 부팅 후 동적 상태까지 결함 10가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.</p>
   </div>
 
   <div class="hostbar">
@@ -110,7 +110,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 
   <div class="prog">
-    <span>진행</span><span class="bar"><i id="pbar"></i></span><span id="ptext">0 / 8</span>
+    <span>진행</span><span class="bar"><i id="pbar"></i></span><span id="ptext">0 / 10</span>
   </div>
 
   <div class="cols" style="margin-top:14px">

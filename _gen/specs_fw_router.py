@@ -99,6 +99,11 @@ FS = {
     '/usr/sbin': {'dir': True},
     '/usr/sbin/telnetd': {'bin': True, 'mode': '0755',
                           'ftype': 'ELF 32-bit MSB executable, MIPS', 'strings': ['telnetd', '-l login shell']},
+    # 공장 디버그 백도어 — 정적으로 놓치기 쉽고 부팅해야 포트가 드러난다 (FW-10)
+    '/etc/rc.local': {'body': "#!/bin/sh\n# factory debug hook (제거 예정이었으나 남음)\n"
+                              "/usr/sbin/utelnetd -p 9527 -l /bin/sh &\nexit 0\n"},
+    '/usr/sbin/utelnetd': {'bin': True, 'mode': '0755',
+                           'ftype': 'ELF 32-bit MSB executable, MIPS', 'strings': ['micro telnetd', '-p <port> -l <shell>']},
 }
 
 HOST = {
@@ -106,13 +111,16 @@ HOST = {
     'device': 'GaonNet GN-7000 (가정용 공유기)',
     'arch': 'MIPS (32-bit, big-endian)',
     'prompt': 'analyst@fw-lab:~/gn7000.extracted$',
+    # 실제 바이트를 조립하는 layout — binwalk/strings/hexdump/entropy 가 이 바이트를 진짜로 스캔한다
     'image': {
         'file': 'gn7000_v2.3.bin',
         'encrypted': False,
-        'binwalk': [
-            {'dec': 0, 'hex': '0', 'desc': 'uImage header, header size: 64 bytes, ... OS: Linux, CPU: MIPS'},
-            {'dec': 64, 'hex': '40', 'desc': 'LZMA compressed data, properties: 0x5D, dictionary size: 8388608 bytes'},
-            {'dec': 1245184, 'hex': '130000', 'desc': 'Squashfs filesystem, little endian, version 4.0, size: 3801088 bytes'},
+        'len': 8192,
+        'layout': [
+            {'kind': 'uimage', 'size': 64, 'name': 'GN-7000 Linux-3.10.14'},
+            {'kind': 'lzma', 'size': 1024},
+            {'kind': 'squashfs', 'size': 5120},
+            {'kind': 'text', 'text': 'admin:admin\nsupport factory shell\nGN7000-FACTORY-DEFAULT\n'},
         ],
     },
     'nvram': {
@@ -121,6 +129,21 @@ HOST = {
         'admin_password': 'admin',        # 공장 기본값 (FW-03)
         'wifi_ssid': 'GaonNet-7000',
         'telnet_enable': '1',
+    },
+    # U-Boot 부트로더 환경변수 (FW-09)
+    'uboot': {
+        'bootdelay': '3',                 # 3초간 콘솔 인터럽트 허용 → 부트로더 셸 탈취 가능
+        'baudrate': '115200',
+        'bootcmd': 'bootm 0x82000000',
+        'bootargs': 'console=ttyS0,115200 root=/dev/mtdblock2 rootfstype=squashfs',
+    },
+    # 자체작성 CVE DB — cve-check 가 버전과 대조 (FW-07 심화)
+    'cvedb': {
+        'busybox': [
+            {'id': 'CVE-2018-1000517', 'sev': 'HIGH', 'desc': 'wget 응답 처리 힙 버퍼 오버플로', 'fixed': '1.29.0'},
+            {'id': 'CVE-2017-16544', 'sev': 'MEDIUM', 'desc': 'lineedit 탭 자동완성으로 임의 문자 주입', 'fixed': '1.28.0'},
+            {'id': 'CVE-2021-42374', 'sev': 'MEDIUM', 'desc': 'unlzma 힙 범위 밖 읽기', 'fixed': '1.34.0'},
+        ],
     },
 }
 
@@ -259,8 +282,8 @@ MISSIONS = [
         'brief': '핵심 바이너리 <code>/bin/busybox</code> 의 버전을 strings 로 확인한다. 오래된 버전은 '
                  '공개된 CVE 가 쌓여 있어 그 자체로 취약점 목록이 된다.',
         'where': '/bin/busybox (strings)',
-        'cmds': ['file /bin/busybox', 'strings /bin/busybox | grep -i busybox'],
-        'hint': 'BusyBox 버전 문자열을 찾아 현재 지원 버전과 비교한다. 1.2x 대 이하는 EOL 이다.',
+        'cmds': ['file /bin/busybox', 'strings /bin/busybox | grep -i busybox', 'cve-check busybox 1.19.4'],
+        'hint': 'BusyBox 버전 문자열을 찾아 현재 지원 버전과 비교한다. 1.2x 대 이하는 EOL 이다. cve-check 로 매핑된 CVE 를 확인하라.',
         'why': 'BusyBox v1.19.4(2013년) 는 지원이 끝난 버전으로, httpd·telnetd 등에서 공개된 취약점이 여럿 있다. '
                '버전 문자열만으로 알려진 CVE 목록을 매핑할 수 있다. 현재 지원 버전으로 재빌드해야 한다.',
         'options': [
@@ -296,6 +319,49 @@ MISSIONS = [
         'fix': r"function(fs){fs.write('/etc/fwupdate.conf','# GN-7000 update\nurl = https://update.gaonnet-cdn.example/gn7000/latest.bin\ncheck_interval = 86400\nverify_signature = 1\npubkey = /etc/ssl/fwupdate-release.pub\n');}",
         'fixNote': '업데이트 URL 을 HTTPS 로 바꾸고 서명 검증(verify_signature=1)과 릴리스 공개키 고정을 켰다.',
     },
+    {
+        'id': 'FW-09', 'risk': 4,
+        'title': 'U-Boot 부트 인터럽트로 부트로더 셸 탈취',
+        'brief': 'U-Boot 환경변수를 <code>printenv</code> 로 본다. <code>bootdelay</code> 가 0보다 크면 부팅 중 '
+                 '시리얼 콘솔에서 키를 눌러 부트로더 셸에 진입하고, bootargs 에 <code>init=/bin/sh</code> 를 넣어 인증을 통째로 우회할 수 있다.',
+        'where': 'U-Boot 환경변수 (printenv)',
+        'cmds': ['printenv', 'printenv bootdelay'],
+        'hint': 'bootdelay 값이 0인지 본다. 0보다 크면 그 시간 동안 부팅을 멈추고 부트로더 셸을 얻을 수 있다.',
+        'why': '<code>bootdelay=3</code> 이라 기기를 뜯어 UART 에 연결한 사람이 부팅 3초 안에 콘솔을 눌러 U-Boot 셸에 들어가고, '
+               '<code>setenv bootargs ... init=/bin/sh</code> 로 루트 셸로 부팅할 수 있다. 양산 기기는 bootdelay=0 과 콘솔 잠금이 필요하다.',
+        'options': [
+            'bootdelay=3',
+            'baudrate=115200',
+            'bootcmd=bootm 0x82000000',
+            'bootargs=console=ttyS0,115200 root=/dev/mtdblock2 rootfstype=squashfs',
+        ],
+        'evidence': ['bootdelay=3'],
+        'verdict': r"function(fs){var d=(fs.host.uboot||{}).bootdelay;return (d!=null&&Number(d)>0)?'vuln':'good';}",
+        'fix': r"function(fs){if(fs.host.uboot)fs.host.uboot.bootdelay='0';}",
+        'fixNote': 'bootdelay 를 0으로 설정해 콘솔 인터럽트를 막았다(양산 시 콘솔 잠금도 함께).',
+    },
+    {
+        'id': 'FW-10', 'risk': 5,
+        'title': '부팅 후 드러나는 문서에 없는 백도어 포트',
+        'brief': '정적 설정만으로는 놓치기 쉬운 서비스가 있다. 펌웨어를 <code>boot</code> 로 부팅해 <code>netstat</code> 로 '
+                 '실제 열린 포트를 보면, 문서에 없는 서비스가 리스닝하고 있는지 드러난다.',
+        'where': '부팅 후 netstat / /etc/rc.local',
+        'cmds': ['boot gn7000_v2.3.bin', 'netstat -an', 'cat /etc/rc.local'],
+        'hint': 'boot 후 netstat 에서 문서화된 포트(23/80) 외에 낯선 고포트가 떠 있는지 본다. 그 포트를 여는 곳을 rc.local 에서 찾는다.',
+        'why': '<code>/etc/rc.local</code> 이 부팅 때 <code>utelnetd -p 9527 -l /bin/sh</code> 로 인증 없는 셸을 9527 포트에 띄운다. '
+               '정적 점검에서 놓쳐도 부팅 후 netstat 에 <code>0.0.0.0:9527</code> 로 드러난다. rc.local 의 해당 줄을 제거해야 한다.',
+        'options': [
+            '0.0.0.0:9527 (문서에 없는 서비스 utelnetd)',
+            '0.0.0.0:23 (telnetd — 이미 알려진 항목)',
+            '0.0.0.0:80 (httpd — 관리 웹)',
+            '/usr/sbin/utelnetd -p 9527 -l /bin/sh &',
+        ],
+        'evidence': ['0.0.0.0:9527 (문서에 없는 서비스 utelnetd)',
+                     '/usr/sbin/utelnetd -p 9527 -l /bin/sh &'],
+        'verdict': r"function(fs){var r=fs.read('/etc/rc.local')||'';return /utelnetd|-p\s*9527/.test(r)?'vuln':'good';}",
+        'fix': r"function(fs){var r=fs.read('/etc/rc.local')||'';fs.write('/etc/rc.local',r.split('\n').filter(function(l){return l.indexOf('utelnetd')<0;}).join('\n'));}",
+        'fixNote': 'rc.local 에서 백도어 telnet 시작 줄을 제거했다. 재부팅 시 9527 포트가 열리지 않는다.',
+    },
 ]
 
 LABS = [{
@@ -303,8 +369,8 @@ LABS = [{
     'file': '17_fw-router.html',
     'code': 'FW · 홈 라우터',
     'title': '홈 공유기 펌웨어 (GaonNet GN-7000)',
-    'desc': '가정용 공유기의 배포 펌웨어 이미지를 binwalk 로 추출하고, rootfs 의 계정·키·CGI·업데이트 설정에서 '
-            '실무에서 가장 먼저 확인하는 결함 8가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.',
+    'desc': '가정용 공유기의 배포 펌웨어 이미지를 실제로 스캔·추출하고, rootfs 의 계정·키·CGI·업데이트 설정, '
+            'U-Boot 부트로더, 그리고 부팅 후 동적 상태까지 결함 10가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.',
     'host': HOST,
     'fs': FS,
     'missions': MISSIONS,

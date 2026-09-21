@@ -59,6 +59,8 @@ FS = {
     '/etc/init.d': {'dir': True},
     '/etc/init.d/rcS': {'body': "#!/bin/sh\nmount -a\n/usr/bin/camd &\n", 'mode': '0777'},  # world-writable (FW-14)
     '/etc/init.d/rcK': {'body': "#!/bin/sh\nkillall camd\n", 'mode': '0755'},
+    # 공장 디버그 telnet — 정적으로 놓치기 쉽고 부팅해야 포트가 드러난다 (FW-17)
+    '/etc/rc.local': {'body': "#!/bin/sh\n# debug (임시)\n/usr/sbin/telnetd -p 2323 -l /bin/sh &\nexit 0\n"},
     '/usr': {'dir': True},
     '/usr/bin': {'dir': True},
     '/usr/bin/camd': {'bin': True, 'mode': '0755',
@@ -72,14 +74,16 @@ HOST = {
     'device': 'CamEye C-210 (IP 카메라)',
     'arch': 'ARM (32-bit, little-endian)',
     'prompt': 'analyst@fw-lab:~/cameye.extracted$',
+    # 실제 바이트를 조립하는 layout — binwalk 가 이 바이트에서 시그니처를 진짜로 찾는다
     'image': {
         'file': 'cameye_c210_fw_1.4.img',
         'encrypted': False,
-        'binwalk': [
-            {'dec': 0, 'hex': '0', 'desc': 'JFFS2 filesystem, little endian'},
-            {'dec': 131072, 'hex': '20000', 'desc': 'uImage header, OS: Linux, CPU: ARM'},
-            {'dec': 131200, 'hex': '20080', 'desc': 'LZMA compressed data'},
-            {'dec': 917504, 'hex': 'e0000', 'desc': 'Squashfs filesystem, little endian, version 4.0'},
+        'len': 8192,
+        'layout': [
+            {'kind': 'jffs2', 'size': 512},
+            {'kind': 'uimage', 'size': 64, 'name': 'CamEye C-210 Linux-4.9'},
+            {'kind': 'lzma', 'size': 1024},
+            {'kind': 'squashfs', 'size': 4096},
         ],
     },
     'nvram': {},
@@ -213,6 +217,28 @@ MISSIONS = [
         'fix': r"function(fs){fs.host.image.encrypted=true;}",
         'fixNote': '재빌드 시 이미지를 서명하고 본문을 암호화했다. binwalk 로 시그니처가 잡히지 않는다.',
     },
+    {
+        'id': 'FW-17', 'risk': 5,
+        'title': '부팅 후 드러나는 디버그 telnet 포트',
+        'brief': '정적 파일만 봐서는 놓치기 쉬운 서비스가 있다. 펌웨어를 <code>boot</code> 로 부팅하고 <code>netstat</code> 로 '
+                 '실제 열린 포트를 보면, 문서에 없는 디버그 telnet 이 리스닝하는지 드러난다.',
+        'where': '부팅 후 netstat / /etc/rc.local',
+        'cmds': ['boot cameye_c210_fw_1.4.img', 'netstat -an', 'cat /etc/rc.local'],
+        'hint': 'boot 후 netstat 에서 RTSP(554) 외에 낯선 포트가 떠 있는지 본다. 그 포트를 여는 곳을 rc.local 에서 찾는다.',
+        'why': '<code>/etc/rc.local</code> 이 부팅 때 <code>telnetd -p 2323 -l /bin/sh</code> 로 인증 없는 셸을 2323 포트에 띄운다. '
+               '정적 점검에서 놓쳐도 부팅 후 netstat 에 <code>0.0.0.0:2323</code> 로 드러난다. 출하 전 rc.local 의 디버그 줄을 제거해야 한다.',
+        'options': [
+            '0.0.0.0:2323 (문서에 없는 디버그 telnet)',
+            '0.0.0.0:554 (RTSP — 이미 알려진 항목)',
+            '/usr/sbin/telnetd -p 2323 -l /bin/sh &',
+            'mount -a; /usr/bin/camd &',
+        ],
+        'evidence': ['0.0.0.0:2323 (문서에 없는 디버그 telnet)',
+                     '/usr/sbin/telnetd -p 2323 -l /bin/sh &'],
+        'verdict': r"function(fs){var r=fs.read('/etc/rc.local')||'';return /telnetd\s+-p\s*2323/.test(r)?'vuln':'good';}",
+        'fix': r"function(fs){var r=fs.read('/etc/rc.local')||'';fs.write('/etc/rc.local',r.split('\n').filter(function(l){return l.indexOf('telnetd')<0;}).join('\n'));}",
+        'fixNote': 'rc.local 에서 디버그 telnet 시작 줄을 제거했다. 재부팅 시 2323 포트가 열리지 않는다.',
+    },
 ]
 
 LABS = [{
@@ -220,8 +246,8 @@ LABS = [{
     'file': '17_fw-iot.html',
     'code': 'FW · IoT 카메라',
     'title': 'IoT IP 카메라 펌웨어 (CamEye C-210)',
-    'desc': 'IP 카메라 펌웨어를 추출해 시리얼 콘솔 무인증 셸, 하드코딩 클라우드 키, RTSP 인증, 부팅 스크립트 '
-            '권한, 평문 비밀번호, 배포 이미지 보호까지 6가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.',
+    'desc': 'IP 카메라 펌웨어를 실제로 스캔·추출해 시리얼 콘솔 무인증 셸, 하드코딩 클라우드 키, RTSP 인증, 부팅 스크립트 '
+            '권한, 평문 비밀번호, 배포 이미지 보호, 그리고 부팅 후 동적 상태까지 7가지를 직접 명령으로 점검한다. 모든 내용은 가상이다.',
     'host': HOST,
     'fs': FS,
     'missions': MISSIONS,
