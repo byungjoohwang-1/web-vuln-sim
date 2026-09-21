@@ -71,7 +71,7 @@
      아래 블록은 _gen/gen_progress_catalog.py 가 같은 정의에서 생성한다. 직접 고치지 말 것. */
   /* <generated:learnable> */
   var LEARNABLE = /^(03_code|04_design|05_linux|06_db|07_fin|07_iss|07_srv|08_win|09_net|10_sec|11_cloud|12_ics|17_fw|13_ai|14_auto|15_privacy|16_zt)/;
-  var TOOLS = /^(vulnlab\.html|redteam\.html|quiz-forge\.html|incident\.html|privacy-data-transfer\.html|privacy-rights-desk\.html|privacy-breach-72h\.html|audit-ismsp-lab\.html|industry-tech-protect\.html|ai-grader\.html|lab-generator\.html|skill-assess\.html|fin-eval\.html|mp-assessment\.html|pia-assessment\.html|privacy-breach-drill\.html|privacy-consent-designer\.html|privacy-policy-builder\.html|privacy-policy-eval\.html|privacy-processor-check\.html|privacy-quiz\.html)$/;
+  var TOOLS = /^(vulnlab\.html|redteam\.html|quiz-forge\.html|incident\.html|privacy-data-transfer\.html|privacy-rights-desk\.html|privacy-breach-72h\.html|audit-ismsp-lab\.html|industry-tech-protect\.html|ai-grader\.html|lab-generator\.html|skill-assess\.html|fin-eval\.html|mp-assessment\.html|pia-assessment\.html|privacy-breach-drill\.html|privacy-consent-designer\.html|privacy-policy-builder\.html|privacy-policy-eval\.html|privacy-processor-check\.html|privacy-quiz\.html|privacy-safety-check\.html)$/;
   /* </generated:learnable> */
   function isLearnable(id) { return LEARNABLE.test(id) || /^sim-/.test(id) || TOOLS.test(id); }
 

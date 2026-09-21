@@ -61,6 +61,7 @@ TOOLS = [
     ('privacy-policy-eval.html', ('개인정보 실습', 'F')),
     ('privacy-processor-check.html', ('개인정보 실습', 'F')),
     ('privacy-quiz.html', ('개인정보 실습', 'F')),
+    ('privacy-safety-check.html', ('개인정보 실습', 'F')),
 ]
 TITLE_RE = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
 CODE_RE = re.compile(r'^([A-Z]{1,4}-\d{1,3})\s*[:：]\s*(.+)$')

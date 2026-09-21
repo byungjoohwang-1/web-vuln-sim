@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 안전성 확보조치 자가진단 — 고시 기준 제4~18조 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 안전성 확보조치 자가진단 · WEB-VULN-SIM">
+<meta property="og:description" content="「개인정보의 안전성 확보조치 기준」(고시) 기반 자가진단 — 내부관리계획·접근권한·접근통제·암호화·접속기록·악성프로그램·물리적·재해재난·파기·공공시스템 이행률 자동 산출">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-safety-check.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="「개인정보의 안전성 확보조치 기준」(고시) 제4조~제18조를 인터랙티브로 자가진단 — 내부 관리계획·접근 권한·접근통제·암호화·접속기록·악성프로그램·물리적·재해재난·출력복사·파기·공공시스템운영기관까지. 이행/부분이행/미이행/해당없음 체크로 이행률·개선과제 자동 산출. 2023.9 개정(유형 구분 폐지)의 규모별 예외를 프로파일로 반영. 100% 브라우저 실행.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--na:#64748b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13px;margin-top:8px;max-width:900px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.dash{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin:16px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.ring{--p:0;--c:var(--good);width:104px;height:104px;border-radius:50%;position:relative;flex-shrink:0;background:conic-gradient(var(--c) calc(var(--p)*1%), #1e293b 0);display:grid;place-items:center}
+.ring::before{content:'';position:absolute;width:78px;height:78px;border-radius:50%;background:var(--panel)}
+.ring .in{position:relative;text-align:center}
+.ring b{font-family:var(--mono);font-size:22px;color:#fff;display:block;line-height:1}
+.ring span{font-size:10px;color:var(--muted)}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:260px}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:92px}
+.kpi .n{font-family:var(--mono);font-size:20px;font-weight:800}
+.kpi .l{font-size:11px;color:var(--muted);margin-top:2px}
+.kpi.good .n{color:var(--good)}.kpi.part .n{color:var(--warn)}.kpi.bad .n{color:var(--bad)}.kpi.na .n{color:var(--na)}.kpi.tot .n{color:#fff}
+.areabars{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:8px;margin:10px 0 2px}
+.ab{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+.ab .t{font-size:11.5px;color:#cbd5e1;display:flex;justify-content:space-between;gap:6px}
+.ab .t b{font-family:var(--mono);color:#7dd3fc}
+.ab .bar{height:6px;border-radius:99px;background:#1e293b;margin-top:6px;overflow:hidden}
+.ab .bar>i{display:block;height:100%}
+.profile{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin:12px 0}
+.profile .ph{font-size:12.5px;color:#c7d2fe;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.profile .pgrid{display:flex;gap:16px;flex-wrap:wrap}
+.profile label{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:#cbd5e1;cursor:pointer;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px}
+.profile label input{accent-color:var(--accent)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
+.seg{display:inline-flex;border:1px solid #334155;border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button{background:var(--panel2);color:#cbd5e1;border:none;padding:8px 12px;font-size:12.5px;font-family:var(--mono);cursor:pointer}
+.seg button.on{background:var(--accent);color:#04222e;font-weight:800}
+input[type=search]{background:var(--panel2);border:1px solid #334155;color:var(--ink);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit;min-width:180px;flex:1}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn.dgr{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;margin:12px 0;overflow:hidden}
+.sec>h2{font-size:14px;color:#e2e8f0;padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(90deg,#172033,#28344b);flex-wrap:wrap}
+.sec>h2 .dom{font-family:var(--mono);font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.dom.aM{background:#1e2a52;color:#93c5fd}.dom.aA{background:#0c2a3a;color:#7dd3fc}.dom.aE{background:#2a1e52;color:#c4b5fd}
+.dom.aL{background:#0f2a18;color:#86efac}.dom.aV{background:#3a2a09;color:#fde047}.dom.aP{background:#3a1a0c;color:#fdba74}
+.dom.aD{background:#3b1418;color:#fca5a5}.dom.aS{background:#1a1330;color:#d8b4fe}
+.sec>h2 .pilln{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.sec>h2 .mini{width:64px;height:7px;border-radius:99px;background:#1e293b;overflow:hidden;flex-shrink:0}
+.sec>h2 .mini>i{display:block;height:100%;background:var(--good)}
+.sec .body{padding:6px 12px 12px}
+.item{border:1px solid var(--border);border-radius:11px;padding:11px 13px;margin:8px 0;background:var(--panel2)}
+.item .top{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.code{font-family:var(--mono);font-size:11px;font-weight:800;color:#7dd3fc;background:#0c2a3a;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.art{font-family:var(--mono);font-size:10.5px;color:#a5b4fc;background:#1e1b4b;border-radius:5px;padding:2px 7px;flex-shrink:0}
+.cbadge{font-family:var(--mono);font-size:10px;font-weight:700;border-radius:5px;padding:2px 7px;flex-shrink:0;background:#3a2a09;color:#fde047}
+.req{font-size:13.5px;font-weight:600;flex:1;min-width:200px}
+.states{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.st{cursor:pointer;border:1px solid #334155;background:#0b1220;color:#94a3b8;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;font-family:var(--mono)}
+.st.on.g{background:#0f2a18;color:#86efac;border-color:#14532d}
+.st.on.p{background:#3a2a09;color:#fde047;border-color:#78350f}
+.st.on.v{background:#3b1418;color:#fca5a5;border-color:#7f1d1d}
+.st.on.n{background:#1e293b;color:#cbd5e1;border-color:#475569}
+.item.isg{border-left:3px solid var(--good)}.item.isp{border-left:3px solid var(--warn)}
+.item.isv{border-left:3px solid var(--bad)}.item.isn{border-left:3px solid var(--na)}
+.item.dim{opacity:.62}
+.det{margin-top:10px;font-size:12.5px;color:#cbd5e1;border-top:1px dashed #334155;padding-top:9px;display:none}
+.item.open .det{display:block}
+.toggle{font-size:11.5px;color:#7dd3fc;cursor:pointer;font-family:var(--mono);margin-top:8px;display:inline-block}
+.det h4{font-size:11.5px;color:#7dd3fc;font-family:var(--mono);margin:9px 0 3px}
+.det p{margin:2px 0;white-space:pre-line}
+.cps{margin:3px 0 0 2px;list-style:none;counter-reset:cp}
+.cps li{font-size:12.5px;color:#e2e8f0;padding:3px 0 3px 24px;position:relative}
+.cps li::before{counter-increment:cp;content:counter(cp);position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:#0c2a3a;color:#7dd3fc;font-family:var(--mono);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.laws{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.law{background:#0b1220;border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:11.5px;color:#c4b5fd;font-family:var(--mono)}
+.simlink{display:inline-block;margin-top:8px;font-size:11.5px;font-family:var(--mono);color:#0c4a6e;background:#7dd3fc;border-radius:6px;padding:3px 9px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:14px 0}
+.disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+.empty{color:var(--muted);font-size:13px;padding:16px;text-align:center}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+<!-- RESP-NET -->
+<style>
+@media (max-width: 768px){
+  html{-webkit-text-size-adjust:100%}
+  img,svg,video,canvas,iframe{max-width:100%;height:auto}
+  pre,code{max-width:100%;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+}
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+</style>
+
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보보호 허브</span></a>
+  <a href="pia-assessment.html"><span data-en="PIA Self-Check">영향평가 자가진단</span></a>
+  <a href="my-progress.html"><span data-en="My Progress">내 학습 현황</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap" role="main">
+  <div class="hero">
+    <h1>🔐 <span data-en="Safety-Measures Self-Check (안전성 확보조치)">개인정보 안전성 확보조치 자가진단</span></h1>
+    <div class="sub" data-en="An interactive self-assessment against Korea's mandatory security-measures standard for personal information — internal management plan, access privileges, access control, encryption, access logs, malware defence, physical measures, disaster readiness, output/copy control, destruction, and the stricter rules for public-system operators. Mark each item 이행 / 부분이행 / 미이행 / 해당없음; the compliance score and improvement tasks are computed live. Everything is stored in your browser.">
+      「개인정보의 <b>안전성 확보조치 기준</b>」(고시) 제4조~제18조를 인터랙티브로 자가진단합니다 — 내부 관리계획·접근 권한·접근통제·암호화·접속기록·악성프로그램·물리적·재해재난·출력복사·파기, 그리고 공공시스템운영기관 강화 기준까지. 항목마다 <b>이행 / 부분이행 / 미이행 / 해당없음</b>을 표시하면 이행률과 <b>개선과제</b>가 자동 산출됩니다. 모든 결과는 브라우저에 저장됩니다.</div>
+    <div class="src" id="srcLine" data-en="📗 Basis: Standards for Ensuring the Safety of Personal Information (notification) · PIPA Art.29 · Enforcement Decree Art.30 — educational reconstruction of public regulation">📗 근거: 개인정보의 안전성 확보조치 기준(고시) · 개인정보 보호법 제29조·시행령 제30조 — 공개 규정 기반 교육용 재구성</div>
+  </div>
+
+  <div class="note" style="border-left-color:#f59e0b;background:#1a1608" data-en="⚠️ Key point since the 2023.9 amendment: the old three-tier classification (relaxed / standard / strengthened by controller size and record volume) was abolished — in principle every controller now meets the same standard. Only a few clauses (encryption-key handling, disaster readiness, internet-network isolation) still vary by size. Use the profile below to switch those on or off.">
+    ⚠️ <b>2023.9 개정 핵심</b> — 처리자 규모·보유량에 따른 <b>유형1(완화)/유형2(표준)/유형3(강화)</b> 구분이 폐지되어 <b>모든 개인정보처리자가 원칙적으로 동일한 기준</b>을 적용합니다. 다만 <b>암호키 관리·재해재난 대비·인터넷망 차단</b> 등 일부 조항만 규모·유형별 예외가 남아 있습니다. 아래 프로파일로 해당 여부를 켜고 끌 수 있습니다.</div>
+
+  <div class="profile">
+    <div class="ph">🧭 <span data-en="Your profile — narrows the size-dependent items">우리 조직 프로파일 — 규모별 조항의 적용 여부를 좁힙니다</span></div>
+    <div class="pgrid">
+      <label><input type="checkbox" id="pfPublic"> <span data-en="We are a public-system operator (Ch.3, Arts.14–18 apply)">공공시스템운영기관이다 (제3장·제14~18조 적용)</span></label>
+      <label><input type="checkbox" id="pfDisaster" checked> <span data-en="Subject to disaster-readiness duty (Art.11)">재해·재난 대비 의무 대상이다 (제11조)</span></label>
+      <label><input type="checkbox" id="pfInternet"> <span data-en="Subject to internet-network isolation (large-scale controller)">인터넷망 차단조치 대상이다 (대규모 처리자)</span></label>
+    </div>
+    <div class="note" style="margin:10px 0 0;font-size:11.5px" data-en="Not sure whether a duty applies? Items that do not fit your profile are dimmed and pre-suggested as 해당없음 (excluded from the score), but you can still mark them. The disaster-readiness duty (Art.11) targets controllers handling 100,000+ subjects (large/mid-size enterprises, public bodies) or 1,000,000+ (SMEs, organisations); check the scope tool if unsure.">
+      의무 대상인지 헷갈리면? 프로파일에 맞지 않는 항목은 흐리게 표시되고 <b>해당없음</b>으로 미리 제안됩니다(이행률에서 제외). 그래도 직접 체크할 수 있습니다. 재해·재난 대비(제11조)는 <b>10만명 이상</b>(대기업·중견기업·공공기관) 또는 <b>100만명 이상</b>(중소기업·단체) 처리 시 대상입니다. 애매하면 적용범위 판단기를 확인하세요.</div>
+  </div>
+
+  <div class="dash">
+    <div class="ring" id="ring"><div class="in"><b id="ringPct">0%</b><span data-en="compliance">이행률</span></div></div>
+    <div class="kpis">
+      <div class="kpi tot"><div class="n" id="kTot">0</div><div class="l" data-en="Items in scope">적용 항목</div></div>
+      <div class="kpi good"><div class="n" id="kG">0</div><div class="l" data-en="Implemented">이행</div></div>
+      <div class="kpi part"><div class="n" id="kP">0</div><div class="l" data-en="Partial">부분이행</div></div>
+      <div class="kpi bad"><div class="n" id="kV">0</div><div class="l" data-en="Not implemented">미이행</div></div>
+      <div class="kpi na"><div class="n" id="kN">0</div><div class="l" data-en="N/A">해당없음</div></div>
+      <div class="kpi"><div class="n" id="kC">0</div><div class="l" data-en="Checked">점검완료</div></div>
+    </div>
+  </div>
+  <div class="areabars" id="areaBars"></div>
+
+  <div class="controls">
+    <div class="seg" id="segDom">
+      <button data-v="all" class="on" data-en="All">전체</button>
+    </div>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><input type="checkbox" id="onlyGap"> <span data-en="Gaps only (미이행·부분이행)">미이행·부분이행만</span></label>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)"><input type="checkbox" id="onlyUn"> <span data-en="Unchecked only">미점검만</span></label>
+    <input type="search" id="q" placeholder="검색 (조문·항목·요건)…" aria-label="검색어">
+    <button class="btn" onclick="exportReport()">📄 <span data-en="Improvement tasks">개선과제 리포트</span></button>
+    <button class="btn dgr" onclick="resetAll()">↺ <span data-en="Reset">초기화</span></button>
+  </div>
+
+  <div class="note" data-en="ℹ️ Compliance = (implemented + 0.5 × partial) ÷ (implemented + partial + not-implemented); 해당없음 items are excluded. This is an educational self-check based on the public notification and does not replace a controller's own compliance review or an inspection by the authority.">
+    ℹ️ 이행률 = (이행 + 0.5 × 부분이행) ÷ (이행 + 부분이행 + 미이행), 해당없음은 제외합니다. 본 도구는 공개 고시 기반 <b>교육용 자가점검</b>으로, 개인정보처리자의 자체 준수 점검이나 감독기관의 조사·점검을 대체하지 않습니다.</div>
+
+  <div id="list"><div class="empty">불러오는 중…</div></div>
+
+  <div class="disc" data-en="Educational reconstruction of the publicly released standard 「Standards for Ensuring the Safety of Personal Information」 and related technical-safeguards guidance. Wording here is original and paraphrased; verify exact obligations against the current notification. Runs entirely in your browser; answers never leave your device.">
+    ⚠️ 「개인정보의 안전성 확보조치 기준」(고시)과 기술적 보호조치 안내 자료를 교육 목적으로 재구성했습니다. 문구는 원문을 그대로 옮기지 않고 새로 작성했으며, 정확한 의무는 현행 고시 원문으로 확인하세요. 전부 브라우저에서 동작하며 응답은 기기를 벗어나지 않습니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+/* i18n */
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);
+  if(window.__booted){render();renderDash();}}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* 도메인(조문 묶음). cond: 프로파일 플래그(public/disaster/internet)에 매인 조항. */
+var DOMAINS=[
+  {key:'M',ko:'관리적 안전조치 (내부 관리계획·접근 권한)',en:'Organisational (management plan · privileges)',sim:'16_zt-least-privilege.html'},
+  {key:'A',ko:'접근통제',en:'Access control',sim:'15_privacy-pv15.html'},
+  {key:'E',ko:'개인정보의 암호화',en:'Encryption',sim:'15_privacy-pv16.html'},
+  {key:'L',ko:'접속기록의 보관 및 점검',en:'Access-log retention & review',sim:'15_privacy-pv17.html'},
+  {key:'V',ko:'악성프로그램 등 방지',en:'Malware defence & patching',sim:'15_privacy-pv18.html'},
+  {key:'P',ko:'물리적·재해재난·출력복사',en:'Physical · disaster · output',sim:'15_privacy-pv21.html'},
+  {key:'D',ko:'개인정보의 파기',en:'Destruction',sim:'15_privacy-pv13.html'},
+  {key:'S',ko:'공공시스템운영기관 강화 기준',en:'Public-system operators (stricter)',sim:'privacy-scope-check.html'}
+];
+
+var ITEMS=[
+/* ── M. 관리적 안전조치 ── */
+{id:'M4-1',dom:'M',art:'제4조',
+ q:['내부 관리계획을 문서로 수립·시행하고 있는가?','Do you have a written internal management plan in force?'],
+ cps:[['개인정보 보호책임자를 지정하고 취급자의 역할·책임을 정한다','Designate a privacy officer and define handlers’ roles/responsibilities'],
+      ['접근 권한·접근통제·암호화·접속기록·악성프로그램·물리적 조치·교육 등 각 항목을 계획에 포함한다','Cover privileges, access control, encryption, logs, malware, physical measures and training'],
+      ['사업주·대표의 승인 등 내부 의사결정 절차를 거친다','Approve it through an internal decision procedure']],
+ ex:['쉽게 말하면, "우리 조직은 개인정보를 이렇게 지킨다"를 적어 둔 규정집입니다. 사람이 바뀌어도 규칙이 문서로 남아 있어야 하고, 소규모라도 간이 양식으로 갖춰야 합니다. 이것이 없으면 아래 모든 안전조치의 근거가 사라집니다.',
+     'Think of it as the rulebook that says how your organisation protects personal data. It must survive staff turnover as a document, and even small controllers need at least a simple version — without it, every measure below loses its basis.'],
+ laws:['안전성 확보조치 기준 제4조','개인정보 보호법 제29조']},
+{id:'M4-2',dom:'M',art:'제4조',
+ q:['처리 방법·환경에 중요한 변경이 생기면 내부 관리계획을 즉시 반영·개정하고 이력을 남기는가?','When processing methods or environment change materially, do you update the plan at once and keep a change history?'],
+ cps:[['변경 내용·시기·시행일을 이력으로 관리한다','Log what changed, when, and the effective date'],
+      ['변경사항을 개인정보 취급자에게 전파한다','Communicate changes to handlers'],
+      ['의사결정 절차를 거쳐 개정한다','Amend via the decision procedure']],
+ ex:['규정집은 한 번 만들고 끝이 아닙니다. 신규 시스템 도입, 위탁사 변경, 클라우드 이전처럼 처리 환경이 바뀌면 그때그때 고쳐야 실제와 일치합니다.',
+     'The plan is not write-once. New systems, a changed processor, or a cloud migration must be reflected promptly so the document matches reality.'],
+ laws:['안전성 확보조치 기준 제4조']},
+{id:'M4-3',dom:'M',art:'제4조',
+ q:['개인정보 보호책임자가 연 1회 이상 내부 관리계획 이행 실태를 점검·관리하는가?','Does the privacy officer review implementation of the plan at least once a year?'],
+ cps:[['기술적·관리적·물리적 조치의 이행 여부를 연 1회 이상 점검한다','Review technical, organisational and physical measures at least yearly'],
+      ['점검 결과에 따라 개선 조치를 취한다','Act on the findings'],
+      ['중대한 사안은 대표·임원에게 보고한다','Escalate serious matters to management']],
+ ex:['계획을 지키는지 스스로 감사하는 절차입니다. "만들어만 두고 아무도 안 보는" 규정이 되지 않도록 최소 연 1회 점검 기록을 남깁니다.',
+     'A self-audit that the plan is actually followed. Keep at least a yearly review record so it never becomes a document nobody looks at.'],
+ laws:['안전성 확보조치 기준 제4조']},
+{id:'M5-1',dom:'M',art:'제5조',
+ q:['개인정보처리시스템 접근 권한을 업무에 필요한 최소한으로 차등 부여하는가?','Are access privileges granted at the minimum needed, differentiated by duty?'],
+ cps:[['직무별로 필요한 범위의 권한만 부여한다','Grant only the scope each duty needs'],
+      ['조회·수정·다운로드·삭제 등 기능별 권한을 구분한다','Separate read / edit / download / delete rights'],
+      ['불필요하게 광범위한 관리자 권한 남용을 막는다','Avoid over-broad admin rights']],
+ ex:['모든 직원에게 전체 열람 권한을 주는 것이 가장 흔한 실수입니다. 필요한 사람에게 필요한 만큼만 — 최소권한 원칙입니다.',
+     'Giving everyone full read access is the most common mistake. The right people, the right amount — the least-privilege principle.'],
+ laws:['안전성 확보조치 기준 제5조']},
+{id:'M5-2',dom:'M',art:'제5조',
+ q:['인사이동·퇴직·직무변경이 있을 때 지체 없이 접근 권한을 변경·말소하는가?','On transfer, resignation or role change, are privileges changed or revoked without delay?'],
+ cps:[['퇴직·이동 즉시 계정과 권한을 회수한다','Revoke accounts/rights immediately on departure or move'],
+      ['인사 절차와 권한 회수 절차를 연계한다','Link HR processes to privilege removal'],
+      ['휴면·미사용 계정을 주기적으로 정리한다','Clean up dormant accounts periodically']],
+ ex:['퇴직자 계정이 살아 있는 것은 유출 사고의 단골 원인입니다. 나가는 순간 문을 닫아야 합니다.',
+     'A still-active account of a former employee is a classic breach cause. Close the door the moment they leave.'],
+ laws:['안전성 확보조치 기준 제5조']},
+{id:'M5-3',dom:'M',art:'제5조',
+ q:['접근 권한의 부여·변경·말소 내역을 기록하고 최소 3년간 보관하는가?','Do you record grants/changes/revocations of privileges and keep them at least 3 years?'],
+ cps:[['누가·언제·어떤 권한을 부여/회수했는지 기록한다','Record who granted/revoked which right and when'],
+      ['해당 기록을 최소 3년 보관한다','Keep the record for at least 3 years']],
+ ex:['권한 변경 이력은 사고가 났을 때 "누가 언제부터 접근할 수 있었나"를 되짚는 근거입니다. 보관 기간은 최소 3년입니다.',
+     'The privilege history is how you reconstruct who could access what, from when, after an incident. Minimum retention is 3 years.'],
+ laws:['안전성 확보조치 기준 제5조']},
+{id:'M5-4',dom:'M',art:'제5조',
+ q:['취급자별로 계정을 발급하고 공유하지 않으며, 안전한 비밀번호·인증 규칙을 수립·적용하는가?','Is each handler given an individual (non-shared) account, with a safe password/authentication rule?'],
+ cps:[['계정을 취급자별로 발급하고 공용 계정 사용을 금지한다','Issue per-handler accounts; forbid shared accounts'],
+      ['안전한 비밀번호 작성·변경 규칙을 운영한다','Operate a safe password creation/change rule'],
+      ['필요 시 추가 인증수단을 적용한다','Apply extra authentication where needed']],
+ ex:['공용 계정은 "누가 했는지" 추적이 불가능해집니다. 접속기록이 의미를 가지려면 계정이 사람 단위여야 합니다.',
+     'Shared accounts make "who did it" untraceable. Access logs only mean something when accounts map to individuals.'],
+ laws:['안전성 확보조치 기준 제5조']},
+/* ── A. 접근통제 ── */
+{id:'A6-1',dom:'A',art:'제6조',
+ q:['정보통신망을 통한 불법 접근을 차단·탐지하기 위해 접근 IP 등을 제한·분석하는가?','Do you restrict/analyse access (e.g. by IP) to block and detect unlawful network access?'],
+ cps:[['침입차단·침입탐지 기능을 설치·운영한다','Run intrusion prevention/detection capability'],
+      ['허용 IP 대역 등으로 접근을 제한한다','Limit access to allowed IP ranges'],
+      ['비정상 접근을 탐지·분석한다','Detect and analyse abnormal access']],
+ ex:['개인정보처리시스템의 정문에 자물쇠와 CCTV를 다는 것에 해당합니다. 아무 IP나 붙지 못하게 하고, 붙는 시도를 지켜봅니다.',
+     'The lock and CCTV at the system’s front gate: stop arbitrary IPs from connecting, and watch the attempts.'],
+ laws:['안전성 확보조치 기준 제6조']},
+{id:'A6-2',dom:'A',art:'제6조',
+ q:['외부에서 개인정보처리시스템에 접속할 때 VPN·전용선 등 안전한 접속수단을 적용하는가?','For external access to the system, do you require a safe channel such as VPN or a leased line?'],
+ cps:[['원격·외부 접속에 안전한 인증·암호화 채널을 사용한다','Use an authenticated, encrypted channel for remote access'],
+      ['공개망을 통한 평문 접속을 금지한다','Forbid plaintext access over public networks']],
+ ex:['재택근무·출장 중 접속이 늘면서 중요해진 항목입니다. 외부에서 들어오는 길은 반드시 암호화된 통로여야 합니다.',
+     'More important as remote and travel access grow: the path in from outside must be an encrypted tunnel.'],
+ laws:['안전성 확보조치 기준 제6조']},
+{id:'A6-3',dom:'A',art:'제6조',
+ q:['일정 횟수 이상 인증에 실패하면 접근을 제한하는가?','Do you restrict access after a set number of failed authentication attempts?'],
+ cps:[['연속 인증 실패 시 계정 잠금 등으로 제한한다','Lock the account (etc.) after repeated failures'],
+      ['자동화된 대입 공격을 완화한다','Mitigate automated credential-guessing']],
+ ex:['비밀번호를 무한히 시도할 수 있으면 언젠가 뚫립니다. 몇 번 틀리면 막는 것만으로 자동 대입 공격을 크게 줄입니다.',
+     'Unlimited password tries eventually succeed. A simple lockout after a few failures greatly cuts automated guessing.'],
+ laws:['안전성 확보조치 기준 제6조']},
+{id:'A6-4',dom:'A',art:'제6조',
+ q:['개인정보가 표시되는 화면·조회 결과에 표시 제한(마스킹) 조치를 하는가?','Do you mask personal data shown on screens and query results?'],
+ cps:[['주민등록번호 등 민감 항목을 화면에서 부분 가린다','Partially hide sensitive fields on screen'],
+      ['업무상 불필요한 전체 노출을 줄인다','Reduce full exposure not needed for the task']],
+ ex:['상담원 화면에 주민번호가 통째로 보일 이유는 거의 없습니다. 뒷자리를 가리는 것만으로 어깨너머 유출을 막습니다.',
+     'An agent screen rarely needs the full resident number. Masking the tail blocks shoulder-surfing leaks.'],
+ laws:['안전성 확보조치 기준 제6조']},
+{id:'A6-5',dom:'A',art:'제6조',cond:'internet',
+ q:['[대규모 처리자] 개인정보를 다운로드·파기하거나 접근 권한을 설정할 수 있는 취급자의 컴퓨터를 인터넷망과 차단하는가?','[Large-scale controllers] Are the PCs of handlers who can download/destroy data or set privileges isolated from the internet?'],
+ cps:[['대량 다운로드·권한설정 권한자의 단말을 인터넷망과 분리한다','Isolate the terminals of high-risk handlers from the internet'],
+      ['업무망과 인터넷망을 분리(망분리)한다','Separate the work network from the internet']],
+ ex:['전년도 기준 일일평균 100만명 이상 등 대규모 처리자에게 적용되는 조항입니다. 대량 유출을 일으킬 수 있는 자리의 PC는 외부 인터넷과 물리적/논리적으로 끊어 둡니다. 규모가 작으면 이 항목은 프로파일에서 해당없음으로 제안됩니다.',
+     'Applies to large controllers (e.g. a daily average of 1,000,000+ subjects the prior year). PCs that could cause mass leakage are cut off from the internet. Smaller controllers see this pre-suggested as N/A by profile.'],
+ laws:['안전성 확보조치 기준 제6조']},
+{id:'A6-6',dom:'A',art:'제6조',
+ q:['개인정보 취급자가 공개된 무선망 등을 이용할 때 보호조치를 하는가?','When handlers use public wireless networks, are protective measures applied?'],
+ cps:[['공용 Wi-Fi 등 개방망 이용 시 암호화·VPN 등을 적용한다','Use encryption/VPN over open networks'],
+      ['안전하지 않은 무선 접속을 통제한다','Control unsafe wireless connections']],
+ ex:['카페 Wi-Fi에서 그냥 접속하면 옆 사람이 트래픽을 엿볼 수 있습니다. 개방망에서는 반드시 암호화 통로를 씁니다.',
+     'Connecting over cafe Wi-Fi lets a neighbour sniff traffic. On open networks, always use an encrypted tunnel.'],
+ laws:['안전성 확보조치 기준 제6조']},
+/* ── E. 암호화 ── */
+{id:'E7-1',dom:'E',art:'제7조',
+ q:['비밀번호는 복호화되지 않는 일방향(해시) 방식으로 저장하는가?','Are passwords stored one-way (hashed), not reversibly?'],
+ cps:[['비밀번호를 일방향 암호화(해시)하여 저장한다','Store passwords with one-way hashing'],
+      ['평문·양방향 암호화 저장을 금지한다','Never store plaintext or reversibly encrypted passwords']],
+ ex:['비밀번호는 원문을 되살릴 필요가 없습니다. 로그인은 "같은 값인지"만 비교하면 되므로, 되돌릴 수 없는 해시로 저장하는 것이 맞습니다.',
+     'You never need the original password back — login only checks equality — so store it as an irreversible hash.'],
+ laws:['안전성 확보조치 기준 제7조']},
+{id:'E7-2',dom:'E',art:'제7조',
+ q:['고유식별정보·비밀번호·바이오정보를 정보통신망으로 송·수신하거나 보조저장매체로 전달할 때 암호화하는가?','Are unique IDs, passwords and biometric data encrypted when transmitted over networks or carried on removable media?'],
+ cps:[['전송 구간을 암호화(TLS 등)한다','Encrypt data in transit (e.g. TLS)'],
+      ['USB 등 매체로 전달할 때 암호화한다','Encrypt data carried on removable media']],
+ ex:['움직이는 데이터가 가장 취약합니다. 네트워크로 흐르거나 USB로 나갈 때 암호화하지 않으면 중간에서 그대로 읽힙니다.',
+     'Data in motion is most exposed. Unencrypted over the wire or on a USB stick, it is readable in transit.'],
+ laws:['안전성 확보조치 기준 제7조']},
+{id:'E7-3',dom:'E',art:'제7조',
+ q:['주민등록번호는 저장 위치와 무관하게 반드시 암호화하여 저장하는가?','Are resident registration numbers always stored encrypted, regardless of location?'],
+ cps:[['내부망·인터넷 구간을 가리지 않고 주민등록번호를 암호화 저장한다','Encrypt RRNs whether on the internal or internet segment'],
+      ['위험도 분석 결과와 무관하게 예외 없이 적용한다','Apply with no risk-analysis exception']],
+ ex:['다른 고유식별정보와 달리 주민등록번호는 예외가 없습니다. 어디에 저장하든 암호화가 의무입니다.',
+     'Unlike other unique identifiers, the RRN has no exception — encryption is mandatory wherever it is stored.'],
+ laws:['안전성 확보조치 기준 제7조','개인정보 보호법 제24조의2']},
+{id:'E7-4',dom:'E',art:'제7조',
+ q:['그 밖의 고유식별정보를 인터넷 구간·DMZ에 저장할 때 암호화하고, 내부망 저장 시 위험도 분석 결과에 따라 암호화 여부를 정하는가?','Are other unique IDs encrypted when stored in the internet zone/DMZ, and decided by risk analysis on the internal network?'],
+ cps:[['인터넷 구간·DMZ 저장 시 암호화한다','Encrypt when stored in the internet zone/DMZ'],
+      ['내부망 저장은 위험도 분석(영향평가 등) 결과에 따라 암호화 여부를 정한다','On the internal network, decide by risk/impact analysis']],
+ ex:['주민번호를 뺀 여권번호·운전면허번호 등은 저장 위치에 따라 판단이 달라집니다. 외부에 가까운 구간일수록 무조건 암호화, 내부망은 위험도를 분석해 정합니다.',
+     'For IDs other than the RRN (passport, driver’s licence …), the rule depends on location: always encrypt near the outside; on the internal network, decide by risk analysis.'],
+ laws:['안전성 확보조치 기준 제7조']},
+{id:'E7-5',dom:'E',art:'제7조',
+ q:['안전한 암호 알고리즘을 사용하고, 암호키의 생성·이용·보관·폐기 절차를 두어 키를 안전하게 관리하는가?','Do you use safe algorithms and manage keys through a generate/use/store/destroy procedure?'],
+ cps:[['검증된 안전한 암호 알고리즘을 사용한다','Use vetted, safe cryptographic algorithms'],
+      ['암호키를 소스코드에 평문으로 두지 않는다','Never keep keys in source code as plaintext'],
+      ['키 생성·보관·폐기 절차와 접근 통제를 둔다','Have key lifecycle and access controls']],
+ ex:['암호화의 안전성은 결국 열쇠 관리에 달려 있습니다. 아무리 강한 자물쇠라도 열쇠를 문 앞 매트 밑에 두면 소용없습니다 — 키를 코드에 박아 두지 마세요.',
+     'Encryption is only as safe as key management. The strongest lock is useless if the key sits under the doormat — do not hard-code keys.'],
+ laws:['안전성 확보조치 기준 제7조']},
+/* ── L. 접속기록 ── */
+{id:'L8-1',dom:'L',art:'제8조',
+ q:['접속기록을 남기며, 식별자·접속일시·접속지 정보·처리한 정보주체 정보·수행업무를 포함하는가?','Do access logs include identifier, timestamp, source info, the subject data touched, and the action performed?'],
+ cps:[['식별자(계정)·접속일시·접속지 정보를 기록한다','Log identifier, timestamp and source information'],
+      ['처리한 정보주체 정보와 수행업무를 기록한다','Log which subject data was touched and what was done'],
+      ['취급자뿐 아니라 로그인 이용자의 접속도 대상이다','Cover logged-in users, not only staff handlers']],
+ ex:['"누가, 언제, 어디서, 누구의 정보를, 무엇을 했나"의 다섯 가지가 다 들어가야 사고 조사에 쓸 수 있습니다. 접속일시만 남긴 로그는 반쪽짜리입니다.',
+     'A log is useful for investigation only if it captures who, when, from where, whose data, and what action. A timestamp-only log is half a log.'],
+ laws:['안전성 확보조치 기준 제8조']},
+{id:'L8-2',dom:'L',art:'제8조',
+ q:['접속기록을 최소 1년 이상 보관하는가? (5만명 이상 정보주체 또는 고유식별정보·민감정보 처리 시스템은 2년 이상)','Are logs kept at least 1 year — or 2 years for systems handling 50,000+ subjects or unique/sensitive data?'],
+ cps:[['접속기록을 최소 1년 이상 보관한다','Keep access logs for at least 1 year'],
+      ['5만명 이상 정보주체의 개인정보 또는 고유식별정보·민감정보 처리 시스템은 2년 이상 보관한다','2 years for 50,000+ subjects or unique/sensitive-data systems']],
+ ex:['보관 기간이 조항 안에서 갈리는 대표 항목입니다. 규모가 크거나 민감·고유식별정보를 다루면 1년이 아니라 2년입니다.',
+     'A clause where the retention period itself splits: for large systems or those handling sensitive/unique IDs, it is 2 years, not 1.'],
+ laws:['안전성 확보조치 기준 제8조']},
+{id:'L8-3',dom:'L',art:'제8조',
+ q:['접속기록을 월 1회 이상 점검하여 오·남용, 대량 조회·다운로드 등 이상 징후를 확인하는가?','Do you review logs at least monthly for misuse and abnormal bulk queries/downloads?'],
+ cps:[['월 1회 이상 접속기록을 점검한다','Review logs at least once a month'],
+      ['대량 조회·다운로드 등 이상 징후의 사유를 확인한다','Check the reason for bulk access/downloads'],
+      ['점검 결과를 기록한다','Record the review outcome']],
+ ex:['기록만 쌓아 두고 아무도 안 보면 사고를 사후에도 못 잡습니다. 최소 월 1회, 특히 대량 다운로드의 사유를 확인하는 것이 핵심입니다.',
+     'Logs nobody reviews miss incidents even after the fact. At least monthly — above all, check the reason behind bulk downloads.'],
+ laws:['안전성 확보조치 기준 제8조']},
+{id:'L8-4',dom:'L',art:'제8조',
+ q:['접속기록이 위·변조·도난·분실되지 않도록 안전하게 보관(별도 저장·백업 등)하는가?','Are logs protected against tampering, theft or loss (separate storage, backup)?'],
+ cps:[['접속기록을 위·변조로부터 보호한다','Protect logs from tampering'],
+      ['별도 저장·백업으로 분실을 방지한다','Prevent loss via separate storage/backup']],
+ ex:['공격자가 가장 먼저 지우려는 것이 로그입니다. 로그를 시스템과 분리해 보관해야 조작·삭제를 막을 수 있습니다.',
+     'Logs are the first thing an attacker erases. Storing them apart from the system prevents alteration and deletion.'],
+ laws:['안전성 확보조치 기준 제8조']},
+/* ── V. 악성프로그램 ── */
+{id:'V9-1',dom:'V',art:'제9조',
+ q:['백신 등 보안 프로그램을 설치·운영하는가?','Do you install and run security software such as anti-malware?'],
+ cps:[['개인정보처리시스템·취급자 단말에 보안 프로그램을 둔다','Deploy security software on systems and handler terminals'],
+      ['실시간 감시 기능을 운영한다','Keep real-time protection on']],
+ ex:['가장 기본적인 방어입니다. 취급자 PC 한 대가 악성코드에 감염되면 그 계정 권한만큼 개인정보가 새 나갈 수 있습니다.',
+     'The most basic defence. One infected handler PC can leak as much personal data as that account’s privileges allow.'],
+ laws:['안전성 확보조치 기준 제9조']},
+{id:'V9-2',dom:'V',art:'제9조',
+ q:['보안 프로그램을 자동 갱신하거나 월 1회 이상 최신 상태로 갱신하는가?','Is the security software auto-updated or refreshed at least monthly?'],
+ cps:[['악성코드 정의를 자동 또는 월 1회 이상 갱신한다','Update signatures automatically or at least monthly'],
+      ['갱신 실패를 점검한다','Check for failed updates']],
+ ex:['백신은 최신 상태일 때만 의미가 있습니다. 구형 정의로는 새로운 악성코드를 못 잡습니다.',
+     'Anti-malware only helps when current; stale signatures miss new threats.'],
+ laws:['안전성 확보조치 기준 제9조']},
+{id:'V9-3',dom:'V',art:'제9조',
+ q:['운영체제·응용프로그램의 보안 업데이트(패치)를 지체 없이 적용하는가?','Do you apply OS/application security patches without delay?'],
+ cps:[['보안 취약점 공개·경보 시 신속히 패치한다','Patch quickly when advisories are issued'],
+      ['제작사 지원이 끝난 소프트웨어 사용을 줄인다','Reduce use of end-of-support software']],
+ ex:['알려진 취약점은 공개되는 순간부터 공격 대상이 됩니다. 패치를 미루는 만큼 창문을 열어 두는 셈입니다.',
+     'A known vulnerability is a target the moment it is published; every delayed patch is a window left open.'],
+ laws:['안전성 확보조치 기준 제9조']},
+/* ── P. 물리·재해·출력 ── */
+{id:'P10-1',dom:'P',art:'제10조',
+ q:['전산실·자료보관실 등 물리적 보관 장소에 출입통제 절차를 두는가?','Do you control entry to physical areas such as server rooms and record stores?'],
+ cps:[['출입 권한자를 지정하고 출입을 통제한다','Authorise and control who may enter'],
+      ['출입 내역을 관리한다','Keep entry records']],
+ ex:['해킹만 유출 경로가 아닙니다. 서버실 문이 열려 있으면 디스크째 들고 나갈 수 있습니다. 물리적 통제도 안전조치의 일부입니다.',
+     'Hacking is not the only path. An open server-room door lets someone walk out with the disks. Physical control is part of security too.'],
+ laws:['안전성 확보조치 기준 제10조']},
+{id:'P10-2',dom:'P',art:'제10조',
+ q:['개인정보가 담긴 서류·보조저장매체를 잠금장치가 있는 안전한 장소에 보관하는가?','Are documents and removable media containing personal data kept in a locked, safe place?'],
+ cps:[['서류·USB·외장하드 등을 잠금장치가 있는 곳에 보관한다','Store paper and media in a lockable location'],
+      ['방치·무단 반출을 방지한다','Prevent unattended or unauthorised removal']],
+ ex:['책상 위에 놓인 명단 한 장, 서랍 속 USB 하나가 유출의 시작이 됩니다. 물리 매체는 잠가서 보관합니다.',
+     'A printed list on a desk or a USB in a drawer can start a leak. Lock away physical media.'],
+ laws:['안전성 확보조치 기준 제10조']},
+{id:'P10-3',dom:'P',art:'제10조',
+ q:['필요한 경우 보조저장매체의 반출·반입을 통제하는가?','Where needed, do you control the import/export of removable media?'],
+ cps:[['매체 반출입 대장·승인 절차를 둔다','Log/approve media brought in or out'],
+      ['불필요한 외부 매체 사용을 제한한다','Limit unnecessary external media']],
+ ex:['USB 하나로 수십만 건이 밖으로 나갈 수 있습니다. 반출입을 기록·승인하게 하면 대량 유출 통로를 좁힙니다.',
+     'A single USB can carry hundreds of thousands of records out. Logging and approving media narrows that channel.'],
+ laws:['안전성 확보조치 기준 제10조']},
+{id:'P11-1',dom:'P',art:'제11조',cond:'disaster',
+ q:['[재해·재난 대비 의무 대상] 위기대응 매뉴얼 등을 마련하고 개인정보처리시스템 백업·복구 계획을 수립하는가?','[If subject to Art.11] Do you maintain a crisis-response manual and a backup/recovery plan for the system?'],
+ cps:[['화재·홍수·해킹 등에 대비한 위기대응 매뉴얼을 마련한다','Have a crisis-response manual for fire/flood/hacking'],
+      ['개인정보처리시스템 백업·복구 계획을 수립하고 점검한다','Establish and test backup/recovery for the system']],
+ ex:['10만명 이상(대기업·중견기업·공공기관) 또는 100만명 이상(중소기업·단체)을 처리하면 대상입니다. 사고가 나도 개인정보를 잃지 않고 복구할 수 있어야 합니다. 규모가 작으면 프로파일에서 해당없음으로 제안됩니다.',
+     'Applies to 100,000+ (large/mid-size, public) or 1,000,000+ (SMEs, organisations) subjects. You must be able to recover data after a disaster. Smaller controllers see this pre-suggested as N/A.'],
+ laws:['안전성 확보조치 기준 제11조']},
+{id:'P12-1',dom:'P',art:'제12조',
+ q:['개인정보 출력물의 항목을 최소화하고, 용도를 고려해 출력·복사물을 안전하게 관리하는가?','Do you minimise fields on printouts and manage output/copies safely by purpose?'],
+ cps:[['출력·복사 시 표시 항목을 업무에 필요한 만큼으로 줄인다','Print only the fields the task needs'],
+      ['출력·복사물의 용도·담당자를 관리한다','Manage the purpose and owner of outputs'],
+      ['불필요한 출력물을 안전하게 파기한다','Destroy unneeded printouts safely']],
+ ex:['꼭 필요한 칸만 뽑고, 뽑은 종이는 함부로 굴러다니지 않게 관리합니다. 파쇄 없이 버린 출력물이 유출로 이어집니다.',
+     'Print only the necessary columns, and do not let printouts float around. Paper tossed without shredding becomes a leak.'],
+ laws:['안전성 확보조치 기준 제12조']},
+/* ── D. 파기 ── */
+{id:'D13-1',dom:'D',art:'제13조',
+ q:['개인정보를 파기할 때 복원·재생되지 않는 방법으로 파기하는가?','Do you destroy personal data so it cannot be restored?'],
+ cps:[['전자적 파일은 복구 불가능한 방법으로 완전 삭제·초기화한다','Wipe electronic files irrecoverably'],
+      ['출력물·매체는 소각·파쇄·전용 소자 등으로 파기한다','Incinerate/shred/degauss paper and media']],
+ ex:['휴지통에서 지우거나 "삭제" 버튼만 누르는 것은 파기가 아닙니다. 복원 도구로 되살릴 수 없어야 진짜 파기입니다.',
+     'Emptying the recycle bin or clicking "delete" is not destruction. It counts only when recovery tools cannot bring it back.'],
+ laws:['안전성 확보조치 기준 제13조','개인정보 보호법 제21조']},
+{id:'D13-2',dom:'D',art:'제13조',
+ q:['개인정보의 일부만 파기할 때 해당 부분을 복구 불가능하게 처리하는가?','When destroying only part of a record, is that part made unrecoverable?'],
+ cps:[['전자적 파일은 해당 부분을 삭제한다','Delete the specific portion in electronic files'],
+      ['종이·매체는 마스킹·천공 등으로 해당 부분을 지운다','Mask/perforate the portion on paper or media']],
+ ex:['보유기간이 끝난 일부 항목만 지울 때도 복원되면 안 됩니다. 종이는 검은칠·천공, 파일은 실제 삭제로 처리합니다.',
+     'Removing just the expired fields must also be irreversible: black-out/perforate paper, truly delete in files.'],
+ laws:['안전성 확보조치 기준 제13조']},
+{id:'D13-3',dom:'D',art:'제13조',
+ q:['파기 사실을 기록·관리하는가?','Do you record and manage the fact of destruction?'],
+ cps:[['무엇을·언제·어떻게 파기했는지 기록한다','Record what was destroyed, when and how'],
+      ['파기 기록을 보관한다','Retain destruction records']],
+ ex:['파기했다는 증거가 없으면, 나중에 그 데이터가 발견됐을 때 "지웠다"고 설명할 수 없습니다. 파기도 기록으로 남깁니다.',
+     'Without evidence of destruction, you cannot show it was deleted if the data resurfaces. Log destruction too.'],
+ laws:['안전성 확보조치 기준 제13조']},
+/* ── S. 공공시스템운영기관 ── */
+{id:'S14-1',dom:'S',art:'제14조',cond:'public',
+ q:['공공시스템 지정 요건에 해당하는지 확인하고, 지정된 경우 제3장 강화 기준을 적용하는가?','Do you check the public-system designation criteria and apply the Chapter 3 stricter standard when designated?'],
+ cps:[['우리 시스템이 공공시스템 지정 요건에 해당하는지 확인한다','Check whether your system meets the designation criteria'],
+      ['지정된 경우 일반 기준에 더해 강화 기준을 적용한다','Apply the stricter rules on top of the general standard']],
+ ex:['다량의 국민 개인정보를 다루는 대규모 공공시스템은 일반 기준만으로 부족하다고 보아 별도의 강화 조항(제3장)이 적용됩니다. 먼저 우리가 그 대상인지부터 확인합니다.',
+     'Large public systems handling citizens’ data at scale are held to extra rules (Chapter 3) beyond the general standard. First confirm whether you are in scope.'],
+ laws:['안전성 확보조치 기준 제14조','시행령 제30조의2']},
+{id:'S15-1',dom:'S',art:'제15조',cond:'public',
+ q:['공공시스템별로 개인정보 관리책임을 지정하고 별도의 내부 관리계획을 수립하는가?','Do you assign responsibility per public system and maintain a dedicated internal management plan?'],
+ cps:[['시스템별 관리책임자·담당자를 지정한다','Assign an owner/handler per system'],
+      ['공공시스템 특성을 반영한 내부 관리계획을 둔다','Keep a plan tailored to the public system']],
+ ex:['시스템이 크고 이용기관이 많을수록 "누가 책임지는가"가 흐려집니다. 시스템 단위로 책임자를 못 박고 전용 관리계획을 둡니다.',
+     'The bigger the system and the more agencies use it, the blurrier accountability gets. Pin an owner per system with a dedicated plan.'],
+ laws:['안전성 확보조치 기준 제15조']},
+{id:'S16-1',dom:'S',art:'제16조',cond:'public',
+ q:['공공시스템 계정을 취급자별로 발급하고 공유하지 않으며, 인사정보와 연계해 발급·말소를 관리하는가?','Are public-system accounts per handler (never shared) and tied to HR data for issuance/revocation?'],
+ cps:[['계정을 취급자별로 발급하고 타인과 공유·양도하지 않는다','Issue per-handler accounts; no sharing/transfer'],
+      ['인사정보와 연계해 발급·변경·말소를 관리한다','Link issuance/change/revocation to HR records']],
+ ex:['공공 부문 유출 사고의 상당수가 공유 계정·방치 계정에서 나왔습니다. 그래서 개인 단위 계정과 인사 연계를 강화 기준으로 못 박았습니다.',
+     'Many public-sector leaks traced back to shared or stale accounts — hence the stricter rule on per-person accounts linked to HR.'],
+ laws:['안전성 확보조치 기준 제16조']},
+{id:'S16-2',dom:'S',art:'제16조',cond:'public',
+ q:['접근권한 부여·변경·말소 내역 등을 시스템에 자동으로 기록하고, 정당한 권한자만 접속하는지 관리하는가?','Are privilege changes recorded automatically, with checks that only authorised users access the system?'],
+ cps:[['권한 변경 내역을 시스템에서 자동 기록한다','Record privilege changes automatically'],
+      ['권한 없는 접근·오남용 여부를 관리·점검한다','Monitor for unauthorised access and misuse']],
+ ex:['수기 관리로는 대규모 공공시스템의 권한 변화를 따라갈 수 없습니다. 자동 기록과 상시 점검이 강화 기준의 핵심입니다.',
+     'Manual tracking cannot keep up with privilege churn in a large public system. Automatic logging and continuous review are the core of the stricter rule.'],
+ laws:['안전성 확보조치 기준 제16조']},
+{id:'S17-1',dom:'S',art:'제17조',cond:'public',
+ q:['공공시스템 접속기록을 자동화된 방식 등으로 상시 점검하고, 이상 징후에 대응하는가?','Are public-system access logs reviewed continuously (e.g. automated), with response to anomalies?'],
+ cps:[['접속기록을 자동화된 방식 등으로 상시·정기 점검한다','Review logs continuously/regularly, automated where possible'],
+      ['이상 징후 발견 시 필요한 조치를 취한다','Act on detected anomalies']],
+ ex:['월 1회 수동 점검을 넘어, 대량 조회 같은 이상 징후를 상시 감시하도록 요구합니다. 규모가 큰 만큼 점검도 자동화합니다.',
+     'Beyond a monthly manual check, it requires continuous watch for anomalies like bulk queries — automation matching the scale.'],
+ laws:['안전성 확보조치 기준 제17조']},
+{id:'S18-1',dom:'S',art:'제18조',cond:'public',
+ q:['공공시스템의 취약점을 정기적으로 점검하고 발견된 취약점을 조치하는가?','Do you regularly assess public-system vulnerabilities and remediate what you find?'],
+ cps:[['정기적으로 취약점을 점검한다','Assess vulnerabilities on a regular schedule'],
+      ['발견된 취약점을 조치하고 결과를 관리한다','Remediate findings and track results']],
+ ex:['강화 기준에는 일반 기준에 없는 "취약점 점검·조치" 의무가 추가됩니다. 알려진 구멍을 정기적으로 찾아 막습니다.',
+     'The stricter standard adds a vulnerability-assessment-and-fix duty not in the general one: regularly find and close known holes.'],
+ laws:['안전성 확보조치 기준 제18조']}
+];
+
+var STATE={}, SKEY='wvs_safety_assess', PKEY='wvs_safety_profile';
+var PROFILE={public:false,disaster:true,internet:false};
+var FILT={dom:'all',onlyGap:false,onlyUn:false,q:''};
+
+function loadState(){try{STATE=JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){STATE={};}
+  try{var p=JSON.parse(localStorage.getItem(PKEY));if(p)PROFILE=Object.assign(PROFILE,p);}catch(e){}}
+function saveState(){try{localStorage.setItem(SKEY,JSON.stringify(STATE));}catch(e){}}
+function saveProfile(){try{localStorage.setItem(PKEY,JSON.stringify(PROFILE));}catch(e){}}
+
+/* 프로파일상 이 항목이 적용 대상인가 */
+function inScope(it){
+  if(it.cond==='public') return PROFILE.public;
+  if(it.cond==='disaster') return PROFILE.disaster;
+  if(it.cond==='internet') return PROFILE.internet;
+  return true;
+}
+/* 이행률·KPI 대상: 적용 항목만 */
+function scoreItems(){return ITEMS.filter(inScope);}
+
+function stats(items){
+  var g=0,p=0,v=0,n=0;
+  items.forEach(function(it){var s=STATE[it.id];if(s==='g')g++;else if(s==='p')p++;else if(s==='v')v++;else if(s==='n')n++;});
+  var den=g+p+v, rate=den?Math.round((g+p*0.5)/den*100):0;
+  return {g:g,p:p,v:v,n:n,checked:g+p+v+n,total:items.length,rate:rate};
+}
+function rateColor(r,has){return r>=80?'var(--good)':r>=50?'var(--accent)':has?'var(--bad)':'var(--warn)';}
+
+function renderDash(){
+  var s=stats(scoreItems());
+  document.getElementById('kTot').textContent=s.total;
+  document.getElementById('kG').textContent=s.g;
+  document.getElementById('kP').textContent=s.p;
+  document.getElementById('kV').textContent=s.v;
+  document.getElementById('kN').textContent=s.n;
+  document.getElementById('kC').textContent=s.checked+' / '+s.total;
+  var ring=document.getElementById('ring');
+  ring.style.setProperty('--p',s.rate);
+  ring.style.setProperty('--c',rateColor(s.rate,s.v>0));
+  document.getElementById('ringPct').textContent=s.rate+'%';
+  renderAreaBars();
+  try{ if(window.WVSProgress){ window.WVSProgress.markVisited('privacy-safety-check.html');
+    if(s.checked>=s.total && s.total>0) window.WVSProgress.complete(s.rate,'privacy-safety-check.html'); } }catch(e){}
+}
+function renderAreaBars(){
+  var host=document.getElementById('areaBars');
+  host.innerHTML=DOMAINS.map(function(d){
+    var its=scoreItems().filter(function(i){return i.dom===d.key;});
+    if(!its.length) return '';
+    var s=stats(its);
+    return '<div class="ab"><div class="t"><span>'+esc(d.key+'. '+L(d.ko,d.en))+'</span><b>'+(s.checked?s.rate+'%':'–')+'</b></div>'+
+      '<div class="bar"><i style="width:'+(s.checked?s.rate:0)+'%;background:'+rateColor(s.rate,s.v>0)+'"></i></div></div>';
+  }).join('');
+}
+
+function buildSeg(){
+  var seg=document.getElementById('segDom');
+  seg.innerHTML='<button data-v="all" class="on">'+L('전체','All')+'</button>'+
+    DOMAINS.map(function(d){return '<button data-v="'+d.key+'">'+d.key+'</button>';}).join('');
+  seg.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click',function(){
+      seg.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on'); FILT.dom=b.getAttribute('data-v'); render();
+    });
+  });
+}
+
+function matchFilter(it){
+  if(FILT.dom!=='all' && it.dom!==FILT.dom) return false;
+  var st=STATE[it.id];
+  if(FILT.onlyGap && !(st==='v'||st==='p')) return false;
+  if(FILT.onlyUn && st) return false;
+  if(FILT.q){
+    var q=FILT.q.toLowerCase();
+    var hay=(it.id+' '+it.art+' '+L(it.q[0],it.q[1])+' '+it.cps.map(function(c){return L(c[0],c[1]);}).join(' ')+' '+L(it.ex[0],it.ex[1])+' '+it.laws.join(' ')).toLowerCase();
+    if(hay.indexOf(q)<0) return false;
+  }
+  return true;
+}
+
+function render(){
+  var host=document.getElementById('list');
+  var vis=ITEMS.filter(matchFilter);
+  if(!vis.length){ host.innerHTML='<div class="empty">'+L('조건에 맞는 항목이 없습니다.','No items match the filters.')+'</div>'; return; }
+  var groups=[], gmap={};
+  vis.forEach(function(it){
+    if(!gmap[it.dom]){gmap[it.dom]={key:it.dom,items:[]};groups.push(gmap[it.dom]);}
+    gmap[it.dom].items.push(it);
+  });
+  var dmap={}; DOMAINS.forEach(function(d){dmap[d.key]=d;});
+  host.innerHTML=groups.map(function(g){
+    var d=dmap[g.key];
+    var s=stats(g.items.filter(inScope));
+    return '<div class="sec" data-k="'+g.key+'">'+
+      '<h2 onclick="toggleSec(this)"><span class="dom a'+g.key+'">'+g.key+'</span>'+
+      '<span>'+esc(L(d.ko,d.en))+'</span>'+
+      (d.sim?'<a class="simlink" style="margin:0" href="'+d.sim+'" onclick="event.stopPropagation()">▶ '+L('관련 학습','Learn')+'</a>':'')+
+      '<span class="pilln">'+s.g+'✓ · '+s.p+'◐ · '+s.v+'✗ · '+s.total+L('개','')+'</span>'+
+      '<span class="mini"><i style="width:'+(s.checked?s.rate:0)+'%;background:'+rateColor(s.rate,s.v>0)+'"></i></span>'+
+      '</h2><div class="body">'+g.items.map(itemHtml).join('')+'</div></div>';
+  }).join('');
+}
+
+function itemHtml(it){
+  var st=STATE[it.id]||'';
+  var scoped=inScope(it);
+  var cls=st==='g'?'isg':st==='p'?'isp':st==='v'?'isv':st==='n'?'isn':'';
+  if(!scoped) cls+=' dim';
+  var cps=it.cps.map(function(c){return '<li>'+esc(L(c[0],c[1]))+'</li>';}).join('');
+  var laws=it.laws.map(function(l){return '<span class="law">'+esc(l)+'</span>';}).join('');
+  var cbadge=(!scoped&&it.cond)?'<span class="cbadge">'+L('프로파일상 해당없음','N/A by profile')+'</span>':'';
+  return '<div class="item '+cls+'" data-id="'+it.id+'">'+
+    '<div class="top">'+
+      '<span class="code">'+it.id+'</span>'+
+      '<span class="art">'+esc(it.art)+'</span>'+cbadge+
+      '<span class="req">'+esc(L(it.q[0],it.q[1]))+'</span>'+
+      '<span class="states">'+
+        '<span class="st g'+(st==='g'?' on':'')+'" onclick="setState(\''+it.id+'\',\'g\')">'+L('이행','Done')+'</span>'+
+        '<span class="st p'+(st==='p'?' on':'')+'" onclick="setState(\''+it.id+'\',\'p\')">'+L('부분이행','Partial')+'</span>'+
+        '<span class="st v'+(st==='v'?' on':'')+'" onclick="setState(\''+it.id+'\',\'v\')">'+L('미이행','Not done')+'</span>'+
+        '<span class="st n'+(st==='n'?' on':'')+'" onclick="setState(\''+it.id+'\',\'n\')">'+L('해당없음','N/A')+'</span>'+
+      '</span>'+
+    '</div>'+
+    '<span class="toggle" onclick="toggleItem(this)">▸ '+L('상세 (요건·쉽게 말하면·근거)','Details (requirements · plain words · basis)')+'</span>'+
+    '<div class="det">'+
+      '<h4>'+L('주요 요건','Key requirements')+'</h4><ul class="cps">'+cps+'</ul>'+
+      '<h4>'+L('쉽게 말하면','In plain words')+'</h4><p>'+esc(L(it.ex[0],it.ex[1]))+'</p>'+
+      '<h4>'+L('근거','Basis')+'</h4><div class="laws">'+laws+'</div>'+
+    '</div>'+
+  '</div>';
+}
+
+function setState(id,val){
+  if(STATE[id]===val) delete STATE[id]; else STATE[id]=val;
+  saveState();
+  var el=document.querySelector('.item[data-id="'+id+'"]');
+  if(el){
+    var st=STATE[id]||'', it=ITEMS.find(function(x){return x.id===id;});
+    var open=el.classList.contains('open');
+    var cls='item'+(st==='g'?' isg':st==='p'?' isp':st==='v'?' isv':st==='n'?' isn':'')+(inScope(it)?'':' dim')+(open?' open':'');
+    el.className=cls;
+    el.querySelectorAll('.st').forEach(function(b){b.classList.remove('on');});
+    if(st){var b=el.querySelector('.st.'+st);if(b)b.classList.add('on');}
+  }
+  renderDash(); updateSectionHead(id);
+  if(FILT.onlyGap||FILT.onlyUn) render();
+}
+function updateSectionHead(id){
+  var it=ITEMS.find(function(x){return x.id===id;}); if(!it)return;
+  var secEl=document.querySelector('.sec[data-k="'+it.dom+'"]'); if(!secEl)return;
+  var ids={}; secEl.querySelectorAll('.item').forEach(function(x){ids[x.getAttribute('data-id')]=1;});
+  var s=stats(ITEMS.filter(function(x){return ids[x.id]&&inScope(x);}));
+  var pill=secEl.querySelector('.pilln'); if(pill)pill.textContent=s.g+'✓ · '+s.p+'◐ · '+s.v+'✗ · '+s.total+L('개','');
+  var mini=secEl.querySelector('.mini>i'); if(mini){mini.style.width=(s.checked?s.rate:0)+'%';mini.style.background=rateColor(s.rate,s.v>0);}
+}
+function toggleItem(t){t.parentNode.classList.toggle('open');t.firstChild.textContent=t.parentNode.classList.contains('open')?'▾ ':'▸ ';}
+function toggleSec(h){var b=h.nextElementSibling;b.style.display=b.style.display==='none'?'':'none';}
+
+function exportReport(){
+  var s=stats(scoreItems()), lines=[];
+  lines.push('개인정보 안전성 확보조치 자가진단 결과 — 개선과제 목록');
+  lines.push('근거: 개인정보의 안전성 확보조치 기준(고시) 제4~18조 / 교육용 재구성');
+  lines.push('프로파일: 공공시스템='+(PROFILE.public?'예':'아니오')+' · 재해재난='+(PROFILE.disaster?'예':'아니오')+' · 인터넷망차단='+(PROFILE.internet?'예':'아니오'));
+  lines.push('생성: '+new Date().toLocaleString('ko-KR'));
+  lines.push('적용 '+s.total+' · 이행 '+s.g+' · 부분이행 '+s.p+' · 미이행 '+s.v+' · 해당없음 '+s.n+' · 이행률 '+s.rate+'%');
+  lines.push('');
+  DOMAINS.forEach(function(d){
+    var its=scoreItems().filter(function(i){return i.dom===d.key;}); if(!its.length)return;
+    var ds=stats(its);
+    lines.push('  ['+d.key+'] '+d.ko+' : '+(ds.checked?ds.rate+'%':'미점검')+' ('+ds.total+'개)');
+  });
+  lines.push('');
+  ['v','p'].forEach(function(kind){
+    var label=kind==='v'?'미이행':'부분이행';
+    var g=scoreItems().filter(function(it){return STATE[it.id]===kind;});
+    lines.push('■ '+label+' 개선과제 ('+g.length+')');
+    if(!g.length) lines.push('  (없음)');
+    g.forEach(function(it){
+      lines.push('- ['+it.id+' '+it.art+'] '+it.q[0]);
+      it.cps.forEach(function(c,i){lines.push('    요건'+(i+1)+': '+c[0]);});
+      lines.push('    근거: '+it.laws.join(' / '));
+    });
+    lines.push('');
+  });
+  var un=scoreItems().filter(function(it){return !STATE[it.id];});
+  lines.push('■ 미점검 ('+un.length+'): '+un.map(function(i){return i.id;}).join(', '));
+  var blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='안전성확보조치_자가진단_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+function resetAll(){
+  if(!confirm(L('모든 점검 결과를 초기화할까요? (이 기기 저장분만 삭제)','Reset all results on this device?')))return;
+  STATE={};saveState();render();renderDash();
+}
+
+function bindProfile(){
+  [['pfPublic','public'],['pfDisaster','disaster'],['pfInternet','internet']].forEach(function(pair){
+    var el=document.getElementById(pair[0]); el.checked=!!PROFILE[pair[1]];
+    el.addEventListener('change',function(){PROFILE[pair[1]]=el.checked;saveProfile();render();renderDash();});
+  });
+}
+function bindControls(){
+  document.getElementById('onlyGap').addEventListener('change',function(){FILT.onlyGap=this.checked;render();});
+  document.getElementById('onlyUn').addEventListener('change',function(){FILT.onlyUn=this.checked;render();});
+  var qt;
+  document.getElementById('q').addEventListener('input',function(){var v=this.value;clearTimeout(qt);qt=setTimeout(function(){FILT.q=v.trim();render();},180);});
+}
+
+function boot(){
+  loadState(); applyLang(); bindProfile(); buildSeg(); bindControls();
+  render(); renderDash(); window.__booted=true;
+}
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</body>
+</html>
