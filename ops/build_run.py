@@ -198,6 +198,21 @@ def main():
         return 1
     print('  변경 %d파일, scope 위반 없음' % len(files))
 
+    attempts = ticket.get('build_attempts', 0) + 1
+    ticket['build_attempts'] = attempts
+
+    # A2 콘텐츠를 사이트에 편입: 집계·빌드 스탬프 재생성. 이걸 빼면 gate 가
+    # stamp drift 를 콘텐츠 결함으로 오해한다 — A2 는 콘텐츠만, build_site 가 집계다.
+    rb = sh(['python', os.path.join('_gen', 'build_site.py')], cwd=wt_dir, timeout=600)
+    if rb.returncode != 0:
+        tail = '\n'.join((rb.stdout + rb.stderr).strip().splitlines()[-4:])
+        return _fault(ticket, wt_dir, branch, attempts, 'build_site 실패: ' + tail[:120])
+
+    # 집계 산출물(registry·sitemap·stamp 등)은 허용 목록. 그래도 scope 재확인.
+    bad2 = scope_violations(changed_files(wt_dir))
+    if bad2:
+        return _fault(ticket, wt_dir, branch, attempts, 'scope(집계후): ' + ', '.join(bad2[:3]))
+
     # 커밋(worktree 안) — gate 가 깨끗한 상태를 보게
     sh(['git', 'add', '-A'], cwd=wt_dir)
     sh(['git', 'commit', '-m', 'auto: %s' % tid], cwd=wt_dir)
@@ -205,33 +220,35 @@ def main():
     # gate
     r = sh(['python', os.path.join('ops', 'gate.py'), '--dir', wt_dir, '--ticket', tid],
            cwd=ROOT, timeout=700)
-    print(r.stdout.strip().splitlines()[-1] if r.stdout.strip() else '(gate 무출력)')
-    gate_pass = r.returncode == 0
+    for ln in (r.stdout or '').strip().splitlines()[-3:]:
+        print('  ' + ln)
+    if r.returncode != 0:
+        return _fault(ticket, wt_dir, branch, attempts, 'gate content-fault')
 
-    attempts = ticket.get('build_attempts', 0) + 1
-    ticket['build_attempts'] = attempts
-    if gate_pass:
-        ticket['status'] = 'gate-pass'
-        ticket['branch'] = branch
-        save_ticket(ticket)
-        conn = state.init()
-        conn.execute("UPDATE items SET status='gate' WHERE run_id=?", (tid,))
-        conn.commit()
-        conn.close()
-        print('판정: gate-pass -> 6단계 검토 대기 (worktree 유지)')
-        cleanup_worktree(wt_dir, branch, keep=True)
-        return 0
+    # gate-pass
+    ticket['status'] = 'gate-pass'
+    ticket['branch'] = branch
+    save_ticket(ticket)
+    conn = state.init()
+    conn.execute("UPDATE items SET status='gate' WHERE run_id=?", (tid,))
+    conn.commit()
+    conn.close()
+    print('판정: gate-pass -> 6단계 검토 대기 (worktree 유지)')
+    cleanup_worktree(wt_dir, branch, keep=True)
+    return 0
 
-    # content-fault
+
+def _fault(ticket, wt_dir, branch, attempts, reason):
+    """content-fault 처리: 1회는 반송(재시도), 상한 도달 시 데드레터."""
     if attempts >= MAX_ATTEMPTS:
-        _record_deadletter(ticket, 'gate content-fault %d회' % attempts)
+        _record_deadletter(ticket, reason)
         cleanup_worktree(wt_dir, branch)
-        print('판정: content-fault %d회 -> 데드레터' % attempts)
+        print('판정: content-fault %d회 -> 데드레터 (%s)' % (attempts, reason[:70]))
     else:
-        ticket['status'] = 'awaiting_build'    # 재시도 대상
+        ticket['status'] = 'awaiting_build'
         save_ticket(ticket)
         cleanup_worktree(wt_dir, branch)
-        print('판정: content-fault -> 반송(재시도 %d/%d)' % (attempts, MAX_ATTEMPTS))
+        print('판정: content-fault -> 반송 %d/%d (%s)' % (attempts, MAX_ATTEMPTS, reason[:70]))
     return 1
 
 
