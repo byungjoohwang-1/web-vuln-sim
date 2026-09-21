@@ -32,6 +32,9 @@ DOMAINS = [
     ('linux',  '05_linux-',  'Linux 서버 점검',      'Linux server hardening',   'u',   (1, 61)),
     ('db',     '06_db-',     'DBMS 점검',            'DBMS hardening',           'd',   (1, 26)),
     ('fin',    '07_fin-',    '전자금융기반시설 점검', 'Financial infrastructure', None,  None),
+    ('fincloud', '07_fincloud-', '금융 클라우드 진단',  'Financial cloud audit',    None,  None),
+    ('iss',    '07_iss-',    '금융 정보보호시스템 점검', 'Financial security appliance audit', None, None),
+    ('srv',    '07_srv-',    '금융 서버 진단',        'Financial server audit',   None,  None),
     ('win',    '08_win-',    'Windows 서버 점검',    'Windows server hardening', 'w',   (1, 28)),
     ('net',    '09_net-',    '네트워크 장비 점검',    'Network device hardening', 'n',   (1, 21)),
     ('sec',    '10_sec-',    '보안장비 점검',         'Security appliance',       's',   (1, 23)),
@@ -41,6 +44,7 @@ DOMAINS = [
     ('auto',   '14_auto-',   '자동차 보안',           'Automotive security',      'auto', (1, 61)),
     ('privacy', '15_privacy-', '개인정보보호',        'Privacy protection',       'p',   None),
     ('zt',     '16_zt-',     '제로트러스트',          'Zero trust',               None,  None),
+    ('fw',     '17_fw-',     '펌웨어·IoT 진단',       'Firmware and IoT audit',   None,  None),
 ]
 
 # 시뮬레이터 파일명은 하이픈과 밑줄이 섞여 있다(sim_insufficient_session.html).

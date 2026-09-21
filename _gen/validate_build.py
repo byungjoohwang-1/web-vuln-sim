@@ -346,6 +346,59 @@ def check_page_order():
 
 
 # ------------------------------------------------------------------ #
+# 8-3. 레지스트리 도메인이 디스크의 모든 기둥을 집계하는지
+# ------------------------------------------------------------------ #
+def check_registry_domains():
+    """새 기둥이 gen_registry.py DOMAINS 에서 빠져 화면 수치에서 통째로
+    누락되는 재발 버그를 막는다.
+
+    실제 사례(2026-09): 07_fincloud(22)·07_iss(7)·07_srv(8)·17_fw(2) 가
+    DOMAINS 에 없어 화면 학습 수치가 실제보다 39 적게 나왔다. page-order·
+    progress·content-catalog 에는 등록됐지만 레지스트리에만 빠졌고, 화면에
+    오류를 내지 않아 눈에 띄지 않았다. check_page_order 가 page-order 를 지키듯
+    이 검사는 레지스트리를 지킨다.
+
+    NN_xxx- 형태의 디스크 접두사(하이픈 앞 토큰)를 전부 모아, 레지스트리
+    domains 의 prefix 로 실제로 집계되는지 대조한다. 하나라도 어느 도메인에도
+    안 잡히면 그 기둥은 화면 수치에서 빠진 것이다.
+    """
+    reg_path = os.path.join(PUB, 'data', 'content-registry.json')
+    if not os.path.exists(reg_path):
+        err('NO-REGISTRY', 'data/content-registry.json 이 없다. python _gen/gen_registry.py')
+        return
+    try:
+        with open(reg_path, encoding='utf-8') as fh:
+            reg = json.load(fh)
+    except (OSError, ValueError) as exc:
+        err('REGISTRY-BROKEN', 'content-registry.json 을 읽을 수 없다: %s' % exc)
+        return
+
+    prefixes = [d.get('prefix', '') for d in reg.get('domains', [])]
+    # 디스크의 학습 기둥 접두사(예: 07_fincloud-, 17_fw-). 03_code_ 처럼 밑줄
+    # 구분자도 있으므로 하이픈/밑줄 앞까지를 접두사로 본다.
+    disk_prefixes = set()
+    for name in os.listdir(PUB):
+        if not name.endswith('.html'):
+            continue
+        m = re.match(r'^(\d{2}_[a-z]+[-_])', name)
+        if m:
+            disk_prefixes.add(m.group(1))
+
+    orphan = sorted(p for p in disk_prefixes
+                    if not any(p.startswith(rp) or rp.startswith(p) for rp in prefixes if rp))
+    if orphan:
+        # 각 고아 접두사의 실제 파일 수를 세어 보고한다.
+        detail = []
+        for p in orphan:
+            n = sum(1 for f in os.listdir(PUB) if f.startswith(p) and f.endswith('.html'))
+            detail.append('%s(%d)' % (p, n))
+        err('REGISTRY-DOMAIN-STALE',
+            '레지스트리 domains 에서 빠진 기둥 %d개: %s. '
+            '화면 수치에서 통째로 누락된다 — _gen/gen_registry.py 의 DOMAINS 에 추가하고 재생성하라.'
+            % (len(orphan), ', '.join(detail)))
+
+
+# ------------------------------------------------------------------ #
 # 9-2. 출처 연결 정합성 (C03)
 # ------------------------------------------------------------------ #
 def check_sources():
@@ -523,7 +576,8 @@ def main():
     strict = '--strict' in sys.argv
     for fn in (check_script_blocks, check_injected_tags, check_links, check_backdoors,
                check_text_quality, check_a11y, check_sri, check_counts,
-               check_page_order, check_sources, check_registry, check_code_lab, check_code_mobile):
+               check_page_order, check_registry_domains, check_sources, check_registry,
+               check_code_lab, check_code_mobile):
         fn()
 
     print('=' * 62)
