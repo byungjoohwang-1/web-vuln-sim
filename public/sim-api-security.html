@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>API 보안 실습 — OWASP API Security Top 10 · WEB-VULN-SIM</title>
+<meta name="description" content="모의 REST API(OrbitPay)를 상대로 OWASP API Security Top 10(2023) — BOLA·인증취약·과다노출·자원소비·BFLA·SSRF·설정오류·인벤토리·안전하지않은소비 —를 직접 공격하고 방어를 적용해 다시 확인하는 API 보안 핸즈온 실습.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="API 보안 실습 — OWASP API Security Top 10">
+<meta property="og:description" content="모의 REST API를 상대로 OWASP API Top 10 을 직접 공격·방어하는 핸즈온 실습.">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-api-security.html">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--panel3:#16233c;--bd:#22314f;--ink:#e6edf7;
+ --muted:#93a4c0;--acc:#38bdf8;--good:#3fb950;--bad:#f85149;--warn:#e3a008;
+ --mono:'JetBrains Mono','Consolas','D2Coding',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+a{color:#7dd3fc;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a,.topbar .langbtn{font-family:var(--mono);font-size:12.5px}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid var(--bd);background:var(--panel2);color:#cdbfb2;border-radius:6px;padding:4px 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 16px 70px}
+h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:11.5px;font-weight:800;color:#06121f;background:#7dd3fc;border-radius:6px;padding:2px 9px}
+.sub{color:var(--muted);font-size:14px;margin-top:8px;max-width:920px}
+.note{background:#0c1a2e;border:1px solid #1e3a5f;border-radius:10px;padding:11px 14px;margin-top:14px;font-size:12.8px;color:#bae6fd}
+.tgt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tgt b{color:var(--acc)}
+.cols{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;margin-top:16px}
+@media(max-width:920px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+.clist{list-style:none;display:flex;flex-direction:column;gap:6px}
+.clist li{border:1px solid var(--bd);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2);display:flex;gap:9px;align-items:center}
+.clist li:hover{border-color:var(--acc)}
+.clist li.on{border-color:var(--acc);background:#16304d}
+.clist .ow{font-family:var(--mono);font-size:10.5px;color:var(--muted);flex:0 0 auto;border:1px solid var(--bd);border-radius:5px;padding:1px 5px}
+.clist .tt{flex:1;font-size:13px}
+.clist .st{font-size:14px;flex:0 0 auto}
+.prog{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+.det h2{font-size:17px;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.det h2 .ow{font-family:var(--mono);font-size:12px;color:#fdba74}
+.risk{font-family:var(--mono);font-size:10.5px;border:1px solid var(--bd);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.ez{background:var(--panel3);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:9px 13px;margin:10px 0;font-size:13.5px;color:#cfe3ff}
+.ez b{color:var(--acc)}
+.term{background:#050a14;border:1px solid var(--bd);border-radius:10px;margin-top:10px;overflow:hidden}
+.term .hd{background:var(--panel3);padding:6px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px}
+.term textarea{width:100%;height:96px;background:#050a14;border:none;color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:10px 12px;resize:vertical;outline:none;white-space:pre}
+.term .out{max-height:230px;overflow:auto;padding:10px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;border-top:1px solid var(--bd);line-height:1.55}
+.btn{cursor:pointer;border:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;font-weight:700;padding:8px 15px}
+.btn.go{background:var(--acc);color:#06121f}
+.btn.alt{background:var(--panel3);color:var(--ink);border:1px solid var(--bd)}
+.btn.fix{background:var(--good);color:#06121f}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt{display:block;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin:6px 0;cursor:pointer;background:var(--panel2);font-size:13.5px}
+.opt:hover{border-color:var(--acc)}.opt input{margin-right:8px}
+.vbtn{background:var(--panel2);border:1px solid var(--bd);color:var(--ink);border-radius:8px;padding:7px 16px;font-weight:700;cursor:pointer;margin-right:8px}
+.vbtn.on{border-color:var(--acc);background:#16304d;color:var(--acc)}
+.res{border-radius:8px;padding:10px 13px;margin-top:10px;font-size:13.5px;line-height:1.7}
+.res.ok{background:#0f2a18;border:1px solid var(--good)}
+.res.no{background:#3a1518;border:1px solid var(--bad)}
+.why{margin-top:10px;font-size:13.5px;color:#d7e3f4}
+.why b{color:#fff}
+.def{margin-top:12px;background:#0e1f16;border:1px solid #1f5137;border-radius:8px;padding:10px 13px;font-size:13px;color:#bdf0d3}
+.def b{color:#7ee7a8}
+.h4{font-size:12.5px;color:var(--acc);font-family:var(--mono);margin:12px 0 4px}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:12px}
+.crosslink{margin-top:8px;font-size:12.5px;color:var(--muted)}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/safety-notice.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<div class="topbar">
+  <a href="index.html">🏠 <span class="ko">홈</span><span class="en">Home</span></a>
+  <a href="vuln-hub.html"><span class="ko">취약점 실습장</span><span class="en">Vuln Hub</span></a>
+  <a href="my-progress.html"><span class="ko">내 학습 현황</span><span class="en">My Progress</span></a>
+  <span class="sp"></span>
+  <span class="langbtn" onclick="wvsToggleLang()">KO ⇄ EN</span>
+</div>
+
+<div class="wrap" id="wvs-main" tabindex="-1" role="main">
+  <h1>🔌 <span class="ko">API 보안 실습</span><span class="en">API Security Lab</span> <span class="badge">OWASP API Top 10 · 2023</span></h1>
+  <p class="sub">
+    <span class="ko">모의 핀테크 API <b>OrbitPay</b> 를 상대로 REST 요청을 직접 던져 OWASP API Security Top 10 위험을 하나씩 시험합니다.
+    각 위험은 <b>공격 실행 → 취약/양호 판정 → 방어 적용 → 재점검</b> 순서로, 방어를 켜면 같은 공격이 이번엔 막히는지 눈으로 확인합니다.</span>
+    <span class="en">Fire real REST requests at a mock fintech API (<b>OrbitPay</b>) to exercise each OWASP API Security Top 10 risk.
+    Each risk runs attack → verdict → apply defense → re-check, so you can watch the same attack get blocked once the defense is on.</span>
+  </p>
+
+  <div class="note">
+    <span class="ko">교육용 시뮬레이션입니다. 대상 <b>api.orbitpay.local</b> 은 전부 이 페이지 안의 mock 이며 실제 네트워크 요청은 전송되지 않습니다.
+    브랜드 OrbitPay 는 가상이며 실제 제품과 무관합니다. 위험 분류는 공개 표준 OWASP API Security Top 10(2023)을 따릅니다.</span>
+    <span class="en">Educational simulation. The target <b>api.orbitpay.local</b> is a fully in-page mock — no real network requests are sent.
+    OrbitPay is a fictional brand. Risk taxonomy follows the public OWASP API Security Top 10 (2023).</span>
+  </div>
+
+  <div class="tgt">
+    <span><span class="ko">대상</span><span class="en">Target</span> <b>https://api.orbitpay.local</b></span><span>·</span>
+    <span><span class="ko">계정</span><span class="en">Users</span> alice(u-1001) · bob(u-1002) · admin(u-9001)</span><span>·</span>
+    <span><span class="ko">내 토큰</span><span class="en">My token</span> <b>alice</b></span>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="prog" id="prog"></div>
+      <ul class="clist" id="clist"></ul>
+    </div>
+    <div class="card det" id="detail"></div>
+  </div>
+
+  <div class="disc">
+    ⚠️ <span class="ko">교육용 시뮬레이션. 콘솔 요청은 모두 페이지 안의 가상 API 에 대해서만 동작합니다. 공격 시연에는 반드시 방어 방법을 함께 둡니다.
+    실제 시스템·API 를 공격하지 마세요.</span>
+    <span class="en">Educational simulation. Console requests act only on the in-page mock API. Every attack is paired with its defense. Do not attack real systems.</span>
+    <div class="crosslink">
+      <span class="ko">관련 실습:</span><span class="en">Related:</span>
+      <a href="sim-idor.html">IDOR</a> · <a href="sim-no-auth.html"><span class="ko">인증 부재</span><span class="en">Missing auth</span></a> ·
+      <a href="sim-dast.html">DAST <span class="ko">콘솔</span><span class="en">console</span></a> · <a href="03_code_vulnerable_api.html"><span class="ko">취약한 API 사용</span><span class="en">Vulnerable API use</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * API 보안 실습 엔진 — 자체 완결형. 실제 네트워크 없음.
+ * 설계: 단일 진실원천 = 방어 플래그(DEF). 콘솔 응답도, 판정(verdict)도,
+ *       방어(fix)도 모두 같은 플래그를 읽고 쓴다. 방어를 켜면 같은 요청이
+ *       이번엔 막히고 재점검이 '양호'로 바뀐다.
+ * 전역에 브라우저 내장 이름(history/location/name/top)을 쓰지 않는다.
+ * ============================================================ */
+(function () {
+  'use strict';
+  function isEn() { try { return (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en'; } catch (e) { return false; } }
+  function L(ko, en) { return isEn() ? en : ko; }
+  function esc(s) { return (s + '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---- 모의 데이터 ---- */
+  var USERS = {
+    'u-1001': { id: 'u-1001', name: 'alice', role: 'user', email: 'alice@orbitpay.local', ssn: '900101-1******', pwHash: '$2b$10$Qk...alice', balance: 5230.50 },
+    'u-1002': { id: 'u-1002', name: 'bob', role: 'user', email: 'bob@orbitpay.local', ssn: '880202-2******', pwHash: '$2b$10$Zx...bob', balance: 88120.00 },
+    'u-9001': { id: 'u-9001', name: 'admin', role: 'admin', email: 'admin@orbitpay.local', ssn: '770303-1******', pwHash: '$2b$10$Aa...admin', balance: 0 }
+  };
+  var ME = 'u-1001'; /* 내 토큰의 주인 = alice */
+
+  /* ---- 방어 플래그(단일 진실원천). false = 취약, true = 방어됨 ---- */
+  var DEF = {
+    objAuthz: false,      /* API1 BOLA: 객체 소유권 검사 */
+    verifyToken: false,   /* API2: 서명·만료·alg 검증 */
+    respAllowlist: false, /* API3: 응답 필드 화이트리스트(민감정보 숨김) */
+    inputAllowlist: false,/* API3: 입력 화이트리스트(mass assignment 차단) */
+    rateLimit: false,     /* API4: 속도 제한·페이지 상한 */
+    funcAuthz: false,     /* API5 BFLA: 함수(역할) 수준 인가 */
+    bizAntiAuto: false,   /* API6: 민감 비즈니스 흐름 자동화 방지 */
+    ssrfGuard: false,     /* API7: URL 허용목록·내부대역 차단 */
+    hardened: false,      /* API8: 설정 하드닝(에러 은닉·CORS·헤더) */
+    inventory: false,     /* API9: 구버전/디버그 엔드포인트 정리 */
+    validateUpstream: false /* API10: 서드파티 응답 검증 */
+  };
+
+  /* 위조 토큰 판별: alg:none 또는 우리 서명키 없이 만든 토큰 */
+  function tokenValid(tok) {
+    if (!tok) return { ok: false, why: 'no-token' };
+    if (/alg"?\s*:\s*"?none/i.test(tok) || /\.$/.test(tok.trim())) return { ok: false, why: 'alg-none', forged: true };
+    if (/FORGED|ADMIN\.$|eyJhbGciOiJub25l/i.test(tok)) return { ok: false, why: 'forged', forged: true };
+    if (/expired|exp=1[0-4]/i.test(tok)) return { ok: false, why: 'expired', expired: true };
+    return { ok: true };
+  }
+
+  /* ---- 모의 API 서버: 요청(메서드/경로/헤더/바디) → 응답 ---- */
+  function api(req) {
+    var m = req.method, p = req.path, q = req.query || {}, b = req.body || {}, h = req.headers || {};
+    var tok = h.Authorization || '';
+    var callerRole = /admin/i.test(tok) && DEF.verifyToken === false ? 'admin' : (USERS[ME] ? USERS[ME].role : 'user');
+    var R = function (status, obj) { return { status: status, body: obj }; };
+
+    /* API1:2023 BOLA — GET /accounts/{id} */
+    var mAcc = p.match(/^\/api\/accounts\/(u-\d+)$/);
+    if (mAcc && m === 'GET') {
+      var oid = mAcc[1];
+      if (DEF.objAuthz && oid !== ME) return R(403, { error: 'forbidden', reason: 'object ownership check failed (not your account)' });
+      var u = USERS[oid];
+      if (!u) return R(404, { error: 'not found' });
+      return R(200, { id: u.id, owner: u.name, balance: u.balance, note: (oid !== ME ? 'BOLA: 남의 계정을 소유권 검사 없이 조회함' : '본인 계정') });
+    }
+
+    /* API2:2023 Broken Authentication — GET /me (토큰 검증) */
+    if (p === '/api/me' && m === 'GET') {
+      var v = tokenValid(tok);
+      if (DEF.verifyToken && !v.ok) return R(401, { error: 'unauthorized', reason: v.why });
+      var who = (v.forged || /admin/i.test(tok)) && !DEF.verifyToken ? 'u-9001' : ME;
+      var uu = USERS[who];
+      return R(200, { id: uu.id, name: uu.name, role: uu.role, tokenAccepted: DEF.verifyToken ? 'verified' : 'NOT verified (alg/exp/sig unchecked)' });
+    }
+
+    /* API3:2023 BOPLA — GET /users/{id} (과다 노출) + POST /users (mass assignment) */
+    var mU = p.match(/^\/api\/users\/(u-\d+)$/);
+    if (mU && m === 'GET') {
+      var uid = mU[1], usr = USERS[uid];
+      if (!usr) return R(404, { error: 'not found' });
+      if (DEF.respAllowlist) return R(200, { id: usr.id, name: usr.name, role: usr.role });
+      return R(200, { id: usr.id, name: usr.name, role: usr.role, email: usr.email, ssn: usr.ssn, passwordHash: usr.pwHash, note: 'excessive data exposure: ssn/passwordHash 노출' });
+    }
+    if (p === '/api/users' && m === 'POST') {
+      var wantRole = b.role || 'user';
+      if (DEF.inputAllowlist) return R(201, { id: 'u-new', name: b.name || 'new', role: 'user', note: 'role 입력은 무시됨(화이트리스트)' });
+      return R(201, { id: 'u-new', name: b.name || 'new', role: wantRole, note: (wantRole === 'admin' ? 'mass assignment: role=admin 을 그대로 수용' : 'role 입력을 그대로 반영') });
+    }
+
+    /* API4:2023 Unrestricted Resource Consumption — GET /transactions?limit= */
+    if (p === '/api/transactions' && m === 'GET') {
+      var lim = parseInt(q.limit || '20', 10);
+      if (DEF.rateLimit && lim > 100) return R(400, { error: 'limit too large', maxAllowed: 100 });
+      if (DEF.rateLimit && (req._nth || 0) > 30) return R(429, { error: 'rate limit exceeded' });
+      return R(200, { requested: lim, returned: lim, note: (lim > 1000 ? 'unrestricted resource consumption: 상한 없이 ' + lim + '건 반환' : lim + '건 반환') });
+    }
+
+    /* API5:2023 BFLA — POST /admin/refunds (관리 기능) */
+    if (p === '/api/admin/refunds' && m === 'POST') {
+      if (DEF.funcAuthz && callerRole !== 'admin') return R(403, { error: 'forbidden', reason: 'function-level authorization: admin 전용' });
+      return R(200, { refunded: b.amount || 999999, to: b.to || 'attacker', note: 'BFLA: 관리 기능이 일반 사용자에게 실행됨' });
+    }
+
+    /* API6:2023 Unrestricted Access to Sensitive Business Flows — POST /transfer (자동화) */
+    if (p === '/api/transfer' && m === 'POST') {
+      if (DEF.bizAntiAuto && (req._nth || 0) > 3) return R(429, { error: 'anti-automation triggered', reason: '민감 흐름 자동화 방지' });
+      return R(200, { transferred: b.amount || 1, note: DEF.bizAntiAuto ? '정상 이체' : 'no anti-automation: 스크립트로 무한 반복 가능' });
+    }
+
+    /* API7:2023 SSRF — POST /import {url} */
+    if (p === '/api/import' && m === 'POST') {
+      var url = (b.url || '') + '';
+      var internal = /169\.254\.169\.254|metadata|localhost|127\.0\.0\.1|0\.0\.0\.0|::1|internal|10\.|192\.168\./i.test(url);
+      if (DEF.ssrfGuard && internal) return R(400, { error: 'blocked', reason: 'SSRF guard: 내부 대역/메타데이터 차단, 허용목록 외 URL' });
+      if (internal) return R(200, { fetched: url, leaked: '{"AccessKeyId":"AKIA...EXAMPLE","SecretAccessKey":"wJal...EXAMPLE"}', note: 'SSRF: 서버가 내부 메타데이터를 대신 가져옴' });
+      return R(200, { fetched: url, title: 'Example Domain', note: '외부 URL 정상 미리보기' });
+    }
+
+    /* API8:2023 Security Misconfiguration — GET /debug/error, OPTIONS(CORS) */
+    if (p === '/api/debug/error' && m === 'GET') {
+      if (DEF.hardened) return R(500, { error: 'internal error', ref: 'ERR-'+ (1000 + (p.length)) });
+      return R(500, { error: 'NullPointerException', stack: 'at com.orbitpay.PayController.charge(PayController.java:142)\n at ...OrmMapper.query(OrmMapper.java:88)', db: 'jdbc:mysql://db-prod:3306/orbit (user=root)', note: 'security misconfiguration: 상세 스택·내부 정보 노출' });
+    }
+    if (m === 'OPTIONS') {
+      var acao = DEF.hardened ? 'https://app.orbitpay.local' : '*';
+      return R(204, { corsAllowOrigin: acao, corsAllowCredentials: !DEF.hardened, note: DEF.hardened ? 'CORS 허용목록' : 'security misconfiguration: CORS * + credentials 허용' });
+    }
+
+    /* API9:2023 Improper Inventory Management — /api/v1/*, /api/internal/debug */
+    if (/^\/api\/v1\//.test(p) || p === '/api/internal/debug') {
+      if (DEF.inventory) return R(410, { error: 'gone', reason: '구버전/디버그 엔드포인트 폐기됨(inventory 관리)' });
+      return R(200, { legacy: true, path: p, note: 'improper inventory: 잊힌 구버전/디버그 엔드포인트가 살아 있음(미패치)', hint: 'v1 은 인증 우회 결함이 남아 있음' });
+    }
+
+    /* API10:2023 Unsafe Consumption of APIs — POST /partner/callback */
+    if (p === '/api/partner/callback' && m === 'POST') {
+      var payload = (b.redirect || b.data || '') + '';
+      var bad = /javascript:|<script|\.\.\/|DROP TABLE|http:\/\/evil/i.test(payload);
+      if (DEF.validateUpstream && bad) return R(400, { error: 'rejected', reason: '서드파티 응답 검증 실패(안전하지 않은 값 차단)' });
+      if (bad) return R(200, { accepted: payload, note: 'unsafe consumption: 협력사가 준 값을 검증 없이 그대로 사용(리다이렉트/주입)' });
+      return R(200, { accepted: payload, note: '정상 콜백' });
+    }
+
+    return R(404, { error: 'no such endpoint', path: p });
+  }
+
+  /* ---- 요청 파서 (간이 raw HTTP) ---- */
+  function parseReq(text) {
+    var lines = text.replace(/\r/g, '').split('\n');
+    var first = (lines[0] || '').trim().split(/\s+/);
+    var method = (first[0] || 'GET').toUpperCase();
+    var target = first[1] || '/';
+    var path = target, query = {};
+    var qi = target.indexOf('?');
+    if (qi >= 0) {
+      path = target.slice(0, qi);
+      target.slice(qi + 1).split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) query[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1)); });
+    }
+    var headers = {}, bi = lines.indexOf('');
+    var hEnd = bi < 0 ? lines.length : bi;
+    for (var k = 1; k < hEnd; k++) { var l = lines[k]; var c = l.indexOf(':'); if (c > 0) headers[l.slice(0, c).trim()] = l.slice(c + 1).trim(); }
+    var bodyText = bi < 0 ? '' : lines.slice(bi + 1).join('\n').trim();
+    var body = {};
+    if (bodyText) { try { body = JSON.parse(bodyText); } catch (e) { body = { _raw: bodyText }; } }
+    return { method: method, path: path, query: query, headers: headers, body: body };
+  }
+
+  /* ============================================================
+   * 도전 과제 — OWASP API Security Top 10 (2023)
+   * verdict(state) 는 현재 방어 플래그를 읽어 취약/양호를 돌려준다.
+   * fix(state) 는 해당 플래그를 켠다 → 같은 공격이 이번엔 막힌다.
+   * ============================================================ */
+  var CH = [
+    {
+      id: 'API1', owasp: 'API1:2023', risk: 5, flag: 'objAuthz',
+      title: L('BOLA — 객체 수준 인가 취약', 'BOLA — Broken Object Level Authorization'),
+      brief: L('요청의 객체 ID(계정 번호)만 바꾸면 남의 자원이 열립니다. API 취약점 1위입니다.',
+               'Change the object ID in the request and you read someone else’s resource. The #1 API risk.'),
+      ez: L('사물함 열쇠 없이 <b>번호만 바꿔</b> 옆 사물함을 여는 셈입니다.', 'Like opening a neighbor’s locker by just <b>changing the number</b> — no key needed.'),
+      req: 'GET /api/accounts/u-1002 HTTP/1.1\nHost: api.orbitpay.local\nAuthorization: Bearer alice-token',
+      options: [
+        L('내 토큰인데 bob(u-1002) 계정 잔액이 조회됨 — 소유권 검사 없음', 'bob’s balance returned with alice’s token — no ownership check'),
+        L('403 거부 — 객체 소유권 검사로 차단', '403 — blocked by object ownership check'),
+        L('404 — 계정 없음', '404 — no such account'),
+        L('토큰이 거부됨', 'token rejected')
+      ],
+      ev: 0,
+      why: L('계정 조회가 <b>요청자와 객체 소유자를 대조하지 않아</b>, u-1002 로 바꾸면 남의 잔액이 그대로 나옵니다. ID 가 추측 가능(순번)하면 전 사용자 데이터가 노출됩니다.',
+             'The endpoint never checks requester-vs-owner, so swapping to u-1002 leaks another user’s balance. Guessable IDs expose every user.'),
+      def: L('모든 객체 접근에 <b>객체 수준 인가</b>(요청자 == 소유자, 또는 권한 있는 역할)를 서버에서 강제한다. ID 는 추측 어려운 값(UUID)을 쓴다.',
+             'Enforce object-level authorization (requester == owner / authorized role) on every object access, server-side. Use non-guessable IDs (UUIDs).'),
+      fixNote: L('계정 조회에 객체 소유권 검사를 적용했습니다.', 'Applied object ownership check to account lookups.')
+    },
+    {
+      id: 'API2', owasp: 'API2:2023', risk: 5, flag: 'verifyToken',
+      title: L('인증 취약 — 토큰 검증 부재', 'Broken Authentication'),
+      brief: L('토큰의 서명·만료·alg 를 검증하지 않으면 <b>위조 토큰</b>(alg:none)으로 아무나 됩니다.',
+               'If signature/exp/alg aren’t verified, a forged token (alg:none) impersonates anyone.'),
+      ez: L('아무나 그릴 수 있는 <b>위조 도장</b>을 확인 없이 받아주는 셈입니다.', 'Accepting a <b>forged stamp</b> anyone can draw, without checking it.'),
+      req: 'GET /api/me HTTP/1.1\nHost: api.orbitpay.local\nAuthorization: Bearer eyJhbGciOiJub25lIn0.ADMIN.',
+      options: [
+        L('위조 토큰(alg:none)이 admin 으로 수용됨 — 서명/만료 미검증', 'Forged alg:none token accepted as admin — sig/exp unverified'),
+        L('401 거부 — 서명·만료·alg 검증', '401 — signature/exp/alg verified'),
+        L('일반 사용자로만 인식됨', 'seen as a normal user'),
+        L('엔드포인트 없음', 'no endpoint')
+      ],
+      ev: 0,
+      why: L('토큰을 <b>검증 없이 신뢰</b>해 alg:none 위조 토큰이 admin 으로 통과합니다. 서명 미검증·만료 미확인·alg 혼동은 전형적 인증 결함입니다.',
+             'The token is trusted without verification, so an alg:none forgery passes as admin. Missing signature/exp checks and alg confusion are classic auth flaws.'),
+      def: L('서명 검증 + 만료(exp) 확인 + <b>alg 허용목록</b>(none 금지)을 서버에서 강제하고, 토큰은 짧게 만료·회전한다.',
+             'Enforce signature verification + exp check + an alg allowlist (reject none), and keep tokens short-lived and rotated.'),
+      fixNote: L('토큰 서명·만료·alg 검증을 적용했습니다.', 'Applied token signature/exp/alg verification.')
+    },
+    {
+      id: 'API3', owasp: 'API3:2023', risk: 4, flag: 'respAllowlist',
+      title: L('BOPLA — 과다 데이터 노출', 'BOPLA — Excessive Data Exposure'),
+      brief: L('응답이 필요한 필드만 주지 않고 <b>주민번호·비밀번호 해시</b>까지 통째로 내려줍니다.',
+               'The response returns everything — including SSN and password hash — instead of only needed fields.'),
+      ez: L('주문 영수증에 <b>내 카드 비밀번호까지</b> 찍혀 나오는 셈입니다.', 'Like a receipt that prints your <b>card PIN</b> too.'),
+      req: 'GET /api/users/u-1002 HTTP/1.1\nHost: api.orbitpay.local\nAuthorization: Bearer alice-token',
+      options: [
+        L('ssn·passwordHash 등 민감 필드가 응답에 그대로 포함됨', 'ssn/passwordHash included in the response'),
+        L('id·name·role 만 반환 — 응답 화이트리스트', 'only id/name/role — response allowlist'),
+        L('403 거부', '403 forbidden'),
+        L('빈 응답', 'empty response')
+      ],
+      ev: 0,
+      why: L('서버가 객체를 <b>있는 그대로 직렬화</b>해 민감 필드까지 클라이언트로 나갑니다. "화면에서 안 쓰니 괜찮다"는 착각이 유출로 이어집니다.',
+             'The server serializes the object as-is, so sensitive fields reach the client. “The UI doesn’t use it” is how leaks happen.'),
+      def: L('응답을 <b>필드 화이트리스트(DTO)</b>로 만들어 필요한 값만 내보낸다. 민감정보는 별도 권한·마스킹으로만 노출한다.',
+             'Build responses from a field allowlist (DTO) and return only what’s needed. Expose sensitive data only via explicit authorization/masking.'),
+      fixNote: L('응답 필드 화이트리스트를 적용해 민감 필드를 숨겼습니다.', 'Applied a response field allowlist; sensitive fields hidden.')
+    },
+    {
+      id: 'API3b', owasp: 'API3:2023', risk: 4, flag: 'inputAllowlist',
+      title: L('BOPLA — 대량 할당(Mass Assignment)', 'BOPLA — Mass Assignment'),
+      brief: L('입력을 통째로 객체에 바인딩하면, 요청에 <b>role=admin</b> 을 끼워 넣어 권한을 올립니다.',
+               'Binding the whole input to the object lets an attacker inject role=admin to escalate.'),
+      ez: L('가입 신청서 빈칸에 <b>"직급: 관리자"</b>를 적어 넣었더니 그대로 처리되는 셈입니다.', 'Like writing <b>“title: admin”</b> on a signup form and having it accepted.'),
+      req: 'POST /api/users HTTP/1.1\nHost: api.orbitpay.local\nContent-Type: application/json\n\n{"name":"mallory","role":"admin"}',
+      options: [
+        L('role=admin 이 그대로 수용됨 — 입력 검증/화이트리스트 없음', 'role=admin accepted — no input allowlist'),
+        L('role 입력이 무시됨 — 입력 화이트리스트', 'role input ignored — input allowlist'),
+        L('400 검증 오류', '400 validation error'),
+        L('사용자 생성 실패', 'user creation failed')
+      ],
+      ev: 0,
+      why: L('요청 본문을 <b>그대로 객체에 바인딩</b>해서, 클라이언트가 보내면 안 되는 role 같은 속성까지 설정됩니다. 대량 할당은 흔한 권한 상승 경로입니다.',
+             'The request body is bound to the object wholesale, so client-controlled attributes like role get set. Mass assignment is a common privilege-escalation path.'),
+      def: L('클라이언트가 설정할 수 있는 <b>속성 화이트리스트</b>만 바인딩한다(role·isAdmin 등은 서버가 결정). 스키마 검증을 강제한다.',
+             'Bind only a whitelist of client-settable properties (server decides role/isAdmin). Enforce schema validation.'),
+      fixNote: L('입력 화이트리스트를 적용해 role 입력을 차단했습니다.', 'Applied input allowlist; role input blocked.')
+    },
+    {
+      id: 'API4', owasp: 'API4:2023', risk: 4, flag: 'rateLimit',
+      title: L('무제한 자원 소비', 'Unrestricted Resource Consumption'),
+      brief: L('페이지 크기·요청 빈도에 상한이 없으면 한 번에 <b>백만 건</b>을 요구해 서버를 마비시키거나 데이터를 통째로 긁습니다.',
+               'No page/rate limit lets an attacker ask for a million rows at once — DoS or bulk scrape.'),
+      ez: L('무한 리필을 <b>한 번에 통째로</b> 달라고 요구하는 셈입니다.', 'Like demanding the entire buffet <b>in one go</b>.'),
+      req: 'GET /api/transactions?limit=1000000 HTTP/1.1\nHost: api.orbitpay.local\nAuthorization: Bearer alice-token',
+      options: [
+        L('상한 없이 1000000 건을 반환 — 자원 소비 제한 없음', 'returns 1,000,000 rows — no limit'),
+        L('400/429 — 페이지 상한·속도 제한 적용', '400/429 — page cap / rate limit'),
+        L('빈 결과', 'empty result'),
+        L('인증 실패', 'auth failed')
+      ],
+      ev: 0,
+      why: L('limit 에 <b>상한이 없어</b> 요청한 만큼 전부 반환합니다. 페이지네이션 상한·속도 제한이 없으면 DoS 와 대량 수집에 노출됩니다.',
+             'No cap on limit means it returns as many as requested. Without pagination caps and rate limits, you’re open to DoS and bulk scraping.'),
+      def: L('<b>페이지 크기 상한</b>과 <b>속도 제한(rate limit)</b>, 요청당 자원·타임아웃 한도를 서버에서 강제한다.',
+             'Enforce a max page size, rate limits, and per-request resource/timeout budgets server-side.'),
+      fixNote: L('페이지 상한(100)과 속도 제한을 적용했습니다.', 'Applied page cap (100) and rate limiting.')
+    },
+    {
+      id: 'API5', owasp: 'API5:2023', risk: 5, flag: 'funcAuthz',
+      title: L('BFLA — 기능 수준 인가 취약', 'BFLA — Broken Function Level Authorization'),
+      brief: L('관리자 전용 기능(환불)이 <b>일반 사용자 토큰</b>으로 그대로 실행됩니다.',
+               'An admin-only function (refund) executes with a regular user’s token.'),
+      ez: L('직원만 누르는 <b>계산대 취소 버튼</b>이 손님한테도 눌리는 셈입니다.', 'Like the staff-only <b>void button</b> working for customers too.'),
+      req: 'POST /api/admin/refunds HTTP/1.1\nHost: api.orbitpay.local\nAuthorization: Bearer alice-token\nContent-Type: application/json\n\n{"amount":999999,"to":"u-1001"}',
+      options: [
+        L('일반 사용자가 관리 환불 기능을 실행함 — 역할 검사 없음', 'a user runs the admin refund — no role check'),
+        L('403 거부 — 함수 수준 인가(admin 전용)', '403 — function-level authz (admin only)'),
+        L('404 — 기능 없음', '404 — no such function'),
+        L('금액 검증 실패', 'amount validation failed')
+      ],
+      ev: 0,
+      why: L('관리 엔드포인트가 <b>역할을 확인하지 않아</b> 일반 사용자가 환불을 실행합니다. UI 에서 버튼을 숨기는 것만으로는 못 막습니다 — API 를 직접 부르면 됩니다.',
+             'The admin endpoint doesn’t check role, so a user triggers a refund. Hiding the button in the UI isn’t enough — the API can be called directly.'),
+      def: L('모든 민감·관리 기능에 <b>함수(역할) 수준 인가</b>를 서버에서 강제한다. 기본은 거부, 관리 기능은 명시적 역할 확인.',
+             'Enforce function-level (role) authorization on every sensitive/admin function server-side. Deny by default; admin functions require an explicit role check.'),
+      fixNote: L('환불 기능에 admin 역할 검사를 적용했습니다.', 'Applied admin role check to the refund function.')
+    },
+    {
+      id: 'API6', owasp: 'API6:2023', risk: 4, flag: 'bizAntiAuto',
+      title: L('민감 비즈니스 흐름 무제한 접근', 'Unrestricted Access to Sensitive Business Flows'),
+      brief: L('이체 같은 민감 흐름에 <b>자동화 방지</b>가 없으면, 스크립트로 반복해 한도·재고·포인트를 악용합니다.',
+               'No anti-automation on a sensitive flow (transfer) lets scripts abuse limits/inventory/points.'),
+      ez: L('한 사람당 하나인 <b>한정판</b>을 봇으로 수천 번 사 가는 셈입니다.', 'Like a bot buying a <b>one-per-person</b> limited item thousands of times.'),
+      req: 'POST /api/transfer HTTP/1.1\nHost: api.orbitpay.local\nAuthorization: Bearer alice-token\nContent-Type: application/json\n\n{"amount":1,"to":"u-9001"}\n// (콘솔에서 여러 번 연속 전송해 보세요)',
+      options: [
+        L('자동화 방지 없이 반복 이체가 계속 성공함', 'repeated transfers keep succeeding — no anti-automation'),
+        L('여러 번 반복하면 429 로 차단됨 — 자동화 방지', 'repeats get 429 — anti-automation'),
+        L('첫 요청부터 거부', 'rejected on first request'),
+        L('엔드포인트 없음', 'no endpoint')
+      ],
+      ev: 0,
+      why: L('비즈니스 흐름 자체에 <b>봇/자동화 방지</b>가 없어 스크립트가 무한 반복합니다. 기술적으로 "정상 요청"이라 입력 검증만으로는 못 막습니다.',
+             'The business flow itself lacks bot/automation defenses, so scripts loop endlessly. Each request is technically “valid,” so input validation alone won’t stop it.'),
+      def: L('민감 흐름에 <b>속도/횟수 제한·기기 지문·행위 분석·CAPTCHA</b> 등 자동화 방지를 적용하고, 이상 패턴을 탐지·차단한다.',
+             'Add anti-automation (rate/quota limits, device fingerprinting, behavioral analysis, CAPTCHA) to sensitive flows and detect/block abnormal patterns.'),
+      fixNote: L('이체 흐름에 자동화 방지(연속 요청 제한)를 적용했습니다.', 'Applied anti-automation (burst limit) to the transfer flow.')
+    },
+    {
+      id: 'API7', owasp: 'API7:2023', risk: 5, flag: 'ssrfGuard',
+      title: L('SSRF — 서버측 요청 위조', 'SSRF — Server-Side Request Forgery'),
+      brief: L('URL 을 받아 서버가 대신 가져오는 기능이, <b>내부 메타데이터</b>(169.254.169.254)까지 가져다 줍니다.',
+               'A “fetch this URL” feature will fetch internal metadata (169.254.169.254) for the attacker.'),
+      ez: L('심부름을 시켰더니 <b>회사 내부 금고</b>까지 다녀오는 셈입니다.', 'Send it on an errand and it visits the <b>internal vault</b> too.'),
+      req: 'POST /api/import HTTP/1.1\nHost: api.orbitpay.local\nContent-Type: application/json\n\n{"url":"http://169.254.169.254/latest/meta-data/iam/credentials"}',
+      options: [
+        L('서버가 내부 메타데이터를 가져와 클라우드 키가 유출됨', 'server fetches internal metadata — cloud keys leak'),
+        L('400 차단 — 내부 대역/메타데이터 차단, URL 허용목록', '400 — internal ranges/metadata blocked, URL allowlist'),
+        L('외부 URL 만 미리보기', 'external URL preview only'),
+        L('요청 형식 오류', 'malformed request')
+      ],
+      ev: 0,
+      why: L('사용자가 준 URL 을 <b>검증 없이 서버가 요청</b>해, 내부 전용 메타데이터 엔드포인트에서 클라우드 자격증명이 새어 나옵니다.',
+             'The server requests the user-supplied URL without validation, so the internal metadata endpoint leaks cloud credentials.'),
+      def: L('아웃바운드 <b>URL 허용목록</b>, 내부 IP 대역·메타데이터 차단, 리다이렉트 재검증, 응답 크기·스킴 제한을 적용한다.',
+             'Apply an outbound URL allowlist, block internal ranges/metadata, re-validate redirects, and restrict schemes/response size.'),
+      fixNote: L('SSRF 방어(내부 대역/메타데이터 차단)를 적용했습니다.', 'Applied SSRF guard (internal range/metadata blocking).')
+    },
+    {
+      id: 'API8', owasp: 'API8:2023', risk: 3, flag: 'hardened',
+      title: L('보안 설정 오류', 'Security Misconfiguration'),
+      brief: L('상세 스택 트레이스·DB 접속정보 노출, <b>CORS: *</b> + credentials 허용 같은 설정 오류가 공격 발판이 됩니다.',
+               'Verbose stack traces/DB info and CORS: * with credentials become an attacker’s foothold.'),
+      ez: L('고장 안내문에 <b>설계도와 열쇠 위치</b>까지 적어 붙인 셈입니다.', 'Like an out-of-order sign that also lists the <b>blueprint and key location</b>.'),
+      req: 'GET /api/debug/error HTTP/1.1\nHost: api.orbitpay.local',
+      options: [
+        L('스택 트레이스·DB 접속정보(root)가 응답에 노출됨', 'stack trace + DB creds (root) exposed in the response'),
+        L('일반화된 오류만 반환 — 설정 하드닝', 'generic error only — hardened config'),
+        L('200 정상', '200 OK'),
+        L('인증 필요', 'auth required')
+      ],
+      ev: 0,
+      why: L('운영 환경에서 <b>디버그 오류를 그대로 노출</b>해 내부 구조·자격증명이 새어 나옵니다. CORS: * + credentials 도 함께 켜져 있어 교차 출처 악용이 가능합니다.',
+             'Debug errors are exposed in production, leaking internal structure and credentials. CORS: * with credentials also enables cross-origin abuse.'),
+      def: L('운영에서 <b>일반화된 오류</b>만 반환(스택·내부정보 은닉), CORS 는 <b>허용목록</b>으로, 보안 헤더(HSTS·nosniff 등)와 최소 노출 설정을 적용한다.',
+             'Return generic errors in production (hide stacks/internals), use a CORS allowlist, and apply security headers (HSTS, nosniff) and least-exposure config.'),
+      fixNote: L('오류 은닉·CORS 허용목록 등 설정 하드닝을 적용했습니다.', 'Applied config hardening (error hiding, CORS allowlist).')
+    },
+    {
+      id: 'API9', owasp: 'API9:2023', risk: 4, flag: 'inventory',
+      title: L('부적절한 자산(인벤토리) 관리', 'Improper Inventory Management'),
+      brief: L('폐기했어야 할 <b>구버전 /api/v1</b> 과 <b>/api/internal/debug</b> 가 아직 살아 있고 미패치입니다.',
+               'A deprecated /api/v1 and /api/internal/debug are still live and unpatched.'),
+      ez: L('이사 가면서 잠그지 않은 <b>옛집 뒷문</b>이 아직 열려 있는 셈입니다.', 'Like the <b>back door of your old house</b> still unlocked after you moved.'),
+      req: 'GET /api/v1/accounts/u-1002 HTTP/1.1\nHost: api.orbitpay.local',
+      options: [
+        L('구버전/디버그 엔드포인트가 살아 있고 결함이 남아 있음', 'legacy/debug endpoint is live with old flaws'),
+        L('410 Gone — 폐기됨(인벤토리 관리)', '410 Gone — retired (inventory managed)'),
+        L('최신 버전으로 리다이렉트', 'redirects to latest'),
+        L('404 — 없음', '404 — none')
+      ],
+      ev: 0,
+      why: L('구버전·디버그 엔드포인트를 <b>추적·폐기하지 않아</b> 미패치 결함이 그대로 노출됩니다. 문서화되지 않은 "그림자 API" 가 공격면을 넓힙니다.',
+             'Old/debug endpoints aren’t tracked or retired, so unpatched flaws stay exposed. Undocumented “shadow APIs” widen the attack surface.'),
+      def: L('API <b>인벤토리(버전·환경·노출 범위)</b>를 관리하고 구버전을 폐기(410)·차단한다. 문서·게이트웨이로 노출 API 를 통제한다.',
+             'Maintain an API inventory (versions, environments, exposure) and retire/block old versions (410). Control exposed APIs via docs and a gateway.'),
+      fixNote: L('구버전·디버그 엔드포인트를 폐기(410)했습니다.', 'Retired legacy/debug endpoints (410).')
+    },
+    {
+      id: 'API10', owasp: 'API10:2023', risk: 3, flag: 'validateUpstream',
+      title: L('안전하지 않은 API 소비', 'Unsafe Consumption of APIs'),
+      brief: L('협력사·서드파티가 준 응답을 <b>검증 없이 그대로</b> 쓰면, 그들이 준 리다이렉트/주입값이 내 서비스를 공격합니다.',
+               'Blindly trusting a partner/third-party response lets their redirect/injection value attack your service.'),
+      ez: L('협력업체가 보낸 택배를 <b>열어보지 않고</b> 고객에게 그대로 전달하는 셈입니다.', 'Like forwarding a partner’s parcel to a customer <b>without opening it</b>.'),
+      req: 'POST /api/partner/callback HTTP/1.1\nHost: api.orbitpay.local\nContent-Type: application/json\n\n{"redirect":"javascript:steal(document.cookie)"}',
+      options: [
+        L('서드파티가 준 위험값이 검증 없이 그대로 사용됨', 'the partner’s dangerous value is used unchecked'),
+        L('400 거부 — 서드파티 응답 검증', '400 — upstream response validated'),
+        L('200 정상 콜백', '200 normal callback'),
+        L('엔드포인트 없음', 'no endpoint')
+      ],
+      ev: 0,
+      why: L('내가 <b>호출한 쪽</b>이라도 그 응답을 신뢰하면 안 됩니다. 협력사가 준 리다이렉트/데이터를 검증 없이 쓰면 오픈 리다이렉트·주입·SSRF 체인이 됩니다.',
+             'Even if you initiated the call, don’t trust the response. Using a partner’s redirect/data unchecked leads to open redirect, injection, or SSRF chains.'),
+      def: L('서드파티 응답도 <b>입력으로 취급</b>해 스킴·형식·값을 검증하고, TLS·타임아웃·허용목록을 적용하며 리다이렉트를 재검증한다.',
+             'Treat third-party responses as untrusted input: validate scheme/format/values, use TLS/timeouts/allowlists, and re-validate redirects.'),
+      fixNote: L('서드파티 응답 검증을 적용했습니다.', 'Applied upstream response validation.')
+    }
+  ];
+
+  /* ---- 상태 ---- */
+  var state = CH.map(function () { return { tried: false, pass: false, fixed: false }; });
+  var cur = 0;
+  var sendCount = {}; /* 엔드포인트별 연속 전송 횟수(자동화 시연용) */
+
+  var PKEY = 'wvs_api_security'; /* 진도 키 */
+  function loadProg() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
+  function saveProg(id) { try { var p = loadProg(); p[id] = 1; localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} }
+
+  function renderList() {
+    var done = state.filter(function (s) { return s.pass; }).length;
+    $('prog').textContent = L('통과 ', 'Passed ') + done + ' / ' + CH.length + L('  ·  방어 적용 ', '  ·  Defenses ') + state.filter(function (s) { return s.fixed; }).length;
+    var ul = $('clist'); ul.innerHTML = '';
+    CH.forEach(function (c, i) {
+      var s = state[i];
+      var st = s.pass ? (s.fixed ? '🛡️' : '✅') : (s.tried ? '🔁' : '·');
+      var li = document.createElement('li');
+      li.className = i === cur ? 'on' : '';
+      li.innerHTML = '<span class="ow">' + esc(c.owasp) + '</span><span class="tt">' + esc(c.title) + '</span><span class="st">' + st + '</span>';
+      li.addEventListener('click', function () { cur = i; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function render() {
+    renderList();
+    var c = CH[cur], s = state[cur], d = $('detail');
+    var h = '<h2><span class="ow">' + esc(c.owasp) + '</span> ' + esc(c.title) + ' <span class="risk">' + L('위험 ', 'risk ') + c.risk + '</span></h2>';
+    h += '<p style="margin-top:8px;color:#d7e3f4">' + c.brief + '</p>';
+    h += '<div class="ez"><b>' + L('쉽게 말하면', 'In plain terms') + '</b> — ' + c.ez + '</div>';
+    h += '<div class="term"><div class="hd">' + L('요청 (편집 가능) — api.orbitpay.local', 'Request (editable) — api.orbitpay.local') + '</div>';
+    h += '<textarea id="reqBox" spellcheck="false" aria-label="' + L('API 요청 편집기', 'API request editor') + '">' + esc(c.req) + '</textarea>';
+    h += '<div class="out" id="outBox"><span style="color:#93a4c0">' + L('▶ 요청 보내기 를 눌러 응답을 확인하세요.', 'Press Send request to see the response.') + '</span></div></div>';
+    h += '<div class="row"><button class="btn go" id="btnSend">▶ ' + L('요청 보내기', 'Send request') + '</button>';
+    h += '<button class="btn alt" id="btnReset2">' + L('요청 원복', 'Reset request') + '</button></div>';
+
+    h += '<div class="h4">1. ' + L('판정', 'Verdict') + '</div>';
+    h += '<div><button class="vbtn" type="button" data-v="good">' + L('양호', 'Secure') + '</button><button class="vbtn" type="button" data-v="vuln">' + L('취약', 'Vulnerable') + '</button></div>';
+    h += '<div class="h4">2. ' + L('그렇게 판단한 근거 (응답에서 확인한 것)', 'Evidence (what the response showed)') + '</div>';
+    c.options.forEach(function (o, i) { h += '<label class="opt"><input type="checkbox" data-o="' + i + '">' + esc(o) + '</label>'; });
+    h += '<div class="row"><button class="btn go" id="btnGrade">' + L('채점', 'Grade') + '</button>';
+    if (s.pass && !s.fixed) h += '<button class="btn fix" id="btnFix">🛡️ ' + L('방어 적용', 'Apply defense') + '</button>';
+    h += '</div><div id="res"></div>';
+
+    if (s.pass) {
+      h += '<div class="why"><b>' + L('왜 그런가', 'Why') + '</b> — ' + c.why + '</div>';
+      h += '<div class="def"><b>🛡️ ' + L('방어', 'Defense') + '</b> — ' + c.def + '</div>';
+    }
+    d.innerHTML = h;
+
+    var chosenV = null;
+    d.querySelectorAll('[data-v]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        chosenV = b.getAttribute('data-v');
+        d.querySelectorAll('[data-v]').forEach(function (x) { x.className = 'vbtn'; });
+        b.className = 'vbtn on';
+      });
+    });
+    $('btnSend').addEventListener('click', function () { send(c); });
+    $('btnReset2').addEventListener('click', function () { $('reqBox').value = c.req; });
+    $('btnGrade').addEventListener('click', function () { grade(c, chosenV); });
+    var fb = $('btnFix'); if (fb) fb.addEventListener('click', function () { applyFix(c); });
+  }
+
+  function verdict(c) { return DEF[c.flag] ? 'good' : 'vuln'; }
+
+  function send(c) {
+    var raw = $('reqBox').value;
+    var req = parseReq(raw);
+    var key = req.method + ' ' + req.path;
+    sendCount[key] = (sendCount[key] || 0) + 1;
+    req._nth = sendCount[key];
+    var res = api(req);
+    var out = $('outBox');
+    out.innerHTML = '<span style="color:#7dd3fc">HTTP ' + res.status + '</span>  ' +
+      (req._nth > 1 ? '<span style="color:#93a4c0">(' + L('연속 전송 ', 'sent ') + req._nth + L('회', 'x') + ')</span>' : '') +
+      '\n' + esc(JSON.stringify(res.body, null, 2));
+  }
+
+  function grade(c, chosenV) {
+    if (!chosenV) { $('res').innerHTML = '<div class="res no">' + L('먼저 양호/취약을 고르세요.', 'Pick Secure/Vulnerable first.') + '</div>'; return; }
+    var ev = [];
+    document.querySelectorAll('#detail [data-o]').forEach(function (cb) { if (cb.checked) ev.push(parseInt(cb.getAttribute('data-o'), 10)); });
+    var vOk = chosenV === verdict(c);
+    var eOk = ev.length === 1 && ev[0] === c.ev;
+    state[cur].tried = true;
+    if (vOk && eOk) {
+      state[cur].pass = true; saveProg(c.id);
+      render();
+      $('res').innerHTML = '<div class="res ok"><b>' + L('통과', 'Passed') + '</b> — ' +
+        L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 같은 요청을 다시 보내 보세요 — 이번엔 막힙니다.',
+          'Verdict and evidence are correct. Apply the defense below, then re-send the same request — it will be blocked this time.') + '</div>';
+    } else {
+      var msg = [];
+      msg.push(vOk ? L('판정은 맞습니다.', 'Verdict is right.') : L('판정이 다릅니다.', 'Verdict is wrong.'));
+      if (!eOk) msg.push(L('근거를 정확히 하나만, 응답에서 본 것으로 고르세요.', 'Pick exactly one evidence — what the response actually showed.'));
+      render();
+      $('res').innerHTML = '<div class="res no"><b>' + L('다시', 'Try again') + '</b> — ' + msg.join(' ') + '</div>';
+    }
+  }
+
+  function applyFix(c) {
+    DEF[c.flag] = true;
+    state[cur].fixed = true;
+    render();
+    $('res').innerHTML = '<div class="res ok"><b>🛡️ ' + L('방어 완료', 'Defense applied') + '</b> — ' + c.fixNote +
+      '<br>' + L('같은 요청을 다시 보내 응답이 바뀌었는지 확인하세요.', 'Re-send the same request and see the response change.') + '</div>';
+  }
+
+  function boot() {
+    var p = loadProg();
+    CH.forEach(function (c, i) { if (p[c.id]) state[i].pass = true; });
+    render();
+  }
+  boot();
+})();
+
+/* 언어 토글 — 사이트 공통 키(wvs_lang) 사용, 클래스 토글 + 재렌더 */
+function wvsToggleLang() {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    var v = en ? 'ko' : 'en';
+    localStorage.setItem('wvs_lang', v); localStorage.setItem('lang', v);
+  } catch (e) {}
+  location.reload();
+}
+(function () {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    document.body.classList.toggle('lang-en', en);
+    document.documentElement.lang = en ? 'en' : 'ko';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
