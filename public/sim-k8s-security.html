@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>쿠버네티스·컨테이너 보안 실습 — 런타임 하드닝 · WEB-VULN-SIM</title>
+<meta name="description" content="모의 쿠버네티스 클러스터에 kubectl 로 직접 공격해 컨테이너 탈출·과도한 RBAC·특권 컨테이너·시크릿 평문·네트워크 정책 부재·취약 이미지·어드미션 부재를 시험하고, Pod Security·최소권한·NetworkPolicy·어드미션 컨트롤로 방어하는 컨테이너 런타임 보안 핸즈온 실습.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="쿠버네티스·컨테이너 보안 실습 — 런타임 하드닝">
+<meta property="og:description" content="모의 K8s 클러스터를 kubectl 로 직접 공격·방어하는 컨테이너 런타임 보안 핸즈온 실습 (CIS·NSA/CISA·Pod Security).">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-k8s-security.html">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--panel3:#16233c;--bd:#22314f;--ink:#e6edf7;
+ --muted:#93a4c0;--acc:#22d3ee;--acc2:#38bdf8;--good:#3fb950;--bad:#f85149;--warn:#e3a008;
+ --mono:'JetBrains Mono','Consolas','D2Coding',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+a{color:#67e8f9;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a,.topbar .langbtn{font-family:var(--mono);font-size:12.5px}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid var(--bd);background:var(--panel2);color:#cdbfb2;border-radius:6px;padding:4px 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 16px 70px}
+h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:11.5px;font-weight:800;color:#062a30;background:#67e8f9;border-radius:6px;padding:2px 9px}
+.sub{color:var(--muted);font-size:14px;margin-top:8px;max-width:920px}
+.note{background:#08222a;border:1px solid #164e5e;border-radius:10px;padding:11px 14px;margin-top:14px;font-size:12.8px;color:#a5f3fc}
+.tgt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tgt b{color:var(--acc)}
+.cols{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;margin-top:16px}
+@media(max-width:940px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+.clist{list-style:none;display:flex;flex-direction:column;gap:6px}
+.clist li{border:1px solid var(--bd);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2);display:flex;gap:9px;align-items:center}
+.clist li:hover{border-color:var(--acc)}
+.clist li.on{border-color:var(--acc);background:#0e3540}
+.clist .ow{font-family:var(--mono);font-size:10.5px;color:var(--muted);flex:0 0 auto;border:1px solid var(--bd);border-radius:5px;padding:1px 5px}
+.clist .tt{flex:1;font-size:13px}
+.clist .st{font-size:14px;flex:0 0 auto}
+.prog{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+.det h2{font-size:17px;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.det h2 .ow{font-family:var(--mono);font-size:12px;color:#fdba74}
+.risk{font-family:var(--mono);font-size:10.5px;border:1px solid var(--bd);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.ez{background:var(--panel3);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:9px 13px;margin:10px 0;font-size:13.5px;color:#c7f0f7}
+.ez b{color:var(--acc)}
+.term{background:#050a14;border:1px solid var(--bd);border-radius:10px;margin-top:10px;overflow:hidden}
+.term .hd{background:var(--panel3);padding:6px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--bd)}
+.term textarea{width:100%;height:80px;background:#050a14;border:none;color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:10px 12px;resize:vertical;outline:none;white-space:pre}
+.term .out{min-height:56px;max-height:260px;overflow:auto;padding:10px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+.btn{cursor:pointer;border:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;font-weight:700;padding:8px 15px}
+.btn.go{background:var(--acc);color:#062a30}
+.btn.alt{background:var(--panel3);color:var(--ink);border:1px solid var(--bd)}
+.btn.fix{background:var(--good);color:#06121f}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt{display:block;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin:6px 0;cursor:pointer;background:var(--panel2);font-size:13.5px}
+.opt:hover{border-color:var(--acc)}.opt input{margin-right:8px}
+.vbtn{background:var(--panel2);border:1px solid var(--bd);color:var(--ink);border-radius:8px;padding:7px 16px;font-weight:700;cursor:pointer;margin-right:8px}
+.vbtn.on{border-color:var(--acc);background:#0e3540;color:var(--acc)}
+.res{border-radius:8px;padding:10px 13px;margin-top:10px;font-size:13.5px;line-height:1.7}
+.res.ok{background:#0f2a18;border:1px solid var(--good)}
+.res.no{background:#3a1518;border:1px solid var(--bad)}
+.why{margin-top:10px;font-size:13.5px;color:#d7e3f4}.why b{color:#fff}
+.def{margin-top:12px;background:#0e1f16;border:1px solid #1f5137;border-radius:8px;padding:10px 13px;font-size:13px;color:#bdf0d3}.def b{color:#7ee7a8}
+.manifest{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;white-space:pre-wrap;line-height:1.5}
+.manifest b{color:#67e8f9}
+.h4{font-size:12.5px;color:var(--acc);font-family:var(--mono);margin:12px 0 4px}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:12px}
+.crosslink{margin-top:8px;font-size:12.5px;color:var(--muted)}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/safety-notice.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<div class="topbar">
+  <a href="index.html">🏠 <span class="ko">홈</span><span class="en">Home</span></a>
+  <a href="vuln-hub.html"><span class="ko">취약점 실습장</span><span class="en">Vuln Hub</span></a>
+  <a href="my-progress.html"><span class="ko">내 학습 현황</span><span class="en">My Progress</span></a>
+  <span class="sp"></span>
+  <span class="langbtn" onclick="wvsToggleLang()">KO ⇄ EN</span>
+</div>
+
+<div class="wrap" id="wvs-main" tabindex="-1" role="main">
+  <h1>☸️ <span class="ko">쿠버네티스 · 컨테이너 보안 실습</span><span class="en">Kubernetes · Container Security Lab</span> <span class="badge">런타임 하드닝</span></h1>
+  <p class="sub">
+    <span class="ko">모의 클러스터 <b>orbit-cluster</b> 에 <b>kubectl</b> 로 직접 공격을 실행해 컨테이너 탈출·과도한 RBAC·시크릿 평문 등을 시험합니다.
+    각 위험은 <b>공격 실행 → 취약/양호 판정 → 방어 적용 → 재점검</b> 순서로, 방어(Pod Security·최소권한·NetworkPolicy·어드미션)를 켜면 같은 공격이 이번엔 막히는지 확인합니다.</span>
+    <span class="en">Run kubectl attacks against a mock cluster (<b>orbit-cluster</b>): container escape, over-privileged RBAC, plaintext secrets, and more.
+    Each risk runs attack → verdict → apply defense → re-check — watch the same attack get blocked once the defense (Pod Security / least privilege / NetworkPolicy / admission) is on.</span>
+  </p>
+
+  <div class="note">
+    <span class="ko">교육용 시뮬레이션입니다. <b>orbit-cluster</b> 는 전부 이 페이지 안의 mock 이며 실제 kubectl 호출이나 클러스터 접속은 전혀 없습니다.
+    위험 분류는 공개 기준(CIS Kubernetes Benchmark, NSA/CISA Kubernetes Hardening, Pod Security Standards)을 개념적으로 재구성했습니다.</span>
+    <span class="en">Educational simulation. orbit-cluster is a fully in-page mock — no real kubectl or cluster access. Risk taxonomy follows public guidance (CIS Kubernetes Benchmark, NSA/CISA Kubernetes Hardening, Pod Security Standards).</span>
+  </div>
+
+  <div class="tgt">
+    <span><span class="ko">클러스터</span><span class="en">Cluster</span> <b>orbit-cluster</b></span><span>·</span>
+    <span><span class="ko">내 접근</span><span class="en">My access</span> <b>web-pod</b> (<span class="ko">침해된 워크로드</span><span class="en">compromised workload</span>)</span><span>·</span>
+    <span>ns: default · kube-system</span>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="prog" id="prog"></div>
+      <ul class="clist" id="clist"></ul>
+    </div>
+    <div class="card det" id="detail"></div>
+  </div>
+
+  <div class="disc">
+    ⚠️ <span class="ko">교육용 시뮬레이션. kubectl 명령은 모두 페이지 안의 가상 클러스터에 대해서만 동작합니다. 공격 시연에는 반드시 방어 방법을 함께 둡니다. 실제 클러스터를 공격하지 마세요.</span>
+    <span class="en">Educational simulation. kubectl commands act only on the in-page mock cluster. Every attack is paired with its defense. Do not attack real clusters.</span>
+    <div class="crosslink">
+      <span class="ko">관련:</span><span class="en">Related:</span>
+      <a href="11_cloud-c01.html"><span class="ko">클라우드 설정 진단</span><span class="en">Cloud config</span></a> ·
+      <a href="07_fincloud-pism001.html"><span class="ko">금융 클라우드 진단</span><span class="en">Fin cloud</span></a> ·
+      <a href="sim-api-security.html">API <span class="ko">보안</span><span class="en">Security</span></a> · <a href="sim-agentic-ai.html"><span class="ko">에이전틱 AI</span><span class="en">Agentic AI</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * 쿠버네티스·컨테이너 보안 실습 엔진 — 자체 완결형. 실제 클러스터 없음.
+ * 단일 진실원천 = 방어 플래그(DEF). kubectl 출력도, 판정(verdict)도, 방어(fix)도
+ * 모두 같은 플래그를 읽고 쓴다. 방어를 켜면 같은 공격이 이번엔 막히고 재점검이
+ * '양호'로 바뀐다. 전역에 브라우저 내장 이름을 쓰지 않는다.
+ * ============================================================ */
+(function () {
+  'use strict';
+  function isEn() { try { return (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en'; } catch (e) { return false; } }
+  function L(ko, en) { return isEn() ? en : ko; }
+  function esc(s) { return (s + '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* 방어 플래그(단일 진실원천). false = 취약, true = 방어됨 */
+  var DEF = {
+    noPrivileged: false,  /* K1: 특권 컨테이너 금지 + capability drop + PSA restricted */
+    noHostMount: false,   /* K2: hostPath / docker.sock 마운트 금지(어드미션) */
+    leastRBAC: false,     /* K3: 최소 권한 RBAC(cluster-admin 바인딩 제거) */
+    kubeletAuth: false,   /* K4: kubelet/API 익명 접근 차단·인가 */
+    podSecCtx: false,     /* K5: securityContext(runAsNonRoot·no-privesc·readOnlyRootFS) */
+    secretMgmt: false,    /* K6: 시크릿을 env/CM 평문 대신 안전 관리·저장암호화 */
+    netPolicy: false,     /* K7: NetworkPolicy 기본 거부 */
+    imageControl: false,  /* K8: 이미지 스캔·서명·다이제스트 고정, :latest 금지 */
+    admission: false      /* K9: 어드미션 컨트롤러(OPA/Kyverno) 정책 강제 */
+  };
+
+  /* kubectl 모의 실행 — 명령 문자열을 보고 DEF 플래그에 따라 출력을 낸다. */
+  function kubectl(cmd) {
+    var c = cmd.trim();
+    var deny = function (reason) { return 'Error from server (Forbidden): ' + reason; };
+
+    /* K1 특권 컨테이너 → 호스트 탈출 */
+    if (/nsenter|--target 1|exec.*web-pod.*bash|chroot \/host/.test(c)) {
+      if (DEF.noPrivileged || DEF.admission) return deny(L('admission: 특권 컨테이너/호스트 네임스페이스 차단(PSA restricted)', 'admission: privileged/host namespaces blocked (PSA restricted)'));
+      return 'root@node-1:/# id\nuid=0(root) gid=0(root) groups=0(root)\n' + L('# 특권 컨테이너 → 호스트 PID/마운트 네임스페이스로 탈출, 노드 root 획득', '# privileged container → escaped to host PID/mount ns, got node root');
+    }
+    /* K2 hostPath / docker.sock */
+    if (/docker\.sock|hostPath|\/var\/run\/docker|mount.*\/host/.test(c)) {
+      if (DEF.noHostMount || DEF.admission) return deny(L('admission: hostPath·docker.sock 마운트 금지', 'admission: hostPath/docker.sock mounts forbidden'));
+      return L('docker -H unix:///var/run/docker.sock run -v /:/host --privileged ...\n# 호스트 도커 소켓으로 특권 컨테이너 생성 → 호스트 파일시스템 장악', 'docker -H unix:///var/run/docker.sock run -v /:/host --privileged ...\n# spawned a privileged container via the host docker socket → owned host FS');
+    }
+    /* K3 과도한 RBAC */
+    if (/auth can-i --list|get secrets --all-namespaces|create clusterrolebinding|token/.test(c)) {
+      if (DEF.leastRBAC) return L('Warning: 이 ServiceAccount 는 default ns 에서 pods:get 만 가능\nsecrets 접근: no', 'Warning: this ServiceAccount can only pods:get in default\nsecrets access: no');
+      return L('resources: */*   verbs: [*]   (cluster-admin 바인딩)\n# 침해된 파드의 토큰이 cluster-admin → 전 네임스페이스 시크릿·워크로드 장악', 'resources: */*   verbs: [*]   (cluster-admin binding)\n# compromised pod token is cluster-admin → owns all secrets/workloads');
+    }
+    /* K4 kubelet/API 익명 */
+    if (/10250|kubelet|--anonymous|curl.*:6443|api.*anonymous/.test(c)) {
+      if (DEF.kubeletAuth) return '401 Unauthorized\n' + L('# 익명 인증 비활성, 인가 필요', '# anonymous auth disabled, authz required');
+      return L('POST https://node-1:10250/run/default/web-pod/web  200 OK\n# 익명 kubelet API 로 노드의 임의 파드에서 명령 실행', 'POST https://node-1:10250/run/default/web-pod/web  200 OK\n# ran commands on node pods via anonymous kubelet API');
+    }
+    /* K5 securityContext */
+    if (/whoami|allowPrivilegeEscalation|setuid|cap_|capsh/.test(c)) {
+      if (DEF.podSecCtx) return 'app\n' + L('# runAsNonRoot + allowPrivilegeEscalation:false + capabilities drop ALL → 권한 상승 불가', '# runAsNonRoot + allowPrivilegeEscalation:false + drop ALL caps → no escalation');
+      return 'root\n' + L('# 컨테이너가 root 로 실행 + privesc 허용 + 광범위 capability → 권한 상승 발판', '# container runs as root + privesc allowed + broad caps → escalation foothold');
+    }
+    /* K6 시크릿 평문 */
+    if (/get secret|env \| grep|printenv|configmap.*password|base64 -d/.test(c)) {
+      if (DEF.secretMgmt) return L('DB_PASSWORD: <외부 시크릿 매니저 참조, 파드 env/CM 에 평문 없음>\n(저장 암호화 활성)', 'DB_PASSWORD: <external secret manager reference; not in pod env/CM>\n(encryption at rest on)');
+      return 'DB_PASSWORD=orbit-prod-EXAMPLE\nAPI_TOKEN=sk-orbit-EXAMPLE...\n' + L('# 시크릿이 env/ConfigMap 에 평문(base64)으로 노출 — 파드 접근만으로 유출', '# secrets exposed in env/ConfigMap as plaintext (base64) — leaked with pod access');
+    }
+    /* K7 네트워크 정책 */
+    if (/curl.*payments|nc .* 5432|nmap|get pods -o wide.*other|lateral/.test(c)) {
+      if (DEF.netPolicy) return L('connection timed out\n# NetworkPolicy 기본 거부 — 침해 파드가 다른 서비스로 못 감', 'connection timed out\n# NetworkPolicy default-deny — compromised pod can’t reach other services');
+      return L('payments-svc:8080  200 OK\npostgres:5432  connected\n# 네트워크 정책 부재 — 침해 파드가 내부 전 서비스로 횡적 이동', 'payments-svc:8080  200 OK\npostgres:5432  connected\n# no NetworkPolicy — compromised pod moves laterally to every service');
+    }
+    /* K8 취약 이미지 / :latest */
+    if (/describe pod.*image|image:.*latest|trivy|scan|:latest/.test(c)) {
+      if (DEF.imageControl) return L('image: registry/orbit/web@sha256:pinned...  (스캔 통과·서명 검증)\n# :latest 금지, 다이제스트 고정, 취약 이미지 어드미션 차단', 'image: registry/orbit/web@sha256:pinned...  (scanned/signed)\n# :latest blocked, digest pinned, vulnerable images denied at admission');
+      return L('image: orbit/web:latest  (미스캔)\nCRITICAL: CVE-2024-XXXX (RCE) 포함\n# :latest 미고정 + 스캔 부재 → 알려진 취약점 그대로 배포', 'image: orbit/web:latest  (unscanned)\nCRITICAL: CVE-2024-XXXX (RCE)\n# :latest unpinned + no scan → known-vulnerable image deployed');
+    }
+    /* K9 어드미션 부재 — 위 위험들이 애초에 배포되게 둔 근본 */
+    if (/apply -f evil|create.*privileged|admission|opa|kyverno|gatekeeper/.test(c)) {
+      if (DEF.admission) return deny(L('admission webhook(Kyverno): 정책 위반으로 거부(특권·hostPath·:latest·root)', 'admission webhook (Kyverno): denied for policy violations (privileged/hostPath/:latest/root)'));
+      return L('pod/evil created\n# 어드미션 컨트롤러 부재 — 특권·hostPath·root·:latest 파드가 검증 없이 그대로 배포됨', 'pod/evil created\n# no admission controller — privileged/hostPath/root/:latest pods deploy with no checks');
+    }
+    return L('명령을 인식하지 못했습니다. 위 "공격 명령"의 예시를 실행해 보세요.', 'Command not recognized. Try the example in the attack box above.');
+  }
+
+  /* ============================================================
+   * 도전 — 쿠버네티스/컨테이너 런타임 보안
+   * ============================================================ */
+  var CH = [
+    {
+      id: 'K1', std: 'CIS 5.2 / PSA', risk: 5, flag: 'noPrivileged',
+      title: L('특권 컨테이너 → 호스트 탈출', 'Privileged Container → Host Escape'),
+      brief: L('<b>privileged: true</b> 로 뜬 파드는 호스트 네임스페이스에 닿아, 컨테이너를 벗어나 <b>노드 root</b> 를 잡습니다.',
+               'A privileged: true pod reaches host namespaces — escape the container and get node root.'),
+      ez: L('세 든 방인데 <b>건물 마스터키</b>까지 쥐여 준 셈입니다.', 'Like renting a room but being handed the <b>building master key</b>.'),
+      manifest: 'spec.containers[0].securityContext:\n  privileged: true          # ← 위험\n  # capabilities, runAsNonRoot 미설정',
+      cmd: 'kubectl exec -it web-pod -- nsenter --target 1 --mount --uts --ipc --net --pid -- bash',
+      options: [
+        L('노드 root 셸 획득 — 특권 컨테이너가 호스트 네임스페이스로 탈출', 'got a node-root shell — privileged container escaped to host namespaces'),
+        L('admission 이 특권 컨테이너를 차단(PSA restricted)', 'admission blocks the privileged container (PSA restricted)'),
+        L('파드를 찾을 수 없음', 'pod not found'),
+        L('명령이 거부됨(RBAC)', 'command denied (RBAC)')
+      ],
+      ev: 0,
+      why: L('특권 컨테이너는 사실상 <b>호스트와 동등한 권한</b>을 갖습니다. 하나가 뚫리면 노드 전체, 나아가 클러스터로 번집니다. 컨테이너 격리가 무의미해집니다.',
+             'A privileged container is effectively host-equivalent. One compromise spreads to the whole node and cluster. Container isolation becomes meaningless.'),
+      def: L('<b>privileged 금지</b>, 모든 capability drop 후 필요한 것만 add, runAsNonRoot, 호스트 네임스페이스(hostPID/Network/IPC) 금지. <b>Pod Security Admission(restricted)</b>로 강제한다.',
+             'Forbid privileged, drop all capabilities and add only what’s needed, runAsNonRoot, forbid host namespaces (hostPID/Network/IPC). Enforce with Pod Security Admission (restricted).'),
+      fixNote: L('특권 컨테이너 금지 + capability drop + PSA restricted 를 적용했습니다.', 'Applied no-privileged + capability drop + PSA restricted.')
+    },
+    {
+      id: 'K2', std: 'CIS 5.2 / NSA', risk: 5, flag: 'noHostMount',
+      title: L('hostPath · docker.sock 마운트', 'hostPath / docker.sock Mount'),
+      brief: L('파드가 <b>/var/run/docker.sock</b> 또는 <b>hostPath: /</b> 를 마운트하면, 호스트 도커/파일시스템을 통해 노드를 장악합니다.',
+               'Mounting /var/run/docker.sock or hostPath: / lets a pod own the node via the host docker/FS.'),
+      ez: L('청소부에게 <b>서버실 문 열쇠</b>까지 준 셈입니다.', 'Like giving the cleaner the <b>server-room key</b> too.'),
+      manifest: 'spec.volumes:\n  - name: dock\n    hostPath: { path: /var/run/docker.sock }   # ← 위험',
+      cmd: 'kubectl exec -it web-pod -- docker -H unix:///var/run/docker.sock run -v /:/host --privileged alpine chroot /host sh',
+      options: [
+        L('호스트 도커 소켓으로 특권 컨테이너 생성 → 호스트 장악', 'spawns a privileged container via the host docker socket → owns host'),
+        L('admission 이 hostPath/docker.sock 마운트를 금지', 'admission forbids hostPath/docker.sock mounts'),
+        L('도커가 설치돼 있지 않음', 'docker not installed'),
+        L('볼륨이 읽기전용', 'volume is read-only')
+      ],
+      ev: 0,
+      why: L('호스트 <b>docker.sock</b> 은 노드의 도커 데몬 제어권입니다. hostPath 로 호스트 경로를 마운트하는 것도 같은 급의 탈출 경로입니다.',
+             'The host docker.sock grants control of the node’s docker daemon. Mounting host paths via hostPath is an equivalent escape route.'),
+      def: L('<b>hostPath·docker.sock 마운트를 어드미션에서 금지</b>한다. 노드 도커 소켓을 파드에 노출하지 않고, 볼륨은 허용목록·읽기전용으로 제한한다.',
+             'Forbid hostPath/docker.sock mounts at admission. Never expose the node docker socket to pods; restrict volumes to an allowlist and read-only.'),
+      fixNote: L('hostPath·docker.sock 마운트 금지(어드미션)를 적용했습니다.', 'Applied hostPath/docker.sock mount ban (admission).')
+    },
+    {
+      id: 'K3', std: 'CIS 5.1 / RBAC', risk: 5, flag: 'leastRBAC',
+      title: L('과도한 RBAC (cluster-admin)', 'Over-privileged RBAC (cluster-admin)'),
+      brief: L('침해된 파드의 <b>ServiceAccount 토큰</b>이 cluster-admin 에 묶여 있으면, 파드 하나로 <b>전 클러스터</b>를 장악합니다.',
+               'If the compromised pod’s ServiceAccount is bound to cluster-admin, one pod owns the whole cluster.'),
+      ez: L('인턴 사원증에 <b>모든 문을 여는 권한</b>이 들어 있는 셈입니다.', 'Like an intern’s badge that opens <b>every door</b>.'),
+      manifest: 'RoleBinding: web-sa → ClusterRole/cluster-admin   # ← 위험\n(파드에 자동 마운트된 토큰: /var/run/secrets/.../token)',
+      cmd: 'kubectl --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) auth can-i --list',
+      options: [
+        L('토큰이 cluster-admin(*/* *) — 전 네임스페이스 시크릿·워크로드 장악', 'token is cluster-admin (*/* *) — owns all secrets/workloads'),
+        L('토큰이 최소 권한(default ns pods:get) 만 가짐', 'token has least privilege (default ns pods:get) only'),
+        L('토큰이 없음', 'no token'),
+        L('API 서버 응답 없음', 'API server unreachable')
+      ],
+      ev: 0,
+      why: L('파드는 기본으로 ServiceAccount 토큰을 마운트합니다. 그 SA 가 과한 권한을 가지면 <b>파드 침해 = 클러스터 침해</b>가 됩니다.',
+             'Pods mount a ServiceAccount token by default. If that SA is over-privileged, a pod compromise becomes a cluster compromise.'),
+      def: L('<b>최소 권한 RBAC</b>: cluster-admin 바인딩 제거, 네임스페이스·리소스·동사를 필요한 만큼만. 불필요한 토큰 자동 마운트를 끄고(automountServiceAccountToken:false), 토큰을 짧게 회전한다.',
+             'Least-privilege RBAC: remove cluster-admin bindings, scope namespace/resource/verb minimally. Disable unneeded token automount (automountServiceAccountToken:false) and rotate tokens.'),
+      fixNote: L('최소 권한 RBAC 를 적용했습니다(cluster-admin 바인딩 제거).', 'Applied least-privilege RBAC (removed cluster-admin binding).')
+    },
+    {
+      id: 'K4', std: 'CIS 4 / NSA', risk: 4, flag: 'kubeletAuth',
+      title: L('kubelet · API 익명 접근', 'Anonymous kubelet / API Access'),
+      brief: L('kubelet(:10250)이나 API 서버가 <b>익명 인증</b>을 허용하면, 인증 없이 노드의 파드에서 명령을 실행합니다.',
+               'If the kubelet (:10250) or API server allows anonymous auth, run commands on node pods with no auth.'),
+      ez: L('경비 없는 <b>직원 전용 출입구</b>가 활짝 열려 있는 셈입니다.', 'Like a <b>staff-only entrance</b> left wide open with no guard.'),
+      manifest: 'kubelet: --anonymous-auth=true            # ← 위험\napiserver: --anonymous-auth=true (authz 미흡)',
+      cmd: 'curl -sk https://node-1:10250/run/default/web-pod/web -d "cmd=id"',
+      options: [
+        L('익명 kubelet API 로 노드 파드에서 명령 실행됨', 'ran commands on node pods via the anonymous kubelet API'),
+        L('401 Unauthorized — 익명 인증 비활성·인가 필요', '401 Unauthorized — anonymous auth off, authz required'),
+        L('노드에 연결 불가', 'node unreachable'),
+        L('명령 형식 오류', 'malformed command')
+      ],
+      ev: 0,
+      why: L('kubelet·API 의 익명 접근은 <b>인증 경계를 통째로 없앱니다</b>. 노드 로컬 API 로 파드 실행·로그·자격증명 접근이 가능해집니다.',
+             'Anonymous access to kubelet/API removes the auth boundary entirely, enabling pod exec, logs, and credential access via the node-local API.'),
+      def: L('<b>익명 인증 비활성</b>(--anonymous-auth=false), kubelet 인가 모드 Webhook, API 서버 인증·인가·감사 활성, 읽기전용 포트 폐쇄. 노드↔컨트롤플레인 mTLS.',
+             'Disable anonymous auth (--anonymous-auth=false), set kubelet authz Webhook, enable API authn/authz/audit, close the read-only port. mTLS between nodes and control plane.'),
+      fixNote: L('kubelet·API 익명 접근을 차단하고 인가를 적용했습니다.', 'Blocked anonymous kubelet/API access; enabled authz.')
+    },
+    {
+      id: 'K5', std: 'PSA restricted', risk: 4, flag: 'podSecCtx',
+      title: L('securityContext 부재 (root 실행)', 'Missing securityContext (runs as root)'),
+      brief: L('컨테이너가 <b>root 로 실행</b>되고 권한 상승(allowPrivilegeEscalation)을 허용하면, 앱 취약점이 곧 컨테이너 장악으로 이어집니다.',
+               'A container running as root with allowPrivilegeEscalation turns an app bug into a container takeover.'),
+      ez: L('작업자가 <b>관리자 권한으로 로그인</b>해 일하는 셈입니다.', 'Like every worker <b>logging in as administrator</b>.'),
+      manifest: 'securityContext: {}   # ← 미설정 → root 실행, privesc 허용, 쓰기가능 루트FS',
+      cmd: 'kubectl exec -it web-pod -- sh -c "whoami; cat /proc/1/status | grep CapEff"',
+      options: [
+        L('root 로 실행 + privesc 허용 + 광범위 capability — 권한 상승 발판', 'runs as root + privesc allowed + broad caps — escalation foothold'),
+        L('app 사용자로 실행, privesc 불가, capability drop', 'runs as app user, no privesc, caps dropped'),
+        L('컨테이너 없음', 'no container'),
+        L('명령 거부', 'command denied')
+      ],
+      ev: 0,
+      why: L('securityContext 미설정은 <b>기본값이 안전하지 않다</b>는 전형입니다. root·privesc·쓰기가능 루트FS·광범위 capability 가 공격 발판을 넓힙니다.',
+             'No securityContext is a classic “insecure defaults”: root, privesc, writable rootFS, and broad capabilities all widen the foothold.'),
+      def: L('<b>securityContext</b>: runAsNonRoot, allowPrivilegeEscalation:false, readOnlyRootFilesystem, capabilities drop ALL, seccompProfile RuntimeDefault. Pod Security Admission(restricted)로 강제.',
+             'securityContext: runAsNonRoot, allowPrivilegeEscalation:false, readOnlyRootFilesystem, drop ALL capabilities, seccompProfile RuntimeDefault. Enforce via Pod Security Admission (restricted).'),
+      fixNote: L('securityContext(runAsNonRoot·no-privesc·caps drop)를 적용했습니다.', 'Applied securityContext (runAsNonRoot / no-privesc / caps drop).')
+    },
+    {
+      id: 'K6', std: 'CIS 5.4', risk: 4, flag: 'secretMgmt',
+      title: L('시크릿 평문 (env · ConfigMap)', 'Plaintext Secrets (env / ConfigMap)'),
+      brief: L('DB 비밀번호·API 토큰을 <b>환경변수나 ConfigMap 에 평문</b>으로 두면, 파드 접근·로그·프로세스 목록만으로 새어 나갑니다.',
+               'Keeping DB passwords/API tokens in env or ConfigMap as plaintext leaks them via pod access, logs, or process listings.'),
+      ez: L('금고 비밀번호를 <b>포스트잇에 적어</b> 문에 붙인 셈입니다.', 'Like the safe’s code on a <b>sticky note</b> on the door.'),
+      manifest: 'env:\n  - name: DB_PASSWORD\n    value: orbit-prod-EXAMPLE   # ← 평문\nConfigMap 에 토큰 저장',
+      cmd: 'kubectl exec -it web-pod -- sh -c "printenv | grep -E \'PASSWORD|TOKEN|KEY\'"',
+      options: [
+        L('시크릿이 env/ConfigMap 평문으로 노출됨 — 파드 접근만으로 유출', 'secrets exposed in env/ConfigMap plaintext — leaked via pod access'),
+        L('외부 시크릿 매니저 참조 + 저장 암호화 — 평문 없음', 'external secret-manager reference + encryption at rest — no plaintext'),
+        L('환경변수가 비어 있음', 'env is empty'),
+        L('접근 거부', 'access denied')
+      ],
+      ev: 0,
+      why: L('환경변수·ConfigMap 은 <b>비밀 저장소가 아닙니다</b>. K8s Secret 도 기본은 base64(암호화 아님)라 etcd 저장 암호화·접근통제가 없으면 평문과 다름없습니다.',
+             'Env/ConfigMap aren’t secret stores. Even K8s Secrets are base64 (not encryption), so without etcd encryption-at-rest and access control they’re effectively plaintext.'),
+      def: L('시크릿을 <b>외부 시크릿 매니저</b>(Vault/CSI)로 주입하고, etcd <b>저장 암호화</b>·RBAC 접근통제·짧은 회전을 적용한다. env/ConfigMap 평문 금지.',
+             'Inject secrets via an external secret manager (Vault/CSI), enable etcd encryption at rest, RBAC access control, and short rotation. No plaintext in env/ConfigMap.'),
+      fixNote: L('시크릿을 안전 관리(외부 매니저·저장 암호화)로 바꿨습니다.', 'Moved secrets to safe management (external manager / encryption at rest).')
+    },
+    {
+      id: 'K7', std: 'CIS 5.3 / NSA', risk: 4, flag: 'netPolicy',
+      title: L('NetworkPolicy 부재 (횡적 이동)', 'No NetworkPolicy (Lateral Movement)'),
+      brief: L('네트워크 정책이 없으면 파드 네트워크가 <b>평면(flat)</b>이라, 침해된 파드가 결제·DB 등 <b>내부 전 서비스</b>에 닿습니다.',
+               'With no NetworkPolicy the pod network is flat, so a compromised pod reaches every internal service (payments, DB, …).'),
+      ez: L('사무실에 <b>칸막이가 하나도 없어</b> 한 자리만 뚫려도 전부 노출되는 셈입니다.', 'Like an office with <b>no walls</b> — breach one desk and everything is exposed.'),
+      manifest: '# 네임스페이스에 NetworkPolicy 리소스가 하나도 없음 → 전면 허용',
+      cmd: 'kubectl exec -it web-pod -- sh -c "curl -s payments-svc:8080/health; nc -vz postgres 5432"',
+      options: [
+        L('결제·DB 등 내부 서비스로 자유롭게 연결됨 — 횡적 이동', 'connects freely to payments/DB — lateral movement'),
+        L('연결 timeout — NetworkPolicy 기본 거부', 'connection timeout — NetworkPolicy default-deny'),
+        L('서비스가 존재하지 않음', 'services do not exist'),
+        L('DNS 실패', 'DNS failure')
+      ],
+      ev: 0,
+      why: L('기본 K8s 네트워크는 <b>모든 파드가 서로 통신</b> 가능합니다. 정책이 없으면 초기 침해 하나가 클러스터 전역 횡적 이동으로 확대됩니다.',
+             'Default K8s networking lets all pods talk to each other. Without policy, one initial compromise expands into cluster-wide lateral movement.'),
+      def: L('<b>NetworkPolicy 기본 거부</b> 후 필요한 통신만 허용(마이크로세분화). 네임스페이스·라벨 기반 egress/ingress 제한, 서비스 메시 mTLS 를 병행한다.',
+             'Default-deny NetworkPolicy, then allow only required flows (micro-segmentation). Restrict egress/ingress by namespace/label; add service-mesh mTLS.'),
+      fixNote: L('NetworkPolicy 기본 거부를 적용했습니다.', 'Applied default-deny NetworkPolicy.')
+    },
+    {
+      id: 'K8', std: 'CIS 5.5 / 공급망', risk: 4, flag: 'imageControl',
+      title: L('취약 이미지 · :latest · 스캔 부재', 'Vulnerable Image · :latest · No Scan'),
+      brief: L('<b>:latest</b> 태그의 미스캔·미서명 이미지를 배포하면, 알려진 <b>치명적 CVE</b>가 그대로 프로덕션에 들어옵니다.',
+               'Deploying an unscanned/unsigned :latest image ships known critical CVEs straight to production.'),
+      ez: L('유통기한·성분표 <b>확인 없이</b> 아무 식자재나 받아 쓰는 셈입니다.', 'Like accepting any ingredient <b>without checking</b> its label or expiry.'),
+      manifest: 'image: orbit/web:latest        # ← 미고정\n# 이미지 스캔·서명 검증 파이프라인 없음',
+      cmd: 'kubectl exec -it web-pod -- sh -c "cat /etc/os-release; echo; trivy image orbit/web:latest 2>/dev/null | grep CRITICAL"',
+      options: [
+        L(':latest 미고정 + 스캔 부재 → 치명적 CVE 포함 이미지 배포됨', ':latest unpinned + no scan → image with critical CVE deployed'),
+        L('다이제스트 고정 + 스캔·서명 통과 이미지만 허용됨', 'only digest-pinned, scanned/signed images allowed'),
+        L('이미지를 찾을 수 없음', 'image not found'),
+        L('레지스트리 접근 불가', 'registry unreachable')
+      ],
+      ev: 0,
+      why: L('<b>:latest</b> 는 무엇이 도는지 알 수 없게 만들고, 스캔·서명이 없으면 취약·위조 이미지가 그대로 실행됩니다. 컨테이너 공급망 보안의 핵심입니다.',
+             ':latest hides what’s actually running, and without scanning/signing, vulnerable or forged images run as-is. This is core container supply-chain security.'),
+      def: L('이미지를 <b>다이제스트로 고정</b>, CI 에서 취약점 스캔·서명(cosign), 어드미션에서 <b>스캔·서명 통과 이미지만</b> 허용. :latest 금지, 최소 베이스 이미지.',
+             'Pin images by digest, scan and sign in CI (cosign), and admit only scanned/signed images at admission. Forbid :latest; use minimal base images.'),
+      fixNote: L('이미지 스캔·서명·다이제스트 고정과 어드미션 통제를 적용했습니다.', 'Applied image scanning/signing/digest-pinning with admission control.')
+    },
+    {
+      id: 'K9', std: 'Admission', risk: 5, flag: 'admission',
+      title: L('어드미션 컨트롤 부재 (근본 원인)', 'No Admission Control (root cause)'),
+      brief: L('정책을 강제하는 <b>어드미션 컨트롤러</b>가 없으면, 특권·hostPath·root·:latest 파드가 <b>검증 없이</b> 그대로 배포됩니다.',
+               'With no admission controller enforcing policy, privileged/hostPath/root/:latest pods deploy with no checks.'),
+      ez: L('출입 심사대가 <b>아예 없어</b> 누구든 무엇이든 들여보내는 셈입니다.', 'Like having <b>no security checkpoint</b> — anyone/anything gets in.'),
+      manifest: '# ValidatingAdmissionWebhook / OPA Gatekeeper / Kyverno 없음\n# Pod Security Admission 라벨 미설정(privileged)',
+      cmd: 'kubectl apply -f evil-pod.yaml   # privileged:true, hostPath:/, image:latest, runAsUser:0',
+      options: [
+        L('정책 위반 파드가 그대로 생성됨 — 어드미션 통제 없음', 'the policy-violating pod is created — no admission control'),
+        L('admission webhook 이 정책 위반으로 거부함', 'the admission webhook denies it for policy violations'),
+        L('YAML 형식 오류', 'YAML syntax error'),
+        L('네임스페이스 없음', 'namespace missing')
+      ],
+      ev: 0,
+      why: L('앞의 위험들(특권·hostPath·root·평문시크릿·취약이미지)은 대개 <b>애초에 배포되지 말았어야</b> 합니다. 어드미션 통제 부재가 그 모든 것을 통과시키는 근본 원인입니다.',
+             'The earlier risks (privileged/hostPath/root/plaintext secrets/vulnerable images) mostly should never have been admitted. Missing admission control is the root cause that lets them all through.'),
+      def: L('<b>정책 엔진 어드미션</b>(OPA Gatekeeper·Kyverno)과 <b>Pod Security Admission(restricted)</b>으로 baseline 을 강제한다. 위험 설정을 배포 시점에 거부하고, CI 에서도 사전 검증(shift-left)한다.',
+             'Enforce a baseline with a policy-engine admission (OPA Gatekeeper/Kyverno) and Pod Security Admission (restricted). Deny risky settings at deploy time and validate earlier in CI (shift-left).'),
+      fixNote: L('어드미션 컨트롤러(정책 강제)와 PSA restricted 를 적용했습니다.', 'Applied an admission controller (policy enforcement) and PSA restricted.')
+    }
+  ];
+
+  var state = CH.map(function () { return { tried: false, pass: false, fixed: false }; });
+  var cur = 0;
+  var PKEY = 'wvs_k8s_security';
+  function loadProg() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
+  function saveProg(id) { try { var p = loadProg(); p[id] = 1; localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} }
+
+  function renderList() {
+    var done = state.filter(function (s) { return s.pass; }).length;
+    $('prog').textContent = L('통과 ', 'Passed ') + done + ' / ' + CH.length + L('  ·  방어 적용 ', '  ·  Defenses ') + state.filter(function (s) { return s.fixed; }).length;
+    var ul = $('clist'); ul.innerHTML = '';
+    CH.forEach(function (c, i) {
+      var s = state[i];
+      var st = s.pass ? (s.fixed ? '🛡️' : '✅') : (s.tried ? '🔁' : '·');
+      var li = document.createElement('li');
+      li.className = i === cur ? 'on' : '';
+      li.innerHTML = '<span class="ow">' + esc(c.id) + '</span><span class="tt">' + esc(c.title) + '</span><span class="st">' + st + '</span>';
+      li.addEventListener('click', function () { cur = i; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function render() {
+    renderList();
+    var c = CH[cur], s = state[cur], d = $('detail');
+    var h = '<h2><span class="ow">' + esc(c.std) + '</span> ' + esc(c.title) + ' <span class="risk">' + L('위험 ', 'risk ') + c.risk + '</span></h2>';
+    h += '<p style="margin-top:8px;color:#d7e3f4">' + c.brief + '</p>';
+    h += '<div class="ez"><b>' + L('쉽게 말하면', 'In plain terms') + '</b> — ' + c.ez + '</div>';
+    h += '<div class="manifest"><b>' + L('취약한 매니페스트', 'Vulnerable manifest') + '</b>\n' + esc(c.manifest) + '</div>';
+    h += '<div class="term"><div class="hd">' + L('공격 명령 (편집 가능) — orbit-cluster', 'Attack command (editable) — orbit-cluster') + '</div>';
+    h += '<textarea id="cmdBox" spellcheck="false" aria-label="' + L('kubectl 공격 명령', 'kubectl attack command') + '">' + esc(c.cmd) + '</textarea>';
+    h += '<div class="out" id="outBox"><span style="color:#93a4c0">' + L('▶ 명령 실행 을 눌러 결과를 확인하세요.', 'Press Run command to see the result.') + '</span></div></div>';
+    h += '<div class="row"><button class="btn go" id="btnRun">▶ ' + L('명령 실행', 'Run command') + '</button><button class="btn alt" id="btnReset2">' + L('명령 원복', 'Reset') + '</button></div>';
+
+    h += '<div class="h4">1. ' + L('판정', 'Verdict') + '</div>';
+    h += '<div><button class="vbtn" type="button" data-v="good">' + L('양호', 'Secure') + '</button><button class="vbtn" type="button" data-v="vuln">' + L('취약', 'Vulnerable') + '</button></div>';
+    h += '<div class="h4">2. ' + L('그렇게 판단한 근거 (출력에서 확인한 것)', 'Evidence (what the output showed)') + '</div>';
+    c.options.forEach(function (o, i) { h += '<label class="opt"><input type="checkbox" data-o="' + i + '">' + esc(o) + '</label>'; });
+    h += '<div class="row"><button class="btn go" id="btnGrade">' + L('채점', 'Grade') + '</button>';
+    if (s.pass && !s.fixed) h += '<button class="btn fix" id="btnFix">🛡️ ' + L('방어 적용', 'Apply defense') + '</button>';
+    h += '</div><div id="res"></div>';
+    if (s.pass) {
+      h += '<div class="why"><b>' + L('왜 그런가', 'Why') + '</b> — ' + c.why + '</div>';
+      h += '<div class="def"><b>🛡️ ' + L('방어', 'Defense') + '</b> — ' + c.def + '</div>';
+    }
+    d.innerHTML = h;
+
+    var chosenV = null;
+    d.querySelectorAll('[data-v]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        chosenV = b.getAttribute('data-v');
+        d.querySelectorAll('[data-v]').forEach(function (x) { x.className = 'vbtn'; });
+        b.className = 'vbtn on';
+      });
+    });
+    $('btnRun').addEventListener('click', function () { run(c); });
+    $('btnReset2').addEventListener('click', function () { $('cmdBox').value = c.cmd; });
+    $('btnGrade').addEventListener('click', function () { grade(c, chosenV); });
+    var fb = $('btnFix'); if (fb) fb.addEventListener('click', function () { applyFix(c); });
+  }
+
+  function verdict(c) { return DEF[c.flag] ? 'good' : 'vuln'; }
+
+  function run(c) {
+    var res = kubectl($('cmdBox').value);
+    $('outBox').innerHTML = '<span style="color:#67e8f9">$ ' + esc($('cmdBox').value.trim().split('\n')[0]) + '</span>\n' + esc(res);
+  }
+
+  function grade(c, chosenV) {
+    if (!chosenV) { $('res').innerHTML = '<div class="res no">' + L('먼저 양호/취약을 고르세요.', 'Pick Secure/Vulnerable first.') + '</div>'; return; }
+    var ev = [];
+    document.querySelectorAll('#detail [data-o]').forEach(function (cb) { if (cb.checked) ev.push(parseInt(cb.getAttribute('data-o'), 10)); });
+    var vOk = chosenV === verdict(c);
+    var eOk = ev.length === 1 && ev[0] === c.ev;
+    state[cur].tried = true;
+    if (vOk && eOk) {
+      state[cur].pass = true; saveProg(c.id);
+      render();
+      $('res').innerHTML = '<div class="res ok"><b>' + L('통과', 'Passed') + '</b> — ' +
+        L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 같은 명령을 다시 실행해 보세요 — 이번엔 막힙니다.',
+          'Verdict and evidence are correct. Apply the defense below, then re-run the same command — it will be blocked this time.') + '</div>';
+    } else {
+      var msg = [];
+      msg.push(vOk ? L('판정은 맞습니다.', 'Verdict is right.') : L('판정이 다릅니다.', 'Verdict is wrong.'));
+      if (!eOk) msg.push(L('근거를 정확히 하나만, 출력에서 본 것으로 고르세요.', 'Pick exactly one evidence — what the output actually showed.'));
+      render();
+      $('res').innerHTML = '<div class="res no"><b>' + L('다시', 'Try again') + '</b> — ' + msg.join(' ') + '</div>';
+    }
+  }
+
+  function applyFix(c) {
+    DEF[c.flag] = true;
+    state[cur].fixed = true;
+    render();
+    $('res').innerHTML = '<div class="res ok"><b>🛡️ ' + L('방어 완료', 'Defense applied') + '</b> — ' + c.fixNote +
+      '<br>' + L('같은 명령을 다시 실행해 결과가 바뀌었는지 확인하세요.', 'Re-run the same command and see the result change.') + '</div>';
+  }
+
+  function boot() {
+    var p = loadProg();
+    CH.forEach(function (c, i) { if (p[c.id]) state[i].pass = true; });
+    render();
+  }
+  boot();
+})();
+
+function wvsToggleLang() {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    var v = en ? 'ko' : 'en';
+    localStorage.setItem('wvs_lang', v); localStorage.setItem('lang', v);
+  } catch (e) {}
+  location.reload();
+}
+(function () {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    document.body.classList.toggle('lang-en', en);
+    document.documentElement.lang = en ? 'en' : 'ko';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
