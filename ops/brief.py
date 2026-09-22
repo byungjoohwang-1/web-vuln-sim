@@ -17,16 +17,64 @@
   python ops/brief.py --all      # 전체 대기 항목(초기 백필 점검용)
 """
 import datetime
+import json
 import os
 import sys
 
 import state
+import agent
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BRIEF_DIR = os.path.join(HERE, 'brief')
+TICKETS = os.path.join(HERE, 'queue', 'tickets')
+DEAD = os.path.join(HERE, 'deadletter')
 
 AI_HINT = ('llm', 'prompt injection', 'machine learning', 'jailbreak',
            'ai model', 'neural', 'model poison')
+
+
+def gather_signals():
+    """A4 가 서술할 사고/대기 신호. 없으면 빈 dict — 평온한 날엔 A4 를 안 부른다."""
+    sig = {}
+    if os.path.isdir(TICKETS):
+        pend, dead_status = 0, 0
+        for f in os.listdir(TICKETS):
+            if not f.endswith('.json'):
+                continue
+            try:
+                with open(os.path.join(TICKETS, f), encoding='utf-8') as fh:
+                    st = json.load(fh).get('status')
+            except (OSError, ValueError):
+                continue
+            if st == 'pending':
+                pend += 1
+            elif st == 'deadletter':
+                dead_status += 1
+        if pend:
+            sig['pending'] = pend
+    if os.path.isdir(DEAD):
+        n = len([f for f in os.listdir(DEAD) if f.endswith('.json')])
+        if n:
+            sig['deadletter'] = n
+    return sig
+
+
+def narrate(signals):
+    """A4 브리프 서술자. 사고/대기가 있을 때만 한 문단을 얹는다. 모델이 죽어도
+    숫자 브리프는 나가야 하므로, 실패하면 None 을 돌려 서술 없이 진행한다."""
+    if not signals:
+        return None
+    prompt = ('어젯밤 콘텐츠 파이프라인 상태 신호: ' + json.dumps(signals, ensure_ascii=False)
+              + '. 사람이 5분 안에 파악하도록 한 문단(3문장 이내)으로 요약하고, 승인 대기가'
+              + ' 있으면 무엇부터 볼지 제안하라. JSON {"narration":"..."} 로만 답하라.')
+    res = agent.run_agent(
+        prompt, model='claude-haiku-4-5-20251001',
+        dry_stub=lambda: {'narration': '(dryrun) 승인 대기 %d건, 데드레터 %d건. '
+                          '승인 대기부터 확인 권장.'
+                          % (signals.get('pending', 0), signals.get('deadletter', 0))})
+    if res.get('ok') and isinstance(res.get('data'), dict):
+        return res['data'].get('narration')
+    return None
 
 
 def render(conn, since_epoch, scope_label):
@@ -56,6 +104,15 @@ def render(conn, since_epoch, scope_label):
     L.append('')
     L.append('> 범위: %s · 모델 없이 집계만' % scope_label)
     L.append('')
+    # A4 서술: 사고/대기가 있는 날만. 숫자 브리프 위에 한 문단(모델 죽어도 숫자는 나감).
+    signals = gather_signals()
+    narration = narrate(signals) if signals else None
+    if narration:
+        L.append('## 어젯밤 요약 (A4)')
+        L.append('')
+        L.append('> ' + narration)
+        L.append('')
+
     L.append('## 한눈에')
     L.append('')
     L.append('- 이 범위 유입: **%d건** (AI/ML 관련 %d건)' % (recent, ai_n))
