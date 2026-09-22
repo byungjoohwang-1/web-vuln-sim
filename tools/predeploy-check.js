@@ -50,6 +50,18 @@ for (const t of PY) {
   if (r.status !== 0) failed++;
 }
 
+/* ops/ 콘텐츠 자동화 파이프라인 자체 검증(순수 함수, 1초 미만). 파이프라인이
+   콘텐츠를 만들어 배포를 트리거하므로, 선별·scope_guard·중복제거 같은 판정
+   로직이 회귀하면 조용히 잘못된 것을 만든다. 배포 게이트가 그 무결성을 막는다.
+   ops/ 가 없는 환경(파이프라인 미도입)에서는 건너뛴다. */
+{
+  const tp = path.join(__dirname, '..', 'ops', 'test_pipeline.py');
+  if (require('fs').existsSync(tp)) {
+    const r = spawnSync('python', [tp], { stdio: 'inherit' });
+    if (r.status !== 0) failed++;
+  }
+}
+
 if (failed) {
   console.error('\n배포 중단: 위 검사를 통과하지 못했습니다.');
   process.exit(1);
