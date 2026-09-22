@@ -17,6 +17,7 @@ license 등급
   link-only   원문 인용 불가. 링크와 사실 요지만
 """
 import json
+import os
 import re
 import urllib.request
 
@@ -142,8 +143,55 @@ def fetch_nvd(cursor, results=40):
     return items, etag, lm
 
 
+def fetch_ghsa(cursor, results=40):
+    """GitHub Security Advisories. 생태계별(pip·npm 등) 취약점을 CVE 발급 전에도
+    리뷰·공개한다 — LiteLLM·transformers 같은 AI 라이브러리 취약점이 NVD 보다
+    빨리 잡히므로 이 포털의 AI 보안 축에 유용하다. 라이선스 CC-BY 4.0(attrib):
+    사실 추출은 되지만 콘텐츠화 시 sources.json 에 출처를 등재해야 한다."""
+    url = ('https://api.github.com/advisories'
+           '?per_page=%d&type=reviewed&sort=published' % results)
+    req = urllib.request.Request(url, headers={
+        'User-Agent': UA, 'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'})
+    tok = os.environ.get('GITHUB_TOKEN')
+    if tok:
+        req.add_header('Authorization', 'Bearer ' + tok)
+    if cursor.get('etag'):
+        req.add_header('If-None-Match', cursor['etag'])
+    try:
+        resp = urllib.request.urlopen(req, timeout=30)
+    except urllib.error.HTTPError as e:
+        if e.code == 304:
+            return [], cursor.get('etag'), None
+        raise
+    data = json.loads(resp.read())
+    etag = resp.headers.get('ETag')
+    items = []
+    for a in data:
+        cve = a.get('cve_id')
+        ghsa = a.get('ghsa_id')
+        summary = (a.get('summary') or '')[:400]
+        cvss = None
+        if a.get('cvss') and a['cvss'].get('score'):
+            cvss = a['cvss']['score']
+        title = summary or ghsa or ''
+        items.append({
+            'canonical_id': cve or ghsa,      # CVE 있으면 NVD·KEV 와 중복 접힘
+            'source': 'ghsa',
+            'url': a.get('html_url'),
+            'title': title,
+            'summary': summary,
+            'published_at': (a.get('published_at') or '')[:10] or None,
+            'cvss': cvss,
+            'priority': _score(title, summary, cvss, in_kev=False),
+            'license': 'attrib',
+        })
+    return items, etag, None
+
+
 # 이름 -> fetch 함수. tick/fetch_feeds 가 이 목록을 돈다. 소스 추가 비용 = 한 줄.
 SOURCES = {
     'kev': fetch_kev,
     'nvd': fetch_nvd,
+    'ghsa': fetch_ghsa,
 }
