@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 영향평가서 작성 가이드 — 구성·위험도 산정·개선계획 · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 영향평가서 작성 가이드 · WEB-VULN-SIM">
+<meta property="og:description" content="영향평가서 4대 구성요소 · 위험도 산정 방법 · 개선계획 작성법과 흔한 실수, 제도 연혁(78→121개 지표)까지">
+<meta property="og:url" content="https://vuln-sim.web.app/pia-report-guide.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="개인정보 영향평가서(PIA) 작성 가이드 — 별지 제12호 서식의 4대 구성(평가대상 시스템 개요·개인정보파일 개요·영향평가 항목별 평가·평가결과 및 개선계획)을 무엇을 어떻게 작성하고 어떤 실수를 피해야 하는지, 위험도 산정 방법(자산가치·발생가능성·취약점·DoA)과 제도 연혁(2011 시행→121개 지표)까지. 자가진단(pia-assessment)과 짝을 이루는 작성 실무 가이드. 100% 브라우저.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13px;margin-top:8px;max-width:920px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+h2.sec{font-size:16px;color:#fff;margin:22px 0 8px;display:flex;align-items:center;gap:8px}
+.steps{display:grid;gap:12px}
+.step{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;border-left:4px solid var(--accent)}
+.step h3{font-size:15px;color:#fff;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.step .num{font-family:var(--mono);font-size:12px;font-weight:800;color:#04222e;background:var(--accent);border-radius:8px;padding:3px 9px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+@media(max-width:640px){.cols{grid-template-columns:1fr}}
+.step h4{font-size:11.5px;font-family:var(--mono);margin:0 0 4px}
+.step h4.w{color:#7dd3fc}.step h4.m{color:#fca5a5}
+.step ul{margin:0 0 0 16px;font-size:12.5px;color:#e2e8f0}
+.step ul.mis li{color:#fca5a5}
+.step li{margin:2px 0}
+.rm{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;border-left:4px solid var(--warn)}
+.rm p{font-size:13px;color:#cbd5e1;margin:2px 0 10px}
+.factors{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:8px 0}
+.factor{background:var(--panel2);border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:12.5px;color:#e2e8f0}
+.factor b{display:block;font-family:var(--mono);font-size:10.5px;color:#fde047;margin-bottom:4px}
+.formula{background:#0b1220;border:1px solid var(--border);border-radius:9px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin-top:6px}
+.warnnote{background:#1a1608;border-left:4px solid var(--warn);border-radius:8px;padding:10px 13px;font-size:12px;color:#fde68a;margin-top:10px}
+.timeline{position:relative;margin:8px 0 0 8px;padding-left:20px;border-left:2px solid #334155}
+.tl{position:relative;padding:8px 0 8px 6px}
+.tl::before{content:'';position:absolute;left:-27px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid #0b1220}
+.tl .yr{font-family:var(--mono);font-size:12px;font-weight:800;color:#7dd3fc}
+.tl .tx{font-size:12.5px;color:#cbd5e1;margin-top:2px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:14px 0}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+.empty{color:var(--muted);font-size:13px;padding:30px;text-align:center}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid #334155;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+body.lang-en .ko{display:none}body:not(.lang-en) .en2{display:none}
+</style>
+<!-- RESP-NET -->
+<style>
+@media (max-width: 768px){
+  html{-webkit-text-size-adjust:100%}
+  img,svg,video,canvas,iframe{max-width:100%;height:auto}
+  pre,code{max-width:100%;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+}
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+</style>
+
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보보호 허브</span></a>
+  <a href="pia-assessment.html"><span data-en="PIA Self-Check">영향평가 자가진단</span></a>
+  <a href="my-progress.html"><span data-en="My Progress">내 학습 현황</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap" role="main">
+  <div class="hero">
+    <h1>📝 <span data-en="Writing a Privacy Impact Assessment Report">개인정보 영향평가서 작성 가이드</span></h1>
+    <div class="sub" data-en="The self-check scores your system against the assessment items; this guide shows how to write the report itself. The public form has four parts — target-system overview, personal-data file overview, item-by-item assessment, and results with an improvement plan. See what goes in each part, the mistakes reviewers flag most, how risk is rated, and how the framework grew from 78 to 121 items.">
+      자가진단이 평가항목으로 시스템을 채점한다면, 이 가이드는 <b>영향평가서 자체를 어떻게 쓰는지</b>를 보여 줍니다. 공개 서식은 네 부분 — <b>평가대상 시스템 개요 · 개인정보파일 개요 · 영향평가 항목별 평가 · 평가결과 및 개선계획</b>. 각 부분에 무엇을 담고, 검토자가 자주 지적하는 실수는 무엇이며, 위험도를 어떻게 매기고, 지표가 78개에서 121개로 어떻게 늘었는지 살펴봅니다.</div>
+    <div class="src" data-en="📕 Grounded in the public PIA notification (별지 제12호 서식) and standard PIA methodology — original educational reconstruction, not the official guide text">📕 근거: 개인정보 영향평가에 관한 고시 별지 제12호 서식과 표준 영향평가 방법론 — 공식 안내서 본문이 아닌 원저작 재구성</div>
+  </div>
+
+  <div class="note" data-en="Pair this with the self-check: run the 121-item assessment to find gaps, then write them up here as findings and an improvement plan.">
+    자가진단과 함께 쓰세요 — 121개 항목으로 미흡점을 찾고, 여기서 그것을 지적사항과 개선계획으로 정리합니다.</div>
+
+  <h2 class="sec">📋 <span data-en="Report structure — the four parts">영향평가서 구성 — 네 부분</span></h2>
+  <div class="steps" id="compHost"><div class="empty"><span class="spin"></span> <span data-en="Loading…">불러오는 중…</span></div></div>
+
+  <h2 class="sec">📊 <span data-en="Rating the risk">위험도 산정</span></h2>
+  <div id="rmHost"></div>
+
+  <h2 class="sec">🕓 <span data-en="How the framework evolved">제도 연혁</span></h2>
+  <div class="timeline" id="tlHost"></div>
+
+  <div class="disc" data-en="Educational reconstruction of a public form and standard methodology. It does not replace a statutory PIA performed by a designated assessment agency. Runs entirely in your browser.">
+    ⚠️ 공개 서식과 표준 방법론을 교육 목적으로 재구성했습니다. 영향평가기관이 수행하는 법정 영향평가를 대체하지 않습니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);
+  if(window.__booted)renderAll();}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function li(arr){return (arr||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');}
+
+var DATA=null;
+function renderAll(){
+  if(!DATA)return;
+  var comps=DATA.components||[];
+  document.getElementById('compHost').innerHTML=comps.map(function(c,i){
+    return '<div class="step"><h3><span class="num">'+(i+1)+'</span>'+esc(L(c.name_ko,c.name_en))+'</h3>'+
+      '<div class="cols"><div><h4 class="w" data-en="What to write">작성 내용</h4><ul>'+li(isEn()?c.writes_en:c.writes_ko)+'</ul></div>'+
+      '<div><h4 class="m" data-en="Common mistakes">흔한 실수</h4><ul class="mis">'+li(isEn()?c.mistakes_en:c.mistakes_ko)+'</ul></div></div></div>';
+  }).join('');
+
+  var rm=DATA.riskModel||{};
+  var factors=(rm.factors||[]).map(function(f,i){return '<div class="factor"><b>'+L('요소','Factor')+' '+(i+1)+'</b>'+esc(L(f.ko,f.en))+'</div>';}).join('');
+  document.getElementById('rmHost').innerHTML='<div class="rm"><p>'+esc(L(rm.intro_ko,rm.intro_en))+'</p>'+
+    '<div class="factors">'+factors+'</div>'+
+    (rm.formula_ko?'<div class="formula">🧮 '+esc(L(rm.formula_ko,rm.formula_en))+'</div>':'')+
+    (rm.note_ko?'<div class="warnnote">⚠️ '+esc(L(rm.note_ko,rm.note_en))+'</div>':'')+'</div>';
+
+  var hist=DATA.history||[];
+  document.getElementById('tlHost').innerHTML=hist.map(function(h){
+    return '<div class="tl"><div class="yr">'+esc(h.year)+'</div><div class="tx">'+esc(L(h.ko,h.en))+'</div></div>';
+  }).join('');
+}
+function boot(){
+  applyLang();
+  fetch('js/pia-report-guide.json').then(function(r){return r.json();}).then(function(d){
+    DATA=d; window.__booted=true; renderAll();
+    try{ if(window.WVSProgress){ window.WVSProgress.markVisited('pia-report-guide.html'); window.WVSProgress.complete(100,'pia-report-guide.html'); } }catch(e){}
+  }).catch(function(e){
+    document.getElementById('compHost').innerHTML='<div class="empty">'+L('데이터를 불러오지 못했습니다.','Failed to load data.')+' ('+esc(e&&e.message||e)+')</div>';
+  });
+}
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</body>
+</html>

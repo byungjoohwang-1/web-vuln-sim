@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0ea5e9"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 보호 원칙 비교 — 법 제3조·OECD·GDPR·Privacy by Design · WEB-VULN-SIM</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="개인정보 보호 원칙 비교 학습 · WEB-VULN-SIM">
+<meta property="og:description" content="개인정보 보호법 제3조 · OECD 프라이버시 8원칙 · EU GDPR 제5조 · Privacy by Design 7원칙·8전략을 한 화면에서 비교하고 퀴즈로 확인">
+<meta property="og:url" content="https://vuln-sim.web.app/privacy-principles.html">
+<meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="개인정보 보호 원칙 4대 프레임워크 비교 학습 — 개인정보 보호법 제3조, OECD 프라이버시 8원칙, EU GDPR 제5조 원칙, Privacy by Design 7대 기본원칙과 프라이버시 설계 8대 전략을 주제별 매트릭스로 대조하고, 16문항 시나리오 퀴즈로 어느 원칙이 적용되는지 스스로 확인. 100% 브라우저 실행, 한국어·영어.">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--border:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8;--bad:#ef4444;--good:#22c55e;--warn:#f59e0b;--mono:'JetBrains Mono','Consolas',monospace;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a{color:#7dd3fc;font-size:13px;font-family:var(--mono)}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;font-family:var(--mono)}
+.wrap{max-width:1140px;margin:0 auto;padding:20px 16px 90px}
+.hero h1{font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero .sub{color:var(--muted);font-size:13px;margin-top:8px;max-width:920px}
+.src{font-size:11.5px;color:#67e8f9;font-family:var(--mono);margin-top:6px}
+.modebar{display:inline-flex;border:1px solid #334155;border-radius:10px;overflow:hidden;margin:16px 0 6px}
+.modebar button{background:var(--panel2);color:#cbd5e1;border:none;padding:9px 16px;font-size:13px;font-weight:700;font-family:var(--mono);cursor:pointer}
+.modebar button.on{background:var(--accent);color:#04222e}
+.fwgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:12px 0}
+.fw{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;border-top:3px solid var(--accent2)}
+.fw h3{font-size:14px;color:#fff;margin-bottom:2px}
+.fw .en{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:8px}
+.fw ol{list-style:none;counter-reset:pr}
+.fw ol li{font-size:12.5px;color:#cbd5e1;padding:5px 0 5px 26px;position:relative;border-top:1px dashed #223049}
+.fw ol li:first-child{border-top:none}
+.fw ol li::before{counter-increment:pr;content:counter(pr);position:absolute;left:0;top:6px;width:18px;height:18px;border-radius:50%;background:#1e1b4b;color:#c4b5fd;font-family:var(--mono);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.fw.f0{border-top-color:#38bdf8}.fw.f1{border-top-color:#22c55e}.fw.f2{border-top-color:#f59e0b}.fw.f3{border-top-color:#a855f7}.fw.f4{border-top-color:#ef4444}
+.matrix{overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin:14px 0}
+table.mx{border-collapse:collapse;width:100%;min-width:820px;font-size:12px}
+table.mx th,table.mx td{border:1px solid #1e293b;padding:8px 10px;text-align:left;vertical-align:top}
+table.mx thead th{background:#172033;color:#93c5fd;font-family:var(--mono);font-size:11px;position:sticky;top:0}
+table.mx tbody th{background:var(--panel2);color:#e2e8f0;font-weight:700;min-width:140px}
+table.mx td{color:#cbd5e1}
+table.mx td small{display:block;color:#7dd3fc;font-family:var(--mono);font-size:10.5px;margin-top:3px}
+.note{background:#0f172a;border-left:4px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12.5px;color:#cbd5e1;margin:14px 0}
+/* quiz */
+.quiz{max-width:760px;margin:14px auto 0}
+.qcard{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:0 12px 34px rgba(0,0,0,.28)}
+.qprog{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+.qbar{height:6px;border-radius:99px;background:#1e293b;overflow:hidden;margin-bottom:14px}
+.qbar>i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.qtext{font-size:15.5px;color:#fff;line-height:1.5;margin-bottom:14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{text-align:left;background:var(--panel2);border:1px solid #334155;color:#e2e8f0;border-radius:11px;padding:12px 15px;font-size:13.5px;cursor:pointer;transition:.14s;font-family:inherit}
+.opt:hover{border-color:#4338ca;background:#18233c}
+.opt.correct{background:#0f2a18;border-color:#14532d;color:#86efac}
+.opt.wrong{background:#3b1418;border-color:#7f1d1d;color:#fca5a5}
+.opt.dim{opacity:.55}
+.exp{margin-top:14px;border-top:1px dashed #334155;padding-top:12px;font-size:13px;color:#cbd5e1;display:none}
+.exp.show{display:block}
+.exp .basis{font-family:var(--mono);font-size:11.5px;color:#c4b5fd;background:#0b1220;border:1px solid var(--border);border-radius:7px;padding:5px 9px;margin-top:8px;display:inline-block}
+.qnav{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+.btn{cursor:pointer;border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;font-family:var(--mono)}
+.btn.pri{background:var(--accent);color:#04222e;border-color:transparent}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.scorebox{text-align:center;padding:8px 0}
+.scorebox .big{font-family:var(--mono);font-size:40px;font-weight:800;color:#fff}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
+.empty{color:var(--muted);font-size:13px;padding:30px;text-align:center}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid #334155;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+body.lang-en .ko{display:none}body:not(.lang-en) .en2{display:none}
+</style>
+<!-- RESP-NET -->
+<style>
+@media (max-width: 768px){
+  html{-webkit-text-size-adjust:100%}
+  img,svg,video,canvas,iframe{max-width:100%;height:auto}
+  pre,code{max-width:100%;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+}
+</style>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<style id="wvs-shell-css">
+.wvs-skip{position:absolute;left:-9999px;top:0;z-index:100001;background:#0ea5e9;color:#04240f;font:700 14px/1 "Segoe UI","Malgun Gothic",sans-serif;padding:12px 18px;border-radius:0 0 10px 0;text-decoration:none}
+.wvs-skip:focus{left:0}
+#wvs-main:focus{outline:none}
+:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+#wvs-footer{margin-top:36px;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:#0a101e;border-top:1px solid #1e293b;color:#94a3b8;font:13px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+#wvs-footer .wvs-foot-inner{max-width:1080px;margin:0 auto;text-align:center}
+#wvs-footer p{margin:0 0 8px}
+#wvs-footer a{color:#7dd3fc;text-decoration:none;margin:0 8px;white-space:nowrap}
+#wvs-footer a:hover{text-decoration:underline}
+#wvs-footer .wvs-foot-ver{color:#64748b;font-size:12px}
+</style>
+
+<div class="topbar">
+  <a href="index.html">🏠 <span data-en="Home">홈</span></a>
+  <a href="privacy-hub.html"><span data-en="Privacy Hub">개인정보보호 허브</span></a>
+  <a href="privacy-quiz.html"><span data-en="Law Q&amp;A">법령 Q&amp;A</span></a>
+  <a href="my-progress.html"><span data-en="My Progress">내 학습 현황</span></a>
+  <span class="sp"></span>
+  <button class="langbtn" onclick="toggleLang()"><span data-en="한국어">English</span> ⇄</button>
+</div>
+<div class="wrap" role="main">
+  <div class="hero">
+    <h1>⚖️ <span data-en="Privacy Principles — Four Frameworks Compared">개인정보 보호 원칙 4대 프레임워크 비교</span></h1>
+    <div class="sub" data-en="Compare the principles behind privacy law in one place: PIPA Article 3, the OECD Privacy Guidelines (8 principles), EU GDPR Article 5, and Privacy by Design (7 foundational principles + 8 design strategies). See how the same idea — minimise, be transparent, stay accountable — is expressed across all of them, then take a 16-question scenario quiz.">
+      프라이버시 법의 뿌리인 원칙들을 한 화면에서 비교합니다 — <b>개인정보 보호법 제3조</b>, <b>OECD 프라이버시 8원칙</b>, <b>EU GDPR 제5조</b>, 그리고 <b>Privacy by Design 7대 원칙 + 설계 8대 전략</b>. "최소화·투명성·책임성" 같은 같은 생각이 각 체계에서 어떻게 표현되는지 매트릭스로 대조하고, 16문항 시나리오 퀴즈로 확인합니다.</div>
+    <div class="src" data-en="📘 Grounded in public frameworks: PIPA Art.3 · OECD Privacy Guidelines (1980/2013) · GDPR Art.5 · Privacy by Design (Cavoukian) · Privacy Design Strategies (Hoepman) — original educational reconstruction">📘 근거: 개인정보 보호법 제3조 · OECD 프라이버시 가이드라인(1980/2013) · GDPR 제5조 · Privacy by Design(Cavoukian) · 프라이버시 설계 전략(Hoepman) — 공개 프레임워크 기반 원저작 재구성</div>
+  </div>
+
+  <div class="modebar" id="modebar">
+    <button data-m="compare" class="on" data-en="Compare">비교 학습</button>
+    <button data-m="quiz" data-en="Quiz (16)">퀴즈 (16)</button>
+  </div>
+
+  <div id="compareView">
+    <div class="note" data-en="Each column is one framework’s own principle list. Below, the matrix lines up cross-cutting themes so you can see how the frameworks map onto each other.">
+      각 열은 한 프레임워크의 고유 원칙 목록입니다. 아래 매트릭스는 공통 주제를 정렬해 프레임워크들이 서로 어떻게 대응되는지 보여 줍니다.</div>
+    <div class="fwgrid" id="fwGrid"><div class="empty"><span class="spin"></span> <span data-en="Loading…">불러오는 중…</span></div></div>
+    <h2 style="font-size:16px;color:#fff;margin:18px 0 4px" data-en="Cross-framework theme matrix">주제별 대조 매트릭스</h2>
+    <div class="matrix" id="mxHost"></div>
+  </div>
+
+  <div id="quizView" style="display:none">
+    <div class="quiz" id="quizHost"></div>
+  </div>
+
+  <div class="disc" data-en="Educational reconstruction of public, widely published privacy frameworks. Principle names follow the official sources; explanations are original paraphrase. Runs entirely in your browser.">
+    ⚠️ 공개적으로 널리 발표된 프라이버시 프레임워크를 교육 목적으로 재구성했습니다. 원칙 명칭은 공식 출처를 따르고, 해설은 원저작 표현입니다. 전부 브라우저에서 동작합니다.</div>
+</div>
+
+<script src="/js/progress.js" defer></script>
+<script>
+function isEn(){try{return (localStorage.getItem('wvs_lang')||localStorage.getItem('lang'))==='en';}catch(e){return false;}}
+function L(ko,en){return isEn()?en:ko;}
+function applyLang(){var en=isEn();document.documentElement.lang=en?'en':'ko';
+  document.querySelectorAll('[data-en]').forEach(function(el){if(el.getAttribute('data-ko')===null)el.setAttribute('data-ko',el.innerHTML);el.innerHTML=en?el.getAttribute('data-en'):el.getAttribute('data-ko');});
+  document.body.classList.toggle('lang-en',en);
+  if(window.__booted){renderCompare();if(MODE==='quiz')renderQuiz();}}
+function toggleLang(){try{var v=isEn()?'ko':'en';localStorage.setItem('wvs_lang',v);localStorage.setItem('lang',v);}catch(e){}applyLang();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var DATA=null, MODE='compare';
+var QUIZ={i:0,answered:{},correct:0};
+
+function renderCompare(){
+  if(!DATA||!DATA.matrix){return;}
+  var fw=DATA.matrix.frameworks||[];
+  document.getElementById('fwGrid').innerHTML=fw.map(function(f,idx){
+    var lis=(f.principles||[]).map(function(p){return '<li>'+esc(L(p.ko,p.en))+'</li>';}).join('');
+    return '<div class="fw f'+(idx%5)+'"><h3>'+esc(L(f.name_ko,f.name_en))+'</h3>'+
+      '<div class="en">'+esc(f.key)+' · '+(f.principles||[]).length+L('개 원칙',' principles')+'</div>'+
+      '<ol>'+lis+'</ol></div>';
+  }).join('');
+  var themes=DATA.matrix.themes||[];
+  var cols=fw.map(function(f){return f;});
+  var head='<tr><th>'+L('공통 주제','Theme')+'</th>'+cols.map(function(f){return '<th>'+esc(L(f.name_ko,f.name_en))+'</th>';}).join('')+'</tr>';
+  var body=themes.map(function(t){
+    var cells=cols.map(function(f){var v=(t.map||{})[f.key]||'–';return '<td>'+esc(v)+'</td>';}).join('');
+    return '<tr><th>'+esc(L(t.theme_ko,t.theme_en))+(t.note_ko?'<small>'+esc(L(t.note_ko,t.note_en))+'</small>':'')+'</th>'+cells+'</tr>';
+  }).join('');
+  document.getElementById('mxHost').innerHTML='<table class="mx"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+}
+
+function renderQuiz(){
+  var host=document.getElementById('quizHost');
+  var qs=(DATA&&DATA.quiz&&DATA.quiz.questions)||[];
+  if(!qs.length){host.innerHTML='<div class="empty">'+L('퀴즈 데이터를 불러오지 못했습니다.','Quiz data unavailable.')+'</div>';return;}
+  if(QUIZ.i>=qs.length){
+    var pct=Math.round(QUIZ.correct/qs.length*100);
+    host.innerHTML='<div class="qcard scorebox"><div class="big">'+QUIZ.correct+' / '+qs.length+'</div>'+
+      '<p style="color:#94a3b8;margin:6px 0 14px">'+L('정답률','Score')+' '+pct+'%</p>'+
+      '<button class="btn pri" onclick="restartQuiz()">↺ '+L('다시 풀기','Restart')+'</button></div>';
+    try{ if(window.WVSProgress) window.WVSProgress.complete(pct,'privacy-principles.html'); }catch(e){}
+    return;
+  }
+  var q=qs[QUIZ.i], picked=QUIZ.answered[QUIZ.i];
+  var opts=(isEn()?q.options_en:q.options_ko)||q.options_ko||[];
+  var frac=Math.round(QUIZ.i/qs.length*100);
+  var optHtml=opts.map(function(o,k){
+    var cls='opt';
+    if(picked!=null){ if(k===q.answer)cls+=' correct'; else if(k===picked)cls+=' wrong'; else cls+=' dim'; }
+    return '<button class="'+cls+'" '+(picked!=null?'disabled':'')+' onclick="answer('+k+')">'+esc(o)+'</button>';
+  }).join('');
+  var exp=picked!=null?'<div class="exp show">'+esc(L(q.explain_ko,q.explain_en))+
+    (q.basis?'<div class="basis">'+esc(q.basis)+'</div>':'')+'</div>':'';
+  host.innerHTML='<div class="qcard">'+
+    '<div class="qprog"><span>'+L('문항','Q')+' '+(QUIZ.i+1)+' / '+qs.length+'</span><span>'+L('정답','Correct')+' '+QUIZ.correct+'</span></div>'+
+    '<div class="qbar"><i style="width:'+frac+'%"></i></div>'+
+    '<div class="qtext">'+esc(L(q.scenario_ko,q.scenario_en))+'</div>'+
+    '<div class="opts">'+optHtml+'</div>'+exp+
+    '<div class="qnav"><button class="btn" onclick="prevQ()" '+(QUIZ.i===0?'disabled':'')+'>← '+L('이전','Prev')+'</button>'+
+      '<button class="btn pri" onclick="nextQ()" '+(picked==null?'disabled':'')+'>'+(QUIZ.i===qs.length-1?L('결과 보기','See result'):L('다음','Next')+' →')+'</button></div>'+
+    '</div>';
+}
+function answer(k){
+  var qs=DATA.quiz.questions; if(QUIZ.answered[QUIZ.i]!=null)return;
+  QUIZ.answered[QUIZ.i]=k;
+  if(k===qs[QUIZ.i].answer)QUIZ.correct++;
+  renderQuiz();
+}
+function nextQ(){QUIZ.i++;renderQuiz();}
+function prevQ(){if(QUIZ.i>0){QUIZ.i--;renderQuiz();}}
+function restartQuiz(){QUIZ={i:0,answered:{},correct:0};renderQuiz();}
+
+function setMode(m){
+  MODE=m;
+  document.querySelectorAll('#modebar button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-m')===m);});
+  document.getElementById('compareView').style.display=m==='compare'?'':'none';
+  document.getElementById('quizView').style.display=m==='quiz'?'':'none';
+  if(m==='quiz')renderQuiz();
+}
+
+function boot(){
+  applyLang();
+  document.getElementById('modebar').addEventListener('click',function(e){var b=e.target.closest('button');if(b)setMode(b.getAttribute('data-m'));});
+  fetch('js/privacy-principles.json').then(function(r){return r.json();}).then(function(d){
+    DATA=d; window.__booted=true; renderCompare();
+    try{ if(window.WVSProgress) window.WVSProgress.markVisited('privacy-principles.html'); }catch(e){}
+  }).catch(function(e){
+    document.getElementById('fwGrid').innerHTML='<div class="empty">'+L('데이터를 불러오지 못했습니다.','Failed to load data.')+' ('+esc(e&&e.message||e)+')</div>';
+  });
+}
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+<script src="js/bilingual.js"></script>
+<script src="/js/soc-chrome.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</body>
+</html>

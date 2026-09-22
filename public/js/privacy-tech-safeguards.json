@@ -1,0 +1,412 @@
+{
+ "cards": [
+  {
+   "id": "TS1",
+   "name_ko": "출력 보안",
+   "name_en": "Output security",
+   "what_ko": "개인정보를 화면·인쇄물·파일로 내보낼 때 필요한 항목만, 필요한 사람에게만 나가도록 통제하고 그 흔적을 남기는 조치다. 출력 자체가 유출 통로가 되지 않게 관리한다.",
+   "what_en": "Controls that ensure personal data leaving the system as a screen view, printout, or file exposes only the minimum needed, to authorized people, with a traceable record, so that output itself does not become a leak channel.",
+   "how_ko": [
+    "목적에 필요한 최소 항목만 출력하고 주민등록번호 등 식별정보는 마스킹(뒷자리 가림)한다",
+    "다운로드·인쇄·내보내기 권한을 역할별로 제한하고 승인 절차를 거치게 한다",
+    "출력물에 워터마크·출력자 ID·출력 시각을 새겨 유출 시 추적성을 확보한다",
+    "대량 다운로드나 비정상 인쇄를 로그로 남기고 임계치 초과 시 경보한다"
+   ],
+   "how_en": [
+    "Output only the fields the task requires and mask identifiers such as resident registration numbers",
+    "Restrict download, print, and export rights by role and route them through approval",
+    "Stamp printouts with a watermark, the operator's ID, and a timestamp for traceability",
+    "Log bulk downloads and abnormal printing and alert when thresholds are exceeded"
+   ],
+   "pitfalls_ko": [
+    "화면은 마스킹하면서 CSV·엑셀 내보내기에는 원문이 그대로 담긴다",
+    "출력물 파기 절차가 없어 이면지나 프린터 트레이로 유출된다"
+   ],
+   "pitfalls_en": [
+    "The screen is masked but a CSV or Excel export still carries the raw values",
+    "No disposal procedure for printouts, so paper leaks through scrap trays and printers"
+   ],
+   "maps_ko": "안전성 확보조치 기준 제12조(출력·복사 시 안전조치)와 연결",
+   "maps_en": "Maps to Article 12 (safeguards for output and copying)"
+  },
+  {
+   "id": "TS2",
+   "name_ko": "접근통제 기술",
+   "name_en": "Access control",
+   "what_ko": "누가 어떤 개인정보에, 어떤 조건에서 접근할 수 있는지 정하고 이를 시스템이 강제하도록 만드는 기술이다.",
+   "what_en": "Technology that defines who may reach which personal data, under what conditions, and lets the system enforce those rules.",
+   "how_ko": [
+    "최소권한·업무필요 원칙으로 역할기반(RBAC)이나 속성기반(ABAC) 권한을 부여한다",
+    "인증(비밀번호+다중요소)과 인가를 분리해 신원을 확인한 뒤 권한을 검사한다",
+    "권한 부여·변경·회수 이력을 남기고 퇴직·부서이동 시 즉시 회수한다",
+    "세션 타임아웃, 동시접속 제한, 접근 IP·시간대 제한을 적용한다"
+   ],
+   "how_en": [
+    "Grant least-privilege, need-to-know rights using role-based (RBAC) or attribute-based (ABAC) models",
+    "Separate authentication (password plus a second factor) from authorization so identity is verified before rights are checked",
+    "Record every grant, change, and revocation and remove access immediately on departure or transfer",
+    "Enforce session timeouts, concurrent-session limits, and IP or time-of-day restrictions"
+   ],
+   "pitfalls_ko": [
+    "준 권한을 회수하지 않아 권한이 계속 쌓이는 권한 적체가 생긴다",
+    "공용 계정을 써서 실제로 누가 접근했는지 식별할 수 없다"
+   ],
+   "pitfalls_en": [
+    "Rights are never revoked, so permissions pile up over time (privilege creep)",
+    "Shared accounts make it impossible to tell who actually accessed the data"
+   ],
+   "maps_ko": "제5조(접근 권한의 관리)와 제6조(접근통제)에 대응",
+   "maps_en": "Maps to Article 5 (managing access privileges) and Article 6 (access control)"
+  },
+  {
+   "id": "TS3",
+   "name_ko": "개인정보 탐지",
+   "name_en": "Personal-data discovery",
+   "what_ko": "서버·PC·문서·데이터베이스 곳곳에 어떤 개인정보가 어디에 흩어져 있는지 자동으로 찾아내는 조치다. 무엇을 지켜야 하는지부터 파악한다.",
+   "what_en": "Automatically finding what personal data exists and where it is scattered across servers, PCs, documents, and databases, so you first know what needs protecting.",
+   "how_ko": [
+    "정규식·패턴(주민번호·카드번호 체크섬)과 사전으로 파일과 DB를 스캔한다",
+    "정형(DB 컬럼)과 비정형(문서, 이미지 OCR) 데이터를 모두 탐지한다",
+    "발견 항목을 위치·양·민감도로 분류해 목록화한다(데이터 인벤토리)",
+    "정기 스캔을 예약해 새로 생긴 사본과 그림자 데이터를 추적한다"
+   ],
+   "how_en": [
+    "Scan files and databases with regular expressions, patterns (resident/card-number checksums), and dictionaries",
+    "Detect both structured (database columns) and unstructured data (documents, images via OCR)",
+    "Catalogue findings and classify them by location, volume, and sensitivity (a data inventory)",
+    "Schedule recurring scans to catch new copies and shadow data"
+   ],
+   "pitfalls_ko": [
+    "오탐(단순 숫자를 주민번호로 인식)과 미탐(암호화·압축 파일 미검사)이 함께 발생한다",
+    "탐지만 하고 암호화·파기 같은 후속 조치로 연결하지 않는다"
+   ],
+   "pitfalls_en": [
+    "Both false positives (a plain number read as an ID) and misses (encrypted or compressed files left unscanned)",
+    "Discovery that is never linked to follow-up action such as encryption or disposal"
+   ],
+   "maps_ko": "명시 조항은 아니나 제7조(암호화)와 파기 대상 식별을 뒷받침하는 실무 관행",
+   "maps_en": "Not a named article, but a practice that supports identifying the targets of Article 7 (encryption) and data disposal"
+  },
+  {
+   "id": "TS4",
+   "name_ko": "개인정보 암호화",
+   "name_en": "Encryption",
+   "what_ko": "개인정보를 저장하거나 전송할 때 키 없이는 읽을 수 없는 형태로 바꾸는 조치다.",
+   "what_en": "Converting personal data, both at rest and in transit, into a form unreadable without the key.",
+   "how_ko": [
+    "고유식별정보·비밀번호·바이오정보 등은 저장 시 암호화하고 비밀번호는 일방향 해시로 저장한다",
+    "전송 구간은 TLS 등으로 암호화해 도청을 막는다",
+    "검증된 표준 알고리즘(AES, SHA-2 이상)을 쓰고 자체 제작 알고리즘은 쓰지 않는다",
+    "키를 데이터와 분리 보관하고 접근권한과 교체주기를 관리한다"
+   ],
+   "how_en": [
+    "Encrypt unique identifiers, passwords, and biometrics at rest, and store passwords as one-way hashes",
+    "Encrypt data in transit with TLS to prevent eavesdropping",
+    "Use vetted standard algorithms (AES, SHA-2 or stronger); never roll your own",
+    "Keep keys separate from the data and manage key access and rotation"
+   ],
+   "pitfalls_ko": [
+    "데이터는 암호화하면서 키를 같은 서버의 코드나 설정파일에 그대로 둔다",
+    "비밀번호를 해시가 아니라 복호화 가능한 암호화 방식으로 저장한다"
+   ],
+   "pitfalls_en": [
+    "The data is encrypted but the key sits in the same server, code, or config file",
+    "Passwords stored in a reversible (encrypted) form instead of hashed"
+   ],
+   "maps_ko": "제7조(개인정보의 암호화)에 대응",
+   "maps_en": "Maps to Article 7 (encryption of personal data)"
+  },
+  {
+   "id": "TS5",
+   "name_ko": "개인정보 유출 방지",
+   "name_en": "Data loss prevention (DLP)",
+   "what_ko": "개인정보가 조직 밖으로 빠져나가는 통로를 감시하고 정책에 따라 차단하는 조치다.",
+   "what_en": "Monitoring the channels through which personal data could leave the organization and blocking them by policy.",
+   "how_ko": [
+    "메일·웹업로드·메신저·USB 등 유출 경로에서 개인정보 패턴을 탐지한다",
+    "정책 위반 시 차단·격리·암호화·승인요청으로 대응한다",
+    "엔드포인트(USB·인쇄·클립보드)와 네트워크 양쪽에 정책을 적용한다",
+    "위반 이벤트를 기록·경보해 사후 추적과 교육에 활용한다"
+   ],
+   "how_en": [
+    "Detect personal-data patterns on exit routes such as email, web uploads, messengers, and USB",
+    "Respond to policy violations by blocking, quarantining, encrypting, or requesting approval",
+    "Apply policy at both the endpoint (USB, print, clipboard) and the network",
+    "Log and alert on violation events for later tracing and training"
+   ],
+   "pitfalls_ko": [
+    "차단 위주로만 걸어 업무를 막고 개인메일 같은 우회를 유발한다",
+    "암호화·이미지·분할 전송을 못 잡는 탐지 한계가 있다"
+   ],
+   "pitfalls_en": [
+    "A block-everything stance disrupts work and pushes users to workarounds like personal email",
+    "Detection gaps for encrypted, image-based, or split transfers"
+   ],
+   "maps_ko": "제6조(접근통제)의 유출 방지 취지를 기술로 구현하는 실무 관행",
+   "maps_en": "A practice that implements the leak-prevention intent of Article 6 (access control) in technology"
+  },
+  {
+   "id": "TS6",
+   "name_ko": "무선랜 보안",
+   "name_en": "Wireless LAN security",
+   "what_ko": "무선 네트워크를 통해 개인정보가 도청되거나 무단 접속되지 않도록 하는 조치다.",
+   "what_en": "Keeping personal data from being eavesdropped on or accessed without authorization over wireless networks.",
+   "how_ko": [
+    "WPA2/WPA3 엔터프라이즈로 암호화하고 사용자별로 인증한다",
+    "기본 SSID와 관리자 비밀번호를 바꾸고 관리 인터페이스 접근을 제한한다",
+    "업무망과 방문자망을 분리하고 무선을 통한 내부망 직접 접근을 통제한다",
+    "비인가 AP(로그 AP)를 탐지하고 무선 접속 로그를 점검한다"
+   ],
+   "how_en": [
+    "Use WPA2/WPA3 Enterprise for encryption and per-user authentication",
+    "Change default SSIDs and admin passwords and restrict access to the management interface",
+    "Separate the work network from a guest network and control direct wireless access to the internal network",
+    "Detect rogue access points and review wireless connection logs"
+   ],
+   "pitfalls_ko": [
+    "WEP나 공유 사전키(PSK) 하나를 전 직원이 공유해 개별 회수가 불가능하다",
+    "몰래 설치된 개인 공유기(로그 AP)로 통제를 우회한다"
+   ],
+   "pitfalls_en": [
+    "A single WEP or shared pre-shared key (PSK) used by all staff, which cannot be revoked individually",
+    "A personal router installed in secret (a rogue AP) that bypasses controls"
+   ],
+   "maps_ko": "제6조(접근통제)와 무선망 이용 시 안전조치 취지에 대응",
+   "maps_en": "Maps to Article 6 (access control) and the intent of safeguards when using wireless networks"
+  },
+  {
+   "id": "TS7",
+   "name_ko": "인터넷망 차단조치",
+   "name_en": "Internet-network isolation (network separation)",
+   "what_ko": "대량의 개인정보를 다루는 담당자의 PC를 인터넷과 분리해 외부 침투와 대량 유출을 막는 조치다.",
+   "what_en": "Separating the PCs of staff who handle large volumes of personal data from the internet to block external intrusion and mass leakage.",
+   "how_ko": [
+    "다운로드·파기 등 개인정보처리시스템 접근 단말을 인터넷과 분리한다(물리적 또는 논리적)",
+    "논리적 망분리 시 VDI나 망연계 게이트웨이로 자료 이동을 통제한다",
+    "망 간 파일 전송은 승인·검사·기록을 거치는 단방향 또는 중계 구조로 한다",
+    "분리망에서는 외부 저장매체와 클라우드 업로드를 차단한다"
+   ],
+   "how_en": [
+    "Isolate terminals with download or disposal access to the processing system from the internet (physically or logically)",
+    "With logical separation, control data movement through VDI or a network-linkage gateway",
+    "Move files between networks only through an approved, inspected, logged one-way or relay path",
+    "Block external storage media and cloud uploads on the isolated network"
+   ],
+   "pitfalls_ko": [
+    "망연계 구간과 예외 허용이 많아 사실상 분리가 무력화된다",
+    "대상 단말(다운로드·파기 권한자) 산정을 누락한다"
+   ],
+   "pitfalls_en": [
+    "So many linkage points and exceptions that the separation is effectively defeated",
+    "Failing to correctly identify the terminals in scope (those with download or disposal rights)"
+   ],
+   "maps_ko": "제6조(접근통제)의 인터넷망 차단조치 — 일정 규모 이상 대규모 개인정보처리자 대상",
+   "maps_en": "Maps to the internet-network isolation requirement of Article 6 (access control), applied to large-scale controllers above a set threshold"
+  },
+  {
+   "id": "TS8",
+   "name_ko": "네트워크 접근제어",
+   "name_en": "Network access control (NAC)",
+   "what_ko": "네트워크에 접속하려는 단말의 신원과 보안 상태를 확인해 허가된 기기만 들이는 조치다.",
+   "what_en": "Checking the identity and security posture of a device trying to join the network so that only approved devices get in.",
+   "how_ko": [
+    "접속 단말을 인증(802.1X, 인증서, MAC)하고 미인가 기기를 차단한다",
+    "백신·패치·자산등록 등 보안 상태를 점검해 통과 또는 격리한다(사전검사)",
+    "부서·역할별로 네트워크를 분리(세분화)해 접근 범위를 제한한다",
+    "접속 이력을 남기고 비인가 접속 시도를 경보한다"
+   ],
+   "how_en": [
+    "Authenticate devices (802.1X, certificates, MAC) and block unauthorized ones",
+    "Check security posture (antivirus, patches, asset registration) and admit or quarantine (pre-admission check)",
+    "Segment the network by department or role to limit reach",
+    "Log connections and alert on unauthorized attempts"
+   ],
+   "pitfalls_ko": [
+    "MAC 주소만으로 인증해 위장(스푸핑)에 취약하다",
+    "예외 단말과 프린터 화이트리스트가 우회 통로가 된다"
+   ],
+   "pitfalls_en": [
+    "Authenticating on MAC address alone, which is vulnerable to spoofing",
+    "Exception devices and printer whitelists that become bypass routes"
+   ],
+   "maps_ko": "제6조(접근통제)를 네트워크 계층에서 구현하는 통제",
+   "maps_en": "Implements Article 6 (access control) at the network layer"
+  },
+  {
+   "id": "TS9",
+   "name_ko": "개발 보안",
+   "name_en": "Secure development",
+   "what_ko": "개인정보를 다루는 시스템을 만들 때 설계·코딩·시험 단계에서 취약점을 예방하는 조치다.",
+   "what_en": "Preventing vulnerabilities in systems that handle personal data at the design, coding, and testing stages.",
+   "how_ko": [
+    "요구·설계 단계에서 위협모델링과 개인정보 영향을 검토한다",
+    "시큐어코딩 규칙(입력검증·출력인코딩·파라미터 바인딩)을 적용한다",
+    "정적·동적 분석(SAST/DAST)과 코드리뷰로 취약점을 조기에 발견한다",
+    "운영 데이터 대신 가명·모의 데이터로 시험하고 비밀정보는 하드코딩하지 않는다"
+   ],
+   "how_en": [
+    "Threat-model and review privacy impact during requirements and design",
+    "Apply secure-coding rules such as input validation, output encoding, and parameter binding",
+    "Find flaws early with static and dynamic analysis (SAST/DAST) and code review",
+    "Test with pseudonymized or mock data instead of production data, and never hardcode secrets"
+   ],
+   "pitfalls_ko": [
+    "개발·시험 서버에 운영 개인정보를 그대로 복사해 노출한다",
+    "배포 후 점검만 하고 설계 단계 보안을 건너뛴다"
+   ],
+   "pitfalls_en": [
+    "Copying live personal data onto development and test servers, exposing it",
+    "Checking only after release and skipping security at the design stage"
+   ],
+   "maps_ko": "명시 조항보다 SDLC 보안 관행 — 제6조·제7조의 기술적 조치가 코드에 구현되도록 뒷받침",
+   "maps_en": "More an SDLC practice than a named article — it ensures the technical controls of Articles 6 and 7 are actually built into the code"
+  }
+ ],
+ "lifecycle": [
+  {
+   "id": "L1",
+   "stage_ko": "수집",
+   "stage_en": "Collection",
+   "risks_ko": [
+    "필요 범위를 넘어선 과다 수집",
+    "적법 근거나 동의 없이 수집",
+    "수집 목적이 모호하거나 사후 변경",
+    "민감정보·고유식별정보를 별도 동의 없이 확보"
+   ],
+   "risks_en": [
+    "Over-collection beyond what the purpose requires",
+    "Collecting without a lawful basis or valid consent",
+    "Vague purpose or purpose defined only after the fact",
+    "Gathering sensitive or unique-ID data without separate consent"
+   ],
+   "controls_ko": [
+    "처리 목적에 필요한 최소한만 수집",
+    "제15조 적법 처리 근거(동의·계약·법령 등) 확인·기록",
+    "수집 목적을 구체적으로 특정하고 사전 고지",
+    "민감·고유식별정보는 별도 동의 또는 법적 근거 확보"
+   ],
+   "controls_en": [
+    "Collect only the minimum needed for the stated purpose",
+    "Verify and log a lawful basis under Art. 15 (consent, contract, statute, etc.)",
+    "Define the purpose specifically and notify it in advance",
+    "Obtain separate consent or a legal basis for sensitive and unique-ID data"
+   ]
+  },
+  {
+   "id": "L2",
+   "stage_ko": "저장·보유",
+   "stage_en": "Storage / Retention",
+   "risks_ko": [
+    "보유기간 초과 후에도 방치",
+    "암호화 미적용으로 유출 시 그대로 노출",
+    "접근권한 과다 부여와 접근기록 부재",
+    "백업·로그에 개인정보가 무통제 잔류"
+   ],
+   "risks_en": [
+    "Data left in place past its retention period",
+    "No encryption, so a breach exposes data in the clear",
+    "Excessive access rights and no access logging",
+    "Personal data lingering uncontrolled in backups and logs"
+   ],
+   "controls_ko": [
+    "보유기간을 정하고 만료 시 파기·분리보관",
+    "비밀번호·고유식별정보 등 암호화 저장",
+    "최소권한 원칙과 접근권한 관리·접근기록 보관",
+    "백업·로그의 보유기간과 보호 수준을 본데이터와 동일 적용"
+   ],
+   "controls_en": [
+    "Set retention periods and destroy or segregate data on expiry",
+    "Encrypt passwords, unique IDs, and other required fields at rest",
+    "Apply least-privilege access control and keep access logs",
+    "Give backups and logs the same retention limits and protection as source data"
+   ]
+  },
+  {
+   "id": "L3",
+   "stage_ko": "이용·제공",
+   "stage_en": "Use / Provision",
+   "risks_ko": [
+    "수집 목적을 벗어난 목적외 이용",
+    "동의 없는 제3자 제공",
+    "가명·익명처리 없이 분석·활용",
+    "제공 이력 미기록으로 추적 불가"
+   ],
+   "risks_en": [
+    "Using data beyond its original collection purpose",
+    "Providing data to third parties without consent",
+    "Analyzing or reusing data without pseudonymization or anonymization",
+    "No record of provisions, so disclosures cannot be traced"
+   ],
+   "controls_ko": [
+    "이용은 고지된 목적 범위로 제한",
+    "제17조에 따라 제공 항목·목적·보유기간 고지 후 동의 확보",
+    "분석·활용 시 가명처리 등 재식별 위험 저감",
+    "제공 대상·항목·일시를 기록·관리"
+   ],
+   "controls_en": [
+    "Limit use to the notified purpose scope",
+    "Obtain consent under Art. 17 after disclosing items, purpose, and retention",
+    "Reduce re-identification risk through pseudonymization when analyzing or reusing",
+    "Log and manage the recipient, items, and timestamp of each provision"
+   ]
+  },
+  {
+   "id": "L4",
+   "stage_ko": "위탁·제3자 이전",
+   "stage_en": "Outsourcing / Third-party transfer",
+   "risks_ko": [
+    "위탁 사실·업무 내용 미공개",
+    "수탁자 관리·감독 부재로 재위탁 통제 실패",
+    "위탁계약에 보호 의무 미명시",
+    "국외 이전 시 고지·안전조치 흠결"
+   ],
+   "risks_en": [
+    "Failure to disclose the outsourcing and the tasks involved",
+    "No supervision of processors, so sub-processing goes uncontrolled",
+    "Protection duties not written into the outsourcing contract",
+    "Cross-border transfers made without notice or safeguards"
+   ],
+   "controls_ko": [
+    "제26조에 따라 위탁 업무·수탁자를 공개하고 처리방침에 명시",
+    "보호 조치·재위탁 제한·손해배상 등을 위탁계약서에 문서화",
+    "수탁자에 대한 정기 교육과 관리·감독 실시",
+    "국외 이전 시 이전 국가·항목·목적을 고지하고 안전조치 확보"
+   ],
+   "controls_en": [
+    "Disclose outsourced tasks and processors and state them in the privacy policy under Art. 26",
+    "Document protection measures, sub-processing limits, and liability in the contract",
+    "Provide regular training and conduct oversight of processors",
+    "For cross-border transfers, notify destination, items, and purpose and secure safeguards"
+   ]
+  },
+  {
+   "id": "L5",
+   "stage_ko": "파기",
+   "stage_en": "Destruction",
+   "risks_ko": [
+    "목적 달성·기간 만료 후 미파기",
+    "논리 삭제만 하고 복원 가능한 상태로 방치",
+    "백업·사본·출력물의 파기 누락",
+    "파기 사실·방법에 대한 기록 부재"
+   ],
+   "risks_en": [
+    "Not destroying data after the purpose is met or the period ends",
+    "Only logical deletion, leaving data recoverable",
+    "Backups, copies, and printouts missed during destruction",
+    "No record of what was destroyed and how"
+   ],
+   "controls_ko": [
+    "제21조에 따라 보유기간 경과·목적 달성 시 지체 없이 파기",
+    "전자파일은 복원 불가능한 방식으로 삭제, 출력물은 파쇄·소각",
+    "백업·사본까지 포함해 파기 범위를 관리",
+    "파기 항목·시점·방법·담당자를 기록·보관"
+   ],
+   "controls_en": [
+    "Destroy data without delay once the period lapses or the purpose is met, per Art. 21",
+    "Erase electronic files irrecoverably and shred or incinerate printouts",
+    "Manage destruction scope to include backups and copies",
+    "Record the items, time, method, and person responsible for destruction"
+   ]
+  }
+ ]
+}
