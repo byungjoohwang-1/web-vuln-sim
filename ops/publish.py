@@ -105,11 +105,24 @@ def main():
         return 0
 
     if not ff_possible:
-        print('중단: ff-only 불가. auto 브랜치를 최신 main 에 rebase 후 재검토가 필요하다.')
-        print('  (승인한 내용과 배포되는 내용이 같음을 보장하려면 ff-only 여야 한다.)')
-        return 1
+        # ff-only 불가(사람이 낮에 main 에 커밋해 auto 브랜치가 뒤처짐) — 자동 rebase.
+        # rebase 는 커밋 diff 를 최신 main 위에 재적용하므로, 충돌이 없으면 내용이
+        # 그대로 보존된다. 그래도 머지 후 재게이트가 '내용이 안 깨졌나'를 다시 보증한다.
+        wt_dir = os.path.join(HERE, 'wt', tid)
+        if not os.path.isdir(wt_dir):
+            print('중단: ff-only 불가하고 rebase 할 worktree 가 없다 — 재작성이 필요하다.')
+            return 1
+        print('ff-only 불가(main 진행) — auto 브랜치를 최신 main 에 rebase 시도...')
+        rb = sh(['git', 'rebase', 'main'], cwd=wt_dir)
+        if rb.returncode != 0:
+            sh(['git', 'rebase', '--abort'], cwd=wt_dir)
+            print('중단: rebase 충돌 — 내용이 최신 main 과 겹친다. 사람이 해결해야 한다.')
+            return 1
+        branch_sha = sh(['git', 'rev-parse', branch]).stdout.strip()
+        print('  rebase 완료 — auto 브랜치 재적용 @ %s (머지 후 재게이트가 안전을 재보증)'
+              % branch_sha[:10])
 
-    # ff-only 머지
+    # ff-only 머지 (rebase 를 거쳤으면 이제 fast-forward 가능)
     m = sh(['git', 'merge', '--ff-only', branch])
     if m.returncode != 0:
         print('머지 실패: %s' % (m.stderr or '')[:200])
