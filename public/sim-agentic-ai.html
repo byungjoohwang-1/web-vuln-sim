@@ -499,14 +499,16 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     var ev = [];
     document.querySelectorAll('#detail [data-o]').forEach(function (cb) { if (cb.checked) ev.push(parseInt(cb.getAttribute('data-o'), 10)); });
     var vOk = chosenV === verdict(c);
-    var eOk = ev.length === 1 && ev[0] === c.ev;
+    /* 방어 적용 후 재점검에서는 '막힌 출력'(옵션 1)이 올바른 근거다 */
+    var expEv = DEF[c.flag] ? (c.evFix != null ? c.evFix : 1) : c.ev;
+    var eOk = ev.length === 1 && ev[0] === expEv;
     state[cur].tried = true;
     if (vOk && eOk) {
       state[cur].pass = true; saveProg(c.id);
       render();
       $('res').innerHTML = '<div class="res ok"><b>' + L('통과', 'Passed') + '</b> — ' +
-        L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 다시 실행해 보세요 — 이번엔 에이전트가 거부합니다.',
-          'Verdict and evidence are correct. Apply the defense below, then run again — the agent refuses this time.') + '</div>';
+        (DEF[c.flag] ? L('<b>재점검</b>까지 맞습니다 — 방어가 같은 공격을 막는 것을 출력으로 확인했습니다.', 'Re-check correct too — the output confirms the defense now blocks the same attack.') : L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 다시 실행해 보세요 — 이번엔 에이전트가 거부합니다.',
+          'Verdict and evidence are correct. Apply the defense below, then run again — the agent refuses this time.')) + '</div>';
     } else {
       var msg = [];
       msg.push(vOk ? L('판정은 맞습니다.', 'Verdict is right.') : L('판정이 다릅니다.', 'Verdict is wrong.'));
