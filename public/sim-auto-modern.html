@@ -4,13 +4,13 @@
 <meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>자동차 모의 해킹 실습: 백엔드·OTA·개인정보 · WEB-VULN-SIM</title>
-<meta name="description" content="차량 백엔드 서버와 OTA 업데이트, 개인정보를 시험합니다. 서버 무단접근(SQLi), 위조 펌웨어 OTA, 업데이트 서버 DoS, 네트워크 분리 미흡, 중고 이전 시 개인정보 잔존을 직접 확인하고 방어합니다.">
+<title>자동차 모의 해킹 실습: 모던 차량: 이더넷·DoIP·SOME/IP·충전 · WEB-VULN-SIM</title>
+<meta name="description" content="최신 차량은 존(zonal) 기반 오토모티브 이더넷 백본을 쓰고, 진단은 DoIP(ISO 13400)·서비스는 SOME/IP·EV 충전은 ISO 15118(CCS)로 동작합니다. CAN 중심 랩이 다루지 못한 이 최신 인터페이스에서 무인증 진단·서비스 스푸핑·존 세분화 부재·충전 MITM 을 직접 시험하고 인증·TLS·세분화·충전 격리로 방어합니다. 실무 도구 맥락: doipclient·Wireshark(doip/someip)·vsomeip.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
-<meta property="og:title" content="자동차 모의 해킹 실습: 백엔드·OTA·개인정보">
-<meta property="og:description" content="차량 백엔드 서버와 OTA 업데이트, 개인정보를 시험합니다. 서버 무단접근(SQLi), 위조 펌웨어 OTA, 업데이트 서버 DoS, 네트워크 분리 미흡, 중고 이전 시 개인정보 잔존을 직접 확인하고 방어합니다.">
-<meta property="og:url" content="https://vuln-sim.web.app/sim-auto-backend.html">
+<meta property="og:title" content="자동차 모의 해킹 실습: 모던 차량: 이더넷·DoIP·SOME/IP·충전">
+<meta property="og:description" content="최신 차량은 존(zonal) 기반 오토모티브 이더넷 백본을 쓰고, 진단은 DoIP(ISO 13400)·서비스는 SOME/IP·EV 충전은 ISO 15118(CCS)로 동작합니다. CAN 중심 랩이 다루지 못한 이 최신 인터페이스에서 무인증 진단·서비스 스푸핑·존 세분화 부재·충전 MITM 을 직접 시험하고 인증·TLS·세분화·충전 격리로 방어합니다. 실무 도구 맥락: doipclient·Wireshark(doip/someip)·vsomeip.">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-auto-modern.html">
 <meta property="og:image" content="https://vuln-sim.web.app/favicon.svg">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="/css/platform-tokens.css">
@@ -84,7 +84,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .disc{margin-top:20px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:10px}
 </style>
 <script src="/js/auto-pentest.js"></script>
-<script src="/js/auto-lab-backend.js"></script>
+<script src="/js/auto-lab-modern.js"></script>
 <script src="/js/progress.js" defer></script>
 <script src="/js/soc-chrome.js" data-topbar="off" defer></script>
 <script src="/js/safety-notice.js" defer></script>
@@ -98,19 +98,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <a href="vuln-hub.html">취약점 실습장</a>
   <a href="my-progress.html">내 학습 현황</a>
   <span class="sp"></span>
-  <span style="font-size:12px;color:#94a3b8;font-family:var(--mono)">AUTO-PT-BE</span>
+  <span style="font-size:12px;color:#94a3b8;font-family:var(--mono)">AUTO-PT-MODERN</span>
 </div>
 
 <div class="wrap" id="wvs-main" tabindex="-1" role="main">
   <div class="hero">
-    <h1>🚗 자동차 모의 해킹 실습 <span>· 백엔드·OTA·개인정보</span> <span class="badge">6개 시험</span> <span class="r155">R155 Annex5 · 백엔드/업데이트</span></h1>
-    <p>차량 백엔드 서버와 OTA 업데이트, 개인정보를 시험합니다. 서버 무단접근(SQLi), 위조 펌웨어 OTA, 업데이트 서버 DoS, 네트워크 분리 미흡, 중고 이전 시 개인정보 잔존을 직접 확인하고 방어합니다.</p>
+    <h1>🚗 자동차 모의 해킹 실습 <span>· 모던 차량: 이더넷·DoIP·SOME/IP·충전</span> <span class="badge">6개 시험</span> <span class="r155">R155 · 오토모티브 이더넷/DoIP/ISO 15118</span></h1>
+    <p>최신 차량은 존(zonal) 기반 오토모티브 이더넷 백본을 쓰고, 진단은 DoIP(ISO 13400)·서비스는 SOME/IP·EV 충전은 ISO 15118(CCS)로 동작합니다. CAN 중심 랩이 다루지 못한 이 최신 인터페이스에서 무인증 진단·서비스 스푸핑·존 세분화 부재·충전 MITM 을 직접 시험하고 인증·TLS·세분화·충전 격리로 방어합니다. 실무 도구 맥락: doipclient·Wireshark(doip/someip)·vsomeip.</p>
   </div>
 
   <div class="hostbar">
     <span>대상 차량 <b id="hostName">-</b></span>
     <span>· VIN <b id="hostVin">-</b></span>
-    <span>· 시험 범위 <b>R155 Annex5 · 백엔드/업데이트</b></span>
+    <span>· 시험 범위 <b>R155 · 오토모티브 이더넷/DoIP/ISO 15118</b></span>
     <span style="margin-left:auto">교육용 가상 차량 (실제 차량 접속 아님)</span>
   </div>
 
@@ -213,7 +213,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     document.getElementById('pbar').style.width = Math.round(done / missions.length * 100) + '%';
     document.getElementById('ptext').textContent = done + ' / ' + missions.length;
     if (done === missions.length) {
-      try { window.WVSProgress && window.WVSProgress.complete(100, 'sim-auto-backend.html'); } catch(e){}
+      try { window.WVSProgress && window.WVSProgress.complete(100, 'sim-auto-modern.html'); } catch(e){}
     }
   }
 
