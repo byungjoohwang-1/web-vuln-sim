@@ -160,8 +160,15 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     var c = cmd.trim();
     var deny = function (reason) { return 'Error from server (Forbidden): ' + reason; };
 
-    /* K1 특권 컨테이너 → 호스트 탈출 */
-    if (/nsenter|--target 1|exec.*web-pod.*bash|chroot \/host/.test(c)) {
+    /* K9 어드미션 부재 — 가장 구체적인 서명이라 먼저 본다. 아래 K2 의 hostPath 패턴이
+       K9 명령(evil-pod 의 hostPath:/ 주석)을 가로채던 것을 막는다. */
+    if (/apply -f evil|create.*privileged|admission|opa|kyverno|gatekeeper/.test(c)) {
+      if (DEF.admission) return deny(L('admission webhook(Kyverno): 정책 위반으로 거부(특권·hostPath·:latest·root)', 'admission webhook (Kyverno): denied for policy violations (privileged/hostPath/:latest/root)'));
+      return L('pod/evil created\n# 어드미션 컨트롤러 부재 — 특권·hostPath·root·:latest 파드가 검증 없이 그대로 배포됨', 'pod/evil created\n# no admission controller — privileged/hostPath/root/:latest pods deploy with no checks');
+    }
+    /* K1 특권 컨테이너 → 호스트 탈출.
+       'chroot /host' 는 K2 명령(docker.sock)에도 들어 있어 분기를 가로챈다 — 제외한다. */
+    if (/nsenter|--target 1|exec.*web-pod.*bash/.test(c)) {
       if (DEF.noPrivileged || DEF.admission) return deny(L('admission: 특권 컨테이너/호스트 네임스페이스 차단(PSA restricted)', 'admission: privileged/host namespaces blocked (PSA restricted)'));
       return 'root@node-1:/# id\nuid=0(root) gid=0(root) groups=0(root)\n' + L('# 특권 컨테이너 → 호스트 PID/마운트 네임스페이스로 탈출, 노드 root 획득', '# privileged container → escaped to host PID/mount ns, got node root');
     }
@@ -199,11 +206,6 @@ body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
     if (/describe pod.*image|image:.*latest|trivy|scan|:latest/.test(c)) {
       if (DEF.imageControl) return L('image: registry/orbit/web@sha256:pinned...  (스캔 통과·서명 검증)\n# :latest 금지, 다이제스트 고정, 취약 이미지 어드미션 차단', 'image: registry/orbit/web@sha256:pinned...  (scanned/signed)\n# :latest blocked, digest pinned, vulnerable images denied at admission');
       return L('image: orbit/web:latest  (미스캔)\nCRITICAL: CVE-2024-XXXX (RCE) 포함\n# :latest 미고정 + 스캔 부재 → 알려진 취약점 그대로 배포', 'image: orbit/web:latest  (unscanned)\nCRITICAL: CVE-2024-XXXX (RCE)\n# :latest unpinned + no scan → known-vulnerable image deployed');
-    }
-    /* K9 어드미션 부재 — 위 위험들이 애초에 배포되게 둔 근본 */
-    if (/apply -f evil|create.*privileged|admission|opa|kyverno|gatekeeper/.test(c)) {
-      if (DEF.admission) return deny(L('admission webhook(Kyverno): 정책 위반으로 거부(특권·hostPath·:latest·root)', 'admission webhook (Kyverno): denied for policy violations (privileged/hostPath/:latest/root)'));
-      return L('pod/evil created\n# 어드미션 컨트롤러 부재 — 특권·hostPath·root·:latest 파드가 검증 없이 그대로 배포됨', 'pod/evil created\n# no admission controller — privileged/hostPath/root/:latest pods deploy with no checks');
     }
     return L('명령을 인식하지 못했습니다. 위 "공격 명령"의 예시를 실행해 보세요.', 'Command not recognized. Try the example in the attack box above.');
   }

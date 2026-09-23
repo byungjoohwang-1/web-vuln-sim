@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>공급망 · DevSecOps 실습 — CI/CD 파이프라인 보안 · WEB-VULN-SIM</title>
+<meta name="description" content="모의 CI/CD 파이프라인에 직접 명령을 실행해 의존성 혼동·악성 패키지·CI 시크릿 유출·서드파티 액션 미고정·빌드 출처 부재·러너 오염·브랜치 보호 우회를 시험하고, SLSA·OWASP CI/CD Top 10 기준으로 방어하는 소프트웨어 공급망 보안 핸즈온 실습.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="공급망 · DevSecOps 실습 — CI/CD 파이프라인 보안">
+<meta property="og:description" content="모의 CI/CD 파이프라인을 직접 공격·방어하는 소프트웨어 공급망 보안 핸즈온 실습 (SLSA · OWASP CI/CD Top 10).">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-supply-chain.html">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--panel3:#16233c;--bd:#22314f;--ink:#e6edf7;
+ --muted:#93a4c0;--acc:#4ade80;--acc2:#86efac;--good:#3fb950;--bad:#f85149;--warn:#e3a008;
+ --mono:'JetBrains Mono','Consolas','D2Coding',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+a{color:#86efac;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a,.topbar .langbtn{font-family:var(--mono);font-size:12.5px}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid var(--bd);background:var(--panel2);color:#cdbfb2;border-radius:6px;padding:4px 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 16px 70px}
+h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:11.5px;font-weight:800;color:#052e16;background:var(--acc2);border-radius:6px;padding:2px 9px}
+.sub{color:var(--muted);font-size:14px;margin-top:8px;max-width:920px}
+.note{background:#052e1b;border:1px solid #166534;border-radius:10px;padding:11px 14px;margin-top:14px;font-size:12.8px;color:#bbf7d0}
+.tgt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tgt b{color:var(--acc)}
+.cols{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;margin-top:16px}
+@media(max-width:940px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+.clist{list-style:none;display:flex;flex-direction:column;gap:6px}
+.clist li{border:1px solid var(--bd);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2);display:flex;gap:9px;align-items:center}
+.clist li:hover{border-color:var(--acc)}
+.clist li.on{border-color:var(--acc);background:#0d2e1c}
+.clist .ow{font-family:var(--mono);font-size:10.5px;color:var(--muted);flex:0 0 auto;border:1px solid var(--bd);border-radius:5px;padding:1px 5px}
+.clist .tt{flex:1;font-size:13px}
+.clist .st{font-size:14px;flex:0 0 auto}
+.prog{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+.det h2{font-size:17px;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.det h2 .ow{font-family:var(--mono);font-size:12px;color:#fdba74}
+.risk{font-family:var(--mono);font-size:10.5px;border:1px solid var(--bd);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.ez{background:var(--panel3);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:9px 13px;margin:10px 0;font-size:13.5px;color:#bbf7d0}
+.ez b{color:var(--acc)}
+.term{background:#050a14;border:1px solid var(--bd);border-radius:10px;margin-top:10px;overflow:hidden}
+.term .hd{background:var(--panel3);padding:6px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--bd)}
+.term textarea{width:100%;height:80px;background:#050a14;border:none;color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:10px 12px;resize:vertical;outline:none;white-space:pre}
+.term .out{min-height:56px;max-height:260px;overflow:auto;padding:10px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+.btn{cursor:pointer;border:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;font-weight:700;padding:8px 15px}
+.btn.go{background:var(--acc);color:#052e16}
+.btn.alt{background:var(--panel3);color:var(--ink);border:1px solid var(--bd)}
+.btn.fix{background:var(--good);color:#06121f}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt{display:block;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin:6px 0;cursor:pointer;background:var(--panel2);font-size:13.5px}
+.opt:hover{border-color:var(--acc)}.opt input{margin-right:8px}
+.vbtn{background:var(--panel2);border:1px solid var(--bd);color:var(--ink);border-radius:8px;padding:7px 16px;font-weight:700;cursor:pointer;margin-right:8px}
+.vbtn.on{border-color:var(--acc);background:#0d2e1c;color:var(--acc2)}
+.res{border-radius:8px;padding:10px 13px;margin-top:10px;font-size:13.5px;line-height:1.7}
+.res.ok{background:#0f2a18;border:1px solid var(--good)}
+.res.no{background:#3a1518;border:1px solid var(--bad)}
+.why{margin-top:10px;font-size:13.5px;color:#d7e3f4}.why b{color:#fff}
+.def{margin-top:12px;background:#0e1f16;border:1px solid #1f5137;border-radius:8px;padding:10px 13px;font-size:13px;color:#bdf0d3}.def b{color:#7ee7a8}
+.manifest{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;white-space:pre-wrap;line-height:1.5}
+.manifest b{color:var(--acc2)}
+.h4{font-size:12.5px;color:var(--acc);font-family:var(--mono);margin:12px 0 4px}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:12px}
+.crosslink{margin-top:8px;font-size:12.5px;color:var(--muted)}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/safety-notice.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<div class="topbar">
+  <a href="index.html">🏠 <span class="ko">홈</span><span class="en">Home</span></a>
+  <a href="vuln-hub.html"><span class="ko">취약점 실습장</span><span class="en">Vuln Hub</span></a>
+  <a href="my-progress.html"><span class="ko">내 학습 현황</span><span class="en">My Progress</span></a>
+  <span class="sp"></span>
+  <span class="langbtn" onclick="wvsToggleLang()">KO ⇄ EN</span>
+</div>
+
+<div class="wrap" id="wvs-main" tabindex="-1" role="main">
+  <h1>📦 <span class="ko">공급망 · DevSecOps 실습</span><span class="en">Supply Chain · DevSecOps Lab</span> <span class="badge">SLSA · CI/CD Top 10</span></h1>
+  <p class="sub">
+    <span class="ko">모의 CI/CD 파이프라인 <b>OrbitCI</b>(저장소 orbit/web)에 직접 명령을 실행해 의존성 혼동·악성 패키지·CI 시크릿 유출·러너 오염 등을 시험합니다.
+    각 위험은 <b>명령 실행 → 취약/양호 판정 → 방어 적용 → 재점검</b> 순서로, 방어(스코프 레지스트리·액션 고정·출처 증명 등)를 켜면 같은 공격이 이번엔 막히는지 확인합니다.</span>
+    <span class="en">Run commands against a mock CI/CD pipeline (<b>OrbitCI</b>, repo orbit/web): dependency confusion, malicious packages, CI secret exfiltration, runner poisoning, and more.
+    Each risk runs command → verdict → apply defense → re-check — watch the same attack get blocked once the defense (scoped registry, pinned actions, provenance) is on.</span>
+  </p>
+
+  <div class="note">
+    <span class="ko">교육용 시뮬레이션입니다. <b>OrbitCI</b> 와 orbit/web 저장소는 전부 이 페이지 안의 mock 이며 실제 빌드·패키지 설치·레지스트리 게시는 전혀 없습니다.
+    위험 분류는 공개 기준(SLSA, OWASP Top 10 CI/CD Security Risks, NIST SSDF)을 개념적으로 재구성했습니다. 등장하는 토큰은 모두 명백한 EXAMPLE 값입니다.</span>
+    <span class="en">Educational simulation. OrbitCI and the orbit/web repo are fully in-page mocks — no real builds, installs, or registry publishing. Risk taxonomy follows public guidance (SLSA, OWASP Top 10 CI/CD Security Risks, NIST SSDF). All tokens shown are obvious EXAMPLE values.</span>
+  </div>
+
+  <div class="tgt">
+    <span><span class="ko">저장소</span><span class="en">Repo</span> <b>orbit/web</b></span><span>·</span>
+    <span>CI <b>OrbitCI</b></span><span>·</span>
+    <span><span class="ko">내 접근</span><span class="en">My access</span> <b><span class="ko">외부 기여자(포크)</span><span class="en">outside contributor (fork)</span></b></span>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="prog" id="prog"></div>
+      <ul class="clist" id="clist"></ul>
+    </div>
+    <div class="card det" id="detail"></div>
+  </div>
+
+  <div class="disc">
+    ⚠️ <span class="ko">교육용 시뮬레이션. 모든 명령은 페이지 안의 가상 파이프라인에 대해서만 동작합니다. 공격 시연에는 반드시 방어 방법을 함께 둡니다. 실제 저장소·레지스트리를 대상으로 시험하지 마세요.</span>
+    <span class="en">Educational simulation. Commands act only on the in-page mock pipeline. Every attack is paired with its defense. Never test against real repositories or registries.</span>
+    <div class="crosslink">
+      <span class="ko">관련:</span><span class="en">Related:</span>
+      <a href="sim-k8s-security.html"><span class="ko">쿠버네티스 보안</span><span class="en">Kubernetes</span></a> ·
+      <a href="sim-api-security.html">API <span class="ko">보안</span><span class="en">Security</span></a> ·
+      <a href="11_cloud-c01.html"><span class="ko">클라우드 설정 진단</span><span class="en">Cloud config</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * 공급망·DevSecOps 실습 엔진 — 자체 완결형. 실제 빌드·설치·게시 없음.
+ * 단일 진실원천 = 방어 플래그(DEF). CI 출력도, 판정(verdict)도, 방어(fix)도
+ * 모두 같은 플래그를 읽고 쓴다. 방어를 켜면 같은 공격이 이번엔 막히고
+ * 재점검이 '양호'로 바뀐다. 전역에 브라우저 내장 이름을 쓰지 않는다.
+ * ============================================================ */
+(function () {
+  'use strict';
+  function isEn() { try { return (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en'; } catch (e) { return false; } }
+  function L(ko, en) { return isEn() ? en : ko; }
+  function esc(s) { return (s + '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* 방어 플래그(단일 진실원천). false = 취약, true = 방어됨 */
+  var DEF = {
+    scopedRegistry: false,  /* C1: 내부 패키지 스코프 고정 + 업스트림 폴백 차단 */
+    depReview: false,       /* C2: 의존성 검토·격리 설치(스크립트 금지) */
+    secretScope: false,     /* C3: 포크 PR 에 시크릿 미노출 + 최소 권한 토큰 */
+    pinActions: false,      /* C4: 서드파티 액션 커밋 SHA 고정 + 허용목록 */
+    provenance: false,      /* C5: 빌드 출처 증명(SLSA) + 아티팩트 서명 */
+    sbomScan: false,        /* C6: SBOM 생성 + 전이 의존성 취약점 차단 */
+    ephemeralRunner: false, /* C7: 일회성 러너 + 격리 */
+    branchProtect: false,   /* C8: 브랜치 보호 + 필수 리뷰 + 서명 커밋 */
+    leastDeploy: false      /* C9: 배포 자격증명 최소 권한 + OIDC 단기 토큰 */
+  };
+
+  /* 모의 CI/CD 실행 — 명령 문자열을 보고 DEF 플래그에 따라 출력을 낸다. */
+  function ci(cmd) {
+    var c = cmd.trim();
+    var deny = function (reason) { return '[blocked] ' + reason; };
+
+    /* C1 의존성 혼동 */
+    if (/publish.*orbit-internal|dependency.?confusion|npm publish|registry.*public/i.test(c)) {
+      if (DEF.scopedRegistry) return deny(L('내부 스코프 @orbit 는 사내 레지스트리로 고정 — 공개 레지스트리 폴백 차단, 외부 동일명 패키지 무시',
+                                            'internal scope @orbit is pinned to the private registry — public fallback blocked, same-named external package ignored'));
+      return L('공개 레지스트리에 orbit-internal-utils@99.9.9 게시 완료\nOrbitCI 빌드 로그: added orbit-internal-utils@99.9.9 (from public registry)\n# 사내 전용 패키지명이 공개에 선점됨 — 높은 버전이 우선돼 빌드가 외부 코드를 당겨감',
+               'published orbit-internal-utils@99.9.9 to the public registry\nOrbitCI build log: added orbit-internal-utils@99.9.9 (from public registry)\n# the internal package name was claimed publicly — the higher version wins and the build pulls external code');
+    }
+    /* C2 악성 패키지 / postinstall */
+    if (/postinstall|preinstall|install[- ]script|typosquat|npm install|yarn add|pnpm add/i.test(c)) {
+      if (DEF.depReview) return deny(L('설치 스크립트 실행 차단(--ignore-scripts) + 신규·저평판 의존성은 검토 대기열로',
+                                       'install scripts disabled (--ignore-scripts) and new/low-reputation dependencies go to a review queue'));
+      return L('npm install → orbit-logger-utils (신규 의존성)\n  postinstall: node ./setup.js\n  → 환경변수 수집 후 외부 엔드포인트로 전송 시도\n# 설치만 해도 코드가 실행된다 — 패키지 설치는 곧 코드 실행',
+               'npm install → orbit-logger-utils (new dependency)\n  postinstall: node ./setup.js\n  → collected environment variables and attempted to POST them out\n# installing runs code — package installation *is* code execution');
+    }
+    /* C3 CI 시크릿 유출 */
+    if (/pull_request_target|secrets\.|env \| |printenv|echo.*TOKEN|workflow.*fork|gh pr create|pr create/i.test(c)) {
+      if (DEF.secretScope) return deny(L('포크 PR 워크플로에 시크릿 미주입 — 읽기 전용 토큰만, 배포 시크릿은 보호 환경(승인 필요)에서만',
+                                         'no secrets injected into fork-PR workflows — read-only token only; deploy secrets live in a protected environment requiring approval'));
+      return 'DEPLOY_TOKEN=orbit_deploy_EXAMPLE_7a2f\nREGISTRY_PASSWORD=EXAMPLE-registry-pw\n' +
+        L('# pull_request_target 이 포크의 코드를 시크릿과 함께 실행 — PR 하나로 배포 자격증명 유출',
+          '# pull_request_target ran fork code together with secrets — one PR leaks deploy credentials');
+    }
+    /* C4 서드파티 액션 미고정 */
+    if (/uses:|@main|@v\d|third.?party.?action|marketplace/i.test(c)) {
+      if (DEF.pinActions) return deny(L('액션이 커밋 SHA 로 고정되고 허용목록에 없는 액션은 실행 불가 — 업스트림 변경이 파이프라인에 자동 유입되지 않음',
+                                        'actions are pinned to commit SHAs and non-allowlisted actions cannot run — upstream changes no longer flow in automatically'));
+      return L('uses: some-org/build-helper@main  ← 태그/브랜치 참조\n업스트림이 방금 변경됨: 빌드 단계에 자격증명 수집 코드 추가\nOrbitCI: 변경된 코드가 다음 빌드부터 그대로 실행됨\n# 고정하지 않은 서드파티 액션 = 남의 저장소에 내 파이프라인 쓰기 권한을 준 것',
+               'uses: some-org/build-helper@main  ← tag/branch reference\nupstream just changed: credential-harvesting code added to the build step\nOrbitCI: the changed code runs from the next build onward\n# an unpinned third-party action gives someone else write access to your pipeline');
+    }
+    /* C5 출처 증명 부재 */
+    if (/provenance|attestation|slsa|cosign|verify.*artifact|sigstore/i.test(c)) {
+      if (DEF.provenance) return 'artifact: orbit-web-2.4.1.tar.gz\n  provenance: verified (builder=OrbitCI, source=orbit/web@a1b2c3d)\n  signature: valid (cosign)\n' +
+        L('# 어떤 소스가 어떤 빌더로 만들어졌는지 검증 가능 — 위조 아티팩트는 거부',
+          '# the source and builder are verifiable — forged artifacts are rejected');
+      return L('artifact: orbit-web-2.4.1.tar.gz\n  provenance: (없음)\n  signature: (없음)\n배포 서버: 아티팩트를 그대로 수락\n# 누가 어떤 소스로 만들었는지 증명할 수 없다 — 중간에 바꿔치기해도 알 수 없음',
+               'artifact: orbit-web-2.4.1.tar.gz\n  provenance: (none)\n  signature: (none)\ndeploy server: accepted the artifact as-is\n# nothing proves who built it from what source — a swapped artifact is undetectable');
+    }
+    /* C6 SBOM / 전이 의존성 */
+    if (/sbom|audit|transitive|depth|cyclonedx|dependency.?tree/i.test(c)) {
+      if (DEF.sbomScan) return L('SBOM(CycloneDX) 생성됨 — 직접 42 · 전이 613 구성요소\n취약점: CRITICAL 0 · HIGH 0 (차단 정책 통과)\n# 무엇이 들어있는지 목록으로 알고, 기준 초과 시 빌드가 실패한다',
+                                 'SBOM (CycloneDX) generated — 42 direct, 613 transitive components\nvulnerabilities: 0 CRITICAL, 0 HIGH (policy passed)\n# inventory is known and the build fails above threshold');
+      return L('직접 의존성 42개 / 전이 의존성 613개\nCRITICAL: 3건 (전이 의존성, 깊이 4~6)\nSBOM: 생성되지 않음\n# 내가 설치한 적 없는 코드가 대부분 — 목록조차 없어 영향 범위를 산정할 수 없다',
+               '42 direct / 613 transitive dependencies\nCRITICAL: 3 (transitive, depth 4-6)\nSBOM: not generated\n# most shipped code was never explicitly installed — with no inventory you cannot scope impact');
+    }
+    /* C7 러너 오염 */
+    if (/self.?hosted|runner|persist|cache.*poison|\/tmp\/|docker.*runner/i.test(c)) {
+      if (DEF.ephemeralRunner) return deny(L('일회성 러너 — 작업마다 새 VM/컨테이너에서 시작하고 종료 시 폐기. 캐시는 키 격리·서명 검증',
+                                             'ephemeral runner — every job starts on a fresh VM/container and is destroyed afterward; caches are key-isolated and signature-checked'));
+      return L('자체 호스팅 러너에 파일 기록: /opt/actions-runner/_work/_tool/node/bin/node (래핑)\n다음 빌드에서도 유지됨 → 이후 모든 작업의 빌드 산출물에 백도어 주입\n# 러너가 재사용되면 한 번의 오염이 뒤따르는 모든 빌드로 번진다',
+               'wrote to the self-hosted runner: /opt/actions-runner/_work/_tool/node/bin/node (wrapped)\npersists into later builds → backdoors the artifacts of every subsequent job\n# when runners are reused, one poisoning spreads to all following builds');
+    }
+    /* C8 브랜치 보호 우회 */
+    if (/push.*main|force.?push|branch.?protection|merge.*self|bypass.*review/i.test(c)) {
+      if (DEF.branchProtect) return deny(L('보호된 브랜치: 직접 푸시·강제 푸시 금지, 필수 리뷰 1인 이상 + 상태 검사 통과 + 서명 커밋 필요',
+                                           'protected branch: direct and force pushes denied; requires review, passing checks, and signed commits'));
+      return L('git push --force origin main → OK\n리뷰 없이 main 반영 → 자동 배포 트리거\n# 보호 규칙이 없으면 코드 리뷰·검사 단계가 전부 선택 사항이 된다',
+               'git push --force origin main → OK\nmerged to main without review → auto-deploy triggered\n# with no protection rules, review and checks all become optional');
+    }
+    /* C9 배포 자격증명 과다 권한 */
+    if (/deploy.*token|oidc|iam|role|credential.*scope|aws|gcloud/i.test(c)) {
+      if (DEF.leastDeploy) return deny(L('OIDC 단기 토큰(수명 15분) + 해당 서비스·환경으로만 범위 제한 — 다른 자원 접근 거부',
+                                         'short-lived OIDC token (15 min) scoped to this service/environment only — access to other resources denied'));
+      return L('DEPLOY_TOKEN 권한 확인: 전체 프로젝트 관리자, 만료 없음\n다른 서비스 8개 + 프로덕션 DB 스냅샷까지 접근 가능\n# 빌드용 자격증명 하나가 조직 전체 권한 — CI 침해가 곧 전면 침해',
+               'DEPLOY_TOKEN scope: org-wide admin, never expires\ncan reach 8 other services plus production DB snapshots\n# one build credential holds org-wide power — a CI compromise becomes a total compromise');
+    }
+    return L('명령을 인식하지 못했습니다. 위 "공격 명령"의 예시를 실행해 보세요.', 'Command not recognized. Try the example in the attack box above.');
+  }
+
+  /* ============================================================
+   * 도전 — 소프트웨어 공급망 / CI·CD
+   * ============================================================ */
+  var CH = [
+    {
+      id: 'C1', std: 'CI/CD-SEC-3 / 의존성', risk: 5, flag: 'scopedRegistry',
+      title: L('의존성 혼동 (Dependency Confusion)', 'Dependency Confusion'),
+      brief: L('사내 전용 패키지명을 <b>공개 레지스트리에 선점</b>하고 버전을 높게 올리면, 빌드가 외부 코드를 당겨 갑니다.',
+               'Claim the internal package name on the public registry with a higher version and the build pulls external code.'),
+      ez: L('회사 내부 택배를 <b>같은 이름의 외부 업체</b>가 가로채 배달하는 셈입니다.', 'Like an <b>outside courier with the same name</b> intercepting your internal deliveries.'),
+      manifest: '# .npmrc 에 스코프 지정 없음 → 공개 레지스트리 폴백 허용\n"dependencies": { "orbit-internal-utils": "^1.2.0" }   # ← 사내 전용 이름',
+      cmd: 'npm publish orbit-internal-utils@99.9.9 --registry https://registry.npmjs.org',
+      options: [
+        L('빌드가 공개 레지스트리의 외부 패키지를 설치함 — 이름 선점 성공', 'the build installed the external package from the public registry — name claimed'),
+        L('내부 스코프가 사내 레지스트리로 고정 — 공개 폴백 차단', 'internal scope pinned to the private registry — public fallback blocked'),
+        L('패키지 이름이 이미 존재해 게시 실패', 'publish failed, name already taken'),
+        L('빌드가 오프라인이라 설치되지 않음', 'build is offline, nothing installed')
+      ],
+      ev: 0,
+      why: L('패키지 관리자는 대개 <b>이름으로 해석하고 높은 버전을 선호</b>합니다. 내부 레지스트리와 공개 레지스트리를 함께 보면, 같은 이름의 외부 패키지가 조용히 우선됩니다. 이름만 알면 되는 <b>원격 코드 실행</b> 경로입니다.',
+             'Package managers resolve by name and prefer the highest version. When both an internal and a public registry are consulted, a same-named external package quietly wins — a remote code execution path that only requires knowing the name.'),
+      def: L('내부 패키지를 <b>스코프(@orbit/...)로 고정</b>하고, 그 스코프는 사내 레지스트리로만 해석되게 한다. 공개 레지스트리 <b>폴백을 차단</b>하고(업스트림 프록시 허용목록), 내부 이름을 공개 레지스트리에 <b>방어적으로 선점</b>해 둔다. 락파일과 무결성 해시를 강제한다.',
+             'Scope internal packages (@orbit/...) and resolve that scope only from the private registry. Block public fallback (allowlisted upstream proxy) and defensively claim internal names publicly. Enforce lockfiles and integrity hashes.'),
+      fixNote: L('스코프 고정과 공개 레지스트리 폴백 차단을 적용했습니다.', 'Pinned scopes and blocked public-registry fallback.')
+    },
+    {
+      id: 'C2', std: 'CI/CD-SEC-3', risk: 5, flag: 'depReview',
+      title: L('악성 패키지 · 설치 스크립트', 'Malicious Package / Install Script'),
+      brief: L('패키지 설치는 <b>곧 코드 실행</b>입니다. postinstall 스크립트 하나가 빌드 환경의 환경변수를 긁어 외부로 보냅니다.',
+               'Installing a package *is* executing code: one postinstall script scrapes build-environment variables and sends them out.'),
+      ez: L('택배를 뜯자마자 <b>상자가 알아서 작동</b>하는 셈입니다.', 'Like a parcel that <b>starts running itself</b> the moment you open it.'),
+      manifest: '"scripts": { "postinstall": "node ./setup.js" }   # ← 설치만 해도 실행\n# 의존성 검토·평판 확인 절차 없음, --ignore-scripts 미사용',
+      cmd: 'npm install orbit-logger-utils   # 신규 의존성 추가 후 CI 빌드',
+      options: [
+        L('postinstall 이 실행돼 환경변수를 외부로 전송 시도 — 설치가 곧 코드 실행', 'postinstall ran and tried to exfiltrate environment variables — install is execution'),
+        L('설치 스크립트 차단 + 신규 의존성은 검토 대기열로', 'install scripts blocked and new dependencies queued for review'),
+        L('패키지를 찾을 수 없음', 'package not found'),
+        L('버전 충돌로 설치 실패', 'install failed on a version conflict')
+      ],
+      ev: 0,
+      why: L('타이포스쿼팅·계정 탈취·유지보수자 교체 등으로 <b>정상 이름의 패키지가 어느 날 악성</b>이 됩니다. 빌드 환경에는 배포 자격증명이 있어, 설치 시점 코드 실행은 곧 파이프라인 장악으로 이어집니다.',
+             'Through typosquatting, account takeover, or maintainer handoff, a legitimately named package can turn malicious overnight. Build environments hold deploy credentials, so code execution at install time leads straight to pipeline takeover.'),
+      def: L('CI 에서 <b>설치 스크립트를 끄고</b>(--ignore-scripts) 필요한 것만 예외 허용한다. 신규·버전 변경 의존성은 <b>자동 검토 게이트</b>(평판·연식·유지보수자 변경·난독 코드)에 걸고, 락파일 변경은 사람이 리뷰한다. 빌드는 <b>네트워크 이그레스를 제한</b>해 유출 경로를 막는다.',
+             'Disable install scripts in CI (--ignore-scripts) and allowlist exceptions. Gate new or changed dependencies through automated review (reputation, age, maintainer changes, obfuscated code) and have humans review lockfile diffs. Restrict build-time network egress to cut exfiltration paths.'),
+      fixNote: L('설치 스크립트 차단과 의존성 검토 게이트를 적용했습니다.', 'Blocked install scripts and added a dependency review gate.')
+    },
+    {
+      id: 'C3', std: 'CI/CD-SEC-4 / 시크릿', risk: 5, flag: 'secretScope',
+      title: L('CI 시크릿 유출 (포크 PR)', 'CI Secret Exfiltration (fork PR)'),
+      brief: L('<b>pull_request_target</b> 은 포크의 코드를 <b>시크릿과 함께</b> 실행합니다. PR 하나로 배포 자격증명이 나갑니다.',
+               'pull_request_target runs fork code together with secrets — one PR leaks deploy credentials.'),
+      ez: L('면접 지원자에게 <b>금고 열쇠를 쥐여주고</b> 시험을 보게 하는 셈입니다.', 'Like handing a job candidate the <b>vault key</b> for their test.'),
+      manifest: 'on: pull_request_target        # ← 포크 코드 + 시크릿\njobs.build.steps:\n  - uses: actions/checkout@v4\n    with: { ref: ${{ github.event.pull_request.head.sha }} }   # ← 포크 코드 체크아웃\n  - run: npm run build     # 시크릿이 환경에 존재',
+      cmd: 'gh pr create --title "docs: typo" --body "..."   # 포크에서 build 스크립트 수정 후 PR',
+      options: [
+        L('빌드 로그로 배포 토큰·레지스트리 비밀번호가 노출됨', 'deploy token and registry password exposed through the build log'),
+        L('포크 PR 에 시크릿 미주입 — 읽기 전용 토큰만 제공', 'no secrets in fork PRs — only a read-only token is provided'),
+        L('워크플로가 실행되지 않음', 'workflow did not run'),
+        L('PR 이 자동 거부됨', 'PR was auto-rejected')
+      ],
+      ev: 0,
+      why: L('CI 시크릿은 <b>프로덕션에 닿는 열쇠</b>입니다. 포크 PR 을 신뢰 경계 안에서 실행하면, 아무나 코드를 제출하는 것만으로 그 열쇠를 읽습니다. 로그·아티팩트·아웃바운드 요청 어디로든 빠져나갈 수 있습니다.',
+             'CI secrets are keys that reach production. Running fork PRs inside the trust boundary lets anyone who can submit code read them — through logs, artifacts, or outbound requests.'),
+      def: L('포크 PR 워크플로에는 <b>시크릿을 주지 않는다</b>(pull_request 사용, 기본 토큰은 읽기 전용). 배포가 필요한 작업은 <b>보호 환경 + 사람 승인</b> 뒤에 두고, 토큰 권한을 작업별 최소로 선언한다(permissions:). 신규 기여자의 워크플로 실행은 <b>승인 후</b>에만 되게 한다.',
+             'Never expose secrets to fork-PR workflows (use pull_request with a read-only default token). Put deploy steps behind a protected environment with human approval, declare least-privilege permissions per job, and require approval before first-time contributors’ workflows run.'),
+      fixNote: L('포크 PR 시크릿 차단과 최소 권한 토큰을 적용했습니다.', 'Blocked secrets in fork PRs and applied least-privilege tokens.')
+    },
+    {
+      id: 'C4', std: 'CI/CD-SEC-5', risk: 4, flag: 'pinActions',
+      title: L('서드파티 액션 미고정', 'Unpinned Third-party Action'),
+      brief: L('<b>@main</b> 으로 참조한 서드파티 액션은 업스트림이 바뀌는 순간 <b>내 파이프라인에서 새 코드</b>가 실행됩니다.',
+               'A third-party action referenced by @main runs new upstream code inside your pipeline the moment it changes.'),
+      ez: L('계약서에 <b>내용은 나중에 채우겠다</b>고 적고 서명한 셈입니다.', 'Like signing a contract whose <b>terms will be filled in later</b>.'),
+      manifest: '- uses: some-org/build-helper@main      # ← 브랜치 참조(가변)\n- uses: another-org/deploy@v2           # ← 태그도 이동 가능\n# 액션 허용목록·SHA 고정 없음',
+      cmd: 'cat .github/workflows/build.yml | grep uses:   # 업스트림이 방금 변경된 뒤 빌드',
+      options: [
+        L('업스트림 변경 코드가 다음 빌드부터 그대로 실행됨 — 고정 부재', 'changed upstream code runs from the next build — no pinning'),
+        L('커밋 SHA 고정 + 허용목록으로 미승인 액션 실행 불가', 'pinned to commit SHAs with an allowlist — unapproved actions cannot run'),
+        L('액션을 찾을 수 없음', 'action not found'),
+        L('워크플로 문법 오류', 'workflow syntax error')
+      ],
+      ev: 0,
+      why: L('태그와 브랜치는 <b>언제든 옮겨질 수 있는 이름표</b>입니다. 실제 공급망 사고 중에는 널리 쓰이던 액션이 오염돼 수천 개 파이프라인에서 자격증명이 수집된 사례가 있습니다.',
+             'Tags and branches are movable labels. Real supply-chain incidents have seen a widely used action compromised, harvesting credentials across thousands of pipelines.'),
+      def: L('서드파티 액션을 <b>커밋 SHA 로 고정</b>하고, 조직 차원에서 <b>허용목록</b>을 운영한다(검증된 작성자만). 고정 버전은 자동 갱신 도구로 <b>검토를 거쳐</b> 올리고, 중요 파이프라인에서는 액션을 내부에 포크해 쓴다. 액션에 주는 권한도 최소로 선언한다.',
+             'Pin third-party actions to commit SHAs and run an org-level allowlist (verified creators only). Bump pins through a reviewed automated update, fork critical actions in-house, and declare least-privilege permissions for them.'),
+      fixNote: L('액션 SHA 고정과 허용목록을 적용했습니다.', 'Pinned actions to SHAs and enabled an allowlist.')
+    },
+    {
+      id: 'C5', std: 'SLSA / 출처', risk: 4, flag: 'provenance',
+      title: L('빌드 출처 증명 · 서명 부재', 'No Build Provenance / Signing'),
+      brief: L('아티팩트에 <b>출처 증명과 서명</b>이 없으면, 빌드와 배포 사이에서 바꿔치기해도 아무도 알 수 없습니다.',
+               'Without provenance and signatures, an artifact swapped between build and deploy is undetectable.'),
+      ez: L('약봉투에 <b>제조원과 봉인이 없는</b> 셈입니다.', 'Like medicine with <b>no manufacturer label and no seal</b>.'),
+      manifest: '# 빌드 산출물에 provenance(출처) 첨부 없음\n# cosign 등 서명 없음\n# 배포 서버는 아티팩트를 검증 없이 수락',
+      cmd: 'cosign verify-attestation --type slsaprovenance orbit-web-2.4.1.tar.gz',
+      options: [
+        L('출처·서명이 없어 검증 불가 — 배포 서버가 그대로 수락', 'no provenance or signature to verify — the deploy server accepts it as-is'),
+        L('출처와 서명이 검증됨 — 소스·빌더가 확인되고 위조는 거부', 'provenance and signature verified — source/builder confirmed, forgeries rejected'),
+        L('아티팩트 파일이 없음', 'artifact file missing'),
+        L('cosign 이 설치되지 않음', 'cosign not installed')
+      ],
+      ev: 0,
+      why: L('공급망 공격의 핵심은 <b>소스와 배포물 사이의 간극</b>입니다. 소스 코드를 아무리 리뷰해도, 실제 배포되는 바이너리가 그 소스에서 나왔다는 <b>증명</b>이 없으면 신뢰는 가정일 뿐입니다.',
+             'Supply-chain attacks live in the gap between source and artifact. No amount of code review helps if nothing proves the deployed binary came from that source — trust stays an assumption.'),
+      def: L('빌드 시 <b>출처 증명(SLSA provenance)</b>을 생성해 어떤 소스·커밋·빌더로 만들었는지 기록하고, 아티팩트에 <b>서명</b>한다(cosign/Sigstore). 배포 단계에서 <b>서명·출처를 검증</b>하고 실패하면 거부한다. 빌드는 재현 가능하게, 빌더는 격리된 신뢰 환경에 둔다.',
+             'Generate SLSA provenance at build time recording source, commit, and builder, and sign artifacts (cosign/Sigstore). Verify signature and provenance at deploy and reject on failure. Make builds reproducible and run the builder in an isolated, trusted environment.'),
+      fixNote: L('SLSA 출처 증명과 아티팩트 서명·검증을 적용했습니다.', 'Applied SLSA provenance plus artifact signing and verification.')
+    },
+    {
+      id: 'C6', std: 'SSDF / SBOM', risk: 4, flag: 'sbomScan',
+      title: L('SBOM 부재 · 전이 의존성 취약점', 'No SBOM / Transitive Vulnerabilities'),
+      brief: L('배포물의 대부분은 <b>직접 설치한 적 없는</b> 전이 의존성입니다. 목록이 없으면 영향 범위조차 알 수 없습니다.',
+               'Most of what ships is transitive — never explicitly installed. With no inventory you cannot even scope impact.'),
+      ez: L('가공식품에 <b>성분표가 없는</b> 셈입니다.', 'Like packaged food with <b>no ingredient list</b>.'),
+      manifest: '# SBOM 생성 단계 없음\n# 의존성 스캔 결과가 빌드를 막지 않음(경고만)\n직접 42 / 전이 613 구성요소',
+      cmd: 'npm audit --production && syft . -o cyclonedx-json   # SBOM 생성 시도',
+      options: [
+        L('전이 의존성에 CRITICAL 3건, SBOM 없음 — 구성요소 목록 부재', '3 CRITICAL in transitive deps and no SBOM — no component inventory'),
+        L('SBOM 생성됨 + CRITICAL/HIGH 0 — 차단 정책 통과', 'SBOM generated with 0 CRITICAL/HIGH — policy gate passed'),
+        L('의존성이 하나도 없음', 'no dependencies at all'),
+        L('스캐너 실행 권한이 없음', 'no permission to run the scanner')
+      ],
+      ev: 0,
+      why: L('새 취약점이 공개됐을 때 가장 먼저 필요한 것은 <b>"우리가 그걸 쓰는가"</b>에 대한 답입니다. SBOM 이 없으면 그 질문에 며칠이 걸리고, 그 사이가 곧 노출 시간입니다.',
+             'When a new vulnerability drops, the first question is “do we use it?” Without an SBOM that answer takes days — and those days are exposure.'),
+      def: L('빌드마다 <b>SBOM(CycloneDX/SPDX)을 생성·보관</b>하고 배포물과 함께 서명한다. 취약점 스캔은 <b>경고가 아니라 차단</b>으로 운영하되(심각도 기준·예외 절차 명시), 오탐으로 파이프라인이 마비되지 않게 정책을 조정한다. 전이 의존성까지 포함해 <b>주기적으로 재스캔</b>한다.',
+             'Generate and retain an SBOM (CycloneDX/SPDX) per build and sign it alongside the artifact. Make vulnerability scanning blocking rather than advisory (with severity thresholds and an exception path) while tuning policy so false positives do not paralyze the pipeline. Re-scan periodically, including transitive dependencies.'),
+      fixNote: L('SBOM 생성과 차단형 취약점 게이트를 적용했습니다.', 'Applied SBOM generation and a blocking vulnerability gate.')
+    },
+    {
+      id: 'C7', std: 'CI/CD-SEC-6', risk: 5, flag: 'ephemeralRunner',
+      title: L('자체 호스팅 러너 오염', 'Self-hosted Runner Poisoning'),
+      brief: L('러너가 <b>재사용</b>되면, 한 번의 오염이 그 뒤 <b>모든 빌드</b>의 산출물에 백도어를 심습니다.',
+               'When runners are reused, a single poisoning backdoors the artifacts of every subsequent build.'),
+      ez: L('도마를 <b>씻지 않고</b> 다음 요리에 그대로 쓰는 셈입니다.', 'Like reusing a cutting board <b>without washing it</b>.'),
+      manifest: '# 자체 호스팅 러너가 여러 작업에서 재사용됨\n# 작업 간 파일시스템·도구 캐시 공유\n# 포크 PR 도 같은 러너에서 실행',
+      cmd: 'echo "wrapper" > /opt/actions-runner/_work/_tool/node/bin/node   # 빌드 단계에서 실행',
+      options: [
+        L('러너에 남은 파일이 이후 모든 빌드에 영향 — 재사용으로 오염 전파', 'files left on the runner affect all later builds — reuse spreads the poisoning'),
+        L('일회성 러너 — 작업마다 새 환경, 종료 시 폐기', 'ephemeral runner — fresh environment per job, destroyed afterward'),
+        L('러너가 읽기 전용 파일시스템', 'runner filesystem is read-only'),
+        L('러너가 오프라인', 'runner is offline')
+      ],
+      ev: 0,
+      why: L('빌드 작업은 본질적으로 <b>임의 코드 실행</b>입니다. 그 코드가 다음 작업에 흔적을 남길 수 있으면, 공격자는 한 번의 PR 로 <b>지속성</b>을 얻습니다. 도구 캐시·의존성 캐시가 특히 좋은 은신처입니다.',
+             'A build job is arbitrary code execution by nature. If that code can leave traces for the next job, one PR buys persistence — with tool and dependency caches making excellent hiding places.'),
+      def: L('러너를 <b>일회성</b>으로 운영한다: 작업마다 새 VM/컨테이너에서 시작하고 종료 시 폐기한다. 포크 PR 은 <b>격리된 러너</b>에서만 돌리고, 캐시는 <b>키를 분리</b>하고 신뢰 경계를 넘는 캐시 재사용을 막는다. 러너에는 배포 자격증명을 상주시키지 않는다.',
+             'Run ephemeral runners: a fresh VM/container per job, destroyed afterward. Execute fork PRs only on isolated runners, isolate cache keys, and never reuse caches across trust boundaries. Keep deploy credentials off the runner.'),
+      fixNote: L('일회성 러너와 캐시 격리를 적용했습니다.', 'Applied ephemeral runners and cache isolation.')
+    },
+    {
+      id: 'C8', std: 'CI/CD-SEC-1', risk: 4, flag: 'branchProtect',
+      title: L('브랜치 보호 · 리뷰 우회', 'Branch Protection / Review Bypass'),
+      brief: L('보호 규칙이 없으면 <b>강제 푸시 한 번</b>으로 리뷰와 검사를 건너뛰고 배포까지 이어집니다.',
+               'With no protection rules, a single force push skips review and checks — straight to deploy.'),
+      ez: L('결재 라인을 만들어 두고 <b>누구나 도장을 건너뛸 수</b> 있게 둔 셈입니다.', 'Like defining an approval chain that <b>anyone can skip</b>.'),
+      manifest: '# main 브랜치 보호 규칙 없음\n# 필수 리뷰·상태 검사·서명 커밋 요구 없음\n# 관리자 우회 허용, 강제 푸시 허용',
+      cmd: 'git push --force origin main   # 리뷰 없이 main 에 직접 반영',
+      options: [
+        L('리뷰 없이 main 반영되고 자동 배포까지 트리거됨', 'merged to main without review and triggered auto-deploy'),
+        L('직접·강제 푸시 거부 — 필수 리뷰·검사·서명 커밋 요구', 'direct/force push denied — review, checks, and signed commits required'),
+        L('브랜치가 존재하지 않음', 'branch does not exist'),
+        L('네트워크 오류로 푸시 실패', 'push failed on a network error')
+      ],
+      ev: 0,
+      why: L('코드 리뷰와 자동 검사는 <b>강제되지 않으면 관행일 뿐</b>입니다. 계정 하나가 털렸을 때 보호 규칙이 마지막 방어선이 되고, 없으면 침해가 곧바로 프로덕션에 도달합니다.',
+             'Review and automated checks are only convention unless enforced. When one account is compromised, protection rules are the last line of defense — without them the compromise reaches production directly.'),
+      def: L('main 에 <b>브랜치 보호</b>를 건다: 직접·강제 푸시 금지, <b>필수 리뷰</b>(작성자 자기승인 불가), 상태 검사 통과 필수, <b>서명 커밋</b> 요구, 관리자에게도 동일 적용. 배포는 보호된 태그·환경에서만 트리거하고, 규칙 변경 자체를 감사 기록한다.',
+             'Protect main: forbid direct and force pushes, require review (no self-approval), require passing checks and signed commits, and apply the rules to admins too. Trigger deploys only from protected tags/environments and audit changes to the rules themselves.'),
+      fixNote: L('브랜치 보호·필수 리뷰·서명 커밋을 적용했습니다.', 'Applied branch protection, required reviews, and signed commits.')
+    },
+    {
+      id: 'C9', std: 'CI/CD-SEC-7', risk: 5, flag: 'leastDeploy',
+      title: L('배포 자격증명 과다 권한', 'Over-privileged Deploy Credential'),
+      brief: L('빌드용 토큰 하나가 <b>조직 전체 관리자</b>이고 만료도 없으면, CI 침해가 곧 전면 침해가 됩니다.',
+               'If one build token is an org-wide admin that never expires, a CI compromise becomes a total compromise.'),
+      ez: L('배달원에게 <b>모든 지점의 마스터키</b>를 영구히 준 셈입니다.', 'Like giving a delivery driver a <b>permanent master key to every branch</b>.'),
+      manifest: 'DEPLOY_TOKEN: 전체 프로젝트 관리자, 만료 없음   # ← 과다 권한\n# 서비스·환경 구분 없이 하나의 토큰 재사용\n# 장기 정적 자격증명(로테이션 없음)',
+      cmd: 'orbitci-cli auth introspect $DEPLOY_TOKEN   # 토큰 권한 범위 확인',
+      options: [
+        L('조직 전체 관리자·무기한 — 다른 서비스와 DB 까지 접근 가능', 'org-wide admin with no expiry — reaches other services and the DB'),
+        L('OIDC 단기 토큰, 해당 서비스·환경으로만 범위 제한', 'short-lived OIDC token scoped to this service/environment only'),
+        L('토큰이 이미 만료됨', 'token already expired'),
+        L('토큰 형식이 올바르지 않음', 'malformed token')
+      ],
+      ev: 0,
+      why: L('CI 는 <b>가장 많은 권한이 모이는 지점</b>이면서 가장 많은 외부 코드가 실행되는 곳입니다. 장기 정적 자격증명은 한 번 유출되면 회수될 때까지 계속 쓰이고, 유출 사실조차 늦게 알려집니다.',
+             'CI concentrates the most privilege while running the most third-party code. Long-lived static credentials keep working until revoked, and leaks are usually noticed late.'),
+      def: L('정적 장기 토큰 대신 <b>OIDC 기반 단기 자격증명</b>을 쓴다(작업 단위로 발급·수 분 내 만료). 권한은 <b>서비스·환경별로 분리</b>하고 필요한 동작만 허용한다. 프로덕션 배포는 <b>승인 게이트</b> 뒤에 두고, 자격증명 사용을 감사·이상탐지로 감시한다.',
+             'Replace static long-lived tokens with short-lived OIDC credentials issued per job and expiring in minutes. Separate permissions per service and environment, allowing only required actions. Put production deploys behind an approval gate and monitor credential use with auditing and anomaly detection.'),
+      fixNote: L('OIDC 단기 토큰과 최소 권한 범위를 적용했습니다.', 'Applied short-lived OIDC tokens with least-privilege scoping.')
+    }
+  ];
+
+  var state = CH.map(function () { return { tried: false, pass: false, fixed: false }; });
+  var cur = 0;
+  var PKEY = 'wvs_supply_chain';
+  function loadProg() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
+  function saveProg(id) { try { var p = loadProg(); p[id] = 1; localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} }
+
+  function renderList() {
+    var done = state.filter(function (s) { return s.pass; }).length;
+    $('prog').textContent = L('통과 ', 'Passed ') + done + ' / ' + CH.length + L('  ·  방어 적용 ', '  ·  Defenses ') + state.filter(function (s) { return s.fixed; }).length;
+    var ul = $('clist'); ul.innerHTML = '';
+    CH.forEach(function (c, i) {
+      var s = state[i];
+      var st = s.pass ? (s.fixed ? '🛡️' : '✅') : (s.tried ? '🔁' : '·');
+      var li = document.createElement('li');
+      li.className = i === cur ? 'on' : '';
+      li.innerHTML = '<span class="ow">' + esc(c.id) + '</span><span class="tt">' + esc(c.title) + '</span><span class="st">' + st + '</span>';
+      li.addEventListener('click', function () { cur = i; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function render() {
+    renderList();
+    var c = CH[cur], s = state[cur], d = $('detail');
+    var h = '<h2><span class="ow">' + esc(c.std) + '</span> ' + esc(c.title) + ' <span class="risk">' + L('위험 ', 'risk ') + c.risk + '</span></h2>';
+    h += '<p style="margin-top:8px;color:#d7e3f4">' + c.brief + '</p>';
+    h += '<div class="ez"><b>' + L('쉽게 말하면', 'In plain terms') + '</b> — ' + c.ez + '</div>';
+    h += '<div class="manifest"><b>' + L('취약한 구성', 'Vulnerable configuration') + '</b>\n' + esc(c.manifest) + '</div>';
+    h += '<div class="term"><div class="hd">' + L('공격 명령 (편집 가능) — OrbitCI · orbit/web', 'Attack command (editable) — OrbitCI · orbit/web') + '</div>';
+    h += '<textarea id="cmdBox" spellcheck="false" aria-label="' + L('공급망 공격 명령', 'supply chain attack command') + '">' + esc(c.cmd) + '</textarea>';
+    h += '<div class="out" id="outBox"><span style="color:#93a4c0">' + L('▶ 명령 실행 을 눌러 결과를 확인하세요.', 'Press Run command to see the result.') + '</span></div></div>';
+    h += '<div class="row"><button class="btn go" id="btnRun">▶ ' + L('명령 실행', 'Run command') + '</button><button class="btn alt" id="btnReset2">' + L('명령 원복', 'Reset') + '</button></div>';
+
+    h += '<div class="h4">1. ' + L('판정', 'Verdict') + '</div>';
+    h += '<div><button class="vbtn" type="button" data-v="good">' + L('양호', 'Secure') + '</button><button class="vbtn" type="button" data-v="vuln">' + L('취약', 'Vulnerable') + '</button></div>';
+    h += '<div class="h4">2. ' + L('그렇게 판단한 근거 (출력에서 확인한 것)', 'Evidence (what the output showed)') + '</div>';
+    c.options.forEach(function (o, i) { h += '<label class="opt"><input type="checkbox" data-o="' + i + '">' + esc(o) + '</label>'; });
+    h += '<div class="row"><button class="btn go" id="btnGrade">' + L('채점', 'Grade') + '</button>';
+    if (s.pass && !s.fixed) h += '<button class="btn fix" id="btnFix">🛡️ ' + L('방어 적용', 'Apply defense') + '</button>';
+    h += '</div><div id="res"></div>';
+    if (s.pass) {
+      h += '<div class="why"><b>' + L('왜 그런가', 'Why') + '</b> — ' + c.why + '</div>';
+      h += '<div class="def"><b>🛡️ ' + L('방어', 'Defense') + '</b> — ' + c.def + '</div>';
+    }
+    d.innerHTML = h;
+
+    var chosenV = null;
+    d.querySelectorAll('[data-v]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        chosenV = b.getAttribute('data-v');
+        d.querySelectorAll('[data-v]').forEach(function (x) { x.className = 'vbtn'; });
+        b.className = 'vbtn on';
+      });
+    });
+    $('btnRun').addEventListener('click', function () { run(c); });
+    $('btnReset2').addEventListener('click', function () { $('cmdBox').value = c.cmd; });
+    $('btnGrade').addEventListener('click', function () { grade(c, chosenV); });
+    var fb = $('btnFix'); if (fb) fb.addEventListener('click', function () { applyFix(c); });
+  }
+
+  function verdict(c) { return DEF[c.flag] ? 'good' : 'vuln'; }
+
+  function run(c) {
+    var res = ci($('cmdBox').value);
+    $('outBox').innerHTML = '<span style="color:#86efac">$ ' + esc($('cmdBox').value.trim().split('\n')[0]) + '</span>\n' + esc(res);
+  }
+
+  function grade(c, chosenV) {
+    if (!chosenV) { $('res').innerHTML = '<div class="res no">' + L('먼저 양호/취약을 고르세요.', 'Pick Secure/Vulnerable first.') + '</div>'; return; }
+    var ev = [];
+    document.querySelectorAll('#detail [data-o]').forEach(function (cb) { if (cb.checked) ev.push(parseInt(cb.getAttribute('data-o'), 10)); });
+    var vOk = chosenV === verdict(c);
+    /* 방어 적용 후 재점검에서는 '막힌 출력'(옵션 1)이 올바른 근거다 */
+    var expEv = DEF[c.flag] ? (c.evFix != null ? c.evFix : 1) : c.ev;
+    var eOk = ev.length === 1 && ev[0] === expEv;
+    state[cur].tried = true;
+    if (vOk && eOk) {
+      state[cur].pass = true; saveProg(c.id);
+      render();
+      $('res').innerHTML = '<div class="res ok"><b>' + L('통과', 'Passed') + '</b> — ' +
+        (DEF[c.flag] ? L('<b>재점검</b>까지 맞습니다 — 방어가 같은 공격을 막는 것을 출력으로 확인했습니다.', 'Re-check correct too — the output confirms the defense now blocks the same attack.')
+          : L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 같은 명령을 다시 실행해 보세요 — 이번엔 막힙니다.',
+              'Verdict and evidence are correct. Apply the defense below, then re-run the same command — it will be blocked this time.')) + '</div>';
+    } else {
+      var msg = [];
+      msg.push(vOk ? L('판정은 맞습니다.', 'Verdict is right.') : L('판정이 다릅니다.', 'Verdict is wrong.'));
+      if (!eOk) msg.push(L('근거를 정확히 하나만, 출력에서 본 것으로 고르세요.', 'Pick exactly one evidence — what the output actually showed.'));
+      render();
+      $('res').innerHTML = '<div class="res no"><b>' + L('다시', 'Try again') + '</b> — ' + msg.join(' ') + '</div>';
+    }
+  }
+
+  function applyFix(c) {
+    DEF[c.flag] = true;
+    state[cur].fixed = true;
+    render();
+    $('res').innerHTML = '<div class="res ok"><b>🛡️ ' + L('방어 완료', 'Defense applied') + '</b> — ' + c.fixNote +
+      '<br>' + L('같은 명령을 다시 실행해 결과가 바뀌었는지 확인하세요.', 'Re-run the same command and see the result change.') + '</div>';
+  }
+
+  function boot() {
+    var p = loadProg();
+    CH.forEach(function (c, i) { if (p[c.id]) state[i].pass = true; });
+    render();
+  }
+  boot();
+})();
+
+function wvsToggleLang() {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    var v = en ? 'ko' : 'en';
+    localStorage.setItem('wvs_lang', v); localStorage.setItem('lang', v);
+  } catch (e) {}
+  location.reload();
+}
+(function () {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    document.body.classList.toggle('lang-en', en);
+    document.documentElement.lang = en ? 'en' : 'ko';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

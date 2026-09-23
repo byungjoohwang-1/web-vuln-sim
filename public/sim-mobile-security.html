@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>모바일 앱 보안 실습 — OWASP MASVS · WEB-VULN-SIM</title>
+<meta name="description" content="모의 금융 앱을 분해·후킹·프록시로 직접 분석해 평문 저장·하드코딩 키·로컬 인증 우회·인증서 핀닝 부재·exported 컴포넌트·루팅 탐지 부재·개인정보 노출을 시험하고, OWASP MASVS 기준으로 방어하는 모바일 앱 보안 핸즈온 실습.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="모바일 앱 보안 실습 — OWASP MASVS">
+<meta property="og:description" content="모의 앱을 분해·후킹·프록시로 공격하고 MASVS 기준으로 방어하는 모바일 보안 핸즈온 실습.">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-mobile-security.html">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--panel3:#16233c;--bd:#22314f;--ink:#e6edf7;
+ --muted:#93a4c0;--acc:#a78bfa;--acc2:#c4b5fd;--good:#3fb950;--bad:#f85149;--warn:#e3a008;
+ --mono:'JetBrains Mono','Consolas','D2Coding',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+a{color:#c4b5fd;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a,.topbar .langbtn{font-family:var(--mono);font-size:12.5px}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid var(--bd);background:var(--panel2);color:#cdbfb2;border-radius:6px;padding:4px 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 16px 70px}
+h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:11.5px;font-weight:800;color:#2b1065;background:var(--acc2);border-radius:6px;padding:2px 9px}
+.sub{color:var(--muted);font-size:14px;margin-top:8px;max-width:920px}
+.note{background:#1c1233;border:1px solid #4c3a86;border-radius:10px;padding:11px 14px;margin-top:14px;font-size:12.8px;color:#ddd6fe}
+.tgt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tgt b{color:var(--acc)}
+.cols{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;margin-top:16px}
+@media(max-width:940px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+.clist{list-style:none;display:flex;flex-direction:column;gap:6px}
+.clist li{border:1px solid var(--bd);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2);display:flex;gap:9px;align-items:center}
+.clist li:hover{border-color:var(--acc)}
+.clist li.on{border-color:var(--acc);background:#2a1f4d}
+.clist .ow{font-family:var(--mono);font-size:10.5px;color:var(--muted);flex:0 0 auto;border:1px solid var(--bd);border-radius:5px;padding:1px 5px}
+.clist .tt{flex:1;font-size:13px}
+.clist .st{font-size:14px;flex:0 0 auto}
+.prog{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+.det h2{font-size:17px;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.det h2 .ow{font-family:var(--mono);font-size:12px;color:#fdba74}
+.risk{font-family:var(--mono);font-size:10.5px;border:1px solid var(--bd);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.ez{background:var(--panel3);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:9px 13px;margin:10px 0;font-size:13.5px;color:#ddd6fe}
+.ez b{color:var(--acc)}
+.term{background:#050a14;border:1px solid var(--bd);border-radius:10px;margin-top:10px;overflow:hidden}
+.term .hd{background:var(--panel3);padding:6px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--bd)}
+.term textarea{width:100%;height:80px;background:#050a14;border:none;color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:10px 12px;resize:vertical;outline:none;white-space:pre}
+.term .out{min-height:56px;max-height:260px;overflow:auto;padding:10px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+.btn{cursor:pointer;border:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;font-weight:700;padding:8px 15px}
+.btn.go{background:var(--acc);color:#2b1065}
+.btn.alt{background:var(--panel3);color:var(--ink);border:1px solid var(--bd)}
+.btn.fix{background:var(--good);color:#06121f}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt{display:block;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin:6px 0;cursor:pointer;background:var(--panel2);font-size:13.5px}
+.opt:hover{border-color:var(--acc)}.opt input{margin-right:8px}
+.vbtn{background:var(--panel2);border:1px solid var(--bd);color:var(--ink);border-radius:8px;padding:7px 16px;font-weight:700;cursor:pointer;margin-right:8px}
+.vbtn.on{border-color:var(--acc);background:#2a1f4d;color:var(--acc2)}
+.res{border-radius:8px;padding:10px 13px;margin-top:10px;font-size:13.5px;line-height:1.7}
+.res.ok{background:#0f2a18;border:1px solid var(--good)}
+.res.no{background:#3a1518;border:1px solid var(--bad)}
+.why{margin-top:10px;font-size:13.5px;color:#d7e3f4}.why b{color:#fff}
+.def{margin-top:12px;background:#0e1f16;border:1px solid #1f5137;border-radius:8px;padding:10px 13px;font-size:13px;color:#bdf0d3}.def b{color:#7ee7a8}
+.manifest{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;white-space:pre-wrap;line-height:1.5}
+.manifest b{color:var(--acc2)}
+.h4{font-size:12.5px;color:var(--acc);font-family:var(--mono);margin:12px 0 4px}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:12px}
+.crosslink{margin-top:8px;font-size:12.5px;color:var(--muted)}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/safety-notice.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<div class="topbar">
+  <a href="index.html">🏠 <span class="ko">홈</span><span class="en">Home</span></a>
+  <a href="vuln-hub.html"><span class="ko">취약점 실습장</span><span class="en">Vuln Hub</span></a>
+  <a href="my-progress.html"><span class="ko">내 학습 현황</span><span class="en">My Progress</span></a>
+  <span class="sp"></span>
+  <span class="langbtn" onclick="wvsToggleLang()">KO ⇄ EN</span>
+</div>
+
+<div class="wrap" id="wvs-main" tabindex="-1" role="main">
+  <h1>📱 <span class="ko">모바일 앱 보안 실습</span><span class="en">Mobile App Security Lab</span> <span class="badge">OWASP MASVS</span></h1>
+  <p class="sub">
+    <span class="ko">모의 금융 앱 <b>OrbitPay Mobile</b> 을 분해(jadx)·후킹(frida)·프록시(mitm)로 직접 분석해 저장·암호·인증·통신·플랫폼·복원력·개인정보 영역의 약점을 시험합니다.
+    각 위험은 <b>분석 실행 → 취약/양호 판정 → 방어 적용 → 재점검</b> 순서로, MASVS 통제를 켜면 같은 분석이 이번엔 막히는지 확인합니다.</span>
+    <span class="en">Analyze a mock finance app (<b>OrbitPay Mobile</b>) with decompilation, hooking, and an intercepting proxy: storage, crypto, auth, network, platform, resilience, and privacy weaknesses.
+    Each risk runs analyze → verdict → apply defense → re-check — watch the same analysis get blocked once the MASVS control is on.</span>
+  </p>
+
+  <div class="note">
+    <span class="ko">교육용 시뮬레이션입니다. <b>OrbitPay Mobile</b> 은 전부 이 페이지 안의 mock 이며 실제 기기 접속·앱 분해·네트워크 가로채기는 전혀 없습니다.
+    위험 분류는 공개 기준(OWASP MASVS v2 / MASTG)을 개념적으로 재구성했습니다. 시연에 쓰인 키·토큰은 모두 명백한 EXAMPLE 값입니다.</span>
+    <span class="en">Educational simulation. OrbitPay Mobile is a fully in-page mock — no real device access, decompilation, or interception. Risk taxonomy follows public guidance (OWASP MASVS v2 / MASTG). All keys and tokens shown are obvious EXAMPLE values.</span>
+  </div>
+
+  <div class="tgt">
+    <span><span class="ko">대상 앱</span><span class="en">Target</span> <b>com.orbitpay.wallet</b></span><span>·</span>
+    <span><span class="ko">기기</span><span class="en">Device</span> <b>Android 14</b> (<span class="ko">루팅된 시험 단말</span><span class="en">rooted test device</span>)</span><span>·</span>
+    <span>jadx · frida · mitmproxy</span>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="prog" id="prog"></div>
+      <ul class="clist" id="clist"></ul>
+    </div>
+    <div class="card det" id="detail"></div>
+  </div>
+
+  <div class="disc">
+    ⚠️ <span class="ko">교육용 시뮬레이션. 모든 명령은 페이지 안의 가상 앱·가상 기기에 대해서만 동작합니다. 공격 시연에는 반드시 방어 방법을 함께 둡니다. 본인 소유가 아니거나 권한 없는 앱·기기를 분석하지 마세요.</span>
+    <span class="en">Educational simulation. Commands act only on the in-page mock app and device. Every attack is paired with its defense. Do not analyze apps or devices you do not own or have permission to test.</span>
+    <div class="crosslink">
+      <span class="ko">관련:</span><span class="en">Related:</span>
+      <a href="sim-api-security.html">API <span class="ko">보안</span><span class="en">Security</span></a> ·
+      <a href="sim-k8s-security.html"><span class="ko">쿠버네티스 보안</span><span class="en">Kubernetes</span></a> ·
+      <a href="17_fw-iot.html"><span class="ko">펌웨어·IoT 진단</span><span class="en">Firmware/IoT</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * 모바일 앱 보안 실습 엔진 — 자체 완결형. 실제 기기·앱 없음.
+ * 단일 진실원천 = 방어 플래그(DEF). 분석 도구 출력도, 판정(verdict)도,
+ * 방어(fix)도 모두 같은 플래그를 읽고 쓴다. 방어를 켜면 같은 분석이 이번엔
+ * 막히고 재점검이 '양호'로 바뀐다. 전역에 브라우저 내장 이름을 쓰지 않는다.
+ * ============================================================ */
+(function () {
+  'use strict';
+  function isEn() { try { return (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en'; } catch (e) { return false; } }
+  function L(ko, en) { return isEn() ? en : ko; }
+  function esc(s) { return (s + '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* 방어 플래그(단일 진실원천). false = 취약, true = 방어됨 */
+  var DEF = {
+    secStorage: false,    /* M1: 민감정보를 Keystore/Keychain 에, 평문 저장 금지 */
+    strongCrypto: false,  /* M2: 하드코딩 키 제거 + AES-GCM + Keystore 보관 */
+    serverAuth: false,    /* M3: 인증 판단을 서버가 — 생체는 키 잠금 해제용 */
+    certPinning: false,   /* M4: TLS 인증서/공개키 핀닝 + 평문 통신 금지 */
+    platformGuard: false, /* M5: exported=false + 딥링크 검증 + 권한 요구 */
+    secretMgmt: false,    /* M6: 앱에 비밀 미포함(서버 경유) + 난독화 */
+    appIntegrity: false,  /* M7: 루팅·후킹·무결성 탐지 + 서버측 이상행위 탐지 */
+    privacyGuard: false   /* M8: 로그·클립보드 PII 제거 + 최소 권한 */
+  };
+
+  /* 모의 분석 도구 실행 — 명령 문자열을 보고 DEF 플래그에 따라 출력을 낸다. */
+  function shell(cmd) {
+    var c = cmd.trim();
+    var blocked = function (reason) { return '[blocked] ' + reason; };
+
+    /* M1 평문 저장 */
+    if (/shared_prefs|prefs\.xml|sqlite|databases|NSUserDefaults|plist/.test(c)) {
+      if (DEF.secStorage) return L('<encrypted blob> (EncryptedSharedPreferences / Keystore 보관)\n# 평문 토큰·PIN 없음 — 파일을 꺼내도 키 없이 복호 불가',
+                                   '<encrypted blob> (EncryptedSharedPreferences / Keystore-backed)\n# no plaintext token/PIN — the file is useless without the key');
+      return '<string name="auth_token">eyJhbGciOiJIUzI1NiJ9.EXAMPLE-TOKEN</string>\n<string name="user_pin">1234</string>\n' +
+        L('# 인증 토큰과 PIN 이 앱 내부 저장소에 평문 — 백업·루팅·포렌식으로 그대로 유출', '# auth token and PIN stored in plaintext — leaked via backup, root, or forensics');
+    }
+    /* M2 하드코딩 키 / 약한 암호 */
+    if (/AES|ECB|SecretKeySpec|CryptoUtil|encrypt|cipher/i.test(c)) {
+      if (DEF.strongCrypto) return L('SecretKey: AndroidKeyStore 별칭 참조(추출 불가)\nCipher: AES/GCM/NoPadding, 랜덤 IV\n# 키가 코드에 없고 하드웨어 보호 — 복호 불가',
+                                     'SecretKey: AndroidKeyStore alias (non-exportable)\nCipher: AES/GCM/NoPadding, random IV\n# key is not in code and hardware-backed — cannot decrypt');
+      return 'static final String KEY = "orbitpay-EXAMPLE-key-0001";\nCipher.getInstance("AES/ECB/PKCS5Padding");\n' +
+        L('# 대칭키가 코드에 하드코딩 + ECB 모드 — 앱만 뜯으면 저장 데이터 전부 복호', '# symmetric key hardcoded + ECB mode — decompile once and decrypt everything');
+    }
+    /* M3 로컬 인증 우회 */
+    if (/onAuthenticationSucceeded|isBiometric|LocalAuthentication|checkPin|login\(\)/i.test(c)) {
+      if (DEF.serverAuth) return L('hook 적용됨 → 화면은 열리지만 서버 호출이 401\n# 인증 판정은 서버가 — 클라이언트 불린을 바꿔도 세션이 없어 아무것도 못 함',
+                                   'hook applied → screen opens but the server returns 401\n# the server decides auth — flipping a client boolean grants no session');
+      return L('[frida] onAuthenticationSucceeded() 반환값 true 로 강제\n→ 잠금 해제, 잔액 화면 진입, 이체 화면까지 도달\n# 인증 성공 여부를 클라이언트가 판단 — 불린 하나 뒤집어 우회',
+               '[frida] forced onAuthenticationSucceeded() to true\n→ unlocked, reached balance and transfer screens\n# the client decides auth success — flip one boolean to bypass');
+    }
+    /* M4 인증서 핀닝 부재 */
+    if (/mitmproxy|burp|proxy|intercept|tcpdump|sslsplit/i.test(c)) {
+      if (DEF.certPinning) return L('SSLHandshakeException: Certificate pinning failure\n# 프록시 CA 를 신뢰 저장소에 넣어도 앱이 거부 — 트래픽 관찰 불가',
+                                    'SSLHandshakeException: Certificate pinning failure\n# even with the proxy CA installed the app refuses — traffic not observable');
+      return 'POST https://api.orbitpay.local/v1/transfer\n{"to":"ACC-9931","amount":1200000,"token":"EXAMPLE-TOKEN"}\n' +
+        L('# 핀닝 부재 — 프록시 CA 만 신뢰시키면 이체 요청을 통째로 읽고 변조 가능', '# no pinning — trust the proxy CA and you can read and tamper with transfers');
+    }
+    /* M5 exported 컴포넌트 / 딥링크 */
+    if (/am start|exported|deeplink|orbitpay:\/\/|intent|URL scheme/i.test(c)) {
+      if (DEF.platformGuard) return L('Permission Denial: not exported / 서명 권한 필요\n# 딥링크 파라미터도 검증·세션 확인 후에만 처리',
+                                      'Permission Denial: not exported / signature permission required\n# deep-link parameters are validated and require a session');
+      return L('Starting: Intent { cmp=com.orbitpay.wallet/.TransferActivity }\n→ 로그인 화면을 건너뛰고 이체 화면이 바로 열림\n# exported=true + 딥링크 미검증 — 다른 앱이 내부 화면을 직접 호출',
+               'Starting: Intent { cmp=com.orbitpay.wallet/.TransferActivity }\n→ transfer screen opens, skipping login\n# exported=true + unvalidated deep links — any app can invoke internal screens');
+    }
+    /* M6 앱에 비밀 포함 */
+    if (/jadx|strings|apktool|grep.*key|BuildConfig|obfusc/i.test(c)) {
+      if (DEF.secretMgmt) return L('(매칭 없음) — 앱 바이너리에 비밀 없음\n클래스명 난독화됨: a.b.c\n# 결제사 키는 서버에만, 앱은 서버를 경유해 호출',
+                                   '(no matches) — no secrets in the app binary\nclasses obfuscated: a.b.c\n# the payment key lives only on the server; the app calls through it');
+      return 'BuildConfig.PAYMENT_API_KEY = "pk_live_EXAMPLE_orbit_9f2a"\nBuildConfig.S3_SECRET = "EXAMPLE/secret/key"\n' +
+        L('# 서버용 비밀이 APK 에 그대로 — 앱은 전 세계에 배포되는 공개물이다', '# server-side secrets shipped inside the APK — an app is public, worldwide');
+    }
+    /* M7 루팅·후킹 탐지 부재 */
+    if (/frida-server|root|su |magisk|hook|objection|ptrace/i.test(c)) {
+      if (DEF.appIntegrity) return L('앱이 즉시 종료됨: 무결성 검증 실패(루팅·후킹 탐지)\n서버: 해당 단말 세션 차단·재인증 요구\n# 탐지는 클라이언트+서버 양쪽',
+                                     'App exits immediately: integrity check failed (root/hook detected)\nServer: device session blocked, re-auth required\n# detection on both client and server');
+      return L('frida-server 기동, 앱 정상 실행\n[+] 12개 메서드 후킹 성공 (인증·서명·금액 검증)\n# 루팅·후킹 탐지 부재 — 앱 로직을 실행 중에 마음대로 바꿈',
+               'frida-server running, app runs fine\n[+] hooked 12 methods (auth, signing, amount checks)\n# no root/hook detection — app logic is rewritable at runtime');
+    }
+    /* M8 개인정보 노출 */
+    if (/logcat|clipboard|permission|screenshot|analytics/i.test(c)) {
+      if (DEF.privacyGuard) return L('D/OrbitPay: transfer ok (id=***)\n권한: 카메라(QR 스캔 시에만) · 위치 없음 · 연락처 없음\n# 로그·클립보드에 식별정보 없음, 최소 권한',
+                                     'D/OrbitPay: transfer ok (id=***)\npermissions: camera (only for QR) · no location · no contacts\n# no identifiers in logs/clipboard, least privilege');
+      return 'D/OrbitPay: user=901234-1****** phone=010-0000-0000 token=EXAMPLE-TOKEN\n' +
+        L('권한: 연락처·위치·SMS·저장소 전체\n# 주민번호·연락처가 로그에 남고, 기능과 무관한 권한을 과다 요구',
+          'permissions: contacts, location, SMS, all storage\n# national ID and contacts land in logs; permissions far exceed the feature set');
+    }
+    return L('명령을 인식하지 못했습니다. 위 "분석 명령"의 예시를 실행해 보세요.', 'Command not recognized. Try the example in the analysis box above.');
+  }
+
+  /* ============================================================
+   * 도전 — OWASP MASVS v2 영역별
+   * ============================================================ */
+  var CH = [
+    {
+      id: 'M1', std: 'MASVS-STORAGE', risk: 5, flag: 'secStorage',
+      title: L('민감정보 평문 저장', 'Plaintext Sensitive Storage'),
+      brief: L('인증 토큰과 결제 PIN 이 <b>앱 내부 저장소에 평문</b>으로 남으면, 백업·루팅·포렌식으로 그대로 새어 나갑니다.',
+               'Auth tokens and payment PINs stored as plaintext leak via backup, root, or forensics.'),
+      ez: L('현금을 금고가 아니라 <b>서랍에 그냥</b> 넣어 둔 셈입니다.', 'Like leaving cash in a <b>desk drawer</b> instead of a safe.'),
+      manifest: 'SharedPreferences.Editor\n  .putString("auth_token", token)   # ← 평문\n  .putString("user_pin", pin)       # ← 평문\n  .apply();',
+      cmd: 'adb shell cat /data/data/com.orbitpay.wallet/shared_prefs/session.xml',
+      options: [
+        L('토큰·PIN 이 평문으로 그대로 보임 — 파일만 꺼내면 계정 탈취', 'token/PIN visible in plaintext — grab the file and take over the account'),
+        L('암호화된 블롭만 보임 — Keystore 키 없이는 복호 불가', 'only an encrypted blob — undecryptable without the Keystore key'),
+        L('파일이 존재하지 않음', 'file does not exist'),
+        L('권한 부족으로 읽기 실패', 'read failed, insufficient permission')
+      ],
+      ev: 0,
+      why: L('모바일 기기는 <b>분실·도난·루팅</b>될 수 있는 환경입니다. 앱 샌드박스는 루팅되면 무력화되고, 클라우드 백업으로도 파일이 빠져나갑니다. 평문 토큰 하나면 세션 탈취가 끝납니다.',
+             'Phones get lost, stolen, and rooted. The app sandbox collapses under root, and cloud backup carries files off-device. One plaintext token is a full session takeover.'),
+      def: L('민감정보는 <b>OS 키 저장소</b>(Android Keystore / iOS Keychain)에 두고, 저장이 필요하면 <b>EncryptedSharedPreferences</b> 같은 암호화 계층을 쓴다. 백업 대상에서 제외(allowBackup=false)하고, PIN 은 저장하지 말고 검증값만 서버에 둔다.',
+             'Keep secrets in the OS key store (Android Keystore / iOS Keychain); if you must persist, use an encrypted layer such as EncryptedSharedPreferences. Exclude from backup (allowBackup=false) and never store the PIN — verify it server-side.'),
+      fixNote: L('Keystore 보관 + 암호화 저장 + 백업 제외를 적용했습니다.', 'Applied Keystore-backed, encrypted storage with backup exclusion.')
+    },
+    {
+      id: 'M2', std: 'MASVS-CRYPTO', risk: 5, flag: 'strongCrypto',
+      title: L('하드코딩 키 · 약한 암호 모드', 'Hardcoded Key / Weak Crypto Mode'),
+      brief: L('대칭키가 <b>코드에 하드코딩</b>되고 <b>ECB 모드</b>를 쓰면, 앱을 한 번 분해하는 것으로 암호가 전부 풀립니다.',
+               'A hardcoded symmetric key plus ECB mode means one decompile breaks all of it.'),
+      ez: L('자물쇠는 달았는데 <b>열쇠를 자물쇠에 꽂아</b> 둔 셈입니다.', 'Like fitting a lock and <b>leaving the key in it</b>.'),
+      manifest: 'static final String KEY = "orbitpay-EXAMPLE-key-0001";  # ← 코드에 상수\nCipher.getInstance("AES/ECB/PKCS5Padding");     # ← ECB, IV 없음',
+      cmd: 'jadx-gui com.orbitpay.wallet.apk  →  grep -R "SecretKeySpec\\|AES/" sources/',
+      options: [
+        L('키가 코드 상수로 박혀 있고 ECB 모드 — 저장 데이터 전부 복호 가능', 'key is a code constant and mode is ECB — all stored data is decryptable'),
+        L('키가 Keystore 별칭 참조(추출 불가) + AES-GCM 랜덤 IV', 'key is a non-exportable Keystore alias + AES-GCM with random IV'),
+        L('암호화를 아예 쓰지 않음', 'no cryptography in use'),
+        L('키 길이가 부족해 오류 발생', 'key length error')
+      ],
+      ev: 0,
+      why: L('앱 바이너리는 <b>공격자 손에 있는 코드</b>입니다. 하드코딩된 키는 비밀이 아니라 상수일 뿐입니다. ECB 는 같은 평문이 같은 암호문이 되어 패턴이 드러납니다.',
+             'The app binary is code in the attacker’s hands: a hardcoded key is a constant, not a secret. ECB maps identical plaintext to identical ciphertext, leaking patterns.'),
+      def: L('키를 <b>하드웨어 보호 키 저장소</b>에서 생성·보관하고 앱은 <b>별칭만</b> 참조한다(추출 불가). 모드는 <b>AES-GCM</b> 등 인증 암호를 쓰고 IV 는 매번 난수로. 자체 암호 구현 금지, 플랫폼 표준 API 사용.',
+             'Generate and keep keys in a hardware-backed key store and reference only an alias (non-exportable). Use authenticated encryption such as AES-GCM with a fresh random IV. Never roll your own crypto — use platform APIs.'),
+      fixNote: L('Keystore 키 + AES-GCM(랜덤 IV)로 교체했습니다.', 'Switched to a Keystore key with AES-GCM and random IVs.')
+    },
+    {
+      id: 'M3', std: 'MASVS-AUTH', risk: 5, flag: 'serverAuth',
+      title: L('로컬 인증 우회 (클라이언트 판정)', 'Local Auth Bypass (client-side decision)'),
+      brief: L('생체·PIN 인증의 <b>성공 여부를 클라이언트가 판단</b>하면, 후킹으로 불린 하나를 뒤집어 잠금을 풉니다.',
+               'If the client decides whether biometric/PIN auth succeeded, hooking one boolean unlocks the app.'),
+      ez: L('출입증을 <b>본인이 직접 검사</b>하고 통과 도장을 찍는 셈입니다.', 'Like letting visitors <b>check their own badge</b> and stamp themselves in.'),
+      manifest: 'if (biometricResult.isSuccess()) {    # ← 클라이언트가 판정\n    unlockWallet();                   #    서버 확인 없음\n}',
+      cmd: 'frida -U -f com.orbitpay.wallet -l hook.js   # onAuthenticationSucceeded → return true',
+      options: [
+        L('불린을 뒤집자 잠금 해제·이체 화면까지 도달 — 클라이언트 판정', 'flipping the boolean unlocked the app and reached transfer — client-side decision'),
+        L('화면은 열려도 서버가 401 — 세션이 없어 아무 동작도 못 함', 'screen opens but the server returns 401 — no session, nothing works'),
+        L('후킹이 실패함', 'hooking failed'),
+        L('생체 인증기가 없음', 'no biometric sensor')
+      ],
+      ev: 0,
+      why: L('생체 인증은 <b>기기 잠금 해제</b>를 위한 수단이지, 그 자체가 서버 세션의 근거가 아닙니다. 클라이언트에 판정을 두면 신뢰 경계가 공격자 기기 안에 놓입니다.',
+             'Biometrics unlock a device; they are not themselves proof for a server session. Putting the decision on the client places the trust boundary inside the attacker’s device.'),
+      def: L('인증 판정은 <b>서버가</b> 한다. 생체 인증은 Keystore 키를 <b>잠금 해제</b>하는 데 쓰고, 그 키로 서명한 값을 서버가 검증한다(setUserAuthenticationRequired). 민감 동작은 서버 재인증·거래 서명으로 한 번 더 확인한다.',
+             'The server decides. Use biometrics to unlock a Keystore key and have the server verify a signature made with it (setUserAuthenticationRequired). Re-authenticate sensitive actions server-side and sign transactions.'),
+      fixNote: L('인증 판정을 서버로 옮기고 키 기반 서명 검증을 적용했습니다.', 'Moved the auth decision server-side with key-backed signature verification.')
+    },
+    {
+      id: 'M4', std: 'MASVS-NETWORK', risk: 4, flag: 'certPinning',
+      title: L('인증서 핀닝 부재 (MITM)', 'No Certificate Pinning (MITM)'),
+      brief: L('핀닝이 없으면 <b>프록시 CA 하나</b>를 신뢰시키는 것만으로 이체 요청을 읽고 변조할 수 있습니다.',
+               'Without pinning, trusting one proxy CA is enough to read and tamper with transfer requests.'),
+      ez: L('편지를 봉인했는데 <b>아무 우체국이나</b> 뜯어볼 수 있게 둔 셈입니다.', 'Like sealing a letter but letting <b>any post office</b> open it.'),
+      manifest: '# network_security_config.xml 없음\n# OkHttp CertificatePinner 미설정\n# 사용자 추가 CA 를 그대로 신뢰',
+      cmd: 'mitmproxy -p 8080 --mode transparent   # 기기 프록시 설정 후 앱에서 이체 시도',
+      options: [
+        L('이체 요청 본문이 그대로 보이고 변조 가능 — 핀닝 부재', 'transfer body is fully visible and tamperable — no pinning'),
+        L('SSLHandshakeException — 핀닝으로 프록시 CA 거부', 'SSLHandshakeException — pinning rejects the proxy CA'),
+        L('앱이 네트워크를 쓰지 않음', 'the app makes no network calls'),
+        L('프록시 포트가 닫힘', 'proxy port closed')
+      ],
+      ev: 0,
+      why: L('TLS 는 <b>신뢰 저장소</b>를 믿습니다. 공격자가 기기에 CA 를 심거나(악성 프로파일·MDM·사회공학) 통신 경로를 잡으면, 핀닝 없는 앱은 중간자를 구분하지 못합니다.',
+             'TLS trusts the device trust store. If an attacker installs a CA (malicious profile, MDM, social engineering) or controls the path, an unpinned app cannot tell a MITM from the real server.'),
+      def: L('<b>인증서·공개키 핀닝</b>을 적용하고(핀 로테이션 계획 포함), 평문 HTTP 를 전면 차단한다(cleartextTrafficPermitted=false). 사용자 추가 CA 를 신뢰하지 않도록 network security config 를 명시하고, 민감 거래는 <b>서버측 서명 검증</b>으로 한 번 더 막는다.',
+             'Pin certificates or public keys (with a rotation plan) and block cleartext HTTP (cleartextTrafficPermitted=false). Declare a network security config that excludes user-added CAs, and additionally verify signed transactions server-side.'),
+      fixNote: L('인증서 핀닝과 평문 통신 차단을 적용했습니다.', 'Applied certificate pinning and blocked cleartext traffic.')
+    },
+    {
+      id: 'M5', std: 'MASVS-PLATFORM', risk: 4, flag: 'platformGuard',
+      title: L('exported 컴포넌트 · 딥링크 악용', 'Exported Component / Deep-link Abuse'),
+      brief: L('액티비티가 <b>exported=true</b> 이고 딥링크를 검증하지 않으면, 다른 앱이 <b>로그인을 건너뛰고</b> 내부 화면을 엽니다.',
+               'An exported=true activity with unvalidated deep links lets any app open internal screens, skipping login.'),
+      ez: L('정문에 경비를 뒀는데 <b>뒷문이 열려</b> 있는 셈입니다.', 'Like guarding the front door while the <b>back door stands open</b>.'),
+      manifest: '<activity android:name=".TransferActivity"\n          android:exported="true">        <!-- ← 위험 -->\n  <intent-filter><data android:scheme="orbitpay"/></intent-filter>\n</activity>',
+      cmd: 'adb shell am start -n com.orbitpay.wallet/.TransferActivity --es to "ACC-9931"',
+      options: [
+        L('로그인을 건너뛰고 이체 화면이 바로 열림 — exported + 미검증 딥링크', 'transfer screen opens without login — exported + unvalidated deep link'),
+        L('Permission Denial — exported=false, 세션·파라미터 검증됨', 'Permission Denial — exported=false with session/parameter validation'),
+        L('액티비티가 존재하지 않음', 'activity does not exist'),
+        L('인텐트 형식 오류', 'malformed intent')
+      ],
+      ev: 0,
+      why: L('모바일 OS 의 컴포넌트는 <b>앱 간 호출</b>이 전제입니다. exported 를 열어 두면 내 앱의 화면과 기능이 다른(악성) 앱의 API 가 됩니다. 딥링크 파라미터도 사용자 입력과 같습니다.',
+             'Mobile components exist to be called across apps. Leaving them exported turns your screens into an API for other (malicious) apps, and deep-link parameters are just untrusted input.'),
+      def: L('필요 없는 컴포넌트는 <b>exported=false</b>, 필요하면 <b>서명 수준 권한</b>을 요구한다. 딥링크는 앱 링크 검증(assetlinks/AASA)을 걸고, 진입 시 <b>세션과 파라미터를 반드시 재검증</b>한다. 민감 화면은 인증 후에만 도달하게 한다.',
+             'Set exported=false unless required; if required, demand a signature-level permission. Verify deep links (assetlinks/AASA) and always re-check session and parameters on entry. Gate sensitive screens behind authentication.'),
+      fixNote: L('exported 제한 + 딥링크 검증 + 세션 확인을 적용했습니다.', 'Restricted exported components, validated deep links, enforced session checks.')
+    },
+    {
+      id: 'M6', std: 'MASVS-CODE', risk: 4, flag: 'secretMgmt',
+      title: L('앱에 서버 비밀 포함', 'Server Secrets Shipped in the App'),
+      brief: L('결제 API 키·스토리지 시크릿을 <b>APK 안에</b> 넣으면, 앱을 받은 누구나 그 키를 가집니다.',
+               'Payment API keys and storage secrets inside the APK belong to everyone who downloads the app.'),
+      ez: L('가게 <b>금고 열쇠를 전단지에 인쇄</b>해 돌린 셈입니다.', 'Like <b>printing the safe key on a flyer</b> and handing it out.'),
+      manifest: 'BuildConfig.PAYMENT_API_KEY = "pk_live_EXAMPLE_orbit_9f2a"   # ← 앱에 포함\nBuildConfig.S3_SECRET       = "EXAMPLE/secret/key"',
+      cmd: 'apktool d com.orbitpay.wallet.apk && grep -RniE "api[_-]?key|secret|token" .',
+      options: [
+        L('서버용 API 키·시크릿이 바이너리에 그대로 — 누구나 추출 가능', 'server API keys/secrets sit in the binary — anyone can extract them'),
+        L('매칭 없음 — 비밀은 서버에만, 클래스도 난독화됨', 'no matches — secrets stay server-side and classes are obfuscated'),
+        L('APK 가 암호화되어 분해 불가', 'APK is encrypted and cannot be unpacked'),
+        L('문자열이 모두 리소스에 있음', 'all strings live in resources')
+      ],
+      ev: 0,
+      why: L('앱은 <b>공개 배포물</b>입니다. 난독화는 분석을 늦출 뿐 비밀을 지키지 못합니다. 유출된 결제 키는 서버 권한을 그대로 가지므로 피해가 앱 밖으로 번집니다.',
+             'An app is a public artifact. Obfuscation only slows analysis; it does not protect secrets. A leaked payment key carries server privileges, so the damage spreads beyond the app.'),
+      def: L('<b>서버 비밀을 앱에 넣지 않는다.</b> 앱은 자기 사용자 토큰으로 <b>자사 서버</b>를 호출하고, 서버가 결제사 키를 들고 대신 호출한다. 난독화·문자열 암호화는 보조 수단으로만 쓰고, 키가 유출되면 즉시 회전한다.',
+             'Never ship server secrets. The app calls your own backend with the user’s token, and the backend holds the payment key. Treat obfuscation and string encryption as defense in depth only, and rotate any leaked key immediately.'),
+      fixNote: L('앱에서 비밀을 제거(서버 경유)하고 난독화를 적용했습니다.', 'Removed secrets from the app (server-mediated) and enabled obfuscation.')
+    },
+    {
+      id: 'M7', std: 'MASVS-RESILIENCE', risk: 3, flag: 'appIntegrity',
+      title: L('루팅 · 후킹 탐지 부재', 'No Root / Hooking Detection'),
+      brief: L('무결성 검증이 없으면 <b>실행 중에 앱 로직</b>(금액 검증·서명·인증)을 자유롭게 바꿀 수 있습니다.',
+               'With no integrity checks, app logic (amount checks, signing, auth) is rewritable at runtime.'),
+      ez: L('심판이 경기 중에 <b>규칙집을 고쳐 쓰게</b> 두는 셈입니다.', 'Like letting a player <b>rewrite the rulebook</b> mid-game.'),
+      manifest: '# 루팅/에뮬레이터/후킹 탐지 없음\n# Play Integrity / DeviceCheck 미사용\n# 서버는 단말 상태를 전혀 모름',
+      cmd: 'objection -g com.orbitpay.wallet explore   # android hooking watch class TransferValidator',
+      options: [
+        L('12개 메서드 후킹 성공 — 실행 중 로직 변조 가능', 'hooked 12 methods — runtime logic is tamperable'),
+        L('앱 종료 + 서버가 단말 세션 차단 — 무결성 검증 동작', 'app exits and the server blocks the device session — integrity check works'),
+        L('기기가 루팅되지 않음', 'device is not rooted'),
+        L('후킹 도구가 설치되지 않음', 'hooking tool not installed')
+      ],
+      ev: 0,
+      why: L('복원력 통제는 <b>근본 방어가 아니라 비용 상승</b> 장치입니다. 그래서 단독으로는 부족하고, 서버측 검증과 <b>함께</b> 놓일 때만 의미가 있습니다. 반대로 아무 탐지도 없으면 자동화된 대량 악용이 쉬워집니다.',
+             'Resilience controls raise cost rather than provide a root fix, so they only matter alongside server-side validation. With no detection at all, automated mass abuse becomes trivial.'),
+      def: L('<b>Play Integrity / App Attest</b> 같은 플랫폼 증명으로 단말·앱 상태를 서버가 확인하고, 루팅·후킹·에뮬레이터 신호를 <b>서버 판단 재료</b>로 보낸다. 중요 로직과 금액 검증은 반드시 서버에 두고, 이상 신호에는 재인증·한도 축소로 대응한다.',
+             'Use platform attestation (Play Integrity / App Attest) so the server can judge device and app state, and send root/hook/emulator signals as server-side input. Keep critical logic and amount validation on the server, and respond to signals with re-auth or lower limits.'),
+      fixNote: L('무결성·플랫폼 증명 검증과 서버측 대응을 적용했습니다.', 'Applied integrity/attestation checks with server-side response.')
+    },
+    {
+      id: 'M8', std: 'MASVS-PRIVACY', risk: 4, flag: 'privacyGuard',
+      title: L('로그·권한 개인정보 노출', 'PII in Logs / Excessive Permissions'),
+      brief: L('주민번호·연락처가 <b>로그와 클립보드</b>에 남고 기능과 무관한 권한을 과다 요구하면, 다른 앱·분석 SDK 로 개인정보가 흘러갑니다.',
+               'IDs and contacts left in logs/clipboard plus permissions beyond the feature set leak PII to other apps and analytics SDKs.'),
+      ez: L('상담 내용을 <b>대기실 게시판에</b> 붙여 둔 셈입니다.', 'Like posting consultation notes on the <b>waiting-room board</b>.'),
+      manifest: 'Log.d("OrbitPay", "user=" + rrn + " phone=" + phone);   # ← 식별정보\n<uses-permission android:name="android.permission.READ_CONTACTS"/>\n<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>',
+      cmd: 'adb logcat -d | grep -iE "user=|token=|phone=" ;  dumpsys clipboard',
+      options: [
+        L('주민번호·연락처·토큰이 로그에 남고 권한도 과다 — 개인정보 노출', 'ID, contacts, and token in logs plus excessive permissions — PII exposure'),
+        L('로그는 마스킹(***)되고 권한은 기능에 필요한 것만', 'logs are masked (***) and permissions match the feature set'),
+        L('로그가 비어 있음', 'log is empty'),
+        L('logcat 접근이 차단됨', 'logcat access blocked')
+      ],
+      ev: 0,
+      why: L('안드로이드 로그·클립보드는 <b>앱 경계를 넘어</b> 읽힐 수 있고, 크래시 리포트·분석 SDK 로도 전송됩니다. 과다 권한은 그 자체가 유출 경로이며, 국내 개인정보 보호법의 <b>최소 수집</b> 원칙에도 어긋납니다.',
+             'Logs and clipboard can be read across app boundaries and are shipped to crash reporters and analytics SDKs. Excessive permissions are themselves a leak path and violate data-minimization requirements.'),
+      def: L('릴리스 빌드에서 <b>로그를 제거</b>하고(식별정보는 개발 중에도 마스킹), 클립보드에 민감값을 넣지 않는다. 권한은 <b>기능에 필요한 것만</b> 런타임에 요청하고 사유를 설명한다. 분석 SDK 로 나가는 항목을 점검하고 <b>처리방침에 반영</b>한다.',
+             'Strip logs in release builds (mask identifiers even in development) and keep sensitive values out of the clipboard. Request only the permissions the feature needs, at runtime, with an explanation. Audit what analytics SDKs send and reflect it in the privacy policy.'),
+      fixNote: L('로그 마스킹·제거와 최소 권한을 적용했습니다.', 'Applied log masking/removal and least-privilege permissions.')
+    }
+  ];
+
+  var state = CH.map(function () { return { tried: false, pass: false, fixed: false }; });
+  var cur = 0;
+  var PKEY = 'wvs_mobile_security';
+  function loadProg() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
+  function saveProg(id) { try { var p = loadProg(); p[id] = 1; localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} }
+
+  function renderList() {
+    var done = state.filter(function (s) { return s.pass; }).length;
+    $('prog').textContent = L('통과 ', 'Passed ') + done + ' / ' + CH.length + L('  ·  방어 적용 ', '  ·  Defenses ') + state.filter(function (s) { return s.fixed; }).length;
+    var ul = $('clist'); ul.innerHTML = '';
+    CH.forEach(function (c, i) {
+      var s = state[i];
+      var st = s.pass ? (s.fixed ? '🛡️' : '✅') : (s.tried ? '🔁' : '·');
+      var li = document.createElement('li');
+      li.className = i === cur ? 'on' : '';
+      li.innerHTML = '<span class="ow">' + esc(c.id) + '</span><span class="tt">' + esc(c.title) + '</span><span class="st">' + st + '</span>';
+      li.addEventListener('click', function () { cur = i; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function render() {
+    renderList();
+    var c = CH[cur], s = state[cur], d = $('detail');
+    var h = '<h2><span class="ow">' + esc(c.std) + '</span> ' + esc(c.title) + ' <span class="risk">' + L('위험 ', 'risk ') + c.risk + '</span></h2>';
+    h += '<p style="margin-top:8px;color:#d7e3f4">' + c.brief + '</p>';
+    h += '<div class="ez"><b>' + L('쉽게 말하면', 'In plain terms') + '</b> — ' + c.ez + '</div>';
+    h += '<div class="manifest"><b>' + L('취약한 코드 · 설정', 'Vulnerable code / config') + '</b>\n' + esc(c.manifest) + '</div>';
+    h += '<div class="term"><div class="hd">' + L('분석 명령 (편집 가능) — com.orbitpay.wallet', 'Analysis command (editable) — com.orbitpay.wallet') + '</div>';
+    h += '<textarea id="cmdBox" spellcheck="false" aria-label="' + L('모바일 앱 분석 명령', 'mobile app analysis command') + '">' + esc(c.cmd) + '</textarea>';
+    h += '<div class="out" id="outBox"><span style="color:#93a4c0">' + L('▶ 명령 실행 을 눌러 결과를 확인하세요.', 'Press Run command to see the result.') + '</span></div></div>';
+    h += '<div class="row"><button class="btn go" id="btnRun">▶ ' + L('명령 실행', 'Run command') + '</button><button class="btn alt" id="btnReset2">' + L('명령 원복', 'Reset') + '</button></div>';
+
+    h += '<div class="h4">1. ' + L('판정', 'Verdict') + '</div>';
+    h += '<div><button class="vbtn" type="button" data-v="good">' + L('양호', 'Secure') + '</button><button class="vbtn" type="button" data-v="vuln">' + L('취약', 'Vulnerable') + '</button></div>';
+    h += '<div class="h4">2. ' + L('그렇게 판단한 근거 (출력에서 확인한 것)', 'Evidence (what the output showed)') + '</div>';
+    c.options.forEach(function (o, i) { h += '<label class="opt"><input type="checkbox" data-o="' + i + '">' + esc(o) + '</label>'; });
+    h += '<div class="row"><button class="btn go" id="btnGrade">' + L('채점', 'Grade') + '</button>';
+    if (s.pass && !s.fixed) h += '<button class="btn fix" id="btnFix">🛡️ ' + L('방어 적용', 'Apply defense') + '</button>';
+    h += '</div><div id="res"></div>';
+    if (s.pass) {
+      h += '<div class="why"><b>' + L('왜 그런가', 'Why') + '</b> — ' + c.why + '</div>';
+      h += '<div class="def"><b>🛡️ ' + L('방어', 'Defense') + '</b> — ' + c.def + '</div>';
+    }
+    d.innerHTML = h;
+
+    var chosenV = null;
+    d.querySelectorAll('[data-v]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        chosenV = b.getAttribute('data-v');
+        d.querySelectorAll('[data-v]').forEach(function (x) { x.className = 'vbtn'; });
+        b.className = 'vbtn on';
+      });
+    });
+    $('btnRun').addEventListener('click', function () { run(c); });
+    $('btnReset2').addEventListener('click', function () { $('cmdBox').value = c.cmd; });
+    $('btnGrade').addEventListener('click', function () { grade(c, chosenV); });
+    var fb = $('btnFix'); if (fb) fb.addEventListener('click', function () { applyFix(c); });
+  }
+
+  function verdict(c) { return DEF[c.flag] ? 'good' : 'vuln'; }
+
+  function run(c) {
+    var res = shell($('cmdBox').value);
+    $('outBox').innerHTML = '<span style="color:#c4b5fd">$ ' + esc($('cmdBox').value.trim().split('\n')[0]) + '</span>\n' + esc(res);
+  }
+
+  function grade(c, chosenV) {
+    if (!chosenV) { $('res').innerHTML = '<div class="res no">' + L('먼저 양호/취약을 고르세요.', 'Pick Secure/Vulnerable first.') + '</div>'; return; }
+    var ev = [];
+    document.querySelectorAll('#detail [data-o]').forEach(function (cb) { if (cb.checked) ev.push(parseInt(cb.getAttribute('data-o'), 10)); });
+    var vOk = chosenV === verdict(c);
+    /* 방어 적용 후 재점검에서는 '막힌 출력'(옵션 1)이 올바른 근거다 */
+    var expEv = DEF[c.flag] ? (c.evFix != null ? c.evFix : 1) : c.ev;
+    var eOk = ev.length === 1 && ev[0] === expEv;
+    state[cur].tried = true;
+    if (vOk && eOk) {
+      state[cur].pass = true; saveProg(c.id);
+      render();
+      $('res').innerHTML = '<div class="res ok"><b>' + L('통과', 'Passed') + '</b> — ' +
+        (DEF[c.flag] ? L('<b>재점검</b>까지 맞습니다 — 방어가 같은 분석을 막는 것을 출력으로 확인했습니다.', 'Re-check correct too — the output confirms the defense now blocks the same analysis.')
+          : L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 같은 명령을 다시 실행해 보세요 — 이번엔 막힙니다.',
+              'Verdict and evidence are correct. Apply the defense below, then re-run the same command — it will be blocked this time.')) + '</div>';
+    } else {
+      var msg = [];
+      msg.push(vOk ? L('판정은 맞습니다.', 'Verdict is right.') : L('판정이 다릅니다.', 'Verdict is wrong.'));
+      if (!eOk) msg.push(L('근거를 정확히 하나만, 출력에서 본 것으로 고르세요.', 'Pick exactly one evidence — what the output actually showed.'));
+      render();
+      $('res').innerHTML = '<div class="res no"><b>' + L('다시', 'Try again') + '</b> — ' + msg.join(' ') + '</div>';
+    }
+  }
+
+  function applyFix(c) {
+    DEF[c.flag] = true;
+    state[cur].fixed = true;
+    render();
+    $('res').innerHTML = '<div class="res ok"><b>🛡️ ' + L('방어 완료', 'Defense applied') + '</b> — ' + c.fixNote +
+      '<br>' + L('같은 명령을 다시 실행해 결과가 바뀌었는지 확인하세요.', 'Re-run the same command and see the result change.') + '</div>';
+  }
+
+  function boot() {
+    var p = loadProg();
+    CH.forEach(function (c, i) { if (p[c.id]) state[i].pass = true; });
+    render();
+  }
+  boot();
+})();
+
+function wvsToggleLang() {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    var v = en ? 'ko' : 'en';
+    localStorage.setItem('wvs_lang', v); localStorage.setItem('lang', v);
+  } catch (e) {}
+  location.reload();
+}
+(function () {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    document.body.classList.toggle('lang-en', en);
+    document.documentElement.lang = en ? 'en' : 'ko';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

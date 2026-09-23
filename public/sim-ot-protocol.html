@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>OT 산업 프로토콜 실습 — Modbus · DNP3 · OPC UA · WEB-VULN-SIM</title>
+<meta name="description" content="모의 정수장 제어망에 Modbus·DNP3·OPC UA 로 직접 명령을 보내 인증 부재·평문 통신·마스터 스푸핑·PLC 로직 변조·IT/OT 분리 부재·안전계장시스템 접근을 시험하고, IEC 62443 기준으로 방어하는 산업제어 프로토콜 핸즈온 실습.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="OT 산업 프로토콜 실습 — Modbus · DNP3 · OPC UA">
+<meta property="og:description" content="모의 정수장 제어망을 산업 프로토콜로 직접 공격·방어하는 OT 보안 핸즈온 실습 (IEC 62443 · NIST SP 800-82).">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-ot-protocol.html">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--panel3:#16233c;--bd:#22314f;--ink:#e6edf7;
+ --muted:#93a4c0;--acc:#fb923c;--acc2:#fdba74;--good:#3fb950;--bad:#f85149;--warn:#e3a008;
+ --mono:'JetBrains Mono','Consolas','D2Coding',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+a{color:#fdba74;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a,.topbar .langbtn{font-family:var(--mono);font-size:12.5px}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid var(--bd);background:var(--panel2);color:#cdbfb2;border-radius:6px;padding:4px 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 16px 70px}
+h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:11.5px;font-weight:800;color:#431407;background:var(--acc2);border-radius:6px;padding:2px 9px}
+.sub{color:var(--muted);font-size:14px;margin-top:8px;max-width:920px}
+.note{background:#2a1608;border:1px solid #7c2d12;border-radius:10px;padding:11px 14px;margin-top:14px;font-size:12.8px;color:#fed7aa}
+.tgt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tgt b{color:var(--acc)}
+.cols{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;margin-top:16px}
+@media(max-width:940px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+.clist{list-style:none;display:flex;flex-direction:column;gap:6px}
+.clist li{border:1px solid var(--bd);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2);display:flex;gap:9px;align-items:center}
+.clist li:hover{border-color:var(--acc)}
+.clist li.on{border-color:var(--acc);background:#3b1d09}
+.clist .ow{font-family:var(--mono);font-size:10.5px;color:var(--muted);flex:0 0 auto;border:1px solid var(--bd);border-radius:5px;padding:1px 5px}
+.clist .tt{flex:1;font-size:13px}
+.clist .st{font-size:14px;flex:0 0 auto}
+.prog{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+.det h2{font-size:17px;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.det h2 .ow{font-family:var(--mono);font-size:12px;color:#fdba74}
+.risk{font-family:var(--mono);font-size:10.5px;border:1px solid var(--bd);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.ez{background:var(--panel3);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:9px 13px;margin:10px 0;font-size:13.5px;color:#fed7aa}
+.ez b{color:var(--acc)}
+.term{background:#050a14;border:1px solid var(--bd);border-radius:10px;margin-top:10px;overflow:hidden}
+.term .hd{background:var(--panel3);padding:6px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--bd)}
+.term textarea{width:100%;height:80px;background:#050a14;border:none;color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:10px 12px;resize:vertical;outline:none;white-space:pre}
+.term .out{min-height:56px;max-height:260px;overflow:auto;padding:10px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+.btn{cursor:pointer;border:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;font-weight:700;padding:8px 15px}
+.btn.go{background:var(--acc);color:#431407}
+.btn.alt{background:var(--panel3);color:var(--ink);border:1px solid var(--bd)}
+.btn.fix{background:var(--good);color:#06121f}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt{display:block;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin:6px 0;cursor:pointer;background:var(--panel2);font-size:13.5px}
+.opt:hover{border-color:var(--acc)}.opt input{margin-right:8px}
+.vbtn{background:var(--panel2);border:1px solid var(--bd);color:var(--ink);border-radius:8px;padding:7px 16px;font-weight:700;cursor:pointer;margin-right:8px}
+.vbtn.on{border-color:var(--acc);background:#3b1d09;color:var(--acc2)}
+.res{border-radius:8px;padding:10px 13px;margin-top:10px;font-size:13.5px;line-height:1.7}
+.res.ok{background:#0f2a18;border:1px solid var(--good)}
+.res.no{background:#3a1518;border:1px solid var(--bad)}
+.why{margin-top:10px;font-size:13.5px;color:#d7e3f4}.why b{color:#fff}
+.def{margin-top:12px;background:#0e1f16;border:1px solid #1f5137;border-radius:8px;padding:10px 13px;font-size:13px;color:#bdf0d3}.def b{color:#7ee7a8}
+.manifest{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;white-space:pre-wrap;line-height:1.5}
+.manifest b{color:var(--acc2)}
+.h4{font-size:12.5px;color:var(--acc);font-family:var(--mono);margin:12px 0 4px}
+.safety{background:#3a1518;border:1px solid var(--bad);border-radius:10px;padding:11px 14px;margin-top:12px;font-size:12.8px;color:#fecaca}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:12px}
+.crosslink{margin-top:8px;font-size:12.5px;color:var(--muted)}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/safety-notice.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<div class="topbar">
+  <a href="index.html">🏠 <span class="ko">홈</span><span class="en">Home</span></a>
+  <a href="vuln-hub.html"><span class="ko">취약점 실습장</span><span class="en">Vuln Hub</span></a>
+  <a href="my-progress.html"><span class="ko">내 학습 현황</span><span class="en">My Progress</span></a>
+  <span class="sp"></span>
+  <span class="langbtn" onclick="wvsToggleLang()">KO ⇄ EN</span>
+</div>
+
+<div class="wrap" id="wvs-main" tabindex="-1" role="main">
+  <h1>🏭 <span class="ko">OT 산업 프로토콜 실습</span><span class="en">OT Industrial Protocol Lab</span> <span class="badge">Modbus · DNP3 · OPC UA</span></h1>
+  <p class="sub">
+    <span class="ko">모의 정수장 제어망 <b>HANARO 정수장</b>에 산업 프로토콜로 직접 명령을 보내 인증 부재·평문 통신·마스터 스푸핑·PLC 로직 변조 등을 시험합니다.
+    각 위험은 <b>명령 실행 → 취약/양호 판정 → 방어 적용 → 재점검</b> 순서로, 방어(세그멘테이션·인증·보안정책)를 켜면 같은 명령이 이번엔 막히는지 확인합니다.</span>
+    <span class="en">Send industrial-protocol commands to a mock water-treatment control network (<b>HANARO</b>): missing authentication, cleartext traffic, master spoofing, PLC logic tampering, and more.
+    Each risk runs command → verdict → apply defense → re-check — watch the same command get blocked once the defense (segmentation / authentication / security policy) is on.</span>
+  </p>
+
+  <div class="note">
+    <span class="ko">교육용 시뮬레이션입니다. <b>HANARO 정수장</b>은 전부 이 페이지 안의 mock 이며 실제 PLC 접속이나 프로토콜 전송은 전혀 없습니다.
+    위험 분류는 공개 기준(IEC 62443, NIST SP 800-82, KISA 제어시스템 가이드)을 개념적으로 재구성했습니다.</span>
+    <span class="en">Educational simulation. HANARO is a fully in-page mock — no real PLC access or protocol traffic. Risk taxonomy follows public guidance (IEC 62443, NIST SP 800-82).</span>
+  </div>
+
+  <div class="safety">
+    ⚠️ <span class="ko"><b>제어시스템은 사람의 안전과 직결됩니다.</b> IT 보안 점검 기법(포트 스캔·퍼징·취약점 스캐너)을 운영 중인 OT 망에 그대로 쓰면 PLC 가 정지하거나 공정이 멈출 수 있습니다.
+    실제 점검은 반드시 사전 승인·정지 계획·오프라인 테스트베드에서 수행합니다. 이 실습은 그 위험을 안전하게 이해하기 위한 것입니다.</span>
+    <span class="en"><b>Control systems are safety-critical.</b> Applying IT testing techniques (port scans, fuzzing, vulnerability scanners) to a live OT network can halt PLCs and stop the process. Real assessments require prior approval, an outage plan, and an offline testbed. This lab exists so you can understand that risk safely.</span>
+  </div>
+
+  <div class="tgt">
+    <span><span class="ko">현장</span><span class="en">Site</span> <b>HANARO</b> <span class="ko">정수장</span><span class="en">water plant</span></span><span>·</span>
+    <span>PLC <b>192.0.2.51</b> (<span class="ko">취수펌프·약품주입</span><span class="en">intake pump / dosing</span>)</span><span>·</span>
+    <span><span class="ko">내 위치</span><span class="en">My position</span> <b>HMI <span class="ko">운영망</span><span class="en">ops LAN</span></b></span>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="prog" id="prog"></div>
+      <ul class="clist" id="clist"></ul>
+    </div>
+    <div class="card det" id="detail"></div>
+  </div>
+
+  <div class="disc">
+    ⚠️ <span class="ko">교육용 시뮬레이션. 모든 명령은 페이지 안의 가상 제어망에 대해서만 동작합니다. 공격 시연에는 반드시 방어 방법을 함께 둡니다. 실제 제어시스템을 대상으로 시험하지 마세요.</span>
+    <span class="en">Educational simulation. Commands act only on the in-page mock control network. Every attack is paired with its defense. Never test against real control systems.</span>
+    <div class="crosslink">
+      <span class="ko">관련:</span><span class="en">Related:</span>
+      <a href="12_ics-ics01.html"><span class="ko">제어시스템 점검</span><span class="en">ICS checklist</span></a> ·
+      <a href="17_fw-router.html"><span class="ko">펌웨어 진단</span><span class="en">Firmware</span></a> ·
+      <a href="sim-k8s-security.html"><span class="ko">쿠버네티스 보안</span><span class="en">Kubernetes</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * OT 산업 프로토콜 실습 엔진 — 자체 완결형. 실제 PLC·프로토콜 전송 없음.
+ * 단일 진실원천 = 방어 플래그(DEF). 프로토콜 도구 출력도, 판정(verdict)도,
+ * 방어(fix)도 모두 같은 플래그를 읽고 쓴다. 방어를 켜면 같은 명령이 이번엔
+ * 막히고 재점검이 '양호'로 바뀐다. 전역에 브라우저 내장 이름을 쓰지 않는다.
+ * ============================================================ */
+(function () {
+  'use strict';
+  function isEn() { try { return (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en'; } catch (e) { return false; } }
+  function L(ko, en) { return isEn() ? en : ko; }
+  function esc(s) { return (s + '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* 방어 플래그(단일 진실원천). false = 취약, true = 방어됨 */
+  var DEF = {
+    otSegment: false,      /* T1: IT/OT 분리 — 도관(conduit)·단방향 게이트웨이 */
+    modbusAuth: false,     /* T2: Modbus 쓰기 인가 — 게이트웨이 화이트리스트 */
+    otEncrypt: false,      /* T3: 평문 통신 보호 — 터널링/암호화 */
+    dnp3Auth: false,       /* T4: DNP3 Secure Authentication v5 */
+    uaPolicy: false,       /* T5: OPC UA 보안정책 Sign&Encrypt, 익명 금지 */
+    uaCertVerify: false,   /* T6: OPC UA 인증서 신뢰목록 검증 */
+    plcWriteProtect: false,/* T7: PLC 키스위치 RUN·로직 다운로드 인가 */
+    sisIsolation: false,   /* T8: 안전계장시스템(SIS) 분리·키 관리 */
+    replayGuard: false     /* T9: 리플레이 방지 — 논스·타임스탬프 */
+  };
+
+  /* 모의 OT 도구 실행 — 명령 문자열을 보고 DEF 플래그에 따라 출력을 낸다. */
+  function otTool(cmd) {
+    var c = cmd.trim();
+    var deny = function (reason) { return '[denied] ' + reason; };
+
+    /* T1 IT/OT 분리 부재 — 사무망에서 제어망 도달 */
+    if (/traceroute|ping 192\.0\.2|from-it|nmap.*192\.0\.2\.0|route/i.test(c)) {
+      if (DEF.otSegment) return deny(L('사무망→제어망 직접 경로 없음(도관 정책). 점프호스트·단방향 게이트웨이 경유만 허용',
+                                       'no direct office→control path (conduit policy); only via jump host / unidirectional gateway'));
+      return L('192.0.2.51  PLC-01   포트 502/tcp open (Modbus)\n192.0.2.52  RTU-03   포트 20000/tcp open (DNP3)\n192.0.2.60  OPC-UA   포트 4840/tcp open\n# 사무망 PC 에서 제어망 장비가 그대로 보임 — 네트워크 분리 부재',
+               '192.0.2.51  PLC-01   502/tcp open (Modbus)\n192.0.2.52  RTU-03   20000/tcp open (DNP3)\n192.0.2.60  OPC-UA   4840/tcp open\n# control devices reachable straight from the office LAN — no segmentation');
+    }
+    /* T2 Modbus 인증 부재 — 코일 강제 쓰기 */
+    if (/write.*coil|mbtget.*-w|modbus.*write|fc=?(5|6|15|16)/i.test(c)) {
+      if (DEF.modbusAuth) return deny(L('Modbus 쓰기 거부 — 보안 게이트웨이가 허가된 마스터/기능코드만 통과(읽기 전용 세션)',
+                                        'Modbus write rejected — the security gateway allows only authorized masters/function codes (read-only session)'));
+      return L('write_single_coil(addr=17, value=0) → OK\n현재 상태: 취수펌프 P-101 = STOP\n# Modbus 에는 인증이 없다 — 연결만 되면 누구나 설비를 조작',
+               'write_single_coil(addr=17, value=0) → OK\nstate: intake pump P-101 = STOP\n# Modbus has no authentication — anyone who can connect can actuate equipment');
+    }
+    /* T3 평문 통신 — 스니핑 */
+    /* 'capture' 는 T9 의 captured_*.pcap 까지 삼켜 분기를 가로챈다 — 도구 이름으로만 매칭한다 */
+    if (/wireshark|tcpdump|sniff|tshark/i.test(c)) {
+      if (DEF.otEncrypt) return L('(암호화된 페이로드 — TLS 터널)\n# 값과 명령을 읽을 수 없음. 무결성 보호로 변조 시 세션 종료',
+                                  '(encrypted payload — TLS tunnel)\n# values and commands unreadable; tampering breaks the session');
+      return L('Modbus/TCP  unit=1 fc=3 addr=40001 → 값 1245 (탁도 NTU x100)\nModbus/TCP  unit=1 fc=6 addr=40010 ← 값 220 (약품 주입률)\n# 공정값과 제어 명령이 평문 — 관찰로 공정을 파악하고 변조 지점을 고름',
+               'Modbus/TCP  unit=1 fc=3 addr=40001 → 1245 (turbidity NTU x100)\nModbus/TCP  unit=1 fc=6 addr=40010 ← 220 (dosing rate)\n# process values and commands in cleartext — observe the process and pick a tampering point');
+    }
+    /* T4 DNP3 마스터 스푸핑 */
+    if (/dnp3|20000|outstation|direct.?operate|crob/i.test(c)) {
+      if (DEF.dnp3Auth) return deny(L('DNP3 Secure Authentication: 챌린지 응답 실패 — 세션 키 없는 마스터의 제어 명령 거부',
+                                      'DNP3 Secure Authentication: challenge failed — control from a master without a session key is rejected'));
+      return L('DirectOperate(CROB, index=4, code=LATCH_OFF) → SUCCESS\n밸브 V-204 = CLOSED\n# DNP3 는 기본적으로 마스터를 인증하지 않는다 — 주소만 흉내 내면 제어 가능',
+               'DirectOperate(CROB, index=4, code=LATCH_OFF) → SUCCESS\nvalve V-204 = CLOSED\n# DNP3 does not authenticate masters by default — spoof the address and you can control');
+    }
+    /* T5 OPC UA 보안정책 None */
+    if (/opcua.*(anonymous|none)|SecurityPolicy.*None|4840.*connect|browse.*ns=/i.test(c)) {
+      if (DEF.uaPolicy) return deny(L('OPC UA: SecurityPolicy None 비활성, 익명 로그인 금지 — 사용자 인증서/계정 필요',
+                                      'OPC UA: SecurityPolicy None disabled and anonymous login forbidden — user certificate/account required'));
+      return L('Connected (SecurityPolicy=None, Anonymous)\nns=2;s=Dosing.Setpoint  쓰기 권한 있음 → 220 에서 900 으로 변경 가능\n# 보안정책 None + 익명 허용 — 인증 없이 태그를 읽고 쓴다',
+               'Connected (SecurityPolicy=None, Anonymous)\nns=2;s=Dosing.Setpoint writable → can change 220 to 900\n# policy None + anonymous — read and write tags with no authentication');
+    }
+    /* T6 OPC UA 인증서 검증 부재 */
+    if (/cert|trust|self-signed|pki|mitm.*4840/i.test(c)) {
+      if (DEF.uaCertVerify) return deny(L('OPC UA: 서버 인증서가 신뢰목록에 없음 — 연결 거부(BadCertificateUntrusted)',
+                                          'OPC UA: server certificate not in the trust list — connection rejected (BadCertificateUntrusted)'));
+      return L('클라이언트가 자체서명 인증서를 그대로 수락 (검증 생략)\n중간자 프록시 삽입 성공 → 설정값 명령을 가로채 변조\n# 인증서를 확인하지 않으면 암호화해도 중간자를 막지 못한다',
+               'client accepted a self-signed certificate without validation\nMITM proxy inserted → setpoint commands intercepted and altered\n# encryption without certificate validation does not stop a MITM');
+    }
+    /* T7 PLC 로직 다운로드 */
+    if (/download.*logic|upload.*program|plc.*program|ladder|stop.*plc|keyswitch/i.test(c)) {
+      if (DEF.plcWriteProtect) return deny(L('PLC 키스위치 RUN(쓰기 잠금) + 엔지니어링 접근 인가 필요 — 로직 다운로드 거부',
+                                             'PLC keyswitch in RUN (write-protected) and engineering access requires authorization — logic download rejected'));
+      return L('Connect to PLC-01 (no authentication)\nDownload user program … 100%\nPLC 상태: STOP → 새 로직 적재 → RUN\n# 엔지니어링 프로토콜에 인증이 없어 공정 로직 자체를 바꿔 넣음',
+               'Connect to PLC-01 (no authentication)\nDownload user program … 100%\nPLC: STOP → new logic loaded → RUN\n# the engineering protocol has no authentication — the process logic itself is replaced');
+    }
+    /* T8 안전계장시스템(SIS) */
+    if (/sis|safety|interlock|trip|sil/i.test(c)) {
+      if (DEF.sisIsolation) return deny(L('SIS 는 별도 망·별도 인증, 물리 키 필요 — 원격 변경 불가(변경 시 이중 승인·감사)',
+                                          'SIS lives on a separate network with separate authentication and a physical key — no remote change (dual approval and audit required)'));
+      return L('SIS 컨트롤러 접근 성공 (BPCS 와 같은 망)\n고수위 트립 설정: 4.2m → 9.9m (사실상 무력화)\n# 안전 기능이 무력화되면 공정 이상이 물리적 사고로 이어진다',
+               'reached the SIS controller (same network as the BPCS)\nhigh-level trip setpoint: 4.2m → 9.9m (effectively disabled)\n# with safety functions disabled, a process upset becomes a physical incident');
+    }
+    /* T9 리플레이 */
+    if (/replay|resend|repeat.*frame|pcap.*inject/i.test(c)) {
+      if (DEF.replayGuard) return deny(L('리플레이 탐지: 논스·타임스탬프 불일치로 프레임 폐기',
+                                         'replay detected: nonce/timestamp mismatch, frame discarded'));
+      return L('이전에 캡처한 정상 제어 프레임을 그대로 재전송 → 수락됨\n밸브 V-204 = OPEN (권한 없이 정상 명령을 복제)\n# 신선도 검증이 없으면 캡처한 명령을 언제든 다시 쓸 수 있다',
+               'replayed a previously captured legitimate control frame → accepted\nvalve V-204 = OPEN (a valid command reused without authorization)\n# with no freshness check, captured commands can be reused at will');
+    }
+    return L('명령을 인식하지 못했습니다. 위 "공격 명령"의 예시를 실행해 보세요.', 'Command not recognized. Try the example in the attack box above.');
+  }
+
+  /* ============================================================
+   * 도전 — OT 산업 프로토콜 / 제어망
+   * ============================================================ */
+  var CH = [
+    {
+      id: 'T1', std: 'IEC 62443 / Zones', risk: 5, flag: 'otSegment',
+      title: L('IT · OT 네트워크 분리 부재', 'No IT/OT Network Segmentation'),
+      brief: L('사무망 PC 에서 <b>제어망 장비가 그대로 보이면</b>, 이메일 한 통으로 시작된 침해가 공정 제어까지 곧장 이어집니다.',
+               'If control devices are reachable from the office LAN, a phishing email leads straight to process control.'),
+      ez: L('은행 로비와 <b>금고실 사이에 문이 없는</b> 셈입니다.', 'Like a bank with <b>no door between the lobby and the vault</b>.'),
+      manifest: '# 사무망(10.0.0.0/8) ↔ 제어망(192.0.2.0/24) 라우팅 허용\n# 방화벽 규칙: any→any permit\n# 점프호스트·DMZ 없음',
+      cmd: 'nmap -Pn -p 502,20000,4840 192.0.2.0/24   # 사무망 노트북에서 실행',
+      options: [
+        L('사무망에서 PLC·RTU·OPC 서버가 그대로 보임 — 분리 부재', 'PLC/RTU/OPC servers visible from the office LAN — no segmentation'),
+        L('직접 경로 없음 — 도관 정책으로 점프호스트 경유만 허용', 'no direct path — conduit policy allows only the jump host'),
+        L('제어망에 장비가 없음', 'no devices on the control network'),
+        L('스캔 도구가 차단됨', 'scanner was blocked')
+      ],
+      ev: 0,
+      why: L('OT 사고 대부분은 <b>OT 를 직접 노린 공격</b>이 아니라 IT 침해가 넘어온 것입니다. 평면 네트워크에서는 랜섬웨어 한 건이 공정 정지로 번집니다. IEC 62443 은 이를 <b>구역(Zone)과 도관(Conduit)</b>으로 끊으라고 요구합니다.',
+             'Most OT incidents are IT compromises that crossed over, not direct OT attacks. On a flat network one ransomware event becomes a production stop. IEC 62443 requires cutting this with zones and conduits.'),
+      def: L('<b>구역·도관 모델</b>로 분리한다: IT/OT 사이에 OT-DMZ 를 두고, 통과 트래픽은 <b>명시적으로 허용한 것만</b> 지나가게 한다. 원격 접속은 점프호스트·MFA 경유, 데이터 반출은 <b>단방향 게이트웨이</b>를 검토한다. 유지보수용 임시 경로를 영구히 남기지 않는다.',
+             'Separate with the zone/conduit model: put an OT-DMZ between IT and OT and allow only explicitly permitted flows. Route remote access through a jump host with MFA, and consider a unidirectional gateway for data egress. Never leave temporary maintenance paths in place.'),
+      fixNote: L('구역·도관 분리(OT-DMZ·점프호스트)를 적용했습니다.', 'Applied zone/conduit segmentation (OT-DMZ, jump host).')
+    },
+    {
+      id: 'T2', std: 'Modbus / IEC 62443 SR1', risk: 5, flag: 'modbusAuth',
+      title: L('Modbus 인증 부재 → 설비 강제 조작', 'No Modbus Authentication → Forced Actuation'),
+      brief: L('Modbus 프로토콜에는 <b>인증이 아예 없습니다</b>. 연결만 되면 코일 쓰기 한 번으로 취수펌프를 세울 수 있습니다.',
+               'Modbus has no authentication at all: once connected, a single coil write stops the intake pump.'),
+      ez: L('누구나 누를 수 있는 <b>비상정지 버튼</b>이 길가에 놓인 셈입니다.', 'Like an <b>emergency stop button</b> sitting on a public sidewalk.'),
+      manifest: '# Modbus/TCP 502 — 인증·인가·암호화 없음(1979년 설계)\n# 쓰기 기능코드(5,6,15,16) 제한 없음\n# 어떤 마스터든 연결 허용',
+      cmd: 'mbtget -u 1 -w5 -a 17 -v 0 192.0.2.51   # write_single_coil: 취수펌프 정지',
+      options: [
+        L('쓰기 성공 — 취수펌프가 STOP, 인증 없이 설비 조작됨', 'write succeeded — intake pump STOPped, equipment actuated without authentication'),
+        L('쓰기 거부 — 게이트웨이가 허가된 마스터/기능코드만 통과', 'write rejected — gateway allows only authorized masters/function codes'),
+        L('PLC 가 응답하지 않음', 'PLC did not respond'),
+        L('주소가 존재하지 않음', 'address does not exist')
+      ],
+      ev: 0,
+      why: L('Modbus 는 <b>신뢰된 전용선</b>을 전제로 만들어진 프로토콜입니다. 이더넷에 올라온 지금도 인증 필드가 없어, 프로토콜 자체로는 고칠 수 없습니다. 방어는 <b>네트워크와 게이트웨이 계층</b>에서 해야 합니다.',
+             'Modbus was designed for trusted serial lines and still has no authentication field on Ethernet, so the protocol itself cannot fix this. Defense has to happen at the network and gateway layers.'),
+      def: L('프로토콜을 바꿀 수 없으므로 <b>주변을 통제</b>한다: 산업용 방화벽/보안 게이트웨이로 <b>허가된 마스터 IP 와 기능코드만</b> 통과시키고(읽기 전용 기본), 쓰기는 지정 HMI 에서만 허용한다. 딥 패킷 검사로 비정상 기능코드를 차단하고, 모든 쓰기를 감사 기록한다.',
+             'Since the protocol cannot change, control its surroundings: an industrial firewall/gateway that permits only authorized master IPs and function codes (read-only by default), with writes allowed from designated HMIs. Use deep packet inspection to block abnormal function codes and audit every write.'),
+      fixNote: L('Modbus 보안 게이트웨이(마스터·기능코드 화이트리스트)를 적용했습니다.', 'Applied a Modbus security gateway (master/function-code allowlist).')
+    },
+    {
+      id: 'T3', std: 'NIST SP 800-82', risk: 4, flag: 'otEncrypt',
+      title: L('평문 통신 → 공정 관찰·변조 지점 선정', 'Cleartext Traffic → Process Recon'),
+      brief: L('공정값과 제어 명령이 <b>평문</b>으로 흐르면, 공격자는 공정을 학습한 뒤 <b>가장 아픈 지점</b>을 골라 변조합니다.',
+               'With process values and commands in cleartext, an attacker learns the process and picks the most damaging point to tamper with.'),
+      ez: L('회의 내용을 <b>스피커폰으로 복도에</b> 틀어 놓는 셈입니다.', 'Like broadcasting a meeting on <b>speakerphone into the hallway</b>.'),
+      manifest: '# Modbus/TCP·DNP3 평문 전송\n# 터널링/암호화 없음, 스위치 포트 미러링 가능\n# 무결성 검증 없음',
+      cmd: 'tshark -i eth1 -f "tcp port 502" -Y modbus   # 제어망 트래픽 관찰',
+      options: [
+        L('탁도·약품주입률 등 공정값과 명령이 평문으로 보임', 'process values (turbidity, dosing) and commands visible in cleartext'),
+        L('암호화된 페이로드만 보임 — 값·명령 판독 불가', 'only encrypted payload — values and commands unreadable'),
+        L('트래픽이 전혀 없음', 'no traffic at all'),
+        L('캡처 권한이 없음', 'no capture permission')
+      ],
+      ev: 0,
+      why: L('OT 공격은 대개 <b>오랜 관찰</b>에서 시작합니다. 평문 트래픽은 설비 구성·정상 범위·제어 주기를 알려 주어, 나중에 <b>정상처럼 보이는 변조</b>를 가능하게 합니다. 탐지 회피의 핵심 재료입니다.',
+             'OT attacks usually begin with long observation. Cleartext traffic reveals equipment layout, normal ranges, and control cycles — the raw material for later tampering that looks legitimate.'),
+      def: L('가능한 구간은 <b>암호화 터널</b>(TLS·IPsec)로 감싸고, 최신 프로토콜은 내장 보안(OPC UA Sign&Encrypt)을 켠다. 레거시 구간은 암호화가 어려우므로 <b>물리·논리 분리와 접근통제</b>로 대신하고, <b>OT 특화 이상탐지</b>로 비정상 명령·주기를 감시한다.',
+             'Wrap what you can in encrypted tunnels (TLS/IPsec) and enable built-in security on modern protocols (OPC UA Sign&Encrypt). Where legacy segments cannot be encrypted, substitute physical/logical separation and access control, and monitor with OT-aware anomaly detection.'),
+      fixNote: L('제어 트래픽 암호화 터널과 무결성 보호를 적용했습니다.', 'Applied encrypted tunnels and integrity protection for control traffic.')
+    },
+    {
+      id: 'T4', std: 'DNP3 / SAv5', risk: 5, flag: 'dnp3Auth',
+      title: L('DNP3 마스터 스푸핑', 'DNP3 Master Spoofing'),
+      brief: L('DNP3 는 기본적으로 <b>마스터를 인증하지 않습니다</b>. 주소만 흉내 내면 가짜 마스터가 밸브를 제어합니다.',
+               'DNP3 does not authenticate masters by default: spoof the address and a fake master operates valves.'),
+      ez: L('관제실 전화번호만 알면 <b>누구나 관제실 행세</b>를 할 수 있는 셈입니다.', 'Like anyone who knows the control room’s number being able to <b>impersonate it</b>.'),
+      manifest: '# DNP3 (20000/tcp) — Secure Authentication 미적용\n# 아웃스테이션이 마스터 주소만 보고 신뢰\n# DirectOperate 명령에 인증 없음',
+      cmd: 'dnp3-master --src 100 --dst 4 --direct-operate CROB,index=4,LATCH_OFF 192.0.2.52',
+      options: [
+        L('제어 명령 수락 — 밸브 V-204 CLOSED, 마스터 인증 없음', 'control accepted — valve V-204 CLOSED, no master authentication'),
+        L('챌린지 응답 실패로 거부 — Secure Authentication 동작', 'rejected on challenge failure — Secure Authentication works'),
+        L('아웃스테이션이 오프라인', 'outstation offline'),
+        L('인덱스가 유효하지 않음', 'invalid index')
+      ],
+      ev: 0,
+      why: L('DNP3 는 전력·수도 등 <b>광역 원격 제어</b>에 널리 쓰입니다. 통신 구간이 길고 공용망을 타는 경우가 많아, 인증 없는 제어 명령은 원격에서 그대로 악용됩니다.',
+             'DNP3 is widely used for wide-area remote control in power and water. Links are long and often traverse shared networks, so unauthenticated control commands are directly exploitable from afar.'),
+      def: L('<b>DNP3 Secure Authentication(v5)</b>을 적용해 제어 명령에 챌린지-응답 인증을 건다. 세션 키를 주기적으로 갱신하고, 중요 제어는 <b>사전 선택 후 실행(SBO)</b> 방식으로 이중 확인한다. 가능하면 전송 구간을 TLS 로 감싸고 마스터 IP 를 제한한다.',
+             'Enable DNP3 Secure Authentication (v5) so control commands require challenge-response. Rotate session keys, use select-before-operate for critical controls, and where possible wrap the transport in TLS and restrict master IPs.'),
+      fixNote: L('DNP3 Secure Authentication(v5)을 적용했습니다.', 'Enabled DNP3 Secure Authentication (v5).')
+    },
+    {
+      id: 'T5', std: 'OPC UA', risk: 4, flag: 'uaPolicy',
+      title: L('OPC UA 보안정책 None · 익명 접속', 'OPC UA SecurityPolicy None / Anonymous'),
+      brief: L('OPC UA 는 보안 기능이 있는데도 <b>편의를 위해 None 으로</b> 운영되는 경우가 많습니다. 그러면 익명으로 태그를 씁니다.',
+               'OPC UA has security features but is often run with SecurityPolicy None for convenience — letting anonymous clients write tags.'),
+      ez: L('좋은 잠금장치를 달아 놓고 <b>잠그지 않은</b> 셈입니다.', 'Like fitting a good lock and <b>never locking it</b>.'),
+      manifest: 'SecurityPolicy: None            # ← 서명·암호화 없음\nUserTokenPolicy: Anonymous      # ← 익명 허용\nns=2;s=Dosing.Setpoint : 쓰기 허용',
+      cmd: 'opcua-client -e opc.tcp://192.0.2.60:4840 --security None --user anonymous --write "ns=2;s=Dosing.Setpoint"=900',
+      options: [
+        L('익명으로 연결돼 약품 주입 설정값 쓰기 가능 — 보안정책 None', 'connected anonymously and can write the dosing setpoint — policy None'),
+        L('연결 거부 — 익명 금지, 사용자 인증서·계정 필요', 'connection rejected — anonymous forbidden, certificate/account required'),
+        L('서버가 실행 중이 아님', 'server not running'),
+        L('노드가 읽기 전용', 'node is read-only')
+      ],
+      ev: 0,
+      why: L('약품 주입률 같은 값은 <b>안전 임계치</b>와 직결됩니다. 정상 범위를 벗어난 설정값 하나가 수질 사고가 됩니다. OPC UA 는 서명·암호화·사용자 인증을 지원하므로, 이 위험은 <b>설정으로 해결되는</b> 문제입니다.',
+             'Values like dosing rate map directly onto safety thresholds — one out-of-range setpoint becomes a water-quality incident. OPC UA supports signing, encryption, and user authentication, so this risk is a configuration problem.'),
+      def: L('<b>SecurityPolicy 를 Sign&amp;Encrypt</b>(Basic256Sha256 이상)로 올리고 <b>익명 로그인을 금지</b>한다. 사용자·응용 인증서를 발급해 역할 기반으로 권한을 나누고, 쓰기 가능한 노드를 최소화한다. 설정값에는 <b>서버측 범위 검증</b>을 둔다.',
+             'Raise SecurityPolicy to Sign&Encrypt (Basic256Sha256 or better) and forbid anonymous login. Issue user/application certificates with role-based rights, minimize writable nodes, and enforce server-side range validation on setpoints.'),
+      fixNote: L('OPC UA Sign&Encrypt 정책과 익명 금지를 적용했습니다.', 'Applied OPC UA Sign&Encrypt policy and disabled anonymous access.')
+    },
+    {
+      id: 'T6', std: 'OPC UA / PKI', risk: 4, flag: 'uaCertVerify',
+      title: L('OPC UA 인증서 검증 부재 (MITM)', 'No OPC UA Certificate Validation (MITM)'),
+      brief: L('암호화를 켜도 <b>인증서를 확인하지 않으면</b> 중간자가 그대로 끼어듭니다. 설정 명령이 가로채이고 바뀝니다.',
+               'Even with encryption on, skipping certificate validation lets a MITM sit in the middle and rewrite setpoint commands.'),
+      ez: L('봉인은 했는데 <b>누구 도장인지 안 보는</b> 셈입니다.', 'Like sealing an envelope but <b>never checking whose seal it is</b>.'),
+      manifest: '# 클라이언트가 자체서명 인증서를 자동 수락\n# 신뢰목록(TrustList)·폐기목록(CRL) 관리 없음\n# 인증서 만료·발급자 확인 생략',
+      cmd: 'opcua-mitm --listen 4840 --upstream 192.0.2.60:4840 --self-signed   # 중간자 프록시',
+      options: [
+        L('자체서명 인증서가 그대로 수락되어 중간자 삽입 성공', 'self-signed certificate accepted — MITM inserted successfully'),
+        L('BadCertificateUntrusted — 신뢰목록에 없어 연결 거부', 'BadCertificateUntrusted — rejected, not in the trust list'),
+        L('프록시가 연결되지 않음', 'proxy could not connect'),
+        L('암호화가 비활성', 'encryption disabled')
+      ],
+      ev: 0,
+      why: L('암호화는 <b>누구와</b> 안전하게 통신하는지까지 보장하지 않습니다. 인증서 검증이 그 역할입니다. OT 에서는 인증서 관리가 번거롭다는 이유로 검증을 끄는 일이 잦고, 그 순간 암호화의 의미가 사라집니다.',
+             'Encryption does not establish who you are talking to — certificate validation does. In OT, validation is often disabled because certificate management is inconvenient, and at that moment encryption stops meaning anything.'),
+      def: L('<b>신뢰목록 기반 검증</b>을 강제한다: 발급자·유효기간·폐기 여부를 확인하고, 자체서명 자동 수락을 끈다. 현장 <b>PKI 운영 절차</b>(발급·갱신·폐기·교체 주기)를 문서화하고, 인증서 만료로 공정이 멈추지 않도록 만료 전 알림을 둔다.',
+             'Enforce trust-list validation: check issuer, validity period, and revocation, and disable automatic acceptance of self-signed certificates. Document field PKI procedures (issue, renew, revoke, rotate) and alert before expiry so certificates never halt the process.'),
+      fixNote: L('OPC UA 인증서 신뢰목록 검증을 적용했습니다.', 'Enforced OPC UA trust-list certificate validation.')
+    },
+    {
+      id: 'T7', std: 'PLC / IEC 62443', risk: 5, flag: 'plcWriteProtect',
+      title: L('PLC 로직 다운로드 (공정 로직 변조)', 'PLC Logic Download (Process Logic Tampering)'),
+      brief: L('엔지니어링 프로토콜에 인증이 없으면 공격자가 <b>공정 로직 자체</b>를 바꿔 넣습니다. HMI 화면은 정상으로 보일 수 있습니다.',
+               'With no authentication in the engineering protocol, an attacker replaces the process logic itself — while the HMI may still look normal.'),
+      ez: L('요리사 몰래 <b>레시피를 바꿔치기</b>하는 셈입니다.', 'Like <b>swapping the recipe</b> without the cook noticing.'),
+      manifest: '# PLC 키스위치: REMOTE (원격 프로그램 변경 허용)\n# 엔지니어링 프로토콜 인증 없음\n# 로직 변경 이력·무결성 검증 없음',
+      cmd: 'plc-tool --target 192.0.2.51 --download modified_logic.bin   # 공정 로직 교체',
+      options: [
+        L('인증 없이 로직이 교체되고 PLC 가 RUN — 공정 제어 장악', 'logic replaced without authentication and PLC set to RUN — process control taken over'),
+        L('키스위치 RUN(쓰기 잠금)과 인가 요구로 다운로드 거부', 'rejected — keyswitch in RUN (write-protected) and authorization required'),
+        L('PLC 모델이 지원되지 않음', 'PLC model not supported'),
+        L('파일 형식 오류', 'file format error')
+      ],
+      ev: 0,
+      why: L('로직 변조는 <b>가장 은밀하고 위험한</b> OT 공격입니다. 센서값은 정상으로 보고되게 만들면서 실제 설비만 다르게 움직이게 할 수 있어, 운영자가 이상을 눈치채기 어렵습니다.',
+             'Logic tampering is the stealthiest and most dangerous OT attack: sensor values can be reported as normal while the equipment behaves differently, so operators struggle to notice.'),
+      def: L('운영 중에는 PLC <b>키스위치를 RUN(쓰기 잠금)</b>에 두고, 로직 변경은 <b>작업 승인·이중 확인</b> 절차로만 허용한다. 엔지니어링 워크스테이션을 전용·격리하고, <b>로직 해시 기준선</b>을 주기적으로 대조해 무단 변경을 탐지한다. 변경 이력은 감사 기록으로 남긴다.',
+             'Keep the PLC keyswitch in RUN (write-protected) during operation and allow logic changes only through an approved, dual-checked procedure. Dedicate and isolate the engineering workstation, and periodically compare a logic hash baseline to detect unauthorized changes, with an audit trail.'),
+      fixNote: L('PLC 쓰기 잠금과 엔지니어링 접근 인가를 적용했습니다.', 'Applied PLC write protection and engineering access authorization.')
+    },
+    {
+      id: 'T8', std: 'SIS / IEC 61511', risk: 5, flag: 'sisIsolation',
+      title: L('안전계장시스템(SIS) 접근', 'Safety Instrumented System (SIS) Access'),
+      brief: L('안전 기능이 제어시스템과 <b>같은 망</b>에 있으면, 공격자가 <b>마지막 방어선</b>인 트립 설정을 무력화할 수 있습니다.',
+               'If safety functions share a network with the control system, an attacker can disable trip setpoints — the last line of defense.'),
+      ez: L('공장에 불이 났는데 <b>스프링클러까지 꺼버리는</b> 셈입니다.', 'Like disabling the <b>sprinklers</b> as well when a fire starts.'),
+      manifest: '# SIS 컨트롤러가 BPCS 와 동일 네트워크\n# 별도 인증·물리 키 없음\n# 트립 설정값 원격 변경 가능',
+      cmd: 'sis-config --target 192.0.2.70 --set HighLevelTrip=9.9   # 고수위 트립 무력화',
+      options: [
+        L('트립 설정이 4.2m → 9.9m 로 변경됨 — 안전 기능 무력화', 'trip setpoint changed 4.2m → 9.9m — safety function disabled'),
+        L('원격 변경 불가 — SIS 별도 망·물리 키·이중 승인 필요', 'remote change impossible — separate network, physical key, dual approval'),
+        L('SIS 컨트롤러를 찾을 수 없음', 'SIS controller not found'),
+        L('설정값이 범위를 벗어남', 'setpoint out of range')
+      ],
+      ev: 0,
+      why: L('SIS 는 공정이 통제를 벗어났을 때 <b>사람과 설비를 지키는 독립 계층</b>입니다. 제어 계층과 함께 뚫리면 사고를 막을 수단이 사라집니다. 실제 사례에서도 안전 계층을 노린 공격이 보고된 바 있습니다.',
+             'The SIS is an independent layer that protects people and equipment when the process goes out of control. If it falls with the control layer, nothing is left to prevent an incident — and attacks targeting safety layers have been reported in practice.'),
+      def: L('SIS 를 제어시스템(BPCS)과 <b>물리적·논리적으로 분리</b>하고, 별도 인증과 <b>물리 키</b>를 요구한다. 설정 변경은 <b>이중 승인·변경관리</b> 절차와 감사 기록을 거치게 하고, 원격 변경 경로는 원칙적으로 만들지 않는다. 안전 기능은 주기적으로 시험(proof test)한다.',
+             'Separate the SIS from the BPCS physically and logically, requiring separate authentication and a physical key. Gate setpoint changes behind dual approval, change management, and audit logging, and avoid creating remote-change paths at all. Proof-test safety functions periodically.'),
+      fixNote: L('SIS 분리·물리 키·이중 승인을 적용했습니다.', 'Applied SIS separation, physical key, and dual approval.')
+    },
+    {
+      id: 'T9', std: 'Replay / Freshness', risk: 4, flag: 'replayGuard',
+      title: L('제어 명령 리플레이', 'Control Command Replay'),
+      brief: L('신선도 검증이 없으면, 공격자는 예전에 캡처한 <b>정상 명령을 그대로 다시</b> 보내 설비를 움직입니다.',
+               'With no freshness check, an attacker replays a previously captured legitimate command to actuate equipment.'),
+      ez: L('어제 받은 <b>출입 승인 문자</b>를 오늘 다시 보여주는 셈입니다.', 'Like reusing <b>yesterday’s entry approval</b> text message today.'),
+      manifest: '# 제어 프레임에 논스·타임스탬프·시퀀스 검증 없음\n# 동일 프레임 재전송 시 그대로 수락\n# 세션 개념 없음',
+      cmd: 'tcpreplay -i eth1 captured_valve_open.pcap   # 캡처한 정상 명령 재전송',
+      options: [
+        L('재전송한 명령이 수락되어 밸브 OPEN — 신선도 검증 없음', 'replayed command accepted and valve OPENed — no freshness check'),
+        L('논스·타임스탬프 불일치로 프레임 폐기 — 리플레이 탐지', 'frame discarded on nonce/timestamp mismatch — replay detected'),
+        L('캡처 파일이 손상됨', 'capture file corrupted'),
+        L('인터페이스를 찾을 수 없음', 'interface not found')
+      ],
+      ev: 0,
+      why: L('리플레이는 <b>암호를 깨지 않고도</b> 통하는 공격입니다. 명령 내용이 정당하기 때문에 서명이 있어도 신선도 검증이 없으면 통과합니다. 평문 구간에서는 캡처 자체가 쉬워 위험이 더 큽니다.',
+             'Replay works without breaking any cryptography: the command is genuine, so even signed traffic passes if freshness is not checked. On cleartext segments, capturing is trivial, raising the risk further.'),
+      def: L('제어 메시지에 <b>논스·타임스탬프·시퀀스 번호</b>를 넣어 재사용을 거부한다(DNP3 SAv5·OPC UA 는 내장). 세션 키를 주기적으로 갱신하고, 중요 제어는 <b>선택 후 실행(SBO)</b>으로 짧은 유효시간을 둔다. 반복 명령·비정상 주기는 이상탐지로 경보한다.',
+             'Add nonces, timestamps, and sequence numbers so messages cannot be reused (built into DNP3 SAv5 and OPC UA). Rotate session keys, use select-before-operate with a short validity window for critical controls, and alert on repeated commands or abnormal timing.'),
+      fixNote: L('논스·타임스탬프 기반 리플레이 방지를 적용했습니다.', 'Applied nonce/timestamp-based replay protection.')
+    }
+  ];
+
+  var state = CH.map(function () { return { tried: false, pass: false, fixed: false }; });
+  var cur = 0;
+  var PKEY = 'wvs_ot_protocol';
+  function loadProg() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
+  function saveProg(id) { try { var p = loadProg(); p[id] = 1; localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} }
+
+  function renderList() {
+    var done = state.filter(function (s) { return s.pass; }).length;
+    $('prog').textContent = L('통과 ', 'Passed ') + done + ' / ' + CH.length + L('  ·  방어 적용 ', '  ·  Defenses ') + state.filter(function (s) { return s.fixed; }).length;
+    var ul = $('clist'); ul.innerHTML = '';
+    CH.forEach(function (c, i) {
+      var s = state[i];
+      var st = s.pass ? (s.fixed ? '🛡️' : '✅') : (s.tried ? '🔁' : '·');
+      var li = document.createElement('li');
+      li.className = i === cur ? 'on' : '';
+      li.innerHTML = '<span class="ow">' + esc(c.id) + '</span><span class="tt">' + esc(c.title) + '</span><span class="st">' + st + '</span>';
+      li.addEventListener('click', function () { cur = i; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function render() {
+    renderList();
+    var c = CH[cur], s = state[cur], d = $('detail');
+    var h = '<h2><span class="ow">' + esc(c.std) + '</span> ' + esc(c.title) + ' <span class="risk">' + L('위험 ', 'risk ') + c.risk + '</span></h2>';
+    h += '<p style="margin-top:8px;color:#d7e3f4">' + c.brief + '</p>';
+    h += '<div class="ez"><b>' + L('쉽게 말하면', 'In plain terms') + '</b> — ' + c.ez + '</div>';
+    h += '<div class="manifest"><b>' + L('취약한 구성', 'Vulnerable configuration') + '</b>\n' + esc(c.manifest) + '</div>';
+    h += '<div class="term"><div class="hd">' + L('공격 명령 (편집 가능) — HANARO 제어망', 'Attack command (editable) — HANARO control network') + '</div>';
+    h += '<textarea id="cmdBox" spellcheck="false" aria-label="' + L('OT 프로토콜 공격 명령', 'OT protocol attack command') + '">' + esc(c.cmd) + '</textarea>';
+    h += '<div class="out" id="outBox"><span style="color:#93a4c0">' + L('▶ 명령 실행 을 눌러 결과를 확인하세요.', 'Press Run command to see the result.') + '</span></div></div>';
+    h += '<div class="row"><button class="btn go" id="btnRun">▶ ' + L('명령 실행', 'Run command') + '</button><button class="btn alt" id="btnReset2">' + L('명령 원복', 'Reset') + '</button></div>';
+
+    h += '<div class="h4">1. ' + L('판정', 'Verdict') + '</div>';
+    h += '<div><button class="vbtn" type="button" data-v="good">' + L('양호', 'Secure') + '</button><button class="vbtn" type="button" data-v="vuln">' + L('취약', 'Vulnerable') + '</button></div>';
+    h += '<div class="h4">2. ' + L('그렇게 판단한 근거 (출력에서 확인한 것)', 'Evidence (what the output showed)') + '</div>';
+    c.options.forEach(function (o, i) { h += '<label class="opt"><input type="checkbox" data-o="' + i + '">' + esc(o) + '</label>'; });
+    h += '<div class="row"><button class="btn go" id="btnGrade">' + L('채점', 'Grade') + '</button>';
+    if (s.pass && !s.fixed) h += '<button class="btn fix" id="btnFix">🛡️ ' + L('방어 적용', 'Apply defense') + '</button>';
+    h += '</div><div id="res"></div>';
+    if (s.pass) {
+      h += '<div class="why"><b>' + L('왜 그런가', 'Why') + '</b> — ' + c.why + '</div>';
+      h += '<div class="def"><b>🛡️ ' + L('방어', 'Defense') + '</b> — ' + c.def + '</div>';
+    }
+    d.innerHTML = h;
+
+    var chosenV = null;
+    d.querySelectorAll('[data-v]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        chosenV = b.getAttribute('data-v');
+        d.querySelectorAll('[data-v]').forEach(function (x) { x.className = 'vbtn'; });
+        b.className = 'vbtn on';
+      });
+    });
+    $('btnRun').addEventListener('click', function () { run(c); });
+    $('btnReset2').addEventListener('click', function () { $('cmdBox').value = c.cmd; });
+    $('btnGrade').addEventListener('click', function () { grade(c, chosenV); });
+    var fb = $('btnFix'); if (fb) fb.addEventListener('click', function () { applyFix(c); });
+  }
+
+  function verdict(c) { return DEF[c.flag] ? 'good' : 'vuln'; }
+
+  function run(c) {
+    var res = otTool($('cmdBox').value);
+    $('outBox').innerHTML = '<span style="color:#fdba74">$ ' + esc($('cmdBox').value.trim().split('\n')[0]) + '</span>\n' + esc(res);
+  }
+
+  function grade(c, chosenV) {
+    if (!chosenV) { $('res').innerHTML = '<div class="res no">' + L('먼저 양호/취약을 고르세요.', 'Pick Secure/Vulnerable first.') + '</div>'; return; }
+    var ev = [];
+    document.querySelectorAll('#detail [data-o]').forEach(function (cb) { if (cb.checked) ev.push(parseInt(cb.getAttribute('data-o'), 10)); });
+    var vOk = chosenV === verdict(c);
+    /* 방어 적용 후 재점검에서는 '막힌 출력'(옵션 1)이 올바른 근거다 */
+    var expEv = DEF[c.flag] ? (c.evFix != null ? c.evFix : 1) : c.ev;
+    var eOk = ev.length === 1 && ev[0] === expEv;
+    state[cur].tried = true;
+    if (vOk && eOk) {
+      state[cur].pass = true; saveProg(c.id);
+      render();
+      $('res').innerHTML = '<div class="res ok"><b>' + L('통과', 'Passed') + '</b> — ' +
+        (DEF[c.flag] ? L('<b>재점검</b>까지 맞습니다 — 방어가 같은 명령을 막는 것을 출력으로 확인했습니다.', 'Re-check correct too — the output confirms the defense now blocks the same command.')
+          : L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 같은 명령을 다시 실행해 보세요 — 이번엔 막힙니다.',
+              'Verdict and evidence are correct. Apply the defense below, then re-run the same command — it will be blocked this time.')) + '</div>';
+    } else {
+      var msg = [];
+      msg.push(vOk ? L('판정은 맞습니다.', 'Verdict is right.') : L('판정이 다릅니다.', 'Verdict is wrong.'));
+      if (!eOk) msg.push(L('근거를 정확히 하나만, 출력에서 본 것으로 고르세요.', 'Pick exactly one evidence — what the output actually showed.'));
+      render();
+      $('res').innerHTML = '<div class="res no"><b>' + L('다시', 'Try again') + '</b> — ' + msg.join(' ') + '</div>';
+    }
+  }
+
+  function applyFix(c) {
+    DEF[c.flag] = true;
+    state[cur].fixed = true;
+    render();
+    $('res').innerHTML = '<div class="res ok"><b>🛡️ ' + L('방어 완료', 'Defense applied') + '</b> — ' + c.fixNote +
+      '<br>' + L('같은 명령을 다시 실행해 결과가 바뀌었는지 확인하세요.', 'Re-run the same command and see the result change.') + '</div>';
+  }
+
+  function boot() {
+    var p = loadProg();
+    CH.forEach(function (c, i) { if (p[c.id]) state[i].pass = true; });
+    render();
+  }
+  boot();
+})();
+
+function wvsToggleLang() {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    var v = en ? 'ko' : 'en';
+    localStorage.setItem('wvs_lang', v); localStorage.setItem('lang', v);
+  } catch (e) {}
+  location.reload();
+}
+(function () {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    document.body.classList.toggle('lang-en', en);
+    document.documentElement.lang = en ? 'en' : 'ko';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
