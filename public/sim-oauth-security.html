@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="theme-color" content="#0b1220"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><script src="/js/pwa.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>OAuth · OIDC · JWT 인증 보안 실습 — WEB-VULN-SIM</title>
+<meta name="description" content="모의 인증서버 OrbitAuth 에 OAuth 2.0·OIDC 요청을 직접 던져 redirect_uri 조작·state 부재 CSRF·PKCE 부재·JWT alg 혼동·토큰 유출·스코프 상승·ID 토큰 미검증·리프레시 회전 부재를 시험하고, OAuth Security BCP·JWT BCP 로 방어하는 인증·토큰 보안 핸즈온 실습.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WEB-VULN-SIM 보안 학습 포털">
+<meta property="og:title" content="OAuth · OIDC · JWT 인증 보안 실습">
+<meta property="og:description" content="모의 인증서버를 OAuth/OIDC 요청으로 직접 공격·방어하는 인증·토큰 보안 핸즈온 실습 (OAuth 2.0 Security BCP · JWT BCP).">
+<meta property="og:url" content="https://vuln-sim.web.app/sim-oauth-security.html">
+<meta property="og:image" content="https://vuln-sim.web.app/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--panel2:#0f172a;--panel3:#16233c;--bd:#22314f;--ink:#e6edf7;
+ --muted:#93a4c0;--acc:#2dd4bf;--acc2:#5eead4;--good:#3fb950;--bad:#f85149;--warn:#e3a008;
+ --mono:'JetBrains Mono','Consolas','D2Coding',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.7 "Segoe UI","Malgun Gothic",sans-serif}
+a{color:#5eead4;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:14px;background:#0b1220;border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.topbar a,.topbar .langbtn{font-family:var(--mono);font-size:12.5px}
+.topbar .sp{margin-left:auto}
+.langbtn{cursor:pointer;border:1px solid var(--bd);background:var(--panel2);color:#cdbfb2;border-radius:6px;padding:4px 10px}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 16px 70px}
+h1{font-size:23px;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:11.5px;font-weight:800;color:#042f2a;background:var(--acc2);border-radius:6px;padding:2px 9px}
+.sub{color:var(--muted);font-size:14px;margin-top:8px;max-width:920px}
+.note{background:#082a26;border:1px solid #155e56;border-radius:10px;padding:11px 14px;margin-top:14px;font-size:12.8px;color:#99f6e4}
+.tgt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tgt b{color:var(--acc)}
+.cols{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;margin-top:16px}
+@media(max-width:940px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+.clist{list-style:none;display:flex;flex-direction:column;gap:6px}
+.clist li{border:1px solid var(--bd);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2);display:flex;gap:9px;align-items:center}
+.clist li:hover{border-color:var(--acc)}
+.clist li.on{border-color:var(--acc);background:#0c3630}
+.clist .ow{font-family:var(--mono);font-size:10.5px;color:var(--muted);flex:0 0 auto;border:1px solid var(--bd);border-radius:5px;padding:1px 5px}
+.clist .tt{flex:1;font-size:13px}
+.clist .st{font-size:14px;flex:0 0 auto}
+.prog{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:10px}
+.det h2{font-size:17px;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.det h2 .ow{font-family:var(--mono);font-size:12px;color:#fdba74}
+.risk{font-family:var(--mono);font-size:10.5px;border:1px solid var(--bd);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.ez{background:var(--panel3);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:9px 13px;margin:10px 0;font-size:13.5px;color:#c7f5ef}
+.ez b{color:var(--acc)}
+.term{background:#050a14;border:1px solid var(--bd);border-radius:10px;margin-top:10px;overflow:hidden}
+.term .hd{background:var(--panel3);padding:6px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--bd)}
+.term textarea{width:100%;height:80px;background:#050a14;border:none;color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:10px 12px;resize:vertical;outline:none;white-space:pre}
+.term .out{min-height:56px;max-height:280px;overflow:auto;padding:10px 12px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+.btn{cursor:pointer;border:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;font-weight:700;padding:8px 15px}
+.btn.go{background:var(--acc);color:#042f2a}
+.btn.alt{background:var(--panel3);color:var(--ink);border:1px solid var(--bd)}
+.btn.fix{background:var(--good);color:#06121f}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt{display:block;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin:6px 0;cursor:pointer;background:var(--panel2);font-size:13.5px}
+.opt:hover{border-color:var(--acc)}.opt input{margin-right:8px}
+.vbtn{background:var(--panel2);border:1px solid var(--bd);color:var(--ink);border-radius:8px;padding:7px 16px;font-weight:700;cursor:pointer;margin-right:8px}
+.vbtn.on{border-color:var(--acc);background:#0c3630;color:var(--acc2)}
+.res{border-radius:8px;padding:10px 13px;margin-top:10px;font-size:13.5px;line-height:1.7}
+.res.ok{background:#0f2a18;border:1px solid var(--good)}
+.res.no{background:#3a1518;border:1px solid var(--bad)}
+.why{margin-top:10px;font-size:13.5px;color:#d7e3f4}.why b{color:#fff}
+.def{margin-top:12px;background:#0e1f16;border:1px solid #1f5137;border-radius:8px;padding:10px 13px;font-size:13px;color:#bdf0d3}.def b{color:#7ee7a8}
+.manifest{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;white-space:pre-wrap;line-height:1.5}
+.manifest b{color:var(--acc2)}
+.h4{font-size:12.5px;color:var(--acc);font-family:var(--mono);margin:12px 0 4px}
+.disc{margin-top:22px;font-size:12px;color:#64748b;border-top:1px dashed #334155;padding-top:12px}
+.crosslink{margin-top:8px;font-size:12.5px;color:var(--muted)}
+body.lang-en .ko{display:none}body:not(.lang-en) .en{display:none}
+</style>
+<script src="/js/soc-chrome.js" data-topbar="off" defer></script>
+<script src="/js/safety-notice.js" defer></script>
+<script src="/js/progress.js" defer></script>
+<script src="/js/shell.js" defer></script>
+</head>
+<body>
+<a class="wvs-skip" href="#wvs-main">본문 바로가기</a>
+<div class="topbar">
+  <a href="index.html">🏠 <span class="ko">홈</span><span class="en">Home</span></a>
+  <a href="vuln-hub.html"><span class="ko">취약점 실습장</span><span class="en">Vuln Hub</span></a>
+  <a href="my-progress.html"><span class="ko">내 학습 현황</span><span class="en">My Progress</span></a>
+  <span class="sp"></span>
+  <span class="langbtn" onclick="wvsToggleLang()">KO ⇄ EN</span>
+</div>
+
+<div class="wrap" id="wvs-main" tabindex="-1" role="main">
+  <h1>🔑 <span class="ko">OAuth · OIDC · JWT 인증 보안 실습</span><span class="en">OAuth · OIDC · JWT Auth Security Lab</span> <span class="badge">OAuth 2.0 · OIDC</span></h1>
+  <p class="sub">
+    <span class="ko">모의 인증서버 <b>OrbitAuth</b> 에 OAuth 2.0·OIDC 요청을 직접 던져 redirect_uri 조작·state 부재·PKCE 부재·JWT alg 혼동·토큰 유출 등을 시험합니다.
+    각 위험은 <b>공격 실행 → 취약/양호 판정 → 방어 적용 → 재점검</b> 순서로, 방어(허용목록·PKCE·서명 검증·토큰 취급)를 켜면 같은 공격이 이번엔 막히는지 확인합니다.</span>
+    <span class="en">Send OAuth 2.0 / OIDC requests to a mock authorization server (<b>OrbitAuth</b>): redirect_uri manipulation, missing state, no PKCE, JWT alg confusion, token leakage, and more.
+    Each risk runs attack → verdict → apply defense → re-check — watch the same attack get blocked once the defense (allowlist / PKCE / signature validation / token handling) is on.</span>
+  </p>
+
+  <div class="note">
+    <span class="ko">교육용 시뮬레이션입니다. <b>OrbitAuth</b> 는 전부 이 페이지 안의 mock 이며 실제 인증서버 접속이나 토큰 발급은 전혀 없습니다.
+    위험 분류는 공개 기준(OAuth 2.0 Security BCP RFC 9700, OpenID Connect Core, JWT BCP RFC 8725)을 개념적으로 재구성했습니다. 등장하는 토큰·키는 모두 명백한 EXAMPLE 값입니다.</span>
+    <span class="en">Educational simulation. OrbitAuth is a fully in-page mock — no real authorization server or token issuance. Risk taxonomy follows public guidance (OAuth 2.0 Security BCP RFC 9700, OpenID Connect Core, JWT BCP RFC 8725). All tokens and keys shown are obvious EXAMPLE values.</span>
+  </div>
+
+  <div class="tgt">
+    <span><span class="ko">인증서버</span><span class="en">IdP</span> <b>idp.orbitauth.local</b></span><span>·</span>
+    <span><span class="ko">클라이언트</span><span class="en">Client</span> <b>orbit-webapp</b> (SPA)</span><span>·</span>
+    <span><span class="ko">내 역할</span><span class="en">My role</span> <b><span class="ko">공격자 사이트</span><span class="en">attacker site</span></b></span>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="prog" id="prog"></div>
+      <ul class="clist" id="clist"></ul>
+    </div>
+    <div class="card det" id="detail"></div>
+  </div>
+
+  <div class="disc">
+    ⚠️ <span class="ko">교육용 시뮬레이션. 모든 요청은 페이지 안의 가상 인증서버에 대해서만 동작합니다. 공격 시연에는 반드시 방어 방법을 함께 둡니다. 실제 인증서버·계정을 대상으로 시험하지 마세요.</span>
+    <span class="en">Educational simulation. Requests act only on the in-page mock IdP. Every attack is paired with its defense. Never test against real authorization servers or accounts.</span>
+    <div class="crosslink">
+      <span class="ko">관련:</span><span class="en">Related:</span>
+      <a href="sim-api-security.html">API <span class="ko">보안</span><span class="en">Security</span></a> ·
+      <a href="sim-agentic-ai.html"><span class="ko">에이전틱 AI</span><span class="en">Agentic AI</span></a> ·
+      <a href="sim-supply-chain.html"><span class="ko">공급망 보안</span><span class="en">Supply chain</span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * OAuth·OIDC·JWT 인증 보안 실습 엔진 — 자체 완결형. 실제 인증서버 없음.
+ * 단일 진실원천 = 방어 플래그(DEF). 인증서버 응답도, 판정(verdict)도, 방어(fix)도
+ * 모두 같은 플래그를 읽고 쓴다. 방어를 켜면 같은 공격이 이번엔 막히고 재점검이
+ * '양호'로 바뀐다. 각 도전은 고유 공격 동사로 매칭해 분기 충돌을 피한다.
+ * 전역에 브라우저 내장 이름을 쓰지 않는다.
+ * ============================================================ */
+(function () {
+  'use strict';
+  function isEn() { try { return (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en'; } catch (e) { return false; } }
+  function L(ko, en) { return isEn() ? en : ko; }
+  function esc(s) { return (s + '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* 방어 플래그(단일 진실원천). false = 취약, true = 방어됨 */
+  var DEF = {
+    redirectAllowlist: false, /* O1: redirect_uri 정확 일치 허용목록 */
+    stateParam: false,        /* O2: state(또는 PKCE) 로 CSRF 차단 */
+    pkce: false,              /* O3: PKCE(S256) 강제 */
+    jwtVerify: false,         /* O4: alg=none 거부 + 서명 검증 */
+    algPin: false,            /* O5: 예상 alg 고정, 키 유형 분리(RS↔HS 혼동 차단) */
+    tokenHandling: false,     /* O6: 토큰을 URL/Referer/localStorage 에 두지 않음 */
+    scopeControl: false,      /* O7: 스코프 검증·최소 동의·화면 확인 */
+    idTokenValidate: false,   /* O8: ID 토큰 aud·iss·exp·nonce 검증 */
+    refreshRotate: false      /* O9: 리프레시 토큰 회전 + 재사용 감지·폐기 */
+  };
+
+  /* 모의 OAuth 도구 실행 — 공격 동사를 보고 DEF 플래그에 따라 출력을 낸다. */
+  function oauth(cmd) {
+    var c = cmd.trim();
+    var deny = function (reason) { return '[blocked] ' + reason; };
+
+    /* O1 redirect_uri 조작 */
+    if (/redirect_uri|open.?redirect/i.test(c)) {
+      if (DEF.redirectAllowlist) return deny(L('invalid_request: redirect_uri 가 등록된 허용목록과 정확히 일치하지 않음 — 인가 거부',
+                                               'invalid_request: redirect_uri not an exact match to the registered allowlist — authorization denied'));
+      return L('302 Found → https://evil.attacker.example/cb?code=AUTHCODE-EXAMPLE\n# redirect_uri 부분일치 허용 — 인가코드가 공격자 콜백으로 전달됨 → 코드 탈취',
+               '302 Found → https://evil.attacker.example/cb?code=AUTHCODE-EXAMPLE\n# redirect_uri partial match allowed — the auth code is sent to the attacker callback → code theft');
+    }
+    /* O2 state 부재 → 로그인 CSRF */
+    if (/login-csrf|no-state|csrf/i.test(c)) {
+      if (DEF.stateParam) return deny(L('state 불일치/부재로 콜백 거부 — 로그인 CSRF 차단(브라우저 세션과 요청 바인딩)',
+                                        'callback rejected on missing/mismatched state — login CSRF blocked (request bound to the browser session)'));
+      return L('callback 수락: 피해자 브라우저가 공격자 계정 인가코드로 로그인됨\n# state 부재 — 요청과 응답이 바인딩되지 않아 계정 고정/로그인 CSRF 성립',
+               'callback accepted: the victim browser is logged into the attacker’s account via a planted code\n# no state — request/response are not bound, enabling login CSRF / account fixation');
+    }
+    /* O3 PKCE 부재·다운그레이드 */
+    if (/pkce|code.?challenge|code.?verifier/i.test(c)) {
+      if (DEF.pkce) return deny(L('code_verifier 불일치 — PKCE(S256) 강제, 가로챈 인가코드로는 토큰 교환 불가',
+                                  'code_verifier mismatch — PKCE (S256) enforced, an intercepted code cannot be exchanged'));
+      return L('POST /token (code=AUTHCODE-EXAMPLE, no code_verifier) → 200 access_token 발급\n# PKCE 부재 — 공용 클라이언트에서 가로챈 인가코드를 그대로 토큰으로 교환',
+               'POST /token (code=AUTHCODE-EXAMPLE, no code_verifier) → 200 access_token issued\n# no PKCE — an intercepted code from a public client is exchanged straight for a token');
+    }
+    /* O4 JWT alg=none / 서명 미검증 */
+    if (/alg=?none|alg none|unsigned/i.test(c)) {
+      if (DEF.jwtVerify) return deny(L('JWT 거부: alg=none 비허용 + 서명 검증 실패 — 위조 토큰 차단',
+                                       'JWT rejected: alg=none disallowed and signature invalid — forged token blocked'));
+      return L('{"alg":"none"}.{"sub":"admin","scope":"admin"}.  → 200 (수락)\n# 서버가 alg=none 을 받아들여 서명 없는 토큰을 신뢰 — 임의 클레임 위조',
+               '{"alg":"none"}.{"sub":"admin","scope":"admin"}.  → 200 (accepted)\n# the server accepts alg=none and trusts an unsigned token — arbitrary claim forgery');
+    }
+    /* O5 JWT alg 혼동 (RS256 -> HS256) */
+    if (/alg-confusion|rs256|hs256|confusion/i.test(c)) {
+      if (DEF.algPin) return deny(L('JWT 거부: 예상 alg=RS256 고정, 공개키를 HMAC 키로 쓸 수 없음 — 혼동 공격 차단',
+                                    'JWT rejected: expected alg pinned to RS256; the public key cannot be used as an HMAC secret — confusion blocked'));
+      return L('공개 RSA 키를 HMAC 비밀키로 사용해 HS256 서명 → 검증 통과\n# 서버가 alg 을 토큰에서 읽어 키 유형을 안 가림 — 공개키만으로 유효 토큰 위조',
+               'signed HS256 using the public RSA key as the HMAC secret → verification passes\n# the server reads alg from the token and does not separate key types — a valid token is forged with only the public key');
+    }
+    /* O6 토큰 유출 (fragment/Referer/localStorage) */
+    if (/steal-token|referer|referrer|fragment|localstorage/i.test(c)) {
+      if (DEF.tokenHandling) return deny(L('토큰이 URL·Referer 에 없음(코드+PKCE 흐름), 저장은 httpOnly 쿠키/메모리 — 유출 경로 없음',
+                                           'no token in URL/Referer (code+PKCE flow); stored in httpOnly cookie/memory — no leak path'));
+      return L('Referer: https://orbit-webapp.example/#access_token=AT-EXAMPLE\nlocalStorage["access_token"]=AT-EXAMPLE (XSS 로 읽힘)\n# 토큰이 URL fragment·Referer·localStorage 에 노출 — XSS/로그/제3자로 유출',
+               'Referer: https://orbit-webapp.example/#access_token=AT-EXAMPLE\nlocalStorage["access_token"]=AT-EXAMPLE (readable via XSS)\n# token exposed in URL fragment, Referer, and localStorage — leaks via XSS/logs/third parties');
+    }
+    /* O7 스코프 상승 / 과다 동의 */
+    if (/escalate-scope|scope=|over-consent/i.test(c)) {
+      if (DEF.scopeControl) return deny(L('요청 스코프가 클라이언트 등록 범위를 초과 — 거부. 민감 스코프는 별도 동의 화면 필요',
+                                          'requested scope exceeds the client’s registered scopes — denied. Sensitive scopes require an explicit consent screen'));
+      return L('authorize?...&scope=openid+profile+admin+payments:write → 동의 없이 전부 승인\n# 스코프 검증·동의 부재 — 클라이언트가 요청만 하면 상위 권한 토큰 획득',
+               'authorize?...&scope=openid+profile+admin+payments:write → all granted with no consent\n# no scope validation/consent — the client obtains an over-privileged token just by asking');
+    }
+    /* O8 ID 토큰 검증 부재 (aud/iss/exp/nonce) */
+    if (/forge-idtoken|id.?token|idtoken|aud|nonce/i.test(c)) {
+      if (DEF.idTokenValidate) return deny(L('ID 토큰 거부: aud·iss·exp·nonce 검증 실패 — 다른 클라이언트용/재생 토큰 차단',
+                                             'ID token rejected: aud/iss/exp/nonce validation failed — cross-client/replayed token blocked'));
+      return L('다른 앱(aud=other-app)용 ID 토큰을 그대로 제출 → 로그인 수락\n# aud·iss·nonce 미검증 — 다른 곳에서 받은 토큰을 주입해 남의 세션으로 로그인',
+               'submit an ID token minted for another app (aud=other-app) → login accepted\n# aud/iss/nonce not validated — inject a token from elsewhere to log in as someone else');
+    }
+    /* O9 리프레시 토큰 회전·폐기 부재 */
+    if (/replay-refresh|refresh.?token|rotation|revoke/i.test(c)) {
+      if (DEF.refreshRotate) return deny(L('리프레시 재사용 감지 → 토큰 패밀리 폐기, 재인증 요구 — 유출 토큰 무력화',
+                                           'refresh reuse detected → token family revoked, re-auth required — a leaked token is neutralized'));
+      return L('같은 refresh_token 을 2주 뒤 재사용 → 새 access_token 계속 발급\n# 회전·재사용 감지 부재 — 한 번 유출된 리프레시 토큰이 사실상 영구 접근',
+               'reuse the same refresh_token two weeks later → new access_token keeps being issued\n# no rotation/reuse detection — one leaked refresh token grants effectively permanent access');
+    }
+    return L('명령을 인식하지 못했습니다. 위 "공격 요청"의 예시를 실행해 보세요.', 'Command not recognized. Try the example in the attack box above.');
+  }
+
+  /* ============================================================
+   * 도전 — OAuth 2.0 / OIDC / JWT
+   * ============================================================ */
+  var CH = [
+    {
+      id: 'O1', std: 'OAuth BCP / redirect', risk: 5, flag: 'redirectAllowlist',
+      title: L('redirect_uri 조작 → 인가코드 탈취', 'redirect_uri Manipulation → Code Theft'),
+      brief: L('인증서버가 <b>redirect_uri 를 정확히 검증하지 않으면</b>, 공격자 콜백으로 인가코드를 빼돌려 계정을 탈취합니다.',
+               'If the server does not exactly validate redirect_uri, an attacker diverts the auth code to their callback and takes over the account.'),
+      ez: L('택배 주소를 <b>비슷한 주소로 살짝 바꿔</b> 가로채는 셈입니다.', 'Like changing the delivery address to a <b>lookalike</b> to intercept the parcel.'),
+      manifest: 'registered: https://orbit-webapp.example/cb\n요청 redirect_uri: https://orbit-webapp.example.evil.attacker.example/cb  # ← 부분일치 허용',
+      cmd: 'GET /authorize?client_id=orbit-webapp&response_type=code&redirect_uri=https://evil.attacker.example/cb',
+      options: [
+        L('인가코드가 공격자 콜백으로 전달됨 — redirect_uri 부분일치 허용', 'the auth code is delivered to the attacker callback — redirect_uri partial match allowed'),
+        L('등록 허용목록과 정확히 일치하지 않아 인가 거부', 'denied — not an exact match to the registered allowlist'),
+        L('클라이언트를 찾을 수 없음', 'client not found'),
+        L('응답 타입 오류', 'unsupported response type')
+      ],
+      ev: 0,
+      why: L('인가코드 흐름의 안전은 <b>코드가 정당한 클라이언트에게만 간다</b>는 전제에 달려 있습니다. redirect_uri 를 느슨히 검증(부분일치·와일드카드·하위경로)하면 그 전제가 무너집니다.',
+             'The code flow’s safety rests on the code going only to the legitimate client. Loose redirect_uri checks (substring, wildcard, subpath) break that assumption.'),
+      def: L('redirect_uri 를 <b>사전 등록 + 정확 일치</b>로만 허용한다(부분일치·와일드카드 금지). 공용 클라이언트는 PKCE 를 병행하고, 인가코드는 1회용·단수명으로 발급한다.',
+             'Allow only pre-registered, exact-match redirect_uris (no substring/wildcard). Pair public clients with PKCE and issue single-use, short-lived codes.'),
+      fixNote: L('redirect_uri 정확 일치 허용목록을 적용했습니다.', 'Applied exact-match redirect_uri allowlist.')
+    },
+    {
+      id: 'O2', std: 'OAuth BCP / CSRF', risk: 4, flag: 'stateParam',
+      title: L('state 부재 → 로그인 CSRF', 'Missing state → Login CSRF'),
+      brief: L('<b>state 파라미터가 없으면</b> 요청과 콜백이 바인딩되지 않아, 공격자가 피해자를 자기 계정으로 로그인시킵니다(계정 고정).',
+               'With no state parameter, request and callback are not bound, so an attacker logs the victim into the attacker’s account (fixation).'),
+      ez: L('내 사물함 열쇠를 <b>남의 사물함에</b> 몰래 연결해 두는 셈입니다.', 'Like secretly wiring your locker key to <b>someone else’s locker</b>.'),
+      manifest: 'GET /authorize?...   # ← state 없음\n콜백에서 state 검증 없음 → 요청-응답 미바인딩',
+      cmd: 'oauth attack login-csrf   # state 없이 공격자 인가코드를 피해자 콜백에 주입',
+      options: [
+        L('피해자가 공격자 계정으로 로그인됨 — state 부재', 'the victim is logged into the attacker account — no state'),
+        L('state 불일치로 콜백 거부', 'callback rejected on state mismatch'),
+        L('세션이 만료됨', 'session expired'),
+        L('콜백 URL 없음', 'no callback URL')
+      ],
+      ev: 0,
+      why: L('로그인 CSRF 는 피해자가 <b>모르는 사이 공격자 계정</b>으로 로그인되어, 이후 입력한 결제수단·개인정보가 공격자 계정에 쌓이게 만듭니다. 흔히 과소평가되는 위험입니다.',
+             'Login CSRF silently logs the victim into the attacker’s account, so payment methods and data the victim later enters accrue to the attacker. It is commonly underestimated.'),
+      def: L('요청마다 <b>추측 불가능한 state</b> 를 만들어 세션에 저장하고 콜백에서 대조한다(PKCE 의 code_challenge 도 같은 CSRF 방어 효과). OIDC 에서는 nonce 도 함께 쓴다.',
+             'Generate an unguessable state per request, store it in the session, and verify it at the callback (PKCE’s code_challenge gives the same CSRF protection). In OIDC also use nonce.'),
+      fixNote: L('state 파라미터 검증(CSRF 방어)을 적용했습니다.', 'Applied state parameter validation (CSRF protection).')
+    },
+    {
+      id: 'O3', std: 'OAuth BCP / PKCE', risk: 4, flag: 'pkce',
+      title: L('PKCE 부재 → 인가코드 가로채기', 'No PKCE → Code Interception'),
+      brief: L('공용 클라이언트(SPA·모바일)에서 <b>PKCE 가 없으면</b>, 가로챈 인가코드를 그대로 토큰으로 교환할 수 있습니다.',
+               'On public clients (SPA/mobile) with no PKCE, an intercepted auth code can be exchanged straight for a token.'),
+      ez: L('한 번 쓰는 <b>일회용 비밀번호를 함께</b> 걸어야 가로채도 소용없습니다.', 'Adding a <b>one-time secret</b> makes an intercepted code useless.'),
+      manifest: 'POST /token  code=AUTHCODE-EXAMPLE   # ← code_verifier 없음\n(공용 클라이언트, 클라이언트 시크릿 없음)',
+      cmd: 'oauth attack pkce   # code_verifier 없이 가로챈 코드로 토큰 교환',
+      options: [
+        L('code_verifier 없이 토큰 발급됨 — PKCE 부재', 'token issued without a code_verifier — no PKCE'),
+        L('code_verifier 불일치로 토큰 교환 거부', 'token exchange rejected on code_verifier mismatch'),
+        L('코드가 만료됨', 'code expired'),
+        L('클라이언트 인증 실패', 'client authentication failed')
+      ],
+      ev: 0,
+      why: L('공용 클라이언트는 <b>비밀을 안전히 보관할 수 없습니다</b>. 인가코드가 앱 링크·리다이렉트·로그로 가로채지면, PKCE 가 없을 때 곧바로 토큰이 됩니다.',
+             'Public clients cannot safely keep secrets. If the auth code is intercepted via app links, redirects, or logs, it becomes a token immediately when PKCE is absent.'),
+      def: L('모든 인가코드 흐름에 <b>PKCE(S256)</b> 를 강제한다. 토큰 교환 시 code_verifier 를 검증하고, code_challenge_method=plain 은 허용하지 않는다. 공용 클라이언트에 암묵적(implicit) 흐름을 쓰지 않는다.',
+             'Enforce PKCE (S256) on every code flow; verify code_verifier at token exchange and disallow code_challenge_method=plain. Do not use the implicit flow for public clients.'),
+      fixNote: L('PKCE(S256) 강제를 적용했습니다.', 'Enforced PKCE (S256).')
+    },
+    {
+      id: 'O4', std: 'JWT BCP', risk: 5, flag: 'jwtVerify',
+      title: L('JWT alg=none · 서명 미검증', 'JWT alg=none / No Signature Check'),
+      brief: L('서버가 <b>alg=none 을 받아들이거나 서명을 검증하지 않으면</b>, 누구나 임의 클레임의 토큰을 위조합니다.',
+               'If the server accepts alg=none or skips signature verification, anyone forges a token with arbitrary claims.'),
+      ez: L('도장 없는 서류를 <b>도장 확인도 없이</b> 통과시키는 셈입니다.', 'Like accepting an unstamped document <b>without checking for a stamp</b>.'),
+      manifest: 'jwt.verify(token)   # ← 서명 검증 생략 또는 alg=none 허용\nheader: {"alg":"none"}',
+      cmd: 'oauth forge-jwt --alg none   # {"alg":"none"} 로 sub=admin, scope=admin 위조',
+      options: [
+        L('서명 없는 토큰이 수락됨 — alg=none 허용', 'an unsigned token is accepted — alg=none allowed'),
+        L('alg=none 거부 + 서명 검증 실패로 차단', 'blocked — alg=none disallowed and signature invalid'),
+        L('토큰 형식 오류', 'malformed token'),
+        L('토큰 만료', 'token expired')
+      ],
+      ev: 0,
+      why: L('JWT 는 <b>서명이 전부</b>입니다. alg=none 은 서명을 없애는 스위치이고, 검증 라이브러리를 잘못 쓰면(디코드만 하고 verify 안 함) 서명이 있어도 무의미해집니다.',
+             'A JWT is only as good as its signature. alg=none is a switch that removes it, and misusing a library (decode without verify) makes even a signed token meaningless.'),
+      def: L('<b>alg=none 을 절대 허용하지 않는다.</b> 서버가 <b>예상 알고리즘을 고정</b>해 검증하고, decode 가 아니라 verify 를 쓴다. 키는 kid 로 신뢰된 키셋에서만 선택한다.',
+             'Never allow alg=none. Pin the expected algorithm server-side and always verify (not just decode). Select keys only from a trusted key set by kid.'),
+      fixNote: L('alg=none 거부 + 서명 검증을 적용했습니다.', 'Disallowed alg=none and enforced signature verification.')
+    },
+    {
+      id: 'O5', std: 'JWT BCP', risk: 5, flag: 'algPin',
+      title: L('JWT alg 혼동 (RS256 → HS256)', 'JWT alg Confusion (RS256 → HS256)'),
+      brief: L('서버가 <b>토큰의 alg 을 그대로 믿으면</b>, 공격자가 공개 RSA 키를 HMAC 비밀키로 써서 유효 토큰을 위조합니다.',
+               'If the server trusts the token’s alg, an attacker uses the public RSA key as an HMAC secret to forge a valid token.'),
+      ez: L('<b>공개된 주소</b>를 비밀번호로 착각해 문을 열어 주는 셈입니다.', 'Like mistaking a <b>public address</b> for the password and opening the door.'),
+      manifest: 'jwt.verify(token, publicKey)   # ← alg 을 토큰에서 읽음(키 유형 미분리)\n공격: header alg RS256 → HS256, HMAC(key=공개키)',
+      cmd: 'oauth forge-jwt --alg-confusion   # RS256 검증기에 HS256(공개키) 토큰 제출',
+      options: [
+        L('공개키를 HMAC 키로 쓴 위조 토큰이 검증 통과 — alg 혼동', 'a forged token using the public key as an HMAC secret passes — alg confusion'),
+        L('예상 alg=RS256 고정으로 거부', 'rejected — expected alg pinned to RS256'),
+        L('키를 찾을 수 없음', 'key not found'),
+        L('서명 형식 오류', 'malformed signature')
+      ],
+      ev: 0,
+      why: L('RS256(공개키 검증)과 HS256(공유 비밀 검증)은 <b>키의 의미가 다릅니다</b>. 검증기가 alg 을 토큰에서 읽고 같은 키 재료를 쓰면, 누구나 아는 공개키가 위조용 비밀이 됩니다.',
+             'RS256 (public-key verify) and HS256 (shared-secret verify) treat the key differently. If the verifier reads alg from the token and reuses the key material, the public key becomes a forgery secret.'),
+      def: L('검증 시 <b>예상 알고리즘을 서버가 고정</b>한다(토큰의 alg 을 신뢰하지 않음). 대칭·비대칭 키를 <b>유형별로 분리</b>해 서로 못 쓰게 하고, 라이브러리의 알고리즘 허용목록을 좁힌다.',
+             'Pin the expected algorithm server-side (never trust the token’s alg). Separate symmetric and asymmetric keys so one cannot be used as the other, and narrow the library’s algorithm allowlist.'),
+      fixNote: L('예상 alg 고정 + 키 유형 분리를 적용했습니다.', 'Pinned expected alg and separated key types.')
+    },
+    {
+      id: 'O6', std: 'OAuth BCP / token', risk: 4, flag: 'tokenHandling',
+      title: L('토큰 유출 (fragment · Referer · localStorage)', 'Token Leakage (fragment / Referer / localStorage)'),
+      brief: L('토큰을 <b>URL fragment·Referer·localStorage</b> 에 두면, XSS·로그·제3자 스크립트로 새어 나가 세션이 탈취됩니다.',
+               'Tokens in the URL fragment, Referer, or localStorage leak via XSS, logs, or third-party scripts, leading to session theft.'),
+      ez: L('열쇠를 <b>현관 매트 밑</b>에 둔 셈입니다 — 아는 사람은 다 꺼냅니다.', 'Like leaving the key <b>under the doormat</b> — anyone who knows can take it.'),
+      manifest: '# implicit 흐름: #access_token=... (URL fragment)\nlocalStorage.setItem("access_token", AT)   # ← XSS 로 읽힘',
+      cmd: 'oauth steal-token --via referer   # fragment/Referer/localStorage 에서 토큰 수집',
+      options: [
+        L('토큰이 URL·Referer·localStorage 에 노출됨 — 유출 경로 다수', 'token exposed in URL/Referer/localStorage — multiple leak paths'),
+        L('토큰이 URL·Referer 에 없고 httpOnly 쿠키/메모리 보관', 'no token in URL/Referer; kept in httpOnly cookie/memory'),
+        L('네트워크 오류', 'network error'),
+        L('토큰이 발급되지 않음', 'no token issued')
+      ],
+      ev: 0,
+      why: L('토큰은 <b>비밀번호와 동급의 비밀</b>입니다. URL 은 브라우저 기록·서버 로그·Referer 헤더로 퍼지고, localStorage 는 XSS 한 줄이면 읽힙니다. 저장 위치가 곧 공격면입니다.',
+             'A token is a secret on par with a password. URLs spread via history, server logs, and the Referer header; localStorage is readable with one line of XSS. Where you store it is the attack surface.'),
+      def: L('암묵적 흐름 대신 <b>인가코드+PKCE</b> 를 쓰고, 토큰을 <b>URL 에 넣지 않는다</b>. 세션은 <b>httpOnly·Secure·SameSite 쿠키</b> 또는 메모리에 두고, Referrer-Policy·CSP 로 유출을 줄이며, XSS 자체를 막는다.',
+             'Use the authorization code flow with PKCE instead of implicit, and keep tokens out of the URL. Store sessions in httpOnly/Secure/SameSite cookies or memory, tighten Referrer-Policy and CSP, and prevent XSS in the first place.'),
+      fixNote: L('토큰 취급 하드닝(URL 미노출·httpOnly)을 적용했습니다.', 'Applied token-handling hardening (no URL exposure, httpOnly).')
+    },
+    {
+      id: 'O7', std: 'OAuth BCP / scope', risk: 4, flag: 'scopeControl',
+      title: L('스코프 상승 · 과다 동의', 'Scope Escalation / Over-consent'),
+      brief: L('스코프를 <b>검증하지 않고 동의도 생략하면</b>, 클라이언트가 요청만으로 상위 권한(admin·결제) 토큰을 받습니다.',
+               'With no scope validation and no consent, a client obtains an over-privileged (admin/payments) token just by asking.'),
+      ez: L('방문증을 신청했는데 <b>마스터키까지</b> 얹어 주는 셈입니다.', 'Like applying for a visitor pass and being handed the <b>master key</b> too.'),
+      manifest: 'authorize?...&scope=openid profile admin payments:write   # ← 검증·동의 없음\n등록 스코프: openid profile',
+      cmd: 'oauth escalate-scope --add admin,payments:write',
+      options: [
+        L('상위 스코프가 동의 없이 승인됨 — 스코프 검증 부재', 'elevated scopes granted with no consent — no scope validation'),
+        L('등록 범위를 초과해 거부 + 민감 스코프는 동의 필요', 'denied for exceeding registered scopes; sensitive scopes require consent'),
+        L('스코프가 비어 있음', 'empty scope'),
+        L('클라이언트 미등록', 'client not registered')
+      ],
+      ev: 0,
+      why: L('스코프는 토큰의 <b>권한 범위</b>입니다. 요청 스코프를 클라이언트 등록 범위와 대조하지 않으면, 최소권한 원칙이 무너지고 토큰 하나가 과한 권한을 갖습니다.',
+             'Scopes define a token’s authority. Without checking requested scopes against the client’s registration, least privilege collapses and one token carries too much power.'),
+      def: L('요청 스코프를 <b>클라이언트 등록 스코프와 교집합</b>으로만 발급하고, 민감 스코프는 <b>명시적 동의 화면</b>을 거친다. 리소스 서버는 토큰의 스코프를 <b>동작마다 재확인</b>한다(과다 동의 방지).',
+             'Issue only the intersection of requested and registered scopes, and gate sensitive scopes behind an explicit consent screen. Resource servers re-check token scope per action (preventing over-consent).'),
+      fixNote: L('스코프 검증·최소 동의를 적용했습니다.', 'Applied scope validation and least-privilege consent.')
+    },
+    {
+      id: 'O8', std: 'OIDC Core', risk: 5, flag: 'idTokenValidate',
+      title: L('ID 토큰 검증 부재 (aud · iss · nonce)', 'No ID Token Validation (aud / iss / nonce)'),
+      brief: L('ID 토큰의 <b>aud·iss·exp·nonce 를 검증하지 않으면</b>, 다른 앱용/재생 토큰을 주입해 남의 세션으로 로그인합니다.',
+               'Without validating aud/iss/exp/nonce, an attacker injects a cross-client or replayed ID token to log in as someone else.'),
+      ez: L('다른 회사 <b>사원증으로 우리 건물</b>에 들어오는 셈입니다.', 'Like entering our building with <b>another company’s badge</b>.'),
+      manifest: '// ID 토큰 서명만 보고 클레임 검증 생략\nverifyIdToken(token)   // aud/iss/exp/nonce 미검증',
+      cmd: 'oauth forge-idtoken --skip aud,iss,nonce   # 다른 앱(aud=other-app) 토큰 주입',
+      options: [
+        L('다른 앱용 ID 토큰이 로그인에 수락됨 — aud/iss/nonce 미검증', 'an ID token minted for another app is accepted for login — aud/iss/nonce not validated'),
+        L('aud·iss·exp·nonce 검증 실패로 거부', 'rejected — aud/iss/exp/nonce validation failed'),
+        L('서명 검증 실패', 'signature verification failed'),
+        L('토큰이 비어 있음', 'empty token')
+      ],
+      ev: 0,
+      why: L('OIDC 로그인의 안전은 <b>이 토큰이 우리에게, 우리 IdP 가, 이번 요청에 대해</b> 발급됐는지 확인하는 데 있습니다. aud(우리)·iss(우리 IdP)·nonce(이번 요청)·exp(유효) 중 하나만 빠져도 주입·재생이 가능합니다.',
+             'OIDC login safety comes from confirming the token was issued to us, by our IdP, for this request. Skipping any of aud (us), iss (our IdP), nonce (this request), or exp (valid) enables injection or replay.'),
+      def: L('ID 토큰의 <b>서명·iss·aud·exp·nonce</b> 를 모두 검증한다(azp 도 확인). nonce 는 요청 시 만든 값과 대조하고, 신뢰된 IdP 의 키셋(jwks)으로만 서명을 확인한다.',
+             'Validate the ID token’s signature, iss, aud, exp, and nonce (and azp). Match nonce to the value created at request time, and verify signatures only against the trusted IdP’s key set (jwks).'),
+      fixNote: L('ID 토큰 aud·iss·exp·nonce 검증을 적용했습니다.', 'Applied ID token aud/iss/exp/nonce validation.')
+    },
+    {
+      id: 'O9', std: 'OAuth BCP / refresh', risk: 4, flag: 'refreshRotate',
+      title: L('리프레시 토큰 회전·폐기 부재', 'No Refresh Token Rotation / Revocation'),
+      brief: L('리프레시 토큰을 <b>회전·재사용 감지하지 않으면</b>, 한 번 유출된 토큰이 사실상 영구 접근이 됩니다.',
+               'Without rotation and reuse detection, one leaked refresh token grants effectively permanent access.'),
+      ez: L('한 번 찍힌 <b>도장을 평생</b> 우려먹는 셈입니다.', 'Like reusing a single <b>stamp forever</b>.'),
+      manifest: '# refresh_token 이 장기·정적, 재사용해도 새 access_token 발급\n# 회전(rotation)·재사용 감지·패밀리 폐기 없음',
+      cmd: 'oauth replay-refresh   # 2주 전 유출된 refresh_token 재사용',
+      options: [
+        L('오래된 refresh_token 재사용으로 새 토큰 계속 발급 — 회전 부재', 'reusing an old refresh_token keeps issuing new tokens — no rotation'),
+        L('재사용 감지 → 토큰 패밀리 폐기, 재인증 요구', 'reuse detected → token family revoked, re-auth required'),
+        L('리프레시 토큰이 없음', 'no refresh token'),
+        L('네트워크 오류', 'network error')
+      ],
+      ev: 0,
+      why: L('리프레시 토큰은 <b>오래 사는 열쇠</b>라 유출 시 피해가 큽니다. 회전(쓸 때마다 새 토큰 발급)과 재사용 감지가 없으면, 탈취된 토큰과 정상 토큰을 구분할 방법이 사라집니다.',
+             'Refresh tokens are long-lived keys, so a leak is costly. Without rotation (a new token on each use) and reuse detection, there is no way to tell a stolen token from a legitimate one.'),
+      def: L('리프레시 토큰을 <b>사용할 때마다 회전</b>하고, <b>이전 토큰 재사용을 감지</b>하면 토큰 패밀리 전체를 폐기하고 재인증을 요구한다. 만료·유휴 만료를 두고, 필요 시 서버측 즉시 폐기(revocation)를 지원한다.',
+             'Rotate refresh tokens on every use, and on detecting reuse of a prior token, revoke the whole token family and require re-authentication. Set absolute/idle expiry and support server-side revocation.'),
+      fixNote: L('리프레시 토큰 회전 + 재사용 감지·폐기를 적용했습니다.', 'Applied refresh token rotation with reuse detection and revocation.')
+    }
+  ];
+
+  var state = CH.map(function () { return { tried: false, pass: false, fixed: false }; });
+  var cur = 0;
+  var PKEY = 'wvs_oauth_security';
+  function loadProg() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
+  function saveProg(id) { try { var p = loadProg(); p[id] = 1; localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} }
+
+  function renderList() {
+    var done = state.filter(function (s) { return s.pass; }).length;
+    $('prog').textContent = L('통과 ', 'Passed ') + done + ' / ' + CH.length + L('  ·  방어 적용 ', '  ·  Defenses ') + state.filter(function (s) { return s.fixed; }).length;
+    var ul = $('clist'); ul.innerHTML = '';
+    CH.forEach(function (c, i) {
+      var s = state[i];
+      var st = s.pass ? (s.fixed ? '🛡️' : '✅') : (s.tried ? '🔁' : '·');
+      var li = document.createElement('li');
+      li.className = i === cur ? 'on' : '';
+      li.innerHTML = '<span class="ow">' + esc(c.id) + '</span><span class="tt">' + esc(c.title) + '</span><span class="st">' + st + '</span>';
+      li.addEventListener('click', function () { cur = i; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function render() {
+    renderList();
+    var c = CH[cur], s = state[cur], d = $('detail');
+    var h = '<h2><span class="ow">' + esc(c.std) + '</span> ' + esc(c.title) + ' <span class="risk">' + L('위험 ', 'risk ') + c.risk + '</span></h2>';
+    h += '<p style="margin-top:8px;color:#d7e3f4">' + c.brief + '</p>';
+    h += '<div class="ez"><b>' + L('쉽게 말하면', 'In plain terms') + '</b> — ' + c.ez + '</div>';
+    h += '<div class="manifest"><b>' + L('취약한 구성 · 코드', 'Vulnerable config / code') + '</b>\n' + esc(c.manifest) + '</div>';
+    h += '<div class="term"><div class="hd">' + L('공격 요청 (편집 가능) — idp.orbitauth.local', 'Attack request (editable) — idp.orbitauth.local') + '</div>';
+    h += '<textarea id="cmdBox" spellcheck="false" aria-label="' + L('OAuth 공격 요청', 'OAuth attack request') + '">' + esc(c.cmd) + '</textarea>';
+    h += '<div class="out" id="outBox"><span style="color:#93a4c0">' + L('▶ 요청 실행 을 눌러 결과를 확인하세요.', 'Press Run request to see the result.') + '</span></div></div>';
+    h += '<div class="row"><button class="btn go" id="btnRun">▶ ' + L('요청 실행', 'Run request') + '</button><button class="btn alt" id="btnReset2">' + L('요청 원복', 'Reset') + '</button></div>';
+
+    h += '<div class="h4">1. ' + L('판정', 'Verdict') + '</div>';
+    h += '<div><button class="vbtn" type="button" data-v="good">' + L('양호', 'Secure') + '</button><button class="vbtn" type="button" data-v="vuln">' + L('취약', 'Vulnerable') + '</button></div>';
+    h += '<div class="h4">2. ' + L('그렇게 판단한 근거 (출력에서 확인한 것)', 'Evidence (what the output showed)') + '</div>';
+    c.options.forEach(function (o, i) { h += '<label class="opt"><input type="checkbox" data-o="' + i + '">' + esc(o) + '</label>'; });
+    h += '<div class="row"><button class="btn go" id="btnGrade">' + L('채점', 'Grade') + '</button>';
+    if (s.pass && !s.fixed) h += '<button class="btn fix" id="btnFix">🛡️ ' + L('방어 적용', 'Apply defense') + '</button>';
+    h += '</div><div id="res"></div>';
+    if (s.pass) {
+      h += '<div class="why"><b>' + L('왜 그런가', 'Why') + '</b> — ' + c.why + '</div>';
+      h += '<div class="def"><b>🛡️ ' + L('방어', 'Defense') + '</b> — ' + c.def + '</div>';
+    }
+    d.innerHTML = h;
+
+    var chosenV = null;
+    d.querySelectorAll('[data-v]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        chosenV = b.getAttribute('data-v');
+        d.querySelectorAll('[data-v]').forEach(function (x) { x.className = 'vbtn'; });
+        b.className = 'vbtn on';
+      });
+    });
+    $('btnRun').addEventListener('click', function () { run(c); });
+    $('btnReset2').addEventListener('click', function () { $('cmdBox').value = c.cmd; });
+    $('btnGrade').addEventListener('click', function () { grade(c, chosenV); });
+    var fb = $('btnFix'); if (fb) fb.addEventListener('click', function () { applyFix(c); });
+  }
+
+  function verdict(c) { return DEF[c.flag] ? 'good' : 'vuln'; }
+
+  function run(c) {
+    var res = oauth($('cmdBox').value);
+    $('outBox').innerHTML = '<span style="color:#5eead4">$ ' + esc($('cmdBox').value.trim().split('\n')[0]) + '</span>\n' + esc(res);
+  }
+
+  function grade(c, chosenV) {
+    if (!chosenV) { $('res').innerHTML = '<div class="res no">' + L('먼저 양호/취약을 고르세요.', 'Pick Secure/Vulnerable first.') + '</div>'; return; }
+    var ev = [];
+    document.querySelectorAll('#detail [data-o]').forEach(function (cb) { if (cb.checked) ev.push(parseInt(cb.getAttribute('data-o'), 10)); });
+    var vOk = chosenV === verdict(c);
+    /* 방어 적용 후 재점검에서는 '막힌 출력'(옵션 1)이 올바른 근거다 */
+    var expEv = DEF[c.flag] ? (c.evFix != null ? c.evFix : 1) : c.ev;
+    var eOk = ev.length === 1 && ev[0] === expEv;
+    state[cur].tried = true;
+    if (vOk && eOk) {
+      state[cur].pass = true; saveProg(c.id);
+      render();
+      $('res').innerHTML = '<div class="res ok"><b>' + L('통과', 'Passed') + '</b> — ' +
+        (DEF[c.flag] ? L('<b>재점검</b>까지 맞습니다 — 방어가 같은 공격을 막는 것을 출력으로 확인했습니다.', 'Re-check correct too — the output confirms the defense now blocks the same attack.')
+          : L('판정과 근거가 맞습니다. 아래 <b>방어 적용</b>을 누른 뒤 같은 요청을 다시 실행해 보세요 — 이번엔 막힙니다.',
+              'Verdict and evidence are correct. Apply the defense below, then re-run the same request — it will be blocked this time.')) + '</div>';
+    } else {
+      var msg = [];
+      msg.push(vOk ? L('판정은 맞습니다.', 'Verdict is right.') : L('판정이 다릅니다.', 'Verdict is wrong.'));
+      if (!eOk) msg.push(L('근거를 정확히 하나만, 출력에서 본 것으로 고르세요.', 'Pick exactly one evidence — what the output actually showed.'));
+      render();
+      $('res').innerHTML = '<div class="res no"><b>' + L('다시', 'Try again') + '</b> — ' + msg.join(' ') + '</div>';
+    }
+  }
+
+  function applyFix(c) {
+    DEF[c.flag] = true;
+    state[cur].fixed = true;
+    render();
+    $('res').innerHTML = '<div class="res ok"><b>🛡️ ' + L('방어 완료', 'Defense applied') + '</b> — ' + c.fixNote +
+      '<br>' + L('같은 요청을 다시 실행해 결과가 바뀌었는지 확인하세요.', 'Re-run the same request and see the result change.') + '</div>';
+  }
+
+  function boot() {
+    var p = loadProg();
+    CH.forEach(function (c, i) { if (p[c.id]) state[i].pass = true; });
+    render();
+  }
+  boot();
+})();
+
+function wvsToggleLang() {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    var v = en ? 'ko' : 'en';
+    localStorage.setItem('wvs_lang', v); localStorage.setItem('lang', v);
+  } catch (e) {}
+  location.reload();
+}
+(function () {
+  try {
+    var en = (localStorage.getItem('wvs_lang') || localStorage.getItem('lang')) === 'en';
+    document.body.classList.toggle('lang-en', en);
+    document.documentElement.lang = en ? 'en' : 'ko';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

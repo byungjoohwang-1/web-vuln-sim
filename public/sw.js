@@ -9,7 +9,7 @@
  *     sync, login and leaderboard keep working exactly as before.
  *   - POST / non-GET: never intercepted.
  */
-var VERSION = 'wvs-6159877e1c6e';
+var VERSION = 'wvs-c42b4ed03650';
 var STATIC_CACHE = 'wvs-static-' + VERSION;
 var PAGE_CACHE = 'wvs-pages-' + VERSION;
 
